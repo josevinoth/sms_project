@@ -1,0 +1,147 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+<form method="POST" action="">
+	{% csrf_token %}
+
+	<!--{{form.as_p}}-->
+
+<div class="row">
+	<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Asset</h3></div>
+						<div class="card-body bg-light" >
+							<div class="row">
+							<div class="col-6">
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" id="">Asset Number</span>
+  								</div>
+								{% render_field form.asset_number class="form-control" id="aset_num" readonly=True%}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Assigned To</span>
+									</div>
+									{% render_field form.asset_assignedto class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Product</span>
+  								</div>
+								{% render_field form.asset_product class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+								<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Make</span>
+  								</div>
+								{% render_field form.asset_make class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Model</span>
+  								</div>
+								{% render_field form.asset_model class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Unique Number</span>
+  								</div>
+								{% render_field form.asset_serial_num1 class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							</div>
+							<div class="col-6">
+
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Location</span>
+  								</div>
+								{% render_field form.asset_location class="form-control" id="myLocation" onchange="myAssetnum()" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor</span>
+									</div>
+									{% render_field form.asset_vendor class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Order Number</span>
+  								</div>
+								{% render_field form.asset_order_number class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Purchase Date</span>
+  								</div>
+								<!--<input type="date" value="2021-09-09" min="2021-09-09">-->
+								{% render_field form.asset_purchase_date type="date" class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Insurance Details</span>
+  								</div>
+								{% render_field form.asset_insurance_details class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Cost (INR)</span>
+  								</div>
+								{% render_field form.asset_cost class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Assigned On</span>
+  								</div>
+								{% render_field form.asset_assignedon type="datetime-local" class="form-control" name="qr_text" %}
+							</div>
+							</div>
+							</div>
+							<div class="message">
+								{{form.errors}}
+							</div>
+							<!--<input class="btn btn-success" type="submit" name="Create User">-->
+							<button onclick="random()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+							 <a href="{% url 'asset_list' %}" class="btn btn-danger float-right">
+                    		<i class="fas fa-times"></i> Cancel </a>
+						</div>
+				</div>
+			</div>
+		</div>
+	<div class="col-2"></div>
+</div>
+</form>
+
+<script>
+function myAssetnum() {
+  selectElement = document.querySelector('#myLocation');
+  output = selectElement.options[selectElement.selectedIndex].value;
+	if (output==1)
+	{
+		nam="MAA"
+	}
+	else
+	{
+		nam="BLR"
+	}
+  var ran=Math.floor((Math.random() * 1000000) + 1)
+  document.getElementById("aset_num").value =nam+"_"+ ran;
+}
+</script>
+
+{% endblock content %}
+

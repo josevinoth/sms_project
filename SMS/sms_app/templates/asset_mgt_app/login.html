@@ -1,0 +1,63 @@
+{% extends "asset_mgt_app/header_1.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<!--<form method="POST" action="">
+	{% csrf_token %}
+	{{form.as_p}}
+
+</form>-->
+<div class="container-fluid">
+	<div class="d-flex justify-content-center h-100">
+		<div class="shadow card">
+			<div class="card-header text-center text-white bg-info mb-3">
+				<h4>Sign In</h4>
+			</div>
+			<div class="card-body bg-light">
+				<form method="POST" action="">
+					{% csrf_token %}
+					<div class="input-group form-group">
+						<div class="input-group-prepend">
+							<span class="input-group-text" style="width: 40px"><i class="fas fa-user-tie"></i></span>
+						</div>
+						<input type="text" class="form-control" placeholder="Employee ID" name="username">
+					</div>
+
+					<div class="input-group form-group">
+						<div class="input-group-prepend">
+							<span class="input-group-text" style="width: 40px"><i class="fas fa-key"></i></span>
+						</div>
+						<input type="password" class="form-control" placeholder="Password" name="password">
+					</div>
+
+					<input class="btn btn-success float-right" type="submit" value="login">
+					<!--<div class="form-group">
+                        <a href="{% url 'home_page' %}" class="btn btn-success float-right">
+                            <i class="fas fa-thumbs-up"></i> Login
+                        </a>
+                    </div>-->
+				</form>
+			</div>
+			<div class="card-footer">
+				<div class="message">
+					{{form.errors}}
+				</div>
+				<div class="message">
+					{% for message in messages %}
+						<p id = "messages">{{message}}</p>
+					{% endfor %}
+				</div>
+
+				<div class="d-flex justify-content-center links">
+					Don't have an account?<a href="{% url 'registration_page' %}">Sign Up</a>
+				</div>
+				<div class="d-flex justify-content-center">
+					<a href="#">Forgot your password?</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+{% endblock content %}

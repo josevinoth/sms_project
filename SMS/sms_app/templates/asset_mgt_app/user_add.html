@@ -1,0 +1,91 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="">
+	{% csrf_token %}
+
+	<!--{{form.as_p}}-->
+
+<div class="row">
+	<div class="col-4"></div>
+		<div class="col-4">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update User</h3></div>
+						<div class="card-body bg-light" >
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" id="">Employee ID</span>
+  								</div>
+								{% render_field form.username class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >First Name</span>
+  								</div>
+								{% render_field form.first_name class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Last Name</span>
+  								</div>
+								{% render_field form.last_name class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<!--<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Date Joined</span>
+  								</div>
+								{{form.date_joined}}
+  								&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;
+							</div>-->
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Status</span>
+  								</div>
+								{% render_field form.is_active class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Email</span>
+  								</div>
+								{% render_field form.email class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Password</span>
+  								</div>
+								{% render_field form.password1 class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Confirm Password</span>
+  								</div>
+								{% render_field form.password2 class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="message">
+								{% render_field form.errors class="form-control" %}
+								<!--{{form.errors}}-->
+							</div>
+
+							<!--<input class="btn btn-success" type="submit" name="Create User">-->
+							<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+							 <a href="{% url 'user_list' %}" class="btn btn-danger float-right">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+						</div>
+				</div>
+			</div>
+		</div>
+	<div class="col-4"></div>
+</div>
+</form>
+
+{% endblock content %}

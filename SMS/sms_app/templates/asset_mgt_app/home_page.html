@@ -1,0 +1,205 @@
+{% extends "asset_mgt_app/base.html" %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="sidenav">
+  <h2>Welcome !</h2>
+  <hr>
+  <button type="button" class="collapsible"><i class="fas fa-drafting-compass"></i> Asset Management System (AMS)</button>
+    <div class="content">
+      <a href="{% url 'asset_list' %}"><i class="fas fa-arrows-alt"></i> Create Assets</a>
+  <a href="{% url 'reports' %}"><i class="fas fa-flag-checkered"></i> Reports</a>
+    </div>
+    <button type="button" class="collapsible"><i class="fa fa-users" aria-hidden="true"></i> Employee Management System (EMS)</button>
+        <div class="content">
+            <a href="{% url 'user_list' %}"><i class="fas fa-user-friends"></i> Employees</a>
+        </div>
+    <button type="button" class="collapsible"><i class="fa fa-life-ring" aria-hidden="true"></i> Customer Management System (CMS)</button>
+        <div class="content">
+          <a href=""> --TBD--</a>
+        </div>
+    <button type="button" class="collapsible"><i class="fa fa-key" aria-hidden="true"></i> Finance Management System (FMS)</button>
+        <div class="content">
+          <a href=""> --TBD--</a>
+        </div>
+    <button type="button" class="collapsible"><i class="fa fa-suitcase" aria-hidden="true"></i>  Packaging Management System (PMS)</button>
+        <div class="content">
+          <a href=""> --TBD--</a>
+        </div>
+    <button type="button" class="collapsible"><i class="fa fa-truck" aria-hidden="true"></i> Transport Management System (TMS)</button>
+        <div class="content">
+          <a href=""> --TBD--</a>
+        </div>
+
+    <button type="button" class="collapsible"><i class="fas fa-industry"></i> Ware-House Management System (WMS)</button>
+    <div class="content">
+      <a href="{% url 'stock_list' %}"><i class="fas fa-arrows-alt"></i> Stocks</a>
+      <a href="{% url 'goods_list' %}"><i class="fas fa-arrows-alt"></i> Goods</a>
+    </div>
+    <button type="button" class="collapsible"><i class="fas fa-users-cog"></i> Admin</button>
+    <div class="content">
+      <a href="{% url 'department_list' %}"><i class="far fa-building"></i> Departments</a>
+      <button type="button" class="collapsible"><i class="fas fa-book-medical"></i> Insurance</button>
+        <div class="content">
+          <a href="{% url 'insurance_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Insurance List</a>
+          <a href="{% url 'insurancetype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Insurance Type</a>
+        </div>
+      <button type="button" class="collapsible"><i class="fas fa-map-marker-alt"></i> Locations</button>
+        <div class="content">
+          <a href="{% url 'location_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Branch List</a>
+          <a href="{% url 'locationmaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Branch Master</a>
+          <a href="{% url 'country_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Country List</a>
+          <a href="{% url 'state_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> State List</a>
+          <a href="{% url 'city_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> City List</a>
+        </div>
+      <button type="button" class="collapsible"><i class="fa fa-truck" aria-hidden="true"></i> Products</button>
+        <div class="content">
+          <a href="{% url 'product_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Product List</a>
+          <a href="{% url 'producttype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Product Type</a>
+        </div>
+      <a href="{% url 'service_list' %}"><i class="fas fa-tools"></i> Service</a>
+      <a href="{% url 'vendor_list' %}"><i class="fas fa-user-secret"></i> Vendors</a>
+    </div>
+    <button type="button" class="collapsible"><i class="fas fa-phone-alt"></i> Supports</button>
+    <div class="content">
+      <a href="#"><i class="fas fa-book"></i> User Guide</a>
+      <a href="#"><i class="fas fa-question"></i> FAQs</a>
+    </div>
+    <a href="#"><i class="fas fa-bell"></i> Notifications</a>
+    <a href="{% url 'stud_list' %}"><i class="fas fa-bell"></i> Students</a>
+    <a href="{% url 'peo_list' %}"><i class="fas fa-bell"></i> People</a>
+    <a href="{% url 'damage_list' %}"><i class="fas fa-bell"></i> Damage Type</a>
+    <a href="{% url 'damagereport_list' %}"><i class="fas fa-bell"></i> Damage Report</a>
+</div>
+</div>
+
+<div class="main">
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+     <!--   <div class="col-1"></div>-->
+        <div class="col-3">
+            <div class="card text-white mb-3 text-center bg-primary">
+              <div class="card-header">Products</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-shopping-cart"></i></h2>
+                        <button type="button" class="btn btn-primary">
+                            <span class="badge badge-light"><a href="{% url 'product_list' %}">{{count_product}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="card text-white bg-secondary mb-3 text-center" >
+              <div class="card-header">Vendors</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-user-secret"></i></h2>
+                        <button type="button" class="btn btn-secondary">
+                            <span class="badge badge-light"><a href="{% url 'vendor_list' %}">{{count_vendors}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="card text-white bg-success mb-3 text-center" >
+              <div class="card-header">Assigned Assets</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-tags"></i></h2>
+                        <button type="button" class="btn btn-success">
+                            <span class="badge badge-light"><a href="{% url 'asset_list' %}">{{count_ass_asset}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+
+        <div class="col-3">
+            <div class="card text-white bg-warning mb-3 text-center" >
+              <div class="card-header">Unassigned Asset</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-hashtag"></i></h2>
+                        <button type="button" class="btn btn-warning">
+                            <span class="badge badge-light"><a href="{% url 'asset_list' %}">{{count_unass_asset}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+        <!--<div class="col-1"></div>-->
+    </div>
+    <br>
+    <div class="row">
+       <!-- <div class="col-1"></div>-->
+        <div class="col-3">
+            <div class="card text-white bg-danger mb-3 text-center" >
+              <div class="card-header">Locations</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-map-marker-alt"></i></h2>
+                        <button type="button" class="btn btn-danger">
+                            <span class="badge badge-light"><a href="{% url 'location_list' %}">{{count_location}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="card text-white mb-3 text-center bg-info">
+              <div class="card-header">Employees</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-user-friends"></i></h2>
+                        <button type="button" class="btn btn-info">
+                            <span class="badge badge-light"><a href="{% url 'user_list' %}">{{count_employee}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+
+        <div class="col-3">
+            <div class="card text-white bg-dark mb-3 text-center" >
+              <div class="card-header">Total Asset Cost</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-rupee-sign"></i></h2>
+                        <button type="button" class="btn btn-dark">
+                            <span class="badge badge-dark"><a>{{sum_ass_cost}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+
+        <div class="col-3">
+            <div class="card text-white bg-primary mb-3 text-center" >
+              <div class="card-header">Total Service Cost</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-rupee-sign"></i></h2>
+                        <button type="button" class="btn btn-primary">
+                            <span class="badge badge-primary"><a>{{sum_service_cost}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+        <div class="col-1"></div>
+    </div>
+      <br>
+</div>
+
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.display === "block") {
+      content.style.display = "none";
+    } else {
+      content.style.display = "block";
+    }
+  });
+}
+</script>
+{% endblock content %}

@@ -1,0 +1,62 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'peo_insert' %}" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i>
+      </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+<table  id="peo_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+<!--            <th>Product Category</th>-->
+            <th>Name</th>
+            <th>Age</th>
+            <th>Mobile</th>
+            <th>Address</th>
+            <th>Edit</th>
+            <th>Delete</th>
+    </thead>
+    <tbody>
+        {% for peoinfo in peo_list %}
+            <tr>
+                <td> {{peoinfo.peo_name}}</td>
+                <td> {{peoinfo.peo_age}}</td>
+                <td> {{peoinfo.peo_mob}}</td>
+                <td> {{peoinfo.peo_address}}</td>
+                <td>
+
+                    <a href="{% url 'peo_update' peoinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'peo_delete' peoinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#peo_list').DataTable();
+} );
+</script>
+
+{% endblock content %}

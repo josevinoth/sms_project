@@ -1,0 +1,66 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'vendor_insert' %}" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i>
+      </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+<table id="vendor_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Email</th>
+            <th>Contact#</th>
+            <th>Contact Person</th>
+            <th>Designation</th>
+            <th>Status</th>
+            <th>Edit</th>
+            <th>Delete</th>
+    </thead>
+    <tbody>
+        {% for vendorinfo in vendor_list %}
+            <tr>
+                <td> {{vendorinfo.vend_name}}</td>
+                <td> {{vendorinfo.vend_description}}</td>
+                <td> {{vendorinfo.vend_email}}</td>
+                <td> {{vendorinfo.vend_contact}}</td>
+                <td> {{vendorinfo.vend_contact_per}}</td>
+                <td> {{vendorinfo.vend_designation}}</td>
+                <td> {{vendorinfo.vend_status}}</td>
+                <td>
+
+                    <a href="{% url 'vendor_update' vendorinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'vendor_delete' vendorinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#vendor_list').DataTable();
+} );
+</script>
+{% endblock content %}

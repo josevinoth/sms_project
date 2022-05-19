@@ -1,0 +1,142 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-2">
+            <div class="card text-white bg-primary mb-3 text-center">
+              <div class="card-header">Export Assets</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-arrows-alt"></i></h2>
+                        <button type="button" class="btn btn-primary">
+                           <!-- <span class="badge badge-light"><a href="{% url 'product_list' %}">9</a></span>-->
+                            <i class="fas fa-download"></i>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+
+        <div class="col-2">
+            <div class="card text-white bg-secondary mb-3 text-center" >
+              <div class="card-header">Export Vendors</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-user-secret"></i></h2>
+                        <button type="button" class="btn btn-secondary">
+                            <!--<span class="badge badge-light"><a href="{% url 'product_list' %}">9</a></span>-->
+                            <i class="fas fa-download"></i>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+
+        <div class="col-2">
+            <div class="card text-white bg-success mb-3 text-center" >
+              <div class="card-header">Export Assigned Asset</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-tags"></i></h2>
+                        <button type="button" class="btn btn-success">
+                            <!--<span class="badge badge-light"><a href="{% url 'product_list' %}">9</a></span>-->
+                            <i class="fas fa-download"></i>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+
+        <div class="col-2">
+            <div class="card text-white bg-danger mb-3 text-center" >
+              <div class="card-header">Export Office Location</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-map-marker-alt"></i></h2>
+                        <button type="button" class="btn btn-danger">
+                            <!--<span class="badge badge-light"><a href="{% url 'product_list' %}">9</a></span>-->
+                            <i class="fas fa-download"></i>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+
+        <div class="col-2">
+            <div class="card text-white bg-warning mb-3 text-center" >
+              <div class="card-header">Export Manufacturers</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-industry"></i></h2>
+                        <button type="button" class="btn btn-warning">
+                            <!--<span class="badge badge-light"><a href="{% url 'product_list' %}">9</a></span>-->
+                            <i class="fas fa-download"></i>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+        <div class="col-1"></div>
+    </div>
+    <br>
+    <br>
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-2">
+            <div class="card text-white bg-info mb-3 text-center" >
+              <div class="card-header">Export Employees</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-user-friends"></i></h2>
+                        <button type="button" class="btn btn-info">
+                            <!--<span class="badge badge-light"><a href="{% url 'product_list' %}">9</a></span>-->
+                            <i class="fas fa-download"></i>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+
+        <div class="col-2">
+            <div class="card text-white mb-3 text-center bg-warning">
+              <div class="card-header">Export Departments</div>
+                  <div class="card-body text-center">
+                        <h2><i class="far fa-building"></i></h2>
+                        <button type="button" class="btn btn-warning">
+                            <!--<span class="badge badge-light"><a href="{% url 'product_list' %}">9</a></span>-->
+                            <i class="fas fa-download"></i>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+
+        <div class="col-2">
+            <div class="card text-white mb-3 text-center bg-primary">
+              <div class="card-header">Export Products</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-shopping-cart"></i></h2>
+                        <button type="button" class="btn btn-primary">
+                            <!--<span class="badge badge-light"><a href="{% url 'product_list' %}">9</a></span>-->
+                            <i class="fas fa-download"></i>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+
+        <div class="col-2">
+            <div class="card text-white bg-dark mb-3 text-center" >
+              <div class="card-header">Export Product Types</div>
+                  <div class="card-body text-center">
+                        <h2><i class="fas fa-anchor"></i></h2>
+                        <button type="button" class="btn btn-dark">
+                            <!--<span class="badge badge-light"><a href="{% url 'product_list' %}">9</a></span>-->
+                            <i class="fas fa-download"></i>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                  </div>
+            </div>
+        </div>
+        <div class="col-1"></div>
+
+    </div>
+</div>
+{% endblock content %}

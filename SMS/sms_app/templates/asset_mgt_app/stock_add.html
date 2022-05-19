@@ -1,0 +1,451 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+<form method="POST" action="">
+	{% csrf_token %}
+
+	<!--{{form.as_p}}-->
+
+<div class="row">
+<!--	<div class="col-1"></div>-->
+		<div class="container-fluid">
+			<div class="col-12">
+				<div class="card text-white bg-info mb-0" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Stocks</h3></div>
+<!--					<p>Invoice Number is  {{ request.session.invoice_num_stock }}</p>-->
+<!--					<p>Stock ID is  {{ request.session.stock_id }}</p>-->
+						<div class="card-body bg-light" >
+							<div class="row">
+							<div class="col-4">
+							<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Invoice Number</span>
+									</div>
+									{% render_field form.wh_stock_invoice name=invoice_number class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Invoice Value</span>
+  									</div>
+								{% render_field form.wh_stock_invoice_value class="form-control"  %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Amount In (INR)</span>
+  									</div>
+								{% render_field form.wh_stock_amount_in class="form-control"  %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Invoice Currency</span>
+  									</div>
+								{% render_field form.wh_stock_invoice_currency class="form-control"  %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Stock Type</span>
+  								</div>
+								{% render_field form.wh_stock_type class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Invoice Weight (Kg)</span>
+  									</div>
+								{% render_field form.wh_stock_invoice_weight class="form-control"  %}
+								</div>
+							</div>
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Customer Name</span>
+									</div>
+									{% render_field form.wh_stock_customer_name class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Consigner Name</span>
+									</div>
+									{% render_field form.wh_stock_consigner_name class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consignee Name</span>
+									</div>
+									<!--<input type="date" value="2021-09-09" min="2021-09-09">-->
+									{% render_field form.wh_stock_consignee_name  class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Docs Recived</span>
+									</div>
+									{% render_field form.wh_stock_docs_received class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">MAWB</span>
+										</div>
+									{% render_field form.wh_stock_MAWB class="form-control"  %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Case Number</span>
+  									</div>
+								{% render_field form.wh_stock_case_number class="form-control"  %}
+								</div>
+							</div>
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">CBM</span>
+  									</div>
+								{% render_field form.wh_stock_CBM class="form-control"  %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">E-Way Bill</span>
+  									</div>
+								{% render_field form.wh_stock_eway_bill class="form-control"  %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Fumigation Status</span>
+  									</div>
+								{% render_field form.wh_stock_fumigation_status class="form-control"  %}
+								</div>
+<!--								<div class="input-group input-group-sm mb-3">-->
+<!--  									<div class="input-group-prepend">-->
+<!--    									<span class="input-group-text">Warehouse</span>-->
+<!--  									</div>-->
+<!--								{% render_field form.wh_warehouse_name class="form-control"  %}-->
+<!--								</div>-->
+								<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Location</span>
+  									</div>
+								{% render_field form.wh_stock_location class="form-control"  %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Days in Warehouse</span>
+  									</div>
+								{% render_field form.wh_stock_days_in_wh class="form-control"  %}
+								</div>
+
+							</div>
+							</div>
+							<div class="message">
+								{{form.errors}}
+							</div>
+							<div class="row">
+								<div class="col-6 ">
+									<div class="card border-info">
+  										<div class="card-header bg-info">Inward</div>
+  											<div class="card-body text-info"></div>
+											<div class="m-1 row">
+												<div class="col-6">
+													<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Arrival Date</span>
+  								</div>
+								{% render_field form.wh_stock_arrival_date type="datetime-local" class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Unloading Start Time</span>
+  								</div>
+								{% render_field form.wh_stock_unloading_start_time type="datetime-local" class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Unloading End Time</span>
+  								</div>
+								{% render_field form.wh_stock_unloading_end_time type="datetime-local" class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >FRD Time</span>
+									</div>
+									{% render_field form.wh_stock_FRD_time type="datetime-local" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Movement Type</span>
+									</div>
+									{% render_field form.wh_stock_movement_type class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+
+												</div>
+												<div class="col-6">
+													<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Transporter</span>
+									</div>
+									{% render_field form.wh_stock_transporters class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+													<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Truck Number</span>
+										</div>
+										{% render_field form.wh_stock_truck_number class="form-control" %}
+										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									</div>
+								<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Truck Type</span>
+										</div>
+									{% render_field form.wh_stock_truck_type type="select" class="form-control"  %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Driver Name</span>
+									</div>
+									{% render_field form.wh_stock_driver_name class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Driver Number</span>
+										</div>
+										{% render_field form.wh_stock_driver_contact class="form-control" %}
+										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									</div>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Driver License</span>
+										</div>
+										{% render_field form.wh_stock_driver_lic class="form-control" %}
+										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									</div>
+
+												</div>
+											</div>
+								</div>
+								</div>
+								<div class="col-6">
+									<div class="card border-warning">
+  										<div class="card-header bg-warning">Outward</div>
+  											<div class="card-body text-warning"></div>
+										<div class="m-1 row">
+												<div class="col-6">
+													<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Arrival Date</span>
+  								</div>
+								{% render_field form.wh_stock_arrival_date_out type="datetime-local" class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Unloading Start Time</span>
+  								</div>
+								{% render_field form.wh_stock_unloading_start_time_out type="datetime-local" class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Unloading End Time</span>
+  								</div>
+								{% render_field form.wh_stock_unloading_end_time_out type="datetime-local" class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >FRD Time</span>
+									</div>
+									{% render_field form.wh_stock_FRD_time_out type="datetime-local" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >HAWB</span>
+									</div>
+									{% render_field form.wh_stock_HAWB class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Destination</span>
+									</div>
+									{% render_field form.wh_stock_destination class="form-control"  %}
+								</div>
+													<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Transporter</span>
+									</div>
+									{% render_field form.wh_stock_transporters_out class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Truck Number</span>
+										</div>
+										{% render_field form.wh_stock_truck_number_out class="form-control" %}
+										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									</div>
+
+												</div>
+												<div class="col-6">
+													<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Truck Type</span>
+										</div>
+									{% render_field form.wh_stock_truck_type_out type="select" class="form-control"  %}
+								</div>
+													<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Ship Date</span>
+  									</div>
+								{% render_field form.wh_stock_ship_date type="datetime-local" class="form-control"  %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Out Date & Time</span>
+  									</div>
+								{% render_field form.wh_stock_out_time type="datetime-local" class="form-control"  %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Pasted By</span>
+  									</div>
+								{% render_field form.wh_stock_labels_pasted_by class="form-control"  %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Driver Name</span>
+									</div>
+									{% render_field form.wh_stock_driver_name_out class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Driver Number</span>
+										</div>
+										{% render_field form.wh_stock_driver_contact_out class="form-control" %}
+										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									</div>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Driver License</span>
+										</div>
+										{% render_field form.wh_stock_driver_lic_out class="form-control" %}
+										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									</div>
+								<div class="input-group input-group-sm mb-3">
+  									<div class="input-group-prepend">
+    									<span class="input-group-text">Remarks</span>
+  									</div>
+									{% render_field form.wh_stock_remarks  class="form-control" aria-label="With textarea" %}
+								</div>
+												</div>
+											</div>
+									</div>
+								</div>
+							</div>
+<hr>
+{% include "asset_mgt_app/goods_list_woh.html" %}
+<!--<div class="container-fluid row">-->
+<!--    <div class="col-md-1">-->
+<!--      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
+<!--        <i class="fas fa-arrow-left"></i>-->
+<!--      </a>-->
+<!--    </div>-->
+<!--    <div class="col-md-1">-->
+<!--      <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">-->
+<!--        <i class="fas fa-plus"></i>-->
+<!--      </a>-->
+<!--    </div>-->
+<!--</div>-->
+<!--<hr>-->
+<!--<div class="container-fluid">-->
+<!--<table  id="goods_list" class="table table-striped table-bordered">-->
+<!--    <thead class="thead-dark">-->
+<!--        <tr>-->
+<!--            <th>Invoice</th>-->
+<!--            <th>Number of Pieces</th>-->
+<!--            <th>Package Type</th>-->
+<!--            <th>Length (mm)</th>-->
+<!--            <th>Width (mm)</th>-->
+<!--            <th>Height (mm)</th>-->
+<!--            <th>Weight (Kg)</th>-->
+<!--			<th>QR Code</th>-->
+<!--            <th>Edit</th>-->
+<!--            <th>Delete</th>-->
+<!--    </thead>-->
+<!--    <tbody>-->
+<!--        {% for goodsinfo in goods_list %}-->
+<!--            <tr>-->
+<!--                <td> {{goodsinfo.wh_goods_invoice}}</td>-->
+<!--                <td> {{goodsinfo.wh_goods_pieces}}</td>-->
+<!--                <td> {{goodsinfo.wh_goods_package_type}}</td>-->
+<!--                <td> {{goodsinfo.wh_goods_length}}</td>-->
+<!--                <td> {{goodsinfo.wh_goods_width}}</td>-->
+<!--                <td> {{goodsinfo.wh_goods_height}}</td>-->
+<!--                <td> {{goodsinfo.wh_goods_weight}}</td>-->
+<!--                <td>-->
+<!--                    <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">-->
+<!--                        {% csrf_token %}-->
+<!--                        <button type="submit" class="btn">-->
+<!--                            <i class="fas fa-qrcode"></i>-->
+<!--                        </button>-->
+<!--                    </form>-->
+
+<!--                </td>-->
+<!--				<td>-->
+
+<!--                    <a href="{% url 'goods_update' goodsinfo.id %}" >-->
+<!--                        <i class="far fa-edit"></i>-->
+<!--                    </a>-->
+<!--                </td>-->
+<!--                <td>-->
+<!--                    <form action="{% url 'goods_delete' goodsinfo.id %}" method="post">-->
+<!--                        {% csrf_token %}-->
+<!--                        <button type="submit" class="btn">-->
+<!--                            <i class="fas fa-trash-alt"></i>-->
+<!--                        </button>-->
+<!--                    </form>-->
+<!--                </td>-->
+<!--            </tr>-->
+<!--        {% endfor %}-->
+<!--    </tbody>-->
+<!--</table>-->
+<!--</div>-->
+<div class="row">
+	<div class="col-5"></div>
+		<div class="col-2">
+		<!--<input class="btn btn-success" type="submit" name="Create User">-->
+			<button onclick="random()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+				<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">
+              		<i class="fas fa-times"></i> Cancel </a>
+		</div>
+<div class="col-5"></div>
+</div>
+</div>
+</div>
+</div>
+<!--	<div class="col-1"></div>-->
+</div>
+</div>
+</form>
+<script>
+    $(document).ready(function() {
+    $('#goods_list').DataTable();
+} );
+</script>
+{% endblock content %}
+
+

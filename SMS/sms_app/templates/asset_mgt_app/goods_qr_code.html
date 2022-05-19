@@ -1,0 +1,48 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'stock_list' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+    </div>
+  <div class="col-md-1">
+      <a href="{% url 'print_pdf' %}" class="btn btn-warning btn-block btn-lg">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+    </div>
+</div>
+<hr>
+  <div class="container shadow"
+       style="width: 500px; margin-top: 5em; padding: 2em">
+    <form method="post">
+      {% csrf_token %}
+      <!--<h3>Enter any text to generate a QR code</h3>
+      <!--<div class="input-group mb-3">
+        <span class="input-group-text"
+              id="inputGroup-sizing-default">QR Code Text:</span>
+        <input type="text"
+               class="form-control"
+               aria-describedby="inputGroup-sizing-default"
+               name="qr_text"
+               autofocus>&ndash;&gt;
+      </div>-->
+      <!--<div class="input-group mb-3">
+        <input type="submit" style="max-width: 200px; margin: auto" class="form-control">
+      </div>-->
+    </form>
+      <div class="row">
+        <div class="col-6">
+          {{ svg|safe }}
+        </div>
+        <div class="col-6">
+          <br>
+          <span>Invoice Number: {{Invoice_Number}}</span>
+          <br>
+          <span>Package_Type: {{Package_Type}}</span>
+        </div>
+      </div>
+  </div>
+{% endblock content %}
