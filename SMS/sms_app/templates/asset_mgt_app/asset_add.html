@@ -134,9 +134,17 @@ function myAssetnum() {
 	{
 		nam="MAA"
 	}
-	else
+	else if(output==2)
 	{
 		nam="BLR"
+	}
+	else if(output==3)
+	{
+		nam="HYD"
+	}
+	else
+	{
+		nam="PNY"
 	}
   var ran=Math.floor((Math.random() * 1000000) + 1)
   document.getElementById("aset_num").value =nam+"_"+ ran;
