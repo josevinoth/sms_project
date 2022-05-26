@@ -26,13 +26,14 @@ def user_add(request,user_id=0):
             form = CreateUserForm(request.POST,instance=user)
             user_ext_form = UserextForm(request.POST,instance=user_ext)
         if form.is_valid() and user_ext_form.is_valid():
+        # if form.is_valid():
             user = form.save()
             user_ext = user_ext_form.save(commit=False)
             user_ext.user = user
             user_ext.save()
-            # form.save()
-            # user_ext_form.save()
-        return redirect('/SMS/user_list')
+            form.save()
+            user_ext_form.save()
+            return redirect('/SMS/user_list')
 
 # List User
 @login_required(login_url='login_page')

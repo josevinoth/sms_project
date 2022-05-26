@@ -13,7 +13,8 @@ def registration_page(request):
             user_ext= user_ext_form.save(commit=False)
             user_ext.user=user
             user_ext.save()
-            # messages.success(request, 'Account was created for ' + user)
+            user_name = form.cleaned_data.get('first_name')
+            messages.success(request,'Account was create '+ user_name)
             return redirect('login_page')
     else:
         form = CreateUserForm()
