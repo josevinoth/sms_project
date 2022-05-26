@@ -1,6 +1,6 @@
 from .sub_forms.AssetinfoaddForm_form import AssetinfoaddForm
 from .sub_forms.AssignassetaddForm_form import AssignassetaddForm
-from .sub_forms.CreateUserForm_form import CreateUserForm
+from .sub_forms.CreateUserForm_form import CreateUserForm,UserextForm
 from .sub_forms.DepartmentaddForm_form import DepartmentaddForm
 from .sub_forms.EmployeeaddForm_form import EmployeeaddForm
 from .sub_forms.GoodsaddForm_form import GoodsaddForm

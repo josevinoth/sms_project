@@ -7,6 +7,7 @@ from .sub_views.home_page_view import home_page
 from .sub_views.insurance_add_view import insurance_add,insurance_delete,insurance_list
 from .sub_views.location_add_view import location_add,location_list,location_delete
 from .sub_views.login_page_view import login_page
+from .sub_views.login_page_view_new import login_page_new,home_page_new
 from .sub_views.logout_page_view import logout_page
 from .sub_views.print_pdf_view import print_pdf
 from .sub_views.product_add_view import product_add,product_list,product_delete
@@ -28,3 +29,4 @@ from .sub_views.peo_add_view import peo_add,peo_list,peo_delete
 from .sub_views.damage_add_view import damage_add,damage_list,damage_delete
 from .sub_views.damagereport_add_view import damagereport_add,damagereport_list,damagereport_delete
 from .sub_views.locationmaster_add_view import locationmaster_add,locationmaster_list,locationmaster_delete
+from .sub_views.employee_add_view import emp_add,emp_list,emp_delete,emp_registration_page

@@ -15,7 +15,13 @@ def login_page(request):
             first_name1 = User.objects.get(pk=user_id).first_name
             last_name=User.objects.get(pk=user_id).last_name
             first_name=first_name1+" " +last_name
+            pwd_1=User.objects.get(pk=user_id).password
+            un_1 = User.objects.get(pk=user_id).username
             print(first_name)
+            print(un_1)
+            print(pwd_1)
+            print("Form Username",username)
+            print("Form password",password)
             user = authenticate(request, username=username,password=password)
             request.session['first_name'] = first_name
             if user is not None:

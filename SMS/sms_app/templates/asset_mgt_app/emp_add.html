@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/header_1.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
@@ -8,94 +8,81 @@
 	<!--{{form.as_p}}-->
 
 <div class="row">
-	<div class="col-3"></div>
-		<div class="col-6">
+	<div class="col-4"></div>
+		<div class="col-4">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h4>User Registration</h4></div>
+					<div class="card-header text-center"><h3>Add/Update Employee</h3></div>
 						<div class="card-body bg-light" >
-							<div class="row">
-							<div class="col-6">
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text" id="">Employee ID</span>
   								</div>
-								{% render_field form.username class="form-control" %}
+								{% render_field form.emp_empid class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
-    								<span class="input-group-text" >First Name</span>
+    								<span class="input-group-text" >Name</span>
   								</div>
-								{% render_field form.first_name class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Last Name</span>
-  								</div>
-								{% render_field form.last_name class="form-control" %}
+								{% render_field form.emp_full_name class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text" >Email</span>
   								</div>
-								{% render_field form.email class="form-control" %}
+								{% render_field form.emp_email class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text" >Contact</span>
   								</div>
-								{% render_field user_ext_form.emp_contact class="form-control" %}
+								{% render_field form.emp_contact class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Designation</span>
+  								</div>
+								{% render_field form.emp_designation class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Branch</span>
+  								</div>
+								{% render_field form.emp_branch class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text" >Password</span>
   								</div>
-								{% render_field form.password type="password" class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							</div>
-							<div class="col-6">
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Department</span>
-  								</div>
-								{% render_field user_ext_form.department class="form-control" %}
+								{% render_field form.emp_password class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
-    								<span class="input-group-text">Designation</span>
+    								<span class="input-group-text" >Password</span>
   								</div>
-								{% render_field user_ext_form.emp_designation class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Branch</span>
-  								</div>
-								{% render_field user_ext_form.emp_branch class="form-control" %}
+								{% render_field form.emp_password_conf class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text">Role</span>
   								</div>
-								{% render_field user_ext_form.emp_role class="form-control" %}
+								{% render_field form.emp_role class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text" >Status</span>
   								</div>
-								{% render_field form.is_active class="form-control" %}
+								{% render_field form.emp_status class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							</div>
 							</div>
 							<div class="message">
 								{% render_field form.errors class="form-control" %}
@@ -104,14 +91,14 @@
 
 							<!--<input class="btn btn-success" type="submit" name="Create User">-->
 							<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-							 <a href="{% url 'login_page' %}" class="btn btn-danger float-right">
+							 <a href="{% url 'emp_list' %}" class="btn btn-danger float-right">
                     <i class="fas fa-times"></i> Cancel
                 </a>
 						</div>
 				</div>
 			</div>
 		</div>
-	<div class="col-3"></div>
+	<div class="col-4"></div>
 </div>
 </form>
 

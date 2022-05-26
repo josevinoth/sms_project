@@ -1,7 +1,7 @@
 from django import forms
-from ..models import AssetInfo
+from ..models import Employee
 
 class EmployeeaddForm(forms.ModelForm):
     class Meta:
-        model = AssetInfo
+        model = Employee
         fields = '__all__'

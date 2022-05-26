@@ -94,7 +94,8 @@ urlpatterns = [
     path('locationmaster_insert', views.locationmaster_add, name='locationmaster_insert'),  # Add locationmaster
     path('locationmaster_update/<int:locationmaster_id>/', views.locationmaster_add, name='locationmaster_update'),  # Update locationmaster
     path('locationmaster_delete/<int:locationmaster_id>/', views.locationmaster_delete, name='locationmaster_delete'),  # Delete locationmaster
-
-
-
+    path('emp_list/', views.emp_list, name='emp_list'),  # List employee,
+    path('emp_insert', views.emp_add, name='emp_insert'),  # Add employee
+    path('emp_update/<int:emp_id>/', views.emp_add, name='emp_update'),  # Update employee
+    path('emp_delete/<int:emp_id>/', views.emp_delete, name='emp_delete'),  # Delete employee
 ]

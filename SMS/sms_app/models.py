@@ -29,3 +29,4 @@ from .sub_models.peo_mod import Peo_reg
 from .sub_models.damage_mod import DamageInfo
 from .sub_models.damagereport_mod import DamagereportInfo
 from .sub_models.locationmaster_mod import LocationmasterInfo
+from .sub_models.user_ext_mod import User_extInfo
