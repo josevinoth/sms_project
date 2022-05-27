@@ -30,3 +30,10 @@ from .sub_models.damage_mod import DamageInfo
 from .sub_models.damagereport_mod import DamagereportInfo
 from .sub_models.locationmaster_mod import LocationmasterInfo
 from .sub_models.user_ext_mod import User_extInfo
+from .sub_models.unit_info_mod import UnitInfo
+from .sub_models.Bay_info_mod import BayInfo
+from .sub_models.Status_info_mod import StatusInfo
+from .sub_models.Customertype_info_mod import CustomertypeInfo
+from .sub_models.whstoragetype_mod import WhstoragetypeInfo
+from .sub_models.Whratemaster_mod import WhratemasterInfo
+from .sub_models.designation_mod import DesignationInfo

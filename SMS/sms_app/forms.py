@@ -20,3 +20,9 @@ from .sub_forms.peoform_form import PeoaddForm
 from .sub_forms.damageaddform_form import DamageaddForm
 from .sub_forms.damagereportaddform_form import DamagereportaddForm
 from .sub_forms.locationmasteraddform_form import LocationmasteraddForm
+from .sub_forms.UnitForm_Form import UnitaddForm
+from .sub_forms.BayaddForm_Form import BayaddForm
+from .sub_forms.StatusaddForm_Form import StatusaddForm
+from .sub_forms.CustomertypeaddForm_Form import CustomertypeaddForm
+from .sub_forms.whratemasteraddform_Form import WhratemasteraddForm
+from .sub_forms.designationForm import DesignationaddForm

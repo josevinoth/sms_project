@@ -30,3 +30,9 @@ from .sub_views.damage_add_view import damage_add,damage_list,damage_delete
 from .sub_views.damagereport_add_view import damagereport_add,damagereport_list,damagereport_delete
 from .sub_views.locationmaster_add_view import locationmaster_add,locationmaster_list,locationmaster_delete
 from .sub_views.employee_add_view import emp_add,emp_list,emp_delete,emp_registration_page
+from .sub_views.unit_add_view import unit_add,unit_list,unit_delete
+from .sub_views.Bay_add_view import bay_add,bay_list,bay_delete
+from .sub_views.status_add_view import status_add,status_list,status_delete
+from .sub_views.Customertype_add_view import customertype_add,customertype_list,customertype_delete
+from .sub_views.whratemasteradd_view import whratemaster_add,whratemaster_list,whratemaster_delete
+from .sub_views.designation_add_view import designation_add,designation_list,designation_delete

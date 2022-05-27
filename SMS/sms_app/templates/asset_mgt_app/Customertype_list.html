@@ -1,0 +1,56 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'customertype_insert' %}" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i>
+      </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+<table  id="customertype_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+<!--            <th>Product Category</th>-->
+            <th>Customer Type</th>
+            <th>Edit</th>
+            <th>Delete</th>
+    </thead>
+    <tbody>
+        {% for customertypeinfo in customertype_list %}
+            <tr>
+                <td> {{customertypeinfo.cust_customer_type}}</td>
+                <td>
+
+                    <a href="{% url 'customertype_update' customertypeinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'customertype_delete' customertypeinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#customertype_list').DataTable();
+} );
+</script>
+
+{% endblock content %}
