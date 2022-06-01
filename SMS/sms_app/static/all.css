@@ -222,7 +222,7 @@ section {
 
 input {
   width: 100%;
-  margin: 7px 0px;
+  'margin: 7px 0px;
   display: inline-block;
   padding: 12px 25px;
   box-sizing: border-box;
