@@ -37,3 +37,4 @@ from .sub_models.Customertype_info_mod import CustomertypeInfo
 from .sub_models.whstoragetype_mod import WhstoragetypeInfo
 from .sub_models.Whratemaster_mod import WhratemasterInfo
 from .sub_models.designation_mod import DesignationInfo
+from .sub_models.role_mod import RoleInfo
