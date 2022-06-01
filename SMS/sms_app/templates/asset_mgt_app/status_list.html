@@ -27,7 +27,7 @@
     <tbody>
         {% for statusinfo in status_list %}
             <tr>
-                <td> {{statusinfo.sta_status}}</td>
+                <td> {{statusinfo.status_title}}</td>
                 <td>
 
                     <a href="{% url 'status_update' statusinfo.id %}" >

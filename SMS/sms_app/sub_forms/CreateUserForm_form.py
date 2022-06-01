@@ -14,7 +14,9 @@ class UserextForm(forms.ModelForm):
         model = User_extInfo
         fields = ['department','emp_contact','emp_designation','emp_branch','emp_role']
         # fields = '__all__'
-    # def __init__(self, *args, **kwargs):
-    #     super(UserextForm,self).__init__(*args, **kwargs)
-    #     # self.fields['prod_category'].empty_label = "--Select--"
-    #     self.fields['emp_status'].empty_label = "--Select--"
+    def __init__(self, *args, **kwargs):
+        super(UserextForm,self).__init__(*args, **kwargs)
+        self.fields['emp_designation'].empty_label = "--Select--"
+        self.fields['emp_branch'].empty_label = "--Select--"
+        self.fields['emp_role'].empty_label = "--Select--"
+        self.fields['department'].empty_label = "--Select--"

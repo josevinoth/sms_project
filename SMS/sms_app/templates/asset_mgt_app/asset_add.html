@@ -57,6 +57,13 @@
 								{% render_field form.asset_serial_num1 class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
+							<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor</span>
+									</div>
+									{% render_field form.asset_vendor class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
 							</div>
 							<div class="col-6">
 
@@ -67,11 +74,11 @@
 								{% render_field form.asset_location class="form-control" id="myLocation" onchange="myAssetnum()" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
-								<div class="input-group input-group-sm mb-3">
+							<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor</span>
+										<span class="input-group-text">Unit</span>
 									</div>
-									{% render_field form.asset_vendor class="form-control" %}
+									{% render_field form.asset_unit class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							<div class="input-group input-group-sm mb-3">
@@ -132,19 +139,19 @@ function myAssetnum() {
   output = selectElement.options[selectElement.selectedIndex].value;
 	if (output==1)
 	{
-		nam="MAA"
+		nam="BLR"
 	}
 	else if(output==2)
 	{
-		nam="BLR"
+		nam="MAA"
 	}
 	else if(output==3)
 	{
-		nam="HYD"
+		nam="PNY"
 	}
 	else
 	{
-		nam="PNY"
+		nam="HYD"
 	}
   var ran=Math.floor((Math.random() * 1000000) + 1)
   document.getElementById("aset_num").value =nam+"_"+ ran;

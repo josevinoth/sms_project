@@ -1,10 +1,10 @@
 from django.db import models
-from ..models import Product_info,Department_info,MyUser,Location_info,Vendor_info,Insurance_Info
+from ..models import Product_info,Department_info,MyUser,Location_info,Vendor_info,Insurance_Info,UnitInfo
 
 class AssetInfo(models.Model):
     asset_number = models.CharField(max_length=10,default = '')
     asset_product = models.ForeignKey(Product_info, on_delete=models.CASCADE, default='')
-    # asset_department = models.ForeignKey(Department_info, on_delete=models.CASCADE, default='')
+    asset_unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE, default='')
     asset_model = models.CharField(max_length=30)
     asset_make = models.CharField(max_length=30)
     asset_assignedto = models.ForeignKey(MyUser,on_delete=models.CASCADE, default='')

@@ -1,9 +1,9 @@
 from django import forms
-from ..models import StatusInfo
+from ..models import StatusList
 
 class StatusaddForm(forms.ModelForm):
     class Meta:
-        model = StatusInfo
+        model = StatusList
         fields = '__all__'
 
     # def __init__(self, *args, **kwargs):

@@ -14,5 +14,4 @@ class AssetinfoaddForm(forms.ModelForm):
         self.fields['asset_vendor'].empty_label = "--Select--"
         self.fields['asset_insurance_details'].empty_label = "--Select--"
         self.fields['asset_assignedto'].empty_label = "--Select--"
-        self.fields['asset_assignedto'].required = False
-        #self.fields['emp_code'].required = False
+        self.fields['asset_unit'].empty_label = "--Select--"
