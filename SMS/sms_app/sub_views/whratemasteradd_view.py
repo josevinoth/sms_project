@@ -19,9 +19,9 @@ def whratemaster_add(request, whratemaster_id=0):
         if whratemaster_id == 0:
             form = WhratemasteraddForm()
         else:
-            whratemasterinfo = WhratemasterInfo.objects.get(pk=goods_id)
+            whratemasterinfo = WhratemasterInfo.objects.get(pk=whratemaster_id)
             form = WhratemasteraddForm(instance=whratemasterinfo)
-        return render(request, "asset_mgt_app/goods_add.html", {'form': form,'first_name': first_name})
+        return render(request, "asset_mgt_app/whratemaster_add.html", {'form': form,'first_name': first_name})
     else:
         if whratemaster_id == 0:
             form = WhratemasteraddForm(request.POST)

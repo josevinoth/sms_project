@@ -36,3 +36,5 @@ from .sub_views.status_add_view import status_add,status_list,status_delete
 from .sub_views.Customertype_add_view import customertype_add,customertype_list,customertype_delete
 from .sub_views.whratemasteradd_view import whratemaster_add,whratemaster_list,whratemaster_delete
 from .sub_views.designation_add_view import designation_add,designation_list,designation_delete
+from .sub_views.whstoragetype_add_view import whstoragetype_add,whstoragetype_list,whstoragetype_delete
+from .sub_views.role_add_view import role_add,role_list,role_delete

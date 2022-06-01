@@ -26,3 +26,5 @@ from .sub_forms.StatusaddForm_Form import StatusaddForm
 from .sub_forms.CustomertypeaddForm_Form import CustomertypeaddForm
 from .sub_forms.whratemasteraddform_Form import WhratemasteraddForm
 from .sub_forms.designationForm import DesignationaddForm
+from .sub_forms.whstoragetypeform_Form import WhstoragetypeaddForm
+from .sub_forms.roleaddform_Form import RoleaddForm
