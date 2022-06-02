@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'SMS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'asset_mgt_011',
+        'NAME': 'asset_mgt_013',
         'USER': 'postgres',
         'PASSWORD': '244613',
         'HOST': 'localhost'
@@ -124,6 +124,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, ''),)
+
+#Email feature
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

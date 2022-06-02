@@ -2,7 +2,7 @@ from .sub_forms.AssetinfoaddForm_form import AssetinfoaddForm
 from .sub_forms.AssignassetaddForm_form import AssignassetaddForm
 from .sub_forms.CreateUserForm_form import CreateUserForm,UserextForm
 from .sub_forms.DepartmentaddForm_form import DepartmentaddForm
-from .sub_forms.EmployeeaddForm_form import EmployeeaddForm
+from .sub_forms.EmployeeaddForm_form import EmpeditForm,UserexteditForm,EmployeeaddForm
 from .sub_forms.GoodsaddForm_form import GoodsaddForm
 from .sub_forms.InsuranceaddForm_form import InsuranceaddForm
 from .sub_forms.LocationaddForm_form import LocationaddForm
@@ -30,3 +30,4 @@ from .sub_forms.whstoragetypeform_Form import WhstoragetypeaddForm
 from .sub_forms.roleaddform_Form import RoleaddForm
 from .sub_forms.whstoragetypeform_Form import WhstoragetypeaddForm
 from .sub_forms.roleaddform_Form import RoleaddForm
+
