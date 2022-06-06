@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from ..forms import EmployeeaddForm
+from ..forms import EmployeeaddForm,EmpeditForm
 from ..models import Employee
 from django.contrib import messages
 
@@ -9,17 +9,17 @@ def emp_add(request,emp_id=0):
     first_name = request.session.get('first_name')
     if request.method == "GET":
         if emp_id == 0:
-            form = EmployeeaddForm()
+            form = EmpeditForm()
         else:
             emp=Employee.objects.get(pk=emp_id)
-            form = EmployeeaddForm(instance=emp)
+            form = EmpeditForm(instance=emp)
         return render(request, "asset_mgt_app/emp_add.html", {'form': form,'first_name': first_name})
     else:
         if emp_id == 0:
-            form = EmployeeaddForm(request.POST)
+            form = EmpeditForm(request.POST)
         else:
             emp = Employee.objects.get(pk=emp_id)
-            form = EmployeeaddForm(request.POST,instance=emp)
+            form = EmpeditForm(request.POST,instance=emp)
         if form.is_valid():
             form.save()
         return redirect('/SMS/emp_list')
@@ -40,9 +40,9 @@ def emp_delete(request,emp_id):
 
 #emp Registration
 def emp_registration_page(request):
-      form = EmployeeaddForm()
+      form = EmpeditForm()
       if request.method=='POST':
-        form=EmployeeaddForm(request.POST)
+        form=EmpeditForm(request.POST)
       if form.is_valid():
         form.save()
         # user = form.cleaned_data.get('full_name')
