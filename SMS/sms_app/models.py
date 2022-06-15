@@ -38,3 +38,4 @@ from .sub_models.Bay_info_mod import BayInfo
 from .sub_models.Customertype_info_mod import CustomertypeInfo
 from .sub_models.whstoragetype_mod import WhstoragetypeInfo
 from .sub_models.Whratemaster_mod import WhratemasterInfo
+from .sub_models.gatein_mod import Gatein_info

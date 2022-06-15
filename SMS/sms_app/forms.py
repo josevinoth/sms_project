@@ -30,4 +30,5 @@ from .sub_forms.whstoragetypeform_Form import WhstoragetypeaddForm
 from .sub_forms.roleaddform_Form import RoleaddForm
 from .sub_forms.whstoragetypeform_Form import WhstoragetypeaddForm
 from .sub_forms.roleaddform_Form import RoleaddForm
+from .sub_forms.GateinForm_form import GateinaddForm
 

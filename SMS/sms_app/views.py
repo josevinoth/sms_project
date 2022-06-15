@@ -39,4 +39,5 @@ from .sub_views.designation_add_view import designation_add,designation_list,des
 from .sub_views.whstoragetype_add_view import whstoragetype_add,whstoragetype_list,whstoragetype_delete
 from .sub_views.role_add_view import role_add,role_list,role_delete
 from .sub_views.password_reset_request_view import password_reset_request
+from .sub_views.wh_job_add_view import gatein_add,wh_job_add
 
