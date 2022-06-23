@@ -1,0 +1,88 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'consignmentdetail_insert' %}" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i>
+      </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+<table  id="consignmentdetail_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+<!--            <th>Product Category</th>-->
+            <th>Enquiry Number</th>
+            <th>Consignment Number</th>
+            <th>Consignment Date</th>
+            <th>Consigner</th>
+            <th>Consignee</th>
+            <th>Consigner Invoice</th>
+            <th>Value</th>
+            <th>Value in INR</th>
+            <th>No. of Pieces</th>
+            <th>Weight</th>
+            <th>E-Bill No.</th>
+            <th>Date of Issue</th>
+            <th>Date of Validity</th>
+            <th>Container Description</th>
+            <th>Dimension</th>
+            <th>Movement</th>
+            <th>Status</th>
+            <th>Edit</th>
+            <th>Delete</th>
+    </thead>
+    <tbody>
+        {% for consignmentdetailinfo in consignmentdetail_list %}
+            <tr>
+                <td> {{consignmentdetailinfo.co_enquirynumber}}</td>
+                <td> {{consignmentdetailinfo.co_consignmentnumber}}</td>
+                <td> {{consignmentdetailinfo.co_consignmentdate}}</td>
+                <td> {{consignmentdetailinfo.co_consigner}}</td>
+                <td> {{consignmentdetailinfo.co_consignee}}</td>
+                <td> {{consignmentdetailinfo.co_consignerinvoice}}</td>
+                <td> {{consignmentdetailinfo.co_consignervalue}}</td>
+                <td> {{consignmentdetailinfo.co_valueininr}}</td>
+                <td> {{consignmentdetailinfo.co_noofpieces}}</td>
+                <td> {{consignmentdetailinfo.co_weight}}</td>
+                <td> {{consignmentdetailinfo.co_ebillno}}</td>
+                <td> {{consignmentdetailinfo.co_dateofissue}}</td>
+                <td> {{consignmentdetailinfo.co_dateofvalidity}}</td>
+                <td> {{consignmentdetailinfo.co_containerdescription}}</td>
+                <td> {{consignmentdetailinfo.co_dimension}}</td>
+                <td> {{consignmentdetailinfo.co_movement}}</td>
+                <td> {{consignmentdetailinfo.co_status}}</td>
+                <td>
+
+                    <a href="{% url 'consignmentdetail_update' consignmentdetailinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'consignmentdetail_delete' consignmentdetailinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#consignmentdetail_list').DataTable();
+} );
+</script>
+
+{% endblock content %}

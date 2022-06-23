@@ -1,0 +1,64 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'rtratemaster_insert' %}" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i>
+      </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+<table  id="rtratemaster_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+<!--            <th>Product Category</th>-->
+            <th>From Location</th>
+            <th>To Location</th>
+            <th>Vehicle Type</th>
+            <th>Customer</th>
+            <th>Rate</th>
+            <th>Edit</th>
+            <th>Delete</th>
+    </thead>
+    <tbody>
+        {% for rtratemasterinfo in rtratemaster_list %}
+            <tr>
+                <td> {{rtratemasterinfo.ro_fromlocation}}</td>
+                <td> {{rtratemasterinfo.ro_tolocation}}</td>
+                <td> {{rtratemasterinfo.ro_vehicletype}}</td>
+                <td> {{rtratemasterinfo.ro_customer}}</td>
+                <td> {{rtratemasterinfo.ro_rate}}</td>
+                <td>
+
+                    <a href="{% url 'rtratemaster_update' rtratemasterinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'rtratemaster_delete' rtratemasterinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#rtratemaster_list').DataTable();
+} );
+</script>
+
+{% endblock content %}

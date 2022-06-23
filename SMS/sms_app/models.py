@@ -38,3 +38,28 @@ from .sub_models.Bay_info_mod import BayInfo
 from .sub_models.Customertype_info_mod import CustomertypeInfo
 from .sub_models.whstoragetype_mod import WhstoragetypeInfo
 from .sub_models.Whratemaster_mod import WhratemasterInfo
+from .sub_models.customername_mod import CustomernameInfo
+from .sub_models.customerdepartment_mod import CustomerdepartmentInfo
+from .sub_models.vehiclecategory_mod import VehiclecategoryInfo
+from .sub_models.vehicletype_mod import VehicletypeInfo
+from .sub_models.enquirynote_mod import EnquirynoteInfo
+from .sub_models.movementtype_mod import MovementtypeInfo
+from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
+from .sub_models.trbusinesstype_mod import TrbusinesstypeInfo
+from .sub_models.vehiclesource_mod import VehiclesourceInfo
+from .sub_models.vehiclenumber_mod import VehiclenumberInfo
+from .sub_models.vehicledetail_mod import VehicledetailInfo
+from .sub_models.tripdetail_mod import TripdetailInfo
+from .sub_models.tripclosure_mod import TripclosureInfo
+from .sub_models.vhmanufacturer_mod import VhmanufacturerInfo
+from .sub_models.vehiclemodel_mod import VehiclemodelInfo
+from .sub_models.ownership_mod import OwnershipInfo
+from .sub_models.body_mod import BodyInfo
+from .sub_models.axletype_mod import AxletypeInfo
+from .sub_models.fueltype_mod import FueltypeInfo
+from .sub_models.vehiclecolour_mod import VehiclecolourInfo
+from .sub_models.permittype_mod import PermittypeInfo
+from .sub_models.vehiclemaster_mod import VehiclemasterInfo
+from .sub_models.rtratemaster_mod import RtratemasterInfo
+
+
