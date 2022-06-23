@@ -1,0 +1,215 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<!-- MultiStep Form -->
+<div class="row">
+  <div class="col-1"></div>
+  <div class="col-10">
+    <div class="container-fluid">
+      <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+        <div class="card-header text-center"><h3>Add/Update Bay</h3></div>
+        <div class="card-body bg-light" >
+          <div class="row">
+            <div class="col">
+              <div class="container-fluid ">
+<!--                <form id="form">-->
+                  <div class="container">
+                    <div class="row">
+                      <div class="col-xs-12 ">
+                        <nav>
+                          <div class="nav nav-tabs nav-fill" id="nav-tab" role="tablist">
+                            <a class="nav-item nav-link active" id="nav-gate_in-tab" data-toggle="tab" href="#nav-gate_in" role="tab" aria-controls="nav-home" aria-selected="true">Gate In</a>
+                            <a class="nav-item nav-link" id="nav-loading_bay-tab" data-toggle="tab" href="#nav-loading_bay" role="tab" aria-controls="nav-profile" aria-selected="false">Loading Bay</a>
+                            <a class="nav-item nav-link" id="nav-damage_check-tab" data-toggle="tab" href="#nav-damage_check" role="tab" aria-controls="nav-contact" aria-selected="false">Damage Check</a>
+                            <a class="nav-item nav-link" id="nav-wh_in-tab" data-toggle="tab" href="#nav-wh_in" role="tab" aria-controls="nav-about" aria-selected="false">WareHouse In</a>
+                            <a class="nav-item nav-link" id="nav-storage-tab" data-toggle="tab" href="#nav-storage" role="tab" aria-controls="nav-about" aria-selected="false">Storage</a>
+                            <a class="nav-item nav-link" id="nav-dispatch-tab" data-toggle="tab" href="#nav-dispatch" role="tab" aria-controls="nav-about" aria-selected="false">Dispatch</a>
+                            <a class="nav-item nav-link" id="nav-billing-tab" data-toggle="tab" href="#nav-billing" role="tab" aria-controls="nav-about" aria-selected="false">Billing</a>
+                            <a class="nav-item nav-link" id="nav-expense-tab" data-toggle="tab" href="#nav-expense" role="tab" aria-controls="nav-about" aria-selected="false">Expenses</a>
+                            <a class="nav-item nav-link" id="nav-reports-tab" data-toggle="tab" href="#nav-reports" role="tab" aria-controls="nav-about" aria-selected="false">Reports</a>
+                          </div>
+                        </nav>
+                        <div class="tab-content py-3 px-3 px-sm-0" id="nav-tabContent">
+                          <div class="tab-pane fade show active" id="nav-gate_in" role="tabpanel" aria-labelledby="nav-gate_in-tab">
+                            <form method="POST" action="">
+	{% csrf_token %}
+
+	<!--{{form.as_p}}-->
+
+<div class="row">
+	<div class="col-1"></div>
+		<div class="col-10">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Gatein</h3></div>
+						<div class="card-body bg-light" >
+							<div class="row">
+							<div class="col-6">
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Job Number</span>
+  								</div>
+								{% render_field gatein_form.gatein_job_no class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Invoice</span>
+  								</div>
+								{% render_field gatein_form.gatein_invoice class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Customer</span>
+  								</div>
+								{% render_field gatein_form.gatein_customer class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Arrival Date</span>
+  								</div>
+								{% render_field gatein_form.gatein_arrival_date class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Department</span>
+  								</div>
+								{% render_field gatein_form.gatein_department class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Shipper</span>
+  								</div>
+								{% render_field gatein_form.gatein_shipper class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">No Of Packages</span>
+  								</div>
+								{% render_field gatein_form.gatein_no_of_pkg class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Weight</span>
+  								</div>
+								{% render_field gatein_form.gatein_weight class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							</div>
+							<div class="col-6">
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Driver Name</span>
+  								</div>
+								{% render_field gatein_form.gatein_driver class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Driver Contact</span>
+  								</div>
+								{% render_field gatein_form.gatein_contact_number class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Driver License</span>
+  								</div>
+								{% render_field gatein_form.gatein_DL_number class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">OTL</span>
+  								</div>
+								{% render_field gatein_form.gatein_otl class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Transporter</span>
+  								</div>
+								{% render_field gatein_form.gatein_transporter class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Truck Number</span>
+  								</div>
+								{% render_field gatein_form.gatein_truck_number class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Truck Type</span>
+  								</div>
+								{% render_field gatein_form.gatein_truck_type class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							</div>
+							<div class="message">
+								{{form.errors}}
+							</div>
+							<!--<input class="btn btn-success" type="submit" name="Create User">-->
+						</div>
+							<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+							 <a href="{% url 'designation_list' %}" class="btn btn-danger float-right">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+				</div>
+			</div>
+		</div>
+		</div>
+	<div class="col-1"></div>
+</div>
+</form>
+                          </div>
+                          <div class="tab-pane fade" id="nav-loading_bay" role="tabpanel" aria-labelledby="nav-loading_bay-tab">
+                            Et et consectetur ipsum labore excepteur est proident excepteur ad velit occaecat qui minim occaecat veniam. Fugiat veniam incididunt anim aliqua enim pariatur veniam sunt est aute sit dolor anim. Velit non irure adipisicing aliqua ullamco irure incididunt irure non esse consectetur nostrud minim non minim occaecat. Amet duis do nisi duis veniam non est eiusmod tempor incididunt tempor dolor ipsum in qui sit. Exercitation mollit sit culpa nisi culpa non adipisicing reprehenderit do dolore. Duis reprehenderit occaecat anim ullamco ad duis occaecat ex.
+                          </div>
+                          <div class="tab-pane fade" id="nav-damage_check" role="tabpanel" aria-labelledby="nav-damage_check-tab">
+                            Et et consectetur ipsum labore excepteur est proident excepteur ad velit occaecat qui minim occaecat veniam. Fugiat veniam incididunt anim aliqua enim pariatur veniam sunt est aute sit dolor anim. Velit non irure adipisicing aliqua ullamco irure incididunt irure non esse consectetur nostrud minim non minim occaecat. Amet duis do nisi duis veniam non est eiusmod tempor incididunt tempor dolor ipsum in qui sit. Exercitation mollit sit culpa nisi culpa non adipisicing reprehenderit do dolore. Duis reprehenderit occaecat anim ullamco ad duis occaecat ex.
+                          </div>
+                          <div class="tab-pane fade" id="nav-wh_in" role="tabpanel" aria-labelledby="nav-wh_in-tab">
+                            Et et consectetur ipsum labore excepteur est proident excepteur ad velit occaecat qui minim occaecat veniam. Fugiat veniam incididunt anim aliqua enim pariatur veniam sunt est aute sit dolor anim. Velit non irure adipisicing aliqua ullamco irure incididunt irure non esse consectetur nostrud minim non minim occaecat. Amet duis do nisi duis veniam non est eiusmod tempor incididunt tempor dolor ipsum in qui sit. Exercitation mollit sit culpa nisi culpa non adipisicing reprehenderit do dolore. Duis reprehenderit occaecat anim ullamco ad duis occaecat ex.
+                          </div>
+                          <div class="tab-pane fade" id="nav-storage" role="tabpanel" aria-labelledby="nav-storage-tab">
+                            Et et consectetur ipsum labore excepteur est proident excepteur ad velit occaecat qui minim occaecat veniam. Fugiat veniam incididunt anim aliqua enim pariatur veniam sunt est aute sit dolor anim. Velit non irure adipisicing aliqua ullamco irure incididunt irure non esse consectetur nostrud minim non minim occaecat. Amet duis do nisi duis veniam non est eiusmod tempor incididunt tempor dolor ipsum in qui sit. Exercitation mollit sit culpa nisi culpa non adipisicing reprehenderit do dolore. Duis reprehenderit occaecat anim ullamco ad duis occaecat ex.
+                          </div>
+                          <div class="tab-pane fade" id="nav-dispatch" role="tabpanel" aria-labelledby="nav-dispatch-tab">
+                            Et et consectetur ipsum labore excepteur est proident excepteur ad velit occaecat qui minim occaecat veniam. Fugiat veniam incididunt anim aliqua enim pariatur veniam sunt est aute sit dolor anim. Velit non irure adipisicing aliqua ullamco irure incididunt irure non esse consectetur nostrud minim non minim occaecat. Amet duis do nisi duis veniam non est eiusmod tempor incididunt tempor dolor ipsum in qui sit. Exercitation mollit sit culpa nisi culpa non adipisicing reprehenderit do dolore. Duis reprehenderit occaecat anim ullamco ad duis occaecat ex.
+                          </div>
+                          <div class="tab-pane fade" id="nav-billing" role="tabpanel" aria-labelledby="nav-billing-tab">
+                            Et et consectetur ipsum labore excepteur est proident excepteur ad velit occaecat qui minim occaecat veniam. Fugiat veniam incididunt anim aliqua enim pariatur veniam sunt est aute sit dolor anim. Velit non irure adipisicing aliqua ullamco irure incididunt irure non esse consectetur nostrud minim non minim occaecat. Amet duis do nisi duis veniam non est eiusmod tempor incididunt tempor dolor ipsum in qui sit. Exercitation mollit sit culpa nisi culpa non adipisicing reprehenderit do dolore. Duis reprehenderit occaecat anim ullamco ad duis occaecat ex.
+                          </div>
+                          <div class="tab-pane fade" id="nav-expense" role="tabpanel" aria-labelledby="nav-expense-tab">
+                            Et et consectetur ipsum labore excepteur est proident excepteur ad velit occaecat qui minim occaecat veniam. Fugiat veniam incididunt anim aliqua enim pariatur veniam sunt est aute sit dolor anim. Velit non irure adipisicing aliqua ullamco irure incididunt irure non esse consectetur nostrud minim non minim occaecat. Amet duis do nisi duis veniam non est eiusmod tempor incididunt tempor dolor ipsum in qui sit. Exercitation mollit sit culpa nisi culpa non adipisicing reprehenderit do dolore. Duis reprehenderit occaecat anim ullamco ad duis occaecat ex.
+                          </div>
+                          <div class="tab-pane fade" id="nav-reports" role="tabpanel" aria-labelledby="nav-reports-tab">
+                            Et et consectetur ipsum labore excepteur est proident excepteur ad velit occaecat qui minim occaecat veniam. Fugiat veniam incididunt anim aliqua enim pariatur veniam sunt est aute sit dolor anim. Velit non irure adipisicing aliqua ullamco irure incididunt irure non esse consectetur nostrud minim non minim occaecat. Amet duis do nisi duis veniam non est eiusmod tempor incididunt tempor dolor ipsum in qui sit. Exercitation mollit sit culpa nisi culpa non adipisicing reprehenderit do dolore. Duis reprehenderit occaecat anim ullamco ad duis occaecat ex.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+<!--                </form>-->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="col-1"></div>
+</div>
+<!-- Steps form -->
+{% endblock content %}

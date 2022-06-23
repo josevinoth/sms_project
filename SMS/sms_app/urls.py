@@ -134,6 +134,8 @@ urlpatterns = [
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name="password/password_reset_done.html"), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name="password/password_reset_confirm.html"), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password/password_reset_complete.html'), name='password_reset_complete'),
+    path('wh_job_add', views.wh_job_add, name='wh_job_add'),  # WH job main
+    path('gatein_insert', views.gatein_add, name='gatein_insert'),  # Add gatein
     path('enquirynote_list/', views.enquirynote_list, name='enquirynote_list'),  # List enquirynote,
     path('enquirynote_insert', views.enquirynote_add, name='enquirynote_insert'),  # Add enquirynote
     path('enquirynote_update/<int:role_id>/', views.enquirynote_add, name='enquirynote_update'),  # Update enquirynote

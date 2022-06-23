@@ -39,6 +39,7 @@ from .sub_views.designation_add_view import designation_add,designation_list,des
 from .sub_views.whstoragetype_add_view import whstoragetype_add,whstoragetype_list,whstoragetype_delete
 from .sub_views.role_add_view import role_add,role_list,role_delete
 from .sub_views.password_reset_request_view import password_reset_request
+from .sub_views.wh_job_add_view import gatein_add,wh_job_add
 from .sub_views.enquirynote_add_view import enquirynote_add,enquirynote_list,enquirynote_delete
 from .sub_views.consignmentdetail_add_view import consignmentdetail_add,consignmentdetail_list,consignmentdetail_delete
 from .sub_views.vehicledetail_add_view import vehicledetail_add,vehicledetail_list,vehicledetail_delete
