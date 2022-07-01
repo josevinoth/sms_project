@@ -54,3 +54,8 @@ from .sub_forms.vehiclecolourform_Form import VehiclecolouraddForm
 from .sub_forms.permittypeform_Form import PermittypeaddForm
 from .sub_forms.vehiclemasterform_Form import VehiclemasteraddForm
 from .sub_forms.rtratemasterform_Form import RtratemasteraddForm
+from .sub_forms.gstexcemptionform_Form import GstexcemptionForm
+from .sub_forms.gstmodelform_Form import GstmodelForm
+from .sub_forms.paymenttypeform_Form import PaymenttypeForm
+from .sub_forms.crcountfromform_Form import CrcountfromForm
+from .sub_forms.customerform_Form import CustomeraddForm

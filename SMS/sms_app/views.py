@@ -63,4 +63,8 @@ from .sub_views.vehiclecolour_add_view import vehiclecolour_add,vehiclecolour_li
 from .sub_views.permittype_add_view import permittype_add,permittype_list,permittype_delete
 from .sub_views.vehiclemaster_add_view import vehiclemaster_add,vehiclemaster_list,vehiclemaster_delete
 from .sub_views.rtratemaster_add_view import rtratemaster_add,rtratemaster_list,rtratemaster_delete
-
+from .sub_views.gstexcepmtion_add_view import gstexcepmtion_add,gstexcepmtion_list,gstexcepmtion_delete
+from .sub_views.gstmodel_add_view import gstmodel_add,gstmodel_list,gstmodel_delete
+from .sub_views.paymenttype_add_view import paymenttype_add,paymenttype_list,paymenttype_delete
+from .sub_views.crcountfrom_add_view import crcountfrom_add,crcountfrom_list,crcountfrom_delete
+from .sub_views.customer_add_view import customer_add,customer_list,customer_delete

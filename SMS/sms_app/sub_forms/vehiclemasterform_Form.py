@@ -7,12 +7,21 @@ class VehiclemasteraddForm(forms.ModelForm):
         model = VehiclemasterInfo
         fields = '__all__'
 
-    # def __init__(self, *args, **kwargs):
-    #     super(AssetinfoaddForm,self).__init__(*args, **kwargs)
-    #     self.fields['asset_product'].empty_label = "--Select--"
-    #     self.fields['asset_location'].empty_label = "--Select--"
-    #     self.fields['asset_vendor'].empty_label = "--Select--"
-    #     self.fields['asset_insurance_details'].empty_label = "--Select--"
-    #     self.fields['asset_assignedto'].empty_label = "--Select--"
-    #     self.fields['asset_assignedto'].required = False
-    #     self.fields['asset_unit'].empty_label = "--Select--"
+    def __init__(self, *args, **kwargs):
+        super(VehiclemasteraddForm,self).__init__(*args, **kwargs)
+        self.fields['vm_vehiclemanufacturer'].empty_label = "--Select--"
+        self.fields['vm_vehiclemodel'].empty_label = "--Select--"
+        self.fields['vm_ownership'].empty_label = "--Select--"
+        self.fields['vm_body'].empty_label = "--Select--"
+        self.fields['vm_vehicletype'].empty_label = "--Select--"
+        self.fields['vm_axletype'].empty_label = "--Select--"
+        self.fields['vm_fueltype'].empty_label = "--Select--"
+        self.fields['vm_vehiclecolour'].empty_label = "--Select--"
+        self.fields['vm_insurancetype'].empty_label = "--Select--"
+        self.fields['vm_insurancecopy'].empty_label = "--Select--"
+        self.fields['vm_fccopy'].empty_label = "--Select--"
+        self.fields['vm_roadtaxcopy'].empty_label = "--Select--"
+        self.fields['vm_permittype'].empty_label = "--Select--"
+        self.fields['vm_permitcopy'].empty_label = "--Select--"
+        self.fields['vm_pollutioncertificatecopy'].empty_label = "--Select--"
+

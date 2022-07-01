@@ -43,10 +43,15 @@ from .sub_models.customername_mod import CustomernameInfo
 from .sub_models.customerdepartment_mod import CustomerdepartmentInfo
 from .sub_models.vehiclecategory_mod import VehiclecategoryInfo
 from .sub_models.vehicletype_mod import VehicletypeInfo
+from .sub_models.gstexcemption_mod import GstexcemptionInfo
+from .sub_models.gstmodel_mod import GstmodelInfo
+from .sub_models.paymenttype_mod import PaymenttypeInfo
+from .sub_models.crcountfrom_mod import CrcountfromInfo
+from .sub_models.trbusinesstype_mod import TrbusinesstypeInfo
+from .sub_models.customer_mod import CustomerInfo
 from .sub_models.enquirynote_mod import EnquirynoteInfo
 from .sub_models.movementtype_mod import MovementtypeInfo
 from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
-from .sub_models.trbusinesstype_mod import TrbusinesstypeInfo
 from .sub_models.vehiclesource_mod import VehiclesourceInfo
 from .sub_models.vehiclenumber_mod import VehiclenumberInfo
 from .sub_models.vehicledetail_mod import VehicledetailInfo
@@ -62,5 +67,7 @@ from .sub_models.vehiclecolour_mod import VehiclecolourInfo
 from .sub_models.permittype_mod import PermittypeInfo
 from .sub_models.vehiclemaster_mod import VehiclemasterInfo
 from .sub_models.rtratemaster_mod import RtratemasterInfo
+
+
 
 

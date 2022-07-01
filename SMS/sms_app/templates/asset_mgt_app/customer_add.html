@@ -12,122 +12,157 @@
 		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Enquiry Note</h3></div>
-					<div class="card-body bg-light" >
+					<div class="card-header text-center"><h3>Add/Update Customer</h3></div>
+					<div class="card-body bg-light">
 						<div class="row">
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Enquiry Number</span>
-									</div>
-									{% render_field form.en_enquirynumber class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Name</span>
-									</div>
-									{% render_field form.en_customername class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Other Customer</span>
-									</div>
-									{% render_field form.en_othercustomer class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Code</span>
 									</div>
-									{% render_field form.en_customercode class="form-control" %}
+									{% render_field form.cu_customercode class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Department</span>
+										<span class="input-group-text">Name</span>
 									</div>
-									{% render_field form.en_customerdepartment class="form-control" %}
+									{% render_field form.cu_name class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Contact</span>
+										<span class="input-group-text">State</span>
 									</div>
-									{% render_field form.en_customercontact class="form-control" %}
+									{% render_field form.cu_state class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Email</span>
+										<span class="input-group-text">Name(Short)</span>
 									</div>
-									{% render_field form.en_customeremail class="form-control" %}
+									{% render_field form.cu_nameshort class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Pan</span>
+									</div>
+									{% render_field form.cu_pan class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST</span>
+									</div>
+									{% render_field form.cu_gst class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Person</span>
+									</div>
+									{% render_field form.cu_customerperson class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Designation</span>
+									</div>
+									{% render_field form.cu_designation class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Contact No.</span>
+									</div>
+									{% render_field form.cu_contactno class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Email</span>
+									</div>
+									{% render_field form.cu_email class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Raised On</span>
+										<span class="input-group-text">GST Excepmtion</span>
 									</div>
-									{% render_field form.en_raisedon class="form-control" %}
+									{% render_field form.cu_gstexcepmtion class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Category</span>
+										<span class="input-group-text">GST Model</span>
 									</div>
-									{% render_field form.en_vehiclecategory class="form-control" %}
+									{% render_field form.cu_gstmodel class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Type</span>
+										<span class="input-group-text">GST Percentage %</span>
 									</div>
-									{% render_field form.en_vehicletype class="form-control" %}
+									{% render_field form.cu_gstpercentage class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Assigned To</span>
+										<span class="input-group-text">Payment Type</span>
 									</div>
-									{% render_field form.en_assignedto class="form-control" %}
+									{% render_field form.cu_paymenttype class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
+										<span class="input-group-text">Credit Days</span>
 									</div>
-									{% render_field form.en_status class="form-control" %}
+									{% render_field form.cu_creditdays class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">From Location</span>
+										<span class="input-group-text">Payment Cycle</span>
 									</div>
-									{% render_field form.en_fromlocaion class="form-control" %}
+									{% render_field form.cu_paymentcycle class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">To Location</span>
+										<span class="input-group-text">Credit Count From</span>
 									</div>
-									{% render_field form.en_tolocation class="form-control" %}
+									{% render_field form.cu_creditcountfrom class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Raised By</span>
+										<span class="input-group-text">Department</span>
 									</div>
-									{% render_field form.en_raisedby class="form-control" %}
+									{% render_field form.cu_department class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Tally ID</span>
+									</div>
+									{% render_field form.cu_tallyid class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Model</span>
+									</div>
+									{% render_field form.cu_businessmodel class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">last modified by</span>
 									</div>
-									{% render_field form.en_lastmodifiedby class="form-control" %}
+									{% render_field form.cu_lastmodifiedby class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -137,7 +172,7 @@
 							<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
+						<a href="{% url 'customer_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</div>
@@ -145,6 +180,7 @@
 			</div>
 		</div>
 		<div class="col-2"></div>
+	</div>
 	</div>
 </form>
 

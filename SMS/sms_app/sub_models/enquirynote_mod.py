@@ -1,9 +1,9 @@
 from django.db import models
-from ..models import CustomernameInfo,CustomerdepartmentInfo,MyUser,VehiclecategoryInfo,VehicletypeInfo,StatusList,City
+from ..models import CustomerInfo,CustomerdepartmentInfo,MyUser,VehiclecategoryInfo,VehicletypeInfo,StatusList,City
 
 class EnquirynoteInfo(models.Model):
     en_enquirynumber = models.CharField(max_length=10,default = '')
-    en_customername = models.ForeignKey(CustomernameInfo, on_delete=models.CASCADE, default='')
+    en_customername = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
     en_othercustomer = models.CharField(max_length=10,default = '')
     en_customercode = models.CharField(max_length=10,default = '')
     en_customerdepartment = models.ForeignKey(CustomerdepartmentInfo, on_delete=models.CASCADE, default='')

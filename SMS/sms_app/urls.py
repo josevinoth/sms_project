@@ -228,5 +228,25 @@ urlpatterns = [
     path('rtratemaster_insert', views.rtratemaster_add, name='rtratemaster_insert'),  # Add rtratemaster
     path('rtratemaster_update/<int:rtratemaster_id>/', views.rtratemaster_add, name='rtratemaster_update'),  # Update rtratemaster
     path('rtratemaster_delete/<int:rtratemaster_id>/', views.rtratemaster_delete, name='rtratemaster_delete'),  # Delete rtratemaster
+    path('gstexcepmtion_list/', views.gstexcepmtion_list, name='gstexcepmtion_list'),  # List gstexcepmtion,
+    path('gstexcepmtion_insert', views.gstexcepmtion_add, name='gstexcepmtion_insert'),  # Add gstexcepmtion
+    path('gstexcepmtion_update/<int:gstexcepmtion_id>/', views.gstexcepmtion_add, name='gstexcepmtion_update'),  # Update gstexcepmtion
+    path('gstexcepmtion_delete/<int:gstexcepmtion_id>/', views.gstexcepmtion_delete, name='gstexcepmtion_delete'),  # Delete gstexcepmtion
+    path('gstmodel_list/', views.gstmodel_list, name='gstmodel_list'),  # List gstmodel,
+    path('gstmodel_insert', views.gstmodel_add, name='gstmodel_insert'),  # Add gstmodel
+    path('gstmodel_update/<int:gstmodel_id>/', views.gstmodel_add, name='gstmodel_update'),  # Update gstmodel
+    path('gstmodel_delete/<int:gstmodel_id>/', views.gstmodel_delete, name='gstmodel_delete'),  # Delete gstmodel
+    path('paymenttype_list/', views.paymenttype_list, name='paymenttype_list'),  # List paymenttype,
+    path('paymenttype_insert', views.paymenttype_add, name='paymenttype_insert'),  # Add paymenttype
+    path('paymenttype_update/<int:paymenttype_id>/', views.paymenttype_add, name='paymenttype_update'),  # Update paymenttype
+    path('paymenttype_delete/<int:paymenttype_id>/', views.paymenttype_delete, name='paymenttype_delete'),  # Delete paymenttype
+    path('crcountfrom_list/', views.crcountfrom_list, name='crcountfrom_list'),  # List crcountfrom,
+    path('crcountfrom_insert', views.crcountfrom_add, name='crcountfrom_insert'),  # Add crcountfrom
+    path('crcountfrom_update/<int:crcountfrom_id>/', views.crcountfrom_add, name='crcountfrom_update'),  # Update crcountfrom
+    path('crcountfrom_delete/<int:crcountfrom_id>/', views.crcountfrom_delete, name='crcountfrom_delete'),  # Delete crcountfrom
+    path('customer_list/', views.customer_list, name='customer_list'),  # List customer,
+    path('customer_insert', views.customer_add, name='customer_insert'),  # Add customer
+    path('customer_update/<int:customer_id>/', views.customer_add, name='customer_update'),  # Update customer
+    path('customer_delete/<int:customer_id>/', views.customer_delete, name='customer_delete'),  # Delete customer
 
 ]

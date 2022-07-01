@@ -11,5 +11,5 @@ class RtratemasterInfo(models.Model):
 
 
 
-    # def __str__(self):
-    #     return self.asset_number
+    def __str__(self):
+        return self.ro_rate
