@@ -4,7 +4,7 @@ from ..models import BodyInfo
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
-def body_add(request,role_id=0):
+def body_add(request,body_id=0):
     first_name = request.session.get('first_name')
     if request.method == "GET":
         if body_id == 0:

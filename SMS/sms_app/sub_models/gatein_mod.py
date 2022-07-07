@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import MyUser
+from ..models import MyUser,StatusList
 
 class Gatein_info(models.Model):
     gatein_job_no = models.CharField(blank=False, null=False, max_length=20)
@@ -17,4 +17,5 @@ class Gatein_info(models.Model):
     gatein_transporter = models.CharField(blank=True, null=True, max_length=100)
     gatein_truck_number = models.CharField(blank=True, null=True, max_length=20)
     gatein_truck_type = models.CharField(blank=True, null=True, max_length=20)
+    gatein_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,null=True)
 

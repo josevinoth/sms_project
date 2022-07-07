@@ -39,7 +39,9 @@ from .sub_views.designation_add_view import designation_add,designation_list,des
 from .sub_views.whstoragetype_add_view import whstoragetype_add,whstoragetype_list,whstoragetype_delete
 from .sub_views.role_add_view import role_add,role_list,role_delete
 from .sub_views.password_reset_request_view import password_reset_request
-from .sub_views.wh_job_add_view import gatein_add,wh_job_add
+from .sub_views.wh_job_add_view import wh_job_add,wh_job_list,wh_job_delete
+from .sub_views.gatein_add_view import gatein_add,gatein_list,gatein_delete
+from .sub_views.loadingbay_add_view import loadingbay_add
 from .sub_views.enquirynote_add_view import enquirynote_add,enquirynote_list,enquirynote_delete
 from .sub_views.consignmentdetail_add_view import consignmentdetail_add,consignmentdetail_list,consignmentdetail_delete
 from .sub_views.vehicledetail_add_view import vehicledetail_add,vehicledetail_list,vehicledetail_delete
@@ -68,3 +70,5 @@ from .sub_views.gstmodel_add_view import gstmodel_add,gstmodel_list,gstmodel_del
 from .sub_views.paymenttype_add_view import paymenttype_add,paymenttype_list,paymenttype_delete
 from .sub_views.crcountfrom_add_view import crcountfrom_add,crcountfrom_list,crcountfrom_delete
 from .sub_views.customer_add_view import customer_add,customer_list,customer_delete
+from .sub_views.materialhandling_add_view import materialhandling_list,materialhandling_delete,materialhandling_add
+from .sub_views.packagetype_add_view import packagetype_list,packagetype_delete,packagetype_add

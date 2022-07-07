@@ -24,7 +24,13 @@
 		{% else %}
 			<a class="btn btn-primary border border-dark" href="{% url 'loadingbay_insert' %}">Loading Bay</a>
 		{% endif %}
-		<a class="btn btn-primary border border-dark">Damage Check/Before</a>
+		{% if damagereport_list %}
+			{% for damagecheckinfo in damagereport_list %}
+			<a class="btn btn-primary border border-dark" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check/Before</a>
+			{% endfor %}
+		{% else %}
+			<a class="btn btn-primary border border-dark" href="{% url 'damagereport_insert' %}">Damage Check/Before</a>
+		{% endif %}
 <!--		{% if goods_list %}-->
 <!--			{% for goodsinfo in goods_list %}-->
 <!--			<a class="btn btn-primary border border-dark" href="{% url 'goods_update' goodsinfo.id %}">Damage Check/After</a>-->
@@ -55,7 +61,7 @@
 		<div class="col-6">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Damage Report</h3></div>
+					<div class="card-header text-center"><h3>Add/Update Loading Bay</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col">
@@ -63,75 +69,79 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">WH Job Number</span>
 									</div>
-									{% render_field damagereport_form.dam_wh_job_num value=request.session.ses_gatein_id_nam class="form-control" readonly=True %}
+									{% render_field loadingbay_form.lb_job_no value=request.session.ses_gatein_id_nam class="form-control" readonly=True %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+<!--								<div class="input-group input-group-sm mb-3">-->
+<!--									<div class="input-group-prepend">-->
+<!--										<span class="input-group-text">Invoice</span>-->
+<!--									</div>-->
+<!--									{% render_field loadingbay_form.lb_invoice class="form-control" %}-->
+<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
+<!--								</div>-->
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Packing List</span>
+									</div>
+									{% render_field loadingbay_form.lb_packing_list class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Damage Type</span>
+										<span class="input-group-text">Delivery Note</span>
 									</div>
-									{% render_field damagereport_form.dam_damage_type class="form-control" %}
+									{% render_field loadingbay_form.lb_customer_delivery_chelan class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">GRN Number</span>
+										<span class="input-group-text">Inward POD</span>
 									</div>
-									{% render_field damagereport_form.dam_GRN_num id="grn_num" class="form-control" readonly="True"%}
+									{% render_field loadingbay_form.lb_inward_pod class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Truck Depature Time</span>
+										<span class="input-group-text">E-way Bill#</span>
 									</div>
-									{% render_field damagereport_form.dam_truck_dep_time type="datetime-local" class="form-control" %}
+									{% render_field loadingbay_form.lb_eway_bill class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">OTL Pic</span>
+										<span class="input-group-text">E-way Bill Validity</span>
 									</div>
-									{% render_field damagereport_form.dam_OTL_pic class="form-control" %}
+									{% render_field loadingbay_form.lb_validity_date type="date" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Closed Door Pic</span>
+										<span class="input-group-text">Material Handling</span>
 									</div>
-									{% render_field damagereport_form.dam_closed_door_pic class="form-control" %}
+									{% render_field loadingbay_form.lb_material_handling class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Opened Door Pic</span>
+										<span class="input-group-text">OTL Check</span>
 									</div>
-									{% render_field damagereport_form.dam_open_door_pic class="form-control" %}
+									{% render_field loadingbay_form.lb_otl_check class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">50% offload Pics</span>
+										<span class="input-group-text">Offload Acceptance</span>
 									</div>
-									{% render_field damagereport_form.dam_50_offload_pic class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Empty Pics</span>
-									</div>
-									{% render_field damagereport_form.dam_empty_vehicle class="form-control" %}
+									{% render_field loadingbay_form.lb_offload_acceptance class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
 							<div class="message">
-								{{damagereport_form.errors}}
+								{{loadingbay_form.errors}}
 							</div>
 							<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						</div>
-						<button type="submit" class="btn btn-success " onclick="grnnum()"><i class="fas fa-check"></i> Save</button>
-<!--						<a href="{% url 'damagereport_list' %}" class="btn btn-danger float-right">-->
-<!--							<i class="fas fa-times"></i> Cancel-->
-<!--						</a>-->
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
 					</div>
 				</div>
 			</div>
@@ -139,18 +149,5 @@
 		<div class="col-3"></div>
 	</div>
 </form>
-<script>
-function grnnum() {
-  var ran=Math.floor((Math.random() * 1000000) + 1)
-  var jn=document.getElementById("grn_num").value
-  if (jn=="")
-	{
-		 document.getElementById("grn_num").value ="GRN"+"_"+ ran;
-	}
-	else
-	{
-  		document.getElementById("grn_num").value=jn;
-  	}
-}
-</script>
+
 {% endblock content %}

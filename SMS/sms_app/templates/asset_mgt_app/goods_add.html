@@ -1,94 +1,155 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<div class="col-md-1">
+	<a href="{% url 'gatein_list' %}" class="btn btn-primary btn-block btn-lg">
+		<i class="fas fa-arrow-left"></i>
+	</a>
+</div>
+<div class="row">
+	<div class="col-2"></div>
+	<div class="col-8 btn-group mx-auto text-center">
+		{% if gatein_list %}
+		{% for gateininfo in gatein_list %}
+		<a class="btn btn-primary border border-dark" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn btn-primary border border-dark" href="{% url 'gatein_insert' %}">Gate-In</a>
+		{% endif %}
 
+		{% if loadingbay_list %}
+		{% for loadingbayinfo in loadingbay_list %}
+		<a class="btn btn-primary border border-dark" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Loading Bay</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn btn-primary border border-dark" href="{% url 'loadingbay_insert' %}">Loading Bay</a>
+		{% endif %}
+		{% if damagereport_list %}
+		{% for damagecheckinfo in damagereport_list %}
+		<a class="btn btn-primary border border-dark" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check/Before</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn btn-primary border border-dark" href="{% url 'damagereport_insert' %}">Damage Check/Before</a>
+		{% endif %}
+		<!--		{% if goods_list %}-->
+		<!--			{% for goodsinfo in goods_list %}-->
+		<!--			<a class="btn btn-primary border border-dark" href="{% url 'goods_update' goodsinfo.id %}">Damage Check/After</a>-->
+		<!--			{% endfor %}-->
+		<!--		{% else %}-->
+		<!--			<a class="btn btn-primary border border-dark" href="{% url 'goods_insert' %}">Damage Check/After</a>-->
+		<!--		{% endif %}-->
+		<a class="btn btn-primary border border-dark" href="{% url 'goods_insert' %}">Damage Check/After</a>
+		<a class="btn btn-primary border border-dark">Warehouse In</a>
+		<a class="btn btn-primary border border-dark">Storage</a>
+		<a class="btn btn-primary border border-dark">Dispatch</a>
+		<a class="btn btn-primary border border-dark">Billing</a>
+		<a class="btn btn-primary border border-dark">Expenses</a>
+		<a class="btn btn-primary border border-dark">Reports</a>
+	</div>
+	<div class="col-2"></div>
+</div>
+
+<hr>
 <form method="POST" action="">
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
 
-<div class="row">
-	<div class="col-3"></div>
+	<div class="row">
+		<div class="col-3"></div>
 		<div class="col-6">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Items</h3></div>
-<!--					<p>Invoice Number is  {{ request.session.invoice_num_stock }}</p>-->
-						<div class="card-body bg-light" >
-							<div class="row">
+					<!--					<p>Invoice Number is  {{ request.session.invoice_num_stock }}</p>-->
+					<div class="card-body bg-light" >
+						<div class="row">
 							<div class="col">
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" id="">Invoice</span>
-  								</div>
-								{% render_field form.wh_goods_invoice value=request.session.invoice_num_stock readonly="true" class="form-control" %}
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="">WH Job Number</span>
+									</div>
+									{% render_field goods_form.wh_job_no value=request.session.ses_gatein_id_nam readonly="true" class="form-control" %}
+								</div>
 
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Number of Pieces</span>
-  								</div>
-								{% render_field form.wh_goods_pieces class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Number of Pieces</span>
+									</div>
+									{% render_field goods_form.wh_goods_pieces class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Length (mm)</span>
-  								</div>
-								{% render_field form.wh_goods_length class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Width (mm)</span>
-  								</div>
-								{% render_field form.wh_goods_width class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length (mm)</span>
+									</div>
+									{% render_field goods_form.wh_goods_length class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Width (mm)</span>
+									</div>
+									{% render_field goods_form.wh_goods_width class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Height (mm)</span>
 									</div>
-									{% render_field form.wh_goods_height class="form-control" %}
+									{% render_field goods_form.wh_goods_height class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Wigth (Kg)</span>
-  								</div>
-								{% render_field form.wh_goods_weight class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Wigth (Kg)</span>
+									</div>
+									{% render_field goods_form.wh_goods_weight class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Package Type</span>
-  								</div>
-								{% render_field form.wh_goods_package_type type="select" class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Package Type</span>
+									</div>
+									{% render_field goods_form.wh_goods_package_type type="select" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Volume Weight (Kg)</span>
-  								</div>
-								{% render_field form.wh_goods_volume_weight class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Volume Weight (Kg)</span>
+									</div>
+									{% render_field goods_form.wh_goods_volume_weight class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 							</div>
-							</div>
-							</div>
-							<div class="message">
-								{{form.errors}}
-							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
-							<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-							 <a href="{% url 'stock_list' %}" class="btn btn-danger float-right">
-                    <i class="fas fa-times"></i> Cancel
-                </a>
 						</div>
+						<div class="message">
+							{{goods_form.errors}}
+						</div>
+						<!--<input class="btn btn-success" type="submit" name="Create User">-->
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
+<!--						<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">-->
+<!--							<i class="fas fa-times"></i> Cancel</a>-->
+					</div>
 				</div>
 			</div>
 		</div>
-	<div class="col-3"></div>
-</div>
+		<div class="col-3"></div>
+	</div>
 </form>
-
+{% include "asset_mgt_app/goods_list_woh.html" %}
+<script>
+function myjobnum() {
+  var ran=Math.floor((Math.random() * 1000000) + 1)
+  var jn=document.getElementById("job_num").value
+  if (jn=="")
+	{
+		 document.getElementById("job_num").value ="WH_Job"+"_"+ ran;
+	}
+	else
+	{
+  		document.getElementById("job_num").value=jn;
+  	}
+}
+</script>
 {% endblock content %}

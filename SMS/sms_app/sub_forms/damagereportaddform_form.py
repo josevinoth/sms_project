@@ -6,6 +6,6 @@ class DamagereportaddForm(forms.ModelForm):
         model = DamagereportInfo
         fields = '__all__'
 
-    # def __init__(self, *args, **kwargs):
-    #     super(ProducttypeaddForm,self).__init__(*args, **kwargs)
-    #     self.fields['prod_type_title'].empty_label = "--Select--"
+    def __init__(self, *args, **kwargs):
+        super(DamagereportaddForm,self).__init__(*args, **kwargs)
+        self.fields['dam_damage_type'].empty_label = "--Select--"

@@ -31,6 +31,7 @@ from .sub_forms.roleaddform_Form import RoleaddForm
 from .sub_forms.whstoragetypeform_Form import WhstoragetypeaddForm
 from .sub_forms.roleaddform_Form import RoleaddForm
 from .sub_forms.GateinForm_form import GateinaddForm
+from .sub_forms.LoadingbayForm_form import LoadingbayddForm
 from .sub_forms.enquirynoteForm_form import EnquirynoteaddForm
 from .sub_forms.consignmentdetailform_Form import ConsignmentdetailaddForm
 from .sub_forms.vehicledetailform_Form import VehicledetailaddForm
@@ -59,3 +60,5 @@ from .sub_forms.gstmodelform_Form import GstmodelForm
 from .sub_forms.paymenttypeform_Form import PaymenttypeForm
 from .sub_forms.crcountfromform_Form import CrcountfromForm
 from .sub_forms.customerform_Form import CustomeraddForm
+from .sub_forms.materialhandlingaddform_form import MaterialhandlingaddForm
+from .sub_forms.packagetype_form import PackagetypeaddForm

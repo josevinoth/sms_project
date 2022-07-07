@@ -16,7 +16,7 @@
 <table  id="goods_list" class="table table-striped table-bordered">
     <thead class="thead-dark">
         <tr>
-            <th>Invoice</th>
+            <th>WH Job Number</th>
             <th>Number of Pieces</th>
             <th>Package Type</th>
             <th>Length (mm)</th>
@@ -30,7 +30,7 @@
     <tbody>
         {% for goodsinfo in goods_list %}
             <tr>
-                <td> {{goodsinfo.wh_goods_invoice}}</td>
+                <td> {{goodsinfo.wh_job_no}}</td>
                 <td> {{goodsinfo.wh_goods_pieces}}</td>
                 <td> {{goodsinfo.wh_goods_package_type}}</td>
                 <td> {{goodsinfo.wh_goods_length}}</td>

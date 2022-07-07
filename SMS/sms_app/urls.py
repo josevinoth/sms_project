@@ -131,11 +131,19 @@ urlpatterns = [
     path('role_update/<int:role_id>/', views.role_add, name='role_update'),  # Update role
     path('role_delete/<int:role_id>/', views.role_delete, name='role_delete'),  # Delete role
     path('password_reset', views.password_reset_request, name='password_reset'),
-    path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name="password/password_reset_done.html"), name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name="password/password_reset_confirm.html"), name='password_reset_confirm'),
-    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password/password_reset_complete.html'), name='password_reset_complete'),
-    path('wh_job_add', views.wh_job_add, name='wh_job_add'),  # WH job main
-    path('gatein_insert', views.gatein_add, name='gatein_insert'),  # Add gatein
+    path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name="password/password_reset_done.html"), name='password_reset_done'),  # Password Reset
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name="password/password_reset_confirm.html"), name='password_reset_confirm'),# Password Reset
+    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password/password_reset_complete.html'), name='password_reset_complete'),# Password Reset
+    path('gatein_insert', views.gatein_add, name='gatein_insert'),  # gatein add
+    path('gatein_list/', views.gatein_list, name='gatein_list'),  # List gatein,
+    path('gatein_update/<int:gatein_id>/', views.gatein_add, name='gatein_update'), # Update gatein
+    path('gatein_delete/<int:gatein_id>/', views.gatein_delete, name='gatein_delete'), # Delete gatein
+    path('loadingbay_update/<int:loadingbay_id>/', views.loadingbay_add, name='loadingbay_update'),  # loadingbay update
+    path('loadingbay_insert', views.loadingbay_add, name='loadingbay_insert'),  # loadingbay insert
+    path('wh_job_insert', views.wh_job_add, name='wh_job_insert'),  # wh Job insert
+    path('wh_job_update/<int:gatein_id>/', views.wh_job_add, name='wh_job_update'),  # wh_job update
+    path('wh_job_list', views.wh_job_list, name='wh_job_list'),  # wh Job list
+    path('wh_job_delete/<int:gatein_id>/', views.wh_job_delete, name='wh_job_delete'),  # wh Job list
     path('enquirynote_list/', views.enquirynote_list, name='enquirynote_list'),  # List enquirynote,
     path('enquirynote_insert', views.enquirynote_add, name='enquirynote_insert'),  # Add enquirynote
     path('enquirynote_update/<int:role_id>/', views.enquirynote_add, name='enquirynote_update'),  # Update enquirynote
@@ -248,5 +256,15 @@ urlpatterns = [
     path('customer_insert', views.customer_add, name='customer_insert'),  # Add customer
     path('customer_update/<int:customer_id>/', views.customer_add, name='customer_update'),  # Update customer
     path('customer_delete/<int:customer_id>/', views.customer_delete, name='customer_delete'),  # Delete customer
+    path('damagereport_update/<int:damagereport_id>/', views.damagereport_add, name='damagereport_update'),  # damagereport update
+    path('damagereport_insert', views.damagereport_add, name='damagereport_insert'),  # damagereport insert
+    path('materialhandling_list/', views.materialhandling_list, name='materialhandling_list'),  # List Material Handling,
+    path('materialhandling_insert', views.materialhandling_add, name='materialhandling_insert'),  # Add Material Handling
+    path('materialhandling_update/<int:material_id>/', views.materialhandling_add, name='materialhandling_update'),  # Update Material Handling
+    path('materialhandling_delete/<int:material_id>/', views.materialhandling_delete, name='materialhandling_delete'),  # Delete Material Handling
+    path('packagetype_list/', views.packagetype_list, name='packagetype_list'),  # List packagetype ,
+    path('packagetype_insert', views.packagetype_add, name='packagetype_insert'),  # Add packagetype
+    path('packagetype_update/<int:packagetype_id>/', views.packagetype_add, name='packagetype_update'),  # Update packagetype
+    path('packagetype_delete/<int:packagetype_id>/', views.packagetype_delete, name='packagetype_delete'),  # Delete packagetype
 
 ]

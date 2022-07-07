@@ -293,3 +293,19 @@ nav > div a.nav-item.nav-link:focus
     border-radius:0;
     transition:background 0.20s linear;
 }
+
+/*Disable anchor*/
+.disable_a_href{
+    pointer-events: none;
+    background:#c0c0c0 !important;
+}
+
+/*Enable anchor*/
+.enable_a_href{
+    pointer-events: 1;
+}
+
+/*Btn Active Hover*/
+.btn:focus {
+background: #ff4000 !important;
+}

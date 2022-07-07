@@ -23,7 +23,7 @@ from .sub_models.enquire_info_mod import Enquiry_Info
 from .sub_models.stock_movement_type_mod import Stock_movement_type
 from .sub_models.stock_type_mod import Stock_type
 from .sub_models.currency_type_mod import Currency_type
-from .sub_models.package_type_mod import Package_type
+from .sub_models.package_type_mod import Packagetype_info
 from .sub_models.warehouse_goods_info_mod import Warehouse_goods_info
 from .sub_models.warehouse_stock_info_mod import Warehouse_stock_info
 from .sub_models.assign_asset_info_mod import Assign_asset_info
@@ -39,6 +39,8 @@ from .sub_models.Customertype_info_mod import CustomertypeInfo
 from .sub_models.whstoragetype_mod import WhstoragetypeInfo
 from .sub_models.Whratemaster_mod import WhratemasterInfo
 from .sub_models.gatein_mod import Gatein_info
+from .sub_models.materialhandling_mod import Materialhandling_Info
+from .sub_models.loadingbay_mod import Loadingbay_Info
 from .sub_models.customername_mod import CustomernameInfo
 from .sub_models.customerdepartment_mod import CustomerdepartmentInfo
 from .sub_models.vehiclecategory_mod import VehiclecategoryInfo
@@ -67,6 +69,7 @@ from .sub_models.vehiclecolour_mod import VehiclecolourInfo
 from .sub_models.permittype_mod import PermittypeInfo
 from .sub_models.vehiclemaster_mod import VehiclemasterInfo
 from .sub_models.rtratemaster_mod import RtratemasterInfo
+
 
 
 
