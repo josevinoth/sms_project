@@ -11,41 +11,41 @@
 	<div class="col-8 btn-group mx-auto text-center">
 		{% if gatein_list %}
 		{% for gateininfo in gatein_list %}
-		<a class="btn btn-primary border border-dark" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+		<a class="btn btn-success border focus border-dark " href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn btn-primary border border-dark" href="{% url 'gatein_insert' %}">Gate-In</a>
+		<a class="btn btn-success border focus border-dark " href="{% url 'gatein_insert' %}">Gate-In</a>
 		{% endif %}
 
 		{% if loadingbay_list %}
 		{% for loadingbayinfo in loadingbay_list %}
-		<a class="btn btn-primary border border-dark disable_a_href"  id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Loading Bay</a>
+		<a class="btn btn-success border border-dark disable_a_href"  id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Loading Bay</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn btn-primary border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Loading Bay</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Loading Bay</a>
 		{% endif %}
 		{% if damagereport_list %}
 		{% for damagecheckinfo in damagereport_list %}
-		<a class="btn btn-primary border border-dark disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check/Before</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check/Before</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn btn-primary border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before</a>
 		{% endif %}
 		<!--		{% if goods_list %}-->
 		<!--			{% for goodsinfo in goods_list %}-->
-		<!--			<a class="btn btn-primary border border-dark" href="{% url 'goods_update' goodsinfo.id %}">Damage Check/After</a>-->
+		<!--			<a class="btn btn-success border border-dark" href="{% url 'goods_update' goodsinfo.id %}">Damage Check/After</a>-->
 		<!--			{% endfor %}-->
 
 		<!--		{% else %}-->
-		<!--			<a class="btn btn-primary border border-dark" href="{% url 'goods_insert' %}">Damage Check/After</a>-->
+		<!--			<a class="btn btn-success border border-dark" href="{% url 'goods_insert' %}">Damage Check/After</a>-->
 		<!--		{% endif %}-->
-		<a class="btn btn-primary border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Damage Check/After</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="warehousein_btn">Warehouse In</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="storage_btn">Storage</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="dispatch_btn">Dispatch</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="billing_btn">Billing</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="expense_btn">Expenses</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="reports_btn">Reports</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Damage Check/After</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="warehousein_btn">Warehouse In</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="storage_btn">Storage</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="dispatch_btn">Dispatch</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="billing_btn">Billing</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="expense_btn">Expenses</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="reports_btn">Reports</a>
 	</div>
 	<div class="col-2"></div>
 </div>
@@ -74,7 +74,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice</span>
+										<span class="input-group-text">Invoice Number</span>
 									</div>
 									{% render_field gatein_form.gatein_invoice class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -116,7 +116,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Weight</span>
+										<span class="input-group-text">Invoice Weight</span>
 									</div>
 									{% render_field gatein_form.gatein_weight class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -176,7 +176,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
-									{% render_field gatein_form.gatein_status class="form-control" id="status" onchange="status_check()" %}
+									{% render_field gatein_form.gatein_status class="form-control" id="gatin_status" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -195,10 +195,22 @@
 </form>
 <script>
 $(document).ready(function() {
-	var status_id=$('#status option:selected').val()
-	if (status_id ==5){
+	var gatein_status_id='{{gatein_status}}';
+	var loadingbay_status_id='{{loadingbay_status}}';
+	var damage_before_status_id='{{damage_before_status}}';
+	if (gatein_status_id =="Completed"){
 		$('#loadingbay_btn').removeClass('disable_a_href');
 		$('#loadingbay_btn1').removeClass('disable_a_href');
+		}
+
+	if (loadingbay_status_id =="Completed"){
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+		}
+
+	if (damage_before_status_id =="Completed"){
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+
 		}
   });
 </script>

@@ -50,61 +50,85 @@
 </div>
 
 <hr>
-<form method="POST" action="">
+<form method="POST" action="" onload="chargeable_weight_fn()">
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
 
 	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
+		<div class="col-2"></div>
+		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Items</h3></div>
+					<div class="card-header text-center">
+						<div class="row">
+							<div class="col-3"></div>
+							<div class="col-5">
+								<h3>Add/Update Damage Check/After</h3>
+							</div>
+							<div class="col-2">
+								<a href="#" class="btn btn-warning btn-block ">
+									Delivery Chelan          <i class="fa fa-download" aria-hidden="true"></i>
+								</a>
+							</div>
+							<div class="col-2">
+								<a href="#" class="btn btn-warning btn-block">
+									Damage Report          <i class="fa fa-download" aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</div>
 					<!--					<p>Invoice Number is  {{ request.session.invoice_num_stock }}</p>-->
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" id="">WH Job Number</span>
 									</div>
 									{% render_field goods_form.wh_job_no value=request.session.ses_gatein_id_nam readonly="true" class="form-control" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Unit Of Measure</span>
+									</div>
+									{% render_field goods_form.wh_uom id="uom" class="form-control" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Number of Pieces</span>
 									</div>
-									{% render_field goods_form.wh_goods_pieces class="form-control" %}
+									{% render_field goods_form.wh_goods_pieces id="no_of_piece" class="form-control" onchange="chargeable_weight_fn()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Length (mm)</span>
+										<span class="input-group-text">Length</span>
 									</div>
-									{% render_field goods_form.wh_goods_length class="form-control" %}
+									{% render_field goods_form.wh_goods_length id="length" class="form-control" onchange="chargeable_weight_fn()" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Width (mm)</span>
+										<span class="input-group-text" >Width</span>
 									</div>
-									{% render_field goods_form.wh_goods_width class="form-control" %}
+									{% render_field goods_form.wh_goods_width id="width"  class="form-control" onchange="chargeable_weight_fn()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Height (mm)</span>
+										<span class="input-group-text" >Height</span>
 									</div>
-									{% render_field goods_form.wh_goods_height class="form-control" %}
+									{% render_field goods_form.wh_goods_height id="height" class="form-control" onchange="chargeable_weight_fn()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Wigth (Kg)</span>
+										<span class="input-group-text" >Weight (Pysical)</span>
 									</div>
-									{% render_field goods_form.wh_goods_weight class="form-control" %}
+									{% render_field goods_form.wh_goods_weight id="weight" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -116,9 +140,75 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Volume Weight (Kg)</span>
+										<span class="input-group-text" >Volume Weight</span>
 									</div>
 									{% render_field goods_form.wh_goods_volume_weight class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="col-6">
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Chargeable Weight</span>
+									</div>
+									{% render_field goods_form.wh_chargeable_weight id="chargeable_weight" class="form-control" readonly="true" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >CBM</span>
+									</div>
+									{% render_field goods_form.wh_CBM class="form-control" id="cbm" readonly="true" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Weight Deviation</span>
+									</div>
+									{% render_field goods_form.wh_weights_deviation class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Dimension Deviation</span>
+									</div>
+									{% render_field goods_form.wh_dimension_deviation class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >No of Units Deviation</span>
+									</div>
+									{% render_field goods_form.wh_no_of_units_deviation class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Damages</span>
+									</div>
+									{% render_field goods_form.wh_damages class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Mismatches</span>
+									</div>
+									{% render_field goods_form.wh_mismatches class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Ratification Process</span>
+									</div>
+									{% render_field goods_form.wh_ratification_process class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Status</span>
+									</div>
+									{% render_field goods_form.wh_goods_status class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -128,28 +218,37 @@
 						</div>
 						<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
-<!--						<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">-->
-<!--							<i class="fas fa-times"></i> Cancel</a>-->
+						<!--						<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">-->
+						<!--							<i class="fas fa-times"></i> Cancel</a>-->
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="col-3"></div>
+		<div class="col-2"></div>
 	</div>
 </form>
 {% include "asset_mgt_app/goods_list_woh.html" %}
 <script>
-function myjobnum() {
-  var ran=Math.floor((Math.random() * 1000000) + 1)
-  var jn=document.getElementById("job_num").value
-  if (jn=="")
+function chargeable_weight_fn() {
+  var width_val=document.getElementById("width").value
+  var length_val=document.getElementById("length").value
+  var height_val=document.getElementById("height").value
+  var no_of_piece=document.getElementById("no_of_piece").value
+  selectElement = document.querySelector('#uom');
+  uom_val = selectElement.options[selectElement.selectedIndex].value;
+  if (uom_val=="cm")
 	{
-		 document.getElementById("job_num").value ="WH_Job"+"_"+ ran;
+		var chargeable_weight_val=((length_val*width_val*height_val)/6000).toFixed(3)
+		document.getElementById("chargeable_weight").value =chargeable_weight_val;
+		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
 	}
 	else
 	{
-  		document.getElementById("job_num").value=jn;
+		var chargeable_weight_val=((length_val*width_val*height_val)/366).toFixed(3)
+  		document.getElementById("chargeable_weight").value =chargeable_weight_val;
+  		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
   	}
+
 }
 </script>
 {% endblock content %}

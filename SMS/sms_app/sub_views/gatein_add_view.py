@@ -29,9 +29,15 @@ def gatein_add(request, gatein_id=0):
             wh_job_id = Gatein_info.objects.get(pk=gatein_id).gatein_job_no
             request.session['ses_gatein_id_nam'] = wh_job_id
             wh_job_id_sess=request.session.get('ses_gatein_id_nam')
+            gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status #fetch gatein status
+            loadingbay_status = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
+            damage_before_status = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
             loadingbay_list= Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
             gatein_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id_sess)
             print(wh_job_id)
+            print("Gatein Status",gatein_status)
+            print("Loadingbay Satus",loadingbay_status)
+            print("Damage_before_status", damage_before_status)
             gatein_form = GateinaddForm(instance=gatein_info)
             context = {
                 'gatein_form': gatein_form,
@@ -39,6 +45,9 @@ def gatein_add(request, gatein_id=0):
                 'loadingbay_list': loadingbay_list,
                 'gatein_list':gatein_list ,
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
+                'gatein_status':gatein_status,
+                'loadingbay_status':loadingbay_status,
+                'damage_before_status':damage_before_status,
             }
         return render(request, "asset_mgt_app/gatein_add.html", context)
     else:

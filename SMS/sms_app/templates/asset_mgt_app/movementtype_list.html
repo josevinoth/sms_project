@@ -27,7 +27,7 @@
     <tbody>
         {% for movementtypeinfo in movementtype_list %}
             <tr>
-                <td> {{movementtypeinfo.movementtype_name}}</td>
+                <td> {{movementtypeinfo.mt_movementtype}}</td>
                 <td>
 
                     <a href="{% url 'movementtype_update' movementtypeinfo.id %}" >

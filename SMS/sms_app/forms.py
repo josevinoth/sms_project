@@ -62,3 +62,5 @@ from .sub_forms.crcountfromform_Form import CrcountfromForm
 from .sub_forms.customerform_Form import CustomeraddForm
 from .sub_forms.materialhandlingaddform_form import MaterialhandlingaddForm
 from .sub_forms.packagetype_form import PackagetypeaddForm
+from .sub_forms.currency_type_form import CurrencytypeaddForm
+from .sub_forms.stock_type_form import StocktypeaddForm

@@ -72,3 +72,5 @@ from .sub_views.crcountfrom_add_view import crcountfrom_add,crcountfrom_list,crc
 from .sub_views.customer_add_view import customer_add,customer_list,customer_delete
 from .sub_views.materialhandling_add_view import materialhandling_list,materialhandling_delete,materialhandling_add
 from .sub_views.packagetype_add_view import packagetype_list,packagetype_delete,packagetype_add
+from .sub_views.currency_type_add_view import currencytype_add,currencytype_list,currencytype_delete
+from .sub_views.stock_type_add_view import stocktype_add,stocktype_delete,stocktype_list

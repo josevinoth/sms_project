@@ -19,10 +19,13 @@
             <th>WH Job Number</th>
             <th>Number of Pieces</th>
             <th>Package Type</th>
-            <th>Length (mm)</th>
-            <th>Width (mm)</th>
-            <th>Height (mm)</th>
-            <th>Weight (Kg)</th>
+            <th>Unit Of Measure</th>
+            <th>Length</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Weight (physical)</th>
+            <th>Chargeable Weight</th>
+            <th>CBM</th>
             <th>QR Code</th>
             <th>Edit</th>
             <th>Delete</th>
@@ -33,10 +36,13 @@
                 <td> {{goodsinfo.wh_job_no}}</td>
                 <td> {{goodsinfo.wh_goods_pieces}}</td>
                 <td> {{goodsinfo.wh_goods_package_type}}</td>
+                <td> {{goodsinfo.wh_uom}}</td>
                 <td> {{goodsinfo.wh_goods_length}}</td>
                 <td> {{goodsinfo.wh_goods_width}}</td>
                 <td> {{goodsinfo.wh_goods_height}}</td>
                 <td> {{goodsinfo.wh_goods_weight}}</td>
+                <td> {{goodsinfo.wh_chargeable_weight}}</td>
+                <td> {{goodsinfo.wh_CBM}}</td>
                 <td>
                     <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">
                         {% csrf_token %}

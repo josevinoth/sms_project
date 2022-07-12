@@ -266,5 +266,13 @@ urlpatterns = [
     path('packagetype_insert', views.packagetype_add, name='packagetype_insert'),  # Add packagetype
     path('packagetype_update/<int:packagetype_id>/', views.packagetype_add, name='packagetype_update'),  # Update packagetype
     path('packagetype_delete/<int:packagetype_id>/', views.packagetype_delete, name='packagetype_delete'),  # Delete packagetype
+    path('currencytype_list/', views.currencytype_list, name='currencytype_list'),  # List currencytype ,
+    path('currencytype_insert', views.currencytype_add, name='currencytype_insert'),  # Add currencytype
+    path('currencytype_update/<int:currencytype_id>/', views.currencytype_add, name='currencytype_update'),  # Update currencytype
+    path('currencytype_delete/<int:currencytype_id>/', views.currencytype_delete, name='currencytype_delete'),  # Delete currencytype
+    path('stocktype_list/', views.stocktype_list, name='stocktype_list'),  # List stocktype ,
+    path('stocktype_insert', views.stocktype_add, name='stocktype_insert'),  # Add stocktype
+    path('stocktype_update/<int:stocktype_id>/', views.stocktype_add, name='stocktype_update'),  # Update stocktype
+    path('stocktype_delete/<int:stocktype_id>/', views.stocktype_delete, name='stocktype_delete'),  # Delete currencytype
 
 ]

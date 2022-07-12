@@ -304,8 +304,3 @@ nav > div a.nav-item.nav-link:focus
 .enable_a_href{
     pointer-events: 1;
 }
-
-/*Btn Active Hover*/
-.btn:focus {
-background: #ff4000 !important;
-}

@@ -32,13 +32,13 @@
 <!--		{% else %}-->
 <!--			<a class="btn btn-primary border border-dark" href="{% url 'goods_insert' %}">Damage Check/After</a>-->
 <!--		{% endif %}-->
-		<a class="btn btn-primary border border-dark" href="{% url 'goods_insert' %}">Damage Check/After</a>
-		<a class="btn btn-primary border border-dark">Warehouse In</a>
-		<a class="btn btn-primary border border-dark">Storage</a>
-		<a class="btn btn-primary border border-dark">Dispatch</a>
-		<a class="btn btn-primary border border-dark">Billing</a>
-		<a class="btn btn-primary border border-dark">Expenses</a>
-		<a class="btn btn-primary border border-dark">Reports</a>
+		<a class="btn btn-primary border border-dark disable_a_href" href="{% url 'goods_insert' %}">Damage Check/After</a>
+		<a class="btn btn-primary border border-dark disable_a_href">Warehouse In</a>
+		<a class="btn btn-primary border border-dark disable_a_href">Storage</a>
+		<a class="btn btn-primary border border-dark disable_a_href">Dispatch</a>
+		<a class="btn btn-primary border border-dark disable_a_href">Billing</a>
+		<a class="btn btn-primary border border-dark disable_a_href">Expenses</a>
+		<a class="btn btn-primary border border-dark disable_a_href">Reports</a>
 	</div>
 	<div class="col-2"></div>
 </div>
@@ -55,7 +55,7 @@
 		<div class="col-6">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Damage Report</h3></div>
+					<div class="card-header text-center"><h3>Add/Update Damage Check/Before</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col">
@@ -120,6 +120,13 @@
 										<span class="input-group-text">Empty Pics</span>
 									</div>
 									{% render_field damagereport_form.dam_empty_vehicle class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Status</span>
+									</div>
+									{% render_field damagereport_form.dam_status class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
