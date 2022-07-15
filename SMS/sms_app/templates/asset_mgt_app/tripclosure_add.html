@@ -1,7 +1,23 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<div class="col-md-1">
+	<a href="{% url 'gatein_list' %}" class="btn btn-primary btn-block btn-lg">
+		<i class="fas fa-arrow-left"></i>
+	</a>
+</div>
+<div class="row" >
+	<div class="col-2"></div>
+	<div class="col-8 btn-group mx-auto text-center">
+		<a class="btn btn-primary border border-dark disable_a_href" id="warehousein_btn">Consignment Details</a>
+		<a class="btn btn-primary border border-dark disable_a_href" id="storage_btn">Vehicle Details</a>
+		<a class="btn btn-primary border border-dark disable_a_href" id="dispatch_btn">Trip Details</a>
+		<a class="btn btn-primary border border-dark disable_a_href" id="billing_btn">Trip Closure</a>
+	</div>
+	<div class="col-2"></div>
+</div>
 
+<hr>
 <form method="POST" action="">
 	{% csrf_token %}
 

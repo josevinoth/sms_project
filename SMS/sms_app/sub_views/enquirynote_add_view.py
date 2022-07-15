@@ -8,15 +8,23 @@ def enquirynote_add(request,enquirynote_id=0):
     first_name = request.session.get('first_name')
     if request.method == "GET":
         if enquirynote_id == 0:
+            print("I am inside Get add Enquirynote")
             form = EnquirynoteaddForm()
         else:
+            print("I am inside get edit Enuirynote")
             enquirynote=EnquirynoteInfo.objects.get(pk=enquirynote_id)
+            tr_enqiury_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
+            request.session['ses_enqiury_id'] = tr_enqiury_id
+            tr_enqiury_id_ses = request.session.get('ses_enqiury_id')
+            print(tr_enqiury_id_ses)
             form = EnquirynoteaddForm(instance=enquirynote)
         return render(request, "asset_mgt_app/enquirynote_add.html", {'form': form,'first_name': first_name})
     else:
         if enquirynote_id == 0:
+            print("I am inside post add Enuirynote")
             form = EnquirynoteaddForm(request.POST)
         else:
+            print("I am inside post edit Enquirynote")
             enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
             form = EnquirynoteaddForm(request.POST,instance=enquirynote)
         if form.is_valid():

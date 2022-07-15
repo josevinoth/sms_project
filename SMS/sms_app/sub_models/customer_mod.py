@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import State,GstexcemptionInfo,GstmodelInfo,PaymenttypeInfo,CrcountfromInfo,CustomerdepartmentInfo,TrbusinesstypeInfo
+from ..models import State,StatusList,GstmodelInfo,PaymenttypeInfo,CrcountfromInfo,CustomerdepartmentInfo,TrbusinesstypeInfo
 
 class CustomerInfo(models.Model):
     cu_customercode = models.CharField(max_length=10,default = '')
@@ -12,7 +12,7 @@ class CustomerInfo(models.Model):
     cu_designation = models.IntegerField(default='')
     cu_contactno = models.IntegerField(default='')
     cu_email = models.IntegerField(default='')
-    cu_gstexcepmtion = models.ForeignKey(GstexcemptionInfo,on_delete=models.CASCADE, default='')
+    cu_gstexcepmtion = models.ForeignKey(StatusList,on_delete=models.CASCADE, default='')
     cu_gstmodel = models.ForeignKey(GstmodelInfo,on_delete=models.CASCADE, default='')
     cu_gstpercentage = models.CharField(max_length=10,default = '')
     cu_paymenttype = models.ForeignKey(PaymenttypeInfo,on_delete=models.CASCADE, default='')

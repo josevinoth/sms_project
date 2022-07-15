@@ -12,7 +12,7 @@ def permittype_add(request,permittype_id=0):
         else:
             permittype=PermittypeInfo.objects.get(pk=permittype_id)
             form = PermittypeaddForm(instance=permittype)
-        return render(request, "asset_mgt_app/role_add.html", {'form': form,'first_name': first_name})
+        return render(request, "asset_mgt_app/permittype_add.html", {'form': form,'first_name': first_name})
     else:
         if permittype_id == 0:
             form = PermittypeaddForm(request.POST)

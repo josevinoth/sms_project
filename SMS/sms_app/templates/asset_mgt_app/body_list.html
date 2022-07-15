@@ -25,9 +25,9 @@
             <th>Delete</th>
     </thead>
     <tbody>
-        {% for bodyinfo in role_list %}
+        {% for bodyinfo in body_list %}
             <tr>
-                <td> {{bodyinfo.role_name}}</td>
+                <td> {{bodyinfo.bo_body}}</td>
                 <td>
 
                     <a href="{% url 'body_update' bodyinfo.id %}" >

@@ -4,7 +4,7 @@ from ..models import VehiclenumberInfo
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
-def vehiclenumber_add(request,vehiclesource_id=0):
+def vehiclenumber_add(request,vehiclenumber_id=0):
     first_name = request.session.get('first_name')
     if request.method == "GET":
         if vehiclenumber_id == 0:
