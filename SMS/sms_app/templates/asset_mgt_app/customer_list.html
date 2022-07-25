@@ -4,56 +4,57 @@
 {% block content %}
 <div class="container-fluid row">
     <div class="col-md-1">
-      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i>
-      </a>
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i>
+        </a>
     </div>
     <div class="col-md-1">
-      <a href="{% url 'customer_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i>
-      </a>
+        <a href="{% url 'customer_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i>
+        </a>
     </div>
 </div>
 <hr>
 <div class="container-fluid">
-<table  id="customer_list" class="table table-striped table-bordered">
-    <thead class="thead-dark">
+    <table  id="customer_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
         <tr>
-<!--            <th>Product Category</th>-->
+            <th>Customer Name</th>
             <th>Code</th>
-            <th>Name</th>
             <th>Short Name</th>
             <th>Contact Person</th>
+            <th>Contact Number</th>
             <th>Email</th>
             <th>Edit</th>
             <th>Delete</th>
-    </thead>
-    <tbody>
+        </thead>
+        <tbody>
         {% for customerinfo in customer_list %}
-            <tr>
-                <td> {{customerinfo.cu_customercode}}</td>
-                <td> {{customerinfo.cu_name}}</td>
-                <td> {{customerinfo.cu_nameshort}}</td>
-                <td> {{customerinfo.cu_contactno}}</td>
-                <td> {{customerinfo.cu_email}}</td>
-                <td>
+        <tr>
+            <td> {{customerinfo.cu_name}}</td>
+            <td> {{customerinfo.cu_customercode}}</td>
+            <td> {{customerinfo.cu_nameshort}}</td>
+            <td> {{customerinfo.cu_customerperson}}</td>
+            <td> {{customerinfo.cu_contactno}}</td>
+            <td> {{customerinfo.cu_email}}</td>
+            <td>
 
-                    <a href="{% url 'customer_update' customerinfo.id %}" >
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-                <td>
-                    <form action="{% url 'customer_delete' customerinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
+                <a href="{% url 'customer_update' customerinfo.id %}" >
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'customer_delete' customerinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
         {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
 </div>
 <script>
     $(document).ready(function() {

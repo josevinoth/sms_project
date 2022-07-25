@@ -31,17 +31,9 @@
 		{% else %}
 		<a class="btn btn-success border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before</a>
 		{% endif %}
-		<!--		{% if goods_list %}-->
-		<!--			{% for goodsinfo in goods_list %}-->
-		<!--			<a class="btn btn-success border border-dark" href="{% url 'goods_update' goodsinfo.id %}">Damage Check/After</a>-->
-		<!--			{% endfor %}-->
-
-		<!--		{% else %}-->
-		<!--			<a class="btn btn-success border border-dark" href="{% url 'goods_insert' %}">Damage Check/After</a>-->
-		<!--		{% endif %}-->
 		<a class="btn btn-success border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Damage Check/After</a>
-		<a class="btn btn-success border border-dark disable_a_href" id="warehousein_btn">Warehouse In</a>
-		<a class="btn btn-success border border-dark disable_a_href" id="storage_btn">Storage</a>
+		<a class="btn btn-success border border-dark disable_a_href " id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
 		<a class="btn btn-success border border-dark disable_a_href" id="dispatch_btn">Dispatch</a>
 		<a class="btn btn-success border border-dark disable_a_href" id="billing_btn">Billing</a>
 		<a class="btn btn-success border border-dark disable_a_href" id="expense_btn">Expenses</a>
@@ -88,9 +80,16 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Arrival Date</span>
+										<span class="input-group-text">Customer Type</span>
 									</div>
-									{% render_field gatein_form.gatein_arrival_date type="date" class="form-control" %}
+									{% render_field gatein_form.gatein_customer_type class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Arrival Date & Time</span>
+									</div>
+									{% render_field gatein_form.gatein_arrival_date type="datetime-local" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -102,9 +101,16 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Shipper</span>
+										<span class="input-group-text">Consigner</span>
 									</div>
 									{% render_field gatein_form.gatein_shipper class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consignee</span>
+									</div>
+									{% render_field gatein_form.gatein_consignee class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -114,15 +120,15 @@
 									{% render_field gatein_form.gatein_no_of_pkg class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice Weight</span>
+										<span class="input-group-text">Invoice Weight(Actual)</span>
 									</div>
 									{% render_field gatein_form.gatein_weight class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Name</span>
@@ -194,10 +200,27 @@
 	</div>
 </form>
 <script>
+function myjobnum() {
+  var ran=Math.floor((Math.random() * 1000000) + 1)
+  var jn=document.getElementById("job_num").value
+  if (jn=="")
+	{
+		 document.getElementById("job_num").value ="WH_Job_"+ ran;
+	}
+	else
+	{
+  		document.getElementById("job_num").value=jn;
+  	}
+}
+</script>
+<script>
 $(document).ready(function() {
-	var gatein_status_id='{{gatein_status}}';
+	var gatein_status_id = '{{gatein_status}}';
 	var loadingbay_status_id='{{loadingbay_status}}';
 	var damage_before_status_id='{{damage_before_status}}';
+	var damage_after_status_id='{{damage_after_status}}';
+	var warehousein_status_id='{{warehousein_status}}';
+
 	if (gatein_status_id =="Completed"){
 		$('#loadingbay_btn').removeClass('disable_a_href');
 		$('#loadingbay_btn1').removeClass('disable_a_href');
@@ -210,7 +233,12 @@ $(document).ready(function() {
 
 	if (damage_before_status_id =="Completed"){
 		$('#damagecheck_after_btn').removeClass('disable_a_href');
-
+		}
+	if (damage_after_status_id =="Completed"){
+		$('#warehousein_btn').removeClass('disable_a_href');
+		}
+	if (warehousein_status_id =="Completed"){
+		$('#storage_btn').removeClass('disable_a_href');
 		}
   });
 </script>

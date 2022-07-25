@@ -8,5 +8,5 @@ class BayaddForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(BayaddForm,self).__init__(*args, **kwargs)
-        self.fields['bay_branch'].empty_label = "--Select--"
-        self.fields['bay_unit'].empty_label = "--Select--"
+        self.fields['bay_branch_name'].empty_label = "--Select--"
+        self.fields['Bay_unit_name'].empty_label = "--Select--"

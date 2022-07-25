@@ -16,8 +16,13 @@
 						<div class="card-body bg-light" >
 							<div class="row">
 							<div class="col">
-
-
+								<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text">Branch Name</span>
+  								</div>
+								{% render_field form.ui_branch_name class="form-control" %}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text">Unit Name</span>

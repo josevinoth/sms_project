@@ -21,8 +21,13 @@
         <tr>
             <th>Warehouse Branch</th>
             <th>Warehouse Unit</th>
-            <th>Side</th>
-            <th>Available Size (Sq.Ft)</th>
+            <th>Bay</th>
+                <th>Customer Name</th>
+                <th>Customer Model</th>
+            <th>Total Area (Sq.cm)</th>
+            <th>Available Area (Sq.cm)</th>
+            <th>Total Volume (Cu.cm)</th>
+            <th>Available Volume (Cu.cm)</th>
             <th>Edit</th>
             <th>Delete</th>
     </thead>
@@ -32,7 +37,12 @@
                 <td> {{locationmasterinfo.lm_wh_location}}</td>
                 <td> {{locationmasterinfo.lm_wh_unit}}</td>
                 <td> {{locationmasterinfo.lm_areaside}}</td>
+                <td> {{locationmasterinfo.lm_customer_name}}</td>
+                <td> {{locationmasterinfo.lm_customer_model}}</td>
                 <td> {{locationmasterinfo.lm_size}}</td>
+                <td> {{locationmasterinfo.lm_available_area}}</td>
+                <td> {{locationmasterinfo.lm_total_volume}}</td>
+                <td> {{locationmasterinfo.lm_available_volume}}</td>
                 <td>
 
                     <a href="{% url 'locationmaster_update' locationmasterinfo.id %}" >

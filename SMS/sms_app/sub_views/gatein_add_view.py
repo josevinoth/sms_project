@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
+from django.core.exceptions import ObjectDoesNotExist
 
 # Add WH Job
 @login_required(login_url='login_page')
@@ -25,19 +26,84 @@ def gatein_add(request, gatein_id=0):
             }
         else:
             print("I am inside get edit Gatein")
-            gatein_info = Gatein_info.objects.get(pk=gatein_id)
             wh_job_id = Gatein_info.objects.get(pk=gatein_id).gatein_job_no
+            wh_customer_name = Gatein_info.objects.get(pk=gatein_id).gatein_customer
+            wh_customer_type = Gatein_info.objects.get(pk=gatein_id).gatein_customer_type
+            wh_invoice = Gatein_info.objects.get(pk=gatein_id).gatein_invoice
             request.session['ses_gatein_id_nam'] = wh_job_id
+            request.session['ses_customer_name'] = wh_customer_name
+            request.session['ses_customer_type'] = wh_customer_type
+            request.session['ses_wh_invoice'] = wh_invoice
+            print("Customer Name",wh_customer_name)
+            print("Customer Type",wh_customer_type)
+            print("Invoice",wh_invoice)
             wh_job_id_sess=request.session.get('ses_gatein_id_nam')
-            gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status #fetch gatein status
-            loadingbay_status = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
-            damage_before_status = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
+            # Gate In Status Check
+            try:
+                gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
+            except ObjectDoesNotExist:
+                gatein_status = "No Status"
+            # Loading Bay Status Check
+            try:
+                loadingbay_status = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
+            except ObjectDoesNotExist:
+                loadingbay_status = "No Status"
+            # Damage/Before Status Check
+            try:
+                damage_before_status = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
+            except ObjectDoesNotExist:
+                damage_before_status = "No Status"
+            # Damage/After Status Check
+            try:
+                goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',flat=True)  # count records
+                print(list(goods_status))
+                goods_status_list = list(goods_status)
+                if goods_status_list != []:
+                    if goods_status_list[0] == 5:
+                        result = all(element == (goods_status_list[0]) for element in (goods_status_list))
+                    else:
+                        result = False
+                else:
+                    result = False
+                print(result)
+                if (result):
+                    damage_after_status = "Completed"  # get goods status
+                    print(damage_after_status)
+                else:
+                    damage_after_status = "No Status"  # get goods status
+                    print(damage_after_status)
+            except ObjectDoesNotExist:
+                damage_after_status = "No Status"
+            # Warehousein Status Check
+            try:
+                warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
+                    'wh_check_in_out', flat=True)  # count records
+                print(list(warehousein_status))
+                warehousein_status_list = list(warehousein_status)
+                if warehousein_status_list != []:
+                    if warehousein_status_list[0] == 9:
+                        result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
+                    else:
+                        result = False
+                else:
+                    result = False
+                print(result)
+                if (result):
+                    warehousein_status = "Completed"  # get goods status
+                    print(warehousein_status)
+                else:
+                    warehousein_status = "No Status"  # get goods status
+                    print(warehousein_status)
+            except ObjectDoesNotExist:
+                warehousein_status = "No Status"
+
             loadingbay_list= Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
             gatein_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id_sess)
-            print(wh_job_id)
+            print("Wh_job_id",wh_job_id)
             print("Gatein Status",gatein_status)
             print("Loadingbay Satus",loadingbay_status)
             print("Damage_before_status", damage_before_status)
+            gatein_info = Gatein_info.objects.get(pk=gatein_id)
             gatein_form = GateinaddForm(instance=gatein_info)
             context = {
                 'gatein_form': gatein_form,
@@ -48,6 +114,8 @@ def gatein_add(request, gatein_id=0):
                 'gatein_status':gatein_status,
                 'loadingbay_status':loadingbay_status,
                 'damage_before_status':damage_before_status,
+                'damage_after_status': damage_after_status,
+                'warehousein_status': warehousein_status,
             }
         return render(request, "asset_mgt_app/gatein_add.html", context)
     else:

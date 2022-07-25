@@ -2,65 +2,177 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="">
+<form method="POST" id="location_master" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" novalidate>
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
 
-<div class="row">
-	<div class="col-3"></div>
+	<div class="row">
+		<div class="col-3"></div>
 		<div class="col-6">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Branch Master</h3></div>
-						<div class="card-body bg-light" >
-							<div class="row">
+					<div class="card-header text-center"><h3>Add/Update Warehouse Master</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
 							<div class="col">
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" id="">Warehouse Branch</span>
-  								</div>
-								{% render_field form.lm_wh_location class="form-control" %}
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="">Warehouse Branch</span>
+									</div>
+									{% render_field form.lm_wh_location id="lm_branch" onchange="area_volume_fn()" class="form-control" %}
+								</div>
 
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Warehouse Unit</span>
-  								</div>
-								{% render_field form.lm_wh_unit class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Warehouse Unit</span>
+									</div>
+									{% render_field form.lm_wh_unit id="lm_unit" onchange="area_volume_fn()" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Side</span>
-  								</div>
-								{% render_field form.lm_areaside class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Available Size (Sq.Ft)</span>
-  								</div>
-								{% render_field form.lm_size class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Bay</span>
+									</div>
+									{% render_field form.lm_areaside id="lm_bay" onchange="area_volume_fn()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field form.lm_customer_name id="lm_customer_name" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Model</span>
+									</div>
+									{% render_field form.lm_customer_model id="lm_customer_model" readonly="Ture" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length (cm)</span>
+									</div>
+									{% render_field form.lm_length id="lm_length" onchange="area_volume_fn()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width (cm)</span>
+									</div>
+									{% render_field form.lm_width id="lm_width" onchange="area_volume_fn()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Heigth (cm)</span>
+									</div>
+									{% render_field form.lm_height id="lm_height" onchange="area_volume_fn()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Total Area (Sq.cm)</span>
+									</div>
+									{% render_field form.lm_size id="lm_size" readonly="True" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Area Occupied (Sq.cm)</span>
+									</div>
+									{% render_field form.lm_area_occupied id="lm_area_occupied" onchange="area_volume_fn()" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Available Area (Sq.cm)</span>
+									</div>
+									{% render_field form.lm_available_area id="lm_available_area" readonly="True" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Volume (Cu.cm)</span>
+									</div>
+									{% render_field form.lm_total_volume id="lm_total_volume" readonly="True" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Volume Occupied (Cu.cm)</span>
+									</div>
+									{% render_field form.lm_volume_occupied id="lm_volume_occupied" onchange="area_volume_fn()" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Available Volume (Cu.cm)</span>
+									</div>
+									{% render_field form.lm_available_volume id="lm_available_volume" readonly="True" class="form-control" %}
+								</div>
+								{% render_field form.lm_concatenate  type="hidden" id="lm_concatenate" class="form-control" %}
+								<div class="message message-warning">
+										{% for message in messages %}
+										<p>{{message}}</p>
+										{% endfor %}
+									{{form.error_messages}}
+								</div>
 
 							</div>
-							</div>
-							<div class="message">
-								{{form.errors}}
-							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
-							<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-							 <a href="{% url 'locationmaster_list' %}" class="btn btn-danger float-right" >
-                    <i class="fas fa-times"></i> Cancel
-                </a>
 						</div>
+						<div class="message">
+							{{form.errors}}
+						</div>
+						<!--<input class="btn btn-success" type="submit" name="Create User">-->
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'locationmaster_list' %}" class="btn btn-danger float-right" >
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>
-	<div class="col-3"></div>
-</div>
+		<div class="col-3"></div>
+	</div>
 </form>
+<script>
+function area_volume_fn() {
+  var branch_val=document.getElementById("lm_branch").value;
+  var unit_val=document.getElementById("lm_unit").value;
+  var bay_val=document.getElementById("lm_bay").value;
+  var width_val=document.getElementById("lm_width").value;
+  var length_val=document.getElementById("lm_length").value;
+  var height_val=document.getElementById("lm_height").value;
+  var lm_size_val=document.getElementById("lm_size").value;
+  var lm_total_volume_val=document.getElementById("lm_total_volume").value;
+  var lm_area_occupied_val=document.getElementById("lm_area_occupied").value;
+  var lm_volume_occupied_val=document.getElementById("lm_volume_occupied").value;
+  var area_val=(width_val*length_val).toFixed(3);
+  var volume_val=(width_val*length_val*height_val).toFixed(3);
+  var lm_available_area_val=(area_val-lm_area_occupied_val).toFixed(3);
+  var lm_available_volume_val=(volume_val-lm_volume_occupied_val).toFixed(3);
+  document.getElementById("lm_total_volume").value =volume_val;
+  document.getElementById("lm_size").value =area_val;
+  document.getElementById("lm_available_area").value =lm_available_area_val;
+  document.getElementById("lm_available_volume").value =lm_available_volume_val;
+   document.getElementById("lm_concatenate").value =branch_val+unit_val+bay_val;
+}
+</script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script>
+    $("#lm_customer_name").change(function () {
+      var url = $("#location_master").attr("data-load_customer_model-url");
 
+      var lm_customer_name_id = $(this).find(":selected").text();
+      alert(lm_customer_name_id)
+      $.ajax({
+        url: url,
+        data: {
+          'lm_customer_name_id': lm_customer_name_id
+        },
+		success: function (response) {
+			alert(response)
+			var obj=JSON.parse(response)["customer_businessmodel_txt"]
+			$("#lm_customer_model").val(obj)
+        }
+      });
+
+    });
+  </script>
 {% endblock content %}

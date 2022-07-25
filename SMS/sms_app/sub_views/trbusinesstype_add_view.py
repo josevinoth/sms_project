@@ -4,15 +4,15 @@ from ..models import TrbusinesstypeInfo
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
-def trbusinesstype_add(request,role_id=0):
+def trbusinesstype_add(request,trbusinesstype_id=0):
     first_name = request.session.get('first_name')
     if request.method == "GET":
-        if role_id == 0:
+        if trbusinesstype_id == 0:
             form = TrbusinesstypeaddForm()
         else:
             trbusinesstype=TrbusinesstypeInfo.objects.get(pk=trbusinesstype_id)
             form = TrbusinesstypeaddForm(instance=trbusinesstype)
-        return render(request, "asset_mgt_app/role_add.html", {'form': form,'first_name': first_name})
+        return render(request, "asset_mgt_app/trbusinesstype_add.html", {'form': form,'first_name': first_name})
     else:
         if trbusinesstype_id == 0:
             form = TrbusinesstypeaddForm(request.POST)

@@ -6,7 +6,6 @@ class UnitaddForm(forms.ModelForm):
         model = UnitInfo
         fields = '__all__'
 
-    #def __init__(self, *args, **kwargs):
-        #super(CityaddForm,self).__init__(*args, **kwargs)
-        #self.fields['country'].empty_label = "--Select--"
-        #self.fields['state'].empty_label = "--Select--"
+    def __init__(self, *args, **kwargs):
+        super(UnitaddForm,self).__init__(*args, **kwargs)
+        self.fields['ui_branch_name'].empty_label = "--Select--"

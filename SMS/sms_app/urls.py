@@ -274,5 +274,11 @@ urlpatterns = [
     path('stocktype_insert', views.stocktype_add, name='stocktype_insert'),  # Add stocktype
     path('stocktype_update/<int:stocktype_id>/', views.stocktype_add, name='stocktype_update'),  # Update stocktype
     path('stocktype_delete/<int:stocktype_id>/', views.stocktype_delete, name='stocktype_delete'),  # Delete currencytype
+    path('wh_space_search', views.wh_space_availability, name='wh_space_search'),  # Search WH space
+    path('ajax/load_units/', views.load_units, name='ajax_load_units'),
+    path('warehousein_insert', views.warehousein_add, name='warehousein_insert'),  # Add warehousein
+    path('warehousein_update/<int:warehousein_id>/', views.warehousein_add, name='warehousein_update'),  # Update warehousein
+    path('storage_list/', views.storage_list, name='storage_list'),  # List Storage
+    path('load_customer_model/', views.load_customer_model, name='load_customer_model'),
 
 ]

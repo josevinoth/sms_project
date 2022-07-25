@@ -1,9 +1,9 @@
 from django import forms
-from ..models import CustomernameInfo
+from ..models import CustomernameInfo_new
 
 class CustomernameaddForm(forms.ModelForm):
     class Meta:
-        model = CustomernameInfo
+        model = CustomernameInfo_new
         fields = '__all__'
 
     # def __init__(self, *args, **kwargs):

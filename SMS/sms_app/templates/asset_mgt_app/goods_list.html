@@ -20,6 +20,8 @@
     <thead class="thead-dark">
         <tr>
             <th>Invoice</th>
+             <th>Customer Name</th>
+             <th>Customer Type</th>
             <th>Number of Pieces</th>
             <th>Package Type</th>
             <th>Length</th>
@@ -34,6 +36,8 @@
         {% for goodsinfo in goods_list %}
             <tr>
                 <td> {{goodsinfo.wh_goods_invoice}}</td>
+                <td> {{goodsinfo.wh_customer_name}}</td>
+                <td> {{goodsinfo.wh_customer_type}}</td>
                 <td> {{goodsinfo.wh_goods_pieces}}</td>
                 <td> {{goodsinfo.wh_goods_package_type}}</td>
                 <td> {{goodsinfo.wh_goods_length}}</td>

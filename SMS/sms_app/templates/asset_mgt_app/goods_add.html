@@ -11,46 +11,39 @@
 	<div class="col-8 btn-group mx-auto text-center">
 		{% if gatein_list %}
 		{% for gateininfo in gatein_list %}
-		<a class="btn btn-primary border border-dark" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+		<a class="btn btn-success border border-dark"  href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn btn-primary border border-dark" href="{% url 'gatein_insert' %}">Gate-In</a>
+		<a class="btn btn-success border border-dark"  href="{% url 'gatein_insert' %}">Gate-In</a>
 		{% endif %}
 
 		{% if loadingbay_list %}
 		{% for loadingbayinfo in loadingbay_list %}
-		<a class="btn btn-primary border border-dark" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Loading Bay</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Loading Bay</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn btn-primary border border-dark" href="{% url 'loadingbay_insert' %}">Loading Bay</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Loading Bay</a>
 		{% endif %}
 		{% if damagereport_list %}
 		{% for damagecheckinfo in damagereport_list %}
-		<a class="btn btn-primary border border-dark" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check/Before</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check/Before</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn btn-primary border border-dark" href="{% url 'damagereport_insert' %}">Damage Check/Before</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before</a>
 		{% endif %}
-		<!--		{% if goods_list %}-->
-		<!--			{% for goodsinfo in goods_list %}-->
-		<!--			<a class="btn btn-primary border border-dark" href="{% url 'goods_update' goodsinfo.id %}">Damage Check/After</a>-->
-		<!--			{% endfor %}-->
-		<!--		{% else %}-->
-		<!--			<a class="btn btn-primary border border-dark" href="{% url 'goods_insert' %}">Damage Check/After</a>-->
-		<!--		{% endif %}-->
-		<a class="btn btn-primary border border-dark" href="{% url 'goods_insert' %}">Damage Check/After</a>
-		<a class="btn btn-primary border border-dark">Warehouse In</a>
-		<a class="btn btn-primary border border-dark">Storage</a>
-		<a class="btn btn-primary border border-dark">Dispatch</a>
-		<a class="btn btn-primary border border-dark">Billing</a>
-		<a class="btn btn-primary border border-dark">Expenses</a>
-		<a class="btn btn-primary border border-dark">Reports</a>
+		<a class="btn btn-success border focus border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Damage Check/After</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="dispatch_btn">Dispatch</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="billing_btn">Billing</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="expense_btn">Expenses</a>
+		<a class="btn btn-success border border-dark disable_a_href" id="reports_btn">Reports</a>
 	</div>
 	<div class="col-2"></div>
 </div>
 
 <hr>
-<form method="POST" action="" onload="chargeable_weight_fn()">
+<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" data-branches-url="{% url 'ajax_load_units' %}" novalidate>
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
@@ -68,7 +61,7 @@
 							</div>
 							<div class="col-2">
 								<a href="#" class="btn btn-warning btn-block ">
-									Delivery Chelan          <i class="fa fa-download" aria-hidden="true"></i>
+									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>
 								</a>
 							</div>
 							<div class="col-2">
@@ -84,9 +77,27 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" id="">WH Job Number</span>
+										<span class="input-group-text" >WH Job Number</span>
 									</div>
 									{% render_field goods_form.wh_job_no value=request.session.ses_gatein_id_nam readonly="true" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Invoice Number</span>
+									</div>
+									{% render_field goods_form.wh_goods_invoice value=request.session.ses_wh_invoice readonly="true" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Customer Name</span>
+									</div>
+									{% render_field goods_form.wh_customer_name value=request.session.ses_customer_name readonly="true" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="">Customer Type</span>
+									</div>
+									{% render_field goods_form.wh_customer_type value=request.session.ses_customer_type readonly="true" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -138,16 +149,22 @@
 									{% render_field goods_form.wh_goods_package_type type="select" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Volume Weight</span>
-									</div>
-									{% render_field goods_form.wh_goods_volume_weight class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
 							</div>
 							<div class="col-6">
-
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Required Area (Sq.Ft)</span>
+									</div>
+									{% render_field goods_form.wh_goods_area id="req_area" readonly="true" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Required Volume (Cu.Ft)</span>
+									</div>
+									{% render_field goods_form.wh_goods_volume_weight id="volume_weight" readonly="true" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Chargeable Weight</span>
@@ -178,7 +195,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >No of Units Deviation</span>
+										<span class="input-group-text" >Quantity Deviation</span>
 									</div>
 									{% render_field goods_form.wh_no_of_units_deviation class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -212,6 +229,56 @@
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
+							<!--							<div class="col-4">-->
+							<!--								<div class="input-group input-group-sm mb-3">-->
+							<!--									<div class="input-group-prepend">-->
+							<!--										<span class="input-group-text" >Branch</span>-->
+							<!--									</div>-->
+							<!--									{% render_field goods_form.wh_branch id="wh_branch" class="form-control" %}-->
+							<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
+							<!--								</div>-->
+							<!--								<div class="input-group input-group-sm mb-3">-->
+							<!--									<div class="input-group-prepend">-->
+							<!--										<span class="input-group-text" >Unit</span>-->
+							<!--									</div>-->
+							<!--									{% render_field goods_form.wh_unit id="wh_unit" class="form-control" %}-->
+							<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
+							<!--								</div>-->
+							<!--								<div class="input-group input-group-sm mb-3">-->
+							<!--									<div class="input-group-prepend">-->
+							<!--										<span class="input-group-text" >Bay</span>-->
+							<!--									</div>-->
+							<!--									{% render_field goods_form.wh_bay id="wh_bay" class="form-control" %}-->
+							<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
+							<!--								</div>-->
+							<!--								<div>-->
+							<!--									<a href="{% url 'wh_space_search' %}" class="btn btn-primary btn-block btn-lg">-->
+							<!--										<i class="fa fa-search" aria-hidden="true"></i> Search Space Availability-->
+							<!--									</a>-->
+							<!--								</div>-->
+							<!--								<br>-->
+							<!--								<div class="input-group input-group-sm mb-3">-->
+							<!--									<div class="input-group-prepend">-->
+							<!--										<span class="input-group-text" >Available Area (Sq.Cm)</span>-->
+							<!--									</div>-->
+							<!--									{% render_field goods_form.wh_available_area class="form-control" %}-->
+							<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
+							<!--								</div>-->
+							<!--								<div class="input-group input-group-sm mb-3">-->
+							<!--									<div class="input-group-prepend">-->
+							<!--										<span class="input-group-text" >Available Volume (Cu.Cm)</span>-->
+							<!--									</div>-->
+							<!--									{% render_field goods_form.wh_available_volume class="form-control" %}-->
+							<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
+							<!--								</div>-->
+							<!--								<div class="input-group input-group-sm mb-3">-->
+							<!--									<div class="input-group-prepend">-->
+							<!--										<span class="input-group-text" >Good Status</span>-->
+							<!--									</div>-->
+							<!--									{% render_field goods_form.wh_check_in_out class="form-control" %}-->
+							<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
+							<!--								</div>-->
+							<!--							</div>-->
 						</div>
 						<div class="message">
 							{{goods_form.errors}}
@@ -228,6 +295,30 @@
 	</div>
 </form>
 {% include "asset_mgt_app/goods_list_woh.html" %}
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<!--<script>-->
+<!--    $("#wh_branch").change(function () {-->
+<!--      var url = $("#goods_add").attr("data-branches-url");-->
+
+<!--      var branchId = $(this).val();-->
+<!--      $.ajax({-->
+<!--        url: url,-->
+<!--        data: {-->
+<!--          'branchId': branchId-->
+<!--        },-->
+<!--		success: function (response) {-->
+<!--        	var obj=JSON.parse(response)["unit_name_list"];-->
+<!--        	var len = (obj).length;-->
+<!--        	$("#wh_unit").empty();-->
+<!--        	for( var i = 0; i<len; i++){-->
+<!--        		$("#wh_unit").append("<option value='"+obj[i]+"'>"+obj[i]+"</option>");-->
+<!--			}-->
+<!--        }-->
+
+<!--      });-->
+
+<!--    });-->
+<!--  </script>-->
 <script>
 function chargeable_weight_fn() {
   var width_val=document.getElementById("width").value
@@ -241,14 +332,51 @@ function chargeable_weight_fn() {
 		var chargeable_weight_val=((length_val*width_val*height_val)/6000).toFixed(3)
 		document.getElementById("chargeable_weight").value =chargeable_weight_val;
 		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
+		var volume_val=((width_val*length_val*height_val)*.0000353147).toFixed(3);
+		document.getElementById("volume_weight").value =volume_val;
+		var req_area_val=((length_val*width_val)*0.00107639).toFixed(3)
+		document.getElementById("req_area").value =req_area_val;
 	}
-	else
+  else
 	{
 		var chargeable_weight_val=((length_val*width_val*height_val)/366).toFixed(3)
   		document.getElementById("chargeable_weight").value =chargeable_weight_val;
   		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
+  		var volume_val=((width_val*length_val*height_val)*0.000578704).toFixed(3);
+		document.getElementById("volume_weight").value =volume_val;
+		var req_area_val=((length_val*width_val)*0.00694444).toFixed(3)
+		document.getElementById("req_area").value =req_area_val;
   	}
-
+  endif
 }
+</script>
+<script>
+$(document).ready(function() {
+	var gatein_status_id = '{{gatein_status}}';
+	var loadingbay_status_id='{{loadingbay_status}}';
+	var damage_before_status_id='{{damage_before_status}}';
+	var damage_after_status_id='{{damage_after_status}}';
+	var warehousein_status_id='{{warehousein_status}}';
+	if (gatein_status_id =="Completed"){
+		$('#loadingbay_btn').removeClass('disable_a_href');
+		$('#loadingbay_btn1').removeClass('disable_a_href');
+		}
+
+	if (loadingbay_status_id =="Completed"){
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+		}
+
+	if (damage_before_status_id =="Completed"){
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+
+		}
+	if (damage_after_status_id =="Completed"){
+		$('#warehousein_btn').removeClass('disable_a_href');
+		}
+	if (warehousein_status_id =="Completed"){
+		$('#storage_btn').removeClass('disable_a_href');
+		}
+  });
 </script>
 {% endblock content %}

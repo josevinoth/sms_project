@@ -64,3 +64,4 @@ from .sub_forms.materialhandlingaddform_form import MaterialhandlingaddForm
 from .sub_forms.packagetype_form import PackagetypeaddForm
 from .sub_forms.currency_type_form import CurrencytypeaddForm
 from .sub_forms.stock_type_form import StocktypeaddForm
+from .sub_forms.WarehouseinddForm_form import WarehoseinaddForm

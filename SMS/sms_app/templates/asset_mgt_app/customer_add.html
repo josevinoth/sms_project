@@ -18,6 +18,20 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field form.cu_name class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Name (Short)</span>
+									</div>
+									{% render_field form.cu_nameshort class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Code</span>
 									</div>
 									{% render_field form.cu_customercode class="form-control" %}
@@ -25,9 +39,9 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Name</span>
+										<span class="input-group-text">Customer Type</span>
 									</div>
-									{% render_field form.cu_name class="form-control" %}
+									{% render_field form.cu_type class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -35,13 +49,6 @@
 										<span class="input-group-text">State</span>
 									</div>
 									{% render_field form.cu_state class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Name(Short)</span>
-									</div>
-									{% render_field form.cu_nameshort class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -160,9 +167,9 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">last modified by</span>
+										<span class="input-group-text">Last Modified By</span>
 									</div>
-									{% render_field form.cu_lastmodifiedby class="form-control" %}
+									{% render_field form.cu_lastmodifiedby value=request.session.first_name readonly="True" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>

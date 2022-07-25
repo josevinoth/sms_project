@@ -1,7 +1,7 @@
 from .sub_views.assetinfo_view import assetinfo_add,asset_list,asset_delete
 from .sub_views.assign_asset_add_view import assign_asset_add,assign_asset_delete,assign_asset_list_new
 from .sub_views.department_add_view import department_add,department_delete,department_list
-from .sub_views.goods_add_view import goods_add,goods_list,goods_delete
+from .sub_views.goods_add_view import goods_add,goods_list,goods_delete,wh_space_availability,load_units
 from .sub_views.goods_check_view import goods_check
 from .sub_views.home_page_view import home_page
 from .sub_views.insurance_add_view import insurance_add,insurance_delete,insurance_list
@@ -28,7 +28,7 @@ from .sub_views.stud_add_view import stud_add,stud_delete,stud_list
 from .sub_views.peo_add_view import peo_add,peo_list,peo_delete
 from .sub_views.damage_add_view import damage_add,damage_list,damage_delete
 from .sub_views.damagereport_add_view import damagereport_add,damagereport_list,damagereport_delete
-from .sub_views.locationmaster_add_view import locationmaster_add,locationmaster_list,locationmaster_delete
+from .sub_views.locationmaster_add_view import locationmaster_add,locationmaster_list,locationmaster_delete,load_customer_model
 from .sub_views.employee_add_view import emp_add,emp_list,emp_delete,emp_registration_page
 from .sub_views.unit_add_view import unit_add,unit_list,unit_delete
 from .sub_views.Bay_add_view import bay_add,bay_list,bay_delete
@@ -74,3 +74,5 @@ from .sub_views.materialhandling_add_view import materialhandling_list,materialh
 from .sub_views.packagetype_add_view import packagetype_list,packagetype_delete,packagetype_add
 from .sub_views.currency_type_add_view import currencytype_add,currencytype_list,currencytype_delete
 from .sub_views.stock_type_add_view import stocktype_add,stocktype_delete,stocktype_list
+from .sub_views.warehouse_add_view import warehousein_add
+from .sub_views.storage_add_view import storage_list

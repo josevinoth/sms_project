@@ -20,12 +20,12 @@
     <thead class="thead-dark">
         <tr>
 <!--            <th>Product Category</th>-->
-            <th>Transport Business Type</th>
+            <th>Business Type</th>
             <th>Edit</th>
             <th>Delete</th>
     </thead>
     <tbody>
-        {% for trbusinesstypeinfo in role_list %}
+        {% for trbusinesstypeinfo in trbusinesstype_list %}
             <tr>
                 <td> {{trbusinesstypeinfo.tb_trbusinesstype}}</td>
                 <td>

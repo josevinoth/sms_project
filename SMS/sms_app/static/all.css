@@ -124,7 +124,7 @@ h4{
 }
 
 .input-group-prepend span{
-width: 160px;
+width: 190px;
 background-color: #8de4e9;'
 font-color: black;
 font-weight: bold!important;
@@ -298,6 +298,7 @@ nav > div a.nav-item.nav-link:focus
 .disable_a_href{
     pointer-events: none;
     background:#c0c0c0 !important;
+    color:#000000 !important;
 }
 
 /*Enable anchor*/

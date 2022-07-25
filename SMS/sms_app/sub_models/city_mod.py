@@ -6,5 +6,8 @@ class City(models.Model):
     state = models.ForeignKey(State, on_delete=models.CASCADE, default='')
     city_name = models.CharField(max_length=100, default='')
 
+    class Meta:
+        ordering = ["city_name"]
+
     def __str__(self):
         return self.city_name
