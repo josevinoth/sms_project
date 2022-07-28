@@ -4,7 +4,6 @@ from ..models import State,GstexcemptionInfo,GstmodelInfo,PaymenttypeInfo,Crcoun
 class CustomerInfo(models.Model):
     cu_customercode = models.CharField(max_length=10,default = '')
     cu_name = models.CharField(max_length=10,default = '')
-    cu_type = models.ForeignKey(CustomertypeInfo, on_delete=models.CASCADE, default='')
     cu_state = models.ForeignKey(State,on_delete=models.CASCADE, default='')
     cu_nameshort = models.CharField(max_length=10,default = '')
     cu_pan = models.CharField(max_length=10,default = '')

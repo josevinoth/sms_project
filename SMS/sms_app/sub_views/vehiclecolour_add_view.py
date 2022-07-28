@@ -4,7 +4,7 @@ from ..models import VehiclecolourInfo
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
-def vehiclecolour_add(request,role_id=0):
+def vehiclecolour_add(request,vehiclecolour_id=0):
     first_name = request.session.get('first_name')
     if request.method == "GET":
         if vehiclecolour_id == 0:

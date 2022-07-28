@@ -1,7 +1,30 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<div class="col-md-1">
+	<a href="{% url 'consignmentdetail_list' %}" class="btn btn-primary btn-block btn-lg">
+		<i class="fas fa-arrow-left"></i>
+	</a>
+</div>
+<div class="row" >
+	<div class="col-2"></div>
+	<div class="col-8 btn-group mx-auto text-center">
+		<a class="btn btn-primary border border-dark " id="consignment_btn">Consignment Details</a>
+		{% if vehicledetails_list %}
+		{% for vehicledetailsinfo in vehicledetails_list %}
+		<a class="btn btn-primary border border-dark disable_a_href"  id="vehicle_btn" href="{% url 'vehicledetail_update' vehicledetailsinfo.id %}">Vehicle Detail</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn btn-primary border border-dark disable_a_href" id="vehicle_btn1" href="{% url 'vehicledetail_insert' %}">Vehicle Detail</a>
+		{% endif %}
+		<a class="btn btn-primary border border-dark disable_a_href" id="vehicle_btn2">Vehicle Details</a>
+		<a class="btn btn-primary border border-dark disable_a_href" id="trip_btn">Trip Details</a>
+		<a class="btn btn-primary border border-dark disable_a_href" id="tripclose_btn">Trip Closure</a>
+	</div>
+	<div class="col-2"></div>
+</div>
 
+<hr>
 <form method="POST" action="">
 	{% csrf_token %}
 
@@ -20,63 +43,63 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field form.co_enquirynumber class="form-control" %}
+									{% render_field con_det_form.co_enquirynumber class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field form.co_consignmentnumber class="form-control" %}
+									{% render_field con_det_form.co_consignmentnumber class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Date</span>
 									</div>
-									{% render_field form.co_consignmentdate class="form-control" %}
+									{% render_field con_det_form.co_consignmentdate class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner</span>
 									</div>
-									{% render_field form.co_consigner class="form-control" %}
+									{% render_field con_det_form.co_consigner class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignee</span>
 									</div>
-									{% render_field form.co_consignee class="form-control" %}
+									{% render_field con_det_form.co_consignee class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner Invoice</span>
 									</div>
-									{% render_field form.co_consignerinvoice class="form-control" %}
+									{% render_field con_det_form.co_consignerinvoice class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner Value</span>
 									</div>
-									{% render_field form.co_consignervalue class="form-control" %}
+									{% render_field con_det_form.co_consignervalue class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Value in INR</span>
 									</div>
-									{% render_field form.co_valueininr class="form-control" %}
+									{% render_field con_det_form.co_valueininr class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">No. Of Pieces</span>
 									</div>
-									{% render_field form.co_noofpieces class="form-control" %}
+									{% render_field con_det_form.co_noofpieces class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -85,68 +108,68 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Weight</span>
 									</div>
-									{% render_field form.co_weight class="form-control" %}
+									{% render_field con_det_form.co_weight class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Ebill No.</span>
 									</div>
-									{% render_field form.co_ebillno class="form-control" %}
+									{% render_field con_det_form.co_ebillno class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Date Of Issue</span>
 									</div>
-									{% render_field form.co_dateofissue class="form-control" %}
+									{% render_field con_det_form.co_dateofissue class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Date Of Validity</span>
 									</div>
-									{% render_field form.co_dateofvalidity class="form-control" %}
+									{% render_field con_det_form.co_dateofvalidity class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Container Description</span>
 									</div>
-									{% render_field form.co_containerdescription class="form-control" %}
+									{% render_field con_det_form.co_containerdescription class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Dimension</span>
 									</div>
-									{% render_field form.co_dimension class="form-control" %}
+									{% render_field con_det_form.co_dimension class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Movement</span>
 									</div>
-									{% render_field form.co_movement class="form-control" %}
+									{% render_field con_det_form.co_movement class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
-									{% render_field form.co_status class="form-control" %}
+									{% render_field con_det_form.co_status class="form-control" id="consignment_status" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">last modified by</span>
 									</div>
-									{% render_field form.co_lastmodifiedby class="form-control" %}
+									{% render_field con_det_form.co_lastmodifiedby class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
 							<div class="message">
-								{{form.errors}}
+								{{con_det_form.errors}}
 							</div>
 							<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						</div>
@@ -162,5 +185,13 @@
 	</div>
 	</div>
 </form>
-
+<script>
+$(document).ready(function() {
+	var status_id=$('#consignment_status option:selected').val()
+	if (status_id ==5){
+		$('#vehicle_btn').removeClass('disable_a_href');
+		$('#vehicle_btn1').removeClass('disable_a_href');
+		}
+  });
+</script>
 {% endblock content %}

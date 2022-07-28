@@ -730,10 +730,18 @@
 										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 								</div>
+								<div class="message">
+								{{form.errors}}
+							</div>
+								<!--<input class="btn btn-success" type="submit" name="Create User">-->
 							</div>
 						</div>
 					</div>
 				</div>
+				<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+				<a href="{% url 'vehiclemaster_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
 			</div>
 		</div>
 	</div>
