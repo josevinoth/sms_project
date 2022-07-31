@@ -31,8 +31,8 @@ def gatein_add(request, gatein_id=0):
             wh_customer_type = Gatein_info.objects.get(pk=gatein_id).gatein_customer_type
             wh_invoice = Gatein_info.objects.get(pk=gatein_id).gatein_invoice
             request.session['ses_gatein_id_nam'] = wh_job_id
-            request.session['ses_customer_name'] = wh_customer_name
-            request.session['ses_customer_type'] = wh_customer_type
+            request.session['ses_customer_name'] = str(wh_customer_name)
+            request.session['ses_customer_type'] = str(wh_customer_type)
             request.session['ses_wh_invoice'] = wh_invoice
             print("Customer Name",wh_customer_name)
             print("Customer Type",wh_customer_type)
@@ -99,18 +99,23 @@ def gatein_add(request, gatein_id=0):
 
             loadingbay_list= Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
             gatein_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id_sess)
+            goods_list= Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
+
             print("Wh_job_id",wh_job_id)
             print("Gatein Status",gatein_status)
             print("Loadingbay Satus",loadingbay_status)
             print("Damage_before_status", damage_before_status)
+            print("Damage_After_status", damage_after_status)
+            print("Ware_Housein_status", warehousein_status)
+            print("Gatein ID", gatein_id)
             gatein_info = Gatein_info.objects.get(pk=gatein_id)
             gatein_form = GateinaddForm(instance=gatein_info)
             context = {
                 'gatein_form': gatein_form,
                 'first_name': first_name,
                 'loadingbay_list': loadingbay_list,
-                'gatein_list':gatein_list ,
-                'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
+                'gatein_list':gatein_list,
+                'goods_list': goods_list,
                 'gatein_status':gatein_status,
                 'loadingbay_status':loadingbay_status,
                 'damage_before_status':damage_before_status,

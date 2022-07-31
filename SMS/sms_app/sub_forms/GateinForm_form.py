@@ -11,3 +11,6 @@ class GateinaddForm(forms.ModelForm):
         self.fields['gatein_driver'].empty_label = "--Select--"
         self.fields['gatein_status'].empty_label = "--Select--"
         self.fields['gatein_truck_type'].empty_label = "--Select--"
+        self.fields['gatein_customer'].empty_label = "--Select--"
+        self.fields['gatein_department'].empty_label = "--Select--"
+        self.fields['gatein_customer_type'].empty_label = "--Select--"

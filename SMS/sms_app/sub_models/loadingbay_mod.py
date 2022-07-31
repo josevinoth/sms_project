@@ -13,14 +13,15 @@ class Loadingbay_Info(models.Model):
     lb_otl_check = models.ForeignKey(StatusList,on_delete=models.CASCADE,related_name='lb_otl_check', db_column='lb_otl_check')
     lb_offload_acceptance = models.ForeignKey(StatusList,on_delete=models.CASCADE,related_name='lb_offload_acceptance', db_column='lb_offload_acceptance')
     lb_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6, null=True)
-    lb_stock_movement_type = models.ForeignKey(MovementtypeInfo, on_delete=models.CASCADE, blank=True, null=True, max_length=20)
+    # lb_stock_movement_type = models.ForeignKey(MovementtypeInfo, on_delete=models.CASCADE, blank=True, null=True, max_length=20)
     lb_stock_type = models.ForeignKey(Stock_type, on_delete=models.CASCADE, blank=True, null=True, max_length=20)
     lb_stock_unloading_start_time = models.CharField(blank=True, null=True, max_length=20)
     lb_stock_unloading_end_time = models.CharField(blank=True, null=True, max_length=20)
     lb_stock_FRD_time = models.CharField(blank=True, null=True, max_length=20)
-    lb_stock_invoice_value = models.IntegerField(blank=True, null=True)
-    lb_stock_amount_in = models.IntegerField(blank=True, null=True)
+    lb_stock_invoice_value = models.FloatField(null=True,default=0.0)
+    lb_stock_amount_in = models.FloatField(null=True,default=0.0)
     lb_stock_invoice_currency = models.ForeignKey(Currency_type, on_delete=models.CASCADE, blank=True, null=True)
+    lb_stock_currency_con = models.FloatField(null=True,default=0.0)
 
 
 

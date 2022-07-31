@@ -1,4 +1,6 @@
 from django.db import models
+
+
 from ..models import DamageInfo,StatusList
 class DamagereportInfo(models.Model):
     dam_wh_job_num = models.CharField(max_length=20, null=True, default='')
@@ -11,6 +13,8 @@ class DamagereportInfo(models.Model):
     dam_50_offload_pic = models.CharField(max_length=20, null=True, default='')
     dam_empty_vehicle = models.CharField(max_length=20, null=True, default='')
     dam_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6, null=True)
-
+    dam_document =  models.CharField(max_length=20, null=True, default='')
+    # dam_document = models.FileField(upload_to='documents/',null=True)
+    # dam_uploaded_at =  models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.dam_damage_type

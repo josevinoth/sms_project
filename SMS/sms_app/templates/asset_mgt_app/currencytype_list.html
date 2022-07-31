@@ -20,7 +20,8 @@
     <thead class="thead-dark">
         <tr>
 <!--            <th>Product Category</th>-->
-            <th>Type</th>
+            <th>Currency</th>
+            <th>Conversion Value</th>
             <th>Edit</th>
             <th>Delete</th>
     </thead>
@@ -28,6 +29,7 @@
         {% for currencytypeinfo in currencytype_list %}
             <tr>
                 <td> {{currencytypeinfo.currency_type}}</td>
+                <td> {{currencytypeinfo.converision_value}}</td>
                 <td>
 
                     <a href="{% url 'currencytype_update' currencytypeinfo.id %}" >

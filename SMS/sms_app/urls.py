@@ -280,5 +280,5 @@ urlpatterns = [
     path('warehousein_update/<int:warehousein_id>/', views.warehousein_add, name='warehousein_update'),  # Update warehousein
     path('storage_list/', views.storage_list, name='storage_list'),  # List Storage
     path('load_customer_model/', views.load_customer_model, name='load_customer_model'),
-
+    path('dam_upload_files/', views.dam_file_upload, name='dam_upload_files'),
 ]

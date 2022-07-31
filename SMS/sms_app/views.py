@@ -27,7 +27,7 @@ from .sub_views.insurancetype_add_view import insurancetype_add,insurancetype_de
 from .sub_views.stud_add_view import stud_add,stud_delete,stud_list
 from .sub_views.peo_add_view import peo_add,peo_list,peo_delete
 from .sub_views.damage_add_view import damage_add,damage_list,damage_delete
-from .sub_views.damagereport_add_view import damagereport_add,damagereport_list,damagereport_delete
+from .sub_views.damagereport_add_view import damagereport_add,damagereport_list,damagereport_delete,dam_file_upload
 from .sub_views.locationmaster_add_view import locationmaster_add,locationmaster_list,locationmaster_delete,load_customer_model
 from .sub_views.employee_add_view import emp_add,emp_list,emp_delete,emp_registration_page
 from .sub_views.unit_add_view import unit_add,unit_list,unit_delete

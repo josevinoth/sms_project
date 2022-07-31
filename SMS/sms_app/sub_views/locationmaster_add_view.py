@@ -102,7 +102,7 @@ def load_customer_model(request):
     customer_businessmodel_txt= lm_customer_model_id[0]['tb_trbusinesstype']  # Get value from Queryset
     print(customer_businessmodel_txt)
     data = {
-        'customer_businessmodel_txt':customer_businessmodel_txt
+        'customer_businessmodel_val':customer_businessmodel_val
     }
-    return HttpResponse(json.dumps(data))
+    return HttpResponse(customer_businessmodel_val)
     # return JsonResponse((data))

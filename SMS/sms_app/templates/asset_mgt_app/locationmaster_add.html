@@ -51,58 +51,58 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Length (cm)</span>
+										<span class="input-group-text">Length (ft)</span>
 									</div>
 									{% render_field form.lm_length id="lm_length" onchange="area_volume_fn()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Width (cm)</span>
+										<span class="input-group-text">Width (ft)</span>
 									</div>
 									{% render_field form.lm_width id="lm_width" onchange="area_volume_fn()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Heigth (cm)</span>
+										<span class="input-group-text">Heigth (ft)</span>
 									</div>
 									{% render_field form.lm_height id="lm_height" onchange="area_volume_fn()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Total Area (Sq.cm)</span>
+										<span class="input-group-text" >Total Area (Sq.ft)</span>
 									</div>
 									{% render_field form.lm_size id="lm_size" readonly="True" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Area Occupied (Sq.cm)</span>
+										<span class="input-group-text" >Area Occupied (Sq.ft)</span>
 									</div>
 									{% render_field form.lm_area_occupied id="lm_area_occupied" onchange="area_volume_fn()" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Available Area (Sq.cm)</span>
+										<span class="input-group-text">Available Area (Sq.ft)</span>
 									</div>
 									{% render_field form.lm_available_area id="lm_available_area" readonly="True" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Volume (Cu.cm)</span>
+										<span class="input-group-text">Total Volume (Cu.ft)</span>
 									</div>
 									{% render_field form.lm_total_volume id="lm_total_volume" readonly="True" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Volume Occupied (Cu.cm)</span>
+										<span class="input-group-text" >Volume Occupied (Cu.ft)</span>
 									</div>
 									{% render_field form.lm_volume_occupied id="lm_volume_occupied" onchange="area_volume_fn()" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Available Volume (Cu.cm)</span>
+										<span class="input-group-text">Available Volume (Cu.ft)</span>
 									</div>
 									{% render_field form.lm_available_volume id="lm_available_volume" readonly="True" class="form-control" %}
 								</div>
@@ -160,14 +160,12 @@ function area_volume_fn() {
       var url = $("#location_master").attr("data-load_customer_model-url");
 
       var lm_customer_name_id = $(this).find(":selected").text();
-      alert(lm_customer_name_id)
       $.ajax({
         url: url,
         data: {
           'lm_customer_name_id': lm_customer_name_id
         },
 		success: function (response) {
-			alert(response)
 			var obj=JSON.parse(response)["customer_businessmodel_txt"]
 			$("#lm_customer_model").val(obj)
         }

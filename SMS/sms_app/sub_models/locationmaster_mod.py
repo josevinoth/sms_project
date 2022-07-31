@@ -17,6 +17,7 @@ class LocationmasterInfo(models.Model):
     lm_concatenate = models.CharField(max_length=10,default = '')
     lm_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
     lm_customer_model = models.CharField(blank=True, null=True, max_length=20)
+
     def __str__(self):
         return str([self.lm_wh_unit,self.lm_areaside])
 

@@ -132,3 +132,17 @@ def damagereport_delete(request,damagereport_id):
     damagereport = DamagereportInfo.objects.get(pk=damagereport_id)
     damagereport.delete()
     return redirect('/SMS/damagereport_list')
+
+#Upload documents
+@login_required(login_url='login_page')
+def dam_file_upload(request):
+    if request.method == 'POST':
+        damagereport_form = DamagereportaddForm(request.POST, request.FILES)
+        if damagereport_form.is_valid():
+            damagereport_form.save()
+            return redirect('home')
+    else:
+        damagereport_form = DamagereportaddForm()
+    return render(request, 'asset_mgt_app/damagereport_add.html', {
+        'damagereport_form': damagereport_form
+    })

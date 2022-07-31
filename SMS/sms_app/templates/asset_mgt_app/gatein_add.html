@@ -43,7 +43,7 @@
 </div>
 
 <hr>
-<form method="POST" action="" >
+<form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" novalidate >
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
@@ -75,14 +75,21 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer</span>
 									</div>
-									{% render_field gatein_form.gatein_customer class="form-control" %}
+									{% render_field gatein_form.gatein_customer id="gatein_customer" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Type</span>
+										<span class="input-group-text">Customer Model</span>
 									</div>
-									{% render_field gatein_form.gatein_customer_type class="form-control" %}
+									{% render_field gatein_form.gatein_customer_type id="gatein_customer_type" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Department</span>
+									</div>
+									{% render_field gatein_form.gatein_department class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -90,13 +97,6 @@
 										<span class="input-group-text">Arrival Date & Time</span>
 									</div>
 									{% render_field gatein_form.gatein_arrival_date type="datetime-local" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Department</span>
-									</div>
-									{% render_field gatein_form.gatein_department class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -242,5 +242,23 @@ $(document).ready(function() {
 		}
   });
 </script>
+<script>
+    $("#gatein_customer").change(function () {
+      var url = $("#gate_in").attr("data-load_customer_model-url");
 
+      var gatein_customer_id = $(this).find(":selected").text();
+      $.ajax({
+        url: url,
+        data: {
+          'lm_customer_name_id': gatein_customer_id
+        },
+		success: function (data) {
+			alert(data);
+			$("#gatein_customer_type").val(data);
+
+        }
+      });
+
+    });
+  </script>
 {% endblock content %}

@@ -88,6 +88,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Documents</span>
+									</div>
+									{% render_field damagereport_form.dam_document class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Closed Door Pic</span>
 									</div>
 									{% render_field damagereport_form.dam_closed_door_pic class="form-control" %}
