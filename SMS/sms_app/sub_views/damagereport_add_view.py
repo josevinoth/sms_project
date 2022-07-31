@@ -65,10 +65,10 @@ def damagereport_add(request,damagereport_id=0):
             # Warehousein Status Check
             try:
                 warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_check_in_out', flat=True)  # count records
-                print(list(warehousein_status))
+                print("warehousein_status_List",list(warehousein_status))
                 warehousein_status_list = list(warehousein_status)
                 if warehousein_status_list != []:
-                    if warehousein_status_list[0] == 9:
+                    if warehousein_status_list[0] == 1:
                         result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
                     else:
                         result = False
@@ -77,17 +77,17 @@ def damagereport_add(request,damagereport_id=0):
                 print(result)
                 if (result):
                     warehousein_status = "Completed"  # get goods status
-                    print(warehousein_status)
+                    print("warehousein_status",warehousein_status)
                 else:
                     warehousein_status = "No Status"  # get goods status
-                    print(warehousein_status)
+                    print("warehousein_status",warehousein_status)
             except ObjectDoesNotExist:
                 warehousein_status = "No Status"
             damagereport_info=DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id)
             damagereport_form = DamagereportaddForm(instance=damagereport_info)
-            print(gatein_status)
-            print(loadingbay_status)
-            print(damage_before_status)
+            print("gatein_status",gatein_status)
+            print("loadingbay_status",loadingbay_status)
+            print("damage_before_status",damage_before_status)
             context = {
                 'damagereport_form': damagereport_form,
                 'first_name': first_name,

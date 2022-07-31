@@ -71,7 +71,7 @@ def loadingbay_add(request, loadingbay_id=0):
                 print(list(warehousein_status))
                 warehousein_status_list = list(warehousein_status)
                 if warehousein_status_list != []:
-                    if warehousein_status_list[0] == 9:
+                    if warehousein_status_list[0] == 1:
                         result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
                     else:
                         result = False

@@ -35,6 +35,8 @@ from .sub_models.crcountfrom_mod import CrcountfromInfo
 from .sub_models.trbusinesstype_mod import TrbusinesstypeInfo
 from .sub_models.customer_mod import CustomerInfo
 from .sub_models.locationmaster_mod import LocationmasterInfo
+from .sub_models.check_in_out_mod import Check_in_out
+from .sub_models.uom_mod import UOM
 from .sub_models.warehouse_goods_info_mod import Warehouse_goods_info
 from .sub_models.warehouse_stock_info_mod import Warehouse_stock_info
 from .sub_models.assign_asset_info_mod import Assign_asset_info
@@ -48,6 +50,7 @@ from .sub_models.Whratemaster_mod import WhratemasterInfo
 from .sub_models.vehicletype_mod import VehicletypeInfo
 from .sub_models.materialhandling_mod import Materialhandling_Info
 from .sub_models.movementtype_mod import MovementtypeInfo
+from .sub_models.received_not_mod import Received_not
 from .sub_models.loadingbay_mod import Loadingbay_Info
 from .sub_models.customername_mod import CustomernameInfo_new
 from .sub_models.vehiclecategory_mod import VehiclecategoryInfo

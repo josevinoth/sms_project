@@ -1,6 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import User_extInfo
+from .models import StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not
 
 # Register your models here.
-# admin.site.register(User_extInfo)
+admin.site.register(StatusList)
+admin.site.register(Country)
+admin.site.register(State)
+admin.site.register(City)
+admin.site.register(Check_in_out)
+admin.site.register(GstexcemptionInfo)
+admin.site.register(UOM)
+admin.site.register(Received_not)

@@ -327,7 +327,7 @@ function chargeable_weight_fn() {
   var no_of_piece=document.getElementById("no_of_piece").value
   selectElement = document.querySelector('#uom');
   uom_val = selectElement.options[selectElement.selectedIndex].value;
-  if (uom_val=="cm")
+  if (uom_val==1)
 	{
 		var chargeable_weight_val=((length_val*width_val*height_val)/6000).toFixed(3)
 		document.getElementById("chargeable_weight").value =chargeable_weight_val;

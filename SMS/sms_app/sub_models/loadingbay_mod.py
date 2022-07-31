@@ -1,12 +1,12 @@
 from django.db import models
-from ..models import StatusList,Materialhandling_Info,MovementtypeInfo,Stock_type,Currency_type
+from ..models import StatusList,Materialhandling_Info,MovementtypeInfo,Stock_type,Currency_type,Received_not
 
 
 class Loadingbay_Info(models.Model):
     lb_job_no = models.CharField(blank=False, null=False, max_length=20,default='')
     lb_invoice = models.CharField(blank=False, null=False,max_length=20,default='')
     lb_material_handling = models.ForeignKey(Materialhandling_Info,on_delete=models.CASCADE,related_name='lb_material_handling', db_column='lb_material_handling')
-    lb_packing_list = models.ForeignKey(StatusList, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list')
+    lb_packing_list = models.ForeignKey(Received_not, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list')
     lb_inward_pod = models.CharField(blank=False, null=False, max_length=20,default='')
     lb_eway_bill= models.CharField(blank=False, null=False, max_length=20,default='')
     lb_validity_date= models.CharField(blank=False, null=False, max_length=20,default='')
