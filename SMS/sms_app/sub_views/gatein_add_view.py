@@ -30,10 +30,12 @@ def gatein_add(request, gatein_id=0):
             wh_customer_name = Gatein_info.objects.get(pk=gatein_id).gatein_customer
             wh_customer_type = Gatein_info.objects.get(pk=gatein_id).gatein_customer_type
             wh_invoice = Gatein_info.objects.get(pk=gatein_id).gatein_invoice
+            wh_total_packages = Gatein_info.objects.get(pk=gatein_id).gatein_no_of_pkg
             request.session['ses_gatein_id_nam'] = wh_job_id
             request.session['ses_customer_name'] = str(wh_customer_name)
             request.session['ses_customer_type'] = str(wh_customer_type)
             request.session['ses_wh_invoice'] = wh_invoice
+            request.session['ses_gatein_no_of_pkg'] = wh_total_packages
             print("Customer Name",wh_customer_name)
             print("Customer Type",wh_customer_type)
             print("Invoice",wh_invoice)

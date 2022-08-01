@@ -72,6 +72,7 @@ from .sub_models.vehiclecolour_mod import VehiclecolourInfo
 from .sub_models.permittype_mod import PermittypeInfo
 from .sub_models.vehiclemaster_mod import VehiclemasterInfo
 from .sub_models.rtratemaster_mod import RtratemasterInfo
+from .sub_models.upload_mod import UploadInfo
 
 
 

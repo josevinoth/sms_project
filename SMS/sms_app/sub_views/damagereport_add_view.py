@@ -85,10 +85,13 @@ def damagereport_add(request,damagereport_id=0):
                 warehousein_status = "No Status"
             damagereport_info=DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id)
             damagereport_form = DamagereportaddForm(instance=damagereport_info)
+            # Get the current instance object to display in the template
+            img_obj = damagereport_form.instance
             print("gatein_status",gatein_status)
             print("loadingbay_status",loadingbay_status)
             print("damage_before_status",damage_before_status)
             context = {
+                'img_obj':img_obj,
                 'damagereport_form': damagereport_form,
                 'first_name': first_name,
                 'loadingbay_list': Loadingbay_Info.objects.filter(lb_job_no=wh_job_id),
@@ -106,7 +109,7 @@ def damagereport_add(request,damagereport_id=0):
     else:
         if damagereport_id == 0:
             print("I am inside post add damagereport")
-            damagereport_form = DamagereportaddForm(request.POST)
+            damagereport_form = DamagereportaddForm(request.POST,request.FILES)
         else:
             print("I am inside post edit damagereport")
             ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')

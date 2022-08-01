@@ -32,14 +32,14 @@
             <td> {{unitinfo.unit_name}}</td>
             <td>
 
-                <a href="{% url 'unit_update' unitinfo.id %}" >
+                <a class="btn btn-primary" href="{% url 'unit_update' unitinfo.id %}" >
                     <i class="far fa-edit"></i>
                 </a>
             </td>
             <td>
                 <form action="{% url 'unit_delete' unitinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
-                    <button type="submit" class="btn">
+                    <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>

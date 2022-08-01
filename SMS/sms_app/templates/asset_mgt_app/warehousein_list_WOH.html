@@ -44,7 +44,7 @@
                 <td>
                     <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn">
+                        <button type="submit" class="btn btn-warning">
                             <i class="fas fa-qrcode"></i>
                         </button>
                     </form>
@@ -52,7 +52,7 @@
                 </td>
                 <td>
 
-                    <a href="{% url 'warehousein_update' goodsinfo.id %}" >
+                    <a class="btn btn-primary" href="{% url 'warehousein_update' goodsinfo.id %}" >
                         <i class="far fa-edit"></i>
                     </a>
                 </td>

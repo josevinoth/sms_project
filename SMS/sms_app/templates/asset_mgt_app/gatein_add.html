@@ -115,7 +115,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">No Of Packages</span>
+										<span class="input-group-text">Total Packages</span>
 									</div>
 									{% render_field gatein_form.gatein_no_of_pkg class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -253,7 +253,6 @@ $(document).ready(function() {
           'lm_customer_name_id': gatein_customer_id
         },
 		success: function (data) {
-			alert(data);
 			$("#gatein_customer_type").val(data);
 
         }

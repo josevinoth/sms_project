@@ -43,14 +43,14 @@
 <!--                <td> {{stockinfo.wh_stock_unloading_end_time}}</td>-->
 <!--                <td> {{stockinfo.wh_stock_FRD_time}}</td>-->
                 <td>
-                    <a href="{% url 'gatein_update' gateininfo.id %}" >
+                    <a class="btn btn-primary" href="{% url 'gatein_update' gateininfo.id %}" >
                         <i class="far fa-edit"></i>
                     </a>
                 </td>
                 <td>
                     <form action="{% url 'gatein_delete' gateininfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn">
+                        <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </form>
