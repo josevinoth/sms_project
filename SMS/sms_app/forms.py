@@ -18,7 +18,7 @@ from .sub_forms.InsurancetypeaddForm_form import InsurancetypeaddForm
 from .sub_forms.StudForm_form import StudaddForm
 from .sub_forms.peoform_form import PeoaddForm
 from .sub_forms.damageaddform_form import DamageaddForm
-from .sub_forms.damagereportaddform_form import DamagereportaddForm
+from .sub_forms.damagereportaddform_form import DamagereportaddForm,DamagereportImagesForm
 from .sub_forms.locationmasteraddform_form import LocationmasteraddForm
 from .sub_forms.UnitForm_Form import UnitaddForm
 from .sub_forms.BayaddForm_Form import BayaddForm

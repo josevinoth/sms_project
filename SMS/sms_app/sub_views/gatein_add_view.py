@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
+from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib import messages
 
 # Add WH Job
 @login_required(login_url='login_page')
@@ -39,6 +40,7 @@ def gatein_add(request, gatein_id=0):
             print("Customer Name",wh_customer_name)
             print("Customer Type",wh_customer_type)
             print("Invoice",wh_invoice)
+            print("wh_total_packages",wh_total_packages)
             wh_job_id_sess=request.session.get('ses_gatein_id_nam')
             # Gate In Status Check
             try:
@@ -147,8 +149,37 @@ def gatein_list(request):
 #Delete WH Job
 @login_required(login_url='login_page')
 def gatein_delete(request,gatein_id):
-    gatein = Gatein_info.objects.get(pk=gatein_id)
-    gatein.delete()
+    wh_job_id=Gatein_info.objects.get(pk=gatein_id).gatein_job_no
+    # wh_job_id = request.session.get('ses_gatein_id_nam')
+    gatein_del = Gatein_info.objects.get(pk=gatein_id)
+    gatein_del.delete()
+
+    # Delete loading Bay
+    try:
+        loadingbay_del = Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
+        loadingbay_del.delete()
+    except ObjectDoesNotExist:
+        print("Loading bay Object does not exist")
+        pass
+
+    # Delete Damage/Check Before
+    try:
+        damagereport_del=DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id)
+        damagereportimg_del = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
+        damagereport_del.delete()
+        damagereportimg_del.delete()
+    except ObjectDoesNotExist:
+        print("Damage/Check Before Object does not exist")
+        pass
+
+    # Delete Damage/Check After
+    try:
+        Warehouse_goods_del = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
+        Warehouse_goods_del.delete()
+    except ObjectDoesNotExist:
+        print("Damage/Check After Object does not exist")
+        pass
+
     return redirect('/SMS/gatein_list')
 
 

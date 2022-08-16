@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import StatusList,Materialhandling_Info,MovementtypeInfo,Stock_type,Currency_type,Received_not
+from ..models import StatusList,Materialhandling_Info,MovementtypeInfo,Stock_type,Currency_type,Received_not,GstexcemptionInfo
 
 
 class Loadingbay_Info(models.Model):
@@ -10,8 +10,8 @@ class Loadingbay_Info(models.Model):
     lb_inward_pod = models.CharField(blank=False, null=False, max_length=20,default='')
     lb_eway_bill= models.CharField(blank=False, null=False, max_length=20,default='')
     lb_validity_date= models.CharField(blank=False, null=False, max_length=20,default='')
-    lb_otl_check = models.ForeignKey(StatusList,on_delete=models.CASCADE,related_name='lb_otl_check', db_column='lb_otl_check')
-    lb_offload_acceptance = models.ForeignKey(StatusList,on_delete=models.CASCADE,related_name='lb_offload_acceptance', db_column='lb_offload_acceptance')
+    lb_otl_check = models.ForeignKey(GstexcemptionInfo,on_delete=models.CASCADE,related_name='lb_otl_check', db_column='lb_otl_check')
+    lb_offload_acceptance = models.ForeignKey(GstexcemptionInfo,on_delete=models.CASCADE,related_name='lb_offload_acceptance', db_column='lb_offload_acceptance')
     lb_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6, null=True)
     # lb_stock_movement_type = models.ForeignKey(MovementtypeInfo, on_delete=models.CASCADE, blank=True, null=True, max_length=20)
     lb_stock_type = models.ForeignKey(Stock_type, on_delete=models.CASCADE, blank=True, null=True, max_length=20)

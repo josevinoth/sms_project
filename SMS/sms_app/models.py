@@ -1,4 +1,5 @@
 from django.db import models
+from.sub_models.activeinactive_mod import ActiveinactiveInfo
 from .sub_models.designation_mod import DesignationInfo
 from .sub_models.role_mod import RoleInfo
 from .sub_models.country_mod import Country
@@ -43,7 +44,7 @@ from .sub_models.assign_asset_info_mod import Assign_asset_info
 from .sub_models.employee_mod import Employee
 from .sub_models.student_mod import Stud_reg
 from .sub_models.peo_mod import Peo_reg
-from .sub_models.damagereport_mod import DamagereportInfo
+from .sub_models.damagereport_mod import DamagereportInfo,DamagereportImages
 from .sub_models.user_ext_mod import User_extInfo
 from .sub_models.whstoragetype_mod import WhstoragetypeInfo
 from .sub_models.Whratemaster_mod import WhratemasterInfo
@@ -73,6 +74,7 @@ from .sub_models.permittype_mod import PermittypeInfo
 from .sub_models.vehiclemaster_mod import VehiclemasterInfo
 from .sub_models.rtratemaster_mod import RtratemasterInfo
 from .sub_models.upload_mod import UploadInfo
+
 
 
 

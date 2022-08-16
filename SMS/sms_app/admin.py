@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo
+from .models import StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo
 
 # Register your models here.
 admin.site.register(StatusList)
@@ -13,5 +13,7 @@ admin.site.register(UOM)
 admin.site.register(Received_not)
 admin.site.register(UploadInfo)
 admin.site.register(DamagereportInfo)
+admin.site.register(ActiveinactiveInfo)
+
 
 

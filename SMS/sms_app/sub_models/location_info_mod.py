@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Country,State,City,StatusList
+from ..models import Country,State,City,ActiveinactiveInfo
 
 class Location_info(models.Model):
     loc_name = models.CharField(max_length=100)
@@ -8,7 +8,7 @@ class Location_info(models.Model):
     loc_city = models.ForeignKey(City, on_delete=models.CASCADE, default='')
     loc_zipcode = models.CharField(max_length=10)
     loc_address = models.CharField(max_length=300)
-    loc_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default='')
+    loc_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.CASCADE, default='')
 
     def __str__(self):
         return self.loc_name

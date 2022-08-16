@@ -89,7 +89,6 @@ urlpatterns = [
     path('damagereport_list/', views.damagereport_list, name='damagereport_list'),  # List damagereport,
     path('damagereport_insert', views.damagereport_add, name='damagereport_insert'),  # Add damagereport
     path('damagereport_update/<int:damagereport_id>/', views.damagereport_add, name='damagereport_update'),  # Update damagereport
-    path('damagereport_delete/<int:damagereport_id>/', views.damagereport_delete, name='damagereport_delete'),  # Delete damagereport
     path('locationmaster_list/', views.locationmaster_list, name='locationmaster_list'),  # List locationmaster,
     path('locationmaster_insert', views.locationmaster_add, name='locationmaster_insert'),  # Add locationmaster
     path('locationmaster_update/<int:locationmaster_id>/', views.locationmaster_add, name='locationmaster_update'),  # Update locationmaster
@@ -280,5 +279,4 @@ urlpatterns = [
     path('warehousein_update/<int:warehousein_id>/', views.warehousein_add, name='warehousein_update'),  # Update warehousein
     path('storage_list/', views.storage_list, name='storage_list'),  # List Storage
     path('load_customer_model/', views.load_customer_model, name='load_customer_model'),
-    path('dam_upload_files/', views.dam_file_upload, name='dam_upload_files'),
 ]

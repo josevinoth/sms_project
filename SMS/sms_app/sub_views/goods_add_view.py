@@ -1,8 +1,9 @@
 import json
 
+import numpy as np
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-
+from django.contrib import messages
 from ..forms import GoodsaddForm
 from ..models import Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo
 from django.shortcuts import render, redirect
@@ -20,7 +21,11 @@ def goods_list(request):
 @login_required(login_url='login_page')
 def goods_add(request, goods_id=0):
     first_name = request.session.get('first_name')
+    wh_job_id = request.session.get('ses_gatein_id_nam')
     if request.method == "GET":
+        raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces', flat=True)
+        cumsum = sum(raw_data)
+        print("Cumulative Sum is",cumsum)
         if goods_id == 0:
             print("I am inside Get add Goods")
             goods_form = GoodsaddForm()
@@ -182,6 +187,11 @@ def goods_add(request, goods_id=0):
             }
         return render(request, "asset_mgt_app/goods_add.html", context)
     else:
+        raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces', flat=True)
+        cumsum = sum(raw_data)
+        print("Cumulative Sum is", cumsum)
+        tot_package=request.session.get('ses_gatein_no_of_pkg')
+        print("Total Package is",tot_package)
         if goods_id == 0:
             print("I am inside post add Goods")
             goods_form = GoodsaddForm(request.POST)
@@ -193,7 +203,10 @@ def goods_add(request, goods_id=0):
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(request.POST, instance=goodsinfo)
         if goods_form.is_valid():
-            goods_form.save()
+            if cumsum <= tot_package:
+                goods_form.save()
+            else:
+                messages.info(request, 'Number of Pacakges Exceeded Invoice Count')
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
 

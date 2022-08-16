@@ -280,6 +280,12 @@
 							<!--								</div>-->
 							<!--							</div>-->
 						</div>
+						<div class="message message-warning">
+							{% for message in messages %}
+							<p>{{message}}</p>
+							{% endfor %}
+							{{form.error_messages}}
+						</div>
 						<div class="message">
 							{{goods_form.errors}}
 						</div>

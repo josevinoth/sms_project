@@ -1,8 +1,11 @@
 from django.contrib.auth.decorators import login_required
-from ..forms import DamagereportaddForm
-from ..models import DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info
+from ..forms import DamagereportaddForm,DamagereportImagesForm
+from ..models import DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
+
+
+
 @login_required(login_url='login_page')
 def damagereport_add(request,damagereport_id=0):
     first_name = request.session.get('first_name')
@@ -10,12 +13,14 @@ def damagereport_add(request,damagereport_id=0):
         if damagereport_id == 0:
             print("I am inside Get add damagereport")
             damagereport_form = DamagereportaddForm()
+            damagereportimg_form = DamagereportImagesForm()
             ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
             print(ses_gatein_id_nam)
             wh_job_id = ses_gatein_id_nam
             context = {
                 'first_name': first_name,
                 'damagereport_form': damagereport_form,
+                'damagereportimg_form':damagereportimg_form,
                 'loadingbay_list': Loadingbay_Info.objects.filter(lb_job_no=wh_job_id),
                 'gatein_list': Gatein_info.objects.filter(gatein_job_no=wh_job_id),
                 'damagereport_list': DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id),
@@ -85,14 +90,14 @@ def damagereport_add(request,damagereport_id=0):
                 warehousein_status = "No Status"
             damagereport_info=DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id)
             damagereport_form = DamagereportaddForm(instance=damagereport_info)
-            # Get the current instance object to display in the template
-            img_obj = damagereport_form.instance
+            damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
+            damagereportimg_form = DamagereportImagesForm(request.FILES, instance=damagereportimg_info)
             print("gatein_status",gatein_status)
             print("loadingbay_status",loadingbay_status)
             print("damage_before_status",damage_before_status)
             context = {
-                'img_obj':img_obj,
                 'damagereport_form': damagereport_form,
+                'damagereportimg_form':damagereportimg_form,
                 'first_name': first_name,
                 'loadingbay_list': Loadingbay_Info.objects.filter(lb_job_no=wh_job_id),
                 'gatein_list': Gatein_info.objects.filter(gatein_job_no=wh_job_id),
@@ -109,7 +114,8 @@ def damagereport_add(request,damagereport_id=0):
     else:
         if damagereport_id == 0:
             print("I am inside post add damagereport")
-            damagereport_form = DamagereportaddForm(request.POST,request.FILES)
+            damagereport_form = DamagereportaddForm(request.POST)
+            damagereportimg_form=DamagereportImagesForm(request.FILES)
         else:
             print("I am inside post edit damagereport")
             ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
@@ -117,9 +123,20 @@ def damagereport_add(request,damagereport_id=0):
             wh_job_id = ses_gatein_id_nam
             damagereport_info = DamagereportInfo.objects.get(pk=damagereport_id)
             damagereport_form = DamagereportaddForm(request.POST,instance=damagereport_info)
+            damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
+            damagereportimg_form = DamagereportImagesForm(request.POST,request.FILES,instance=damagereportimg_info)
         if damagereport_form.is_valid():
+            print("Main Form Saved")
             damagereport_form.save()
-        # return redirect(request.META['HTTP_REFERER'])
+        else:
+            print("Main Form Not saved")
+
+        if damagereportimg_form.is_valid():
+            print("SubForm Saved")
+            damagereportimg_form.save()
+        else:
+            print("Sub Form Not saved")
+
         return redirect('/SMS/gatein_list')
 
 # List damagereport
@@ -129,23 +146,10 @@ def damagereport_list(request):
     context = {'damagereport_list' : DamagereportInfo.objects.all(),'first_name': first_name}
     return render(request,"asset_mgt_app/damagereport_list.html",context)
 
-#Delete damagereport
-@login_required(login_url='login_page')
-def damagereport_delete(request,damagereport_id):
-    damagereport = DamagereportInfo.objects.get(pk=damagereport_id)
-    damagereport.delete()
-    return redirect('/SMS/damagereport_list')
-
-#Upload documents
-@login_required(login_url='login_page')
-def dam_file_upload(request):
-    if request.method == 'POST':
-        damagereport_form = DamagereportaddForm(request.POST, request.FILES)
-        if damagereport_form.is_valid():
-            damagereport_form.save()
-            return redirect('home')
-    else:
-        damagereport_form = DamagereportaddForm()
-    return render(request, 'asset_mgt_app/damagereport_add.html', {
-        'damagereport_form': damagereport_form
-    })
+# #Delete damagereport
+# @login_required(login_url='login_page')
+# def damagereport_delete(request,damagereport_id):
+#     damagereport = DamagereportInfo.objects.get(pk=damagereport_id)
+#
+#     damagereport.delete()
+#     return redirect('/SMS/damagereport_list')
