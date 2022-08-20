@@ -34,6 +34,8 @@ class Warehouse_goods_info(models.Model):
     wh_checkin_time = models.CharField(blank=True, null=True, max_length=20)
     wh_qr_rand_num = models.CharField(blank=True, null=True, max_length=20)
     wh_dispatch_num = models.CharField(blank=True, null=True, max_length=20)
+    wh_consigner = models.CharField(blank=True, null=True, max_length=20)
+    wh_consignee = models.CharField(blank=True, null=True, max_length=20)
 
 
 

@@ -283,6 +283,8 @@ urlpatterns = [
     path('dispatch_insert', views.dispatch_add, name='dispatch_insert'),  # Add dispatch
     path('dispatch_update/<int:dispatch_id>/', views.dispatch_add, name='dispatch_update'),# Update dispatch
     path('dispatch_delete/<int:dispatch_id>/', views.dispatch_delete, name='dispatch_delete'),# Delete dispatch
-    path('dispatch_goods_list/', views.dispatch_goods_list, name='dispatch_goods_list'),# Dispatch Goods List
+    path('dispatch_goods_list/<int:dispatch_id>/', views.dispatch_goods_list, name='dispatch_goods_list'),# Dispatch Goods List
+    path('dispatch_remove_goods/<int:dispatch_id>/', views.dispatch_remove_goods, name='dispatch_remove_goods'),# Remove Dispatch Goods
+    path('dispatch_add_goods/<int:dispatch_id>/', views.dispatch_add_goods, name='dispatch_add_goods'),# Add Dispatch Goods
 
 ]

@@ -71,28 +71,29 @@ def goods_add(request, goods_id=0):
                     print(damage_after_status)
             except ObjectDoesNotExist:
                 damage_after_status = "No Status"
-            # Warehousein Status Check
-            try:
-                warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
-                    'wh_check_in_out', flat=True)  # count records
-                print(list(warehousein_status))
-                warehousein_status_list = list(warehousein_status)
-                if warehousein_status_list != []:
-                    if warehousein_status_list[0] == 1:
-                        result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
-                    else:
-                        result = False
-                else:
-                    result = False
-                print(result)
-                if (result):
-                    warehousein_status = "Completed"  # get goods status
-                    print(warehousein_status)
-                else:
-                    warehousein_status = "No Status"  # get goods status
-                    print(warehousein_status)
-            except ObjectDoesNotExist:
-                warehousein_status = "No Status"
+            # # Warehousein Status Check
+            # try:
+            #     warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
+            #         'wh_check_in_out', flat=True)  # count records
+            #     print(list(warehousein_status))
+            #     warehousein_status_list = list(warehousein_status)
+            #     if warehousein_status_list != []:
+            #         if warehousein_status_list[0] == 1:
+            #             result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
+            #         else:
+            #             result = False
+            #     else:
+            #         result = False
+            #     print(result)
+            #     if (result):
+            #         warehousein_status = "Completed"  # get goods status
+            #         print(warehousein_status)
+            #     else:
+            #         warehousein_status = "No Status"  # get goods status
+            #         print(warehousein_status)
+            # except ObjectDoesNotExist:
+            #     warehousein_status = "No Status"
+            warehousein_status = "Completed"
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -150,27 +151,28 @@ def goods_add(request, goods_id=0):
                     print(damage_after_status)
             except ObjectDoesNotExist:
                 damage_after_status ="No Status"
-            # Warehousein Status Check
-            try:
-                warehousein_status=Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_check_in_out',flat=True)# count records
-                print(list(warehousein_status))
-                warehousein_status_list=list(warehousein_status)
-                if warehousein_status_list !=[]:
-                    if warehousein_status_list[0]==9:
-                        result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
-                    else:
-                        result = False
-                else:
-                    result=False
-                print(result)
-                if (result):
-                    warehousein_status="Completed" # get goods status
-                    print(warehousein_status)
-                else:
-                    warehousein_status = "No Status"  # get goods status
-                    print(warehousein_status)
-            except ObjectDoesNotExist:
-                warehousein_status ="No Status"
+            # # Warehousein Status Check
+            # try:
+            #     warehousein_status=Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_check_in_out',flat=True)# count records
+            #     print(list(warehousein_status))
+            #     warehousein_status_list=list(warehousein_status)
+            #     if warehousein_status_list !=[]:
+            #         if warehousein_status_list[0]==9:
+            #             result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
+            #         else:
+            #             result = False
+            #     else:
+            #         result=False
+            #     print(result)
+            #     if (result):
+            #         warehousein_status="Completed" # get goods status
+            #         print(warehousein_status)
+            #     else:
+            #         warehousein_status = "No Status"  # get goods status
+            #         print(warehousein_status)
+            # except ObjectDoesNotExist:
+            #     warehousein_status ="No Status"
+            warehousein_status = "Completed"
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,

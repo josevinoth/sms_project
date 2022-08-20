@@ -34,10 +34,10 @@
 		<a class="btn btn-success border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Damage Check/After</a>
 		<a class="btn btn-success border focus border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>
 		<a class="btn btn-success border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
-		<a class="btn btn-success border border-dark disable_a_href" id="dispatch_btn">Dispatch</a>
-		<a class="btn btn-success border border-dark disable_a_href" id="billing_btn">Billing</a>
-		<a class="btn btn-success border border-dark disable_a_href" id="expense_btn">Expenses</a>
-		<a class="btn btn-success border border-dark disable_a_href" id="reports_btn">Reports</a>
+<!--		<a class="btn btn-success border border-dark disable_a_href" id="dispatch_btn" href="{% url 'dispatch_insert' %}">Dispatch</a>-->
+<!--		<a class="btn btn-success border border-dark disable_a_href" id="billing_btn">Billing</a>-->
+<!--		<a class="btn btn-success border border-dark disable_a_href" id="expense_btn">Expenses</a>-->
+<!--		<a class="btn btn-success border border-dark disable_a_href" id="reports_btn">Reports</a>-->
 	</div>
 	<div class="col-2"></div>
 </div>
@@ -107,6 +107,18 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text" >Consigner</span>
+									</div>
+									{% render_field warehousein_form.wh_consigner value=request.session.ses_consigner class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Consignee</span>
+									</div>
+									{% render_field warehousein_form.wh_consignee value=request.session.ses_consignee class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Unit Of Measure</span>
 									</div>
 									{% render_field warehousein_form.wh_uom id="uom" class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
@@ -141,6 +153,8 @@
 									{% render_field warehousein_form.wh_goods_height id="height" class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Package Type</span>
@@ -155,8 +169,6 @@
 									{% render_field warehousein_form.wh_goods_weight id="weight" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Required Area(Sq.Ft)</span>
