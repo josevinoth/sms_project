@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import render, redirect
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
@@ -6,16 +7,18 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 
 # Add WH Job
+@transaction.atomic
 @login_required(login_url='login_page')
 def gatein_add(request, gatein_id=0):
     first_name = request.session.get('first_name')
+    ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
+    tot_package = request.POST.get('gatein_no_of_pkg')
+    print(ses_gatein_id_nam)
+    wh_job_id = ses_gatein_id_nam
     if request.method == "GET":
         if gatein_id == 0:
             print("I am inside Get add Gatein")
             gatein_form = GateinaddForm()
-            ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-            print(ses_gatein_id_nam)
-            wh_job_id = ses_gatein_id_nam
             context = {
                 'first_name': first_name,
                 'gatein_form': gatein_form,
@@ -41,7 +44,7 @@ def gatein_add(request, gatein_id=0):
             print("Customer Type",wh_customer_type)
             print("Invoice",wh_invoice)
             print("wh_total_packages",wh_total_packages)
-            wh_job_id_sess=request.session.get('ses_gatein_id_nam')
+            # wh_job_id_sess=request.session.get('ses_gatein_id_nam')
             # Gate In Status Check
             try:
                 gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -102,7 +105,7 @@ def gatein_add(request, gatein_id=0):
                 warehousein_status = "No Status"
 
             loadingbay_list= Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
-            gatein_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id_sess)
+            gatein_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id)
             goods_list= Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
 
             print("Wh_job_id",wh_job_id)
@@ -137,7 +140,16 @@ def gatein_add(request, gatein_id=0):
             gatein_form = GateinaddForm(request.POST, instance=gatein_info)
         if gatein_form.is_valid():
             gatein_form.save()
-        # return redirect(request.META['HTTP_REFERER'])
+            # raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
+            # cumsum = sum(raw_data)
+            # print("Sum is",cumsum)
+            # print("Total Package is", tot_package)
+            # if cumsum > float(tot_package):
+            #     messages.info(request, 'Total Packages count is lower than package count inside Warehouse ')
+            #     transaction.set_rollback(True)
+            #     return redirect(request.META['HTTP_REFERER'])
+            # else:
+            #     messages.info(request, 'Record Updated Successfully')
         return redirect('/SMS/gatein_list')
 # List WH Job
 @login_required(login_url='login_page')

@@ -16,8 +16,15 @@ def qr_code_goods(request,goods_qr_id):
     stream = BytesIO()
     img.save(stream)
     context= {'svg':stream.getvalue().decode(),
-              'Invoice_Number':Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_invoice,
+              'Invoice_Number': Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_invoice,
+              'Stock_Number':Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_qr_rand_num,
               'Package_Type': Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_package_type,
+              'Area': Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_area,
+              'Volume': Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_volume_weight,
+              'UOM': Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_uom,
+              'L': Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_length,
+              'W': Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_width,
+              'H': Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_height,
               'first_name': first_name
               }
     return render(request, "asset_mgt_app/goods_qr_code.html", context=context)

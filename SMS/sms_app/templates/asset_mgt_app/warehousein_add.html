@@ -81,6 +81,12 @@
 									</div>
 									{% render_field warehousein_form.wh_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3 ">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Stock Number</span>
+									</div>
+									{% render_field warehousein_form.wh_qr_rand_num id="wh_qr_rand_num" class="form-control disable_a_href" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Invoice Number</span>
@@ -153,14 +159,14 @@
 							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Required Area(Sq.Cm)</span>
+										<span class="input-group-text" >Required Area(Sq.Ft)</span>
 									</div>
 									{% render_field warehousein_form.wh_goods_area id="req_area" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Required Volume(Cu.Cm)</span>
+										<span class="input-group-text" >Required Volume(Cu.Ft)</span>
 									</div>
 									{% render_field warehousein_form.wh_goods_volume_weight id="volume_weight" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -244,6 +250,13 @@
 									{% render_field warehousein_form.wh_bay id="wh_bay" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Stacking Layer</span>
+									</div>
+									{% render_field warehousein_form.wh_stack_layer id="wh_stack_layer" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								<div>
 									<a href="{% url 'wh_space_search' %}" class="btn btn-primary btn-block btn-lg">
 										<i class="fa fa-search" aria-hidden="true"></i> Search Space Availability
@@ -262,6 +275,13 @@
 										<span class="input-group-text" >Available Volume (Cu.Cm)</span>
 									</div>
 									{% render_field warehousein_form.wh_available_volume class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Check-In Date/Time</span>
+									</div>
+									{% render_field warehousein_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3" >
@@ -376,6 +396,7 @@ $(document).ready(function() {
 		}
 	if (warehousein_status_id =="Completed"){
 		$('#storage_btn').removeClass('disable_a_href');
+		$('#dispatch_btn').removeClass('disable_a_href');
 		}
   });
 </script>

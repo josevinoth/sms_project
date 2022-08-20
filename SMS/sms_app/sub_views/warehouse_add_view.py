@@ -34,20 +34,17 @@ def warehousein_add(request, warehousein_id=0):
                 gatein_status = "No Status"
             # Loading Bay Status Check
             try:
-                loadingbay_status = Loadingbay_Info.objects.get(
-                    lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
+                loadingbay_status = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
             except ObjectDoesNotExist:
                 loadingbay_status = "No Status"
             # Damage/Before Status Check
             try:
-                damage_before_status = DamagereportInfo.objects.get(
-                    dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
+                damage_before_status = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
             except ObjectDoesNotExist:
                 damage_before_status = "No Status"
             # Damage/After Status Check
             try:
-                goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
-                                                                                                    flat=True)  # count records
+                goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',flat=True)  # count records
                 print(list(goods_status))
                 goods_status_list = list(goods_status)
                 if goods_status_list != []:
@@ -68,8 +65,7 @@ def warehousein_add(request, warehousein_id=0):
                 damage_after_status = "No Status"
             # Warehousein Status Check
             try:
-                warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
-                    'wh_check_in_out', flat=True)  # count records
+                warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_check_in_out', flat=True)  # count records
                 print(list(warehousein_status))
                 warehousein_status_list = list(warehousein_status)
                 if warehousein_status_list != []:

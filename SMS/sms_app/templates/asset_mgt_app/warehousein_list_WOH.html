@@ -17,13 +17,16 @@
     <thead class="thead-dark">
         <tr>
             <th>WH Job Number</th>
+             <th>WH Stock Number</th>
             <th>Customer Invoice</th>
             <th>Customer Type</th>
             <th>Branch</th>
             <th>Unit</th>
             <th>Bay</th>
-            <th>Area (Sq.Cm)</th>
-            <th>Volume (Cu.Cm)</th>
+            <th>Stack</th>
+            <th>Req.Area (Sq.Ft)</th>
+            <th>Req.Volume (Cu.Ft)</th>
+            <th>Date/Time</th>
             <th>Goods Status</th>
             <th>QR Code</th>
             <th>Edit</th>
@@ -33,13 +36,16 @@
         {% for goodsinfo in goods_list %}
             <tr>
                 <td> {{goodsinfo.wh_job_no}}</td>
+                <td> {{goodsinfo.wh_qr_rand_num}}</td>
                 <td> {{goodsinfo.wh_goods_invoice}}</td>
                 <td> {{goodsinfo.wh_customer_type}}</td>
                 <td> {{goodsinfo.wh_branch}}</td>
                 <td> {{goodsinfo.wh_unit}}</td>
                 <td> {{goodsinfo.wh_bay}}</td>
+                <td> {{goodsinfo.wh_stack_layer}}</td>
                 <td> {{goodsinfo.wh_goods_area}}</td>
                 <td> {{goodsinfo.wh_goods_volume_weight}}</td>
+                 <td> {{goodsinfo.wh_checkin_time}}</td>
                 <td> {{goodsinfo.wh_check_in_out}}</td>
                 <td>
                     <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">

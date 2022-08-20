@@ -1,15 +1,16 @@
+{% extends "asset_mgt_app/base.html" %}
 {% block content %}
 <div class="container-fluid row">
-    <!--    <div class="col-md-1">-->
-    <!--      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-    <!--        <i class="fas fa-arrow-left"></i>-->
-    <!--      </a>-->
-    <!--    </div>-->
-    <div class="col-md-1">
-        <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i>
-        </a>
-    </div>
+        <div class="col-md-1">
+          <a href="{% url 'dispatch_insert' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i>
+          </a>
+        </div>
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">-->
+<!--            <i class="fas fa-plus"></i>-->
+<!--        </a>-->
+<!--    </div>-->
 </div>
 <hr>
 <div class="container-fluid">
@@ -18,6 +19,7 @@
         <tr>
             <th>WH Job Number</th>
             <th>WH Stock Number</th>
+            <th>Dispatch Number</th>
             <th>Customer Invoice</th>
             <th>Customer Name</th>
             <th>Customer Type</th>
@@ -32,14 +34,15 @@
             <th>CBM</th>
             <!--            <th>QR Code</th>-->
             <th>Status</th>
-            <th>Edit</th>
-            <th>Delete</th>
+<!--            <th>Edit</th>-->
+            <th>Remove</th>
         </thead>
         <tbody>
         {% for goodsinfo in goods_list %}
         <tr>
             <td> {{goodsinfo.wh_job_no}}</td>
             <td> {{goodsinfo.wh_qr_rand_num}}</td>
+            <td> {{goodsinfo.wh_dispatch_num}}</td>
             <td> {{goodsinfo.wh_goods_invoice}}</td>
             <td> {{goodsinfo.wh_customer_name}}</td>
             <td> {{goodsinfo.wh_customer_type}}</td>
@@ -53,21 +56,11 @@
             <td> {{goodsinfo.wh_chargeable_weight}}</td>
             <td> {{goodsinfo.wh_CBM}}</td>
             <td> {{goodsinfo.wh_goods_status}}</td>
-            <!--                <td>-->
-            <!--                    <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">-->
-            <!--                        {% csrf_token %}-->
-            <!--                        <button type="submit" class="btn">-->
-            <!--                            <i class="fas fa-qrcode"></i>-->
-            <!--                        </button>-->
-            <!--                    </form>-->
-
-            <!--                </td>-->
-            <td>
-
-                <a class="btn btn-primary" href="{% url 'goods_update' goodsinfo.id %}" >
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
+<!--            <td>-->
+<!--                <a class="btn btn-primary" href="{% url 'goods_update' goodsinfo.id %}" >-->
+<!--                    <i class="far fa-edit"></i>-->
+<!--                </a>-->
+<!--            </td>-->
             <td>
                 <form action="{% url 'goods_delete' goodsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}

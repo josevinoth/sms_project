@@ -279,4 +279,10 @@ urlpatterns = [
     path('warehousein_update/<int:warehousein_id>/', views.warehousein_add, name='warehousein_update'),  # Update warehousein
     path('storage_list/', views.storage_list, name='storage_list'),  # List Storage
     path('load_customer_model/', views.load_customer_model, name='load_customer_model'),
+    path('dispatch_list/', views.dispatch_list, name='dispatch_list'),  # List currencytype ,
+    path('dispatch_insert', views.dispatch_add, name='dispatch_insert'),  # Add dispatch
+    path('dispatch_update/<int:dispatch_id>/', views.dispatch_add, name='dispatch_update'),# Update dispatch
+    path('dispatch_delete/<int:dispatch_id>/', views.dispatch_delete, name='dispatch_delete'),# Delete dispatch
+    path('dispatch_goods_list/', views.dispatch_goods_list, name='dispatch_goods_list'),# Dispatch Goods List
+
 ]

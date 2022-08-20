@@ -1,7 +1,6 @@
 import json
-
-import numpy as np
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import HttpResponse
 from django.contrib import messages
 from ..forms import GoodsaddForm
@@ -18,6 +17,7 @@ def goods_list(request):
 
 
 # Add goods
+@transaction.atomic
 @login_required(login_url='login_page')
 def goods_add(request, goods_id=0):
     first_name = request.session.get('first_name')
@@ -203,10 +203,14 @@ def goods_add(request, goods_id=0):
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(request.POST, instance=goodsinfo)
         if goods_form.is_valid():
-            if cumsum <= tot_package:
-                goods_form.save()
-            else:
+            goods_form.save()
+            raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
+            cumsum = sum(raw_data)
+            if cumsum > tot_package:
                 messages.info(request, 'Number of Pacakges Exceeded Invoice Count')
+                transaction.set_rollback(True)
+            else:
+                messages.info(request, 'Record Updated Successfully')
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
 

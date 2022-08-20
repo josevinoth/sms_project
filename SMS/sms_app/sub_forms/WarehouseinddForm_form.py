@@ -8,7 +8,7 @@ class WarehoseinaddForm(forms.ModelForm):
                   'wh_goods_weight', 'wh_goods_package_type', 'wh_goods_area', 'wh_goods_volume_weight',
                   'wh_chargeable_weight', 'wh_CBM', 'wh_weights_deviation', 'wh_dimension_deviation',
                   'wh_no_of_units_deviation', 'wh_damages', 'wh_mismatches', 'wh_ratification_process',
-                  'wh_branch','wh_unit','wh_bay','wh_available_area','wh_available_volume','wh_check_in_out','wh_customer_name','wh_customer_type','wh_goods_invoice']
+                  'wh_branch','wh_unit','wh_bay','wh_available_area','wh_available_volume','wh_check_in_out','wh_customer_name','wh_customer_type','wh_goods_invoice','wh_stack_layer','wh_checkin_time','wh_qr_rand_num']
 
         # fields = '__all__'
 
@@ -25,6 +25,7 @@ class WarehoseinaddForm(forms.ModelForm):
         self.fields['wh_unit'].empty_label = "--Select--"
         self.fields['wh_bay'].empty_label = "--Select--"
         self.fields['wh_check_in_out'].required = True
+        self.fields['wh_stack_layer'].empty_label = "--Select--"
 
 
 
