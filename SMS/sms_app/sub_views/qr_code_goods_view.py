@@ -6,8 +6,7 @@ from io import BytesIO
 def qr_code_goods(request,goods_qr_id):
     first_name = request.session.get('first_name')
     qr_id_goods = {
-        Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_pieces,
-        Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_package_type
+        Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_qr_rand_num,
     }
     print(qr_id_goods)
     factory_goods = qrcode.image.svg.SvgImage

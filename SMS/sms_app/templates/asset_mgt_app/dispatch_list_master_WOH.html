@@ -19,10 +19,10 @@
             <th>WH Job Number</th>
             <th>WH Stock Number</th>
             <th>Dispatch Number</th>
+            <th>Customer Invoice</th>
             <th>Customer Name</th>
             <th>Consigner</th>
             <th>Consignee</th>
-            <th>Customer Invoice</th>
             <th>Customer Type</th>
             <th>Branch</th>
             <th>Unit</th>
@@ -30,8 +30,8 @@
             <th>Stack</th>
             <th>Date/Time</th>
             <th>Goods Status</th>
-            <th>QR Code</th>
-            <th>Add Stock</th>
+            <th>Scan QR Code</th>
+<!--            <th>Add Stock</th>-->
             <!--            <th>Delete</th>-->
         </thead>
         <tbody>
@@ -40,10 +40,10 @@
             <td> {{goodsinfo.wh_job_no}}</td>
             <td> {{goodsinfo.wh_qr_rand_num}}</td>
             <td> {{goodsinfo.wh_dispatch_num}}</td>
+            <td> {{goodsinfo.wh_goods_invoice}}</td>
             <td> {{goodsinfo.wh_customer_name}}</td>
             <td> {{goodsinfo.wh_consigner}}</td>
             <td> {{goodsinfo.wh_consignee}}</td>
-            <td> {{goodsinfo.wh_goods_invoice}}</td>
             <td> {{goodsinfo.wh_customer_type}}</td>
             <td> {{goodsinfo.wh_branch}}</td>
             <td> {{goodsinfo.wh_unit}}</td>
@@ -52,18 +52,18 @@
             <td> {{goodsinfo.wh_checkin_time}}</td>
             <td> {{goodsinfo.wh_check_in_out}}</td>
             <td>
-                <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">
+                <form action="{% url 'qr_dispatch_decoder' goodsinfo.id %}" method="post">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-warning">
+                    <button type="submit" class="btn btn-success">
                         <i class="fas fa-qrcode"></i>
                     </button>
                 </form>
             </td>
-            <td>
-                <a class="btn btn-success" href="{% url 'dispatch_add_goods' goodsinfo.id %}" onclick="return confirm('Are you sure to add this stock?');">
-                    <i class="fas fa-plus"></i>
-                </a>
-            </td>
+<!--            <td>-->
+<!--                <a class="btn btn-success" href="{% url 'dispatch_add_goods' goodsinfo.id %}" onclick="return confirm('Are you sure to add this stock?');">-->
+<!--                    <i class="fas fa-plus"></i>-->
+<!--                </a>-->
+<!--            </td>-->
             <!--                <td>-->
             <!--                    <form action="{% url 'goods_delete' goodsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
             <!--                        {% csrf_token %}-->

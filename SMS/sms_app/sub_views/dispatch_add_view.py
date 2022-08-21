@@ -1,10 +1,18 @@
+import time
+
 from django.db import transaction
 from django.shortcuts import render, redirect
+from django.template.defaultfilters import join
+from pyzbar import pyzbar
+
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Dispatch_info
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
+import cv2
+import numpy as np
+from pyzbar.pyzbar import decode
 
 # Add Dispatch Job
 @transaction.atomic
@@ -257,5 +265,46 @@ def dispatch_add_goods(request,dispatch_id):
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
 
+def qr_dispatch_decoder(request,dispatch_id):
+    # Scanning QR Code from Camera Feed
+    cap = cv2.VideoCapture(0)
+    cap.set(3, 640)
+    cap.set(4, 740)
+    used_code=[]
+    camera=True
+    dispatch_num_val = request.session.get('ses_dispatch_num_val')
+    stock_num_val = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_qr_rand_num
+    print(stock_num_val)
+    while camera==True:
+        success, img = cap.read()
+        for qrcode in decode(img):
+            text = qrcode.data.decode('utf-8')
+            t1=text.replace("{","")
+            t2=t1.replace("}","")
+            t3=t2.replace("'","")
+            print(text)
+            print(t3)
+            polygon_Points = np.array([qrcode.polygon], np.int32)
+            polygon_Points = polygon_Points.reshape(-1, 1, 2)
+            rect_Points = qrcode.rect
+            cv2.polylines(img, [polygon_Points], True, (255, 255, 0), 5)
+            cv2.putText(img, text, (rect_Points[0], rect_Points[1]), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255, 255, 0), 2)
+            if t3 ==stock_num_val:
+                dispatch_goods_checkout = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=2)
+                dispatch_num_update = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num=dispatch_num_val)
+                print("Stock Matching.Approved to Move")
+                time.sleep(2)
+                return redirect(request.META['HTTP_REFERER'])
+            elif t3 !=dispatch_num_val:
+                print("Stock Not Matching")
+                time.sleep(2)
+            else:
+                pass
+        cv2.imshow("Video", img)
+        k=cv2.waitKey(1)
+        if k == 27:  # wait for ESC key to exit and terminate progra,
+            cv2.destroyAllWindows()
+            break
 
+    return redirect(request.META['HTTP_REFERER'])
 
