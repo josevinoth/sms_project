@@ -147,9 +147,10 @@ font-weight: bold;
 
 .message{
 color:black;
-background:#f0ad4e;
+/*background:#f0ad4e;*/
 font-family: 'Heebo', sans-serif;
 font-weight: bold;
+font-size:30px;
 }
 
 /*Data Table*/

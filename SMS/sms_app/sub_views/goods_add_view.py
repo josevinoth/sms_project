@@ -21,79 +21,83 @@ def goods_list(request):
 @login_required(login_url='login_page')
 def goods_add(request, goods_id=0):
     first_name = request.session.get('first_name')
-    wh_job_id = request.session.get('ses_gatein_id_nam')
+    ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
+    print(ses_gatein_id_nam)
+    wh_job_id = ses_gatein_id_nam
+    # Gate In Status Check
+    try:
+        gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
+    except ObjectDoesNotExist:
+        gatein_status = "No Status"
+    # Loading Bay Status Check
+    try:
+        loadingbay_status = Loadingbay_Info.objects.get(
+            lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
+    except ObjectDoesNotExist:
+        loadingbay_status = "No Status"
+    # Damage/Before Status Check
+    try:
+        damage_before_status = DamagereportInfo.objects.get(
+            dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
+    except ObjectDoesNotExist:
+        damage_before_status = "No Status"
+    # Damage/After Status Check
+    try:
+        goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
+                                                                                            flat=True)  # count records
+        print(list(goods_status))
+        goods_status_list = list(goods_status)
+        result_1=(element == "None" for element in (goods_status_list))
+        print(result_1)
+        if goods_status_list != []:
+            if goods_status_list[0] == 5:
+                result = all(element == (goods_status_list[0]) for element in (goods_status_list))
+            else:
+                result = False
+        else:
+            result = False
+        print(result)
+        if (result):
+            damage_after_status = "Completed"  # get goods status
+            print(damage_after_status)
+        else:
+            damage_after_status = "No Status"  # get goods status
+            print(damage_after_status)
+    except ObjectDoesNotExist:
+        damage_after_status = "No Status"
+    # # Warehousein Status Check
+    # try:
+    #     warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
+    #         'wh_check_in_out', flat=True)  # count records
+    #     print(list(warehousein_status))
+    #     warehousein_status_list = list(warehousein_status)
+    #     if warehousein_status_list != []:
+    #         if warehousein_status_list[0] == 1:
+    #             result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
+    #         else:
+    #             result = False
+    #     else:
+    #         result = False
+    #     print(result)
+    #     if (result):
+    #         warehousein_status = "Completed"  # get goods status
+    #         print(warehousein_status)
+    #     else:
+    #         warehousein_status = "No Status"  # get goods status
+    #         print(warehousein_status)
+    # except ObjectDoesNotExist:
+    #     warehousein_status = "No Status"
+    # warehousein_status = "Completed"
+
+    raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces', flat=True)
+    cumsum = sum(raw_data)
+    print("Cumulative Sum is", cumsum)
+    tot_package = request.session.get('ses_gatein_no_of_pkg')
+    print("Total Package is", tot_package)
     if request.method == "GET":
-        raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces', flat=True)
-        cumsum = sum(raw_data)
-        print("Cumulative Sum is",cumsum)
         if goods_id == 0:
             print("I am inside Get add Goods")
             goods_form = GoodsaddForm()
-            ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-            print(ses_gatein_id_nam)
-            wh_job_id = ses_gatein_id_nam
-            # Gate In Status Check
-            try:
-                gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
-            except ObjectDoesNotExist:
-                gatein_status = "No Status"
-            # Loading Bay Status Check
-            try:
-                loadingbay_status = Loadingbay_Info.objects.get(
-                    lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
-            except ObjectDoesNotExist:
-                loadingbay_status = "No Status"
-            # Damage/Before Status Check
-            try:
-                damage_before_status = DamagereportInfo.objects.get(
-                    dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
-            except ObjectDoesNotExist:
-                damage_before_status = "No Status"
-            # Damage/After Status Check
-            try:
-                goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
-                                                                                                    flat=True)  # count records
-                print(list(goods_status))
-                goods_status_list = list(goods_status)
-                if goods_status_list != []:
-                    if goods_status_list[0] == 5:
-                        result = all(element == (goods_status_list[0]) for element in (goods_status_list))
-                    else:
-                        result = False
-                else:
-                    result = False
-                print(result)
-                if (result):
-                    damage_after_status = "Completed"  # get goods status
-                    print(damage_after_status)
-                else:
-                    damage_after_status = "No Status"  # get goods status
-                    print(damage_after_status)
-            except ObjectDoesNotExist:
-                damage_after_status = "No Status"
-            # # Warehousein Status Check
-            # try:
-            #     warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
-            #         'wh_check_in_out', flat=True)  # count records
-            #     print(list(warehousein_status))
-            #     warehousein_status_list = list(warehousein_status)
-            #     if warehousein_status_list != []:
-            #         if warehousein_status_list[0] == 1:
-            #             result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
-            #         else:
-            #             result = False
-            #     else:
-            #         result = False
-            #     print(result)
-            #     if (result):
-            #         warehousein_status = "Completed"  # get goods status
-            #         print(warehousein_status)
-            #     else:
-            #         warehousein_status = "No Status"  # get goods status
-            #         print(warehousein_status)
-            # except ObjectDoesNotExist:
-            #     warehousein_status = "No Status"
-            warehousein_status = "Completed"
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -106,73 +110,12 @@ def goods_add(request, goods_id=0):
                 'loadingbay_status': loadingbay_status,
                 'damage_before_status': damage_before_status,
                 'damage_after_status':damage_after_status,
-                'warehousein_status': warehousein_status,
+                # 'warehousein_status': warehousein_status,
             }
         else:
             print("I am inside get edit Goods")
-            ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-            print(ses_gatein_id_nam)
-            wh_job_id = ses_gatein_id_nam
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(instance=goodsinfo)
-            #Gate In Status Check
-            try:
-                gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
-            except ObjectDoesNotExist:
-                gatein_status = "No Status"
-            # Loading Bay Status Check
-            try:
-                loadingbay_status = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
-            except ObjectDoesNotExist:
-                loadingbay_status="No Status"
-            # Damage/Before Status Check
-            try:
-                damage_before_status = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
-            except ObjectDoesNotExist:
-                damage_before_status ="No Status"
-            # Damage/After Status Check
-            try:
-                goods_status=Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',flat=True)# count records
-                print(list(goods_status))
-                goods_status_list=list(goods_status)
-                if goods_status_list !=[]:
-                    if goods_status_list[0]==5:
-                        result = all(element == (goods_status_list[0]) for element in (goods_status_list))
-                    else:
-                        result = False
-                else:
-                    result=False
-                print(result)
-                if (result):
-                    damage_after_status="Completed" # get goods status
-                    print(damage_after_status)
-                else:
-                    damage_after_status = "No Status"  # get goods status
-                    print(damage_after_status)
-            except ObjectDoesNotExist:
-                damage_after_status ="No Status"
-            # # Warehousein Status Check
-            # try:
-            #     warehousein_status=Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_check_in_out',flat=True)# count records
-            #     print(list(warehousein_status))
-            #     warehousein_status_list=list(warehousein_status)
-            #     if warehousein_status_list !=[]:
-            #         if warehousein_status_list[0]==9:
-            #             result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
-            #         else:
-            #             result = False
-            #     else:
-            #         result=False
-            #     print(result)
-            #     if (result):
-            #         warehousein_status="Completed" # get goods status
-            #         print(warehousein_status)
-            #     else:
-            #         warehousein_status = "No Status"  # get goods status
-            #         print(warehousein_status)
-            # except ObjectDoesNotExist:
-            #     warehousein_status ="No Status"
-            warehousein_status = "Completed"
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -185,23 +128,15 @@ def goods_add(request, goods_id=0):
                 'loadingbay_status': loadingbay_status,
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
-                'warehousein_status': warehousein_status,
+                # 'warehousein_status': warehousein_status,
             }
         return render(request, "asset_mgt_app/goods_add.html", context)
     else:
-        raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces', flat=True)
-        cumsum = sum(raw_data)
-        print("Cumulative Sum is", cumsum)
-        tot_package=request.session.get('ses_gatein_no_of_pkg')
-        print("Total Package is",tot_package)
         if goods_id == 0:
             print("I am inside post add Goods")
             goods_form = GoodsaddForm(request.POST)
         else:
             print("I am inside post edit Goods")
-            ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-            print(ses_gatein_id_nam)
-            wh_job_id = ses_gatein_id_nam
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(request.POST, instance=goodsinfo)
         if goods_form.is_valid():
@@ -209,13 +144,12 @@ def goods_add(request, goods_id=0):
             raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
             cumsum = sum(raw_data)
             if cumsum > tot_package:
-                messages.info(request, 'Number of Pacakges Exceeded Invoice Count')
+                messages.error(request, 'Record Not Updated.Number of Pacakges Exceeded Invoice Count')
                 transaction.set_rollback(True)
             else:
-                messages.info(request, 'Record Updated Successfully')
+                messages.success(request, 'Record Updated Successfully')
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
-
 
 # Delete goods
 @login_required(login_url='login_page')

@@ -287,5 +287,5 @@ urlpatterns = [
     path('dispatch_remove_goods/<int:dispatch_id>/', views.dispatch_remove_goods, name='dispatch_remove_goods'),# Remove Dispatch Goods
     path('dispatch_add_goods/<int:dispatch_id>/', views.dispatch_add_goods, name='dispatch_add_goods'),# Add Dispatch Goods
     path('qr_dispatch_decoder/<int:dispatch_id>', views.qr_dispatch_decoder, name='qr_dispatch_decoder'), # qr_dispatch_decoder
-
+    path('message_test/',views.message_test,name='message_test'),
 ]

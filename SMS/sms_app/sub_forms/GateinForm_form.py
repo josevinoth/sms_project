@@ -4,7 +4,8 @@ from ..models import Gatein_info
 class GateinaddForm(forms.ModelForm):
     class Meta:
         model = Gatein_info
-        fields = '__all__'
+        # fields = '__all__'
+        fields = ['gatein_job_no','gatein_invoice','gatein_customer','gatein_customer_type','gatein_arrival_date','gatein_department','gatein_shipper','gatein_consignee','gatein_no_of_pkg','gatein_weight','gatein_driver','gatein_contact_number','gatein_DL_number','gatein_otl','gatein_transporter','gatein_truck_number','gatein_truck_type','gatein_status']
 
     def __init__(self, *args, **kwargs):
         super(GateinaddForm, self).__init__(*args, **kwargs)

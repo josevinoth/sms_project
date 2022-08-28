@@ -13,7 +13,18 @@
     <!--    </div>-->
 </div>
 <br>
-<h3><span class="badge bg-info">Dispatch Stock List</span></h3>
+<div class="row">
+    <div class="col-4">
+        <h3><span class="badge bg-info ">Dispatch Stock List</span></h3>
+    </div>
+    <div class="col-4 message text-center">
+        {% for message in messages %}
+        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+        {% endfor %}
+    </div>
+</div>
+<div class="col-4"></div>
+</div>
 <hr>
 <div class="container-fluid">
     <table  id="dispatch_goods_list" class="table table-striped table-bordered">
@@ -31,7 +42,7 @@
             <th>Unit</th>
             <th>Bay</th>
             <th>Stack</th>
-            <th>Date/Time</th>
+            <th>Check-Out Time</th>
             <th>Goods Status</th>
             <!--            <th>QR Code</th>-->
             <!--            <th>Checkout Stock</th>-->
@@ -41,9 +52,12 @@
         {% for goodsinfo in goods_list %}
         <tr>
             <td> {{goodsinfo.wh_job_no}}</td>
-            <td> {{goodsinfo.wh_qr_rand_num}}</td>
+            <!--            <td> {{goodsinfo.wh_qr_rand_num}}</td>-->
+            <td>
+                <a class="" href="{% url 'warehousein_update' goodsinfo.id %}" onclick="return confirm('Are you sure to view?');">{{goodsinfo.wh_qr_rand_num}}</a>
+            </td>
             <td> {{goodsinfo.wh_dispatch_num}}</td>
-             <td> {{goodsinfo.wh_goods_invoice}}</td>
+            <td> {{goodsinfo.wh_goods_invoice}}</td>
             <td> {{goodsinfo.wh_customer_name}}</td>
             <td> {{goodsinfo.wh_consigner}}</td>
             <td> {{goodsinfo.wh_consignee}}</td>
@@ -52,7 +66,7 @@
             <td> {{goodsinfo.wh_unit}}</td>
             <td> {{goodsinfo.wh_bay}}</td>
             <td> {{goodsinfo.wh_stack_layer}}</td>
-            <td> {{goodsinfo.wh_checkin_time}}</td>
+            <td> {{goodsinfo.wh_checkout_time}}</td>
             <td> {{goodsinfo.wh_check_in_out}}</td>
             <!--                <td>-->
             <!--                    <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">-->
@@ -80,8 +94,8 @@
         </tbody>
     </table>
 </div>
-<div>
-   <h3><span class="badge bg-info light">Master List</span></h3>
+<div class="container-fluid">
+    <h3><span class="badge bg-info light">Master List</span></h3>
     {% include "asset_mgt_app/dispatch_list_master_WOH.html" %}
 </div>
 <script>

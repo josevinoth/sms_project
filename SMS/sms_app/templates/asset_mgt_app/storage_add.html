@@ -45,12 +45,10 @@
 <hr>
 <form method="POST" action="" id="storage_add" >
 	{% csrf_token %}
-
 	<!--{{form.as_p}}-->
-
 	<div class="row">
-		<div class="col-1"></div>
-		<div class="col-10">
+<!--		<div class="col-1"></div>-->
+		<div class="col-12">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center">
@@ -64,12 +62,12 @@
 					</div>
 					<!--					<p>Invoice Number is  {{ request.session.invoice_num_stock }}</p>-->
 					<div class="card-body bg-light" >
-						{% include "asset_mgt_app/locationmaster_list_WOH.html" %}
+						{% include "asset_mgt_app/storage_list_WOH.html" %}
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="col-1"></div>
+<!--		<div class="col-1"></div>-->
 	</div>
 </form>
 <script>

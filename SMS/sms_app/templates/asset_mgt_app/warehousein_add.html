@@ -293,14 +293,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Check-In Date/Time</span>
 									</div>
-									{% render_field warehousein_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" class="form-control" %}
+									{% render_field warehousein_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3" >
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Goods Status</span>
 									</div>
-									{% render_field warehousein_form.wh_check_in_out class="form-control"%}
+									{% render_field warehousein_form.wh_check_in_out class="form-control disable_a_href"%}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<!--								<div class="input-group input-group-sm mb-3">-->
@@ -405,6 +405,7 @@ $(document).ready(function() {
 		}
 	if (damage_after_status_id =="Completed"){
 		$('#warehousein_btn').removeClass('disable_a_href');
+		$('#storage_btn').removeClass('disable_a_href');
 		}
 	if (warehousein_status_id =="Completed"){
 		$('#storage_btn').removeClass('disable_a_href');

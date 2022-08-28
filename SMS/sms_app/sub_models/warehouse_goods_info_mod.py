@@ -1,4 +1,7 @@
+import django
 from django.db import models
+from django.utils import timezone
+
 from ..models import Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
 
 class Warehouse_goods_info(models.Model):
@@ -27,11 +30,13 @@ class Warehouse_goods_info(models.Model):
     wh_available_area = models.FloatField(null=True,default=0.0)
     wh_available_volume = models.FloatField(null=True,default=0.0)
     wh_goods_area = models.FloatField(null=True,default=0.0)
-    wh_check_in_out= models.ForeignKey(Check_in_out, on_delete=models.CASCADE, null=True, related_name='wh_check_in_out',db_column='wh_check_in_out')
+    wh_check_in_out= models.ForeignKey(Check_in_out, on_delete=models.CASCADE, null=True, default=1,related_name='wh_check_in_out',db_column='wh_check_in_out')
     wh_customer_name = models.CharField(blank=True, null=True, max_length=20)
     wh_customer_type = models.CharField(blank=True, null=True, max_length=20)
     wh_stack_layer = models.ForeignKey(StackingInfo, null=True, on_delete=models.CASCADE, default='')
-    wh_checkin_time = models.CharField(blank=True, null=True, max_length=20)
+    wh_checkin_time = models.DateTimeField(blank=True, null=True,default=timezone.now())
+    wh_checkout_time = models.DateTimeField(null=True,blank=True)
+    wh_storage_time = models.CharField(blank=True, null=True, max_length=50)
     wh_qr_rand_num = models.CharField(blank=True, null=True, max_length=20)
     wh_dispatch_num = models.CharField(blank=True, null=True, max_length=20)
     wh_consigner = models.CharField(blank=True, null=True, max_length=20)

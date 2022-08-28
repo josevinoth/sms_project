@@ -105,8 +105,8 @@ def gatein_add(request, gatein_id=0):
             #         print(warehousein_status)
             # except ObjectDoesNotExist:
             #     warehousein_status = "No Status"
-            warehousein_status = "Completed"
             loadingbay_list= Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
+            damagereport_list= DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id)
             gatein_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id)
             goods_list= Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
 
@@ -115,13 +115,14 @@ def gatein_add(request, gatein_id=0):
             print("Loadingbay Satus",loadingbay_status)
             print("Damage_before_status", damage_before_status)
             print("Damage_After_status", damage_after_status)
-            print("Ware_Housein_status", warehousein_status)
+            # print("Ware_Housein_status", warehousein_status)
             print("Gatein ID", gatein_id)
             gatein_info = Gatein_info.objects.get(pk=gatein_id)
             gatein_form = GateinaddForm(instance=gatein_info)
             context = {
                 'gatein_form': gatein_form,
                 'first_name': first_name,
+                'damagereport_list':damagereport_list,
                 'loadingbay_list': loadingbay_list,
                 'gatein_list':gatein_list,
                 'goods_list': goods_list,
@@ -129,7 +130,7 @@ def gatein_add(request, gatein_id=0):
                 'loadingbay_status':loadingbay_status,
                 'damage_before_status':damage_before_status,
                 'damage_after_status': damage_after_status,
-                'warehousein_status': warehousein_status,
+                # 'warehousein_status': warehousein_status,
             }
         return render(request, "asset_mgt_app/gatein_add.html", context)
     else:

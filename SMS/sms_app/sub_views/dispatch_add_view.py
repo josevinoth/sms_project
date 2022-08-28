@@ -1,8 +1,10 @@
+
 import time
 
 from django.db import transaction
 from django.shortcuts import render, redirect
 from django.template.defaultfilters import join
+from django.utils.datetime_safe import datetime
 from pyzbar import pyzbar
 
 from ..forms import DispatchaddForm
@@ -24,73 +26,73 @@ def dispatch_add(request, dispatch_id=0):
     print(ses_gatein_id_nam)
     wh_job_id = ses_gatein_id_nam
     # dispatch_list = Dispatch_info.objects.filter(dispatch_job_no=wh_job_id)
+    # Gate In Status Check
+    try:
+        gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
+    except ObjectDoesNotExist:
+        gatein_status = "No Status"
+    # Loading Bay Status Check
+    try:
+        loadingbay_status = Loadingbay_Info.objects.get(
+            lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
+    except ObjectDoesNotExist:
+        loadingbay_status = "No Status"
+    # Damage/Before Status Check
+    try:
+        damage_before_status = DamagereportInfo.objects.get(
+            dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
+    except ObjectDoesNotExist:
+        damage_before_status = "No Status"
+    # Damage/After Status Check
+    try:
+        goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
+                                                                                            flat=True)  # count records
+        print(list(goods_status))
+        goods_status_list = list(goods_status)
+        if goods_status_list != []:
+            if goods_status_list[0] == 5:
+                result = all(element == (goods_status_list[0]) for element in (goods_status_list))
+            else:
+                result = False
+        else:
+            result = False
+        print(result)
+        if (result):
+            damage_after_status = "Completed"  # get goods status
+            print(damage_after_status)
+        else:
+            damage_after_status = "No Status"  # get goods status
+            print(damage_after_status)
+    except ObjectDoesNotExist:
+        damage_after_status = "No Status"
+    # Warehousein Status Check
+    try:
+        warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
+            'wh_check_in_out', flat=True)  # count records
+        print(list(warehousein_status))
+        warehousein_status_list = list(warehousein_status)
+        if warehousein_status_list != []:
+            if warehousein_status_list[0] == 1:
+                result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
+            else:
+                result = False
+        else:
+            result = False
+        print(result)
+        if (result):
+            warehousein_status = "Completed"  # get goods status
+            print(warehousein_status)
+        else:
+            warehousein_status = "No Status"  # get goods status
+            print(warehousein_status)
+    except ObjectDoesNotExist:
+        warehousein_status = "No Status"
+    # warehousein_status = "Completed"
     dispatch_list = Dispatch_info.objects.all()
     if request.method == "GET":
         if dispatch_id == 0:
             print("I am inside Get add dispatch")
             dispatch_form = DispatchaddForm()
-            # Gate In Status Check
-            try:
-                gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
-            except ObjectDoesNotExist:
-                gatein_status = "No Status"
-            # Loading Bay Status Check
-            try:
-                loadingbay_status = Loadingbay_Info.objects.get(
-                    lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
-            except ObjectDoesNotExist:
-                loadingbay_status = "No Status"
-            # Damage/Before Status Check
-            try:
-                damage_before_status = DamagereportInfo.objects.get(
-                    dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
-            except ObjectDoesNotExist:
-                damage_before_status = "No Status"
-            # Damage/After Status Check
-            try:
-                goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
-                                                                                                    flat=True)  # count records
-                print(list(goods_status))
-                goods_status_list = list(goods_status)
-                if goods_status_list != []:
-                    if goods_status_list[0] == 5:
-                        result = all(element == (goods_status_list[0]) for element in (goods_status_list))
-                    else:
-                        result = False
-                else:
-                    result = False
-                print(result)
-                if (result):
-                    damage_after_status = "Completed"  # get goods status
-                    print(damage_after_status)
-                else:
-                    damage_after_status = "No Status"  # get goods status
-                    print(damage_after_status)
-            except ObjectDoesNotExist:
-                damage_after_status = "No Status"
-            # # Warehousein Status Check
-            # try:
-            #     warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
-            #         'wh_check_in_out', flat=True)  # count records
-            #     print(list(warehousein_status))
-            #     warehousein_status_list = list(warehousein_status)
-            #     if warehousein_status_list != []:
-            #         if warehousein_status_list[0] == 1:
-            #             result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
-            #         else:
-            #             result = False
-            #     else:
-            #         result = False
-            #     print(result)
-            #     if (result):
-            #         warehousein_status = "Completed"  # get goods status
-            #         print(warehousein_status)
-            #     else:
-            #         warehousein_status = "No Status"  # get goods status
-            #         print(warehousein_status)
-            # except ObjectDoesNotExist:
-            #     warehousein_status = "No Status"
-            warehousein_status = "Completed"
             context = {
                 'first_name': first_name,
                 'dispatch_form': dispatch_form,
@@ -110,64 +112,6 @@ def dispatch_add(request, dispatch_id=0):
             print("I am inside get edit Dispatch")
             dispatch_info = Dispatch_info.objects.get(pk=dispatch_id)
             dispatch_form = DispatchaddForm(instance=dispatch_info)
-            try:
-                gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
-            except ObjectDoesNotExist:
-                gatein_status = "No Status"
-            # Loading Bay Status Check
-            try:
-                loadingbay_status = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
-            except ObjectDoesNotExist:
-                loadingbay_status = "No Status"
-            # Damage/Before Status Check
-            try:
-                damage_before_status = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
-            except ObjectDoesNotExist:
-                damage_before_status = "No Status"
-            # Damage/After Status Check
-            try:
-                goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',flat=True)  # count records
-                print(list(goods_status))
-                goods_status_list = list(goods_status)
-                if goods_status_list != []:
-                    if goods_status_list[0] == 5:
-                        result = all(element == (goods_status_list[0]) for element in (goods_status_list))
-                    else:
-                        result = False
-                else:
-                    result = False
-                print(result)
-                if (result):
-                    damage_after_status = "Completed"  # get goods status
-                    print(damage_after_status)
-                else:
-                    damage_after_status = "No Status"  # get goods status
-                    print(damage_after_status)
-            except ObjectDoesNotExist:
-                damage_after_status = "No Status"
-            # # Warehousein Status Check
-            # try:
-            #     warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
-            #         'wh_check_in_out', flat=True)  # count records
-            #     print(list(warehousein_status))
-            #     warehousein_status_list = list(warehousein_status)
-            #     if warehousein_status_list != []:
-            #         if warehousein_status_list[0] == 1:
-            #             result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
-            #         else:
-            #             result = False
-            #     else:
-            #         result = False
-            #     print(result)
-            #     if (result):
-            #         warehousein_status = "Completed"  # get goods status
-            #         print(warehousein_status)
-            #     else:
-            #         warehousein_status = "No Status"  # get goods status
-            #         print(warehousein_status)
-            # except ObjectDoesNotExist:
-            #     warehousein_status = "No Status"
-            warehousein_status = "Completed"
             loadingbay_list= Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
             gatein_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id)
             goods_list= Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
@@ -240,6 +184,7 @@ def dispatch_goods_list(request,dispatch_id):
 def dispatch_remove_goods(request,dispatch_id):
     dispatch_num_update = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num="None")
     dispatch_goods_checkin = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=1)
+    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=0)
     print(dispatch_goods_checkin)
     wh_dispatch_num=request.session.get('ses_dispatch_num_val')
     print(wh_dispatch_num)
@@ -290,19 +235,36 @@ def qr_dispatch_decoder(request,dispatch_id):
             cv2.polylines(img, [polygon_Points], True, (255, 255, 0), 5)
             cv2.putText(img, text, (rect_Points[0], rect_Points[1]), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255, 255, 0), 2)
             if t3 ==stock_num_val:
-                dispatch_goods_checkout = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=2)
-                dispatch_num_update = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num=dispatch_num_val)
+                cv2.destroyAllWindows()
+                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=2)
+                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num=dispatch_num_val)
+                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=datetime.now())
+                messages.success(request,'Stock Matching.Approved for Dispatch')
                 print("Stock Matching.Approved to Move")
-                time.sleep(2)
+                time.sleep(5)
+                check_in_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkin_time
+                check_out_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkout_time
+                date_diff=(check_out_date - check_in_date) # Differnce between dates
+                duration_in_s = date_diff.total_seconds() # Total number of seconds between dates
+                storage_days = (check_out_date - check_in_date).days # In days
+                storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
+                storage_minutes = divmod(duration_in_s, 60)[0]  # Seconds in a minute = 60
+                # date_dif_final=(storage_days[0], storage_hours[0], storage_minutes[0])
+                # print(date_dif_final)
+                print("Storage_Days", storage_days)
+                print("Storage_Hours", storage_hours)
+                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff)
                 return redirect(request.META['HTTP_REFERER'])
-            elif t3 !=dispatch_num_val:
-                print("Stock Not Matching")
-                time.sleep(2)
             else:
-                pass
+                time.sleep(5)
+                cv2.destroyAllWindows()
+                messages.error(request, 'Stock Not Matching')
+                print("Stock Not Matching")
+                return redirect(request.META['HTTP_REFERER'])
+
         cv2.imshow("Video", img)
         k=cv2.waitKey(1)
-        if k == 27:  # wait for ESC key to exit and terminate progra,
+        if k == 27:  # wait for ESC key to exit and terminate program,
             cv2.destroyAllWindows()
             break
 

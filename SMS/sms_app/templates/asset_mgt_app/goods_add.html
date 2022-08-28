@@ -298,14 +298,17 @@
 							<!--								</div>-->
 							<!--							</div>-->
 						</div>
-						<div class="message message-warning">
-							{% for message in messages %}
-							<p>{{message}}</p>
-							{% endfor %}
-							{{form.error_messages}}
-						</div>
-						<div class="message">
-							{{goods_form.errors}}
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+									{{form.error_messages}}
+								</div>
+							</div>
+							<div class="col-1"></div>
 						</div>
 						<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
@@ -318,6 +321,7 @@
 		<div class="col-2"></div>
 	</div>
 </form>
+
 {% include "asset_mgt_app/goods_list_woh.html" %}
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <!--<script>-->
@@ -409,6 +413,7 @@ $(document).ready(function() {
 		}
 	if (damage_after_status_id =="Completed"){
 		$('#warehousein_btn').removeClass('disable_a_href');
+		$('#storage_btn').removeClass('disable_a_href');
 		}
 	if (warehousein_status_id =="Completed"){
 		$('#storage_btn').removeClass('disable_a_href');
