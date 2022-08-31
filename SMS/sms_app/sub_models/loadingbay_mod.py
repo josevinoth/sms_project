@@ -1,13 +1,17 @@
 from django.db import models
 from ..models import StatusList,Materialhandling_Info,MovementtypeInfo,Stock_type,Currency_type,Received_not,GstexcemptionInfo
 
+def loadingbay_directory_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+
+    return 'Loadingbayfiles/{0}/{1}'.format(instance.lbimg_job_no, filename)
 
 class Loadingbay_Info(models.Model):
     lb_job_no = models.CharField(blank=False, null=False, max_length=20,default='')
     lb_invoice = models.CharField(blank=False, null=False,max_length=20,default='')
     lb_material_handling = models.ForeignKey(Materialhandling_Info,on_delete=models.CASCADE,related_name='lb_material_handling', db_column='lb_material_handling')
     lb_packing_list = models.ForeignKey(Received_not, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list')
-    lb_inward_pod = models.CharField(blank=False, null=False, max_length=20,default='')
+    # lb_inward_pod = models.FileField(upload_to=loadingbay_directory_path, null=True)
     lb_eway_bill= models.CharField(blank=False, null=False, max_length=20,default='')
     lb_validity_date= models.CharField(blank=False, null=False, max_length=20,default='')
     lb_otl_check = models.ForeignKey(GstexcemptionInfo,on_delete=models.CASCADE,related_name='lb_otl_check', db_column='lb_otl_check')
@@ -23,6 +27,6 @@ class Loadingbay_Info(models.Model):
     lb_stock_invoice_currency = models.ForeignKey(Currency_type, on_delete=models.CASCADE, blank=True, null=True)
     lb_stock_currency_con = models.FloatField(null=True,default=0.0)
 
-
-
-
+class Loadingbayimages_Info(models.Model):
+    lbimg_job_no = models.CharField(max_length=300, null=True, default='')
+    lbimg_inward_pod = models.FileField(upload_to=loadingbay_directory_path, null=True)

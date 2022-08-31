@@ -1,7 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<div class="col-md-1">
+<div class="col-md-1" >
 	<a href="{% url 'gatein_list' %}" class="btn btn-primary btn-block btn-lg">
 		<i class="fas fa-arrow-left"></i>
 	</a>
@@ -34,17 +34,17 @@
 		<a class="btn btn-success border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Damage Check/After</a>
 		<a class="btn btn-success border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>
 		<a class="btn btn-success border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
-<!--		<a class="btn btn-success border border-dark disable_a_href" id="dispatch_btn" href="{% url 'dispatch_insert' %}">Dispatch</a>-->
-<!--		<a class="btn btn-success border border-dark disable_a_href" id="billing_btn">Billing</a>-->
-<!--		<a class="btn btn-success border border-dark disable_a_href" id="expense_btn">Expenses</a>-->
-<!--		<a class="btn btn-success border border-dark disable_a_href" id="reports_btn">Reports</a>-->
+		<!--		<a class="btn btn-success border border-dark disable_a_href" id="dispatch_btn" href="{% url 'dispatch_insert' %}">Dispatch</a>-->
+		<!--		<a class="btn btn-success border border-dark disable_a_href" id="billing_btn">Billing</a>-->
+		<!--		<a class="btn btn-success border border-dark disable_a_href" id="expense_btn">Expenses</a>-->
+		<!--		<a class="btn btn-success border border-dark disable_a_href" id="reports_btn">Reports</a>-->
 	</div>
 	<div class="col-2"></div>
 </div>
 
 <hr>
 
-<form method="POST" action="">
+<form method="POST" action="" enctype="multipart/form-data">
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
@@ -76,49 +76,49 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Invoice Value</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_invoice_value class="form-control" %}
+									{% render_field loadingbay_form.lb_stock_invoice_value id="lb_stock_invoice_value" onchange="inv_curr_change()" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Invoice Currency</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_invoice_currency class="form-control" %}
+									{% render_field loadingbay_form.lb_stock_invoice_currency id="lb_stock_invoice_currency" class="form-control" onchange="inv_curr_change()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Conversion Rate</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_currency_con class="form-control" %}
+									{% render_field loadingbay_form.lb_stock_currency_con id="lb_stock_currency_con" class="form-control disable_a_href" onchange="inv_curr_change()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Amount In (INR)</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_amount_in class="form-control" %}
+									{% render_field loadingbay_form.lb_stock_amount_in id="lb_stock_amount_in" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_type class="form-control" id="lb_status" onchange="status_check()" %}
+									{% render_field loadingbay_form.lb_stock_type class="form-control" id="lb_stock_type" onchange="status_check()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading Start Time</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_unloading_start_time type="datetime-local" class="form-control" id="lb_status" onchange="status_check()" %}
+									{% render_field loadingbay_form.lb_stock_unloading_start_time type="datetime-local" class="form-control" id="lb_stock_unloading_start_time" onchange="status_check()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading End Time</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_unloading_end_time class="form-control" type="datetime-local" id="lb_status" onchange="status_check()" %}
+									{% render_field loadingbay_form.lb_stock_unloading_end_time class="form-control" type="datetime-local" id="lb_stock_unloading_end_time" onchange="status_check()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -127,7 +127,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Dock-In Time</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_FRD_time class="form-control" type="datetime-local" id="lb_status" onchange="status_check()" %}
+									{% render_field loadingbay_form.lb_stock_FRD_time class="form-control" type="datetime-local" id="lb_stock_FRD_time" onchange="status_check()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -141,9 +141,10 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Inward POD</span>
 									</div>
-									{% render_field loadingbay_form.lb_inward_pod class="form-control" %}
+									{% render_field loadingbayimg_form.lbimg_inward_pod id="lbimg_inward_pod" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								{% render_field loadingbayimg_form.lbimg_job_no id="lbimg_job_no" value=request.session.ses_gatein_id_nam class="form-control" %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">E-way Bill#</span>
@@ -183,7 +184,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
-									{% render_field loadingbay_form.lb_status class="form-control" id="lb_status" onchange="status_check()" %}
+									{% render_field loadingbay_form.lb_status class="form-control" id="lb_status" onchange="lb_status_change()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -227,6 +228,42 @@ $(document).ready(function() {
 		$('#storage_btn').removeClass('disable_a_href');
 		$('#dispatch_btn').removeClass('disable_a_href');
 		}
+	lb_status_change();
   });
+</script>
+<script>
+function inv_curr_change() {
+	 var currency_type =document.getElementById("lb_stock_invoice_currency").value;
+	 var invoice_value_val=document.getElementById("lb_stock_invoice_value").value;
+	 if (currency_type==1)
+	 {
+	 		conversion_rate_val='{{currency_INR}}';
+	 		document.getElementById("lb_stock_currency_con").value=conversion_rate_val;
+	 } else if (currency_type==2)
+	 {
+	 		conversion_rate_val='{{currency_USD}}';
+	 		document.getElementById("lb_stock_currency_con").value=conversion_rate_val;
+	 } else
+	 {
+	 		conversion_rate_val='{{currency_EUR}}';
+	 		document.getElementById("lb_stock_currency_con").value=conversion_rate_val;
+	 }
+	 var amount_INR_val=(invoice_value_val*conversion_rate_val).toFixed(2)
+	 document.getElementById("lb_stock_amount_in").value=amount_INR_val
+}
+</script>
+<script>
+function lb_status_change() {
+	var lb_status_val=document.getElementById("lb_status").value;
+	if (lb_status_val==6){
+			$('#lb_stock_invoice_currency').removeClass('disable_a_href');
+			$('#lb_stock_invoice_value').removeClass('disable_a_href');
+		}
+	else
+		{
+			$('#lb_stock_invoice_currency').addClass('disable_a_href');
+			$('#lb_stock_invoice_value').addClass('disable_a_href');
+		}
+	}
 </script>
 {% endblock content %}

@@ -45,3 +45,4 @@ class Warehouse_goods_info(models.Model):
 
 
 
+

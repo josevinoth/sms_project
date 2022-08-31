@@ -53,7 +53,7 @@ from .sub_models.vehicletype_mod import VehicletypeInfo
 from .sub_models.materialhandling_mod import Materialhandling_Info
 from .sub_models.movementtype_mod import MovementtypeInfo
 from .sub_models.received_not_mod import Received_not
-from .sub_models.loadingbay_mod import Loadingbay_Info
+from .sub_models.loadingbay_mod import Loadingbay_Info,Loadingbayimages_Info
 from .sub_models.customername_mod import CustomernameInfo_new
 from .sub_models.vehiclecategory_mod import VehiclecategoryInfo
 from .sub_models.gatein_mod import Gatein_info

@@ -47,7 +47,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Model</span>
 									</div>
-									{% render_field form.lm_customer_model id="lm_customer_model" readonly="Ture" class="form-control" %}
+									{% render_field form.lm_customer_model id="lm_customer_model" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -165,9 +165,8 @@ function area_volume_fn() {
         data: {
           'lm_customer_name_id': lm_customer_name_id
         },
-		success: function (response) {
-			var obj=JSON.parse(response)["customer_businessmodel_txt"]
-			$("#lm_customer_model").val(obj)
+		success: function (data) {
+			$("#lm_customer_model").val(data);
         }
       });
 
