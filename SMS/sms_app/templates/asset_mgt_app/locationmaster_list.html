@@ -45,14 +45,14 @@
             <td> {{locationmasterinfo.lm_available_volume}}</td>
             <td>
 
-                <a href="{% url 'locationmaster_update' locationmasterinfo.id %}" >
+                <a class="btn btn-primary" href="{% url 'locationmaster_update' locationmasterinfo.id %}" >
                     <i class="far fa-edit"></i>
                 </a>
             </td>
             <td>
                 <form action="{% url 'locationmaster_delete' locationmasterinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
-                    <button type="submit" class="btn">
+                    <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>

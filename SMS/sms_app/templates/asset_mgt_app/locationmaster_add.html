@@ -71,40 +71,40 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Total Area (Sq.ft)</span>
 									</div>
-									{% render_field form.lm_size id="lm_size" readonly="True" class="form-control" %}
+									{% render_field form.lm_size id="lm_size" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Area Occupied (Sq.ft)</span>
 									</div>
-									{% render_field form.lm_area_occupied id="lm_area_occupied" onchange="area_volume_fn()" class="form-control" %}
+									{% render_field form.lm_area_occupied id="lm_area_occupied"  onchange="area_volume_fn()" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Available Area (Sq.ft)</span>
 									</div>
-									{% render_field form.lm_available_area id="lm_available_area" readonly="True" class="form-control" %}
+									{% render_field form.lm_available_area id="lm_available_area" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Volume (Cu.ft)</span>
 									</div>
-									{% render_field form.lm_total_volume id="lm_total_volume" readonly="True" class="form-control" %}
+									{% render_field form.lm_total_volume id="lm_total_volume" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Volume Occupied (Cu.ft)</span>
 									</div>
-									{% render_field form.lm_volume_occupied id="lm_volume_occupied" onchange="area_volume_fn()" class="form-control" %}
+									{% render_field form.lm_volume_occupied id="lm_volume_occupied" onchange="area_volume_fn()" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Available Volume (Cu.ft)</span>
 									</div>
-									{% render_field form.lm_available_volume id="lm_available_volume" readonly="True" class="form-control" %}
+									{% render_field form.lm_available_volume id="lm_available_volume" class="form-control disable_a_href" %}
 								</div>
 								{% render_field form.lm_concatenate  type="hidden" id="lm_concatenate" class="form-control" %}
 								<div class="message message-warning">
@@ -131,6 +131,13 @@
 		<div class="col-3"></div>
 	</div>
 </form>
+<script>
+	$(document).ready(function() {
+		document.getElementById("lm_area_occupied").value ='{{area_final|floatformat:'3'}}';
+		document.getElementById("lm_volume_occupied").value ='{{volume_final|floatformat:'3'}}';
+	 	area_volume_fn()
+	 });
+</script>
 <script>
 function area_volume_fn() {
   var branch_val=document.getElementById("lm_branch").value;

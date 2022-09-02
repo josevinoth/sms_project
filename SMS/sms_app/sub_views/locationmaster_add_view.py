@@ -28,9 +28,39 @@ def locationmaster_add(request,locationmaster_id=0):
                 form = LocationmasteraddForm()
         else:
             print('Inside Get Else')
+            Branch_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_location.id
+            Unit_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_unit.id
+            Bay_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_areaside.id
+            print("Branch", Branch_val)
+            print("Unit", Unit_val)
+            print("Bay", Bay_val)
+            wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,
+                                                                wh_bay_id=Bay_val)
+            stack_layer = wh_goods_list.values('wh_stack_layer_id')
+            volume = wh_goods_list.values('wh_goods_volume_weight')
+            area = wh_goods_list.values('wh_goods_area')
+            area_final = 0
+            volume_final = 0
+            for j in range(len(stack_layer)):
+                # print("Stack Layer",stack_layer[j]['wh_stack_layer_id'])
+                # print("Volume Occupied", volume[j]['wh_goods_volume_weight'])
+                volume_final = volume_final + volume[j]['wh_goods_volume_weight']
+                if stack_layer[j]['wh_stack_layer_id'] == 1:
+                    # print("Area Occupied", area[j]['wh_goods_area'])
+                    area_final = area_final + area[j]['wh_goods_area']
+                else:
+                    print("No Area")
+            print("Total_Area", area_final)
+            print("Total_Volume", volume_final)
             locationmaster=LocationmasterInfo.objects.get(pk=locationmaster_id)
             form = LocationmasteraddForm(instance=locationmaster)
-        return render(request, "asset_mgt_app/locationmaster_add.html", {'form': form,'first_name': first_name})
+            context = {
+                'form': form,
+                'first_name': first_name,
+                'area_final':area_final,
+                'volume_final':volume_final,
+            }
+        return render(request, "asset_mgt_app/locationmaster_add.html",context)
     else:
         if locationmaster_id == 0:
             con_val = request.POST.get('lm_concatenate')
@@ -68,31 +98,8 @@ def locationmaster_add(request,locationmaster_id=0):
                 locationmaster = LocationmasterInfo.objects.get(pk=locationmaster_id)
                 form = LocationmasteraddForm(request.POST, instance=locationmaster)
                 if form.is_valid():
-                    Branch_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_location.id
-                    Unit_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_unit.id
-                    Bay_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_areaside.id
-                    print(Branch_val)
-                    print(Unit_val)
-                    print(Bay_val)
-                    wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,wh_bay_id=Bay_val)
-                    stack_layer = wh_goods_list.values('wh_stack_layer_id')
-                    volume = wh_goods_list.values('wh_goods_volume_weight')
-                    area = wh_goods_list.values('wh_goods_area')
-                    area_final = 0
-                    volume_final = 0
-                    for j in range(len(stack_layer)):
-                        # print("Stack Layer",stack_layer[j]['wh_stack_layer_id'])
-                        # print("Volume Occupied", volume[j]['wh_goods_volume_weight'])
-                        volume_final = volume_final + volume[j]['wh_goods_volume_weight']
-                        if stack_layer[j]['wh_stack_layer_id'] == 1:
-                            # print("Area Occupied", area[j]['wh_goods_area'])
-                            area_final = area_final + area[j]['wh_goods_area']
-                        else:
-                            print("No Area")
-                    print("Total_Area", area_final)
-                    print("Total_Volume",volume_final)
-                    LocationmasterInfo.objects.filter(pk=locationmaster_id).update(lm_area_occupied=area_final)
-                    LocationmasterInfo.objects.filter(pk=locationmaster_id).update(lm_volume_occupied=volume_final)
+                    # LocationmasterInfo.objects.filter(pk=locationmaster_id).update(lm_area_occupied=area_final)
+                    # LocationmasterInfo.objects.filter(pk=locationmaster_id).update(lm_volume_occupied=volume_final)
 
                     form.save()
             return redirect('/SMS/locationmaster_list')
