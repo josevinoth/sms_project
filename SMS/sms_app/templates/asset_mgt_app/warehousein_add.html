@@ -326,7 +326,6 @@
    $("#wh_branch").change(function () {
       var url = $("#goods_add").attr("data-branches-url");
       var branchId = $(this).val();
-      alert(branchId)
       $.ajax({
         url: url,
         data: {
@@ -341,6 +340,7 @@
         	var unit_id=JSON.parse(data)["unit_id"];
         	var len = (unit_name).length;
         	$("#wh_unit").empty();
+        	$('#wh_unit').empty().append("<option value='0'>--Select--</option>");
         	for( var i = 0; i<len; i++){
         		$("#wh_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
 			}
@@ -349,11 +349,10 @@
     });
   </script>
 <script>
-   $("#wh_unit").click(function () {
+   $("#wh_unit").change(function () {
       var url = $("#goods_add").attr("data-units-url");
       var branchId = document.getElementById("wh_branch").value
       var unitId = $(this).val();
-      alert(unitId)
       $.ajax({
         url: '{% url 'load_bays' %}',
         data: {
@@ -367,6 +366,7 @@
         	var bay_id=JSON.parse(data)["bay_id"];
 			var len1 = (bay).length;
         	$("#wh_bay").empty();
+        	$('#wh_bay').empty().append("<option value='0'>--Select--</option>");
         	for( var j = 0; j<len1; j++){
         		$("#wh_bay").append("<option value='"+bay_id[j]+"'>"+bay[j]+"</option>");
 			}
