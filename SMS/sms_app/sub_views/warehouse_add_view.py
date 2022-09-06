@@ -2,9 +2,10 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
+from django.utils.datetime_safe import datetime
 
 from ..forms import GoodsaddForm,WarehoseinaddForm
-from ..models import Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo
+from ..models import Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -140,7 +141,8 @@ def warehousein_add(request, warehousein_id=0):
             warehousein_form = WarehoseinaddForm(request.POST, instance=warehouseininfo)
 
         if warehousein_form.is_valid():
-             warehousein_form.save()
+            Warehouse_goods_info.objects.filter(pk=warehousein_id).update(wh_checkin_time=datetime.now())
+            warehousein_form.save()
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
 
@@ -169,12 +171,14 @@ def wh_space_availability(request):
 # Load Units
 @login_required(login_url='login_page')
 def load_units(request):
+    # Fetch unit
     unit_list=[]
     unit_name=[]
     unit_name_list = []
     wh_branch_id = request.GET.get('branchId')
     print("Branch_ID",wh_branch_id)
-    units = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id).values('lm_wh_unit')
+    # Fetch Unit Details
+    units = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id).values('lm_wh_unit').distinct()
     print("Units",units)
     units_count=units.count()
     for i in range(units_count):
@@ -185,12 +189,46 @@ def load_units(request):
     for j in unit_list:
         print("j",j)
         unit_name=UnitInfo.objects.filter(id=j).values('unit_name')
+        print("unit_name",list(unit_name))
         unit_name_list.append(unit_name[0]['unit_name'])
-        print(unit_name)
-    print(unit_name_list)
-    print(len(list(unit_name_list)))
+    print('unit_name_list',unit_name_list)
     data = {
-        'unit_name_list': list(unit_name_list)
+        'unit_id':unit_list,
+        'unit_name_list': unit_name_list,
+    }
+    return HttpResponse(json.dumps(data))
+    # return JsonResponse((data))
+
+# Load Bays
+@login_required(login_url='login_page')
+def load_bays(request):
+    # Fetch Bays
+    bay_list = []
+    bay_name = []
+    bay_name_list = []
+    wh_branch_id = request.GET.get('branchId')
+    untid_id = request.GET.get('unitId')
+    print('Branch_bay',wh_branch_id)
+    print('Unit_bay',untid_id)
+    # Fetch Bay details
+    bays = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id,lm_wh_unit=untid_id).values('lm_areaside').distinct()
+    print("Bays", bays)
+    bays_count = bays.count()
+    for k in range(bays_count):
+        print("k",k)
+        bay_list.append(bays[k]['lm_areaside'])
+    print("Bay_list",bay_list)
+    print("Length Bay_list",len(bay_list))
+    for m in bay_list:
+        print("m",m)
+        bay_name=BayInfo.objects.filter(id=m).values('bay_bayname')
+        bay_name_list.append(bay_name[0]['bay_bayname'])
+        print(bay_name)
+    print(bay_name_list)
+    print(len(list(bay_name_list)))
+    data = {
+        'bay_id':bay_list,
+        'bay_name_list':bay_name_list,
     }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))

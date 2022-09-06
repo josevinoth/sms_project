@@ -26,6 +26,15 @@ def locationmaster_add(request,locationmaster_id=0):
             else:
                 print('Inside GET second loop')
                 form = LocationmasteraddForm()
+                area_final = 0
+                volume_final = 0
+                context = {
+                    'form': form,
+                    'first_name': first_name,
+                    'area_final': area_final,
+                    'volume_final': volume_final,
+                }
+                return render(request, "asset_mgt_app/locationmaster_add.html", context)
         else:
             print('Inside Get Else')
             Branch_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_location.id
@@ -42,13 +51,11 @@ def locationmaster_add(request,locationmaster_id=0):
             area_final = 0
             volume_final = 0
             for j in range(len(stack_layer)):
-                # print("Stack Layer",stack_layer[j]['wh_stack_layer_id'])
-                # print("Volume Occupied", volume[j]['wh_goods_volume_weight'])
                 volume_final = volume_final + volume[j]['wh_goods_volume_weight']
                 if stack_layer[j]['wh_stack_layer_id'] == 1:
-                    # print("Area Occupied", area[j]['wh_goods_area'])
                     area_final = area_final + area[j]['wh_goods_area']
                 else:
+                    area_final=0
                     print("No Area")
             print("Total_Area", area_final)
             print("Total_Volume", volume_final)

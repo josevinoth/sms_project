@@ -62,14 +62,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">WH Job Number</span>
 									</div>
-									{% render_field loadingbay_form.lb_job_no value=request.session.ses_gatein_id_nam class="form-control" readonly=True %}
+									{% render_field loadingbay_form.lb_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href"  %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Invoice</span>
 									</div>
-									{% render_field loadingbay_form.lb_invoice value=request.session.ses_wh_invoice readonly="True" class="form-control" %}
+									{% render_field loadingbay_form.lb_invoice value=request.session.ses_wh_invoice class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -229,12 +229,16 @@ $(document).ready(function() {
 		$('#dispatch_btn').removeClass('disable_a_href');
 		}
 	lb_status_change();
+	inv_curr_change();
   });
 </script>
 <script>
 function inv_curr_change() {
 	 var currency_type =document.getElementById("lb_stock_invoice_currency").value;
 	 var invoice_value_val=document.getElementById("lb_stock_invoice_value").value;
+	 var lb_status_val=document.getElementById("lb_status").value;
+	 if (lb_status_val==6)
+	 {
 	 if (currency_type==1)
 	 {
 	 		conversion_rate_val='{{currency_INR}}';
@@ -250,6 +254,7 @@ function inv_curr_change() {
 	 }
 	 var amount_INR_val=(invoice_value_val*conversion_rate_val).toFixed(2)
 	 document.getElementById("lb_stock_amount_in").value=amount_INR_val
+	 }
 }
 </script>
 <script>
@@ -264,6 +269,7 @@ function lb_status_change() {
 			$('#lb_stock_invoice_currency').addClass('disable_a_href');
 			$('#lb_stock_invoice_value').addClass('disable_a_href');
 		}
+		inv_curr_change();
 	}
 </script>
 {% endblock content %}

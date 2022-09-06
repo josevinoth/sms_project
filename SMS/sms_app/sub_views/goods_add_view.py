@@ -158,45 +158,4 @@ def goods_delete(request, goods_id):
     goodsinfo.delete()
     return redirect('/SMS/goods_insert')
 
-# Search Space Availability
-@login_required(login_url='login_page')
-def wh_space_availability(request):
-    wh_branch_val = request.GET.get('wh_branch')
-    wh_unit_val = request.GET.get('wh_unit')
-    wh_bay_val = request.GET.get('wh_bay')
-    print("wh_branch_val",wh_branch_val)
-    print("wh_unit_val", wh_unit_val)
-    print("wh_bay_val", wh_bay_val)
-    context = {
-        'wh_branch_val': wh_branch_val,
-    }
-    return render(request, "asset_mgt_app/goods_add.html", context)
 
-# Load Units
-@login_required(login_url='login_page')
-def load_units(request):
-    unit_list=[]
-    unit_name=[]
-    unit_name_list = []
-    wh_branch_id = request.GET.get('branchId')
-    print("Branch_ID",wh_branch_id)
-    units = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id).values('lm_wh_unit')
-    print("Units",units)
-    units_count=units.count()
-    for i in range(units_count):
-        print("i",i)
-        unit_list.append(units[i]['lm_wh_unit'])
-    print("Unit_list",unit_list)
-    print("Length Unit_list",len(unit_list))
-    for j in unit_list:
-        print("j",j)
-        unit_name=UnitInfo.objects.filter(id=j).values('unit_name')
-        unit_name_list.append(unit_name[0]['unit_name'])
-        print(unit_name)
-    print(unit_name_list)
-    print(len(list(unit_name_list)))
-    data = {
-        'unit_name_list': list(unit_name_list)
-    }
-    return HttpResponse(json.dumps(data))
-    # return JsonResponse((data))

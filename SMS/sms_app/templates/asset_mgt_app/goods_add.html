@@ -43,7 +43,7 @@
 </div>
 
 <hr>
-<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" data-branches-url="{% url 'ajax_load_units' %}" novalidate>
+<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" >
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
@@ -273,30 +273,6 @@
 </form>
 
 {% include "asset_mgt_app/goods_list_woh.html" %}
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-<!--<script>-->
-<!--    $("#wh_branch").change(function () {-->
-<!--      var url = $("#goods_add").attr("data-branches-url");-->
-
-<!--      var branchId = $(this).val();-->
-<!--      $.ajax({-->
-<!--        url: url,-->
-<!--        data: {-->
-<!--          'branchId': branchId-->
-<!--        },-->
-<!--		success: function (response) {-->
-<!--        	var obj=JSON.parse(response)["unit_name_list"];-->
-<!--        	var len = (obj).length;-->
-<!--        	$("#wh_unit").empty();-->
-<!--        	for( var i = 0; i<len; i++){-->
-<!--        		$("#wh_unit").append("<option value='"+obj[i]+"'>"+obj[i]+"</option>");-->
-<!--			}-->
-<!--        }-->
-
-<!--      });-->
-
-<!--    });-->
-<!--  </script>-->
 <script>
 function chargeable_weight_fn() {
   var width_val=document.getElementById("width").value;

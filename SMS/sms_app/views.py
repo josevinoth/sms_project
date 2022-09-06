@@ -1,7 +1,7 @@
 from .sub_views.assetinfo_view import assetinfo_add,asset_list,asset_delete
 from .sub_views.assign_asset_add_view import assign_asset_add,assign_asset_delete,assign_asset_list_new
 from .sub_views.department_add_view import department_add,department_delete,department_list
-from .sub_views.goods_add_view import goods_add,goods_list,goods_delete,wh_space_availability,load_units
+from .sub_views.goods_add_view import goods_add,goods_list,goods_delete
 from .sub_views.goods_check_view import goods_check
 from .sub_views.home_page_view import home_page
 from .sub_views.insurance_add_view import insurance_add,insurance_delete,insurance_list
@@ -74,7 +74,7 @@ from .sub_views.materialhandling_add_view import materialhandling_list,materialh
 from .sub_views.packagetype_add_view import packagetype_list,packagetype_delete,packagetype_add
 from .sub_views.currency_type_add_view import currencytype_add,currencytype_list,currencytype_delete
 from .sub_views.stock_type_add_view import stocktype_add,stocktype_delete,stocktype_list
-from .sub_views.warehouse_add_view import warehousein_add
+from .sub_views.warehouse_add_view import warehousein_add,load_units,load_bays
 from .sub_views.storage_add_view import storage_list
 from .sub_views.dispatch_add_view import dispatch_list,dispatch_delete,dispatch_add,dispatch_goods_list,dispatch_remove_goods,dispatch_add_goods,qr_dispatch_decoder
 from .sub_views.message_test import message_test

@@ -253,7 +253,7 @@ def qr_dispatch_decoder(request,dispatch_id):
                 # print(date_dif_final)
                 print("Storage_Days", storage_days)
                 print("Storage_Hours", storage_hours)
-                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff)
+                # Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff)
                 return redirect(request.META['HTTP_REFERER'])
             else:
                 time.sleep(5)

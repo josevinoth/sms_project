@@ -1,5 +1,5 @@
 from django import forms
-from ..models import Warehouse_goods_info,UnitInfo,StatusList
+from ..models import Warehouse_goods_info,UnitInfo,StatusList,BayInfo,LocationmasterInfo
 
 class WarehoseinaddForm(forms.ModelForm):
     class Meta:
@@ -21,11 +21,7 @@ class WarehoseinaddForm(forms.ModelForm):
         self.fields['wh_damages'].empty_label = "--Select--"
         self.fields['wh_mismatches'].empty_label = "--Select--"
         self.fields['wh_ratification_process'].empty_label = "--Select--"
-        self.fields['wh_branch'].empty_label = "--Select--"
-        self.fields['wh_unit'].empty_label = "--Select--"
-        self.fields['wh_bay'].empty_label = "--Select--"
         self.fields['wh_check_in_out'].required = True
         self.fields['wh_stack_layer'].empty_label = "--Select--"
-
-
-
+        self.fields['wh_branch'].empty_label = "--Select--"
+        self.fields['wh_unit'].empty_label = "--Select--"

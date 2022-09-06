@@ -10,5 +10,8 @@ class Location_info(models.Model):
     loc_address = models.CharField(max_length=300)
     loc_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.CASCADE, default='')
 
+    class Meta:
+        ordering = ["loc_name"]
+
     def __str__(self):
         return self.loc_name

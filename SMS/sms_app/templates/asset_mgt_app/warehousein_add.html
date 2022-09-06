@@ -43,7 +43,7 @@
 </div>
 
 <hr>
-<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" data-branches-url="{% url 'ajax_load_units' %}" novalidate>
+<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" data-branches-url="{% url 'load_units' %}" novalidate>
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
@@ -252,14 +252,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Warehouse Unit</span>
 									</div>
-									{% render_field warehousein_form.wh_unit id="wh_unit" class="form-control" %}
+									{% render_field warehousein_form.wh_unit id="wh_unit" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Warehouse Bay</span>
 									</div>
-									{% render_field warehousein_form.wh_bay id="wh_bay" class="form-control" %}
+									{% render_field warehousein_form.wh_bay id="wh_bay" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -269,12 +269,6 @@
 									{% render_field warehousein_form.wh_stack_layer id="wh_stack_layer" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div>
-									<a href="{% url 'wh_space_search' %}" class="btn btn-primary btn-block btn-lg">
-										<i class="fa fa-search" aria-hidden="true"></i> Search Space Availability
-									</a>
-								</div>
-								<br>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Available Area (Sq.Cm)</span>
@@ -328,29 +322,58 @@
 </form>
 {% include "asset_mgt_app/warehousein_list_woh.html" %}
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-<!--<script>-->
-<!--    $("#wh_branch").change(function () {-->
-<!--      var url = $("#goods_add").attr("data-branches-url");-->
-
-<!--      var branchId = $(this).val();-->
-<!--      $.ajax({-->
-<!--        url: url,-->
-<!--        data: {-->
-<!--          'branchId': branchId-->
-<!--        },-->
-<!--		success: function (response) {-->
-<!--        	var obj=JSON.parse(response)["unit_name_list"];-->
-<!--        	var len = (obj).length;-->
-<!--        	$("#wh_unit").empty();-->
-<!--        	for( var i = 0; i<len; i++){-->
-<!--        		$("#wh_unit").append("<option value='"+obj[i]+"'>"+obj[i]+"</option>");-->
-<!--			}-->
-<!--        }-->
-
-<!--      });-->
-
-<!--    });-->
-<!--  </script>-->
+<script>
+   $("#wh_branch").change(function () {
+      var url = $("#goods_add").attr("data-branches-url");
+      var branchId = $(this).val();
+      alert(branchId)
+      $.ajax({
+        url: url,
+        data: {
+          'branchId': branchId,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#wh_unit').removeClass('disable_a_href');
+			$("#wh_unit").empty();
+			$("#wh_bay").empty();
+        	var unit_name=JSON.parse(data)["unit_name_list"];
+        	var unit_id=JSON.parse(data)["unit_id"];
+        	var len = (unit_name).length;
+        	$("#wh_unit").empty();
+        	for( var i = 0; i<len; i++){
+        		$("#wh_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
+<script>
+   $("#wh_unit").click(function () {
+      var url = $("#goods_add").attr("data-units-url");
+      var branchId = document.getElementById("wh_branch").value
+      var unitId = $(this).val();
+      alert(unitId)
+      $.ajax({
+        url: '{% url 'load_bays' %}',
+        data: {
+          'branchId':branchId,
+          'unitId': unitId,
+        },
+		success: function (data) {
+			$('#wh_bay').removeClass('disable_a_href');
+			$("#wh_bay").empty();
+        	var bay=JSON.parse(data)["bay_name_list"];
+        	var bay_id=JSON.parse(data)["bay_id"];
+			var len1 = (bay).length;
+        	$("#wh_bay").empty();
+        	for( var j = 0; j<len1; j++){
+        		$("#wh_bay").append("<option value='"+bay_id[j]+"'>"+bay[j]+"</option>");
+			}
+        }
+      });
+    });
+</script>
 <script>
 function chargeable_weight_fn() {
   var width_val=document.getElementById("width").value
