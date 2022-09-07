@@ -54,7 +54,22 @@
 		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Loading Bay</h3></div>
+					<div class="card-header text-center"><div class="row">
+						<div class="col-3"></div>
+						<div class="col-5">
+							<h3>Add/Update Loading Bay</h3>
+						</div>
+						<div class="col-2">
+							<a href="#" class="btn btn-warning btn-block disable_a_href" id="delivery_chalan_btn">
+								Delivery Challan          <i class="fa fa-download " aria-hidden="true"></i>
+							</a>
+						</div>
+						<div class="col-2">
+							<a href="#" class="btn btn-warning btn-block disable_a_href" id="damage_report_btn">
+								Damage Report          <i class="fa fa-download" aria-hidden="true"></i>
+							</a>
+						</div>
+					</div></div>
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col-6">
@@ -121,8 +136,6 @@
 									{% render_field loadingbay_form.lb_stock_unloading_end_time class="form-control" type="datetime-local" id="lb_stock_unloading_end_time" onchange="status_check()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Dock-In Time</span>
@@ -137,6 +150,8 @@
 									{% render_field loadingbay_form.lb_packing_list class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Inward POD</span>
@@ -161,23 +176,48 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Material Handling</span>
+										<span class="input-group-text">Manual</span>
 									</div>
-									{% render_field loadingbay_form.lb_material_handling class="form-control" %}
+									<!--									<input type="checkbox" class="form-control" name="lb_mh_manual" id="lb_mh_manual">-->
+									{% render_field loadingbay_form.lb_mh_manual class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">OTL Check</span>
+										<span class="input-group-text">Forklift</span>
 									</div>
-									{% render_field loadingbay_form.lb_otl_check class="form-control" %}
+									<!--									<input type="checkbox" class="form-control" name="lb_mh_forklift" id="lb_mh_forklift">-->
+									{% render_field loadingbay_form.lb_mh_forklift class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Crane</span>
+									</div>
+									<!--									<input type="checkbox" class="form-control" name="lb_mh_crane" id="lb_mh_crane">-->
+									{% render_field loadingbay_form.lb_mh_crane class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Hand Trolley</span>
+									</div>
+									<!--									<input type="checkbox" class="form-control" name="lb_mh_handtrolley" id="lb_mh_handtrolley">-->
+									{% render_field loadingbay_form.lb_mh_handtrolley class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">OTL Check Acceptance</span>
+									</div>
+									{% render_field loadingbay_form.lb_otl_check id="lb_otl_check" class="form-control" onchange="challan_damage_btn_active()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Offload Acceptance</span>
 									</div>
-									{% render_field loadingbay_form.lb_offload_acceptance class="form-control" %}
+									{% render_field loadingbay_form.lb_offload_acceptance id="lb_offload_acceptance" class="form-control" onchange="challan_damage_btn_active()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -230,7 +270,27 @@ $(document).ready(function() {
 		}
 	lb_status_change();
 	inv_curr_change();
+	challan_damage_btn_active();
   });
+</script>
+<script>
+function challan_damage_btn_active() {
+	var otl_check_val =document.getElementById("lb_otl_check").value;
+	var offload_acceptance_val=document.getElementById("lb_offload_acceptance").value;
+	if ((otl_check_val==2)||(offload_acceptance_val==2))
+	 {
+	 	document.getElementById("lb_status").value=6
+	 	$('#lb_status').addClass('disable_a_href');
+	 	$('#delivery_chalan_btn').removeClass('disable_a_href');
+	 	$('#damage_report_btn').removeClass('disable_a_href');
+	 }
+	 else
+	 {
+	 	$('#lb_status').removeClass('disable_a_href');
+	 	$('#delivery_chalan_btn').addClass('disable_a_href');
+	 	$('#damage_report_btn').addClass('disable_a_href');
+	 }
+}
 </script>
 <script>
 function inv_curr_change() {

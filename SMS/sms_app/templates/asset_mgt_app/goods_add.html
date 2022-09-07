@@ -60,12 +60,12 @@
 								<h3>Add/Update Damage Check/After</h3>
 							</div>
 							<div class="col-2">
-								<a href="#" class="btn btn-warning btn-block ">
+								<a href="#" class="btn btn-warning btn-block disable_a_href" id="delivery_chalan_btn">
 									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>
 								</a>
 							</div>
 							<div class="col-2">
-								<a href="#" class="btn btn-warning btn-block">
+								<a href="#" class="btn btn-warning btn-block disable_a_href" id="damage_report_btn">
 									Damage Report          <i class="fa fa-download" aria-hidden="true"></i>
 								</a>
 							</div>
@@ -79,43 +79,43 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >WH Job Number</span>
 									</div>
-									{% render_field goods_form.wh_job_no value=request.session.ses_gatein_id_nam readonly="true" class="form-control" %}
+									{% render_field goods_form.wh_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3 ">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Stock Number</span>
 									</div>
-									{% render_field goods_form.wh_qr_rand_num id="wh_qr_rand_num" readonly="true" class="form-control" %}
+									{% render_field goods_form.wh_qr_rand_num id="wh_qr_rand_num" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Invoice Number</span>
 									</div>
-									{% render_field goods_form.wh_goods_invoice value=request.session.ses_wh_invoice readonly="true" class="form-control" %}
+									{% render_field goods_form.wh_goods_invoice value=request.session.ses_wh_invoice class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Customer Name</span>
 									</div>
-									{% render_field goods_form.wh_customer_name value=request.session.ses_customer_name readonly="true" class="form-control" %}
+									{% render_field goods_form.wh_customer_name value=request.session.ses_customer_name class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" id="">Customer Type</span>
 									</div>
-									{% render_field goods_form.wh_customer_type value=request.session.ses_customer_type readonly="true" class="form-control" %}
+									{% render_field goods_form.wh_customer_type value=request.session.ses_customer_type class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Consigner</span>
 									</div>
-									{% render_field goods_form.wh_consigner value=request.session.ses_consigner readonly="true" class="form-control" %}
+									{% render_field goods_form.wh_consigner value=request.session.ses_consigner class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Consignee</span>
 									</div>
-									{% render_field goods_form.wh_consignee value=request.session.ses_consignee readonly="true" class="form-control" %}
+									{% render_field goods_form.wh_consignee value=request.session.ses_consignee class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -173,77 +173,77 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Required Area (Sq.Ft)</span>
 									</div>
-									{% render_field goods_form.wh_goods_area id="req_area" readonly="true" class="form-control" %}
+									{% render_field goods_form.wh_goods_area id="req_area"  class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Required Volume (Cu.Ft)</span>
 									</div>
-									{% render_field goods_form.wh_goods_volume_weight id="volume_weight" readonly="true" class="form-control" %}
+									{% render_field goods_form.wh_goods_volume_weight id="volume_weight" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Chargeable Weight</span>
 									</div>
-									{% render_field goods_form.wh_chargeable_weight id="chargeable_weight" class="form-control" readonly="true" %}
+									{% render_field goods_form.wh_chargeable_weight id="chargeable_weight" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >CBM</span>
 									</div>
-									{% render_field goods_form.wh_CBM class="form-control" id="cbm" readonly="true" %}
+									{% render_field goods_form.wh_CBM class="form-control disable_a_href" id="cbm"  %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Weight Deviation</span>
+										<span class="input-group-text" >Weight Deviation?</span>
 									</div>
-									{% render_field goods_form.wh_weights_deviation class="form-control" %}
+									{% render_field goods_form.wh_weights_deviation class="form-control" id="wh_weights_deviation" onchange="challan_damage_btn_active()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Dimension Deviation</span>
+										<span class="input-group-text" >Dimension Deviation?</span>
 									</div>
-									{% render_field goods_form.wh_dimension_deviation class="form-control" %}
+									{% render_field goods_form.wh_dimension_deviation id="wh_dimension_deviation" class="form-control" onchange="challan_damage_btn_active()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Quantity Deviation</span>
+										<span class="input-group-text" >Quantity Deviation?</span>
 									</div>
-									{% render_field goods_form.wh_no_of_units_deviation class="form-control" %}
+									{% render_field goods_form.wh_no_of_units_deviation id="wh_no_of_units_deviation" class="form-control" onchange="challan_damage_btn_active()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Damages</span>
+										<span class="input-group-text" >Damages?</span>
 									</div>
-									{% render_field goods_form.wh_damages class="form-control" %}
+									{% render_field goods_form.wh_damages id="wh_damages" class="form-control" onchange="challan_damage_btn_active()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Mismatches</span>
+										<span class="input-group-text" >Mismatches?</span>
 									</div>
-									{% render_field goods_form.wh_mismatches class="form-control" %}
+									{% render_field goods_form.wh_mismatches id="wh_mismatches" class="form-control" onchange="challan_damage_btn_active()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Ratification Process</span>
+										<span class="input-group-text" >Ratification Process?</span>
 									</div>
-									{% render_field goods_form.wh_ratification_process class="form-control" %}
+									{% render_field goods_form.wh_ratification_process id="wh_ratification_process" class="form-control" onchange="challan_damage_btn_active()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Status</span>
 									</div>
-									{% render_field goods_form.wh_goods_status class="form-control" %}
+									{% render_field goods_form.wh_goods_status id="wh_goods_status" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -345,6 +345,30 @@ $(document).ready(function() {
 		$('#storage_btn').removeClass('disable_a_href');
 		$('#dispatch_btn').removeClass('disable_a_href');
 		}
+	challan_damage_btn_active()
   });
+</script>
+<script>
+function challan_damage_btn_active() {
+	var weight_deviation_val =document.getElementById("wh_weights_deviation").value;
+	var dimension_deviation_val=document.getElementById("wh_dimension_deviation").value;
+	var no_of_units_deviation_val=document.getElementById("wh_no_of_units_deviation").value;
+	var damages_val=document.getElementById("wh_damages").value;
+	var mismatches_val=document.getElementById("wh_mismatches").value;
+	var ratification_process_val=document.getElementById("wh_ratification_process").value;
+	if ((weight_deviation_val==1)||(dimension_deviation_val==1)||(no_of_units_deviation_val==1)||(damages_val!=6)||(mismatches_val==1)||(ratification_process_val==1))
+	 {
+	 	document.getElementById("wh_goods_status").value=6
+	 	$('#wh_goods_status').addClass('disable_a_href');
+	 	$('#delivery_chalan_btn').removeClass('disable_a_href');
+	 	$('#damage_report_btn').removeClass('disable_a_href');
+	 }
+	 else
+	 {
+	 	$('#wh_goods_status').removeClass('disable_a_href');
+	 	$('#delivery_chalan_btn').addClass('disable_a_href');
+	 	$('#damage_report_btn').addClass('disable_a_href');
+	 }
+}
 </script>
 {% endblock content %}

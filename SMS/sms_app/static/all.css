@@ -127,7 +127,7 @@ h4{
 width: 190px;
 background-color: #8de4e9;'
 font-color: black;
-font-weight: bold!important;
+font-weight: bold ;
 font-size:14px!important;
 color:#a83232;
 
@@ -154,20 +154,16 @@ font-size:30px;
 }
 
 /*Data Table*/
-
 .table{
 font-family: 'Heebo', sans-serif;
 background-color:white;
 border-color:black;
-border: 10px solid;
-
 }
 
 .table.dataTable thead tr th {
   color: white;
   text-align:center;
 }
-
 
 .badge a{
 font-size:16px;

@@ -48,11 +48,10 @@
             <td>
                 <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-qrcode"></i>
-                    </button>
+                        <button type="submit" class="btn btn-warning ">
+                            <i class="fas fa-qrcode"></i>
+                        </button>
                 </form>
-
             </td>
             <td>
 

@@ -141,8 +141,56 @@ def warehousein_add(request, warehousein_id=0):
             warehousein_form = WarehoseinaddForm(request.POST, instance=warehouseininfo)
 
         if warehousein_form.is_valid():
+            print("warehousein_form is Valid")
             Warehouse_goods_info.objects.filter(pk=warehousein_id).update(wh_checkin_time=datetime.now())
             warehousein_form.save()
+            Branch_val = request.POST.get('wh_branch')
+            Unit_val = request.POST.get('wh_unit')
+            Bay_val = request.POST.get('wh_bay')
+            print("Branch", Branch_val)
+            print("Unit", Unit_val)
+            print("Bay", Bay_val)
+            wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,
+                                                                wh_bay_id=Bay_val)
+            print("Goods List Count", wh_goods_list)
+            stack_layer = wh_goods_list.values('wh_stack_layer_id')
+            volume = wh_goods_list.values('wh_goods_volume_weight')
+            check_in_out_list = wh_goods_list.values('wh_check_in_out')
+            print('Volume',volume)
+            area = wh_goods_list.values('wh_goods_area')
+            print('Area', area)
+            area_final = 0
+            volume_final = 0
+            for j in range(len(wh_goods_list)):
+                if check_in_out_list[j]['wh_check_in_out']==1:
+                    print('check_in_out_list',check_in_out_list[j]['wh_check_in_out'])
+                    volume_final = volume_final + volume[j]['wh_goods_volume_weight']
+                    LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,
+                                                      lm_areaside=Bay_val).update(lm_volume_occupied=volume_final)
+                    if stack_layer[j]['wh_stack_layer_id'] == 1:
+                        print("Area_loop",area[j]['wh_goods_area'])
+                        area_final = area_final + area[j]['wh_goods_area']
+                        print("Final Area",area_final)
+                        LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_final)
+                    else:
+                        print("No Area")
+                else:
+                    print('check_in_out_list', check_in_out_list[j]['wh_check_in_out'])
+
+            print("area_final", area_final)
+            print("volume_final", volume_final)
+            total_area_data=LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_size
+            total_volume_data=LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_total_volume
+            print('total_area_data',total_area_data)
+            print('total_volume_data',total_volume_data)
+            available_area_final =round((total_area_data-area_final),3)
+            available_volume_final =round((total_volume_data-volume_final),3)
+            print('available_area_final',available_area_final)
+            print('available_volume_final',available_volume_final)
+            LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_area=available_area_final)
+            LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_volume=available_volume_final)
+        else:
+            print("warehousein_form is not Valid")
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
 

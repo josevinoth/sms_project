@@ -29,6 +29,13 @@
             <th>Width</th>
             <th>Height</th>
             <th>Weight (Physical)</th>
+            <th>Branch</th>
+            <th>Unit</th>
+            <th>Bay</th>
+            <th>Stack Layer</th>
+            <th>Area Occupied(Sq.ft)</th>
+            <th>Volume Occupied(Cu.ft)</th>
+            <th>Check-In/Out</th>
 <!--            <th>QR Code</th>-->
 <!--            <th>Edit</th>-->
 <!--            <th>Delete</th>-->
@@ -46,6 +53,13 @@
                 <td> {{goodsinfo.wh_goods_width}}</td>
                 <td> {{goodsinfo.wh_goods_height}}</td>
                 <td> {{goodsinfo.wh_goods_weight}}</td>
+                <td> {{goodsinfo.wh_branch}}</td>
+                <td> {{goodsinfo.wh_unit}}</td>
+                <td> {{goodsinfo.wh_bay}}</td>
+                <td> {{goodsinfo.wh_stack_layer}}</td>
+                <td> {{goodsinfo.wh_goods_area}}</td>
+                <td> {{goodsinfo.wh_goods_volume_weight}}</td>
+                <td> {{goodsinfo.wh_check_in_out}}</td>
 <!--                <td>-->
 <!--                    <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">-->
 <!--                        {% csrf_token %}-->
@@ -76,7 +90,16 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#goods_list').DataTable();
+    $('#goods_list').DataTable(
+        {
+        scrollY: "600px",
+        scrollX: true,
+        scrollCollapse: true,
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+    } );
 } );
 </script>
 {% endblock content %}

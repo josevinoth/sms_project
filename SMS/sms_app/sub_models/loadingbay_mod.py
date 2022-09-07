@@ -9,7 +9,7 @@ def loadingbay_directory_path(instance, filename):
 class Loadingbay_Info(models.Model):
     lb_job_no = models.CharField(blank=False, null=False, max_length=20,default='')
     lb_invoice = models.CharField(blank=False, null=False,max_length=20,default='')
-    lb_material_handling = models.ForeignKey(Materialhandling_Info,on_delete=models.CASCADE,related_name='lb_material_handling', db_column='lb_material_handling')
+    # lb_material_handling = models.ForeignKey(Materialhandling_Info,on_delete=models.CASCADE,related_name='lb_material_handling', db_column='lb_material_handling')
     lb_packing_list = models.ForeignKey(Received_not, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list')
     # lb_inward_pod = models.FileField(upload_to=loadingbay_directory_path, null=True)
     lb_eway_bill= models.CharField(blank=False, null=False, max_length=20,default='')
@@ -26,6 +26,10 @@ class Loadingbay_Info(models.Model):
     lb_stock_amount_in = models.FloatField(null=True,default=0.0)
     lb_stock_invoice_currency = models.ForeignKey(Currency_type, on_delete=models.CASCADE, blank=True, null=True)
     lb_stock_currency_con = models.FloatField(null=True,default=0.0)
+    lb_mh_manual = models.BooleanField(null=True)
+    lb_mh_forklift = models.BooleanField(null=True)
+    lb_mh_crane = models.BooleanField(null=True)
+    lb_mh_handtrolley = models.BooleanField(null=True)
 
 class Loadingbayimages_Info(models.Model):
     lbimg_job_no = models.CharField(max_length=300, null=True, default='')
