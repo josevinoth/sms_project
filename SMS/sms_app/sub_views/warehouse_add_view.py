@@ -134,9 +134,6 @@ def warehousein_add(request, warehousein_id=0):
             warehousein_form = WarehoseinaddForm(request.POST)
         else:
             print("I am inside post edit warehousein")
-            ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-            print(ses_gatein_id_nam)
-            wh_job_id = ses_gatein_id_nam
             warehouseininfo = Warehouse_goods_info.objects.get(pk=warehousein_id)
             warehousein_form = WarehoseinaddForm(request.POST, instance=warehouseininfo)
 

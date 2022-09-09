@@ -75,6 +75,8 @@ def locationmaster_add(request,locationmaster_id=0):
             con_val = request.POST.get('lm_concatenate')
             print(con_val)
             print('Inside Post')
+            lm_record_check=LocationmasterInfo.objects.filter(lm_concatenate=con_val)
+            print('lm_record_check',lm_record_check)
             lm_record_count=LocationmasterInfo.objects.filter(lm_concatenate=con_val).count()
             print("Record Count",lm_record_count)
             if lm_record_count==1:

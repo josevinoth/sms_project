@@ -142,6 +142,7 @@ def gatein_add(request, gatein_id=0):
             gatein_info = Gatein_info.objects.get(pk=gatein_id)
             gatein_form = GateinaddForm(request.POST, instance=gatein_info)
         if gatein_form.is_valid():
+            print("Form is Valid")
             gatein_form.save()
             # raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
             # cumsum = sum(raw_data)
@@ -153,6 +154,8 @@ def gatein_add(request, gatein_id=0):
             #     return redirect(request.META['HTTP_REFERER'])
             # else:
             #     messages.info(request, 'Record Updated Successfully')
+        else:
+            print("Form is In-Valid")
         return redirect('/SMS/gatein_list')
 # List WH Job
 @login_required(login_url='login_page')
