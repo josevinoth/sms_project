@@ -273,14 +273,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Available Area (Sq.Cm)</span>
 									</div>
-									{% render_field warehousein_form.wh_available_area class="form-control" %}
+									{% render_field warehousein_form.wh_available_area id="wh_available_area" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Available Volume (Cu.Cm)</span>
 									</div>
-									{% render_field warehousein_form.wh_available_volume class="form-control" %}
+									{% render_field warehousein_form.wh_available_volume id="wh_available_volume" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -306,8 +306,17 @@
 								<!--								</div>-->
 							</div>
 						</div>
-						<div class="message">
-							{{warehousein_form.errors}}
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+									{{form.error_messages}}
+								</div>
+							</div>
+							<div class="col-1"></div>
 						</div>
 						<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
@@ -370,6 +379,37 @@
         	for( var j = 0; j<len1; j++){
         		$("#wh_bay").append("<option value='"+bay_id[j]+"'>"+bay[j]+"</option>");
 			}
+        }
+      });
+    });
+</script>
+<script>
+   $("#wh_bay").change(function () {
+      var url = $("#goods_add").attr("data-bay-url");
+      var branchId = document.getElementById("wh_branch").value;
+      var unitId = document.getElementById("wh_unit").value;
+      var bayId = $(this).val();
+   		alert(bayId)
+   		var req_area_val = document.getElementById("req_area").value;
+   		alert(req_area_val)
+   		var req_volume_val = document.getElementById("volume_weight").value;
+   		alert(req_volume_val)
+      $.ajax({
+        url: '{% url 'load_area_volume' %}',
+        data: {
+			'req_area_val':req_area_val,
+			'req_volume_val':req_volume_val,
+          	'branchId':branchId,
+          	'unitId': unitId,
+          	'bayId': bayId,
+        },
+		success: function (data) {
+			$("#wh_available_area").empty();
+			$("#wh_available_volume").empty();
+			var available_area_final=JSON.parse(data)["available_area_final"];
+        	var available_volume_final=JSON.parse(data)["available_volume_final"];
+			$("#wh_available_area").val(available_area_final);
+			$("#wh_available_volume").val(available_volume_final);
         }
       });
     });

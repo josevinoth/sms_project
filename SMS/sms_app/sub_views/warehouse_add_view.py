@@ -1,5 +1,6 @@
 import json
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.utils.datetime_safe import datetime
@@ -274,6 +275,61 @@ def load_bays(request):
     data = {
         'bay_id':bay_list,
         'bay_name_list':bay_name_list,
+    }
+    return HttpResponse(json.dumps(data))
+    # return JsonResponse((data))
+
+# Load Bays
+@login_required(login_url='login_page')
+def load_area_volume(request):
+    # Fetch Bays
+    area_list = []
+    volume_list = []
+    bay_name = []
+    bay_name_list = []
+    wh_branch_id = request.GET.get('branchId')
+    untid_id = request.GET.get('unitId')
+    bayId = request.GET.get('bayId')
+    req_area_val = float(request.GET.get('req_area_val'))
+    req_volume_val = float(request.GET.get('req_volume_val'))
+    print('Branch_bay',wh_branch_id)
+    print('Unit_bay',untid_id)
+    print('bayId',bayId)
+    print('req_area_val',req_area_val)
+    print('req_volume_val',req_volume_val)
+    # Fetch Bay details
+    lm_available_area_val = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id,lm_wh_unit=untid_id,lm_areaside=bayId).values('lm_available_area').distinct()
+    lm_available_volume_val = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id,lm_wh_unit=untid_id,lm_areaside=bayId).values('lm_available_volume').distinct()
+    print("lm_available_area_val", lm_available_area_val)
+    print("lm_available_volume_val", lm_available_volume_val)
+    area_count = lm_available_area_val.count()
+    for k in range(area_count):
+        print("k",k)
+        available_area_final=lm_available_area_val[k]['lm_available_area']
+        available_volume_final=lm_available_volume_val[k]['lm_available_volume']
+        print('available_area_final',available_area_final)
+        print('available_volume_final',available_volume_final)
+        if (available_area_final- req_area_val) < 0:
+            messages.error(request, 'Area Not Sufficient for Storage')
+        else:
+            messages.success(request, 'Area Sufficient for Storage')
+            available_area_final=available_area_final
+        if (available_volume_final-req_volume_val)<0:
+            messages.error(request, 'Volume Not Sufficient for Storage')
+        else:
+            messages.success(request, 'Volume Sufficient for Storage')
+            available_volume_final=available_volume_final
+
+    # for m in bay_list:
+    #     print("m",m)
+    #     bay_name=BayInfo.objects.filter(id=m).values('bay_bayname')
+    #     bay_name_list.append(bay_name[0]['bay_bayname'])
+    #     print(bay_name)
+    # print(bay_name_list)
+    # print(len(list(bay_name_list)))
+    data = {
+        'available_area_final':available_area_final,
+        'available_volume_final':available_volume_final,
     }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))
