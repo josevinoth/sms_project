@@ -3,6 +3,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
 from django.utils.datetime_safe import datetime
 
 from ..forms import GoodsaddForm,WarehoseinaddForm
@@ -133,15 +134,43 @@ def warehousein_add(request, warehousein_id=0):
         if warehousein_id == 0:
             print("I am inside post add warehousein")
             warehousein_form = WarehoseinaddForm(request.POST)
+            available_area_val = request.POST.get('wh_available_area')
+            available_volume_val = request.POST.get('wh_available_volume')
+            stack_layer_val = request.POST.get('wh_stack_layer')
+            Warehouse_goods_info.objects.filter(pk=warehousein_id).update(wh_checkin_time=timezone.now())
         else:
             print("I am inside post edit warehousein")
             warehouseininfo = Warehouse_goods_info.objects.get(pk=warehousein_id)
             warehousein_form = WarehoseinaddForm(request.POST, instance=warehouseininfo)
+            available_area_val = request.POST.get('wh_available_area')
+            available_volume_val = request.POST.get('wh_available_volume')
+            stack_layer_val = request.POST.get('wh_stack_layer')
+            Warehouse_goods_info.objects.filter(pk=warehousein_id).update(wh_checkin_time=timezone.now())
 
+        print('available_area_val',available_area_val)
+        print('available_volume_val',available_volume_val)
+        print('stack_layer_val',stack_layer_val)
         if warehousein_form.is_valid():
             print("warehousein_form is Valid")
-            Warehouse_goods_info.objects.filter(pk=warehousein_id).update(wh_checkin_time=datetime.now())
-            warehousein_form.save()
+            if (float(available_area_val) <= 0):
+                print("Area is negative")
+                if (float(stack_layer_val)==1):
+                    print("1st layer")
+                    messages.error(request, 'Area Not Sufficient for Storage. Try to Stack in next layer!')
+                else:
+                    print("Above 1st layer")
+                    messages.success(request, 'Goods Stacked above Ground  Level!')
+                    if (float(available_volume_val) <= 0):
+                        print("Volume is negative")
+                        messages.error(request, 'Volume Not Sufficient for Storage!')
+                    else:
+                        print("Volume is Positive")
+                        warehousein_form.save()
+            else:
+                print("Area & volume is Positive")
+                messages.success(request, 'Goods Stored!')
+                warehousein_form.save()
+
             Branch_val = request.POST.get('wh_branch')
             Unit_val = request.POST.get('wh_unit')
             Bay_val = request.POST.get('wh_bay')
@@ -189,6 +218,7 @@ def warehousein_add(request, warehousein_id=0):
             LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_volume=available_volume_final)
         else:
             print("warehousein_form is not Valid")
+            messages.error(request, 'Record not Updated!')
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
 
@@ -282,11 +312,7 @@ def load_bays(request):
 # Load Bays
 @login_required(login_url='login_page')
 def load_area_volume(request):
-    # Fetch Bays
-    area_list = []
-    volume_list = []
-    bay_name = []
-    bay_name_list = []
+    # Fetch Area & Volume
     wh_branch_id = request.GET.get('branchId')
     untid_id = request.GET.get('unitId')
     bayId = request.GET.get('bayId')
@@ -309,27 +335,9 @@ def load_area_volume(request):
         available_volume_final=lm_available_volume_val[k]['lm_available_volume']
         print('available_area_final',available_area_final)
         print('available_volume_final',available_volume_final)
-        if (available_area_final- req_area_val) < 0:
-            messages.error(request, 'Area Not Sufficient for Storage')
-        else:
-            messages.success(request, 'Area Sufficient for Storage')
-            available_area_final=available_area_final
-        if (available_volume_final-req_volume_val)<0:
-            messages.error(request, 'Volume Not Sufficient for Storage')
-        else:
-            messages.success(request, 'Volume Sufficient for Storage')
-            available_volume_final=available_volume_final
-
-    # for m in bay_list:
-    #     print("m",m)
-    #     bay_name=BayInfo.objects.filter(id=m).values('bay_bayname')
-    #     bay_name_list.append(bay_name[0]['bay_bayname'])
-    #     print(bay_name)
-    # print(bay_name_list)
-    # print(len(list(bay_name_list)))
-    data = {
-        'available_area_final':available_area_final,
-        'available_volume_final':available_volume_final,
-    }
+        data = {
+            'available_area_final':available_area_final,
+            'available_volume_final':available_volume_final,
+        }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))

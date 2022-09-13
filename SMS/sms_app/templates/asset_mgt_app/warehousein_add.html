@@ -171,14 +171,14 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Required Area(Sq.Ft)</span>
+										<span class="input-group-text" >Required Area(Sq.ft)</span>
 									</div>
 									{% render_field warehousein_form.wh_goods_area id="req_area" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Required Volume(Cu.Ft)</span>
+										<span class="input-group-text" >Required Volume(Cu.ft)</span>
 									</div>
 									{% render_field warehousein_form.wh_goods_volume_weight id="volume_weight" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -266,28 +266,21 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Stacking Layer</span>
 									</div>
-									{% render_field warehousein_form.wh_stack_layer id="wh_stack_layer" class="form-control" %}
+									{% render_field warehousein_form.wh_stack_layer id="wh_stack_layer" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Available Area (Sq.Cm)</span>
+										<span class="input-group-text" >Available Area (Sq.ft)</span>
 									</div>
 									{% render_field warehousein_form.wh_available_area id="wh_available_area" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Available Volume (Cu.Cm)</span>
+										<span class="input-group-text" >Available Volume (Cu.ft)</span>
 									</div>
 									{% render_field warehousein_form.wh_available_volume id="wh_available_volume" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Check-In Date/Time</span>
-									</div>
-									{% render_field warehousein_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3" >
@@ -344,11 +337,11 @@
 			console.log(data);
 			$('#wh_unit').removeClass('disable_a_href');
 			$("#wh_unit").empty();
-			$("#wh_bay").empty();
+			$('#wh_bay').empty().append("<option value='0'>--Select--</option>");
+			$("#wh_stack_layer").val($("#selectBox option:first").val());
         	var unit_name=JSON.parse(data)["unit_name_list"];
         	var unit_id=JSON.parse(data)["unit_id"];
         	var len = (unit_name).length;
-        	$("#wh_unit").empty();
         	$('#wh_unit').empty().append("<option value='0'>--Select--</option>");
         	for( var i = 0; i<len; i++){
         		$("#wh_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
@@ -371,6 +364,7 @@
 		success: function (data) {
 			$('#wh_bay').removeClass('disable_a_href');
 			$("#wh_bay").empty();
+			$("#wh_stack_layer").val($("#selectBox option:first").val());
         	var bay=JSON.parse(data)["bay_name_list"];
         	var bay_id=JSON.parse(data)["bay_id"];
 			var len1 = (bay).length;
@@ -384,16 +378,19 @@
     });
 </script>
 <script>
-   $("#wh_bay").change(function () {
+	$("#wh_bay").change(function () {
+		$('#wh_stack_layer').removeClass('disable_a_href');
+		$("#wh_stack_layer").val($("#selectBox option:first").val());
+	});
+</script>
+<script>
+   $("#wh_stack_layer").change(function () {
       var url = $("#goods_add").attr("data-bay-url");
       var branchId = document.getElementById("wh_branch").value;
       var unitId = document.getElementById("wh_unit").value;
-      var bayId = $(this).val();
-   		alert(bayId)
+      var bayId = document.getElementById("wh_bay").value;
    		var req_area_val = document.getElementById("req_area").value;
-   		alert(req_area_val)
    		var req_volume_val = document.getElementById("volume_weight").value;
-   		alert(req_volume_val)
       $.ajax({
         url: '{% url 'load_area_volume' %}',
         data: {
