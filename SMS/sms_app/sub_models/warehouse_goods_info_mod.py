@@ -34,7 +34,7 @@ class Warehouse_goods_info(models.Model):
     wh_customer_name = models.CharField(blank=True, null=True, max_length=20)
     wh_customer_type = models.CharField(blank=True, null=True, max_length=20)
     wh_stack_layer = models.ForeignKey(StackingInfo, null=True, on_delete=models.CASCADE, default='')
-    wh_checkin_time = models.DateTimeField(blank=True, null=True)
+    wh_checkin_time = models.DateTimeField(blank=True, null=True,auto_now=True)
     wh_checkout_time = models.DateTimeField(null=True,blank=True)
     wh_storage_time = models.CharField(blank=True, null=True, max_length=50)
     wh_qr_rand_num = models.CharField(blank=True, null=True, max_length=20)

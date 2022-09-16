@@ -74,6 +74,7 @@ urlpatterns = [
     path('stock_update/<int:stock_id>/', views.stock_add, name='stock_update'),  # Update stock
     path('stock_delete/<int:stock_id>/', views.stock_delete, name='stock_delete'),  # Delete stock
     path('reports/', views.reports, name='reports'),  # Reports
+    path('damage_report/', views.damage_report_pdf, name='damage_report'),  # Damage Reports
     path('stud_list/', views.stud_list, name='stud_list'),  # List stud,
     path('stud_insert', views.stud_add, name='stud_insert'),  # Add stud
     path('stud_update/<int:stud_id>/', views.stud_add, name='stud_update'),  # Update stud

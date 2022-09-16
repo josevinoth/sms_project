@@ -61,11 +61,11 @@
 						</div>
 						<div class="col-2">
 							<a href="#" class="btn btn-warning btn-block disable_a_href" id="delivery_chalan_btn">
-								Delivery Challan          <i class="fa fa-download " aria-hidden="true"></i>
+								Delivery Chelan          <i class="fa fa-download " aria-hidden="true"></i>
 							</a>
 						</div>
 						<div class="col-2">
-							<a href="#" class="btn btn-warning btn-block disable_a_href" id="damage_report_btn">
+							<a href="{% url 'damage_report' %}" class="btn btn-warning btn-block disable_a_href" id="damage_report_btn">
 								Damage Report          <i class="fa fa-download" aria-hidden="true"></i>
 							</a>
 						</div>
@@ -119,28 +119,28 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_type class="form-control" id="lb_stock_type" onchange="status_check()" %}
+									{% render_field loadingbay_form.lb_stock_type class="form-control" id="lb_stock_type" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading Start Time</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_unloading_start_time type="datetime-local" class="form-control" id="lb_stock_unloading_start_time" onchange="status_check()" %}
+									{% render_field loadingbay_form.lb_stock_unloading_start_time type="datetime-local" class="form-control" id="lb_stock_unloading_start_time" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading End Time</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_unloading_end_time class="form-control" type="datetime-local" id="lb_stock_unloading_end_time" onchange="status_check()" %}
+									{% render_field loadingbay_form.lb_stock_unloading_end_time class="form-control" type="datetime-local" id="lb_stock_unloading_end_time" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Dock-In Time</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_FRD_time class="form-control" type="datetime-local" id="lb_stock_FRD_time" onchange="status_check()" %}
+									{% render_field loadingbay_form.lb_stock_FRD_time class="form-control" type="datetime-local" id="lb_stock_FRD_time" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">

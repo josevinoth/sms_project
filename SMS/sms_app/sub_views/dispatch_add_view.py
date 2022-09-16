@@ -117,6 +117,8 @@ def dispatch_add(request, dispatch_id=0):
             goods_list= Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
             # dispatch_list = Dispatch_info.objects.filter(dispatch_job_no=wh_job_id)
             dispatch_list = Dispatch_info.objects.all()
+            dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
+            dispatch_goods_list= Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
             context = {
                 'dispatch_form': dispatch_form,
                 'first_name': first_name,
@@ -129,6 +131,7 @@ def dispatch_add(request, dispatch_id=0):
                 'damage_before_status':damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
+                'dispatch_goods_list':dispatch_goods_list,
             }
         return render(request, "asset_mgt_app/dispatch_add.html", context)
     else:
@@ -141,9 +144,9 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_form = DispatchaddForm(request.POST, instance=dispatch_info)
         if dispatch_form.is_valid():
             dispatch_form.save()
-            messages.info(request, 'Record Updated Successfully')
-        return redirect(request.META['HTTP_REFERER'])
-        # return redirect('/SMS/gatein_list')
+            messages.success(request, 'Record Updated Successfully')
+        # return redirect(request.META['HTTP_REFERER'])
+        return redirect('/SMS/dispatch_list')
 # List Dispatch Job
 @login_required(login_url='login_page')
 def dispatch_list(request):
@@ -205,7 +208,8 @@ def dispatch_add_goods(request,dispatch_id):
     print(dispatch_goods_checkout)
     first_name = request.session.get('first_name')
     context = {
-               'first_name': first_name,
+                'first_name': first_name,
+                'dispatch_goods_list':dispatch_goods_list,
                }
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')

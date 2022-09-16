@@ -22,8 +22,8 @@
         <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
         {% endfor %}
     </div>
+    <div class="col-4"></div>
 </div>
-<div class="col-4"></div>
 </div>
 <hr>
 <div class="container-fluid">
@@ -95,7 +95,7 @@
     </table>
 </div>
 <div class="container-fluid">
-    <h3><span class="badge bg-info light">Master List</span></h3>
+    <h3><span class="badge bg-info light">Master Stock List</span></h3>
     {% include "asset_mgt_app/dispatch_list_master_WOH.html" %}
 </div>
 <script>

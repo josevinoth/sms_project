@@ -15,7 +15,7 @@ from .sub_views.producttype_add_view import producttype_list,producttype_delete,
 from .sub_views.qr_code_asset_view import qr_code_asset
 from .sub_views.qr_code_goods_view import qr_code_goods
 from .sub_views.registration_page_view import registration_page
-from .sub_views.reports_view import reports
+from .sub_views.reports_view import reports,damage_report_pdf
 from .sub_views.service_add_view import service_add,service_list,service_delete
 from .sub_views.stock_add_view import stock_add,stock_list,stock_delete
 from .sub_views.user_add_view import user_add,user_list,user_delete

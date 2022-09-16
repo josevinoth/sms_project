@@ -137,7 +137,7 @@ def warehousein_add(request, warehousein_id=0):
             available_area_val = request.POST.get('wh_available_area')
             available_volume_val = request.POST.get('wh_available_volume')
             stack_layer_val = request.POST.get('wh_stack_layer')
-            Warehouse_goods_info.objects.filter(pk=warehousein_id).update(wh_checkin_time=timezone.now())
+            # Warehouse_goods_info.objects.filter(pk=warehousein_id).update(wh_checkin_time=timezone.now())
         else:
             print("I am inside post edit warehousein")
             warehouseininfo = Warehouse_goods_info.objects.get(pk=warehousein_id)
@@ -145,7 +145,7 @@ def warehousein_add(request, warehousein_id=0):
             available_area_val = request.POST.get('wh_available_area')
             available_volume_val = request.POST.get('wh_available_volume')
             stack_layer_val = request.POST.get('wh_stack_layer')
-            Warehouse_goods_info.objects.filter(pk=warehousein_id).update(wh_checkin_time=timezone.now())
+            # Warehouse_goods_info.objects.filter(pk=warehousein_id).update(wh_checkin_time=timezone.now())
 
         print('available_area_val',available_area_val)
         print('available_volume_val',available_volume_val)
