@@ -1,4 +1,5 @@
 from django.db import models
+from.sub_models.whchargetype_mod import Wh_chargetype
 from .sub_models.stacking_mod import StackingInfo
 from.sub_models.activeinactive_mod import ActiveinactiveInfo
 from .sub_models.designation_mod import DesignationInfo
@@ -76,6 +77,7 @@ from .sub_models.vehiclemaster_mod import VehiclemasterInfo
 from .sub_models.rtratemaster_mod import RtratemasterInfo
 from .sub_models.upload_mod import UploadInfo
 from .sub_models.dispatch_mod import Dispatch_info
+from.sub_models.gatein_mod_pre import Gatein_pre_info
 
 
 

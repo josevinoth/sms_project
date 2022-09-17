@@ -22,6 +22,8 @@ def login_page(request):
             print(pwd_1)
             print("Form Username",username)
             print("Form password",password)
+            print("User_id",user_id)
+            request.session['ses_userID'] = user_id
             user = authenticate(request, username=username,password=password)
             request.session['first_name'] = first_name
             if user is not None:

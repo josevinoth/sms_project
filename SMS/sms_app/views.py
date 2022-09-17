@@ -78,3 +78,4 @@ from .sub_views.warehouse_add_view import warehousein_add,load_units,load_bays,l
 from .sub_views.storage_add_view import storage_list
 from .sub_views.dispatch_add_view import dispatch_list,dispatch_delete,dispatch_add,dispatch_goods_list,dispatch_remove_goods,dispatch_add_goods,qr_dispatch_decoder
 from .sub_views.message_test import message_test
+from .sub_views.gatein_pre_add_view import gatein_pre_add,gatein_pre_list,gatein_pre_delete

@@ -7,7 +7,12 @@ from django.shortcuts import render, redirect
 @login_required(login_url='login_page')
 def whratemaster_list(request):
     first_name = request.session.get('first_name')
-    context = {'whratemaster_list': WhratemasterInfo.objects.all(),'first_name': first_name}
+    user_id = request.session.get('ses_userID')
+    context = {
+                'whratemaster_list': WhratemasterInfo.objects.all(),
+                'first_name': first_name,
+                'user_id':user_id,
+            }
     return render(request, "asset_mgt_app/whratemaster_list.html", context)
 
 
@@ -15,13 +20,20 @@ def whratemaster_list(request):
 @login_required(login_url='login_page')
 def whratemaster_add(request, whratemaster_id=0):
     first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    print('user_id',user_id)
     if request.method == "GET":
         if whratemaster_id == 0:
             form = WhratemasteraddForm()
         else:
             whratemasterinfo = WhratemasterInfo.objects.get(pk=whratemaster_id)
             form = WhratemasteraddForm(instance=whratemasterinfo)
-        return render(request, "asset_mgt_app/whratemaster_add.html", {'form': form,'first_name': first_name})
+        context={
+                    'form': form,
+                    'first_name': first_name,
+                    'user_id': user_id,
+                }
+        return render(request, "asset_mgt_app/whratemaster_add.html", context)
     else:
         if whratemaster_id == 0:
             form = WhratemasteraddForm(request.POST)

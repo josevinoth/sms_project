@@ -3,8 +3,8 @@ from ..models import State,GstexcemptionInfo,GstmodelInfo,PaymenttypeInfo,Crcoun
 
 
 class CustomerInfo(models.Model):
-    cu_customercode = models.CharField(max_length=10,default = '')
-    cu_name = models.CharField(max_length=10,default = '')
+    cu_customercode = models.CharField(max_length=100,default = '')
+    cu_name = models.CharField(max_length=100,default = '')
     cu_type= models.ForeignKey(CustomertypeInfo,on_delete=models.CASCADE, default='')
     cu_state = models.ForeignKey(State,on_delete=models.CASCADE, default='')
     cu_nameshort = models.CharField(max_length=10,default = '')
@@ -25,6 +25,9 @@ class CustomerInfo(models.Model):
     cu_tallyid = models.CharField(max_length=30)
     cu_businessmodel = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, default='')
     cu_lastmodifiedby = models.CharField(max_length=30)
+
+    class Meta:
+        ordering = ["cu_name"]
 
     def __str__(self):
         return self.cu_name

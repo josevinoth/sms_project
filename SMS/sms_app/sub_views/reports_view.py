@@ -4,8 +4,7 @@ from django.shortcuts import render
 from django.template.loader import get_template
 from django.http import HttpResponse
 from xhtml2pdf import pisa
-from ..models import Loadingbay_Info,Gatein_info
-
+from ..models import Gatein_info
 
 
 @login_required(login_url='login_page')
@@ -22,8 +21,10 @@ def damage_report_pdf(request):
     print('wh_job_id',wh_job_id)
     damage_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id)
     print(damage_list)
-    context={'damage_list':damage_list}
-    template_path='asset_mgt_app/damage_report.html'
+    context={
+        'damage_list':damage_list,
+    }
+    template_path='asset_mgt_app/damage_report_new.html'
     response=HttpResponse(content_type='application/pdf')
     response['Content-Disposition']='attachment; filename="Damage_Report.pdf"'
 

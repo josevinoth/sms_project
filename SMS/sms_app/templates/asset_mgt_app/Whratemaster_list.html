@@ -20,17 +20,16 @@
     <thead class="thead-dark">
         <tr>
             <th>Customer Name</th>
-            <th>Storage Type</th>
-            <th>Storage Charge</th>
-            <th>Loading Charge</th>
-            <th>Unloading Charge</th>
-            <th>ForkLifting Charge</th>
-            <th>ForkUnloading Charge</th>
-            <th>Crane Loading</th>
-            <th>Crane Unloading</th>
-            <th>OverTime Charge</th>
-            <th>Insurance Charge</th>
-            <th>Add Manpower Charge</th>
+            <th>Customer Business</th>
+            <th>Charge Type</th>
+            <th>Max Weight (kg)</th>
+            <th>Min weight (kg)</th>
+            <th>Item (pcs or Space)</th>
+            <th>Rate (INR)</th>
+            <th>Cost (INR)</th>
+            <th>Description</th>
+            <th>Updated On</th>
+            <th>Updated By</th>
             <th>Edit</th>
             <th>Delete</th>
     </thead>
@@ -38,26 +37,16 @@
         {% for whratemasterinfo in whratemaster_list %}
             <tr>
                 <td> {{whratemasterinfo.whrm_customer_name}}</td>
-                <td> {{whratemasterinfo.whrm_storage_type}}</td>
-                <td> {{whratemasterinfo.whrm_storage_charge}}</td>
-                <td> {{whratemasterinfo.whrm_loading_charge}}</td>
-                <td> {{whratemasterinfo.whrm_unloading_charge}}</td>
-                <td> {{whratemasterinfo.whrm_forkliftloading_charge}}</td>
-                <td> {{whratemasterinfo.whrm_forkliftunloading_charge}}</td>
-                <td> {{whratemasterinfo.whrm_crane_loading_charge}}</td>
-                <td> {{whratemasterinfo.whrm_crane_unloading_charge}}</td>
-                <td> {{whratemasterinfo.whrm_over_time_charge}}</td>
-                <td> {{whratemasterinfo.whrm_insurance_charge}}</td>
-                <td> {{whratemasterinfo.whrm_addmanpow_charge}}</td>
-                <td>
-                    <form action="{% url 'goods_qr_id' whratemasterinfo.id %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn">
-                            <i class="fas fa-qrcode"></i>
-                        </button>
-                    </form>
-
-                </td>
+                <td> {{whratemasterinfo.whrm_businessmodel}}</td>
+                <td> {{whratemasterinfo.whrm_charge_type}}</td>
+                <td> {{whratemasterinfo.whrm_max_wt}}</td>
+                <td> {{whratemasterinfo.whrm_min_wt}}</td>
+                <td> {{whratemasterinfo.whrm_item}}</td>
+                <td> {{whratemasterinfo.whrm_rate}}</td>
+                <td> {{whratemasterinfo.whrm_total}}</td>
+                <td> {{whratemasterinfo.whrm_description}}</td>
+                <td> {{whratemasterinfo.whrm_updated_on}}</td>
+                <td> {{whratemasterinfo.whrm_updated_by}}</td>
                 <td>
 
                     <a href="{% url 'whratemaster_update' whratemasterinfo.id %}" >

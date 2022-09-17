@@ -303,3 +303,43 @@ nav > div a.nav-item.nav-link:focus
 .enable_a_href{
     pointer-events: 1;
 }
+
+/*Reports*/
+ .report_body{
+    font-weight:200;
+    font-size:14px;
+        }
+.report_header{
+    font-weight:100;
+    font-size:20px;
+    text-align:center;
+    color:#007cae;
+ }
+.report_title{
+    font-weight:100;
+    font-size:22px;
+    padding:10px 20px 0px 20px;
+}
+.report_title span{
+    color: #007cae;
+}
+.report_details{
+    padding:10px 20px 0px 20px;
+    text-align:left !important;
+}
+.report_hrItem{
+    border: none;
+    height: 1px;
+    color: #333;
+    background-color:#fff;
+}
+.report_footer{
+    font-size:8px;
+    text-align:center;
+    color:#007cae;
+    display: block;
+}
+.report_logo{
+    width:100px;
+    height:150px;
+}
