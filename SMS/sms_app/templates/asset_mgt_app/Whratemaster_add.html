@@ -109,7 +109,6 @@
 <script>
 $(document).ready(function() {
 	calculate_total()
-<!--	change_charge_type()-->
 	document.getElementById("whrm_updated_by").value ='{{user_id}}';
   });
 </script>
@@ -122,20 +121,4 @@ function calculate_total() {
 	document.getElementById("whrm_total").value =total_val;
 }
 </script>
-
-<!--<script>-->
-<!--function change_charge_type() {-->
-<!--  var jn=document.getElementById("whrm_charge_type").value-->
-<!--  if (jn==7)-->
-<!--	{-->
-<!--		$('#whrm_max_wt').removeClass('disable_a_href');-->
-<!--		$('#whrm_min_wt').removeClass('disable_a_href');-->
-<!--	}-->
-<!--	else-->
-<!--	{-->
-<!--  		$('#whrm_max_wt').addClass('disable_a_href');-->
-<!--		$('#whrm_min_wt').addClass('disable_a_href');-->
-<!--  	}-->
-<!--}-->
-<!--</script>-->
 {% endblock content %}

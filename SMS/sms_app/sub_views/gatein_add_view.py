@@ -2,15 +2,16 @@ from django.db import transaction
 from django.shortcuts import render, redirect
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages
+from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib import messages
-
+from django.http import HttpResponse
+import json
 # Add WH Job
 @transaction.atomic
 @login_required(login_url='login_page')
 def gatein_add(request, gatein_id=0):
     first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     tot_package = request.POST.get('gatein_no_of_pkg')
     print(ses_gatein_id_nam)
@@ -20,6 +21,7 @@ def gatein_add(request, gatein_id=0):
             print("I am inside Get add Gatein")
             gatein_form = GateinaddForm()
             context = {
+                'user_id': user_id,
                 'first_name': first_name,
                 'gatein_form': gatein_form,
                 'loadingbay_list': Loadingbay_Info.objects.filter(lb_job_no=wh_job_id),
@@ -117,9 +119,11 @@ def gatein_add(request, gatein_id=0):
             print("Damage_After_status", damage_after_status)
             # print("Ware_Housein_status", warehousein_status)
             print("Gatein ID", gatein_id)
+            print('user_id',user_id)
             gatein_info = Gatein_info.objects.get(pk=gatein_id)
             gatein_form = GateinaddForm(instance=gatein_info)
             context = {
+                'user_id': user_id,
                 'gatein_form': gatein_form,
                 'first_name': first_name,
                 'damagereport_list':damagereport_list,
@@ -130,7 +134,6 @@ def gatein_add(request, gatein_id=0):
                 'loadingbay_status':loadingbay_status,
                 'damage_before_status':damage_before_status,
                 'damage_after_status': damage_after_status,
-                # 'warehousein_status': warehousein_status,
             }
         return render(request, "asset_mgt_app/gatein_add.html", context)
     else:
@@ -200,4 +203,29 @@ def gatein_delete(request,gatein_id):
 
     return redirect('/SMS/gatein_list')
 
+#Delete WH Job
+@login_required(login_url='login_page')
+def load_pre_gate_in(request):
+    # Fetch pre_gate_in details
+    pre_gatein_val = request.GET.get('pre_gatein_val')
+    # Fetch Bay details
+    pre_gatein_val_final = Gatein_pre_info.objects.filter(gatein_pre_number=pre_gatein_val).values()
+    Transporter=pre_gatein_val_final[0]['gatein_pre_transporter']
+    Driver_Name=pre_gatein_val_final[0]['gatein_pre_driver']
+    Driver_Contact=pre_gatein_val_final[0]['gatein_pre_contact_number']
+    Driver_License=pre_gatein_val_final[0]['gatein_pre_DL_number']
+    OTL=pre_gatein_val_final[0]['gatein_pre_otl']
+    Truck_Number=pre_gatein_val_final[0]['gatein_pre_truck_number']
+    Truck_Type=pre_gatein_val_final[0]['gatein_pre_truck_type_id']
+    data = {
+            'Transporter': Transporter,
+            'Driver_Name': Driver_Name,
+            'Driver_Contact': Driver_Contact,
+            'Driver_License': Driver_License,
+            'OTL': OTL,
+            'Truck_Number':Truck_Number,
+            'Truck_Type': Truck_Type,
+        }
+    return HttpResponse(json.dumps(data))
+    # return JsonResponse((data))
 

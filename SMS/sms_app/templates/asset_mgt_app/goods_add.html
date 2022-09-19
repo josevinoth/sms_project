@@ -61,7 +61,7 @@
 							</div>
 							<div class="col-2">
 								<a href="#" class="btn btn-warning btn-block disable_a_href" id="delivery_chalan_btn">
-									Delivery chelan          <i class="fa fa-download" aria-hidden="true"></i>
+									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>
 								</a>
 							</div>
 							<div class="col-2">
@@ -261,7 +261,7 @@
 							<div class="col-1"></div>
 						</div>
 						<!--<input class="btn btn-success" type="submit" name="Create User">-->
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
+						<button type="submit" class="btn btn-success" onclick="stocknum()"><i class="fas fa-check"></i> Save</button>
 						<!--						<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">-->
 						<!--							<i class="fas fa-times"></i> Cancel</a>-->
 					</div>
@@ -281,17 +281,6 @@ function chargeable_weight_fn() {
   var no_of_piece=document.getElementById("no_of_piece").value
   selectElement = document.querySelector('#uom');
   uom_val = selectElement.options[selectElement.selectedIndex].value;
-  var jn1=document.getElementById("wh_qr_rand_num").value;
-  var ran=Math.floor((Math.random() * 1000000) + 1)
-  if (jn1=="")
-	{
-	  document.getElementById("wh_qr_rand_num").value ="Stock_"+ ran;
-	}
-  else
-	{
-	   document.getElementById("wh_qr_rand_num").value =jn1;
-	}
-
   if (uom_val==1)
 	{
 		var chargeable_weight_val=((length_val*width_val*height_val)/6000).toFixed(3)
@@ -335,12 +324,13 @@ $(document).ready(function() {
 
 	if (damage_before_status_id =="Completed"){
 		$('#damagecheck_after_btn').removeClass('disable_a_href');
-
 		}
+
 	if (damage_after_status_id =="Completed"){
 		$('#warehousein_btn').removeClass('disable_a_href');
 		$('#storage_btn').removeClass('disable_a_href');
 		}
+
 	if (warehousein_status_id =="Completed"){
 		$('#storage_btn').removeClass('disable_a_href');
 		$('#dispatch_btn').removeClass('disable_a_href');
@@ -369,6 +359,20 @@ function challan_damage_btn_active() {
 	 	$('#delivery_chalan_btn').addClass('disable_a_href');
 	 	$('#damage_report_btn').addClass('disable_a_href');
 	 }
+}
+</script>
+<script>
+function stocknum() {
+ 	var jn1=document.getElementById("wh_qr_rand_num").value;
+  	var ran=Math.floor((Math.random() * 1000000) + 1)
+  if (jn1=="")
+	{
+	  document.getElementById("wh_qr_rand_num").value ="Stock_"+ ran;
+	}
+  else
+	{
+	   document.getElementById("wh_qr_rand_num").value =jn1;
+	}
 }
 </script>
 {% endblock content %}

@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import StatusList,VehicletypeInfo
+from ..models import StatusList,VehicletypeInfo,MyUser
 
 class Gatein_pre_info(models.Model):
     gatein_pre_number = models.CharField(blank=True, null=True, max_length=100)
@@ -14,4 +14,10 @@ class Gatein_pre_info(models.Model):
     gatein_pre_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,null=True)
     gatein_pre_created_at = models.DateTimeField(null=True,auto_now_add=True)
     gatein_pre_updated_at = models.DateTimeField(null=True,auto_now=True)
+    gatein_pre_updated_by = models.ForeignKey(MyUser,on_delete=models.CASCADE, default='')
 
+    class Meta:
+        ordering = ["gatein_pre_number"]
+
+    def __str__(self):
+        return self.gatein_pre_number

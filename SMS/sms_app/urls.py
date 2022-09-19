@@ -294,4 +294,5 @@ urlpatterns = [
     path('qr_dispatch_decoder/<int:dispatch_id>', views.qr_dispatch_decoder, name='qr_dispatch_decoder'), # qr_dispatch_decoder
     path('message_test/',views.message_test,name='message_test'),
     path('load_area_volume/',views.load_area_volume,name='load_area_volume'),
+    path('load_pre_gate_in/',views.load_pre_gate_in,name='load_pre_gate_in'),
 ]

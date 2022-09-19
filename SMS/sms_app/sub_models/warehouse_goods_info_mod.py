@@ -31,7 +31,7 @@ class Warehouse_goods_info(models.Model):
     wh_available_volume = models.FloatField(null=True,default=0.0)
     wh_goods_area = models.FloatField(null=True,default=0.0)
     wh_check_in_out= models.ForeignKey(Check_in_out, on_delete=models.CASCADE, null=True, default=1,related_name='wh_check_in_out',db_column='wh_check_in_out')
-    wh_customer_name = models.CharField(blank=True, null=True, max_length=20)
+    wh_customer_name = models.CharField(blank=True, null=True, max_length=200)
     wh_customer_type = models.CharField(blank=True, null=True, max_length=20)
     wh_stack_layer = models.ForeignKey(StackingInfo, null=True, on_delete=models.CASCADE, default='')
     wh_checkin_time = models.DateTimeField(blank=True, null=True,auto_now=True)

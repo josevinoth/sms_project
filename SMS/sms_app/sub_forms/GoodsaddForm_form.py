@@ -1,7 +1,6 @@
 from django import forms
-from django.forms import HiddenInput
 
-from ..models import Warehouse_goods_info,UnitInfo,StatusList
+from ..models import Warehouse_goods_info
 
 class GoodsaddForm(forms.ModelForm):
     class Meta:

@@ -82,6 +82,7 @@
 									{% render_field gatein_pre_form.gatein_pre_status class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								{% render_field gatein_pre_form.gatein_pre_updated_by id="gatein_pre_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>
 						<button type="submit" class="btn btn-success" onclick="pre_gate_in_num()"><i class="fas fa-check"></i> Save</button>
@@ -102,12 +103,17 @@ function pre_gate_in_num() {
   var jn=document.getElementById("gatein_pre_number").value
   if (jn=="")
 	{
-		document.getElementById("gatein_pre_number").value ="PGI_"+ ran;
+		document.getElementById("gatein_pre_number").value =ran;
 	}
 	else
 	{
   		document.getElementById("gatein_pre_number").value=jn;
   	}
 }
+</script>
+<script>
+$(document).ready(function() {
+	document.getElementById("gatein_pre_updated_by").value ='{{user_id}}';
+  });
 </script>
 {% endblock content %}

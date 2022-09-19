@@ -29,10 +29,10 @@ def whratemaster_add(request, whratemaster_id=0):
             whratemasterinfo = WhratemasterInfo.objects.get(pk=whratemaster_id)
             form = WhratemasteraddForm(instance=whratemasterinfo)
         context={
-                    'form': form,
-                    'first_name': first_name,
-                    'user_id': user_id,
-                }
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+        }
         return render(request, "asset_mgt_app/whratemaster_add.html", context)
     else:
         if whratemaster_id == 0:

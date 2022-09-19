@@ -20,16 +20,12 @@
     <thead class="thead-dark">
         <tr>
             <th>Created On</th>
+            <th>Pre-Gate_In</th>
             <th>Job Number</th>
             <th>Invoice Number</th>
             <th>Customer Name</th>
-<!--            <th>Stock Movement Type</th>-->
-<!--            <th>Stock Type</th>-->
-<!--            <th>Arrival Date</th>-->
-<!--            <th>Unloading Start Time</th>-->
-<!--            <th>Unloading End Time</th>-->
-<!--            <th>FRD Time</th>-->
             <th>Updated On</th>
+            <th>Updated By</th>
             <th>Edit</th>
             <th>Delete</th>
     </thead>
@@ -37,15 +33,12 @@
         {% for gateininfo in Gatein_list %}
             <tr>
                 <td> {{gateininfo.gatein_created_at}}</td>
+                <td> {{gateininfo.gatein_pre_id}}</td>
                 <td> {{gateininfo.gatein_job_no}}</td>
                 <td> {{gateininfo.gatein_invoice}}</td>
                 <td> {{gateininfo.gatein_customer}}</td>
                 <td> {{gateininfo.gatein_updated_at}}</td>
-<!--                <td> {{whjobinfo.wh_stock_type}}</td>-->
-<!--                <td> {{stockinfo.wh_stock_arrival_date}}</td>-->
-<!--                <td> {{stockinfo.wh_stock_unloading_start_time}}</td>-->
-<!--                <td> {{stockinfo.wh_stock_unloading_end_time}}</td>-->
-<!--                <td> {{stockinfo.wh_stock_FRD_time}}</td>-->
+                <td> {{gateininfo.gatein_updated_by}}</td>
                 <td>
                     <a class="btn btn-primary" href="{% url 'gatein_update' gateininfo.id %}" >
                         <i class="far fa-edit"></i>

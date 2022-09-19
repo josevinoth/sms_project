@@ -11,22 +11,21 @@ from django.contrib import messages
 @login_required(login_url='login_page')
 def gatein_pre_add(request, gatein_pre_id=0):
     first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
     if request.method == "GET":
         if gatein_pre_id == 0:
             print("I am inside Get add Gatein")
             gatein_pre_form = Gatein_preaddForm()
-            context = {
-                'first_name': first_name,
-                'gatein_pre_form': gatein_pre_form,
-            }
         else:
             print("I am inside get edit Gatein")
             gatein_pre_info = Gatein_pre_info.objects.get(pk=gatein_pre_id)
             gatein_pre_form = Gatein_preaddForm(instance=gatein_pre_info)
-            context = {
-                'gatein_pre_form': gatein_pre_form,
-                'first_name': first_name,
-            }
+
+        context = {
+            'first_name': first_name,
+            'gatein_pre_form': gatein_pre_form,
+            'user_id': user_id,
+        }
         return render(request, "asset_mgt_app/gatein_pre_add.html", context)
     else:
         if gatein_pre_id == 0:

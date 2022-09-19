@@ -140,6 +140,7 @@ def goods_add(request, goods_id=0):
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(request.POST, instance=goodsinfo)
         if goods_form.is_valid():
+            print("Form is Valid")
             goods_form.save()
             raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
             cumsum = sum(raw_data)
@@ -148,6 +149,8 @@ def goods_add(request, goods_id=0):
                 transaction.set_rollback(True)
             else:
                 messages.success(request, 'Record Updated Successfully')
+        else:
+            print("Form is not Valid")
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
 
