@@ -1,12 +1,12 @@
 from django.db import models
-from ..models import State,GstexcemptionInfo,GstmodelInfo,PaymenttypeInfo,CrcountfromInfo,CustomerdepartmentInfo,TrbusinesstypeInfo,CustomertypeInfo
+from ..models import MyUser,PaymentcycleInfo,GstexcemptionInfo,GstmodelInfo,PaymenttypeInfo,CrcountfromInfo,TrbusinesstypeInfo,CustomertypeInfo
 
 
 class CustomerInfo(models.Model):
     cu_customercode = models.CharField(max_length=100,default = '')
     cu_name = models.CharField(max_length=100,default = '')
     cu_type= models.ForeignKey(CustomertypeInfo,on_delete=models.CASCADE, default='')
-    cu_state = models.ForeignKey(State,on_delete=models.CASCADE, default='')
+    cu_address =  models.CharField(max_length=200,default = '')
     cu_nameshort = models.CharField(max_length=10,default = '')
     cu_pan = models.CharField(max_length=10,default = '')
     cu_gst =models.CharField(max_length=10,default = '')
@@ -19,12 +19,13 @@ class CustomerInfo(models.Model):
     cu_gstpercentage = models.CharField(max_length=10,default = '')
     cu_paymenttype = models.ForeignKey(PaymenttypeInfo,on_delete=models.CASCADE, default='')
     cu_creditdays = models.CharField(max_length=10,default = '')
-    cu_paymentcycle = models.CharField(max_length=30)
+    cu_paymentcycle =  models.ForeignKey(PaymentcycleInfo,on_delete=models.CASCADE, default='')
     cu_creditcountfrom = models.ForeignKey(CrcountfromInfo,on_delete=models.CASCADE, default='')
-    cu_department = models.ForeignKey(CustomerdepartmentInfo,on_delete=models.CASCADE, default='')
     cu_tallyid = models.CharField(max_length=30)
     cu_businessmodel = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, default='')
-    cu_lastmodifiedby = models.CharField(max_length=30)
+    cu_lastmodifiedby = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+    cu_created_at = models.DateTimeField(null=True, auto_now_add=True)
+    cu_updated_at = models.DateTimeField(null=True, auto_now=True)
 
     class Meta:
         ordering = ["cu_name"]

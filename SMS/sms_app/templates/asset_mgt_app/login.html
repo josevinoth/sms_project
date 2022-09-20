@@ -9,48 +9,48 @@
 </form>-->
 <div class="row">
 	<div class="col-4"></div>
-		<div class="col-4">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h4>Sign In</h4></div>
-						<div class="card-body bg-light text-dark" >
-							<form method="POST">
-                                {% csrf_token %}
-									<div class="input-group form-group">
-										<div class="input-group-prepend">
-											<span class="input-group-text" style="width: 40px"><i class="fas fa-user-tie"></i></span>
-										</div>
-										<input type="text" class="form-control" placeholder="Employee ID" name="username" required="True">
-									</div>
-
-									<div class="input-group form-group">
-										<div class="input-group-prepend">
-											<span class="input-group-text" style="width: 40px"><i class="fas fa-key"></i></span>
-										</div>
-										<input type="password" class="form-control" placeholder="Password" name="password"  required="True">
-									</div>
-										<div class="text-center">
-											 <button class="btn btn-success" type="submit"><i class="fa fa-thumbs-up" aria-hidden="true"></i> Login</button>
-										</div>
-                            </form>
-							<br>
-							<div class="message message-warning" >
-								{% for message in messages %}
-								<p>{{message}}</p>
-								{% endfor %}
+	<div class="col-4">
+		<div class="container-fluid">
+			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+				<div class="card-header text-center"><h4>Sign In</h4></div>
+				<div class="card-body bg-light text-dark" >
+					<form method="POST">
+						{% csrf_token %}
+						<div class="input-group form-group">
+							<div class="input-group-prepend">
+								<span class="input-group-text" style="width: 40px"><i class="fas fa-user-tie"></i></span>
 							</div>
+							<input type="text" class="form-control" placeholder="Employee ID" name="username" required="True">
 						</div>
-						<div class="card-footer text-center bg-light">
-							<div class="justify-content-center text-dark">
-								Don't have an account?<a href="{% url 'registration_page' %}"> Sign Up</a>
+
+						<div class="input-group form-group">
+							<div class="input-group-prepend">
+								<span class="input-group-text" style="width: 40px"><i class="fas fa-key"></i></span>
 							</div>
-							<div class="justify-content-center">
-							  <a href="{% url 'password_reset' %}">Forgot your password?</a>
-							</div>
+							<input type="password" class="form-control" placeholder="Password" name="password"  required="True">
+						</div>
+						<div class="text-center">
+							<button class="btn btn-success" type="submit"><i class="fa fa-thumbs-up" aria-hidden="true"></i> Login</button>
+						</div>
+					</form>
+					<br>
+					<div class="message text-center">
+						{% for message in messages %}
+						<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+						{% endfor %}
+					</div>
 				</div>
+				<div class="card-footer text-center bg-light">
+					<div class="justify-content-center text-dark">
+						Don't have an account?<a href="{% url 'registration_page' %}"> Sign Up</a>
+					</div>
+					<div class="justify-content-center">
+						<a href="{% url 'password_reset' %}">Forgot your password?</a>
+					</div>
 				</div>
-  			</div>
+			</div>
 		</div>
+	</div>
 	<div class="col-4"></div>
 </div>
 

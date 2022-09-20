@@ -37,14 +37,14 @@ def login_page_new(request):
         print(full_name)
         print(emp_id)
         if emp_id != username_form:
-            messages.info(request, 'Employee not available! Please register!')
+            messages.error(request, 'Employee not available! Please register!')
         elif emp_id==username_form and emp_pwd==password_form:
             messages.success(request, 'Valid Login')
             return redirect('home_page_new')
             # elif password_form==emp_pwd:
             #     return redirect('home_page')
         else:
-            messages.info(request,'Username Or Password is Incorrect')
+            messages.error(request,'Username Or Password is Incorrect')
             # user = authenticate(request, username=username_form,password=password_form)
             request.session['first_name'] = full_name
             print(full_name)

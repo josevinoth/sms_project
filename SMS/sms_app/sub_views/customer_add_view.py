@@ -6,13 +6,19 @@ from django.shortcuts import render, redirect
 @login_required(login_url='login_page')
 def customer_add(request,customer_id=0):
     first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
     if request.method == "GET":
         if customer_id == 0:
             form = CustomeraddForm()
         else:
             customer=CustomerInfo.objects.get(pk=customer_id)
             form = CustomeraddForm(instance=customer)
-        return render(request, "asset_mgt_app/customer_add.html", {'form': form,'first_name': first_name})
+        context={
+                'form': form,
+                'first_name': first_name,
+                'user_id':user_id,
+        }
+        return render(request, "asset_mgt_app/customer_add.html",context )
     else:
         if customer_id == 0:
             form = CustomeraddForm(request.POST)
@@ -20,7 +26,10 @@ def customer_add(request,customer_id=0):
             customer = CustomerInfo.objects.get(pk=customer_id)
             form = CustomeraddForm(request.POST,instance=customer)
         if form.is_valid():
+            print("Form is Valid")
             form.save()
+        else:
+            print("Form is Not Valid")
         return redirect('/SMS/customer_list')
 
 # List customer

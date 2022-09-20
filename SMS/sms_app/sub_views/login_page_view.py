@@ -30,7 +30,7 @@ def login_page(request):
                 login(request,user)
                 return redirect('home_page')
             else:
-                messages.info(request,'Username Or Password is Incorrect')
+                messages.error(request,'Username Or Password is Incorrect')
 
         context = {}
         return render(request, "asset_mgt_app/login.html", context)

@@ -29,6 +29,7 @@ from .sub_models.currency_type_mod import Currency_type
 from .sub_models.package_type_mod import Packagetype_info
 from .sub_models.damage_mod import DamageInfo
 from .sub_models.Bay_info_mod import BayInfo
+from.sub_models.payment_cycle_mod import PaymentcycleInfo
 from .sub_models.Customertype_info_mod import CustomertypeInfo
 from .sub_models.customerdepartment_mod import CustomerdepartmentInfo
 from .sub_models.gstexcemption_mod import GstexcemptionInfo
@@ -78,7 +79,7 @@ from .sub_models.vehiclemaster_mod import VehiclemasterInfo
 from .sub_models.rtratemaster_mod import RtratemasterInfo
 from .sub_models.upload_mod import UploadInfo
 from .sub_models.dispatch_mod import Dispatch_info
-
+from .sub_models.billing_mod import BilingInfo
 
 
 

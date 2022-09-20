@@ -252,22 +252,49 @@ $(document).ready(function() {
 		$('#loadingbay_btn').removeClass('disable_a_href');
 		$('#loadingbay_btn1').removeClass('disable_a_href');
 		}
+	else if (gatein_status_id =="Work In Progress"){
+		$('#loadingbay_btn').removeClass('disable_a_href');
+		$('#loadingbay_btn1').removeClass('disable_a_href');
+		$('#loadingbay_btn').addClass('btn-warning');
+		$('#loadingbay_btn1').addClass('btn-warning');
+	}
 	if (loadingbay_status_id =="Completed"){
 		$('#damagecheck_before_btn').removeClass('disable_a_href');
 		$('#damagecheck_before_btn1').removeClass('disable_a_href');
 		}
-
+	else if (loadingbay_status_id =="Work In Progress"){
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+		$('#damagecheck_before_btn').addClass('btn-warning');
+		$('#damagecheck_before_btn1').addClass('btn-warning');
+	}
 	if (damage_before_status_id =="Completed"){
 		$('#damagecheck_after_btn').removeClass('disable_a_href');
 		}
+	else if (damage_before_status_id =="Work In Progress"){
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+		$('#damagecheck_after_btn').addClass('btn-warning');
+	}
 	if (damage_after_status_id =="Completed"){
 		$('#warehousein_btn').removeClass('disable_a_href');
 		$('#storage_btn').removeClass('disable_a_href');
 		}
+	else if (damage_after_status_id =="No Status"){
+		$('#warehousein_btn').removeClass('disable_a_href');
+		$('#warehousein_btn').addClass('btn-warning');
+		$('#storage_btn').removeClass('disable_a_href');
+		$('#storage_btn').addClass('btn-warning');
+	}
 	if (warehousein_status_id =="Completed"){
 		$('#storage_btn').removeClass('disable_a_href');
 		$('#dispatch_btn').removeClass('disable_a_href');
 		}
+	else if (warehousein_status_id =="No Status"){
+		$('#storage_btn').removeClass('disable_a_href');
+		$('#storage_btn').addClass('btn-warning');
+		$('#dispatch_btn').removeClass('disable_a_href');
+		$('#dispatch_btn').addClass('btn-warning');
+	}
 	lb_status_change();
 	inv_curr_change();
 	challan_damage_btn_active();

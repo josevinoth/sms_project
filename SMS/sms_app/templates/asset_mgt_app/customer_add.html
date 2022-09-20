@@ -46,9 +46,9 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">State</span>
+										<span class="input-group-text">Address</span>
 									</div>
-									{% render_field form.cu_state class="form-control" %}
+									{% render_field form.cu_address type="textarea" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -146,13 +146,6 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Department</span>
-									</div>
-									{% render_field form.cu_department class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Tally ID</span>
 									</div>
 									{% render_field form.cu_tallyid class="form-control" %}
@@ -169,7 +162,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Last Modified By</span>
 									</div>
-									{% render_field form.cu_lastmodifiedby value=request.session.first_name readonly="True" class="form-control" %}
+									{% render_field form.cu_lastmodifiedby id="cu_lastmodifiedby" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -190,5 +183,9 @@
 	</div>
 	</div>
 </form>
-
+<script>
+$(document).ready(function() {
+	document.getElementById("cu_lastmodifiedby").value ='{{user_id}}';
+});
+</script>
 {% endblock content %}
