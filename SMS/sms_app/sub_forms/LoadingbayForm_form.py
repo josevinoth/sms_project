@@ -15,8 +15,10 @@ class LoadingbayddForm(forms.ModelForm):
         self.fields['lb_offload_acceptance'].empty_label = "--Select--"
         self.fields['lb_otl_check'].empty_label = "--Select--"
         self.fields['lb_offload_acceptance'].empty_label = "--Select--"
-        # self.fields['lb_offload_acceptance'].queryset = self.fields['lb_offload_acceptance'].queryset.order_by('name')
-        # self.fields['wh_stock_invoice_currency'].empty_label = "--Select--"
+        self.fields['lb_stock_invoice_currency'].empty_label = "--Select--"
+        self.fields['lb_stock_type'].empty_label = "--Select--"
+        self.fields['lb_packing_list'].empty_label = "--Select--"
+
 
 class LoadingbayImagesForm(forms.ModelForm):
     # dam_OTL_pic = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))

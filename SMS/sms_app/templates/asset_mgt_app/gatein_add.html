@@ -11,10 +11,10 @@
 	<div class="col-8 btn-group mx-auto text-center">
 		{% if gatein_list %}
 		{% for gateininfo in gatein_list %}
-		<a class="btn  border focus border-dark " id="gatein_btn"  href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+		<a class="btn  border focus border-dark disable_a_href" id="gatein_btn"  href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border focus border-dark " id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
+		<a class="btn  border focus border-dark disable_a_href" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
 		{% endif %}
 
 		{% if loadingbay_list %}
@@ -222,84 +222,82 @@ $(document).ready(function() {
 	var gatein_status_id = '{{gatein_status}}';
 	var loadingbay_status_id='{{loadingbay_status}}';
 	var damage_before_status_id='{{damage_before_status}}';
-	alert(damage_before_status_id)
 	var damage_after_status_id='{{damage_after_status}}';
 	var warehousein_status_id='{{warehousein_status}}';
 
 	if (gatein_status_id =="Completed")
 	{
+		$('#gatein_btn').removeClass('disable_a_href');
+		$('#gatein_btn1').removeClass('disable_a_href');
 		$('#gatein_btn').addClass('btn-success');
-		$('#gatein_btn').addClass('btn-success');
+		$('#gatein_btn1').addClass('btn-success');
 		$('#loadingbay_btn').removeClass('disable_a_href');
 		$('#loadingbay_btn1').removeClass('disable_a_href');
+	}
+	else if (gatein_status_id =="Work In Progress")
+	{
+		$('#gatein_btn').removeClass('disable_a_href');
+		$('#gatein_btn1').removeClass('disable_a_href');
+		$('#gatein_btn').addClass('btn-warning');
+		$('#gatein_btn1').addClass('btn-warning');
+	}
 
-		if (loadingbay_status_id =="Completed")
-			$('#loadingbay_btn').removeClass('disable_a_href');
-			$('#loadingbay_btn1').removeClass('disable_a_href');
-			$('#loadingbay_btn').addClass('btn-success');
-			$('#loadingbay_btn1').addClass('btn-success');
-		}
-		if (loadingbay_status_id =="Work In Progress")
-		{
-			$('#loadingbay_btn').removeClass('disable_a_href');
-			$('#loadingbay_btn1').removeClass('disable_a_href');
-			$('#loadingbay_btn').addClass('btn-warning');
-			$('#loadingbay_btn1').addClass('btn-warning');
-			$('#damagecheck_before_btn').addClass('disable_a_href');
-			$('#damagecheck_before_btn1').addClass('disable_a_href');
-			$('#damagecheck_after_btn').addClass('disable_a_href');
-			$('#warehousein_btn').addClass('disable_a_href');
-			$('#storage_btn').addClass('disable_a_href');
-		}
-		if (damage_before_status_id =="Completed")
-		{
-			$('#damagecheck_before_btn').removeClass('disable_a_href');
-			$('#damagecheck_before_btn1').removeClass('disable_a_href');
-			$('#damagecheck_before_btn').addClass('btn-success');
-			$('#damagecheck_before_btn1').addClass('btn-success');
-		}
-		if (damage_before_status_id =="Work In Progress")
-		{
-			$('#damagecheck_before_btn').addClass('btn-warning');
-			$('#damagecheck_before_btn1').addClass('btn-warning');
-			$('#damagecheck_after_btn').addClass('disable_a_href');
-			$('#warehousein_btn').addClass('disable_a_href');
-			$('#storage_btn').addClass('disable_a_href');
-		}
-		else if (damage_after_status_id =="Completed")
-		{
-			$('#damagecheck_after_btn').removeClass('disable_a_href');
-			$('#damagecheck_after_btn').addClass('btn-success');
-		}
-		else if (damage_after_status_id =="No Status")
-		{
-			$('#damagecheck_after_btn').addClass('btn-warning');
-			$('#warehousein_btn').addClass('disable_a_href');
-			$('#storage_btn').addClass('disable_a_href');
-		}
-		else if (warehousein_status_id =="Completed")
-		{
-			$('#damagecheck_after_btn').removeClass('disable_a_href');
-			$('#damagecheck_after_btn').addClass('btn-success');
-		}
-		else if (warehousein_status_id =="No Status")
-		{
-			$('#damagecheck_after_btn').addClass('btn-warning');
-			$('#warehousein_btn').addClass('disable_a_href');
-			$('#storage_btn').addClass('disable_a_href');
-		}
-	else
-		{
-			$('#gatein_btn').addClass('btn-warning');
-			$('#gatein_btn1').addClass('btn-warning');
-			$('#loadingbay_btn').addClass('disable_a_href');
-			$('#loadingbay_btn1').addClass('disable_a_href');
-			$('#damagecheck_before_btn').addClass('disable_a_href');
-			$('#damagecheck_before_btn1').addClass('disable_a_href');
-			$('#damagecheck_after_btn').addClass('disable_a_href');
-			$('#warehousein_btn').addClass('disable_a_href');
-			$('#storage_btn').addClass('disable_a_href');
-		}
+	if (loadingbay_status_id =="Completed")
+	{
+		$('#loadingbay_btn').removeClass('disable_a_href');
+		$('#loadingbay_btn1').removeClass('disable_a_href');
+		$('#loadingbay_btn').addClass('btn-success');
+		$('#loadingbay_btn1').addClass('btn-success');
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+	}
+	else if (loadingbay_status_id =="Work In Progress")
+	{
+		$('#loadingbay_btn').removeClass('disable_a_href');
+		$('#loadingbay_btn1').removeClass('disable_a_href');
+		$('#loadingbay_btn').addClass('btn-warning');
+		$('#loadingbay_btn1').addClass('btn-warning');
+	}
+
+	if (damage_before_status_id =="Completed")
+	{
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+		$('#damagecheck_before_btn').addClass('btn-success');
+		$('#damagecheck_before_btn1').addClass('btn-success');
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+	}
+	else if (damage_before_status_id =="Work In Progress")
+	{
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+		$('#damagecheck_before_btn').addClass('btn-warning');
+		$('#damagecheck_before_btn1').addClass('btn-warning');
+	}
+	if (damage_after_status_id =="Completed")
+	{
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+		$('#damagecheck_after_btn').addClass('btn-success');
+		$('#warehousein_btn').removeClass('disable_a_href');
+	}
+	else if (damage_after_status_id =="No Status")
+	{
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+		$('#damagecheck_after_btn').addClass('btn-warning');
+	}
+
+	if (warehousein_status_id =="Completed")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
+		$('#warehousein_btn').addClass('btn-success');
+		$('#storage_btn').removeClass('disable_a_href');
+		$('#storage_btn').addClass('btn-success');
+	}
+	else if (warehousein_status_id =="No Status")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
+		$('#warehousein_btn').addClass('btn-warning');
+	}
 	document.getElementById("gatein_updated_by").value ='{{user_id}}';
   });
 </script>
