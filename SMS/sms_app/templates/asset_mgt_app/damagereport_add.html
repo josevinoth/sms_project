@@ -50,11 +50,28 @@
 	<!--{{form.as_p}}-->
 
 	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
+		<div class="col-2"></div>
+		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Damage Check/Before</h3></div>
+					<div class="card-header text-center">
+						<div class="row">
+							<div class="col-2"></div>
+							<div class="col-6">
+								<h3>Add/Update Damage Check/Before</h3>
+							</div>
+							<div class="col-2">
+								<a href="#" class="btn btn-warning btn-block disable_a_href" id="delivery_chalan_btn">
+									Delivery Chelan          <i class="fa fa-download " aria-hidden="true"></i>
+								</a>
+							</div>
+							<div class="col-2">
+								<a href="{% url 'damage_report' %}" class="btn btn-warning btn-block disable_a_href" id="damage_report_btn">
+									Damage Report          <i class="fa fa-download" aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</div>
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col">
@@ -69,7 +86,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Damage Type</span>
 									</div>
-									{% render_field damagereport_form.dam_damage_type class="form-control" %}
+									{% render_field damagereport_form.dam_damage_type id="dam_damage_type" onchange="challan_damage_btn_active()" class="form-control" %}
 
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -124,7 +141,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
-									{% render_field damagereport_form.dam_status class="form-control" %}
+									{% render_field damagereport_form.dam_status id="dam_status" class="form-control" %}
 
 								</div>
 							</div>
@@ -141,7 +158,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-3"></div>
+		<div class="col-2"></div>
 	</div>
 </form>
 <script>
@@ -156,6 +173,24 @@ function grnnum() {
 	{
   		document.getElementById("grn_num").value=jn;
   	}
+}
+</script>
+<script>
+function challan_damage_btn_active() {
+	var damage_type_val =document.getElementById("dam_damage_type").value;
+	if (damage_type_val!=6)
+	 {
+	 	document.getElementById("dam_status").value=6
+	 	$('#dam_status').addClass('disable_a_href');
+	 	$('#delivery_chalan_btn').removeClass('disable_a_href');
+	 	$('#damage_report_btn').removeClass('disable_a_href');
+	 }
+	 else
+	 {
+	 	$('#dam_status').removeClass('disable_a_href');
+	 	$('#delivery_chalan_btn').addClass('disable_a_href');
+	 	$('#damage_report_btn').addClass('disable_a_href');
+	 }
 }
 </script>
 <script>
@@ -233,6 +268,10 @@ $(document).ready(function() {
 		$('#warehousein_btn').addClass('btn-success');
 		$('#storage_btn').removeClass('disable_a_href');
 		$('#storage_btn').addClass('btn-success');
+	}
+	else if (warehousein_status_id =="None")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
 	}
 	else if (warehousein_status_id =="No Status")
 	{

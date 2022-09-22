@@ -47,47 +47,30 @@ def goods_add(request, goods_id=0):
                                                                                                 flat=True)  # count records
         print(list(goods_status))
         goods_status_list = list(goods_status)
-        if goods_status_list != []:
-            if goods_status_list[0] == 5:
-                result = all(element == (goods_status_list[0]) for element in (goods_status_list))
-            else:
-                result = False
-        else:
-            result = "Empty"
-        print(result)
-        if (result == True):
+        if goods_status_list == []:
+            damage_after_status = "Empty"
+        elif all(element == None for element in (goods_status_list)):
+            damage_after_status = "None"
+        elif all(element == 5 for element in (goods_status_list)):
             damage_after_status = "Completed"  # get goods status
-            print(damage_after_status)
-        elif (result == "Empty"):
-            damage_after_status = "Empty Status"  # get goods status
-            print(damage_after_status)
+            print('damage_after_status', damage_after_status)
         else:
             damage_after_status = "No Status"  # get goods status
-            print(damage_after_status)
+            print('damage_after_status', damage_after_status)
     except ObjectDoesNotExist:
         damage_after_status = "No Status"
 
     # Warehousein Status Check
     try:
-        warehousein_stack_layer = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
-            'wh_stack_layer', flat=True)  # count records
+        warehousein_stack_layer = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_stack_layer', flat=True)  # count records
         print("warehousein_stack_layer_list", list(warehousein_stack_layer))
         warehousein_stack_layer_list = list(warehousein_stack_layer)
-        if warehousein_stack_layer_list != [None]:
-            print("Inside warehousein_stack_layer_list")
-            if warehousein_stack_layer_list[0] == 1:
-                result = all(
-                    element == (warehousein_stack_layer_list[0]) for element in (warehousein_stack_layer_list))
-            else:
-                result = False
-        else:
-            result = "Empty"
-        print("Warehousein_status", result)
-        if (result == True):
+        if warehousein_stack_layer_list == []:
+            warehousein_status = "Empty"
+        elif all(element == None for element in (warehousein_stack_layer_list)):
+            warehousein_status = "None"
+        elif None not in warehousein_stack_layer_list:
             warehousein_status = "Completed"  # get goods status
-            print('warehousein_status', warehousein_status)
-        elif (result == "Empty"):
-            warehousein_status = "Empty Status"  # get goods status
             print('warehousein_status', warehousein_status)
         else:
             warehousein_status = "No Status"  # get goods status
@@ -100,6 +83,9 @@ def goods_add(request, goods_id=0):
     print("Cumulative Sum is", cumsum)
     tot_package = request.session.get('ses_gatein_no_of_pkg')
     print("Total Package is", tot_package)
+    print("goods_status_list",goods_status_list)
+    print("damage_after_status",damage_after_status)
+    print("warehousein_status",warehousein_status)
     if request.method == "GET":
         if goods_id == 0:
             print("I am inside Get add Goods")

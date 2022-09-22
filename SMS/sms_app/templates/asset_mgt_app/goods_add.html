@@ -366,7 +366,6 @@ $(document).ready(function() {
 		$('#damagecheck_after_btn').removeClass('disable_a_href');
 		$('#damagecheck_after_btn').addClass('btn-success');
 		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-warning');
 	}
 	else if (damage_after_status_id =="No Status")
 	{
@@ -380,6 +379,10 @@ $(document).ready(function() {
 		$('#warehousein_btn').addClass('btn-success');
 		$('#storage_btn').removeClass('disable_a_href');
 		$('#storage_btn').addClass('btn-success');
+	}
+	else if (warehousein_status_id =="None")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
 	}
 	else if (warehousein_status_id =="No Status")
 	{

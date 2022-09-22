@@ -193,6 +193,7 @@
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field gatein_form.gatein_updated_by id="gatein_updated_by" hidden="True" class="form-control" %}
+								{% render_field gatein_form.gatein_job_status id="gatein_job_status" hidden="True" class="form-control" %}
 							</div>
 						</div>
 						<button type="submit" class="btn btn-success" onclick="myjobnum()"><i class="fas fa-check"></i> Save</button>
@@ -292,6 +293,10 @@ $(document).ready(function() {
 		$('#warehousein_btn').addClass('btn-success');
 		$('#storage_btn').removeClass('disable_a_href');
 		$('#storage_btn').addClass('btn-success');
+	}
+	else if (warehousein_status_id =="None")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
 	}
 	else if (warehousein_status_id =="No Status")
 	{

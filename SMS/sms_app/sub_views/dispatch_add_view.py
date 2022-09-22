@@ -205,6 +205,7 @@ def dispatch_add_goods(request,dispatch_id):
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     dispatch_goods_checkout = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=2)
     dispatch_num_update = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num=dispatch_num_val)
+    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=datetime.now())
     print(dispatch_goods_checkout)
     first_name = request.session.get('first_name')
     context = {

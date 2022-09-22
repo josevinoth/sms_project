@@ -42,54 +42,45 @@ def warehousein_add(request, warehousein_id=0):
             dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
     except ObjectDoesNotExist:
         damage_before_status = "No Status"
+
     # Damage/After Status Check
     try:
         goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
-                                                                                            flat=True)  # count records
+                                                                                                flat=True)  # count records
         print(list(goods_status))
         goods_status_list = list(goods_status)
-        if goods_status_list != []:
-            if goods_status_list[0] == 5:
-                result = all(element == (goods_status_list[0]) for element in (goods_status_list))
-            else:
-                result = False
-        else:
-            result = False
-        print(result)
-        if (result):
+        if goods_status_list == []:
+            damage_after_status = "Empty"
+        elif all(element == None for element in (goods_status_list)):
+            damage_after_status = "None"
+        elif all(element == 5 for element in (goods_status_list)):
             damage_after_status = "Completed"  # get goods status
-            print(damage_after_status)
+            print('damage_after_status', damage_after_status)
         else:
             damage_after_status = "No Status"  # get goods status
-            print(damage_after_status)
+            print('damage_after_status', damage_after_status)
     except ObjectDoesNotExist:
         damage_after_status = "No Status"
-    # # Warehousein Status Check
-    # try:
-    #     warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_check_in_out',
-    #                                                                                               flat=True)  # count records
-    #     print(list(warehousein_status))
-    #     warehousein_status_list = list(warehousein_status)
-    #     if warehousein_status_list != []:
-    #         if warehousein_status_list[0] != 0:
-    #             print("Inside If loop")
-    #             result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
-    #             print("Result is", result)
-    #         else:
-    #             print("Inside Else loop")
-    #             result = False
-    #     else:
-    #         result = False
-    #     print(result)
-    #     if (result):
-    #         warehousein_status = "Completed"  # get goods status
-    #         print(warehousein_status)
-    #     else:
-    #         warehousein_status = "No Status"  # get goods status
-    #         print(warehousein_status)
-    # except ObjectDoesNotExist:
-    #     warehousein_status = "No Status"
-    # # warehousein_status = "Completed"
+
+    # Warehousein Status Check
+    try:
+        warehousein_stack_layer = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
+            'wh_stack_layer', flat=True)  # count records
+        print("warehousein_stack_layer_list", list(warehousein_stack_layer))
+        warehousein_stack_layer_list = list(warehousein_stack_layer)
+        if warehousein_stack_layer_list == []:
+            warehousein_status = "Empty"
+        elif all(element == None for element in (warehousein_stack_layer_list)):
+            warehousein_status = "None"
+        elif None not in warehousein_stack_layer_list:
+            warehousein_status = "Completed"  # get goods status
+            print('warehousein_status', warehousein_status)
+        else:
+            warehousein_status = "No Status"  # get goods status
+            print('warehousein_status', warehousein_status)
+    except ObjectDoesNotExist:
+        warehousein_status = "No Status"
+
     if request.method == "GET":
         if warehousein_id == 0:
             print("I am inside Get add warehousein")
@@ -106,7 +97,7 @@ def warehousein_add(request, warehousein_id=0):
                 'loadingbay_status': loadingbay_status,
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
-                # 'warehousein_status':warehousein_status,
+                'warehousein_status':warehousein_status,
             }
         else:
             print("I am inside get edit warehousein")
@@ -127,7 +118,7 @@ def warehousein_add(request, warehousein_id=0):
                 'loadingbay_status': loadingbay_status,
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
-                # 'warehousein_status': warehousein_status,
+                'warehousein_status': warehousein_status,
             }
         return render(request, "asset_mgt_app/warehousein_add.html", context)
     else:
@@ -167,9 +158,13 @@ def warehousein_add(request, warehousein_id=0):
                         print("Volume is Positive")
                         warehousein_form.save()
             else:
-                print("Area & volume is Positive")
-                messages.success(request, 'Goods Stored!')
-                warehousein_form.save()
+                if (float(available_volume_val) <= 0):
+                    print("Volume is negative")
+                    messages.error(request, 'Volume Not Sufficient for Storage!')
+                else:
+                    print("Volume is Positive")
+                    messages.success(request, 'Goods Stored!')
+                    warehousein_form.save()
 
             Branch_val = request.POST.get('wh_branch')
             Unit_val = request.POST.get('wh_unit')

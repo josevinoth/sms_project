@@ -295,4 +295,5 @@ urlpatterns = [
     path('message_test/',views.message_test,name='message_test'),
     path('load_area_volume/',views.load_area_volume,name='load_area_volume'),
     path('load_pre_gate_in/',views.load_pre_gate_in,name='load_pre_gate_in'),
+    path('invoice_list/',views.invoice_list,name='invoice_list'),
 ]
