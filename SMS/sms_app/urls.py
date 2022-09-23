@@ -296,4 +296,9 @@ urlpatterns = [
     path('load_area_volume/',views.load_area_volume,name='load_area_volume'),
     path('load_pre_gate_in/',views.load_pre_gate_in,name='load_pre_gate_in'),
     path('invoice_list/',views.invoice_list,name='invoice_list'),
+    path('warehouse_reports/',views.warehouse_reports,name='warehouse_reports'),
+    path('space_utilization_reports/',views.space_utilization_reports,name='space_utilization_reports'),
+    path('stock_value_report/',views.stock_value_reports,name='stock_value_report'),
+    path('damage_report_list/',views.damage_reports_list,name='damage_report_list'),
+    path('deviation_report/',views.deviation_report,name='deviation_report'),
 ]

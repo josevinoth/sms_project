@@ -11,25 +11,23 @@
             <th>Customer Type</th>
             <th>Consigner</th>
             <th>Consignee</th>
-            <th>Check-In Time</th>
-            <th>Check-Out Time</th>
-            <th>Goods Status</th>
         </tr>
         </thead>
         <tbody>
-        {% for invoiceinfo in invoice_list %}
+
         <tr>
-            <td> {{invoiceinfo.wh_job_no}}</td>
-            <td> {{invoiceinfo.wh_goods_invoice}}</td>
-            <td> {{invoiceinfo.wh_customer_name}}</td>
-            <td> {{invoiceinfo.wh_customer_type}}</td>
-            <td> {{invoiceinfo.wh_consigner}}</td>
-            <td> {{invoiceinfo.wh_consignee}}</td>
-            <td> {{invoiceinfo.wh_checkin_time}}</td>
-            <td> {{invoiceinfo.wh_checkout_time}}</td>
-            <td> {{invoiceinfo.wh_check_in_out}}</td>
+            <td> {{wh_job_num_list}}</td>
+            <td> {{wh_job_num_list}}</td>
+            <td> {{customer_name_list}}</td>
+            <td> {{customer_type_list}}</td>
+            <td> {{consigner_list}}</td>
+            <td> {{consignee_list}}</td>
+<!--            <td> {{invoiceinfo.gatein_customer}}</td>-->
+<!--            <td> {{invoiceinfo.gatein_customer_type}}</td>-->
+<!--            <td> {{invoiceinfo.gatein_shipper}}</td>-->
+<!--            <td> {{invoiceinfo.gatein_consignee}}</td>-->
         </tr>
-        {% endfor %}
+
         </tbody>
     </table>
 </div>
