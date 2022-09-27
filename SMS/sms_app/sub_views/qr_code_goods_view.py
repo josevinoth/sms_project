@@ -14,6 +14,7 @@ def qr_code_goods(request,goods_qr_id):
     img = qrcode.make(qr_id_goods, image_factory=factory_goods, box_size=10)
     stream = BytesIO()
     img.save(stream)
+    img.save('../qrcode_test2.png')
     context= {'svg':stream.getvalue().decode(),
               'Invoice_Number': Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_invoice,
               'Stock_Number':Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_qr_rand_num,
@@ -26,4 +27,10 @@ def qr_code_goods(request,goods_qr_id):
               'H': Warehouse_goods_info.objects.get(pk=goods_qr_id).wh_goods_height,
               'first_name': first_name
               }
+    qr = qrcode.QRCode()
+    qr.add_data(img)
+    qr.make()
+    img_1 = qr.make_image()
+    img_1.save('media/img.png')
+
     return render(request, "asset_mgt_app/goods_qr_code.html", context=context)
