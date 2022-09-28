@@ -19,10 +19,10 @@
 
 		{% if loadingbay_list %}
 		{% for loadingbayinfo in loadingbay_list %}
-		<a class="btn  border border-dark disable_a_href"  id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Loading Bay</a>
+		<a class="btn  border border-dark disable_a_href"  id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Loading Bay</a>
+		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">LGoods Receipt</a>
 		{% endif %}
 		{% if damagereport_list %}
 		{% for damagecheckinfo in damagereport_list %}
@@ -94,7 +94,14 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Arrival Date & Time</span>
+										<span class="input-group-text">Commodity</span>
+									</div>
+									{% render_field gatein_form.gatein_comodity class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dock-In Date & Time</span>
 									</div>
 									{% render_field gatein_form.gatein_arrival_date type="datetime-local" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -124,7 +131,7 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice Weight(Actual)</span>
+										<span class="input-group-text">Invoice weight-Gross(Kg)</span>
 									</div>
 									{% render_field gatein_form.gatein_weight class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->

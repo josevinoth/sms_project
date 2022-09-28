@@ -19,10 +19,10 @@
 
 		{% if loadingbay_list %}
 		{% for loadingbayinfo in loadingbay_list %}
-		<a class="btn  border focus border-dark" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Loading Bay</a>
+		<a class="btn  border focus border-dark" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border focus border-dark" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Loading Bay</a>
+		<a class="btn  border focus border-dark" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
 		{% endif %}
 		{% if damagereport_list %}
 		{% for damagecheckinfo in damagereport_list %}
@@ -140,13 +140,6 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Dock-In Time</span>
-									</div>
-									{% render_field loadingbay_form.lb_stock_FRD_time class="form-control" type="datetime-local" id="lb_stock_FRD_time" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Original Documents Pouch</span>
 									</div>
 									{% render_field loadingbay_form.lb_packing_list class="form-control" %}
@@ -173,7 +166,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">E-way Bill Validity</span>
 									</div>
-									{% render_field loadingbay_form.lb_validity_date type="date" class="form-control" %}
+									{% render_field loadingbay_form.lb_validity_date type="datetime-local" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">

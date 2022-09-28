@@ -17,3 +17,4 @@ class GateinaddForm(forms.ModelForm):
         self.fields['gatein_customer_type'].empty_label = "--Select--"
         self.fields['gatein_pre_id'].empty_label = "--Select--"
         self.fields['gatein_updated_by'].empty_label = "--Select--"
+        self.fields['gatein_comodity'].empty_label = "--Select--"

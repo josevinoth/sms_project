@@ -19,10 +19,10 @@
 
 		{% if loadingbay_list %}
 		{% for loadingbayinfo in loadingbay_list %}
-		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Loading Bay</a>
+		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Loading Bay</a>
+		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
 		{% endif %}
 		{% if damagereport_list %}
 		{% for damagecheckinfo in damagereport_list %}
@@ -155,7 +155,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Weight (Pysical)</span>
+										<span class="input-group-text" >Weight (Physical)</span>
 									</div>
 									{% render_field goods_form.wh_goods_weight id="weight" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
