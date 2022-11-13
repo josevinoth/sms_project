@@ -18,6 +18,7 @@ class LoadingbayddForm(forms.ModelForm):
         self.fields['lb_stock_invoice_currency'].empty_label = "--Select--"
         self.fields['lb_stock_type'].empty_label = "--Select--"
         self.fields['lb_packing_list'].empty_label = "--Select--"
+        self.fields['lb_status'].empty_label = "--Select--"
 
 
 class LoadingbayImagesForm(forms.ModelForm):

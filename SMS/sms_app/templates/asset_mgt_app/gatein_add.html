@@ -22,7 +22,7 @@
 		<a class="btn  border border-dark disable_a_href"  id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">LGoods Receipt</a>
+		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
 		{% endif %}
 		{% if damagereport_list %}
 		{% for damagecheckinfo in damagereport_list %}
@@ -329,7 +329,7 @@ $(document).ready(function() {
       });
 
     });
-  </script>
+</script>
 <script>
     $("#gatein_pre_id").change(function () {
       var url = $("#gate_in").attr("data-load_pregatein-url");

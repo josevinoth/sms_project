@@ -74,7 +74,7 @@ from .sub_views.materialhandling_add_view import materialhandling_list,materialh
 from .sub_views.packagetype_add_view import packagetype_list,packagetype_delete,packagetype_add
 from .sub_views.currency_type_add_view import currencytype_add,currencytype_list,currencytype_delete
 from .sub_views.stock_type_add_view import stocktype_add,stocktype_delete,stocktype_list
-from .sub_views.warehouse_add_view import warehousein_add,load_units,load_bays,load_area_volume
+from .sub_views.warehouse_add_view import warehousein_add,load_units,load_bays,load_area_volume,load_units_origin,load_bays_origin
 from .sub_views.storage_add_view import storage_list
 from .sub_views.dispatch_add_view import dispatch_list,dispatch_delete,dispatch_add,dispatch_goods_list,dispatch_remove_goods,dispatch_add_goods,qr_dispatch_decoder
 from .sub_views.message_test import message_test

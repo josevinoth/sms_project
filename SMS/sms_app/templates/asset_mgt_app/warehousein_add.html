@@ -324,6 +324,8 @@
 </form>
 {% include "asset_mgt_app/warehousein_list_woh.html" %}
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+<!--Fetch Units-->
 <script>
    $("#wh_branch").change(function () {
       var url = $("#goods_add").attr("data-branches-url");
@@ -350,6 +352,8 @@
       });
     });
   </script>
+
+<!--Fetch Bays-->
 <script>
    $("#wh_unit").change(function () {
       var url = $("#goods_add").attr("data-units-url");
@@ -377,12 +381,16 @@
       });
     });
 </script>
+
+<!--Enable Stack layer-->
 <script>
 	$("#wh_bay").change(function () {
 		$('#wh_stack_layer').removeClass('disable_a_href');
 		$("#wh_stack_layer").val($("#selectBox option:first").val());
 	});
 </script>
+
+<!--Fetch Available Area and Volume-->
 <script>
    $("#wh_stack_layer").change(function () {
       var url = $("#goods_add").attr("data-bay-url");
@@ -411,6 +419,8 @@
       });
     });
 </script>
+
+<!--calculate Area, Volume and Weight-->
 <script>
 function chargeable_weight_fn() {
   var width_val=document.getElementById("width").value
@@ -442,6 +452,8 @@ function chargeable_weight_fn() {
   endif
 }
 </script>
+
+<!--Enable Forms-->
 <script>
 $(document).ready(function() {
 	var gatein_status_id = '{{gatein_status}}';

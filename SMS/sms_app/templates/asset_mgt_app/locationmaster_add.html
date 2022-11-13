@@ -27,7 +27,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Warehouse Unit</span>
 									</div>
-									{% render_field form.lm_wh_unit id="lm_unit" class="form-control" %}
+									{% render_field form.lm_wh_unit id="lm_unit" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
@@ -35,7 +35,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Bay</span>
 									</div>
-									{% render_field form.lm_areaside id="lm_bay" class="form-control" %}
+									{% render_field form.lm_areaside id="lm_bay" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -178,5 +178,57 @@ function area_volume_fn() {
       });
 
     });
-  </script>
+</script>
+<!--to Fetch Unists-->
+<script>
+   $("#lm_branch").change(function () {
+      var url = $("#location_master").attr("data-units-url");
+      var branchId = $(this).val();
+      $.ajax({
+        url: '{% url 'load_units_origin' %}',
+        data: {
+          'branchId': branchId,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#lm_unit').removeClass('disable_a_href');
+			$('#lm_unit').empty().append("<option value='0'>--Select--</option>");
+        	var unit_name=JSON.parse(data)["unit_name_list"];
+        	var unit_id=JSON.parse(data)["unit_id"];
+        	var len = (unit_name).length;
+        	$('#lm_unit').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#lm_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+			}
+        }
+      });
+    });
+</script>
+<!--To Fetch bays-->
+<script>
+   $("#lm_unit").change(function () {
+      var url = $("#location_master").attr("data-bays-url");
+      var branchId = document.getElementById("lm_branch").value
+      var unitId = $(this).val();
+      $.ajax({
+        url: '{% url 'load_bays_origin' %}',
+        data: {
+          'branchId':branchId,
+          'unitId': unitId,
+        },
+		success: function (data) {
+			$('#lm_bay').removeClass('disable_a_href');
+			$("#lm_bay").empty();
+        	var bay=JSON.parse(data)["bay_name_list"];
+        	var bay_id=JSON.parse(data)["bay_id"];
+			var len1 = (bay).length;
+        	$("#lm_bay").empty();
+        	$('#lm_bay').empty().append("<option value='0'>--Select--</option>");
+        	for( var j = 0; j<len1; j++){
+        		$("#lm_bay").append("<option value='"+bay_id[j]+"'>"+bay[j]+"</option>");
+			}
+        }
+      });
+    });
+</script>
 {% endblock content %}
