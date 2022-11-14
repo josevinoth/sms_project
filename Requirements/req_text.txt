@@ -1,0 +1,20 @@
+3. rename Loading Bay to Goods Receipt - Jose
+4. Add E,D,S prefix to customer code - Jose
+5. Add Not Available to OTL check in loading bay form - Jose
+6. Capture system timing for Unloading start & End Time - Jose
+7. Arrival Date & Time in Gate-In screen renamed as Dock-In Date & Time - Jose
+8. Remove Dock-In Date & time form loading bay form -Jose
+9. Check customer contract validity on customer selection in Gate-In form -Jose
+10. Notifications/alert for Customer Contract Validity, Warehouse Insurance Validity, Vendor contract Validity, E-way bill Validity - Jose
+11. in Gate-In Form, if customer contract validity is expired, further steps should be allowed only for super user -Jose
+12. In Gate-In form, change Invoice (actual) to Invoice weight-Gross(KG) - Jose
+13. Create Gate-In from Pre-Gate-In page-Jose
+14. Module List access and permissions - Jose/Joseph Sir/Sridhar Sir
+15. Change E-way bill validity date field to date & time - Jose
+16. Check E-way bill validity (alert has to 4hr before validity) - Jose
+17. In Pre-Gate-In, add branch dropdown (for GRN purpose)-Jose
+18. In Pre-Check-In, add Shipment-Alert attachment (Shipment Information)-Jose
+19. In Pre-Check-In, Attachment for customer approval (in case of mismatch)-Jose
+20. In Billing, rate for all charges should be editable with concessional rate or Nil Billing with approval email from Customer/Joseph sire (Super user).  Also, include comment box to document the change.
+21. In Customer master creation, super user to approve deviation in mandatory document (KYC, Contract, SOW, Operations SOP, Billing SOP,Rate Sheet) requirement with comments. Each document attachment field should have deviation (Yes/No), Frequency (Time being/Permanent)(Time being alert should be notified in alerts, Comments - Jose
+22. In Damage Check/Before, change Damage Type to Multi select-Jose

@@ -1,0 +1,20 @@
+23. In Damage Check/Before, generate GRN branch wise continuous number (Chennai-MAA, Bengaluru-BLR-XXXXXX)-Jose
+24. Continuous Job Number unitwise (Ex: MAA-U1-XXXX)-Jose
+25. Add GRN Number in Damage Check/After form-Jose
+26. Spell check Physical weight in Damage Check/After form-Jose
+27. In Damage Check/After Physical and Chargeable weight should be calculated for all box not for individual box - Jose
+28. In Damage Check/After form add comment box to document deviations - Jose
+29. In Damage Check/After change damage check button name to inspection check report - Jose
+30. In Damage Check/After inspection report should be downloadable for any condition-Jose
+31. In Damage Check/After rename Damages as Overage/Shortage and mention the count in next text box and move to Damage Check/Before form -Jose
+32. In Damage Check/After move Ratification process to Damage Check/Before form -Jose
+33. In Damage Check/After move rename Quantity deviation as Quantity deviation (in open Box) and move to Damage Check/Before form -Jose
+34. In Damage Check/After add Fumigation Status (Yes/No). If fumigation is No then add a drop down with options (BVM,Customer) Venkat/Raghu to provide further process when fumigation  come under BVM -Jose
+35. Add "Marks & numbers" (yes/no) in "Damage Check/Before". If No, hold the process and proceed upon customer approval -Jose
+36. Rename "Damage Check/Before" to "Check/Before offloading" and "Damage Check/After" to "Inspection" - Jose
+37. in Warehouse-In form, branch and unit should be tagged to user id -jose
+38. In Dispatch, add E-Waybill number, delivery challan-Jose
+39. In Dispatch, validate driver, truck, OTL with customer email - Jose
+40. In Loading Bay, move Dock-In time above Start time-Jose
+41. Share hardware configuration and cost for Tablet, QR Scanner, QR printer to BVM team - Jose
+42. Schedule recurring meeting for every Saturday - Jose

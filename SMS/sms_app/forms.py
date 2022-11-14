@@ -66,4 +66,4 @@ from .sub_forms.currency_type_form import CurrencytypeaddForm
 from .sub_forms.stock_type_form import StocktypeaddForm
 from .sub_forms.WarehouseinddForm_form import WarehoseinaddForm
 from .sub_forms.dispatchadd_form import DispatchaddForm
-from .sub_forms.GateinForm_pre_form import Gatein_preaddForm
+from .sub_forms.GateinForm_pre_form import Gatein_preaddForm,Gatein_pre_att_Form
