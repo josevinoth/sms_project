@@ -58,7 +58,7 @@ from .sub_models.received_not_mod import Received_not
 from .sub_models.loadingbay_mod import Loadingbay_Info,Loadingbayimages_Info
 from .sub_models.customername_mod import CustomernameInfo_new
 from .sub_models.vehiclecategory_mod import VehiclecategoryInfo
-from.sub_models.gatein_mod_pre import Gatein_pre_info
+from.sub_models.gatein_mod_pre import Gatein_pre_info,Pre_checkin_att
 from .sub_models.gatein_mod import Gatein_info
 from .sub_models.enquirynote_mod import EnquirynoteInfo
 from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
