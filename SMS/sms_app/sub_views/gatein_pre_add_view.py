@@ -12,7 +12,6 @@ from django.contrib import messages
 def gatein_pre_add(request, gatein_pre_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    gatein_pre_number_sess=request.POST.get('gatein_pre_number')
     if request.method == "GET":
         if gatein_pre_id == 0:
             print("I am inside Get add Gatein")
@@ -20,6 +19,7 @@ def gatein_pre_add(request, gatein_pre_id=0):
             gatein_pre_att_form=Gatein_pre_att_Form()
         else:
             print("I am inside get edit Gatein")
+            gatein_pre_number_sess=Gatein_pre_info.objects.get(pk=gatein_pre_id).gatein_pre_number
             print('pre_gate_in Number', gatein_pre_number_sess)
             gatein_pre_info = Gatein_pre_info.objects.get(pk=gatein_pre_id)
             gatein_pre_form = Gatein_preaddForm(instance=gatein_pre_info)
@@ -37,8 +37,9 @@ def gatein_pre_add(request, gatein_pre_id=0):
         if gatein_pre_id == 0:
             print("I am inside post add Gatein")
             gatein_pre_form = Gatein_preaddForm(request.POST)
-            gatein_pre_att_form = Gatein_pre_att_Form(request.POST)
+            gatein_pre_att_form = Gatein_pre_att_Form(request.POST,request.FILES)
         else:
+            gatein_pre_number_sess = request.POST.get('gatein_pre_number')
             print("I am inside post edit Gatein")
             print('pre_gate_in Number',gatein_pre_number_sess)
             gatein_pre_info = Gatein_pre_info.objects.get(pk=gatein_pre_id)
