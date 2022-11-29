@@ -1,7 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" id="gate_in_pre" action="" enctype="multipart/form-data">
+<form method="POST" action="" enctype="multipart/form-data">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-3"></div>
@@ -90,22 +90,23 @@
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field gatein_pre_form.gatein_pre_updated_by id="gatein_pre_updated_by" hidden="True" class="form-control" %}
-								{% render_field gatein_pre_att_form.pre_att_gatein_pre_number id="pre_att_gatein_pre_number"  class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Shipment Info</span>
+								{% render_field gatein_preimg_form.gatein_pre_number_att id="gatein_pre_number_att" class="form-control" %}
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Shipment Details</span>
+									</div>
+									{% render_field gatein_preimg_form.gatein_pre_shipment_att id="gatein_pre_shipment_att" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								{% render_field gatein_pre_att_form.pre_att_shipment_info id="pre_att_shipment_info" class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Custome Approval</span>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Approval</span>
+									</div>
+									{% render_field gatein_preimg_form.gatein_pre_cust_appr_att id="gatein_pre_cust_appr_att" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								{% render_field gatein_pre_att_form.pre_att_customer_approval id="pre_att_customer_approval" class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
+
 						</div>
 						<button type="submit" class="btn btn-success" onclick="pre_gate_in_num()"><i class="fas fa-check"></i> Save</button>
 						<a href="{% url 'gatein_pre_list' %}" class="btn btn-danger float-right">
@@ -123,15 +124,16 @@
 function pre_gate_in_num() {
   var ran=Math.floor((Math.random() * 1000000) + 1)
   var jn=document.getElementById("gatein_pre_number").value
+  alert(jn)
   if (jn=="")
 	{
 		document.getElementById("gatein_pre_number").value =ran;
-		document.getElementById("pre_att_gatein_pre_number").value =ran;
+		document.getElementById("gatein_pre_number_att").value =ran;
 	}
 	else
 	{
   		document.getElementById("gatein_pre_number").value=jn;
-  		document.getElementById("pre_att_gatein_pre_number").value=jn;
+  		document.getElementById("gatein_pre_number_att").value=jn;
   	}
 }
 </script>
@@ -140,4 +142,5 @@ $(document).ready(function() {
 	document.getElementById("gatein_pre_updated_by").value ='{{user_id}}';
   });
 </script>
+
 {% endblock content %}

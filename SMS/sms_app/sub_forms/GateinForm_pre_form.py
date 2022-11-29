@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import HiddenInput
 
-from ..models import Gatein_pre_info,Pre_checkin_att
+from ..models import Gatein_pre_info,Gatein_pre_info_att
 
 class Gatein_preaddForm(forms.ModelForm):
     class Meta:
@@ -15,12 +15,12 @@ class Gatein_preaddForm(forms.ModelForm):
         self.fields['gatein_pre_status'].empty_label = "--Select--"
         self.fields['gatein_pre_branch'].empty_label = "--Select--"
 
-class Gatein_pre_att_Form(forms.ModelForm):
+class Gatein_pre_att_addForm(forms.ModelForm):
     # dam_OTL_pic = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
-    pre_att_gatein_pre_number = forms.CharField(widget=HiddenInput(), required=False)
-    pre_att_shipment_info = forms.FileField(required=False)
-    pre_att_customer_approval = forms.FileField(required=False)
+    gatein_pre_number_att = forms.CharField(widget=HiddenInput(), required=False)
+    gatein_pre_shipment_att = forms.FileField(required=False)
+    gatein_pre_cust_appr_att = forms.FileField(required=False)
     class Meta:
-        model = Pre_checkin_att
+        model = Gatein_pre_info_att
         fields = '__all__'
         # fields=('dam_OTL_pic','dam_document')

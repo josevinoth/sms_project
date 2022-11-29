@@ -23,7 +23,8 @@ class LoadingbayddForm(forms.ModelForm):
 
 class LoadingbayImagesForm(forms.ModelForm):
     # dam_OTL_pic = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
-    lbimg_job_no = forms.CharField(widget=HiddenInput(), required=False)
+    # lbimg_job_no = forms.CharField(widget=HiddenInput(), required=False)
+    lbimg_inward_pod = forms.FileField(required=False)
     class Meta:
         model = Loadingbayimages_Info
         fields = '__all__'

@@ -4,7 +4,7 @@ from ..models import StatusList,VehicletypeInfo,MyUser,Location_info
 def pre_checkin_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
 
-    return 'Pre_checkin_att/{0}/{1}'.format(instance.pre_att_gatein_pre_number, filename)
+    return 'Gatein_pre_files/{0}/{1}'.format(instance.gatein_pre_number_att, filename)
 class Gatein_pre_info(models.Model):
     gatein_pre_number = models.CharField(blank=True, null=True, max_length=100)
     gatein_pre_transporter = models.CharField(blank=True, null=True, max_length=100)
@@ -27,7 +27,7 @@ class Gatein_pre_info(models.Model):
     def __str__(self):
         return self.gatein_pre_number
 
-class Pre_checkin_att(models.Model):
-    pre_att_gatein_pre_number = models.CharField(max_length=300, null=True, default='')
-    pre_att_shipment_info = models.FileField(upload_to=pre_checkin_directory_path, null=True)
-    pre_att_customer_approval = models.FileField(upload_to=pre_checkin_directory_path, null=True)
+class Gatein_pre_info_att(models.Model):
+    gatein_pre_number_att = models.CharField(max_length=300, null=True, default='')
+    gatein_pre_shipment_att = models.FileField(upload_to=pre_checkin_directory_path, null=True)
+    gatein_pre_cust_appr_att = models.FileField(upload_to=pre_checkin_directory_path, null=True)
