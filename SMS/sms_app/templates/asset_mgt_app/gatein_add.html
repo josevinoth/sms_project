@@ -26,12 +26,12 @@
 		{% endif %}
 		{% if damagereport_list %}
 		{% for damagecheckinfo in damagereport_list %}
-		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check/Before</a>
+		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check/Before Offloading</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before</a>
+		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before Offloading</a>
 		{% endif %}
-		<a class="btn  border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Damage Check/After</a>
+		<a class="btn  border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
 		<a class="btn  border border-dark disable_a_href " id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>
 		<a class="btn  border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
 		<!--		<a class="btn btn-success border border-dark disable_a_href" id="dispatch_btn" href="{% url 'dispatch_insert' %}">Dispatch</a>-->
@@ -215,9 +215,25 @@
 function myjobnum() {
   var ran=Math.floor((Math.random() * 1000000) + 1)
   var jn=document.getElementById("job_num").value
+  var user_branch='{{user_branch}}';
   if (jn=="")
 	{
-		document.getElementById("job_num").value ="WH_Job_"+ ran;
+		if (user_branch=="BVM Chennai")
+			{
+				document.getElementById("job_num").value ="MAA_"+"WH_Job_"+ ran;
+			}
+		else if (user_branch=="BVM Benguluru")
+			{
+				document.getElementById("job_num").value ="BLR_"+"WH_Job_"+ ran;
+			}
+		else if (user_branch=="BVM Hyderabad")
+			{
+				document.getElementById("job_num").value ="HYD_"+"WH_Job_"+ ran;
+			}
+		else
+			{
+				document.getElementById("job_num").value ="PNY_"+"WH_Job_"+ ran;
+			}
 	}
 	else
 	{

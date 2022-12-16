@@ -3,13 +3,15 @@ from ..forms import DamagereportaddForm,DamagereportImagesForm
 from ..models import DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
-
-
-
+from ..models import User_extInfo
 @login_required(login_url='login_page')
 def damagereport_add(request,damagereport_id=0):
     first_name = request.session.get('first_name')
     wh_job_id = request.session.get('ses_gatein_id_nam')
+    user_id = request.session.get('ses_userID')
+    print('user_id', user_id)
+    user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+    print('user_branch', user_branch)
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -82,6 +84,7 @@ def damagereport_add(request,damagereport_id=0):
                 'loadingbay_status': loadingbay_status,
                 'damage_before_status': damage_before_status,
                 'warehousein_status': warehousein_status,
+                'user_branch': user_branch,
             }
         else:
             print("I am inside get edit damagereport")

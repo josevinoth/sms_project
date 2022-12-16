@@ -2,7 +2,7 @@ import django
 from django.db import models
 from django.utils import timezone
 
-from ..models import Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
+from ..models import Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
 
 class Warehouse_goods_info(models.Model):
     wh_job_no = models.CharField(blank=False, null=False, max_length=20, default='')
@@ -20,7 +20,8 @@ class Warehouse_goods_info(models.Model):
     wh_no_of_units_deviation = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,null=True,related_name='wh_no_of_units_deviation',db_column='wh_no_of_units_deviation',default=2)
     wh_damages= models.ForeignKey(DamageInfo, on_delete=models.CASCADE, null=True,related_name='wh_damages',db_column='wh_damages',default=6)
     wh_mismatches= models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True,related_name='wh_mismatches',db_column='wh_mismatches',default=2)
-    wh_ratification_process = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, related_name='wh_ratification_process',db_column='wh_ratification_process',default=2)
+    wh_fumigation_process = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, related_name='wh_ratification_process',db_column='wh_ratification_process',default=1)
+    wh_fumigation_action = models.ForeignKey(Fumigation_ActionInfo, on_delete=models.CASCADE, null=True)
     wh_uom = models.ForeignKey(UOM, on_delete=models.CASCADE, null=True, related_name='wh_uom',db_column='wh_uom')
     wh_chargeable_weight = models.FloatField(null=True,default=0.0)
     wh_CBM = models.FloatField(null=True,default=0.0)
@@ -41,6 +42,7 @@ class Warehouse_goods_info(models.Model):
     wh_dispatch_num = models.CharField(blank=True, null=True, max_length=20)
     wh_consigner = models.CharField(blank=True, null=True, max_length=20)
     wh_consignee = models.CharField(blank=True, null=True, max_length=20)
+    wh_comments = models.TextField(blank=True, null=True)
 
 
 

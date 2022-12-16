@@ -13,9 +13,17 @@ def user_add(request,user_id=0):
         else:
             user=User.objects.get(pk=user_id)
             user_ext=User_extInfo.objects.get(user_id=user_id)
+            user_branch=User_extInfo.objects.get(user_id=user_id).emp_branch
+            print('user_branch',user_branch)
             form = EmpeditForm(instance=user)
             user_ext_edit_form = UserexteditForm(instance=user_ext)
-        return render(request, "asset_mgt_app/emp_add.html", {'form': form,'user_ext_edit_form': user_ext_edit_form,'first_name': first_name})
+        context={
+            'form': form,
+            'user_ext_edit_form': user_ext_edit_form,
+            'first_name': first_name,
+            # 'user_branch':user_branch,
+            }
+        return render(request, "asset_mgt_app/emp_add.html", context)
     else:
         if user_id == 0:
             form = EmpeditForm(request.POST)
@@ -23,17 +31,19 @@ def user_add(request,user_id=0):
         else:
             user = User.objects.get(pk=user_id)
             user_ext = User_extInfo.objects.get(user_id=user_id)
+            user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+            print('user_branch', user_branch)
             form = EmpeditForm(request.POST,instance=user)
             user_ext_edit_form = UserexteditForm(request.POST,instance=user_ext)
-            if form.is_valid() and user_ext_edit_form.is_valid():
-            # if form.is_valid():
-                user = form.save()
-                user_ext = user_ext_edit_form.save(commit=False)
-                user_ext.user = user
-                user_ext.save()
-                form.save()
-                user_ext_edit_form.save()
-            return redirect('/SMS/user_list')
+        if form.is_valid() and user_ext_edit_form.is_valid():
+        # if form.is_valid():
+            user = form.save()
+            user_ext = user_ext_edit_form.save(commit=False)
+            user_ext.user = user
+            user_ext.save()
+            form.save()
+            user_ext_edit_form.save()
+        return redirect('/SMS/user_list')
 
 # List User
 @login_required(login_url='login_page')

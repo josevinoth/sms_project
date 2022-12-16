@@ -8,6 +8,7 @@ from .sub_models.country_mod import Country
 from .sub_models.state_mod import State
 from .sub_models.city_mod import City
 # from .sub_models.Status_info_mod import StatusInfo
+from .sub_models.fumigation_action_mod import Fumigation_ActionInfo
 from .sub_models.status_list_mod import StatusList
 from .sub_models.location_info_mod import Location_info
 from .sub_models.unit_info_mod import UnitInfo
@@ -80,6 +81,7 @@ from .sub_models.rtratemaster_mod import RtratemasterInfo
 from .sub_models.upload_mod import UploadInfo
 from .sub_models.dispatch_mod import Dispatch_info
 from .sub_models.billing_mod import BilingInfo
+
 
 
 

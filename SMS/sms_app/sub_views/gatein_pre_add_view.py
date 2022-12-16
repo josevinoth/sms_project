@@ -1,8 +1,9 @@
 from django.db import transaction
 from django.shortcuts import render, redirect
-from ..forms import Gatein_preaddForm,Gatein_pre_att_addForm
+from ..forms import Gatein_preaddForm,Gatein_pre_att_addForm,GateinaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Gatein_pre_info,Gatein_pre_info_att,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages
+from ..models import Gatein_info,Gatein_pre_info,Gatein_pre_info_att,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages
+from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 
@@ -11,7 +12,6 @@ from django.contrib import messages
 @login_required(login_url='login_page')
 def gatein_pre_add(request, gatein_pre_id=0):
     first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
     if request.method == "GET":
         if gatein_pre_id == 0:
             print("I am inside Get add Gatein")

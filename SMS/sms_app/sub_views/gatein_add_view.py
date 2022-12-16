@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
+from ..models import User_extInfo
 import json
 # Add WH Job
 @transaction.atomic
@@ -12,6 +13,9 @@ import json
 def gatein_add(request, gatein_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    print('user_id',user_id)
+    user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+    print('user_branch',user_branch)
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     tot_package = request.POST.get('gatein_no_of_pkg')
     print(ses_gatein_id_nam)
@@ -29,6 +33,7 @@ def gatein_add(request, gatein_id=0):
                 'gatein_list': Gatein_info.objects.filter(gatein_job_no=wh_job_id),
                 'wh_job_id': wh_job_id,
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
+                'user_branch':user_branch,
             }
         else:
             print("I am inside get edit Gatein")
@@ -100,11 +105,11 @@ def gatein_add(request, gatein_id=0):
                     print('warehousein_status', warehousein_status)
             except ObjectDoesNotExist:
                 warehousein_status = "No Status"
+
             loadingbay_list= Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
             damagereport_list= DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id)
             gatein_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id)
             goods_list= Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
-
             print("Wh_job_id",wh_job_id)
             print("Gatein Status",gatein_status)
             print("Loadingbay Satus",loadingbay_status)

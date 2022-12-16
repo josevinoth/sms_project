@@ -18,7 +18,7 @@ class Loadingbay_Info(models.Model):
     lb_offload_acceptance = models.ForeignKey(GstexcemptionInfo,on_delete=models.CASCADE,related_name='lb_offload_acceptance', db_column='lb_offload_acceptance',default=1)
     lb_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6, null=True)
     # lb_stock_movement_type = models.ForeignKey(MovementtypeInfo, on_delete=models.CASCADE, blank=True, null=True, max_length=20)
-    lb_stock_type = models.ForeignKey(Stock_type, on_delete=models.CASCADE, blank=True, null=True, max_length=20)
+    # lb_stock_type = models.ForeignKey(Stock_type, on_delete=models.CASCADE, blank=True, null=True, max_length=20)
     lb_stock_unloading_start_time = models.CharField(blank=True, null=True, max_length=20)
     lb_stock_unloading_end_time = models.CharField(blank=True, null=True, max_length=20)
     lb_stock_invoice_value = models.FloatField(null=True,default=0.0)

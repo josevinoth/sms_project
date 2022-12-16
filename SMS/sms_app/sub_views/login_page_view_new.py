@@ -8,6 +8,7 @@ from ..models import AssetInfo,Vendor_info,Location_info,Product_info,Employee,S
 
 def home_page_new(request):
     first_name=request.session.get('first_name')
+    first_name=request.session.get('first_name')
     ses_username = request.session.get('ses_username', request.POST.get('username'))
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
