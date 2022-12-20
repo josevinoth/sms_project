@@ -3,25 +3,28 @@
 {% block content %}
 <form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" novalidate >
 	{% csrf_token %}
-
-	<!--{{form.as_p}}-->
-
 	<div class="row">
 		<div class="col-2"></div>
 		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Dispatch</h3></div>
+					<div class="card-header text-center">
+						<div class="row">
+							<div class="col-3"></div>
+							<div class="col-5">
+								<h3>Add/Update Dispatch</h3>
+							</div>
+							<div class="col-4">
+								<a href="#" class="btn btn-warning btn-block" id="delivery_chalan_btn">
+									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>
+								</a>
+							</div>
+
+						</div>
+					</div>
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col-6">
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text">WH Job Number</span>-->
-								<!--									</div>-->
-								<!--									{% render_field dispatch_form.dispatch_job_no class="form-control" id="job_num" value=request.session.ses_gatein_id_nam readonly=True %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-								<!--								</div>-->
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Dispatch Number</span>
@@ -29,64 +32,6 @@
 									{% render_field dispatch_form.dispatch_num class="form-control" id="dispatch_num" readonly=True %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text">Invoice Number</span>-->
-								<!--									</div>-->
-								<!--									{% render_field dispatch_form.dispatch_invoice value=request.session.ses_wh_invoice readonly="True" class="form-control" %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-								<!--								</div>-->
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text">Customer</span>-->
-								<!--									</div>-->
-								<!--									{% render_field dispatch_form.dispatch_customer id="dispatch_customer" class="form-control" %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-								<!--								</div>-->
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text">Customer Model</span>-->
-								<!--									</div>-->
-								<!--									{% render_field dispatch_form.dispatch_customer_type id="dispatch_customer_type" class="form-control disable_a_href" %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-								<!--								</div>-->
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text">Customer Department</span>-->
-								<!--									</div>-->
-								<!--									{% render_field dispatch_form.dispatch_department class="form-control" %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-								<!--								</div>-->
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text">Consigner</span>-->
-								<!--									</div>-->
-								<!--									{% render_field dispatch_form.dispatch_shipper class="form-control" %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-								<!--								</div>-->
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text">Consignee</span>-->
-								<!--									</div>-->
-								<!--									{% render_field dispatch_form.dispatch_consignee class="form-control" %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-								<!--								</div>-->
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text">Total Packages</span>-->
-								<!--									</div>-->
-								<!--									{% render_field dispatch_form.dispatch_no_of_pkg id="dispatch_no_of_pkg" class="form-control" %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-								<!--								</div>-->
-								<!--							</div>-->
-								<!--							<div class="col-4">-->
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text">Invoice Weight(Actual)</span>-->
-								<!--									</div>-->
-								<!--									{% render_field dispatch_form.dispatch_weight class="form-control" %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-								<!--								</div>-->
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Name</span>
@@ -180,13 +125,13 @@
 									{% render_field dispatch_form.dispatch_destination class="form-control"  %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text">GRN</span>-->
-								<!--									</div>-->
-								<!--									{% render_field dispatch_form.dispatch_GRN class="form-control"  %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-								<!--								</div>-->
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">E-Way Bill</span>
+									</div>
+									{% render_field dispatch_form.dispatch_eWaybill class="form-control"  %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Comments</span>

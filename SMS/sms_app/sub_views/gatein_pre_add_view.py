@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from ..forms import Gatein_preaddForm,Gatein_pre_att_addForm,GateinaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import Gatein_info,Gatein_pre_info,Gatein_pre_info_att,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages
+from ..models import User_extInfo,Location_info
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
@@ -12,6 +13,12 @@ from django.contrib import messages
 @login_required(login_url='login_page')
 def gatein_pre_add(request, gatein_pre_id=0):
     first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    print('user_id', user_id)
+    user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+    print('user_branch', user_branch)
+    user_branch_id=Location_info.objects.get(loc_name=user_branch).id
+    print(user_branch_id)
     if request.method == "GET":
         if gatein_pre_id == 0:
             print("I am inside Get add Gatein")
@@ -29,6 +36,7 @@ def gatein_pre_add(request, gatein_pre_id=0):
             'first_name': first_name,
             'gatein_pre_form': gatein_pre_form,
             'gatein_preimg_form': gatein_preimg_form,
+            'user_branch_id': user_branch_id,
             'user_id': user_id,
         }
         return render(request, "asset_mgt_app/gatein_pre_add.html", context)

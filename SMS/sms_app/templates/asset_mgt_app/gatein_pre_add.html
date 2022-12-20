@@ -23,7 +23,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Branch</span>
 									</div>
-									{% render_field gatein_pre_form.gatein_pre_branch class="form-control" id="gatein_pre_branch" %}
+									{% render_field gatein_pre_form.gatein_pre_branch class="form-control disable_a_href" id="gatein_pre_branch" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -124,7 +124,6 @@
 function pre_gate_in_num() {
   var ran=Math.floor((Math.random() * 1000000) + 1)
   var jn=document.getElementById("gatein_pre_number").value
-  alert(jn)
   if (jn=="")
 	{
 		document.getElementById("gatein_pre_number").value =ran;
@@ -140,6 +139,7 @@ function pre_gate_in_num() {
 <script>
 $(document).ready(function() {
 	document.getElementById("gatein_pre_updated_by").value ='{{user_id}}';
+	document.getElementById("gatein_pre_branch").value ='{{user_branch_id}}';
   });
 </script>
 

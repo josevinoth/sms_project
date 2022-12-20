@@ -232,13 +232,6 @@
 									{% render_field warehousein_form.wh_mismatches class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Ratification Process</span>
-									</div>
-									{% render_field warehousein_form.wh_ratification_process class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
 							</div>
 							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
@@ -461,6 +454,11 @@ $(document).ready(function() {
 	var damage_before_status_id='{{damage_before_status}}';
 	var damage_after_status_id='{{damage_after_status}}';
 	var warehousein_status_id='{{warehousein_status}}';
+	var branch_val=document.getElementById("wh_branch").value
+	var user_role_val='{{user_role}}';
+	var user_branch_id_val='{{user_branch_id}}';
+	var user_branch_val1='{{user_branch}}';
+
 	if (gatein_status_id =="Completed")
 	{
 		$('#gatein_btn').removeClass('disable_a_href');
@@ -537,6 +535,24 @@ $(document).ready(function() {
 	{
 		$('#warehousein_btn').removeClass('disable_a_href');
 		$('#warehousein_btn').addClass('btn-warning');
+	}
+
+
+	if (user_role_val!="Admin")
+	{
+		if (branch_val=="")
+		{
+			alert("branch is empty")
+			alert(user_branch_id_val)
+			alert(user_branch_val1)
+			$('#wh_branch').empty().append("<option value='0'>--Select--</option>");
+			$("#wh_branch").append("<option value='"+user_branch_id_val+"'>"+user_branch_val1+"</option>");
+		}
+		else
+		{
+			alert("branch_val")
+			document.getElementById("wh_branch").value =branch_val;
+		}
 	}
   });
 </script>

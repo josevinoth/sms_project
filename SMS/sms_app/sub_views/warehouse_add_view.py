@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.datetime_safe import datetime
 
 from ..forms import GoodsaddForm,WarehoseinaddForm
-from ..models import Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
+from ..models import Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -26,6 +26,16 @@ def warehousein_add(request, warehousein_id=0):
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     print(ses_gatein_id_nam)
     wh_job_id = ses_gatein_id_nam
+    # get branch name & ID
+    user_id = request.session.get('ses_userID')
+    print('user_id', user_id)
+    user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+    print('user_branch', user_branch)
+    user_branch_id = Location_info.objects.get(loc_name=user_branch).id
+    print(user_branch_id)
+    # get emp role
+    user_role=User_extInfo.objects.get(user_id=user_id).emp_role
+    print('user_role',user_role)
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -98,6 +108,9 @@ def warehousein_add(request, warehousein_id=0):
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status':warehousein_status,
+                'user_role':user_role,
+                'user_branch_id':user_branch_id,
+                'user_branch':user_branch,
             }
         else:
             print("I am inside get edit warehousein")
@@ -119,6 +132,9 @@ def warehousein_add(request, warehousein_id=0):
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
+                'user_role': user_role,
+                'user_branch_id': user_branch_id,
+                'user_branch': user_branch,
             }
         return render(request, "asset_mgt_app/warehousein_add.html", context)
     else:

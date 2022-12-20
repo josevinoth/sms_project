@@ -142,11 +142,14 @@ def dispatch_add(request, dispatch_id=0):
             print("I am inside post edit dispatch")
             dispatch_info = Dispatch_info.objects.get(pk=dispatch_id)
             dispatch_form = DispatchaddForm(request.POST, instance=dispatch_info)
-        if dispatch_form.is_valid():
-            dispatch_form.save()
-            messages.success(request, 'Record Updated Successfully')
+    if dispatch_form.is_valid():
+        dispatch_form.save()
+        print("Form Saved")
+        messages.success(request, 'Record Updated Successfully')
         # return redirect(request.META['HTTP_REFERER'])
-        return redirect('/SMS/dispatch_list')
+    else:
+        print("Form Not Saved")
+    return redirect('/SMS/dispatch_list')
 # List Dispatch Job
 @login_required(login_url='login_page')
 def dispatch_list(request):
