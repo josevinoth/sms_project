@@ -1,0 +1,304 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<!--<div class="col-md-1">-->
+<!--	<a href="{% url 'gatein_list' %}" class="btn btn-primary btn-block btn-lg">-->
+<!--		<i class="fas fa-arrow-left"></i>-->
+<!--	</a>-->
+<!--</div>-->
+
+<form method="POST" id="invoice_add" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" novalidate >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-1"></div>
+		<div class="col-10">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Invoice</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">WH Job Number</span>
+									</div>
+									{% render_field invoice_form.bill_wh_job_no class="form-control" id="bill_wh_job_no" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Invoice Date</span>
+									</div>
+									{% render_field invoice_form.bill_invoice_date type="datetime-local" id="bill_invoice_date" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Voucher Number</span>
+									</div>
+									{% render_field invoice_form.bill_invoice_ref id="bill_invoice_ref" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field invoice_form.bill_customer_name id="bill_customer_name" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Short Name</span>
+									</div>
+									{% render_field invoice_form.bill_customer_short_name id="bill_customer_short_name" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Model</span>
+									</div>
+									{% render_field invoice_form.bill_customer_type id="gatein_customer_type" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GSTIN</span>
+									</div>
+									{% render_field invoice_form.bill_customer_GST class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Code</span>
+									</div>
+									{% render_field invoice_form.bill_customer_code class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">State</span>
+									</div>
+									{% render_field invoice_form.bill_customer_state  class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Pincode</span>
+									</div>
+									{% render_field invoice_form.bill_customer_pincode class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Branch</span>
+									</div>
+									{% render_field invoice_form.bill_branch class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Product</span>
+									</div>
+									{% render_field invoice_form.bill_product id="bill_product" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Primary Cost Category</span>
+									</div>
+									{% render_field invoice_form.bill_primary_cost_category class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Contact</span>
+									</div>
+									{% render_field invoice_form.bill_customer_contact id="bill_customer_contact" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Payment Cycle</span>
+									</div>
+									{% render_field invoice_form.bill_customer_payment_cycle id="bill_customer_payment_cycle" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">e-invoice</span>
+									</div>
+									{% render_field invoice_form.bill_e_invoice id="bill_e_invoice" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Shipper Name</span>
+									</div>
+									{% render_field invoice_form.bill_shipper_name id="bill_shipper_name" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Shipper Invoice</span>
+									</div>
+									{% render_field invoice_form.bill_shipper_invoice id="bill_shipper_invoice" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Type</span>
+									</div>
+									{% render_field invoice_form.bill_wh_charge_veh_type id="bill_wh_charge_veh_type" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Shipment Weight</span>
+									</div>
+									{% render_field invoice_form.bill_weight id="bill_weight" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Shipment In Date</span>
+									</div>
+									{% render_field invoice_form.bill_start_date type="datetime-local" class="form-control" id="bill_start_date" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Shipment Out Date</span>
+									</div>
+									{% render_field invoice_form.bill_end_date type="datetime-local" class="form-control" id="bill_end_date" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">No Of Days</span>
+									</div>
+									{% render_field invoice_form.bill_no_of_days class="form-control" id="bill_no_of_days" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Wh Charges/Day</span>
+									</div>
+									{% render_field invoice_form.bill_per_day_wh_charges class="form-control" id="bill_per_day_wh_charges" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Wh Storage Charges</span>
+									</div>
+									{% render_field invoice_form.bill_wh_storage_charges class="form-control" id="bill_wh_storage_charges" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								{% render_field invoice_form.bill_updated_by id="bill_updated_by" hidden="True" class="form-control" %}
+								{% render_field invoice_form.bill_updated_at id="bill_updated_at"  class="form-control" %}
+							</div>
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">No of Pallets</span>
+									</div>
+									{% render_field invoice_form.bill_no_of_pallets class="form-control" id="bill_no_of_pallets" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Rate Per Pallet</span>
+									</div>
+									{% render_field invoice_form.bill_rate_per_pallet class="form-control" id="bill_rate_per_pallet" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Loading Charges</span>
+									</div>
+									{% render_field invoice_form.bill_loading_charge class="form-control" id="bill_loading_charge" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Unloading Charges</span>
+									</div>
+									{% render_field invoice_form.bill_unloading_charge class="form-control" id="bill_unloading_charge" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Crane Charges 1st Hr</span>
+									</div>
+									{% render_field invoice_form.bill_crane_hrs_1 class="form-control" id="bill_crane_hrs_1" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Crane Charges after 1Hr</span>
+									</div>
+									{% render_field invoice_form.bill_crane_hrs_2 class="form-control" id="bill_crane_hrs_2" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Forklift Charges 1st Hr</span>
+									</div>
+									{% render_field invoice_form.bill_forklift_hrs_1 class="form-control" id="bill_forklift_hrs_1" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Forklift Charges after 1Hr</span>
+									</div>
+									{% render_field invoice_form.bill_forklift_hrs_2 class="form-control" id="bill_forklift_hrs_2" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total (Before GST)</span>
+									</div>
+									{% render_field invoice_form.bill_total_pre_gst class="form-control" id="bill_total_pre_gst" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">CGST</span>
+									</div>
+									{% render_field invoice_form.bill_cgst class="form-control" id="bill_cgst" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">SGST</span>
+									</div>
+									{% render_field invoice_form.bill_sgst class="form-control" id="bill_sgst" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Post GST</span>
+									</div>
+									{% render_field invoice_form.bill_total_post_gst class="form-control" id="bill_total_post_gst" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+						</div>
+						<button type="submit" class="btn btn-success" onclick="myjobnum()"><i class="fas fa-check"></i> Save</button>
+						<a href="{% url 'invoice_list' %}" class="btn btn-danger float-right">
+                    		<i class="fas fa-times"></i> Cancel </a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-1"></div>
+	</div>
+</form>
+
+<script>
+$(document).ready(function() {
+	document.getElementById("bill_updated_by").value ='{{user_id}}';
+  });
+</script>
+{% endblock content %}

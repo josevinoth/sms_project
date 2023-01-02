@@ -49,23 +49,9 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Item (pcs or Space)</span>
-									</div>
-									{% render_field form.whrm_item type="select" id="whrm_item" onchange="calculate_total()" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text" >Rate (INR)</span>
 									</div>
-									{% render_field form.whrm_rate id="whrm_rate" onchange="calculate_total()" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Total</span>
-									</div>
-									{% render_field form.whrm_total type="select" id="whrm_total" class="form-control disable_a_href" %}
+									{% render_field form.whrm_rate id="whrm_rate" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -108,17 +94,17 @@
  </script>
 <script>
 $(document).ready(function() {
-	calculate_total()
+<!--	calculate_total()-->
 	document.getElementById("whrm_updated_by").value ='{{user_id}}';
   });
 </script>
 
-<script>
-function calculate_total() {
-	var rate_val=document.getElementById("whrm_rate").value
-	var item_val=document.getElementById("whrm_item").value
-	var total_val=(rate_val*item_val).toFixed(3)
-	document.getElementById("whrm_total").value =total_val;
-}
-</script>
+<!--<script>-->
+<!--function calculate_total() {-->
+<!--	var rate_val=document.getElementById("whrm_rate").value-->
+<!--	var item_val=document.getElementById("whrm_item").value-->
+<!--	var total_val=(rate_val*item_val).toFixed(3)-->
+<!--	document.getElementById("whrm_total").value =total_val;-->
+<!--}-->
+<!--</script>-->
 {% endblock content %}

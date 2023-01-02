@@ -33,9 +33,9 @@
             <th>Charge Type</th>
             <th>Max Weight (kg)</th>
             <th>Min weight (kg)</th>
-            <th>Item (pcs or Space)</th>
+<!--            <th>Item (pcs or Space)</th>-->
             <th>Rate (INR)</th>
-            <th>Cost (INR)</th>
+<!--            <th>Cost (INR)</th>-->
             <th>Description</th>
             <th>Updated On</th>
             <th>Updated By</th>
@@ -50,22 +50,22 @@
                 <td> {{whratemasterinfo.whrm_charge_type}}</td>
                 <td> {{whratemasterinfo.whrm_max_wt}}</td>
                 <td> {{whratemasterinfo.whrm_min_wt}}</td>
-                <td> {{whratemasterinfo.whrm_item}}</td>
+<!--                <td> {{whratemasterinfo.whrm_item}}</td>-->
                 <td> {{whratemasterinfo.whrm_rate}}</td>
-                <td> {{whratemasterinfo.whrm_total}}</td>
+<!--                <td> {{whratemasterinfo.whrm_total}}</td>-->
                 <td> {{whratemasterinfo.whrm_description}}</td>
                 <td> {{whratemasterinfo.whrm_updated_on}}</td>
                 <td> {{whratemasterinfo.whrm_updated_by}}</td>
                 <td>
 
-                    <a href="{% url 'whratemaster_update' whratemasterinfo.id %}" >
+                    <a class="btn btn-primary" href="{% url 'whratemaster_update' whratemasterinfo.id %}" >
                         <i class="far fa-edit"></i>
                     </a>
                 </td>
                 <td>
                     <form action="{% url 'whratemaster_delete' whratemasterinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn">
+                        <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </form>

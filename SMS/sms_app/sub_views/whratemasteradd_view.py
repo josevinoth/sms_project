@@ -42,6 +42,9 @@ def whratemaster_add(request, whratemaster_id=0):
             form = WhratemasteraddForm(request.POST, instance=whratemasterinfo)
         if form.is_valid():
             form.save()
+            print("Main form saved")
+        else:
+            print("Main form not saved")
         return redirect('/SMS/whratemaster_list')
 
 
