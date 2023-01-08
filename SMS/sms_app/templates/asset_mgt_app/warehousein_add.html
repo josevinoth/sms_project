@@ -283,6 +283,9 @@
 									{% render_field warehousein_form.wh_check_in_out class="form-control disable_a_href"%}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								{% render_field warehousein_form.wh_invoice_value id="wh_invoice_value" class="form-control "%}
+								{% render_field warehousein_form.wh_invoice_currency id="wh_invoice_currency" class="form-control "%}
+								{% render_field warehousein_form.wh_invoice_amount_inr id="wh_invoice_amount_inr" class="form-control "%}
 								<!--								<div class="input-group input-group-sm mb-3">-->
 								<!--									<div class="input-group-prepend">-->
 								<!--										<span class="input-group-text" >Status</span>-->
@@ -458,6 +461,17 @@ $(document).ready(function() {
 	var user_role_val='{{user_role}}';
 	var user_branch_id_val='{{user_branch_id}}';
 	var user_branch_val1='{{user_branch}}';
+	var invoice_value_val='{{invoice_value}}'
+	var invoice_currency_val='{{invoice_currency}}'
+	var invoice_amount_inr_val='{{invoice_amount_inr}}'
+
+	alert(invoice_value_val)
+	alert(invoice_currency_val)
+	alert(invoice_amount_inr_val)
+
+	document.getElementById("wh_invoice_value").value =invoice_value_val;
+	document.getElementById("wh_invoice_currency").value =invoice_currency_val;
+	document.getElementById("wh_invoice_amount_inr").value =invoice_amount_inr_val;
 
 	if (gatein_status_id =="Completed")
 	{
@@ -542,9 +556,6 @@ $(document).ready(function() {
 	{
 		if (branch_val=="")
 		{
-			alert("branch is empty")
-			alert(user_branch_id_val)
-			alert(user_branch_val1)
 			$('#wh_branch').empty().append("<option value='0'>--Select--</option>");
 			$("#wh_branch").append("<option value='"+user_branch_id_val+"'>"+user_branch_val1+"</option>");
 		}

@@ -1,14 +1,19 @@
 from django import forms
+from django.forms.widgets import HiddenInput
+
 from ..models import Warehouse_goods_info,UnitInfo,StatusList,BayInfo,LocationmasterInfo
 
 class WarehoseinaddForm(forms.ModelForm):
+    wh_invoice_value=forms.FloatField(required=False)
+    wh_invoice_currency=forms.CharField(required=False)
+    wh_invoice_amount_inr=forms.FloatField(required=False)
     class Meta:
         model = Warehouse_goods_info
         fields = ['wh_job_no', 'wh_uom', 'wh_goods_pieces', 'wh_goods_length', 'wh_goods_width', 'wh_goods_height',
                   'wh_goods_weight', 'wh_goods_package_type', 'wh_goods_area', 'wh_goods_volume_weight',
                   'wh_chargeable_weight', 'wh_CBM', 'wh_weights_deviation', 'wh_dimension_deviation',
                   'wh_no_of_units_deviation', 'wh_damages', 'wh_mismatches',
-                  'wh_branch','wh_unit','wh_bay','wh_available_area','wh_available_volume','wh_check_in_out','wh_customer_name','wh_customer_type','wh_goods_invoice','wh_stack_layer','wh_qr_rand_num','wh_consigner','wh_consignee']
+                  'wh_branch','wh_unit','wh_bay','wh_available_area','wh_available_volume','wh_check_in_out','wh_customer_name','wh_customer_type','wh_goods_invoice','wh_stack_layer','wh_qr_rand_num','wh_consigner','wh_consignee','wh_invoice_value','wh_invoice_currency','wh_invoice_amount_inr']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

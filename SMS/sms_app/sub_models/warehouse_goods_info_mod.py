@@ -43,6 +43,9 @@ class Warehouse_goods_info(models.Model):
     wh_consigner = models.CharField(blank=True, null=True, max_length=20)
     wh_consignee = models.CharField(blank=True, null=True, max_length=20)
     wh_comments = models.TextField(blank=True, null=True)
+    wh_invoice_value = models.FloatField(null=True, default=0.0)
+    wh_invoice_currency = models.CharField(null=True, max_length=10)
+    wh_invoice_amount_inr = models.FloatField(null=True, default=0.0)
 
 
 

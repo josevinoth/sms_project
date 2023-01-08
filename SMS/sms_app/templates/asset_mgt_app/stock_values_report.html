@@ -30,16 +30,24 @@
         <tr>
             <th>WH Job Number</th>
             <th>Customer Invoice</th>
-            <th>Stock Type</th>
+            <th>Branch</th>
+            <th>Unit</th>
+            <th>Goods Status</th>
+            <th>Invoice Value</th>
+            <th>Invoice Currency</th>
             <th>Invoice Value (INR)</th>
         </thead>
         <tbody>
-        {% for stock_value in stock_value_list %}
+        {% for stock_value in checkin_goods_list %}
         <tr>
-            <td> {{stock_value.lb_job_no}}</td>
-            <td> {{stock_value.lb_invoice}}</td>
-            <td> {{stock_value.lb_stock_type}}</td>
-            <td> {{stock_value.lb_stock_invoice_value}}</td>
+            <td> {{stock_value.wh_job_no}}</td>
+            <td> {{stock_value.wh_goods_invoice}}</td>
+            <td> {{stock_value.wh_branch}}</td>
+            <td> {{stock_value.wh_unit}}</td>
+            <td> {{stock_value.wh_check_in_out}}</td>
+            <td> {{stock_value.wh_invoice_value}}</td>
+            <td> {{stock_value.wh_invoice_currency}}</td>
+            <td> {{stock_value.wh_invoice_amount_inr}}</td>
         </tr>
         {% endfor %}
         </tbody>

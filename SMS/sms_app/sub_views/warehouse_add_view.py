@@ -36,6 +36,13 @@ def warehousein_add(request, warehousein_id=0):
     # get emp role
     user_role=User_extInfo.objects.get(user_id=user_id).emp_role
     print('user_role',user_role)
+    # Get stock value
+    invoice_value=Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_value
+    print(invoice_value)
+    invoice_currency = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_currency
+    print(invoice_currency)
+    invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_amount_in
+    print(invoice_amount_inr)
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -111,6 +118,9 @@ def warehousein_add(request, warehousein_id=0):
                 'user_role':user_role,
                 'user_branch_id':user_branch_id,
                 'user_branch':user_branch,
+                'invoice_value':invoice_value,
+                'invoice_currency':invoice_currency,
+                'invoice_amount_inr':invoice_amount_inr
             }
         else:
             print("I am inside get edit warehousein")
@@ -135,6 +145,9 @@ def warehousein_add(request, warehousein_id=0):
                 'user_role': user_role,
                 'user_branch_id': user_branch_id,
                 'user_branch': user_branch,
+                'invoice_value': invoice_value,
+                'invoice_currency': invoice_currency,
+                'invoice_amount_inr': invoice_amount_inr
             }
         return render(request, "asset_mgt_app/warehousein_add.html", context)
     else:

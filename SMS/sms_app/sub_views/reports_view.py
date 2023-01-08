@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.template.loader import get_template
 from django.http import HttpResponse
 from xhtml2pdf import pisa
-from ..models import Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
+from ..models import Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,Warehouse_goods_info
 
 
 @login_required(login_url='login_page')
@@ -36,10 +36,18 @@ def space_utilization_reports(request):
 
 @login_required(login_url='login_page')
 def stock_value_reports(request):
+    print("Inside Stock Value Report")
     first_name = request.session.get('first_name')
+    invoice_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1).values_list('wh_goods_invoice',flat=True)
+    checkin_goods_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1).distinct('wh_goods_invoice')
+    print(list(invoice_list))
+    print(checkin_goods_list)
+    # invoice_list_lb= Loadingbay_Info.objects.all()
+    # print(invoice_list_lb)
     context = {
                 'stock_value_list': Loadingbay_Info.objects.all(),
                 'first_name': first_name,
+                'checkin_goods_list': checkin_goods_list,
                 }
     return render(request,"asset_mgt_app/stock_values_report.html",context)
 
