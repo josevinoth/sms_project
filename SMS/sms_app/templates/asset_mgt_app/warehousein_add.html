@@ -89,7 +89,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Invoice Number</span>
+										<span class="input-group-text" >Shipper Invoice Number</span>
 									</div>
 									{% render_field warehousein_form.wh_goods_invoice value=request.session.ses_wh_invoice class="form-control disable_a_href" %}
 								</div>
@@ -464,10 +464,6 @@ $(document).ready(function() {
 	var invoice_value_val='{{invoice_value}}'
 	var invoice_currency_val='{{invoice_currency}}'
 	var invoice_amount_inr_val='{{invoice_amount_inr}}'
-
-	alert(invoice_value_val)
-	alert(invoice_currency_val)
-	alert(invoice_amount_inr_val)
 
 	document.getElementById("wh_invoice_value").value =invoice_value_val;
 	document.getElementById("wh_invoice_currency").value =invoice_currency_val;

@@ -84,21 +84,21 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice</span>
+										<span class="input-group-text">Shipper Invoice</span>
 									</div>
 									{% render_field loadingbay_form.lb_invoice value=request.session.ses_wh_invoice class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice Value</span>
+										<span class="input-group-text">Shipper Invoice Value</span>
 									</div>
 									{% render_field loadingbay_form.lb_stock_invoice_value id="lb_stock_invoice_value" onchange="inv_curr_change()" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice Currency</span>
+										<span class="input-group-text">Shipper Invoice Currency</span>
 									</div>
 									{% render_field loadingbay_form.lb_stock_invoice_currency id="lb_stock_invoice_currency" class="form-control" onchange="inv_curr_change()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->

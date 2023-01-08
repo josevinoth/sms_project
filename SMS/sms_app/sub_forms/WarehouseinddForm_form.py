@@ -4,9 +4,9 @@ from django.forms.widgets import HiddenInput
 from ..models import Warehouse_goods_info,UnitInfo,StatusList,BayInfo,LocationmasterInfo
 
 class WarehoseinaddForm(forms.ModelForm):
-    wh_invoice_value=forms.FloatField(required=False)
-    wh_invoice_currency=forms.CharField(required=False)
-    wh_invoice_amount_inr=forms.FloatField(required=False)
+    wh_invoice_value=forms.FloatField(widget=HiddenInput(),required=False)
+    wh_invoice_currency=forms.CharField(widget=HiddenInput(),required=False)
+    wh_invoice_amount_inr=forms.FloatField(widget=HiddenInput(),required=False)
     class Meta:
         model = Warehouse_goods_info
         fields = ['wh_job_no', 'wh_uom', 'wh_goods_pieces', 'wh_goods_length', 'wh_goods_width', 'wh_goods_height',

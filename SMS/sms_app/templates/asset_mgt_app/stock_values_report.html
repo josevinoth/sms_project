@@ -29,19 +29,36 @@
         <thead class="thead-dark">
         <tr>
             <th>WH Job Number</th>
-            <th>Customer Invoice</th>
+            <th>Shipper Invoice</th>
+            <th>Customer Name</th>
+            <th>Customer Type</th>
             <th>Branch</th>
             <th>Unit</th>
             <th>Goods Status</th>
             <th>Invoice Value</th>
             <th>Invoice Currency</th>
             <th>Invoice Value (INR)</th>
+        </tr>
+        <tr>
+            <th>WH Job Number</th>
+            <th>Shipper Invoice</th>
+            <th>Customer Name</th>
+            <th>Customer Type</th>
+            <th>Branch</th>
+            <th>Unit</th>
+            <th>Goods Status</th>
+            <th>Invoice Value</th>
+            <th>Invoice Currency</th>
+            <th>Invoice Value (INR)</th>
+        </tr>
         </thead>
         <tbody>
         {% for stock_value in checkin_goods_list %}
         <tr>
             <td> {{stock_value.wh_job_no}}</td>
             <td> {{stock_value.wh_goods_invoice}}</td>
+            <td> {{stock_value.wh_customer_name}}</td>
+            <td> {{stock_value.wh_customer_type}}</td>
             <td> {{stock_value.wh_branch}}</td>
             <td> {{stock_value.wh_unit}}</td>
             <td> {{stock_value.wh_check_in_out}}</td>
@@ -51,21 +68,74 @@
         </tr>
         {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="9" style="text-align:right">Total:</th>
+                <th></th>
+            </tr>
+        </tfoot>
     </table>
 </div>
-
 <script>
     $(document).ready(function() {
     $('#stock_value_report').DataTable({
+        footerCallback: function (row, data, start, end, display) {
+            var api = this.api();
+
+            // Remove the formatting to get integer data for summation
+            var intVal = function (i) {
+                return typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;
+            };
+
+            // Total over all pages
+            total = api
+                .column(9)
+                .data()
+                .reduce(function (a, b) {
+                    return intVal(a) + intVal(b);
+                }, 0);
+
+            // Total over this page
+            pageTotal = api
+                .column(9, { page: 'current' })
+                .data()
+                .reduce(function (a, b) {
+                    return intVal(a) + intVal(b);
+                }, 0);
+
+            // Update footer
+            $(api.column(9).footer()).html('INR ' + pageTotal);
+        },
+        initComplete: function () {
+            this.api()
+                .columns()
+                .every(function () {
+                    var column = this;
+                    var select = $('<select><option value=""></option></select>')
+                        .appendTo($(column.header()).empty())
+                        .on('change', function () {
+                            var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                            column.search(val ? '^' + val + '$' : '', true, false).draw();
+                        });
+
+                    column
+                        .data()
+                        .unique()
+                        .sort()
+                        .each(function (d, j) {
+                            select.append('<option value="' + d + '">' + d + '</option>');
+                        });
+                });
+        },
         scrollY: "600px",
 <!--        scrollX: true,-->
         scrollCollapse: true,
         dom: 'Bfrtip',
         buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print'
-        ]
+            'copy', 'csv', 'excel', 'print'
+        ],
     });
 } );
 </script>
-
 {% endblock content %}
