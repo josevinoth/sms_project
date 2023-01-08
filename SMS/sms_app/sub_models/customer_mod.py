@@ -9,7 +9,7 @@ class CustomerInfo(models.Model):
     cu_address =  models.CharField(max_length=200,default = '')
     cu_nameshort = models.CharField(max_length=10,default = '')
     cu_pan = models.CharField(max_length=10,default = '')
-    cu_gst =models.CharField(max_length=20,default = '')
+    cu_gst =models.CharField(max_length=30,default = '')
     cu_customerperson = models.CharField(max_length=30,default = '')
     cu_designation = models.CharField(max_length=10,default = '')
     cu_contactno = models.CharField(max_length=10,default = '',null=True)
