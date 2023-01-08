@@ -2,7 +2,7 @@ from django import forms
 from ..models import CustomerInfo
 
 class CustomeraddForm(forms.ModelForm):
-    cu_paymentcycle = forms.ChoiceField(required=False)
+    # cu_paymentcycle = forms.ChoiceField(required=False)
     cu_contactno = forms.CharField(required=False)
     cu_email = forms.CharField(required=False)
     cu_tallyid = forms.CharField(required=False)
