@@ -24,8 +24,8 @@
     </div>
     <div class="col-4"></div>
 </div>
+ <hr>
 </div>
-
 <div class="container-fluid">
     <table  id="dispatch_goods_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
@@ -44,8 +44,6 @@
             <th>Stack</th>
             <th>Check-Out Time</th>
             <th>Goods Status</th>
-            <!--            <th>QR Code</th>-->
-            <!--            <th>Checkout Stock</th>-->
             <th>Remove Stock</th>
         </thead>
         <tbody>
@@ -68,19 +66,6 @@
             <td> {{goodsinfo.wh_stack_layer}}</td>
             <td> {{goodsinfo.wh_checkout_time}}</td>
             <td> {{goodsinfo.wh_check_in_out}}</td>
-            <!--                <td>-->
-            <!--                    <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">-->
-            <!--                        {% csrf_token %}-->
-            <!--                        <button type="submit" class="btn btn-warning">-->
-            <!--                            <i class="fas fa-qrcode"></i>-->
-            <!--                        </button>-->
-            <!--                    </form>-->
-            <!--                </td>-->
-            <!--                <td>-->
-            <!--                    <a class="btn btn-success" href="{% url 'warehousein_update' goodsinfo.id %}" >-->
-            <!--                       <i class="fa fa-shopping-cart" aria-hidden="true"></i>-->
-            <!--                    </a>-->
-            <!--                </td>-->
             <td>
                 <form action="{% url 'dispatch_remove_goods' goodsinfo.id %}" method="post" onclick="return confirm('Are you sure to remove this stock?');">
                     {% csrf_token %}

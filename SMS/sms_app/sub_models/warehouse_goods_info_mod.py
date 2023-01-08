@@ -46,6 +46,7 @@ class Warehouse_goods_info(models.Model):
     wh_invoice_value = models.FloatField(null=True, default=0.0)
     wh_invoice_currency = models.CharField(null=True, max_length=10)
     wh_invoice_amount_inr = models.FloatField(null=True, default=0.0)
+    wh_voucher_num = models.CharField(blank=True, null=True, max_length=20)
 
 
 

@@ -16,10 +16,13 @@ def invoice_add(request,invoice_id=0):
         else:
             invoice = BilingInfo.objects.get(pk=invoice_id)
             invoice_form = InvoiceaddForm(instance=invoice)
+            voucher_num = BilingInfo.objects.get(pk=invoice_id).bill_invoice_ref
+            shipper_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num =voucher_num)
         context={
             'user_id':user_id,
             'invoice_form': invoice_form,
             'first_name': first_name,
+            'shipper_invoice_list':shipper_invoice_list,
         }
         return render(request, "asset_mgt_app/invoice_add.html", context)
     else:
@@ -28,6 +31,7 @@ def invoice_add(request,invoice_id=0):
         else:
             invoice = BilingInfo.objects.get(pk=invoice_id)
             invoice_form = InvoiceaddForm(request.POST, instance=invoice)
+
         if invoice_form.is_valid():
             invoice_form.save()
             print("Main Form Saved")
@@ -37,9 +41,9 @@ def invoice_add(request,invoice_id=0):
 @login_required(login_url='login_page')
 def invoice_list(request):
     first_name = request.session.get('first_name')
-    invoice_list=BilingInfo.objects.all()
+    invoice_list_val = BilingInfo.objects.all()
     context =   {
-                'invoice_list' : invoice_list,
+                'invoice_list_val' : invoice_list_val,
                 'first_name': first_name,
                 }
     return render(request,"asset_mgt_app/invoice_list.html",context)
@@ -49,6 +53,56 @@ def invoice_delete(request,invoice_id):
     invoice_del = BilingInfo.objects.get(pk=invoice_id)
     invoice_del.delete()
     return redirect('/asset_mgt_app/invoice_list')
+
+@login_required(login_url='login_page')
+def shipper_invoice_list(request,voucher_id):
+    first_name = request.session.get('first_name')
+    voucher_num_val = BilingInfo.objects.get(pk=voucher_id).bill_invoice_ref
+    customer_name_val = BilingInfo.objects.get(pk=voucher_id).bill_customer_name
+    request.session['ses_voucher_num_val'] = voucher_num_val
+    print(voucher_num_val)
+    print(customer_name_val)
+    shipper_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
+    invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_check_in_out=2,wh_voucher_num=None)
+    context =   {
+                'shipper_invoice_list' : shipper_invoice_list,
+                'first_name': first_name,
+                'invoice_list_master': invoice_list_master,
+                }
+    return render(request,"asset_mgt_app/shipper_invoice_list.html",context)
+@login_required(login_url='login_page')
+def shipper_invoice_add(request,voucher_id):
+    first_name = request.session.get('first_name')
+    voucher_num_val = request.session.get('ses_voucher_num_val')
+    voucher_num_update=Warehouse_goods_info.objects.filter(pk=voucher_id).update(wh_voucher_num=voucher_num_val)
+    shipper_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
+    context =   {
+                # 'shipper_invoice_list' : shipper_invoice_list,
+                'first_name': first_name,
+                # 'invoice_list_master': invoice_list_master,
+                }
+    return redirect(request.META['HTTP_REFERER'])
+    # return render(request,"asset_mgt_app/shipper_invoice_list.html",context)
+
+@login_required(login_url='login_page')
+def shipper_invoice_remove(request,voucher_id):
+    first_name = request.session.get('first_name')
+    Warehouse_goods_info.objects.filter(pk=voucher_id).update(wh_voucher_num=None)
+    context =   {
+                'first_name': first_name,
+                }
+    return redirect(request.META['HTTP_REFERER'])
+    # return render(request,"asset_mgt_app/shipper_invoice_list.html",context)
+
+# @login_required(login_url='login_page')
+# def invoice_list_master(request):
+#     first_name = request.session.get('first_name')
+#     invoice_list_master=Warehouse_goods_info.objects.all()
+#     context =   {
+#                 'invoice_list_master' : invoice_list_master,
+#                 'first_name': first_name,
+#                 }
+#     return render(request,"asset_mgt_app/shipper_invoice_list_master_WOH.html",context)
 @login_required(login_url='login_page')
 def invoice_list_query(request):
     checkedout_invoice_list=[]

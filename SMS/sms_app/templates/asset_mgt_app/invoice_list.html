@@ -23,12 +23,13 @@
             <th>Customer Type</th>
             <th>e-Invoice</th>
             <th>Invoice Amount (INR)</th>
+            <th>Shipper Invoice List</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
         </thead>
         <tbody>
-        {% for invoiceinfo in invoice_list %}
+        {% for invoiceinfo in invoice_list_val %}
         <tr>
             <td> {{invoiceinfo.bill_wh_job_no}}</td>
             <td> {{invoiceinfo.bill_invoice_ref}}</td>
@@ -36,6 +37,13 @@
             <td> {{invoiceinfo.bill_customer_type}}</td>
             <td> {{invoiceinfo.bill_e_invoice}}</td>
             <td> {{invoiceinfo.bill_total_post_gst}}</td>
+
+            <td>
+                <a class="btn btn-warning" href="{% url 'shipperinvoice_list' invoiceinfo.id %}" >
+                    <i class="fa fa-anchor" aria-hidden="true"></i>
+                </a>
+            </td>
+
             <td>
                 <a class="btn btn-primary" href="{% url 'invoice_update' invoiceinfo.id %}" >
                     <i class="far fa-edit"></i>

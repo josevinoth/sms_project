@@ -306,4 +306,7 @@ urlpatterns = [
     path('stock_value_report/',views.stock_value_reports,name='stock_value_report'),
     path('damage_report_list/',views.damage_reports_list,name='damage_report_list'),
     path('deviation_report/',views.deviation_report,name='deviation_report'),
+    path('shipperinvoice_list/<int:voucher_id>', views.shipper_invoice_list, name='shipperinvoice_list'),  # List invoice
+    path('shipperinvoice_add/<int:voucher_id>', views.shipper_invoice_add, name='shipperinvoice_add'),  # add shipper invoice to voucher list
+    path('shipperinvoice_remove/<int:voucher_id>', views.shipper_invoice_remove, name='shipperinvoice_remove'),  # remove shipper invoice to voucher list
 ]
