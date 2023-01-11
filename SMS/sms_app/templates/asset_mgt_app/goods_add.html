@@ -298,22 +298,22 @@ function chargeable_weight_fn() {
   uom_val = selectElement.options[selectElement.selectedIndex].value;
   if (uom_val==1)
 	{
-		var chargeable_weight_val=((length_val*width_val*height_val)/6000).toFixed(3)
+		var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/6000).toFixed(3)
 		document.getElementById("chargeable_weight").value =chargeable_weight_val;
 		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
-		var volume_val=((width_val*length_val*height_val)*.0000353147).toFixed(3);
+		var volume_val=((width_val*length_val*height_val*no_of_piece)*.0000353147).toFixed(3);
 		document.getElementById("volume_weight").value =volume_val;
-		var req_area_val=((length_val*width_val)*0.00107639).toFixed(3)
+		var req_area_val=((length_val*width_val*no_of_piece)*0.00107639).toFixed(3)
 		document.getElementById("req_area").value =req_area_val;
 	}
   else
 	{
-		var chargeable_weight_val=((length_val*width_val*height_val)/366).toFixed(3)
+		var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/366).toFixed(3)
   		document.getElementById("chargeable_weight").value =chargeable_weight_val;
   		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
-  		var volume_val=((width_val*length_val*height_val)*0.000578704).toFixed(3);
+  		var volume_val=((width_val*length_val*height_val*no_of_piece)*0.000578704).toFixed(3);
 		document.getElementById("volume_weight").value =volume_val;
-		var req_area_val=((length_val*width_val)*0.00694444).toFixed(3)
+		var req_area_val=((length_val*width_val*no_of_piece)*0.00694444).toFixed(3)
 		document.getElementById("req_area").value =req_area_val;
   	}
   endif
