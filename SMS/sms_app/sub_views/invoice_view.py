@@ -13,17 +13,20 @@ def invoice_add(request,invoice_id=0):
     if request.method == "GET":
         if invoice_id == 0:
             invoice_form = InvoiceaddForm()
+            context={
+                'invoice_form': invoice_form,
+            }
         else:
             invoice = BilingInfo.objects.get(pk=invoice_id)
             invoice_form = InvoiceaddForm(instance=invoice)
             voucher_num = BilingInfo.objects.get(pk=invoice_id).bill_invoice_ref
-            shipper_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num =voucher_num)
-        context={
-            'user_id':user_id,
-            'invoice_form': invoice_form,
-            'first_name': first_name,
-            'shipper_invoice_list':shipper_invoice_list,
-        }
+            shipper_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num)
+            context= {
+                'user_id':user_id,
+                'invoice_form': invoice_form,
+                'first_name': first_name,
+                'shipper_invoice_list':shipper_invoice_list,
+                }
         return render(request, "asset_mgt_app/invoice_add.html", context)
     else:
         if invoice_id == 0:
