@@ -17,11 +17,11 @@
             <i class="fas fa-arrow-left"></i>
         </a>
     </div>
-<!--    <div class="col-md-1">-->
-<!--        <a href="{% url 'locationmaster_insert' %}" class="btn btn-success btn-block btn-lg">-->
-<!--            <i class="fas fa-plus"></i>-->
-<!--        </a>-->
-<!--    </div>-->
+    <!--    <div class="col-md-1">-->
+    <!--        <a href="{% url 'locationmaster_insert' %}" class="btn btn-success btn-block btn-lg">-->
+    <!--            <i class="fas fa-plus"></i>-->
+    <!--        </a>-->
+    <!--    </div>-->
 </div>
 <hr>
 <div class="container-fluid">
@@ -39,6 +39,8 @@
             <th>Invoice Currency</th>
             <th>Invoice Value (INR)</th>
         </tr>
+        </thead>
+        <thead class="thead-dark">
         <tr>
             <th>WH Job Number</th>
             <th>Shipper Invoice</th>
@@ -69,10 +71,10 @@
         {% endfor %}
         </tbody>
         <tfoot>
-            <tr>
-                <th colspan="9" style="text-align:right">Total:</th>
-                <th></th>
-            </tr>
+        <tr>
+            <th colspan="9" style="text-align:right">Total:</th>
+            <th></th>
+        </tr>
         </tfoot>
     </table>
 </div>
@@ -107,7 +109,7 @@
                 }, 0);
 
             // Update footer
-            $(api.column(9).footer()).html('INR ' + pageTotal);
+            $(api.column(9).header()).html('INR ' + (pageTotal).toFixed(2));
         },
         initComplete: function () {
             this.api()
