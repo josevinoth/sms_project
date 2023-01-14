@@ -166,7 +166,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Package Type</span>
 									</div>
-									{% render_field goods_form.wh_goods_package_type type="select" class="form-control" %}
+									{% render_field goods_form.wh_goods_package_type id="wh_goods_package_type" onchange="package_type_chng()" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -236,7 +236,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Fumigation Process?</span>
 									</div>
-									{% render_field goods_form.wh_fumigation_process id="wh_fumigation_process" class="form-control" onchange="challan_damage_btn_active()"%}
+									{% render_field goods_form.wh_fumigation_process id="wh_fumigation_process" class="form-control disable_a_href" onchange="fumigation_process_chng()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -244,6 +244,13 @@
 										<span class="input-group-text" >Fumigation Action?</span>
 									</div>
 									{% render_field goods_form.wh_fumigation_action id="wh_fumigation_action" class="form-control disable_a_href"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Fumigation Date</span>
+									</div>
+									{% render_field goods_form.wh_fumigation_date type="datetime-local" id="wh_fumigation_date" class="form-control disable_a_href"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -406,14 +413,35 @@ $(document).ready(function() {
 		$('#warehousein_btn').addClass('btn-warning');
 	}
 	challan_damage_btn_active()
+	package_type_chng()
+	fumigation_process_chng()
   });
 </script>
+
+<script>
+function package_type_chng() {
+	var wh_goods_package_type_val=document.getElementById("wh_goods_package_type").value;
+	alert(wh_goods_package_type_val)
+
+	if (wh_goods_package_type_val ==3)
+	{
+		$('#wh_fumigation_process').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#wh_fumigation_process').addClass('disable_a_href');
+		document.getElementById("wh_fumigation_process").value=3
+	}
+	fumigation_process_chng()
+}
+</script>
+
+
 <script>
 function challan_damage_btn_active() {
 	var weight_deviation_val =document.getElementById("wh_weights_deviation").value;
 	var dimension_deviation_val=document.getElementById("wh_dimension_deviation").value;
 	var no_of_units_deviation_val=document.getElementById("wh_no_of_units_deviation").value;
-	var fumigation_process=document.getElementById("wh_fumigation_process").value;
 	var damages_val=document.getElementById("wh_damages").value;
 	var mismatches_val=document.getElementById("wh_mismatches").value;
 	if ((weight_deviation_val==1)||(dimension_deviation_val==1)||(no_of_units_deviation_val==1)||(damages_val!=6)||(mismatches_val==1))
@@ -425,15 +453,23 @@ function challan_damage_btn_active() {
 	 {
 	 	$('#wh_goods_status').removeClass('disable_a_href');
 	 }
+}
+</script>
 
-	 if (fumigation_process==2)
+<script>
+function fumigation_process_chng() {
+	var fumigation_process=document.getElementById("wh_fumigation_process").value;
+	if (fumigation_process==2)
 	 	{
 	 		$('#wh_fumigation_action').removeClass('disable_a_href');
+	 		$('#wh_fumigation_date').removeClass('disable_a_href');
 	 	}
-	 else
+	else
 	 	{
 	 		$('#wh_fumigation_action').addClass('disable_a_href');
 	 		document.getElementById("wh_fumigation_action").value=3
+	 		document.getElementById("wh_fumigation_date").value ="";
+	 		$('#wh_fumigation_date').addClass('disable_a_href');
 	 	}
 }
 </script>

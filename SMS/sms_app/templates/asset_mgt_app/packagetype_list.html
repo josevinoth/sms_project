@@ -29,14 +29,14 @@
         <tr>
             <td> {{packagetype_info.package_type}}</td>
             <td>
-                <a href="{% url 'packagetype_update' packagetype_info.id %}" >
+                <a class="btn btn-primary" href="{% url 'packagetype_update' packagetype_info.id %}" >
                     <i class="far fa-edit"></i>
                 </a>
             </td>
             <td>
                 <form action="{% url 'packagetype_delete' packagetype_info.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
-                    <button type="submit" class="btn">
+                    <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>

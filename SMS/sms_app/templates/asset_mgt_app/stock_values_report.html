@@ -26,6 +26,7 @@
 <hr>
 <div class="container-fluid">
     <table  id="stock_value_report" class="table table-striped table-bordered">
+
         <thead class="thead-dark">
         <tr>
             <th>WH Job Number</th>
@@ -39,8 +40,6 @@
             <th>Invoice Currency</th>
             <th>Invoice Value (INR)</th>
         </tr>
-        </thead>
-        <thead class="thead-dark">
         <tr>
             <th>WH Job Number</th>
             <th>Shipper Invoice</th>
@@ -85,7 +84,6 @@
     $('#stock_value_report').DataTable({
         footerCallback: function (row, data, start, end, display) {
             var api = this.api();
-
             // Remove the formatting to get integer data for summation
             var intVal = function (i) {
                 return typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;
@@ -119,7 +117,6 @@
                         .appendTo($(column.header()).empty())
                         .on('change', function () {
                             var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
                             column.search(val ? '^' + val + '$' : '', true, false).draw();
                         });
 
@@ -133,8 +130,11 @@
                 });
         },
         scrollY: "600px",
-        scrollX: true,
+<!--        scrollX: true,-->
         scrollCollapse: true,
+        autoWidth:true,
+        fixedHeader: false,
+
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'
