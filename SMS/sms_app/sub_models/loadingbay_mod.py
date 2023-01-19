@@ -29,6 +29,8 @@ class Loadingbay_Info(models.Model):
     lb_mh_forklift = models.BooleanField(null=True)
     lb_mh_crane = models.BooleanField(null=True)
     lb_mh_handtrolley = models.BooleanField(null=True)
+    lb_crane_time = models.FloatField(blank=False, null=False,default=0.0)
+    lb_forklift_time = models.FloatField(blank=False, null=False,default=0.0)
 
 class Loadingbayimages_Info(models.Model):
     lbimg_job_no = models.CharField(max_length=300, null=True, default='')

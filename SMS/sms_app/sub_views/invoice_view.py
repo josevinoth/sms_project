@@ -1,8 +1,14 @@
 from itertools import chain
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.aggregates import Sum, Max
+from django.http import HttpResponse
+import json
+from django.contrib import messages
+
 from ..forms import InvoiceaddForm
-from ..models import Warehouse_goods_info,Gatein_info,BilingInfo
+from ..models import Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
 from django.shortcuts import render, redirect
 
 # Invoicecity
@@ -21,11 +27,19 @@ def invoice_add(request,invoice_id=0):
             invoice_form = InvoiceaddForm(instance=invoice)
             voucher_num = BilingInfo.objects.get(pk=invoice_id).bill_invoice_ref
             shipper_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num)
+            weight_sum=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_volume_weight'))['wh_goods_volume_weight__sum']
+            no_of_days=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Max('wh_storage_time'))['wh_storage_time__max']
+            no_of_pieces=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
+            print('weight_sum',weight_sum)
+            print('no_of_days',no_of_days)
             context= {
                 'user_id':user_id,
                 'invoice_form': invoice_form,
                 'first_name': first_name,
                 'shipper_invoice_list':shipper_invoice_list,
+                'weight_sum':weight_sum,
+                'no_of_days':no_of_days,
+                'no_of_pieces':no_of_pieces,
                 }
         return render(request, "asset_mgt_app/invoice_add.html", context)
     else:
@@ -97,15 +111,112 @@ def shipper_invoice_remove(request,voucher_id):
     return redirect(request.META['HTTP_REFERER'])
     # return render(request,"asset_mgt_app/shipper_invoice_list.html",context)
 
-# @login_required(login_url='login_page')
-# def invoice_list_master(request):
-#     first_name = request.session.get('first_name')
-#     invoice_list_master=Warehouse_goods_info.objects.all()
-#     context =   {
-#                 'invoice_list_master' : invoice_list_master,
-#                 'first_name': first_name,
-#                 }
-#     return render(request,"asset_mgt_app/shipper_invoice_list_master_WOH.html",context)
+@login_required(login_url='login_page')
+def load_whrate_model(request):
+    lm_customer_name_id = request.GET.get('lm_customer_name_id')
+    total_weight = request.GET.get('total_weight')
+    no_of_pieces = request.GET.get('no_of_pieces')
+    voucher_num = request.GET.get('voucher_num')
+    weight_per_piece=(float(total_weight)/float(no_of_pieces))
+    customer_id=CustomerInfo.objects.get(cu_name=lm_customer_name_id).id
+    print(customer_id)
+    customer_businessmodel = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_businessmodel')
+    customer_short_name = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_nameshort')
+    customer_code = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customercode')
+    customer_GST = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_gst')
+    customer_person = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customerperson')
+    customer_contact = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_contactno')
+    customer_address = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_address')
+    print('customer_businessmodel',customer_businessmodel)
+    customer_businessmodel_val=customer_businessmodel[0]['cu_businessmodel'] #Get value from Queryset
+    customer_short_name_val=customer_short_name[0]['cu_nameshort'] #Get value from Queryset
+    customer_code_val=customer_code[0]['cu_customercode'] #Get value from Queryset
+    customer_GST_val=customer_GST[0]['cu_gst'] #Get value from Queryset
+    customer_person_val=customer_person[0]['cu_customerperson'] #Get value from Queryset
+    customer_contact_val = customer_contact[0]['cu_contactno']  # Get value from Queryset
+    customer_address_val = customer_address[0]['cu_address']  # Get value from Queryset
+    print('customer_businessmodel_val',customer_businessmodel_val)
+    lm_customer_model_id=TrbusinesstypeInfo.objects.filter(id=customer_businessmodel_val).values('tb_trbusinesstype')
+    customer_businessmodel_txt= lm_customer_model_id[0]['tb_trbusinesstype']  # Get value from Queryset
+    # WH Charge
+    wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=total_weight,whrm_min_wt__gte=total_weight, whrm_charge_type=1).values('whrm_rate')
+    if wh_rate:
+        wh_rate_val = wh_rate[0]['whrm_rate']
+    else:
+        wh_rate_val = 0.0
+
+    # Loading_unloading charge
+    piece_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=weight_per_piece,whrm_min_wt__gte=weight_per_piece, whrm_charge_type=3).values('whrm_rate')
+    if piece_rate:
+        piece_rate_val = piece_rate[0]['whrm_rate']
+    else:
+        piece_rate_val = 0.0
+        # wh_rate = 1
+
+    # Get Crane and forklift time
+    wh_job_list= (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values('wh_job_no').distinct())
+    wh_job_list_lb=(Loadingbay_Info.objects.all().values_list('lb_job_no', flat=True))
+    crane_time_tot=0
+    forklift_time_tot=0
+    for a in wh_job_list:
+        b=a['wh_job_no']
+        if b in wh_job_list_lb:
+            crane_time_val=float(Loadingbay_Info.objects.filter(lb_job_no=b).values('lb_crane_time')[0]['lb_crane_time'])
+            forklift_time_val=float(Loadingbay_Info.objects.filter(lb_job_no=b).values('lb_forklift_time')[0]['lb_forklift_time'])
+            crane_time_tot=crane_time_tot+crane_time_val
+            forklift_time_tot=forklift_time_tot+forklift_time_val
+    print('crane_time_tot',crane_time_tot)
+    print('forklift_time_tot',forklift_time_tot)
+
+    forklift_2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=4).values('whrm_rate')
+    if forklift_2hr:
+        forklift_2hr_val = forklift_2hr[0]['whrm_rate']
+    else:
+        forklift_2hr_val = 0.0
+    print('forklift_2hr_val', forklift_2hr_val)
+
+    forklift_aft2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=7).values('whrm_rate')
+    if forklift_aft2hr:
+        forklift_aft2hr_val = forklift_aft2hr[0]['whrm_rate']
+    else:
+        forklift_aft2hr_val = 0.0
+    print('forklift_aft2hr_val',forklift_aft2hr_val)
+
+    crane_2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=5).values(
+        'whrm_rate')
+    if crane_2hr:
+        crane_2hr_val = crane_2hr[0]['whrm_rate']
+    else:
+        crane_2hr_val = 0.0
+    print('crane_2hr_val', crane_2hr_val)
+
+    crane_aft2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=6).values(
+        'whrm_rate')
+    if crane_aft2hr:
+        crane_aft2hr_val = crane_aft2hr[0]['whrm_rate']
+    else:
+        crane_aft2hr_val = 0.0
+    print('crane_aft2hr_val', crane_aft2hr_val)
+
+    data = {
+        'customer_businessmodel_val':customer_businessmodel_val,
+        'customer_short_name_val':customer_short_name_val,
+        'customer_code_val':customer_code_val,
+        'customer_GST_val':customer_GST_val,
+        'customer_person_val':customer_person_val,
+        'customer_contact_val':customer_contact_val,
+        'customer_address_val':customer_address_val,
+        'wh_rate_val':wh_rate_val,
+        'piece_rate_val':piece_rate_val,
+        'crane_time_tot':crane_time_tot,
+        'forklift_time_tot':forklift_time_tot,
+        'forklift_2hr_val':forklift_2hr_val,
+        'forklift_aft2hr_val':forklift_aft2hr_val,
+        'crane_2hr_val':crane_2hr_val,
+        'crane_aft2hr_val':crane_aft2hr_val,
+    }
+    return HttpResponse(json.dumps(data))
+
 @login_required(login_url='login_page')
 def invoice_list_query(request):
     checkedout_invoice_list=[]

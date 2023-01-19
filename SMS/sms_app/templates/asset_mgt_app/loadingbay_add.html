@@ -138,8 +138,6 @@
 									{% render_field loadingbay_form.lb_packing_list class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Inward POD</span>
@@ -147,6 +145,8 @@
 									{% render_field loadingbayimg_form.lbimg_inward_pod id="lbimg_inward_pod" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-6">
 								{% render_field loadingbayimg_form.lbimg_job_no id="lbimg_job_no" value=request.session.ses_gatein_id_nam class="form-control" %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -175,7 +175,14 @@
 										<span class="input-group-text">Forklift</span>
 									</div>
 									<!--									<input type="checkbox" class="form-control" name="lb_mh_forklift" id="lb_mh_forklift">-->
-									{% render_field loadingbay_form.lb_mh_forklift class="form-control" %}
+									{% render_field loadingbay_form.lb_mh_forklift id="lb_mh_forklift" onchange="lb_crane_forklift_change()" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Forklift Hours</span>
+									</div>
+									{% render_field loadingbay_form.lb_forklift_time id="lb_forklift_time" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -183,7 +190,14 @@
 										<span class="input-group-text">Crane</span>
 									</div>
 									<!--									<input type="checkbox" class="form-control" name="lb_mh_crane" id="lb_mh_crane">-->
-									{% render_field loadingbay_form.lb_mh_crane class="form-control" %}
+									{% render_field loadingbay_form.lb_mh_crane id="lb_mh_crane" onchange="lb_crane_forklift_change()" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Crane Hours</span>
+									</div>
+									{% render_field loadingbay_form.lb_crane_time id="lb_crane_time" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -317,6 +331,7 @@ $(document).ready(function() {
 	lb_status_change();
 	inv_curr_change();
 	challan_damage_btn_active();
+	lb_crane_forklift_change();
   });
 </script>
 <script>
@@ -377,5 +392,29 @@ function lb_status_change() {
 		}
 		inv_curr_change();
 	}
+</script>
+
+<script>
+function lb_crane_forklift_change() {
+	var lb_crane_status_val=document.getElementById("lb_mh_crane").value;
+	var lb_forklift_status_val=document.getElementById("lb_mh_forklift").value;
+	if (lb_crane_status_val=="true")
+	{
+		$('#lb_crane_time').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#lb_crane_time').addClass('disable_a_href');
+	}
+
+	if (lb_forklift_status_val=="true")
+	{
+		$('#lb_forklift_time').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#lb_forklift_time').addClass('disable_a_href');
+	}
+}
 </script>
 {% endblock content %}

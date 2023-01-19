@@ -86,7 +86,9 @@
           'lm_customer_name_id': gatein_customer_id
         },
 		success: function (data) {
-			$("#whrm_businessmodel").val(data);
+<!--			$("#whrm_businessmodel").val(data);-->
+			var customer_model=JSON.parse(data)["customer_businessmodel_val"];
+			document.getElementById("whrm_businessmodel").value =customer_model;
         }
       });
 

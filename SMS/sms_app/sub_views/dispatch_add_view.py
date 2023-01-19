@@ -216,13 +216,12 @@ def dispatch_add_goods(request,dispatch_id):
     check_in_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkin_time
     check_out_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkout_time
     date_diff = (check_out_date - check_in_date)  # Differnce between dates
+    date_diff_days=date_diff.days
     duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
     storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
-    print('storage_hours',storage_hours)
     # storage_days = (check_out_date - check_in_date).days  # In days
     storage_days = float(round(storage_hours / 24,2))  # In days
-    print('storage_days',storage_days)
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=storage_days)
+    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff_days)
     context = {
                 'first_name': first_name,
                 'dispatch_goods_list':dispatch_goods_list,
@@ -265,6 +264,7 @@ def qr_dispatch_decoder(request,dispatch_id):
                 check_in_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkin_time
                 check_out_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkout_time
                 date_diff=(check_out_date - check_in_date) # Differnce between dates
+                date_diff_days = date_diff.days
                 duration_in_s = date_diff.total_seconds() # Total number of seconds between dates
                 # storage_days = (check_out_date - check_in_date).days # In days
                 storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
@@ -274,7 +274,7 @@ def qr_dispatch_decoder(request,dispatch_id):
                 # print(date_dif_final)
                 print("Storage_Days", storage_days)
                 print("Storage_Hours", storage_hours)
-                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=storage_hours)
+                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff_days)
                 return redirect(request.META['HTTP_REFERER'])
             else:
                 time.sleep(5)
