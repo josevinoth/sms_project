@@ -340,7 +340,8 @@ $(document).ready(function() {
           'lm_customer_name_id': gatein_customer_id
         },
 		success: function (data) {
-			$("#gatein_customer_type").val(data);
+			var customer_model=JSON.parse(data)["customer_businessmodel_val"];
+			document.getElementById("gatein_customer_type").value =customer_model;
         }
       });
 
