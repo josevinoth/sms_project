@@ -19,8 +19,16 @@ def invoice_add(request,invoice_id=0):
     if request.method == "GET":
         if invoice_id == 0:
             invoice_form = InvoiceaddForm()
+            # weight_sum=0
+            # no_of_days=0
+            # no_of_pieces=0
             context={
                 'invoice_form': invoice_form,
+                'first_name':first_name,
+                'user_id':user_id,
+                # 'weight_sum':weight_sum,
+                # 'no_of_days':no_of_days,
+                # 'no_of_pieces':no_of_pieces,
             }
         else:
             invoice = BilingInfo.objects.get(pk=invoice_id)
@@ -69,7 +77,7 @@ def invoice_list(request):
 def invoice_delete(request,invoice_id):
     invoice_del = BilingInfo.objects.get(pk=invoice_id)
     invoice_del.delete()
-    return redirect('/asset_mgt_app/invoice_list')
+    return redirect('/SMS/invoice_list')
 
 @login_required(login_url='login_page')
 def shipper_invoice_list(request,voucher_id):
@@ -115,9 +123,24 @@ def shipper_invoice_remove(request,voucher_id):
 def load_whrate_model(request):
     lm_customer_name_id = request.GET.get('lm_customer_name_id')
     total_weight = request.GET.get('total_weight')
+    if total_weight:
+        total_weight_1=float(total_weight.replace(',',''))
+    else:
+        total_weight_1=0.0
+
     no_of_pieces = request.GET.get('no_of_pieces')
+    if no_of_pieces:
+        no_of_pieces_1=float((no_of_pieces.replace(',','')))
+    else:
+        no_of_pieces_1=0.0
+
     voucher_num = request.GET.get('voucher_num')
-    weight_per_piece=(float(total_weight)/float(no_of_pieces))
+
+    try:
+        weight_per_piece=((total_weight_1)/(no_of_pieces_1))
+    except ZeroDivisionError:
+        weight_per_piece =float(0.0)
+
     customer_id=CustomerInfo.objects.get(cu_name=lm_customer_name_id).id
     print(customer_id)
     customer_businessmodel = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_businessmodel')
@@ -139,12 +162,17 @@ def load_whrate_model(request):
     lm_customer_model_id=TrbusinesstypeInfo.objects.filter(id=customer_businessmodel_val).values('tb_trbusinesstype')
     customer_businessmodel_txt= lm_customer_model_id[0]['tb_trbusinesstype']  # Get value from Queryset
     # WH Charge
-    wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=total_weight,whrm_min_wt__gte=total_weight, whrm_charge_type=1).values('whrm_rate')
+    # wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=total_weight,whrm_min_wt__gte=total_weight, whrm_charge_type=1).values('whrm_rate')
+    try:
+        wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=total_weight,
+                                                  whrm_min_wt__gte=total_weight, whrm_charge_type=1).values('whrm_rate')
+    except:
+        wh_rate=0
+
     if wh_rate:
         wh_rate_val = wh_rate[0]['whrm_rate']
     else:
         wh_rate_val = 0.0
-
     # Loading_unloading charge
     piece_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=weight_per_piece,whrm_min_wt__gte=weight_per_piece, whrm_charge_type=3).values('whrm_rate')
     if piece_rate:

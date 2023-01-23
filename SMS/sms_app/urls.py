@@ -310,4 +310,8 @@ urlpatterns = [
     path('shipperinvoice_add/<int:voucher_id>', views.shipper_invoice_add, name='shipperinvoice_add'),  # add shipper invoice to voucher list
     path('shipperinvoice_remove/<int:voucher_id>', views.shipper_invoice_remove, name='shipperinvoice_remove'),  # remove shipper invoice to voucher list
     path('load_whrate_model/', views.load_whrate_model, name='load_whrate_model'),  # load WH rate
+    path('expense_list/',views.expense_list,name='expense_list'), # List expense
+    path('expense_insert/',views.expense_add,name='expense_insert'), # Add expense
+    path('expense_update/<int:expense_id>',views.expense_add,name='expense_update'), # update expense
+    path('expense_delete/<int:expense_id>',views.expense_delete,name='expense_delete'), # delete expense
 ]

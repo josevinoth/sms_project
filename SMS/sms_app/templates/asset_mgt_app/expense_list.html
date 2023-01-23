@@ -1,0 +1,82 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'expense_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i>
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="expense_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Created On</th>
+            <th>Branch</th>
+            <th>Unit</th>
+            <th>Vendor</th>
+            <th>Bill No</th>
+            <th>Bill Date</th>
+            <th>Service Start Date</th>
+            <th>Service End Date</th>
+            <th>Expense Amount</th>
+            <th>Updated By</th>
+            <th>Updated On</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for expenseinfo in expense_list_val %}
+        <tr>
+            <td> {{expenseinfo.exp_created_on}}</td>
+            <td> {{expenseinfo.exp_branch}}</td>
+            <td> {{expenseinfo.exp_unit}}</td>
+            <td> {{expenseinfo.exp_vendor}}</td>
+            <td> {{expenseinfo.exp_vendor_bill}}</td>
+            <td> {{expenseinfo.exp_vendor_bill_date}}</td>
+            <td> {{expenseinfo.exp_service_start_date}}</td>
+            <td> {{expenseinfo.exp_service_end_date}}</td>
+            <td> {{expenseinfo.exp_amount_payable}}</td>
+            <td> {{expenseinfo.exp_updated_by}}</td>
+            <td> {{expenseinfo.exp_updated_at}}</td>
+
+            <td>
+                <a class="btn btn-primary" href="{% url 'expense_update' expenseinfo.id %}" >
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'expense_delete' expenseinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#expense_list').DataTable(
+        {
+        scrollY: "600px",
+<!--        scrollX: true,-->
+        scrollCollapse: true,
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    } );
+} );
+</script>
+{% endblock content %}

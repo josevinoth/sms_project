@@ -81,6 +81,9 @@ from .sub_models.rtratemaster_mod import RtratemasterInfo
 from .sub_models.upload_mod import UploadInfo
 from .sub_models.dispatch_mod import Dispatch_info
 from .sub_models.billing_mod import BilingInfo
+from.sub_models.expense_type_mod import ExpenseTypeInfo
+from.sub_models.expense_uom_mod import ExpenseUOMInfo
+from.sub_models.expense_mod import ExpenseInfo
 
 
 

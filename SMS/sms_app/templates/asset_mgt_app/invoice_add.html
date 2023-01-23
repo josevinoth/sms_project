@@ -92,27 +92,6 @@
 							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Branch</span>
-									</div>
-									{% render_field invoice_form.bill_branch class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Product</span>
-									</div>
-									{% render_field invoice_form.bill_product id="bill_product" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Primary Cost Category</span>
-									</div>
-									{% render_field invoice_form.bill_primary_cost_category class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">e-invoice</span>
 									</div>
 									{% render_field invoice_form.bill_e_invoice id="bill_e_invoice" class="form-control" %}
@@ -151,20 +130,16 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wh Charges/Day</span>
 									</div>
-									{% render_field invoice_form.bill_per_day_wh_charges class="form-control" id="bill_per_day_wh_charges" %}
+									{% render_field invoice_form.bill_per_day_wh_charges class="form-control disable_a_href" id="bill_per_day_wh_charges" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wh Storage Charges</span>
 									</div>
-									{% render_field invoice_form.bill_wh_storage_charges class="form-control" id="bill_wh_storage_charges" %}
+									{% render_field invoice_form.bill_wh_storage_charges class="form-control disable_a_href" id="bill_wh_storage_charges" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								{% render_field invoice_form.bill_updated_by id="bill_updated_by" hidden="True" class="form-control" %}
-								{% render_field invoice_form.bill_updated_at id="bill_updated_at"  class="form-control" %}
-							</div>
-							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">No of Pieces</span>
@@ -176,77 +151,93 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Rate Per Pallet</span>
 									</div>
-									{% render_field invoice_form.bill_rate_per_pallet class="form-control" id="bill_rate_per_pallet" %}
+									{% render_field invoice_form.bill_rate_per_pallet class="form-control disable_a_href" id="bill_rate_per_pallet" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Loading Charges</span>
 									</div>
-									{% render_field invoice_form.bill_loading_charge class="form-control" id="bill_loading_charge" %}
+									{% render_field invoice_form.bill_loading_charge class="form-control disable_a_href" id="bill_loading_charge" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading Charges</span>
 									</div>
-									{% render_field invoice_form.bill_unloading_charge class="form-control" id="bill_unloading_charge" %}
+									{% render_field invoice_form.bill_unloading_charge class="form-control disable_a_href" id="bill_unloading_charge" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Fumigation Charges</span>
+									</div>
+									{% render_field invoice_form.bill_tot_fumigation_charges class="form-control" id="bill_tot_fumigation_charges" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								{% render_field invoice_form.bill_updated_by id="bill_updated_by" hidden="True" class="form-control" %}
+								{% render_field invoice_form.bill_updated_at id="bill_updated_at"  class="form-control" %}
+								{% render_field invoice_form.bill_created_on id="bill_created_on"  class="form-control" %}
+
+							</div>
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Crane Charges 1st 2Hr</span>
 									</div>
-									{% render_field invoice_form.bill_crane_hrs_1 class="form-control" id="bill_crane_hrs_1" %}
+									{% render_field invoice_form.bill_crane_hrs_1 class="form-control disable_a_href" id="bill_crane_hrs_1" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Crane Charges after 2Hr</span>
 									</div>
-									{% render_field invoice_form.bill_crane_hrs_2 class="form-control" id="bill_crane_hrs_2" %}
+									{% render_field invoice_form.bill_crane_hrs_2 class="form-control disable_a_href" id="bill_crane_hrs_2" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Forklift Charges 1st 2Hr</span>
 									</div>
-									{% render_field invoice_form.bill_forklift_hrs_1 class="form-control" id="bill_forklift_hrs_1" %}
+									{% render_field invoice_form.bill_forklift_hrs_1 class="form-control disable_a_href" id="bill_forklift_hrs_1" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Forklift Charges after 2Hr</span>
 									</div>
-									{% render_field invoice_form.bill_forklift_hrs_2 class="form-control" id="bill_forklift_hrs_2" %}
+									{% render_field invoice_form.bill_forklift_hrs_2 class="form-control disable_a_href" id="bill_forklift_hrs_2" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								{% render_field invoice_form.bill_tot_crane_charges hidden="True" class="form-control" id="bill_tot_crane_charges" %}
+								{% render_field invoice_form.bill_tot_forklift_charges hidden="True" class="form-control" id="bill_tot_forklift_charges" %}
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total (Before GST)</span>
 									</div>
-									{% render_field invoice_form.bill_total_pre_gst class="form-control" id="bill_total_pre_gst" %}
+									{% render_field invoice_form.bill_total_pre_gst class="form-control disable_a_href" id="bill_total_pre_gst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">CGST</span>
 									</div>
-									{% render_field invoice_form.bill_cgst class="form-control" id="bill_cgst" %}
+									{% render_field invoice_form.bill_cgst class="form-control disable_a_href" id="bill_cgst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">SGST</span>
 									</div>
-									{% render_field invoice_form.bill_sgst class="form-control" id="bill_sgst" %}
+									{% render_field invoice_form.bill_sgst class="form-control disable_a_href" id="bill_sgst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Post GST</span>
 									</div>
-									{% render_field invoice_form.bill_total_post_gst class="form-control" id="bill_total_post_gst" %}
+									{% render_field invoice_form.bill_total_post_gst class="form-control disable_a_href" id="bill_total_post_gst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
