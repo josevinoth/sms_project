@@ -92,12 +92,25 @@ def goods_add(request, goods_id=0):
     print("goods_status_list",goods_status_list)
     print("damage_after_status",damage_after_status)
     print("warehousein_status",warehousein_status)
+    goods_checkin_weight = \
+    Warehouse_goods_info.objects.filter(wh_job_no=ses_gatein_id_nam).aggregate(Sum('wh_goods_weight'))[
+        'wh_goods_weight__sum']
+    goods_checkin_count = \
+    Warehouse_goods_info.objects.filter(wh_job_no=ses_gatein_id_nam).aggregate(Sum('wh_goods_pieces'))[
+        'wh_goods_pieces__sum']
+    if goods_checkin_weight:
+        goods_checkin_weight_val = round(goods_checkin_weight, 2)
+    else:
+        goods_checkin_weight_val = 0.0
+
+    if goods_checkin_count:
+        goods_checkin_count_val = round(goods_checkin_count, 2)
+    else:
+        goods_checkin_count_val = 0
     if request.method == "GET":
         if goods_id == 0:
             print("I am inside Get add Goods")
             goods_form = GoodsaddForm()
-            goods_checkin_weight = Warehouse_goods_info.objects.filter(wh_job_no=ses_gatein_id_nam).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
-            goods_checkin_count= Warehouse_goods_info.objects.filter(wh_job_no=ses_gatein_id_nam).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -113,15 +126,13 @@ def goods_add(request, goods_id=0):
                 'warehousein_status': warehousein_status,
                 'gatein_no_of_pkg_val': gatein_no_of_pkg_val,
                 'gatein_weight_val': gatein_weight_val,
-                'goods_checkin_weight': round(goods_checkin_weight,2),
-                'goods_checkin_count': goods_checkin_count,
+                'goods_checkin_weight': goods_checkin_weight_val,
+                'goods_checkin_count': goods_checkin_count_val,
             }
         else:
             print("I am inside get edit Goods")
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(instance=goodsinfo)
-            goods_checkin_weight=Warehouse_goods_info.objects.filter(wh_job_no = ses_gatein_id_nam).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
-            goods_checkin_count =Warehouse_goods_info.objects.filter(wh_job_no=ses_gatein_id_nam).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -137,8 +148,8 @@ def goods_add(request, goods_id=0):
                 'warehousein_status': warehousein_status,
                 'gatein_no_of_pkg_val': gatein_no_of_pkg_val,
                 'gatein_weight_val': gatein_weight_val,
-                'goods_checkin_weight': round(goods_checkin_weight,2),
-                'goods_checkin_count': goods_checkin_count,
+                'goods_checkin_weight': goods_checkin_weight,
+                'goods_checkin_count': goods_checkin_count_val,
             }
         return render(request, "asset_mgt_app/goods_add.html", context)
     else:
