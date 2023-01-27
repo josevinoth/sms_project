@@ -1,6 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models.aggregates import Sum
 from django.http import HttpResponse
 from django.contrib import messages
 from ..forms import GoodsaddForm
@@ -22,8 +23,12 @@ def goods_list(request):
 def goods_add(request, goods_id=0):
     first_name = request.session.get('first_name')
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
+    ses_gatein_no_of_pkg_nam = request.session.get('ses_gatein_no_of_pkg')
+    ses_gatein_weight_nam = request.session.get('ses_gatein_weight')
     print(ses_gatein_id_nam)
     wh_job_id = ses_gatein_id_nam
+    gatein_no_of_pkg_val = ses_gatein_no_of_pkg_nam
+    gatein_weight_val = ses_gatein_weight_nam
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -82,6 +87,7 @@ def goods_add(request, goods_id=0):
     cumsum = sum(raw_data)
     print("Cumulative Sum is", cumsum)
     tot_package = request.session.get('ses_gatein_no_of_pkg')
+    invoice_weight = request.session.get('ses_gatein_weight')
     print("Total Package is", tot_package)
     print("goods_status_list",goods_status_list)
     print("damage_after_status",damage_after_status)
@@ -90,6 +96,8 @@ def goods_add(request, goods_id=0):
         if goods_id == 0:
             print("I am inside Get add Goods")
             goods_form = GoodsaddForm()
+            goods_checkin_weight = Warehouse_goods_info.objects.filter(wh_job_no=ses_gatein_id_nam).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
+            goods_checkin_count= Warehouse_goods_info.objects.filter(wh_job_no=ses_gatein_id_nam).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -103,11 +111,17 @@ def goods_add(request, goods_id=0):
                 'damage_before_status': damage_before_status,
                 'damage_after_status':damage_after_status,
                 'warehousein_status': warehousein_status,
+                'gatein_no_of_pkg_val': gatein_no_of_pkg_val,
+                'gatein_weight_val': gatein_weight_val,
+                'goods_checkin_weight': round(goods_checkin_weight,2),
+                'goods_checkin_count': goods_checkin_count,
             }
         else:
             print("I am inside get edit Goods")
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(instance=goodsinfo)
+            goods_checkin_weight=Warehouse_goods_info.objects.filter(wh_job_no = ses_gatein_id_nam).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
+            goods_checkin_count =Warehouse_goods_info.objects.filter(wh_job_no=ses_gatein_id_nam).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -121,6 +135,10 @@ def goods_add(request, goods_id=0):
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
+                'gatein_no_of_pkg_val': gatein_no_of_pkg_val,
+                'gatein_weight_val': gatein_weight_val,
+                'goods_checkin_weight': round(goods_checkin_weight,2),
+                'goods_checkin_count': goods_checkin_count,
             }
         return render(request, "asset_mgt_app/goods_add.html", context)
     else:
@@ -135,12 +153,25 @@ def goods_add(request, goods_id=0):
             print("Form is Valid")
             goods_form.save()
             raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
+            weigth_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_weight',flat=True)
             cumsum = sum(raw_data)
+            weight_cumsum = sum(weigth_data)
             if cumsum > tot_package:
-                messages.error(request, 'Record Not Updated.Number of Pacakges Exceeded Invoice Count')
+                messages.error(request, 'Record Not Updated.Number of Pacakges Exceeds Invoice Count')
                 transaction.set_rollback(True)
+
+            elif weight_cumsum > invoice_weight:
+                messages.error(request, 'Record Not Updated.Goods Check-In weight Exceeds Invoice Weight')
+                transaction.set_rollback(True)
+
             else:
                 messages.success(request, 'Record Updated Successfully')
+
+            # if weight_cumsum > invoice_weight:
+            #     messages.error(request, 'Record Not Updated.Goods Check-In weight Exceeded Invoice Weight')
+            #     transaction.set_rollback(True)
+            # else:
+            #     messages.success(request, 'Record Updated Successfully')
         else:
             print("Form is not Valid")
         return redirect(request.META['HTTP_REFERER'])

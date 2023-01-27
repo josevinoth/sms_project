@@ -7,7 +7,7 @@ class CustomerInfo(models.Model):
     cu_name = models.CharField(max_length=100,default = '')
     cu_type= models.ForeignKey(CustomertypeInfo,on_delete=models.CASCADE, default='')
     cu_address =  models.CharField(max_length=200,default = '')
-    cu_nameshort = models.CharField(max_length=10,default = '')
+    cu_nameshort = models.CharField(max_length=100,default = '')
     cu_pan = models.CharField(max_length=10,default = '')
     cu_gst =models.CharField(max_length=30,default = '')
     cu_customerperson = models.CharField(max_length=30,default = '')

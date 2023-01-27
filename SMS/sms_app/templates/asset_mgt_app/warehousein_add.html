@@ -95,6 +95,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text" >PO Number</span>
+									</div>
+									{% render_field warehousein_form.wh_po_num value=request.session.ses_po_num class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text" >Customer Name</span>
 									</div>
 									{% render_field warehousein_form.wh_customer_name value=request.session.ses_customer_name class="form-control disable_a_href" %}

@@ -246,6 +246,15 @@ def load_whrate_model(request):
     return HttpResponse(json.dumps(data))
 
 @login_required(login_url='login_page')
+def invoice_list_open(request):
+    first_name = request.session.get('first_name')
+    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1)
+    context={
+        'open_invoice_list':open_invoice_list,
+        'first_name': first_name,
+    }
+    return render(request, "asset_mgt_app/invoice_list_open.html", context)
+@login_required(login_url='login_page')
 def invoice_list_query(request):
     checkedout_invoice_list=[]
     final_goods_list=[]

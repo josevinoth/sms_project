@@ -9,7 +9,7 @@ class WarehoseinaddForm(forms.ModelForm):
     wh_invoice_amount_inr=forms.FloatField(widget=HiddenInput(),required=False)
     class Meta:
         model = Warehouse_goods_info
-        fields = ['wh_job_no', 'wh_uom', 'wh_goods_pieces', 'wh_goods_length', 'wh_goods_width', 'wh_goods_height',
+        fields = ['wh_po_num','wh_job_no', 'wh_uom', 'wh_goods_pieces', 'wh_goods_length', 'wh_goods_width', 'wh_goods_height',
                   'wh_goods_weight', 'wh_goods_package_type', 'wh_goods_area', 'wh_goods_volume_weight',
                   'wh_chargeable_weight', 'wh_CBM', 'wh_weights_deviation', 'wh_dimension_deviation',
                   'wh_no_of_units_deviation', 'wh_damages', 'wh_mismatches',

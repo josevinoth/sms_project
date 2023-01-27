@@ -11,7 +11,7 @@ class Gatein_info(models.Model):
     gatein_shipper = models.CharField(blank=True, null=True, max_length=20)
     gatein_consignee = models.CharField(blank=True, null=True, max_length=20)
     gatein_no_of_pkg = models.IntegerField(blank=True, null=True)
-    gatein_weight = models.IntegerField(blank=True, null=True)
+    gatein_weight = models.FloatField(blank=True, null=True,default=0.0)
     gatein_driver = models.CharField(blank=True, null=True, max_length=20)
     gatein_contact_number = models.CharField(blank=True, null=True, max_length=20)
     gatein_DL_number = models.CharField(blank=True, null=True, max_length=20)
@@ -26,6 +26,7 @@ class Gatein_info(models.Model):
     gatein_updated_at = models.DateTimeField(null=True,auto_now=True)
     gatein_updated_by = models.ForeignKey(MyUser,on_delete=models.CASCADE,null=True)
     gatein_job_status = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, default=2)
+    gatein_po_num = models.CharField(blank=True, null=True, max_length=20)
 
     class Meta:
         ordering = ["gatein_job_no"]

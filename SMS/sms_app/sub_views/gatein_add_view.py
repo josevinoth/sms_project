@@ -42,17 +42,17 @@ def gatein_add(request, gatein_id=0):
             wh_customer_type = Gatein_info.objects.get(pk=gatein_id).gatein_customer_type
             wh_invoice = Gatein_info.objects.get(pk=gatein_id).gatein_invoice
             wh_total_packages = Gatein_info.objects.get(pk=gatein_id).gatein_no_of_pkg
+            wh_invoice_weight = Gatein_info.objects.get(pk=gatein_id).gatein_weight
+            wh_po_num = Gatein_info.objects.get(pk=gatein_id).gatein_po_num
             request.session['ses_gatein_id_nam'] = wh_job_id
             request.session['ses_customer_name'] = str(wh_customer_name)
             request.session['ses_customer_type'] = str(wh_customer_type)
             request.session['ses_wh_invoice'] = wh_invoice
             request.session['ses_gatein_no_of_pkg'] = wh_total_packages
+            request.session['ses_gatein_weight'] = wh_invoice_weight
             request.session['ses_consigner']=Gatein_info.objects.get(pk=gatein_id).gatein_shipper
             request.session['ses_consignee'] = Gatein_info.objects.get(pk=gatein_id).gatein_consignee
-            print("Customer Name",wh_customer_name)
-            print("Customer Type",wh_customer_type)
-            print("Invoice",wh_invoice)
-            print("wh_total_packages",wh_total_packages)
+            request.session['ses_po_num'] = wh_po_num
             # wh_job_id_sess=request.session.get('ses_gatein_id_nam')
             # Gate In Status Check
             try:

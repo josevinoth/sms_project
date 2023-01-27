@@ -314,4 +314,5 @@ urlpatterns = [
     path('expense_insert/',views.expense_add,name='expense_insert'), # Add expense
     path('expense_update/<int:expense_id>',views.expense_add,name='expense_update'), # update expense
     path('expense_delete/<int:expense_id>',views.expense_delete,name='expense_delete'), # delete expense
+    path('open_invoice/',views.invoice_list_open,name='open_invoice'), # Open invoice list
 ]

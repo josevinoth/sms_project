@@ -73,6 +73,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">PO Number</span>
+									</div>
+									{% render_field gatein_form.gatein_po_num class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Customer</span>
 									</div>
 									{% render_field gatein_form.gatein_customer id="gatein_customer" class="form-control" %}

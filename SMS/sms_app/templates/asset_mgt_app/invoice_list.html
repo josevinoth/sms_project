@@ -1,5 +1,14 @@
 {% extends "asset_mgt_app/base.html" %}
 {% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-4"></div>
+        <div class="col-4 rounded text-center bg-info">
+            <h3>Invoice List</h3>
+        </div>
+        <div class="col-4"></div>
+    </div>
+</div>
 <div class="container-fluid row">
     <div class="col-md-1">
         <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
@@ -23,9 +32,9 @@
             <th>Customer Type</th>
             <th>e-Invoice</th>
             <th>Invoice Amount (INR)</th>
-             <th>Updated By</th>
-            <th>Updated On</th>
             <th>Shipper Invoice List</th>
+            <th>Updated By</th>
+            <th>Updated On</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
