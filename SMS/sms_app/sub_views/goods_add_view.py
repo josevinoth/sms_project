@@ -169,11 +169,11 @@ def goods_add(request, goods_id=0):
             weight_cumsum = sum(weigth_data)
             if cumsum > tot_package:
                 messages.error(request, 'Record Not Updated.Number of Pacakges Exceeds Invoice Count')
-                transaction.set_rollback(True)
+                # transaction.set_rollback(True)
 
             elif weight_cumsum > invoice_weight:
                 messages.error(request, 'Record Not Updated.Goods Check-In weight Exceeds Invoice Weight')
-                transaction.set_rollback(True)
+                # transaction.set_rollback(True)
 
             else:
                 messages.success(request, 'Record Updated Successfully')
