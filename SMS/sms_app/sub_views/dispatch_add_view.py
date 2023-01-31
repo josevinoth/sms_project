@@ -10,7 +10,7 @@ from pyzbar import pyzbar
 
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Dispatch_info
+from ..models import StatusList,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Dispatch_info
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 import cv2
@@ -143,25 +143,33 @@ def dispatch_add(request, dispatch_id=0):
             print("I am inside post edit dispatch")
             dispatch_info = Dispatch_info.objects.get(pk=dispatch_id)
             dispatch_form = DispatchaddForm(request.POST, instance=dispatch_info)
+
+            dispatch_status = Dispatch_info.objects.get(pk=dispatch_id).dispatch_status
+            dispatch_status_id = StatusList.objects.get(status_title=dispatch_status).id
+            dispatch_num = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
+            wh_job_no_list = list(
+                Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_job_no',
+                                                                                              flat=True).distinct())
+            print('dispatch_status_id', dispatch_status_id)
+            print('dispatch_status', dispatch_status)
+            print('dispatch_num', dispatch_num)
+            print('wh_job_no_list', wh_job_no_list)
+            if dispatch_status_id == 5:
+                for wh_job in wh_job_no_list:
+                    print(Gatein_info.objects.get(gatein_job_no=wh_job).gatein_job_status)
+                    Gatein_info.objects.filter(gatein_job_no=wh_job).update(gatein_job_status=1)
+                    print(Gatein_info.objects.get(gatein_job_no=wh_job).gatein_job_status)
+            else:
+                print("Not Completed")
+                for wh_job in wh_job_no_list:
+                    print(Gatein_info.objects.get(gatein_job_no=wh_job).gatein_job_status)
+                    Gatein_info.objects.filter(gatein_job_no=wh_job).update(gatein_job_status=2)
+                    print(Gatein_info.objects.get(gatein_job_no=wh_job).gatein_job_status)
+
     if dispatch_form.is_valid():
         dispatch_form.save()
         print("Form Saved")
         messages.success(request, 'Record Updated Successfully')
-
-        dispatch_status = Dispatch_info.objects.get(pk=dispatch_id).dispatch_status
-        dispatch_num = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-        wh_job_no_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_job_no',
-                                                                                                            flat=True).distinct())
-        print('dispatch_status', dispatch_status)
-        print('dispatch_num', dispatch_num)
-        print('wh_job_no_list', wh_job_no_list)
-        if dispatch_status == "Completed":
-            for wh_job in wh_job_no_list:
-                print(Gatein_info.objects.get(gatein_job_no=wh_job).gatein_job_status)
-                Gatein_info.objects.filter(gatein_job_no=wh_job).update(gatein_job_status=1)
-                print(Gatein_info.objects.get(gatein_job_no=wh_job).gatein_job_status)
-        else:
-            print("Not Completed")
         # return redirect(request.META['HTTP_REFERER'])
     else:
         print("Form Not Saved")
