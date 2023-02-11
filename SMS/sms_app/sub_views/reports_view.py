@@ -38,7 +38,7 @@ def space_utilization_reports(request):
 def stock_value_reports(request):
     print("Inside Stock Value Report")
     first_name = request.session.get('first_name')
-    invoice_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1).values_list('wh_goods_invoice',flat=True)
+    invoice_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1).values_list('wh_goods_invoice',flat=True).distinct()
     checkin_goods_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1).distinct('wh_goods_invoice')
     print(list(invoice_list))
     print(checkin_goods_list)

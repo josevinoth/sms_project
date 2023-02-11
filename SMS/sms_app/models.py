@@ -19,8 +19,8 @@ from .sub_models.prod_type_mod import Prod_Type
 from .sub_models.prod_cat_mod import Prod_Cat
 from .sub_models.vendor_info_mod import Vendor_info
 from .sub_models.product_info_mod import Product_info
-from .sub_models.insurance_info_mod import Insurance_Info
 from .sub_models.my_user_mod import MyUser
+from .sub_models.insurance_info_mod import Insurance_Info
 from .sub_models.asset_info_mod import AssetInfo
 from .sub_models.service_info_mod import Service_Info
 from .sub_models.enquire_info_mod import Enquiry_Info

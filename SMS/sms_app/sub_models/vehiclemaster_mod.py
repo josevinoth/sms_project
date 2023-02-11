@@ -85,13 +85,5 @@ class VehiclemasterInfo(models.Model):
     vm_secondarydrivermob = models.IntegerField(default='')
     vm_budgetexpense = models.CharField(max_length=30)
 
-
-
-
-
-
-
-
-
     def __str__(self):
-        return self.en_enquirynumber
+        return self.vm_registrationnumber
