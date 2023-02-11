@@ -7,7 +7,6 @@ class VendoraddForm(forms.ModelForm):
         fields = '__all__'
     def __init__(self, *args, **kwargs):
         super(VendoraddForm,self).__init__(*args, **kwargs)
-        self.fields['vend_country'].empty_label = "--Select--"
-        self.fields['vend_state'].empty_label = "--Select--"
-        self.fields['vend_city'].empty_label = "--Select--"
+        self.fields['vend_branch'].empty_label = "--Select--"
+        self.fields['vend_service_type'].empty_label = "--Select--"
         self.fields['vend_status'].empty_label = "--Select--"

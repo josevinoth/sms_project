@@ -2,6 +2,15 @@
 
 
 {% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-4"></div>
+        <div class="col-4 rounded text-center bg-info">
+            <h3>Insurance List</h3>
+        </div>
+        <div class="col-4"></div>
+    </div>
+</div>
 <div class="container-fluid row">
     <div class="col-md-1">
       <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
@@ -21,6 +30,7 @@
         <tr>
             <th>Created On</th>
             <th>Insurance Name</th>
+            <th>Policy Number</th>
             <th>Insurance Type</th>
             <th>Start Date</th>
             <th>Expiry Date</th>
@@ -39,6 +49,7 @@
             <tr>
                 <td> {{insuranceinfo.ins_created_at}}</td>
                 <td> {{insuranceinfo.ins_name}}</td>
+                <td> {{insuranceinfo.ins_policy_no}}</td>
                 <td> {{insuranceinfo.ins_type}}</td>
                 <td> {{insuranceinfo.ins_start_date}}</td>
                 <td> {{insuranceinfo.ins_expiry_date}}</td>

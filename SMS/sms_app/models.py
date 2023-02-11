@@ -1,4 +1,5 @@
 from django.db import models
+from.sub_models.service_type_info_mod import servicetype_info
 from.sub_models.whchargetype_mod import Wh_chargetype
 from .sub_models.stacking_mod import StackingInfo
 from.sub_models.activeinactive_mod import ActiveinactiveInfo
@@ -17,9 +18,9 @@ from django.contrib.auth.models import User
 from .sub_models.insurance_type_mod import Insurance_Type
 from .sub_models.prod_type_mod import Prod_Type
 from .sub_models.prod_cat_mod import Prod_Cat
-from .sub_models.vendor_info_mod import Vendor_info
 from .sub_models.product_info_mod import Product_info
 from .sub_models.my_user_mod import MyUser
+from .sub_models.vendor_info_mod import Vendor_info
 from .sub_models.insurance_info_mod import Insurance_Info
 from .sub_models.asset_info_mod import AssetInfo
 from .sub_models.service_info_mod import Service_Info

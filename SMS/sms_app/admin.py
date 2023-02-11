@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import ExpenseTypeInfo,ExpenseUOMInfo,Fumigation_ActionInfo,Department_info,RoleInfo,PaymentcycleInfo,StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo,StackingInfo,Wh_chargetype
+from .models import servicetype_info,ExpenseTypeInfo,ExpenseUOMInfo,Fumigation_ActionInfo,Department_info,RoleInfo,PaymentcycleInfo,StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo,StackingInfo,Wh_chargetype
 
 # Register your models here.
 admin.site.register(StatusList)
@@ -22,6 +22,7 @@ admin.site.register(PaymentcycleInfo)
 admin.site.register(Fumigation_ActionInfo)
 admin.site.register(ExpenseTypeInfo)
 admin.site.register(ExpenseUOMInfo)
+admin.site.register(servicetype_info)
 
 
 
