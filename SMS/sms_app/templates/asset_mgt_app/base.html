@@ -22,27 +22,28 @@
 
 </head>
 <!--<body style="background-color:powderblue;">-->
-<body style="background-color: white">
+<body style="background-color: #99ccff ">
 <!--Header-->
 <!--<nav class="navbar navbar-dark bg-primary justify-content-center">
   &lt;!&ndash; Brand &ndash;&gt;
      <h1>Asset Management</h1>
 </nav>-->
 <div class="header_style mb-2 text-white">
-    <div class="container">
+    <div class="container-fluid">
         <div class="row text-center">
-            <div class="col-3">
-                <h1><a href="{% url 'home_page' %}" class="btn btn-dark"><i class="fas fa-home"></i></a></h1>
+            <div class="title_style col-3" >
+                <h1 style="font-weight:Bold;"><a href="{% url 'home_page' %}" class="btn btn-dark"><i class="fas fa-home"></i></a></h1>
             </div>
 
-            <div class="col-6">
-                <h1>Service Management System</h1>
+            <div class="col-6" >
+                <h1 style="font-weight: Bold;"><img src="/media/Company_Logo.png" style="width:50px;height:60px;padding:2px;margin-right:10px;">BVM Management System</h1>
             </div>
 
-            <div class="col-2">
+            <div class="col-2" >
                 <h6>Hi, {{first_name}}</h6>
+                <h6 style="color:red">{{role}}</h6>
             </div>
-            <div class="col-1">
+            <div class="col-1" >
                 <h1><a href="{% url 'logout_page' %}" class="btn btn-dark "><i class="fas fa-sign-out-alt"></i></a></h1>
             </div>
         </div>

@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from ..forms import AssetinfoaddForm
-from ..models import AssetInfo
+from ..models import User_extInfo,AssetInfo
 from django.shortcuts import render, redirect
 import qrcode
 from io import BytesIO
@@ -9,13 +9,21 @@ import qrcode.image.svg
 @login_required(login_url='login_page')
 def asset_list(request):
     first_name = request.session.get('first_name')
-    context = {'asset_list': AssetInfo.objects.all(),'first_name': first_name}
+    user_id = request.session.get('ses_userID')
+    role = User_extInfo.objects.get(user=user_id).emp_role
+    context = {
+        'asset_list': AssetInfo.objects.all(),
+        'first_name': first_name,
+        'role': role,
+    }
     return render(request, "asset_mgt_app/asset_list.html", context)
 
 @login_required(login_url='login_page')
 def assetinfo_add(request, asset_id=0):
     context = {}
     first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    role = User_extInfo.objects.get(user=user_id).emp_role
     if request.method == "GET":
         if asset_id == 0:
             form = AssetinfoaddForm()
@@ -28,7 +36,12 @@ def assetinfo_add(request, asset_id=0):
             # print(context)
             assetinfo = AssetInfo.objects.get(pk=asset_id)
             form = AssetinfoaddForm(instance=assetinfo)
-        return render(request, "asset_mgt_app/asset_add.html", {'form': form,'context': context,'first_name': first_name,})
+        context={
+            'form': form,
+            'role': role,
+            'first_name': first_name,
+        }
+        return render(request, "asset_mgt_app/asset_add.html", context)
     else:
         if asset_id == 0:
             form = AssetinfoaddForm(request.POST)

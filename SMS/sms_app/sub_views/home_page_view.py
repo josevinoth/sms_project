@@ -1,12 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from ..forms import AssetinfoaddForm
-from ..models import Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
+from ..models import User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
 from django.shortcuts import render, redirect
 from django.db.models import Sum
 
 @login_required(login_url='login_page')
 def home_page(request):
     first_name=request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    role=User_extInfo.objects.get(user=user_id).emp_role
     ses_username = request.session.get('ses_username', request.POST.get('username'))
     checked_out_goods_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2).values_list('wh_job_no',flat=True).distinct())
     checked_out_goods=len(checked_out_goods_list)
@@ -22,5 +24,6 @@ def home_page(request):
                'ses_username': ses_username,
                'first_name': first_name,
                'checked_out_goods': checked_out_goods,
+               'role': role,
                }
     return render(request, 'asset_mgt_app/home_page.html', context)

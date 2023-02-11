@@ -12,7 +12,7 @@
   left: 0;
   background-color: #111;
   overflow-x: hidden;
-  padding-top: 40px;
+  padding-top: 12px;
   padding-left:10px;
 }
 
@@ -122,10 +122,15 @@ h4{
     height: 100%;
   }
 }
+input,select{
+    font-weight: bold!important;
+    font-size:15px!important;
+    background-color: #f5f5f0!important;
+}
 
 .input-group-prepend span{
 width: 190px;
-background-color: #8de4e9;'
+background-color: #8de4e9;
 font-color: black;
 font-weight: bold ;
 font-size:14px!important;
@@ -175,12 +180,13 @@ font-weight: bold;
 .header_style{
 background-color: #111;
 border-bottom:5px solid #3366ff;
+text-align: center;
 }
 
 /*nav header*/
 
 .nav_header_style{
-border-bottom:2px solid #3366ff;
+border-bottom:5px solid #3366ff;
 color:white;
 }
 
@@ -225,7 +231,6 @@ section {
   border-radius:5px;
   transition:transform 0.2s ease-in-out;
 }
-
 
 input {
   width: 100%;
