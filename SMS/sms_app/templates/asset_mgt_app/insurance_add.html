@@ -8,14 +8,14 @@
 	<!--{{form.as_p}}-->
 
 	<div class="row">
-		<div class="col-4"></div>
-		<div class="col-4">
+		<div class="col-3"></div>
+		<div class="col-6">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Insurance</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Insurance Name</span>
@@ -62,6 +62,8 @@
 									{% render_field form.ins_validity_remaining id="ins_validity_remaining" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >No Of units</span>
@@ -111,20 +113,27 @@
 									{% render_field form.ins_attachment class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								{% render_field form.ins_updated_by id="ins_updated_by" hidden="True" class="form-control" %}
-								<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-								<a href="{% url 'insurance_list' %}" class="btn btn-danger float-right">
-									<i class="fas fa-times"></i> Cancel
-								</a>
 							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text" >Remarks</span>
+								</div>
+								{% render_field form.ins_remarks class="form-control" %}
+							</div>
+							{% render_field form.ins_updated_by id="ins_updated_by" hidden="True" class="form-control" %}
 						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'insurance_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
 					</div>
 				</div>
 			</div>
 		</div>
+		<div class="col-3"></div>
 	</div>
-	<div class="col-4"></div>
 	</div>
+
 </form>
 <script>
 $(document).ready(function() {

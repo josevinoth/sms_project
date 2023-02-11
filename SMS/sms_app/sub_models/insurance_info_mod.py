@@ -20,9 +20,10 @@ class Insurance_Info(models.Model):
     ins_vendor = models.ForeignKey(Vendor_info, on_delete=models.CASCADE, default='')
     ins_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.CASCADE, default='')
     ins_units = models.IntegerField(default='0')
-    ins_attachment = models.FileField(upload_to=insurance_directory_path, null=True)
     ins_created_at = models.DateTimeField(null=True, auto_now_add=True)
     ins_updated_at = models.DateTimeField(null=True, auto_now=True)
     ins_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+    ins_remarks= models.TextField(blank=True, null=True)
+    ins_attachment = models.FileField(upload_to=insurance_directory_path, null=True)
     def __str__(self):
         return self.ins_name

@@ -30,10 +30,10 @@ def insurance_add(request, insurance_id=0):
         return render(request, "asset_mgt_app/insurance_add.html", context)
     else:
         if insurance_id == 0:
-            form = InsuranceaddForm(request.POST)
+            form = InsuranceaddForm(request.POST,request.FILES)
         else:
             insuranceinfo = Insurance_Info.objects.get(pk=insurance_id)
-            form = InsuranceaddForm(request.POST, instance=insuranceinfo)
+            form = InsuranceaddForm(request.POST,request.FILES, instance=insuranceinfo)
         if form.is_valid():
             form.save()
             print("Main Form Saved")

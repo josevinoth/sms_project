@@ -14,3 +14,4 @@ class InsuranceaddForm(forms.ModelForm):
         self.fields['ins_vendor'].empty_label = "--Select--"
         self.fields['ins_status'].empty_label = "--Select--"
         self.fields['ins_branch'].empty_label = "--Select--"
+
