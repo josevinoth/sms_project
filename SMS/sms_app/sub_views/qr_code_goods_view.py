@@ -11,7 +11,7 @@ def qr_code_goods(request,goods_qr_id):
     print(qr_id_goods)
     factory_goods = qrcode.image.svg.SvgImage
     #img = qrcode.make(request.POST.get("qr_text", ""), image_factory=factory, box_size=10)
-    img = qrcode.make(qr_id_goods, image_factory=factory_goods, box_size=10)
+    img = qrcode.make(qr_id_goods, image_factory=factory_goods, box_size=15)
     stream = BytesIO()
     img.save(stream)
     img.save('../qrcode_test2.png')

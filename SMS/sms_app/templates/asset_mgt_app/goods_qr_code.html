@@ -4,36 +4,42 @@
 {% load crispy_forms_tags %}
 <div class="container-fluid row">
     <div class="col-md-1">
-      <a href="{% url 'warehousein_insert' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i>
-      </a>
+        <a href="{% url 'warehousein_insert' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i>
+        </a>
     </div>
-  <div class="col-md-1">
-      <a href="{% url 'print_pdf' %}" class="btn btn-warning btn-block btn-lg">
-        <i class="fas fa-file-pdf"></i>
-      </a>
+    <div class="col-md-1">
+        <a href="" class="btn btn-warning btn-block btn-lg" onclick="printDiv()">
+            <i class="fas fa-file-pdf"></i>
+        </a>
     </div>
 </div>
 <hr>
-  <div class="container shadow"
-       style="width: 600px; margin-top: 5em; padding: 2em">
-      <div class="row">
-        <div class="col-4">
-          {{ svg|safe }}
+<div class="container-fluid shadow" style="width: 500px; padding: 1px;background-color:white">
+    <div class="row">
+        <div class="col-4" id="print_div" >
+            {{ svg|safe }}
         </div>
         <div class="col-8">
-          <br>
-          <span>Shipper Invoice Number: {{Invoice_Number}}</span>
-          <br>
-          <span>Stock Number: {{Stock_Number}}</span>
-          <br>
-          <span>Package_Type: {{Package_Type}}</span>
-           <br>
-          <span>Area(Sq.Ft): {{Area}}</span>
-          <span>Volume(Cu.Ft): {{Volume}}</span>
-            <br>
-           <span>UOM: {{UOM}}</span> <span>Length: {{L}}</span> <span>Width: {{W}}</span> <span>Height: {{H}}</span>
+            <h6>Shipper Invoice Number: {{Invoice_Number}}</h6>
+            <h6>Stock Number: {{Stock_Number}}</h6>
+            <h6>Package_Type: {{Package_Type}}</h6>
+            <h6>Area(Sq.Ft): {{Area}}</h6>
+            <h6>Volume(Cu.Ft): {{Volume}}</h6>
+            <h6>UOM: {{UOM}}</h6>
+            <h6><span>Length: {{L}}</span><span>Width: {{W}}</span><span>Height: {{H}}</span></h6>
         </div>
-      </div>
-  </div>
+    </div>
+</div>
+<script>
+        function printDiv() {
+            var divContents = document.getElementById("print_div").innerHTML;
+            var a = window.open('', '', 'height=800, width=800');
+            a.document.write('<html>');
+            a.document.write(divContents);
+            a.document.write('</body></html>');
+            a.document.close();
+            a.print();
+        }
+</script>
 {% endblock content %}

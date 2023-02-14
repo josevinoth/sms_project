@@ -42,6 +42,7 @@
             <div class="col-2" >
                 <h6>Hi, {{first_name}}</h6>
                 <h6 style="color:red">{{role}}</h6>
+<!--                <h6 style="color:red">{{request.session.ses_user_role}}</h6>-->
             </div>
             <div class="col-1" >
                 <h1><a href="{% url 'logout_page' %}" class="btn btn-dark "><i class="fas fa-sign-out-alt"></i></a></h1>

@@ -6,6 +6,8 @@ from django.shortcuts import render, redirect
 @login_required(login_url='login_page')
 def enquirynote_add(request,enquirynote_id=0):
     first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    print(user_id)
     if request.method == "GET":
         if enquirynote_id == 0:
             print("I am inside Get add Enquirynote")
@@ -18,7 +20,12 @@ def enquirynote_add(request,enquirynote_id=0):
             tr_enqiury_id_ses = request.session.get('ses_enqiury_id')
             print(tr_enqiury_id_ses)
             form = EnquirynoteaddForm(instance=enquirynote)
-        return render(request, "asset_mgt_app/enquirynote_add.html", {'form': form,'first_name': first_name})
+        context={
+            'user_id': user_id,
+            'form': form,
+            'first_name': first_name,
+        }
+        return render(request, "asset_mgt_app/enquirynote_add.html",context)
     else:
         if enquirynote_id == 0:
             print("I am inside post add Enuirynote")
