@@ -6,746 +6,755 @@
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
-
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
-			<div class="accordion" id="accordionExample">
-				<div class="card">
-					<div class="card-header" id="headingOne">
-						<h2 class="mb-0">
-							<button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-								Vehicle Details
+		<div class="col-1"></div>
+		<div class="col-10">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Vehicle Category</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
 
-							</button>
-						</h2>
-					</div>
+							<div class="col">
+								<div class="accordion" id="accordionExample">
+									<div class="card">
+										<div class="card-header" id="headingOne">
+											<h2 class="mb-0">
+												<button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+													Vehicle Details
 
-					<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
-						<div class="card-body">
-							<div class="row">
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Vehicle Manufacturer</span>
+												</button>
+											</h2>
 										</div>
-										{% render_field form.vm_vehiclemanufacturer class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+
+										<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Vehicle Manufacturer</span>
+															</div>
+															{% render_field form.vm_vehiclemanufacturer class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Vehicle Model</span>
+															</div>
+															{% render_field form.vm_vehiclemodel class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Ownership</span>
+															</div>
+															{% render_field form.vm_ownership class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tonnage</span>
+															</div>
+															{% render_field form.vm_tonnage class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Container Size</span>
+															</div>
+															{% render_field form.vm_containersize class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Capacity</span>
+															</div>
+															{% render_field form.vm_capacity class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Category</span>
+															</div>
+															{% render_field form.vm_category class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Body</span>
+															</div>
+															{% render_field form.vm_body class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Vehicle Type</span>
+															</div>
+															{% render_field form.vm_vehicletype class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Axle Type</span>
+															</div>
+															{% render_field form.vm_axletype class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Registration Number</span>
+															</div>
+															{% render_field form.vm_registrationnumber class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Millage</span>
+															</div>
+															{% render_field form.vm_millage class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Cost</span>
+															</div>
+															{% render_field form.vm_cost class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Fuel Type</span>
+															</div>
+															{% render_field form.vm_fueltype class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Year Of Depreciation</span>
+															</div>
+															{% render_field form.vm_yearofdepreciation class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">% Of Depreciation</span>
+															</div>
+															{% render_field form.vm_ofdepreciation class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Vehicle Colour</span>
+															</div>
+															{% render_field form.vm_vehiclecolour class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Registration Date</span>
+															</div>
+															{% render_field form.vm_registrationdate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">% Of value of Vehicle</span>
+															</div>
+															{% render_field form.vm_valueofvehicle class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Chassis Number</span>
+															</div>
+															{% render_field form.vm_chassisnumber class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Engine Number</span>
+															</div>
+															{% render_field form.vm_enginenumber class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Battery Number</span>
+															</div>
+															{% render_field form.vm_batterynumber class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Battery Warranty Date</span>
+															</div>
+															{% render_field form.vm_batterywarrantydate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
 									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Vehicle Model</span>
+									<div class="card">
+										<div class="card-header" id="headingTwo">
+											<h2 class="mb-0">
+												<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+													Tyre Details
+												</button>
+											</h2>
 										</div>
-										{% render_field form.vm_vehiclemodel class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Number of Tyres</span>
+															</div>
+															{% render_field form.vm_numberoftyres class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tyre Make</span>
+															</div>
+															{% render_field form.vm_tyremake class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Stephanie Tyre Make</span>
+															</div>
+															{% render_field form.vm_stephanietyremake class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Stephanie Tyre#</span>
+															</div>
+															{% render_field form.vm_stephanietyre class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tyre 1#</span>
+															</div>
+															{% render_field form.vm_tyre1 class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tyre 2#</span>
+															</div>
+															{% render_field form.vm_tyre2 class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tyre 3#</span>
+															</div>
+															{% render_field form.vm_tyre3 class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tyre 4#</span>
+															</div>
+															{% render_field form.vm_tyre4 class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
 									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Ownership</span>
+									<div class="card">
+										<div class="card-header" id="headingThree">
+											<h2 class="mb-0">
+												<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+													Tools Details
+												</button>
+											</h2>
 										</div>
-										{% render_field form.vm_ownership class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Fire Extinguisher#</span>
+															</div>
+															{% render_field form.vm_fireextinguisher class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Fire Ext Expiry date</span>
+															</div>
+															{% render_field form.vm_fireextexpirydate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">First Aid Kit#(FAK)</span>
+															</div>
+															{% render_field form.vm_firstaidkit class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">FAK Expiry Date</span>
+															</div>
+															{% render_field form.vm_fakexpirydate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">GPRS Tracking ID</span>
+															</div>
+															{% render_field form.vm_gprstrackingid class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tool Box Content1</span>
+															</div>
+															{% render_field form.vm_toolboxcontent1 class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tool Box Content2</span>
+															</div>
+															{% render_field form.vm_toolboxcontent2 class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tool Box Content3</span>
+															</div>
+															{% render_field form.vm_toolboxcontent3 class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tool Box Content4</span>
+															</div>
+															{% render_field form.vm_toolboxcontent4 class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Tool Box Content5</span>
+															</div>
+															{% render_field form.vm_toolboxcontent5 class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">GPRS SIM ID</span>
+															</div>
+															{% render_field form.vm_gprssimid class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
 									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tonnage</span>
+									<div class="card">
+										<div class="card-header" id="headingFour">
+											<h2 class="mb-0">
+												<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+													Insurance Details
+												</button>
+											</h2>
 										</div>
-										{% render_field form.vm_tonnage class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										<div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordionExample">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Insurance Type</span>
+															</div>
+															{% render_field form.vm_insurancetype class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Company </span>
+															</div>
+															{% render_field form.vm_company class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Policy#</span>
+															</div>
+															{% render_field form.vm_policy class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Policy Expiry Date</span>
+															</div>
+															{% render_field form.vm_policyexpirydate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Premium </span>
+															</div>
+															{% render_field form.vm_premium class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">ICV Value</span>
+															</div>
+															{% render_field form.vm_icvvalue class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">NCB </span>
+															</div>
+															{% render_field form.vm_ncb class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Insurance Copy</span>
+															</div>
+															{% render_field form.vm_insurancecopy class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
 									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Container Size</span>
+									<div class="card">
+										<div class="card-header" id="headingFive">
+											<h2 class="mb-0">
+												<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+													RTO Details
+												</button>
+											</h2>
 										</div>
-										{% render_field form.vm_containersize class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										<div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordionExample">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">RTO Name</span>
+															</div>
+															{% render_field form.vm_rtoname class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">FC Date</span>
+															</div>
+															{% render_field form.vm_fcdate type="Date"  class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Receipt #</span>
+															</div>
+															{% render_field form.vm_receipt class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">FC Amount</span>
+															</div>
+															{% render_field form.vm_fcamount class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">FC Expiry Date</span>
+															</div>
+															{% render_field form.vm_fcexpirydate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">FC Copy</span>
+															</div>
+															{% render_field form.vm_fccopy class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Agency Name</span>
+															</div>
+															{% render_field form.vm_agencyname class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Agency Charges</span>
+															</div>
+															{% render_field form.vm_agencycharges class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">RoadTax Amount</span>
+															</div>
+															{% render_field form.vm_roadtaxamount class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">RoadTax Expiry Date</span>
+															</div>
+															{% render_field form.vm_roadtaxexpirydate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">RoadTax Receipt#</span>
+															</div>
+															{% render_field form.vm_roadtaxreceipt class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">RoadTax Receipt Date</span>
+															</div>
+															{% render_field form.vm_roadtaxreceiptdate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">RoadTax Copy</span>
+															</div>
+															{% render_field form.vm_roadtaxcopy class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
 									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Capacity</span>
+									<div class="card">
+										<div class="card-header" id="headingSix">
+											<h2 class="mb-0">
+												<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+													Permit & Pollution Control
+												</button>
+											</h2>
 										</div>
-										{% render_field form.vm_capacity class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										<div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordionExample">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Permit Type</span>
+															</div>
+															{% render_field form.vm_permittype class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Permit Expiry Date</span>
+															</div>
+															{% render_field form.vm_permitexpirydate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Permit #</span>
+															</div>
+															{% render_field form.vm_permit class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Permit Amount</span>
+															</div>
+															{% render_field form.vm_permitamount class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Permit Date</span>
+															</div>
+															{% render_field form.vm_permitdate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Permit Copy</span>
+															</div>
+															{% render_field form.vm_permitcopy class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Pollution Certificate #</span>
+															</div>
+															{% render_field form.vm_pollutioncertificate class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Pollution Certificate Amt</span>
+															</div>
+															{% render_field form.vm_pollutioncertificateamt class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Pollution Certificate Date</span>
+															</div>
+															{% render_field form.vm_pollutioncertificatedate type="Date" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Pollution Certificate Copy Manufacturer</span>
+															</div>
+															{% render_field form.vm_pollutioncertificatecopy class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
 									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Category</span>
+									<div class="card">
+										<div class="card-header" id="headingSeven">
+											<h2 class="mb-0">
+												<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+													Other Details
+												</button>
+											</h2>
 										</div>
-										{% render_field form.vm_category class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Body</span>
+										<div id="collapseSeven" class="collapse" aria-labelledby="headingSeven" data-parent="#accordionExample">
+											<div class="card-body">
+												<div class="row">
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Mobile App Device ID</span>
+															</div>
+															{% render_field form.vm_mobileappdeviceid class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">BPCL Card # Manufacturer</span>
+															</div>
+															{% render_field form.vm_bpclcard class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Fastag ID</span>
+															</div>
+															{% render_field form.vm_fastagid class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Primary Driver Name</span>
+															</div>
+															{% render_field form.vm_primarydrivername class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Primary Driver Mob#</span>
+															</div>
+															{% render_field form.vm_primarydrivermob class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Potential Revenue</span>
+															</div>
+															{% render_field form.vm_potenialrevenue class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+													<div class="col-4">
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Secondary Driver Name</span>
+															</div>
+															{% render_field form.vm_secondarydrivername class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Secondary Driver Mob#</span>
+															</div>
+															{% render_field form.vm_secondarydrivermob class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Budget Expense</span>
+															</div>
+															{% render_field form.vm_budgetexpense class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+													</div>
+												</div>
+											</div>
 										</div>
-										{% render_field form.vm_body class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Vehicle Type</span>
-										</div>
-										{% render_field form.vm_vehicletype class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Axle Type</span>
-										</div>
-										{% render_field form.vm_axletype class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Registration Number</span>
-										</div>
-										{% render_field form.vm_registrationnumber class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Millage</span>
-										</div>
-										{% render_field form.vm_millage class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Cost</span>
-										</div>
-										{% render_field form.vm_cost class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Fuel Type</span>
-										</div>
-										{% render_field form.vm_fueltype class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Year Of Depreciation</span>
-										</div>
-										{% render_field form.vm_yearofdepreciation class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">% Of Depreciation</span>
-										</div>
-										{% render_field form.vm_ofdepreciation class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Vehicle Colour</span>
-										</div>
-										{% render_field form.vm_vehiclecolour class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Registration Date</span>
-										</div>
-										{% render_field form.vm_registrationdate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">% Of value of Vehicle</span>
-										</div>
-										{% render_field form.vm_valueofvehicle class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Chassis Number</span>
-										</div>
-										{% render_field form.vm_chassisnumber class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Engine Number</span>
-										</div>
-										{% render_field form.vm_enginenumber class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Battery Number</span>
-										</div>
-										{% render_field form.vm_batterynumber class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Battery Warranty Date</span>
-										</div>
-										{% render_field form.vm_batterywarrantydate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-				</div>
-				<div class="card">
-					<div class="card-header" id="headingTwo">
-						<h2 class="mb-0">
-							<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-								Tyre Details
-							</button>
-						</h2>
-					</div>
-					<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
-						<div class="card-body">
-							<div class="row">
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Number of Tyres</span>
-										</div>
-										{% render_field form.vm_numberoftyres class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tyre Make</span>
-										</div>
-										{% render_field form.vm_tyremake class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Stephanie Tyre Make</span>
-										</div>
-										{% render_field form.vm_stephanietyremake class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Stephanie Tyre#</span>
-										</div>
-										{% render_field form.vm_stephanietyre class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tyre 1#</span>
-										</div>
-										{% render_field form.vm_tyre1 class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tyre 2#</span>
-										</div>
-										{% render_field form.vm_tyre2 class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tyre 3#</span>
-										</div>
-										{% render_field form.vm_tyre3 class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tyre 4#</span>
-										</div>
-										{% render_field form.vm_tyre4 class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="card">
-					<div class="card-header" id="headingThree">
-						<h2 class="mb-0">
-							<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-								Tools Details
-							</button>
-						</h2>
-					</div>
-					<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
-						<div class="card-body">
-							<div class="row">
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Fire Extinguisher#</span>
-										</div>
-										{% render_field form.vm_fireextinguisher class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Fire Ext Expiry date</span>
-										</div>
-										{% render_field form.vm_fireextexpirydate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">First Aid Kit#(FAK)</span>
-										</div>
-										{% render_field form.vm_firstaidkit class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">FAK Expiry Date</span>
-										</div>
-										{% render_field form.vm_fakexpirydate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">GPRS Tracking ID</span>
-										</div>
-										{% render_field form.vm_gprstrackingid class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tool Box Content1</span>
-										</div>
-										{% render_field form.vm_toolboxcontent1 class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tool Box Content2</span>
-										</div>
-										{% render_field form.vm_toolboxcontent2 class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tool Box Content3</span>
-										</div>
-										{% render_field form.vm_toolboxcontent3 class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tool Box Content4</span>
-										</div>
-										{% render_field form.vm_toolboxcontent4 class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Tool Box Content5</span>
-										</div>
-										{% render_field form.vm_toolboxcontent5 class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">GPRS SIM ID</span>
-										</div>
-										{% render_field form.vm_gprssimid class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="card">
-					<div class="card-header" id="headingFour">
-						<h2 class="mb-0">
-							<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-								Insurance Details
-							</button>
-						</h2>
-					</div>
-					<div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordionExample">
-						<div class="card-body">
-							<div class="row">
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Insurance Type</span>
-										</div>
-										{% render_field form.vm_insurancetype class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Company </span>
-										</div>
-										{% render_field form.vm_company class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Policy#</span>
-										</div>
-										{% render_field form.vm_policy class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Policy Expiry Date</span>
-										</div>
-										{% render_field form.vm_policyexpirydate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Premium </span>
-										</div>
-										{% render_field form.vm_premium class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">ICV Value</span>
-										</div>
-										{% render_field form.vm_icvvalue class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">NCB </span>
-										</div>
-										{% render_field form.vm_ncb class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Insurance Copy</span>
-										</div>
-										{% render_field form.vm_insurancecopy class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="card">
-					<div class="card-header" id="headingFive">
-						<h2 class="mb-0">
-							<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-								RTO Details
-							</button>
-						</h2>
-					</div>
-					<div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordionExample">
-						<div class="card-body">
-							<div class="row">
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">RTO Name</span>
-										</div>
-										{% render_field form.vm_rtoname class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">FC Date</span>
-										</div>
-										{% render_field form.vm_fcdate type="Date"  class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Receipt #</span>
-										</div>
-										{% render_field form.vm_receipt class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">FC Amount</span>
-										</div>
-										{% render_field form.vm_fcamount class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">FC Expiry Date</span>
-										</div>
-										{% render_field form.vm_fcexpirydate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">FC Copy</span>
-										</div>
-										{% render_field form.vm_fccopy class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Agency Name</span>
-										</div>
-										{% render_field form.vm_agencyname class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Agency Charges</span>
-										</div>
-										{% render_field form.vm_agencycharges class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">RoadTax Amount</span>
-										</div>
-										{% render_field form.vm_roadtaxamount class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">RoadTax Expiry Date</span>
-										</div>
-										{% render_field form.vm_roadtaxexpirydate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">RoadTax Receipt#</span>
-										</div>
-										{% render_field form.vm_roadtaxreceipt class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">RoadTax Receipt Date</span>
-										</div>
-										{% render_field form.vm_roadtaxreceiptdate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">RoadTax Copy</span>
-										</div>
-										{% render_field form.vm_roadtaxcopy class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="card">
-					<div class="card-header" id="headingSix">
-						<h2 class="mb-0">
-							<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-								Permit & Pollution Control
-							</button>
-						</h2>
-					</div>
-					<div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordionExample">
-						<div class="card-body">
-							<div class="row">
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Permit Type</span>
-										</div>
-										{% render_field form.vm_permittype class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Permit Expiry Date</span>
-										</div>
-										{% render_field form.vm_permitexpirydate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Permit #</span>
-										</div>
-										{% render_field form.vm_permit class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Permit Amount</span>
-										</div>
-										{% render_field form.vm_permitamount class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Permit Date</span>
-										</div>
-										{% render_field form.vm_permitdate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Permit Copy</span>
-										</div>
-										{% render_field form.vm_permitcopy class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Pollution Certificate #</span>
-										</div>
-										{% render_field form.vm_pollutioncertificate class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Pollution Certificate Amt</span>
-										</div>
-										{% render_field form.vm_pollutioncertificateamt class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Pollution Certificate Date</span>
-										</div>
-										{% render_field form.vm_pollutioncertificatedate type="Date" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Pollution Certificate Copy Manufacturer</span>
-										</div>
-										{% render_field form.vm_pollutioncertificatecopy class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="card">
-					<div class="card-header" id="headingSeven">
-						<h2 class="mb-0">
-							<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
-								Other Details
-							</button>
-						</h2>
-					</div>
-					<div id="collapseSeven" class="collapse" aria-labelledby="headingSeven" data-parent="#accordionExample">
-						<div class="card-body">
-							<div class="row">
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Mobile App Device ID</span>
-										</div>
-										{% render_field form.vm_mobileappdeviceid class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">BPCL Card # Manufacturer</span>
-										</div>
-										{% render_field form.vm_bpclcard class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Fastag ID</span>
-										</div>
-										{% render_field form.vm_fastagid class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Primary Driver Name</span>
-										</div>
-										{% render_field form.vm_primarydrivername class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Primary Driver Mob#</span>
-										</div>
-										{% render_field form.vm_primarydrivermob class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Potential Revenue</span>
-										</div>
-										{% render_field form.vm_potenialrevenue class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="col-4">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Secondary Driver Name</span>
-										</div>
-										{% render_field form.vm_secondarydrivername class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Secondary Driver Mob#</span>
-										</div>
-										{% render_field form.vm_secondarydrivermob class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Budget Expense</span>
-										</div>
-										{% render_field form.vm_budgetexpense class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-								</div>
-								<div class="message">
-								{{form.errors}}
-							</div>
-								<!--<input class="btn btn-success" type="submit" name="Create User">-->
-							</div>
-						</div>
-					</div>
-				</div>
-				<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-				<a href="{% url 'vehiclemaster_list' %}" class="btn btn-danger float-right">
+						<br>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'vehiclemaster_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
+					</div>
+				</div>
 			</div>
 		</div>
+		<div class="col-1"></div>
 	</div>
-	<div class="col-2"></div>
+
 </form>
 
 {% endblock content %}
