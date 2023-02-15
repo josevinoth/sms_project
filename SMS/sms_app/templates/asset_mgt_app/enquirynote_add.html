@@ -20,7 +20,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field form.en_enquirynumber id="en_enquirynumber" class="form-control" %}
+									{% render_field form.en_enquirynumber id="en_enquirynumber" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -127,7 +127,6 @@
 function enq_num() {
   var ran=Math.floor((Math.random() * 1000000) + 1)
   var jn=document.getElementById("en_enquirynumber").value
-  alert(jn)
    if (jn=="")
 	   {
 			document.getElementById("en_enquirynumber").value ="EN_"+ ran;
