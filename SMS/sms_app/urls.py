@@ -155,6 +155,7 @@ urlpatterns = [
     path('consignmentdetail_list/', views.consignmentdetail_list, name='consignmentdetail_list'),  # List consignmentdetail,
     path('consignmentdetail_insert', views.consignmentdetail_add, name='consignmentdetail_insert'),  # Add consignmentdetail
     path('consignmentdetail_update/<int:consignmentdetail_id>/', views.consignmentdetail_add, name='consignmentdetail_update'),  # Update consignmentdetail
+    path('consignment_note_connect/<int:enquirynote_id>/', views.consignment_note_connect, name='consignment_note_connect'),  # Connect consignmentdetail
     path('consignmentdetail_delete/<int:consignmentdetail_id>/', views.consignmentdetail_delete, name='consignmentdetail_delete'),  # Delete consignmentdetail
     path('vehicledetail_list/', views.vehicledetail_list, name='vehicledetail_list'),  # List vehicledetail,
     path('vehicledetail_insert', views.vehicledetail_add, name='vehicledetail_insert'),  # Add vehicledetail

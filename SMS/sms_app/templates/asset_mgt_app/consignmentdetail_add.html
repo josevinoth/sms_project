@@ -1,35 +1,9 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<div class="col-md-1">
-	<a href="{% url 'consignmentdetail_list' %}" class="btn btn-primary btn-block btn-lg">
-		<i class="fas fa-arrow-left"></i>
-	</a>
-</div>
-<div class="row" >
-	<div class="col-2"></div>
-	<div class="col-8 btn-group mx-auto text-center">
-		<a class="btn btn-primary border border-dark " id="consignment_btn">Consignment Details</a>
-		{% if vehicledetails_list %}
-		{% for vehicledetailsinfo in vehicledetails_list %}
-		<a class="btn btn-primary border border-dark disable_a_href"  id="vehicle_btn" href="{% url 'vehicledetail_update' vehicledetailsinfo.id %}">Vehicle Detail</a>
-		{% endfor %}
-		{% else %}
-		<a class="btn btn-primary border border-dark disable_a_href" id="vehicle_btn1" href="{% url 'vehicledetail_insert' %}">Vehicle Detail</a>
-		{% endif %}
-		<a class="btn btn-primary border border-dark disable_a_href" id="vehicle_btn2">Vehicle Details</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="trip_btn">Trip Details</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="tripclose_btn">Trip Closure</a>
-	</div>
-	<div class="col-2"></div>
-</div>
 
-<hr>
 <form method="POST" action="">
 	{% csrf_token %}
-
-	<!--{{form.as_p}}-->
-
 	<div class="row">
 		<div class="col-2"></div>
 		<div class="col-8">
@@ -43,21 +17,21 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field con_det_form.co_enquirynumber class="form-control" %}
+									{% render_field con_det_form.co_enquirynumber id="co_enquirynumber" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field con_det_form.co_consignmentnumber class="form-control" %}
+									{% render_field con_det_form.co_consignmentnumber id="co_consignmentnumber" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Date</span>
 									</div>
-									{% render_field con_det_form.co_consignmentdate class="form-control" %}
+									{% render_field con_det_form.co_consignmentdate type="Date" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -122,14 +96,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Date Of Issue</span>
 									</div>
-									{% render_field con_det_form.co_dateofissue class="form-control" %}
+									{% render_field con_det_form.co_dateofissue type="Date" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Date Of Validity</span>
 									</div>
-									{% render_field con_det_form.co_dateofvalidity class="form-control" %}
+									{% render_field con_det_form.co_dateofvalidity type="Date" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -160,21 +134,11 @@
 									{% render_field con_det_form.co_status class="form-control" id="consignment_status" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">last modified by</span>
-									</div>
-									{% render_field con_det_form.co_lastmodifiedby class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
+								{% render_field con_det_form.co_lastmodifiedby id="co_lastmodifiedby" class="form-control" %}
 							</div>
-							<div class="message">
-								{{con_det_form.errors}}
-							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'consignmentdetail_list' %}" class="btn btn-danger float-right">
+						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</div>
@@ -187,11 +151,24 @@
 </form>
 <script>
 $(document).ready(function() {
-	var status_id=$('#consignment_status option:selected').val()
-	if (status_id ==5){
-		$('#vehicle_btn').removeClass('disable_a_href');
-		$('#vehicle_btn1').removeClass('disable_a_href');
-		}
+	document.getElementById("co_lastmodifiedby").value ='{{user_id}}';
+	document.getElementById("co_enquirynumber").value ='{{enquiry_num}}';
+	consignment_num();
   });
 </script>
+
+<script>
+function consignment_num() {
+  var ran=Math.floor((Math.random() * 1000000) + 1)
+  var jn=document.getElementById("co_consignmentnumber").value
+   if (jn=="")
+	   {
+			document.getElementById("co_consignmentnumber").value ="CON_"+ ran;
+	   }
+   else
+		{
+			document.getElementById("co_consignmentnumber").value =jn;
+		}
+	}
+</script>>
 {% endblock content %}

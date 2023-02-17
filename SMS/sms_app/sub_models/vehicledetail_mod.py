@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import TrbusinesstypeInfo,VehiclesourceInfo,VehicletypeInfo,VehiclenumberInfo,StatusList
+from ..models import MyUser,TrbusinesstypeInfo,VehiclesourceInfo,VehicletypeInfo,VehiclenumberInfo,StatusList
 
 class VehicledetailInfo(models.Model):
     ve_enquirynumber = models.CharField(max_length=10,default = '')
@@ -11,7 +11,10 @@ class VehicledetailInfo(models.Model):
     ve_drivername = models.CharField(max_length=30)
     ve_drivernumber = models.CharField(max_length=30)
     ve_status = models.ForeignKey(StatusList,on_delete=models.CASCADE, default='')
-    ve_lastmodifiedby = models.CharField(max_length=30)
+    ve_updated_at = models.DateTimeField(null=True, auto_now=True)
+    ve_created_at = models.DateTimeField(null=True, auto_now_add=True)
+    ve_updated_by = models.ForeignKey(MyUser, related_name='ve_updated_by', db_column='ve_updated_by',
+                                      on_delete=models.CASCADE, null=True)
 
 
 

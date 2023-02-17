@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="">
+<form method="POST" id="enquiry_note" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" novalidate>
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
@@ -27,21 +27,21 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Name</span>
 									</div>
-									{% render_field form.en_customername class="form-control" %}
+									{% render_field form.en_customername id="en_customername" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Full Name</span>
+									</div>
+									{% render_field form.en_customercode id="en_customercode" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Other Customer</span>
 									</div>
-									{% render_field form.en_othercustomer class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Code</span>
-									</div>
-									{% render_field form.en_customercode class="form-control" %}
+									{% render_field form.en_othercustomer id="en_othercustomer" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -141,6 +141,24 @@ function enq_num() {
 $(document).ready(function() {
 	document.getElementById("en_updated_by").value ='{{user_id}}';
   });
+</script>
+
+<script>
+    $("#en_customername").change(function () {
+      var url = $("#enquiry_note").attr("data-load_customer_model-url");
+      var gatein_customer_id = $(this).find(":selected").text();
+      $.ajax({
+        url: url,
+        data: {
+          'lm_customer_name_id': gatein_customer_id
+        },
+		success: function (data) {
+			var customer_model=JSON.parse(data)["customer_short_name_val"];
+			document.getElementById("en_customercode").value =customer_model;
+        }
+      });
+
+    });
 </script>
 
 {% endblock content %}

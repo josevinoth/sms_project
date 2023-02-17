@@ -13,7 +13,7 @@ class CustomerInfo(models.Model):
     cu_customerperson = models.CharField(max_length=30,default = '')
     cu_designation = models.CharField(max_length=10,default = '')
     cu_contactno = models.CharField(max_length=10,default = '',null=True)
-    cu_email = models.EmailField(max_length=50,default = '',null=True)
+    cu_email = models.EmailField(max_length=50,default = '')
     cu_gstexcepmtion = models.ForeignKey(GstexcemptionInfo,on_delete=models.CASCADE, default='')
     cu_gstmodel = models.ForeignKey(GstmodelInfo,on_delete=models.CASCADE, default='')
     cu_gstpercentage = models.CharField(max_length=10,default = '')

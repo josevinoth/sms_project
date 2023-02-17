@@ -1,23 +1,6 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<div class="col-md-1">
-	<a href="{% url 'consignmentdetail_list' %}" class="btn btn-primary btn-block btn-lg">
-		<i class="fas fa-arrow-left"></i>
-	</a>
-</div>
-<div class="row" >
-	<div class="col-2"></div>
-	<div class="col-8 btn-group mx-auto text-center">
-		<a class="btn btn-primary border border-dark disable_a_href" id="warehousein_btn">Consignment Details</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="storage_btn">Vehicle Details</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="dispatch_btn">Trip Details</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="billing_btn">Trip Closure</a>
-	</div>
-	<div class="col-2"></div>
-</div>
-
-<hr>
 <form method="POST" action="">
 	{% csrf_token %}
 
@@ -36,14 +19,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field form.ve_enquirynumber class="form-control" %}
+									{% render_field form.ve_enquirynumber id="ve_enquirynumber" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field form.ve_consignmentnumber class="form-control" %}
+									{% render_field form.ve_consignmentnumber id="ve_consignmentnumber" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -97,19 +80,9 @@
 									{% render_field form.ve_status class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">last modified by</span>
-									</div>
-									{% render_field form.ve_lastmodifiedby class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
+								{% render_field form.ve_updated_by id="ve_updated_by"  class="form-control" %}
 							</div>
-							<div class="message">
-								{{form.errors}}
 							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
-						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'vehicledetail_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
@@ -121,5 +94,13 @@
 		<div class="col-2"></div>
 	</div>
 </form>
+<script>
+$(document).ready(function() {
+	document.getElementById("ve_updated_by").value ='{{user_id}}';
+	document.getElementById("ve_enquirynumber").value ='{{enquiry_num}}';
+	document.getElementById("ve_consignmentnumber").value ='{{consignment_num}}';
+  });
+</script>
+
 
 {% endblock content %}
