@@ -1,28 +1,8 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<div class="col-md-1">
-	<a href="{% url 'gatein_list' %}" class="btn btn-primary btn-block btn-lg">
-		<i class="fas fa-arrow-left"></i>
-	</a>
-</div>
-<div class="row" >
-	<div class="col-2"></div>
-	<div class="col-8 btn-group mx-auto text-center">
-		<a class="btn btn-primary border border-dark disable_a_href" id="warehousein_btn">Consignment Details</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="storage_btn">Vehicle Details</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="dispatch_btn">Trip Details</a>
-		<a class="btn btn-primary border border-dark disable_a_href" id="billing_btn">Trip Closure</a>
-	</div>
-	<div class="col-2"></div>
-</div>
-
-<hr>
 <form method="POST" action="">
 	{% csrf_token %}
-
-	<!--{{form.as_p}}-->
-
 	<div class="row">
 		<div class="col-2"></div>
 		<div class="col-8">
@@ -31,26 +11,70 @@
 					<div class="card-header text-center"><h3>Add/Update Trip Detail</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field form.tr_enquirynumber class="form-control" %}
+									{% render_field form.tr_enquirynumber id="tr_enquirynumber" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field form.tr_consignmentnumber class="form-control" %}
+									{% render_field form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Number</span>
 									</div>
-									{% render_field form.tr_tripnumber class="form-control" %}
+									{% render_field form.tr_tripnumber id="tr_tripnumber" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Type</span>
+									</div>
+									{% render_field form.tr_transportbusinesstype id="tr_transportbusinesstype" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Source</span>
+									</div>
+									{% render_field form.tr_vehiclesource id="tr_vehiclesource" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Type</span>
+									</div>
+									{% render_field form.tr_vehicletype id="tr_vehicletype" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Number</span>
+									</div>
+									{% render_field form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Driver Name</span>
+									</div>
+									{% render_field form.tr_drivername id="tr_drivername" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Driver Number</span>
+									</div>
+									{% render_field form.tr_drivernumber id="tr_drivernumber" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -71,25 +95,9 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Staring Date</span>
 									</div>
-									{% render_field form.tr_startingdate class="form-control" %}
+									{% render_field form.tr_startingdate type="Date" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Delivery Image</span>
-									</div>
-									{% render_field form.tr_deliveryimages class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Proof Of Delivery</span>
-									</div>
-									{% render_field form.tr_proofofdelivery class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Seal Number</span>
@@ -104,13 +112,8 @@
 									{% render_field form.tr_containernumber class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Status</span>
-									</div>
-									{% render_field form.tr_tripstatus class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
+							</div>
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">To Location</span>
@@ -129,7 +132,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Ending Date</span>
 									</div>
-									{% render_field form.tr_endingdate class="form-control" %}
+									{% render_field form.tr_endingdate type="Date" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -146,16 +149,7 @@
 									{% render_field form.tr_status class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">last modified by</span>
-									</div>
-									{% render_field form.tr_lastmodifiedby class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="message">
-								{{form.errors}}
+								{% render_field form.tr_updated_by id="tr_updated_by" class="form-control" %}
 							</div>
 							<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						</div>
@@ -170,5 +164,27 @@
 		<div class="col-2"></div>
 	</div>
 </form>
+<script>
+$(document).ready(function() {
+	document.getElementById("tr_updated_by").value ='{{user_id}}';
+	document.getElementById("tr_enquirynumber").value ='{{enquiry_num}}';
+	document.getElementById("tr_consignmentnumber").value ='{{consignment_num}}';
+	tripnum();
+  });
+</script>
 
+<script>
+function tripnum() {
+  var ran=Math.floor((Math.random() * 1000000) + 1)
+  var jn=document.getElementById("tr_tripnumber").value
+  if (jn=="")
+	{
+		document.getElementById("tr_tripnumber").value="TN_"+ ran;
+	}
+	else
+	{
+  		document.getElementById("tr_tripnumber").value=jn;
+  	}
+}
+</script>
 {% endblock content %}

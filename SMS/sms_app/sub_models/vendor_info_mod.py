@@ -11,7 +11,7 @@ class Vendor_info(models.Model):
     vend_description = models.CharField(max_length=100, default='')
     vend_contact = models.CharField(max_length=10)
     vend_contact_per = models.CharField(max_length=50, default='')
-    vend_gstin = models.CharField(max_length=10, default='')
+    vend_gstin = models.CharField(max_length=15, default='')
     vend_designation = models.CharField(max_length=30)
     vend_email = models.CharField(max_length=50)
     vend_address = models.TextField(max_length=500,null=True,blank=True)

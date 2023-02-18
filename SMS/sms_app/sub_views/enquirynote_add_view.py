@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm
-from ..models import ConsignmentdetailInfo,EnquirynoteInfo
+from ..models import TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
@@ -55,6 +55,13 @@ def enquirynote_list(request):
         if i in enquiry_list_cons_data:
             cons_num_cons_data=ConsignmentdetailInfo.objects.get(co_enquirynumber=i).co_consignmentnumber
             EnquirynoteInfo.objects.filter(en_enquirynumber=i).update(en_consignmentdetails=cons_num_cons_data)
+
+    open_trip_num_data = EnquirynoteInfo.objects.filter(en_tripdetails=None).values_list('en_enquirynumber',flat=True)
+    trip_list_data=TripdetailInfo.objects.filter().values_list('tr_tripnumber',flat=True)
+    for j in open_trip_num_data:
+        if j in trip_list_data:
+            cons_num_trip_data = TripdetailInfo.objects.get(tr_enquirynumber=i).tr_tripnumber
+            EnquirynoteInfo.objects.filter(en_enquirynumber=i).update(en_tripdetails=cons_num_trip_data)
     context = {
                 'enquirynote_list' : EnquirynoteInfo.objects.all(),
                 'consignmentdetail_list': ConsignmentdetailInfo.objects.all(),

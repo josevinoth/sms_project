@@ -59,7 +59,9 @@
                 <a class="link" href="{% url 'consignment_note_connect' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_consignmentdetails}}                </a>
             </td>
             <td> {{enquirynoteinfo.}}</td>
-            <td> {{enquirynoteinfo.}}</td>
+          <td>
+                <a class="link" href="{% url 'tripdetail_update' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripdetails}}                </a>
+            </td>
             <td> {{enquirynoteinfo.en_lastmodifiedby}}</td>
             <td> {{enquirynoteinfo.en_updated_by}}</td>
             <td>

@@ -42,8 +42,6 @@
             <th>Container Number</th>
             <th>Trip Status</th>
             <th>Shipment Details</th>
-            <th>Proof Of Delivery</th>
-            <th>Delivery Images</th>
             <th>Edit</th>
             <th>Delete</th>
     </thead>
@@ -63,8 +61,6 @@
                 <td> {{tripdetailinfo.tr_containernumber}}</td>
                 <td> {{tripdetailinfo.tr_tripstatus}}</td>
                 <td> {{tripdetailinfo.tr_shipmentdetails}}</td>
-                <td> {{tripdetailinfo.tr_proofofdelivery}}</td>
-                <td> {{tripdetailinfo.tr_deliveryimages}}</td>
                 <td>
 
                     <a href="{% url 'tripdetail_update' tripdetailinfo.id %}" >

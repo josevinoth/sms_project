@@ -15,9 +15,5 @@ class VehicledetailInfo(models.Model):
     ve_created_at = models.DateTimeField(null=True, auto_now_add=True)
     ve_updated_by = models.ForeignKey(MyUser, related_name='ve_updated_by', db_column='ve_updated_by',
                                       on_delete=models.CASCADE, null=True)
-
-
-
-
     # def __str__(self):
     #     return self.asset_number
