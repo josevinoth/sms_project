@@ -137,13 +137,6 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Shipment Details</span>
-									</div>
-									{% render_field form.tr_shipmentdetails class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
 									{% render_field form.tr_status class="form-control" %}
@@ -154,7 +147,7 @@
 							<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'tripdetail_list' %}" class="btn btn-danger float-right">
+						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</div>

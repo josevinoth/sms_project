@@ -19,7 +19,7 @@ def tripdetail_add(request,tripdetail_id=0):
     print('trip_num', trip_num)
 
     if request.method == "GET":
-        if trip_num == None:
+        if trip_num == None or trip_num ==0:
             print("I am inside Get add Trip Details")
             form = TripdetailaddForm()
         else:
@@ -38,7 +38,7 @@ def tripdetail_add(request,tripdetail_id=0):
         }
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
     else:
-        if trip_num == None:
+        if trip_num == None or trip_num ==0:
             print("I am inside post add Trip Details")
             form = TripdetailaddForm(request.POST)
         else:

@@ -19,7 +19,6 @@ class TripdetailInfo(models.Model):
     tr_tolocation = models.ForeignKey(City,on_delete=models.CASCADE,related_name='tr_tolocation', db_column='tr_tolocation')
     tr_endingkm = models.CharField(max_length=10,default = '')
     tr_endingdate = models.DateField(null=True,blank=True)
-    tr_shipmentdetails = models.CharField(max_length=10,default = '')
     tr_status = models.ForeignKey(StatusList,on_delete=models.CASCADE, related_name='tr_status', db_column='tr_status')
     tr_updated_at = models.DateTimeField(null=True, auto_now=True)
     tr_created_at = models.DateTimeField(null=True, auto_now_add=True)
