@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm
-from ..models import TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo
+from ..models import StatusList,TripclosureInfo,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
@@ -20,7 +20,6 @@ def enquirynote_add(request,enquirynote_id=0):
             tr_enqiury_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
             request.session['ses_enqiury_id'] = tr_enqiury_id
             tr_enqiury_id_ses = request.session.get('ses_enqiury_id')
-            print(tr_enqiury_id_ses)
             form = EnquirynoteaddForm(instance=enquirynote)
         context={
             'user_id': user_id,
@@ -50,18 +49,47 @@ def enquirynote_list(request):
     first_name = request.session.get('first_name')
     open_cons_num_end_data=EnquirynoteInfo.objects.filter(en_consignmentdetails=None).values_list('en_enquirynumber',flat=True)
     enquiry_list_cons_data=ConsignmentdetailInfo.objects.filter().values_list('co_enquirynumber',flat=True)
-    print((open_cons_num_end_data))
     for i in open_cons_num_end_data:
         if i in enquiry_list_cons_data:
             cons_num_cons_data=ConsignmentdetailInfo.objects.get(co_enquirynumber=i).co_consignmentnumber
             EnquirynoteInfo.objects.filter(en_enquirynumber=i).update(en_consignmentdetails=cons_num_cons_data)
 
     open_trip_num_data = EnquirynoteInfo.objects.filter(en_tripdetails=None).values_list('en_enquirynumber',flat=True)
-    trip_list_data=TripdetailInfo.objects.filter().values_list('tr_tripnumber',flat=True)
+    trip_list_data=TripdetailInfo.objects.filter().values_list('tr_enquirynumber',flat=True)
     for j in open_trip_num_data:
         if j in trip_list_data:
-            cons_num_trip_data = TripdetailInfo.objects.get(tr_enquirynumber=i).tr_tripnumber
-            EnquirynoteInfo.objects.filter(en_enquirynumber=i).update(en_tripdetails=cons_num_trip_data)
+            trip_num_trip_data = TripdetailInfo.objects.get(tr_enquirynumber=j).tr_tripnumber
+            EnquirynoteInfo.objects.filter(en_enquirynumber=j).update(en_tripdetails=trip_num_trip_data)
+
+    open_trip_cloure_data=EnquirynoteInfo.objects.filter(en_tripclosure=None).values_list('en_enquirynumber',flat=True)
+    trip_closure_list_data=TripclosureInfo.objects.filter().values_list('tc_enquirynumber',flat=True)
+    for k in open_trip_cloure_data:
+        if k in trip_closure_list_data:
+            trip_closure_trip_data=TripclosureInfo.objects.get(tc_enquirynumber=k).tc_tripnumber
+            EnquirynoteInfo.objects.filter(en_enquirynumber=k).update(en_tripclosure=trip_closure_trip_data)
+    enquiry_num_list=EnquirynoteInfo.objects.filter()
+    for m in enquiry_num_list:
+        try:
+            consignment_status = ConsignmentdetailInfo.objects.get(co_enquirynumber=m).co_status
+            consignment_status_id = StatusList.objects.get(status_title=consignment_status).id
+        except ObjectDoesNotExist:
+            consignment_status_id=6
+        try:
+            trip_details_status = TripdetailInfo.objects.get(tr_enquirynumber=m).tr_status
+            trip_details_status_id = StatusList.objects.get(status_title=trip_details_status).id
+        except ObjectDoesNotExist:
+            trip_details_status_id = 6
+        try:
+            trip_closure_status = TripclosureInfo.objects.get(tc_enquirynumber=m).tc_financestatus
+            trip_closure_status_id = StatusList.objects.get(status_title=trip_closure_status).id
+        except ObjectDoesNotExist:
+            trip_closure_status_id = 6
+
+        if consignment_status_id == 5 and trip_details_status_id==5 and trip_closure_status_id==5:
+            EnquirynoteInfo.objects.filter(en_enquirynumber=m).update(en_status=5)
+        else:
+            EnquirynoteInfo.objects.filter(en_enquirynumber=m).update(en_status=6)
+
     context = {
                 'enquirynote_list' : EnquirynoteInfo.objects.all(),
                 'consignmentdetail_list': ConsignmentdetailInfo.objects.all(),
@@ -75,12 +103,10 @@ def consignment_note_connect(request,enquirynote_id):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     enquiry_num=EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
-    print('enquiry_num', enquiry_num)
     try:
         consignment_num=ConsignmentdetailInfo.objects.get(co_enquirynumber=enquiry_num).co_consignmentnumber
     except ObjectDoesNotExist:
         consignment_num=None
-    print('consignment_num',consignment_num)
 
     if request.method == "GET":
         if consignment_num==None:

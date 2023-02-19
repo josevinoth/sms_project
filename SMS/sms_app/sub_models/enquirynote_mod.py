@@ -21,5 +21,6 @@ class EnquirynoteInfo(models.Model):
     en_consignmentdetails = models.CharField(max_length=100,null=True,blank=True)
     en_vehicledetails = models.CharField(max_length=100, null=True,blank=True)
     en_tripdetails = models.CharField(max_length=100, null=True,blank=True)
+    en_tripclosure = models.CharField(max_length=100, null=True,blank=True)
     def __str__(self):
         return self.en_enquirynumber

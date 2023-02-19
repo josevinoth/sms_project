@@ -310,6 +310,13 @@ nav > div a.nav-item.nav-link:focus
     color:#000000 !important;
 }
 
+/*Disable anchor*/
+.disable_a_href_list{
+    pointer-events: none;
+    background:yellow !important;
+    color:red !important;
+}
+
 /*Enable anchor*/
 .enable_a_href{
     pointer-events: 1;

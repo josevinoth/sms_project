@@ -19,7 +19,7 @@ def tripdetail_add(request,tripdetail_id=0):
     print('trip_num', trip_num)
 
     if request.method == "GET":
-        if trip_num == None or trip_num ==0:
+        if trip_num == None:
             print("I am inside Get add Trip Details")
             form = TripdetailaddForm()
         else:
@@ -38,13 +38,13 @@ def tripdetail_add(request,tripdetail_id=0):
         }
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
     else:
-        if trip_num == None or trip_num ==0:
+        if trip_num == None:
             print("I am inside post add Trip Details")
             form = TripdetailaddForm(request.POST)
         else:
             print("I am inside post edit Trip Details")
             try:
-                tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
+                tripdetail = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
             except ObjectDoesNotExist:
                 tripdetail = None
             form = TripdetailaddForm(request.POST,instance=tripdetail)
@@ -53,7 +53,7 @@ def tripdetail_add(request,tripdetail_id=0):
             print("Main Form Saved")
         else:
             print("Main Form not Saved")
-        return redirect('/SMS/tripdetail_list')
+        return redirect('/SMS/enquirynote_list')
 
 # List tripdetail
 @login_required(login_url='login_page')

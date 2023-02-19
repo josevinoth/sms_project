@@ -14,12 +14,12 @@
 <div class="container-fluid row">
     <div class="col-md-1">
         <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i>
+            <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
     <div class="col-md-1">
         <a href="{% url 'enquirynote_insert' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i>
+            <i class="fas fa-plus"></i> Add
         </a>
     </div>
 </div>
@@ -35,12 +35,12 @@
             <th>To Location</th>
             <th>Vehicle Type</th>
             <th>Assigned To</th>
-            <th>Status</th>
             <th>Consignment Details</th>
-            <th>Vehicle Details</th>
             <th>Trip Details</th>
+            <th>Trip Closure</th>
             <th>Updated On</th>
             <th>Updated By</th>
+            <th>Status</th>
             <th>Edit</th>
             <th>Delete</th>
         </thead>
@@ -54,16 +54,27 @@
             <td> {{enquirynoteinfo.en_tolocation}}</td>
             <td> {{enquirynoteinfo.en_vehicletype}}</td>
             <td> {{enquirynoteinfo.en_assignedto}}</td>
-            <td> {{enquirynoteinfo.en_status}}</td>
             <td>
-                <a class="link" href="{% url 'consignment_note_connect' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_consignmentdetails}}                </a>
+                <a class="link" href="{% url 'consignment_note_connect' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_consignmentdetails}}</a>
             </td>
-            <td> {{enquirynoteinfo.}}</td>
-          <td>
-                <a class="link" href="{% url 'tripdetail_update' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripdetails}}                </a>
+            {% if enquirynoteinfo.en_consignmentdetails %}
+            <td>
+                <a class="link" href="{% url 'tripdetail_update' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripdetails}}</a>
             </td>
+            {%else%}
+            <td>
+                <a class="link disable_a_href_list" href="{% url 'tripdetail_update' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripdetails}}</a>
+            </td>
+            {% endif %}
+
+            {% if enquirynoteinfo.en_tripdetails %}
+                <td> <a class="link" href="{% url 'tripclosure_update' enquirynoteinfo.id %}" > {{enquirynoteinfo.en_tripclosure}}</a></td>
+            {%else%}
+                <td> <a class="link disable_a_href_list" href="{% url 'tripclosure_update' enquirynoteinfo.id %}" > {{enquirynoteinfo.en_tripclosure}}</a></td>
+            {% endif %}
             <td> {{enquirynoteinfo.en_lastmodifiedby}}</td>
             <td> {{enquirynoteinfo.en_updated_by}}</td>
+            <td> {{enquirynoteinfo.en_status}}</td>
             <td>
                 <a class="btn btn-primary" href="{% url 'enquirynote_update' enquirynoteinfo.id %}" >
                     <i class="far fa-edit"></i>
