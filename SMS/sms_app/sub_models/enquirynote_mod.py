@@ -12,7 +12,7 @@ class EnquirynoteInfo(models.Model):
     en_vehiclecategory = models.ForeignKey(VehiclecategoryInfo,on_delete=models.CASCADE, default='')
     en_vehicletype = models.ForeignKey(VehicletypeInfo,on_delete=models.CASCADE, default='')
     en_assignedto = models.ForeignKey(MyUser,on_delete=models.CASCADE, default='')
-    en_status = models.ForeignKey(StatusList,on_delete=models.CASCADE, default='')
+    en_status = models.ForeignKey(StatusList,on_delete=models.CASCADE, default=6)
     en_fromlocaion = models.ForeignKey(City,on_delete=models.CASCADE,related_name='en_fromlocaion', db_column='en_fromlocaion')
     en_tolocation = models.ForeignKey(City,on_delete=models.CASCADE,related_name='en_tolocation', db_column='en_tolocation')
     en_lastmodifiedby = models.DateTimeField(null=True, auto_now=True)
