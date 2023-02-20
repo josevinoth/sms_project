@@ -4,7 +4,6 @@ from ..models import CustomerInfo,CustomerdepartmentInfo,MyUser,VehiclecategoryI
 class EnquirynoteInfo(models.Model):
     en_enquirynumber = models.CharField(max_length=100,default = '')
     en_customername = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
-    en_othercustomer = models.CharField(max_length=50,default = '')
     en_customercode = models.CharField(max_length=100,default = '')
     en_customerdepartment = models.ForeignKey(CustomerdepartmentInfo, on_delete=models.CASCADE, default='')
     en_customercontact = models.CharField(max_length=30)

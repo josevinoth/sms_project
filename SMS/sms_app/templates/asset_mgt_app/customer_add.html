@@ -158,13 +158,7 @@
 									{% render_field form.cu_businessmodel class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Last Modified By</span>
-									</div>
-									{% render_field form.cu_lastmodifiedby id="cu_lastmodifiedby" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
+								{% render_field form.cu_lastmodifiedby id="cu_lastmodifiedby" hidden="True" class="form-control disable_a_href" %}
 							</div>
 							<div class="message">
 								{{form.errors}}
