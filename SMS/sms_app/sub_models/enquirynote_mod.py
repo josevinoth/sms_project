@@ -15,7 +15,7 @@ class EnquirynoteInfo(models.Model):
     en_status = models.ForeignKey(StatusList,on_delete=models.CASCADE, default=6)
     en_fromlocaion = models.ForeignKey(City,on_delete=models.CASCADE,related_name='en_fromlocaion', db_column='en_fromlocaion')
     en_tolocation = models.ForeignKey(City,on_delete=models.CASCADE,related_name='en_tolocation', db_column='en_tolocation')
-    en_lastmodifiedby = models.DateTimeField(null=True, auto_now=True)
+    en_updatedon = models.DateTimeField(null=True, auto_now=True)
     en_created_at = models.DateTimeField(null=True, auto_now_add=True)
     en_updated_by = models.ForeignKey(MyUser, related_name='en_updated_by', db_column='en_updated_by',on_delete=models.CASCADE, null=True)
     en_consignmentdetails = models.CharField(max_length=100,null=True,blank=True)
