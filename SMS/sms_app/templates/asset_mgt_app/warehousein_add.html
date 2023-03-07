@@ -3,7 +3,7 @@
 {% block content %}
 <div class="col-md-1">
 	<a href="{% url 'gatein_list' %}" class="btn btn-primary btn-block btn-lg">
-		<i class="fas fa-arrow-left"></i>
+		<i class="fas fa-arrow-left"></i> Back
 	</a>
 </div>
 <div class="row">
@@ -554,7 +554,7 @@ $(document).ready(function() {
 	}
 
 
-	if (user_role_val!="Admin")
+	if (user_role_val=="User")
 	{
 		if (branch_val=="")
 		{

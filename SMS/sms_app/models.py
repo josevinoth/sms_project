@@ -43,7 +43,6 @@ from .sub_models.customer_mod import CustomerInfo
 from .sub_models.locationmaster_mod import LocationmasterInfo
 from .sub_models.check_in_out_mod import Check_in_out
 from .sub_models.uom_mod import UOM
-from .sub_models.warehouse_goods_info_mod import Warehouse_goods_info
 from .sub_models.warehouse_stock_info_mod import Warehouse_stock_info
 from .sub_models.assign_asset_info_mod import Assign_asset_info
 from .sub_models.employee_mod import Employee
@@ -62,6 +61,7 @@ from .sub_models.customername_mod import CustomernameInfo_new
 from .sub_models.vehiclecategory_mod import VehiclecategoryInfo
 from.sub_models.gatein_mod_pre import Gatein_pre_info,Gatein_pre_info_att
 from .sub_models.gatein_mod import Gatein_info
+from .sub_models.warehouse_goods_info_mod import Warehouse_goods_info
 from .sub_models.enquirynote_mod import EnquirynoteInfo
 from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from .sub_models.vehiclesource_mod import VehiclesourceInfo

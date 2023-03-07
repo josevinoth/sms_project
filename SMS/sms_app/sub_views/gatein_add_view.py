@@ -53,6 +53,7 @@ def gatein_add(request, gatein_id=0):
             request.session['ses_consigner']=Gatein_info.objects.get(pk=gatein_id).gatein_shipper
             request.session['ses_consignee'] = Gatein_info.objects.get(pk=gatein_id).gatein_consignee
             request.session['ses_po_num'] = wh_po_num
+            request.session['ses_wh_gatein_id'] = gatein_id
             # wh_job_id_sess=request.session.get('ses_gatein_id_nam')
             # Gate In Status Check
             try:

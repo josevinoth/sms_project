@@ -3,7 +3,7 @@
 {% block content %}
 <div class="col-md-1">
 	<a href="{% url 'gatein_list' %}" class="btn btn-primary btn-block btn-lg">
-		<i class="fas fa-arrow-left"></i>
+		<i class="fas fa-arrow-left"></i> Back
 	</a>
 </div>
 <div class="row">
@@ -115,7 +115,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Shipper Invoice Number</span>
 									</div>
-									{% render_field goods_form.wh_goods_invoice value=request.session.ses_wh_invoice class="form-control disable_a_href" %}
+									{% render_field goods_form.wh_goods_invoice id="wh_goods_invoice" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -364,7 +364,7 @@ $(document).ready(function() {
 	var damage_before_status_id='{{damage_before_status}}';
 	var damage_after_status_id='{{damage_after_status}}';
 	var warehousein_status_id='{{warehousein_status}}';
-
+	document.getElementById("wh_goods_invoice").value ='{{gatein_wh_job_id}}';
 	if (gatein_status_id =="Completed")
 	{
 		$('#gatein_btn').removeClass('disable_a_href');

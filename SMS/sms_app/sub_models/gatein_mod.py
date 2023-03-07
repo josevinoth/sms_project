@@ -29,7 +29,7 @@ class Gatein_info(models.Model):
     gatein_po_num = models.CharField(blank=True, null=True, max_length=100)
 
     class Meta:
-        ordering = ["gatein_job_no"]
+        ordering = ["gatein_invoice"]
 
     def __str__(self):
-        return self.gatein_job_no
+        return self.gatein_invoice

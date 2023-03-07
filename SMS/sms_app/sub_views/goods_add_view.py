@@ -29,6 +29,8 @@ def goods_add(request, goods_id=0):
     wh_job_id = ses_gatein_id_nam
     gatein_no_of_pkg_val = ses_gatein_no_of_pkg_nam
     gatein_weight_val = ses_gatein_weight_nam
+    gatein_wh_job_id=Gatein_info.objects.get(gatein_job_no=wh_job_id).id
+    print('gatein_wh_job_id',gatein_wh_job_id)
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -128,6 +130,7 @@ def goods_add(request, goods_id=0):
                 'gatein_weight_val': gatein_weight_val,
                 'goods_checkin_weight': goods_checkin_weight_val,
                 'goods_checkin_count': goods_checkin_count_val,
+                'gatein_wh_job_id': gatein_wh_job_id,
             }
         else:
             print("I am inside get edit Goods")

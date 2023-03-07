@@ -37,17 +37,24 @@ def space_utilization_reports(request):
 @login_required(login_url='login_page')
 def stock_value_reports(request):
     print("Inside Stock Value Report")
+    goods_list=[]
     first_name = request.session.get('first_name')
     invoice_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1).values_list('wh_goods_invoice',flat=True).distinct()
-    checkin_goods_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1).distinct('wh_goods_invoice')
-    print(list(invoice_list))
-    print(checkin_goods_list)
-    # invoice_list_lb= Loadingbay_Info.objects.all()
-    # print(invoice_list_lb)
+    checkin_goods_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1)
+    gatein_list=Gatein_info.objects.all()
+    # combine= gatein_list.union(checkin_goods_list, all=True)
+    combine= list(chain(checkin_goods_list,gatein_list))
+    print('combine',combine)
+    print('checkin_goods_list',checkin_goods_list)
+    for i in invoice_list:
+        goods_list.append(Gatein_info.objects.filter(gatein_invoice=i))
+    print('goods_list',goods_list)
     context = {
                 'stock_value_list': Loadingbay_Info.objects.all(),
                 'first_name': first_name,
                 'checkin_goods_list': checkin_goods_list,
+                'goods_list': goods_list,
+                'combine': combine,
                 }
     return render(request,"asset_mgt_app/stock_values_report.html",context)
 

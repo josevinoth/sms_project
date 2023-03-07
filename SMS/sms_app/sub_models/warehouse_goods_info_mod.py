@@ -2,11 +2,11 @@ import django
 from django.db import models
 from django.utils import timezone
 
-from ..models import Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
+from ..models import Gatein_info,Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
 
 class Warehouse_goods_info(models.Model):
     wh_job_no = models.CharField(blank=False, null=False, max_length=20, default='')
-    wh_goods_invoice = models.CharField(blank=True, null=True,max_length=20)
+    wh_goods_invoice = models.ForeignKey(Gatein_info, on_delete=models.CASCADE, null=True,blank=True)
     wh_goods_pieces = models.FloatField(default=0.0)
     wh_goods_length = models.FloatField(default=0.0)
     wh_goods_width = models.FloatField(default=0.0)
