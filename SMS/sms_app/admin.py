@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import servicetype_info,ExpenseTypeInfo,ExpenseUOMInfo,Fumigation_ActionInfo,Department_info,RoleInfo,PaymentcycleInfo,StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo,StackingInfo,Wh_chargetype
+from .models import CustomerInfo,CustomertypeInfo,Busnotwon,Salestatus,Callpurpose,Callnature,Calltype,Supplyinfo,Packreuqirementinfo,Transrequirementinfo,Whrequirementinfo,Industrytype,RequirementsInfo,Cusnewexist,servicetype_info,ExpenseTypeInfo,ExpenseUOMInfo,Fumigation_ActionInfo,Department_info,RoleInfo,PaymentcycleInfo,StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo,StackingInfo,Wh_chargetype
 
 # Register your models here.
 admin.site.register(StatusList)
@@ -23,7 +23,20 @@ admin.site.register(Fumigation_ActionInfo)
 admin.site.register(ExpenseTypeInfo)
 admin.site.register(ExpenseUOMInfo)
 admin.site.register(servicetype_info)
-
+admin.site.register(RequirementsInfo)
+admin.site.register(Cusnewexist)
+admin.site.register(Industrytype)
+admin.site.register(Whrequirementinfo)
+admin.site.register(Transrequirementinfo)
+admin.site.register(Packreuqirementinfo)
+admin.site.register(Supplyinfo)
+admin.site.register(Calltype)
+admin.site.register(Callnature)
+admin.site.register(Callpurpose)
+admin.site.register(Salestatus)
+admin.site.register(Busnotwon)
+admin.site.register(CustomertypeInfo)
+admin.site.register(CustomerInfo)
 
 
 

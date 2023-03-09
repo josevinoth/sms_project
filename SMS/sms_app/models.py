@@ -1,4 +1,16 @@
 from django.db import models
+from.sub_models.requirements_info_mod import RequirementsInfo
+from .sub_models.cus_new_exist_mod import Cusnewexist
+from .sub_models.industry_type_mod import Industrytype
+from .sub_models.wh_requirement_mod import Whrequirementinfo
+from .sub_models.trans_requirement_mod import Transrequirementinfo
+from .sub_models.pack_requirement_mod import Packreuqirementinfo
+from .sub_models.supply_info_mod import Supplyinfo
+from .sub_models.call_type_mod import Calltype
+from .sub_models.call_nature_mod import Callnature
+from .sub_models.call_purpose_mod import Callpurpose
+from .sub_models.sales_status_mod import Salestatus
+from .sub_models.bus_notwon_mod import Busnotwon
 from.sub_models.service_type_info_mod import servicetype_info
 from.sub_models.whchargetype_mod import Wh_chargetype
 from .sub_models.stacking_mod import StackingInfo
@@ -85,7 +97,7 @@ from .sub_models.billing_mod import BilingInfo
 from.sub_models.expense_type_mod import ExpenseTypeInfo
 from.sub_models.expense_uom_mod import ExpenseUOMInfo
 from.sub_models.expense_mod import ExpenseInfo
-
+from.sub_models.sales_info_mod import SalesInfo
 
 
 

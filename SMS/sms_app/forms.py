@@ -69,3 +69,4 @@ from .sub_forms.WarehouseinddForm_form import WarehoseinaddForm
 from .sub_forms.dispatchadd_form import DispatchaddForm
 from .sub_forms.GateinForm_pre_form import Gatein_preaddForm,Gatein_pre_att_addForm
 from.sub_forms.expenseaddForm_form import ExpenseaddForm
+from.sub_forms.salesinfoaddForm_form import SalesinfoaddForm

@@ -316,4 +316,8 @@ urlpatterns = [
     path('expense_update/<int:expense_id>',views.expense_add,name='expense_update'), # update expense
     path('expense_delete/<int:expense_id>',views.expense_delete,name='expense_delete'), # delete expense
     path('open_invoice/',views.invoice_list_open,name='open_invoice'), # Open invoice list
+    path('sales_list/',views.sales_list,name='sales_list'), # List sales
+    path('sales_insert/',views.sales_add,name='sales_insert'), # Add sales
+    path('sales_update/<int:sales_id>',views.sales_add,name='sales_update'), # update sales
+    path('sales_delete/<int:sales_id>',views.sales_delete,name='sales_delete'), # delete sales
 ]
