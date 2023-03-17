@@ -26,9 +26,23 @@
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
+    								<span class="input-group-text" >Customer New or Existing</span>
+  								</div>
+								{% render_field form.s_customer_new class="form-control" id="s_customer_new" onchange="cusnewexist_enabler()"%}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
     								<span class="input-group-text" >Customer Name</span>
   								</div>
-								{% render_field form.s_customer_name class="form-control" %}
+								{% render_field form.s_customer_name class="form-control disable_a_href" id="s_customer_name"%}
+  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							<div class="input-group input-group-sm mb-3">
+  								<div class="input-group-prepend">
+    								<span class="input-group-text" >Customer New Name</span>
+  								</div>
+								{% render_field form.s_customer_new_name class="form-control disable_a_href" id="s_customer_new_name"%}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 								<div class="input-group input-group-sm mb-3">
@@ -38,13 +52,7 @@
 								{% render_field form.s_customer_type class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Customer New or Existing</span>
-  								</div>
-								{% render_field form.s_customer_new class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text">Industry Type</span>
@@ -56,7 +64,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Requirement</span>
 									</div>
-									{% render_field form.s_requirement class="form-control" %}
+									{% render_field form.s_requirement  class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
@@ -175,14 +183,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Decision Maker</span>
 									</div>
-									{% render_field form.s_decision_maker class="form-control" %}
+									{% render_field form.s_decision_maker class="form-control" id="s_decision_maker" onchange="decmaker_enabler()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text" >Name and Designation of Decision Maker</span>
   								</div>
-								{% render_field form.s_name_desg_dm class="form-control" %}
+								{% render_field form.s_name_desg_dm class="form-control disable_a_href" id="s_name_desg_dm" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
@@ -204,21 +212,21 @@
   								<div class="input-group-prepend">
     								<span class="input-group-text" > Prospective Customer</span>
   								</div>
-								{% render_field form.s_customer_prospective class="form-control" %}
+								{% render_field form.s_customer_prospective class="form-control" id="s_customer_prospective" onchange="pc_enabler()"%}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text" > If no reason</span>
   								</div>
-								{% render_field form.s_noreason_cp class="form-control" %}
+								{% render_field form.s_noreason_cp class="form-control disable_a_href" id="s_noreason_cp"%}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text" > If Yes Date of Quote sent</span>
   								</div>
-								{% render_field form.s_yesdate_quote type="date" class="form-control" %}
+								{% render_field form.s_yesdate_quote type="date" class="form-control disable_a_href" id="s_yesdate_quote" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 
@@ -228,27 +236,27 @@
   								<div class="input-group-prepend">
     								<span class="input-group-text">Quote Ref</span>
   								</div>
-								{% render_field form.s_customer_prospective class="form-control" %}
+								{% render_field form.s_quote_ref class="form-control" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text">Business Won or Not</span>
   								</div>
-								{% render_field form.s_bus_won_not class="form-control" %}
+								{% render_field form.s_bus_won_not class="form-control" id="s_bus_won_not" onchange="Buswonnot_enabler()" %}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div><div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text">Not Reason</span>
   								</div>
-								{% render_field form.s_not_reason class="form-control" %}
+								{% render_field form.s_not_reason class="form-control disable_a_href" id="s_not_reason"%}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
   								<div class="input-group-prepend">
     								<span class="input-group-text"> Yes Date to start business</span>
   								</div>
-								{% render_field form.s_yesdate_business type="date" class="form-control" %}
+								{% render_field form.s_yesdate_business type="date" class="form-control disable_a_href" id="s_yesdate_business"%}
   								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
@@ -350,6 +358,105 @@
 	<div class="col-1"></div>
 </div>
 </form>
+
+<script>
+function cusnewexist_enabler() {
+  var jn5=document.getElementById("s_customer_new").value
+  alert(jn5)
+  if (jn5==2)
+	{
+<!--		document.getElementById("s_customer_name").disabled=false-->
+<!--		document.getElementById("s_customer_new_name").disabled=true-->
+		$('#s_customer_name').removeClass('disable_a_href');
+		$('#s_customer_new_name').addClass('disable_a_href');
+		document.getElementById("s_customer_name").value=""
+		document.getElementById("s_customer_new_name").value=""
+	}
+  else
+  	{
+<!--		document.getElementById("s_customer_name").disabled=true-->
+<!--		document.getElementById("s_customer_new_name").disabled=false-->
+		$('#s_customer_name').addClass('disable_a_href');
+		$('#s_customer_new_name').removeClass('disable_a_href');
+		document.getElementById("s_customer_name").value=""
+		document.getElementById("s_customer_new_name").value=""
+	}
+}
+</script>
+
+<script>
+function decmaker_enabler() {
+  var jn6=document.getElementById("s_decision_maker").value
+  alert(jn6)
+  if (jn6==3)
+	{
+<!--		document.getElementById("s_name_desg_dm").disabled=false-->
+		$('#s_name_desg_dm').removeClass('disable_a_href');
+		document.getElementById("s_name_desg_dm").value=""
+	}
+  else
+  	{
+<!--		document.getElementById("s_name_desg_dm").disabled=true-->
+		$('#s_name_desg_dm').addClass('disable_a_href');
+		document.getElementById("s_name_desg_dm").value=""
+	}
+}
+</script>
+
+<script>
+function pc_enabler() {
+  var jn3=document.getElementById("s_customer_prospective").value
+  alert(jn3)
+  if (jn3==2)
+	{
+<!--		document.getElementById("s_noreason_cp").disabled=true-->
+<!--		document.getElementById("s_yesdate_quote").disabled=false-->
+		$('#s_noreason_cp').addClass('disable_a_href');
+		$('#s_yesdate_quote').removeClass('disable_a_href');
+		document.getElementById("s_noreason_cp").value=""
+		document.getElementById("s_yesdate_quote").value=""
+	}
+  else
+  	{
+<!--		document.getElementById("s_noreason_cp").disabled=false-->
+<!--		document.getElementById("s_yesdate_quote").disabled=true-->
+		$('#s_noreason_cp').removeClass('disable_a_href');
+		$('#s_yesdate_quote').addClass('disable_a_href');
+		document.getElementById("s_noreason_cp").value=""
+		document.getElementById("s_yesdate_quote").value=""
+	}
+}
+</script>
+
+<script>
+function Buswonnot_enabler() {
+  var jn4=document.getElementById("s_bus_won_not").value
+  alert(jn4)
+  if (jn4==2)
+	{
+<!--		document.getElementById("s_not_reason").disabled=true-->
+<!--		document.getElementById("s_yesdate_business").disabled=false-->
+		$('#s_not_reason').addClass('disable_a_href');
+		$('#s_yesdate_business').removeClass('disable_a_href');
+		document.getElementById("s_not_reason").value=""
+		document.getElementById("s_yesdate_business").value=""
+	}
+  else
+  	{
+<!--		document.getElementById("s_not_reason").disabled=false-->
+<!--		document.getElementById("s_yesdate_business").disabled=true-->
+		$('#s_not_reason').removeClass('disable_a_href');
+		$('#s_yesdate_business').addClass('disable_a_href');
+		document.getElementById("s_not_reasona").value=""
+		document.getElementById("s_yesdate_business").value=""
+	}
+}
+</script>
+
+
+
+
+
 
 <!--<script>-->
 <!--function myAssetnum() {-->

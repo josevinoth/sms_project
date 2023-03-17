@@ -108,14 +108,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">HAWB</span>
 									</div>
-									{% render_field dispatch_form.dispatch_HAWB class="form-control" disabled="True" id="dispatch_HAWB" %}
+									{% render_field dispatch_form.dispatch_HAWB class="form-control disable_a_href"  id="dispatch_HAWB" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">MAWB</span>
 									</div>
-									{% render_field dispatch_form.dispatch_MAWB class="form-control" disabled="True" id="dispatch_MAWB" %}
+									{% render_field dispatch_form.dispatch_MAWB class="form-control disable_a_href"  id="dispatch_MAWB" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -185,17 +185,22 @@ function dispatch_num_fn() {
 <script>
 function AWB_enabler() {
   var jn3=document.getElementById("dispatch_sticker_pasted_BVM").value
-  if (jn3==1)
+  alert(jn3)
+  if (jn3==2)
 	{
-		document.getElementById("dispatch_MAWB").disabled=false
-		document.getElementById("dispatch_HAWB").disabled=false
+<!--		document.getElementById("dispatch_MAWB").disabled=false-->
+<!--		document.getElementById("dispatch_HAWB").disabled=false-->
+		$('#dispatch_MAWB').removeClass('disable_a_href');
+		$('#dispatch_HAWB').removeClass('disable_a_href');
 		document.getElementById("dispatch_MAWB").value=""
 		document.getElementById("dispatch_HAWB").value=""
 	}
   else
   	{
-		document.getElementById("dispatch_MAWB").disabled=true
-		document.getElementById("dispatch_HAWB").disabled=true
+<!--		document.getElementById("dispatch_MAWB").disabled=true-->
+<!--		document.getElementById("dispatch_HAWB").disabled=true-->
+		$('#dispatch_MAWB').addClass('disable_a_href');
+		$('#dispatch_HAWB').addClass('disable_a_href');
 		document.getElementById("dispatch_MAWB").value=""
 		document.getElementById("dispatch_HAWB").value=""
 	}

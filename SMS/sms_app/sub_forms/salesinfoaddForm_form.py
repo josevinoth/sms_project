@@ -33,4 +33,3 @@ class SalesinfoaddForm(forms.ModelForm):
         self.fields['s_rate_approval'].empty_label = "--Select--"
         self.fields['s_approver_name'].empty_label = "--Select--"
         self.fields['s_status'].empty_label = "--Select--"
-
