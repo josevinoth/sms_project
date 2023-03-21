@@ -52,29 +52,29 @@
         </tr>
         </thead>
         <tbody>
-        {% for stock_value in combine %}
+        {% for stock_value in results %}
         <tr>
-            <td> {{stock_value.wh_job_no}}</td>
-            <td> {{stock_value.wh_goods_invoice}}</td>
-            <td> {{stock_value.wh_po_num}}</td>
-            <td> {{stock_value.wh_customer_name}}</td>
-            <td> {{stock_value.wh_customer_type}}</td>
-            <td> {{stock_value.wh_consigner}}</td>
-            <td> {{stock_value.wh_consignee}}</td>
-            <td> {{stock_value.wh_goods_pieces}}</td>
-            <td> {{stock_value.wh_goods_weight}}</td>
-            <td> {{stock_value.wh_goods_volume_weight}}</td>
-            <td> {{stock_value.wh_uom}}</td>
-            <td> {{stock_value.wh_goods_length}}</td>
-            <td> {{stock_value.wh_goods_width}}</td>
-            <td> {{stock_value.wh_goods_height}}</td>
-            <td> {{stock_value.wh_CBM}}</td>
-            <td> {{stock_value.wh_fumigation_date}}</td>
-            <td> {{stock_value.wh_check_in_out}}</td>
-            <td> {{stock_value.wh_invoice_value}}</td>
-            <td> {{stock_value.wh_invoice_currency}}</td>
-            <td> {{stock_value.wh_invoice_amount_inr}}</td>
-            <td> {{stock_value.wh_storage_time}}</td>
+            <td> {{stock_value.1}}</td>
+            <td> {{stock_value.2}}</td>
+            <td> {{stock_value.3}}</td>
+<!--            <td> {{stock_value.wh_customer_name}}</td>-->
+<!--            <td> {{stock_value.wh_customer_type}}</td>-->
+<!--            <td> {{stock_value.wh_consigner}}</td>-->
+<!--            <td> {{stock_value.wh_consignee}}</td>-->
+<!--            <td> {{stock_value.wh_goods_pieces}}</td>-->
+<!--            <td> {{stock_value.wh_goods_weight}}</td>-->
+<!--            <td> {{stock_value.wh_goods_volume_weight}}</td>-->
+<!--            <td> {{stock_value.wh_uom}}</td>-->
+<!--            <td> {{stock_value.wh_goods_length}}</td>-->
+<!--            <td> {{stock_value.wh_goods_width}}</td>-->
+<!--            <td> {{stock_value.wh_goods_height}}</td>-->
+<!--            <td> {{stock_value.wh_CBM}}</td>-->
+<!--            <td> {{stock_value.wh_fumigation_date}}</td>-->
+<!--            <td> {{stock_value.wh_check_in_out}}</td>-->
+<!--            <td> {{stock_value.wh_invoice_value}}</td>-->
+<!--            <td> {{stock_value.wh_invoice_currency}}</td>-->
+<!--            <td> {{stock_value.wh_invoice_amount_inr}}</td>-->
+<!--            <td> {{stock_value.wh_storage_time}}</td>-->
         </tr>
 
         {% endfor %}

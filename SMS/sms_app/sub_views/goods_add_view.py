@@ -31,6 +31,7 @@ def goods_add(request, goods_id=0):
     gatein_weight_val = ses_gatein_weight_nam
     gatein_wh_job_id=Gatein_info.objects.get(gatein_job_no=wh_job_id).id
     print('gatein_wh_job_id',gatein_wh_job_id)
+    shipper_invoice=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_invoice
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -131,6 +132,7 @@ def goods_add(request, goods_id=0):
                 'goods_checkin_weight': goods_checkin_weight_val,
                 'goods_checkin_count': goods_checkin_count_val,
                 'gatein_wh_job_id': gatein_wh_job_id,
+                'shipper_invoice': shipper_invoice,
             }
         else:
             print("I am inside get edit Goods")
@@ -153,6 +155,8 @@ def goods_add(request, goods_id=0):
                 'gatein_weight_val': gatein_weight_val,
                 'goods_checkin_weight': goods_checkin_weight,
                 'goods_checkin_count': goods_checkin_count_val,
+                'gatein_wh_job_id': gatein_wh_job_id,
+                'shipper_invoice': shipper_invoice,
             }
         return render(request, "asset_mgt_app/goods_add.html", context)
     else:

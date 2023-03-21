@@ -38,8 +38,17 @@ def invoice_add(request,invoice_id=0):
             weight_sum=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_volume_weight'))['wh_goods_volume_weight__sum']
             no_of_days=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Max('wh_storage_time'))['wh_storage_time__max']
             no_of_pieces=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
-            print('weight_sum',weight_sum)
-            print('no_of_days',no_of_days)
+            min_check_in_time=min(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkin_time'))
+            max_check_out_time=max(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkout_time'))
+            print('min_check_in_time',min_check_in_time)
+            print('max_check_out_time',max_check_out_time)
+            job_num = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).distinct().values_list('wh_job_no',flat=True))
+            crane_time=0
+            forklift_time=0
+            for i in job_num:
+                crane_time=crane_time+Loadingbay_Info.objects.get(lb_job_no=i).lb_crane_time
+                forklift_time=forklift_time+Loadingbay_Info.objects.get(lb_job_no=i).lb_forklift_time
+
             context= {
                 'user_id':user_id,
                 'invoice_form': invoice_form,
@@ -48,6 +57,10 @@ def invoice_add(request,invoice_id=0):
                 'weight_sum':weight_sum,
                 'no_of_days':no_of_days,
                 'no_of_pieces':no_of_pieces,
+                'crane_time':crane_time,
+                'forklift_time':forklift_time,
+                'min_check_in_time':min_check_in_time,
+                'max_check_out_time':max_check_out_time,
                 }
         return render(request, "asset_mgt_app/invoice_add.html", context)
     else:
@@ -85,8 +98,6 @@ def shipper_invoice_list(request,voucher_id):
     voucher_num_val = BilingInfo.objects.get(pk=voucher_id).bill_invoice_ref
     customer_name_val = BilingInfo.objects.get(pk=voucher_id).bill_customer_name
     request.session['ses_voucher_num_val'] = voucher_num_val
-    print(voucher_num_val)
-    print(customer_name_val)
     shipper_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
     invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_check_in_out=2,wh_voucher_num=None)
     context =   {
@@ -142,7 +153,6 @@ def load_whrate_model(request):
         weight_per_piece =float(0.0)
 
     customer_id=CustomerInfo.objects.get(cu_name=lm_customer_name_id).id
-    print(customer_id)
     customer_businessmodel = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_businessmodel')
     customer_short_name = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_nameshort')
     customer_code = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customercode')
@@ -150,7 +160,6 @@ def load_whrate_model(request):
     customer_person = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customerperson')
     customer_contact = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_contactno')
     customer_address = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_address')
-    print('customer_businessmodel',customer_businessmodel)
     customer_businessmodel_val=customer_businessmodel[0]['cu_businessmodel'] #Get value from Queryset
     customer_short_name_val=customer_short_name[0]['cu_nameshort'] #Get value from Queryset
     customer_code_val=customer_code[0]['cu_customercode'] #Get value from Queryset
@@ -158,7 +167,6 @@ def load_whrate_model(request):
     customer_person_val=customer_person[0]['cu_customerperson'] #Get value from Queryset
     customer_contact_val = customer_contact[0]['cu_contactno']  # Get value from Queryset
     customer_address_val = customer_address[0]['cu_address']  # Get value from Queryset
-    print('customer_businessmodel_val',customer_businessmodel_val)
     lm_customer_model_id=TrbusinesstypeInfo.objects.filter(id=customer_businessmodel_val).values('tb_trbusinesstype')
     customer_businessmodel_txt= lm_customer_model_id[0]['tb_trbusinesstype']  # Get value from Queryset
     # WH Charge
@@ -193,22 +201,18 @@ def load_whrate_model(request):
             forklift_time_val=float(Loadingbay_Info.objects.filter(lb_job_no=b).values('lb_forklift_time')[0]['lb_forklift_time'])
             crane_time_tot=crane_time_tot+crane_time_val
             forklift_time_tot=forklift_time_tot+forklift_time_val
-    print('crane_time_tot',crane_time_tot)
-    print('forklift_time_tot',forklift_time_tot)
 
     forklift_2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=4).values('whrm_rate')
     if forklift_2hr:
         forklift_2hr_val = forklift_2hr[0]['whrm_rate']
     else:
         forklift_2hr_val = 0.0
-    print('forklift_2hr_val', forklift_2hr_val)
 
     forklift_aft2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=7).values('whrm_rate')
     if forklift_aft2hr:
         forklift_aft2hr_val = forklift_aft2hr[0]['whrm_rate']
     else:
         forklift_aft2hr_val = 0.0
-    print('forklift_aft2hr_val',forklift_aft2hr_val)
 
     crane_2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=5).values(
         'whrm_rate')
@@ -216,7 +220,6 @@ def load_whrate_model(request):
         crane_2hr_val = crane_2hr[0]['whrm_rate']
     else:
         crane_2hr_val = 0.0
-    print('crane_2hr_val', crane_2hr_val)
 
     crane_aft2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=6).values(
         'whrm_rate')
@@ -224,7 +227,6 @@ def load_whrate_model(request):
         crane_aft2hr_val = crane_aft2hr[0]['whrm_rate']
     else:
         crane_aft2hr_val = 0.0
-    print('crane_aft2hr_val', crane_aft2hr_val)
 
     data = {
         'customer_businessmodel_val':customer_businessmodel_val,
