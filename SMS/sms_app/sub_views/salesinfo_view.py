@@ -5,7 +5,6 @@ from django.shortcuts import render, redirect
 import qrcode
 from io import BytesIO
 import qrcode.image.svg
-
 @login_required(login_url='login_page')
 def sales_list(request):
     first_name = request.session.get('first_name')

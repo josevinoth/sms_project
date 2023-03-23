@@ -1,6 +1,5 @@
 from django import forms
 from ..models import SalesInfo
-
 class SalesinfoaddForm(forms.ModelForm):
 
     class Meta:

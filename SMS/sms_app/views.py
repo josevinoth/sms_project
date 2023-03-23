@@ -86,3 +86,4 @@ from .sub_views.ininspectionreport_view import ininspectreport_add,ininspectrepo
 from .sub_views.ouinspectionreport_view import ouinspectreport_add,ouinspectreport_list,ouinspectreport_delete
 from .sub_views.materialstock_view import materialstock_add,materialstock_list,materialstock_delete
 from .sub_views.packingjobs_view import packingjobs_add,packingjobs_list,packingjobs_delete
+

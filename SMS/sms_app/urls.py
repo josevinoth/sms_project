@@ -336,4 +336,5 @@ urlpatterns = [
     path('packingjobs_insert/',views.packingjobs_add,name='packingjobs_insert'), # Add packingjobs
     path('packingjobs_update/<int:packingjobs_id>',views.packingjobs_add,name='packingjobs_update'), # update packingjobs
     path('packingjobs_delete/<int:packingjobs_id>',views.packingjobs_delete,name='packingjobs_delete'), # delete packingjobs
+
 ]
