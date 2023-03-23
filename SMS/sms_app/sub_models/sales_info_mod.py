@@ -47,7 +47,6 @@ class SalesInfo(models.Model):
     s_credit_period = models.CharField(blank=True, null=True,max_length=30)
     s_complain_complement = models.CharField(blank=True, null=True,max_length=30)
     s_minutes_of_meet = models.CharField(blank=True, null=True,max_length=30)
-    s_Test = models.CharField(blank=True, null=True,max_length=30)
 
     def __str__(self):
         return self.s_customer_name
