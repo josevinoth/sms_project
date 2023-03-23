@@ -70,3 +70,8 @@ from .sub_forms.dispatchadd_form import DispatchaddForm
 from .sub_forms.GateinForm_pre_form import Gatein_preaddForm,Gatein_pre_att_addForm
 from.sub_forms.expenseaddForm_form import ExpenseaddForm
 from.sub_forms.salesinfoaddForm_form import SalesinfoaddForm
+from.sub_forms.ininspectionreportForm_form import IninspectreportForm
+from.sub_forms.ouinspectionreportForm_form import OuinspectreportForm
+from.sub_forms.materialstockForm_Form import MaterialstockForm
+from.sub_forms.packingjobsForm_Form import PackingjobsForm
+

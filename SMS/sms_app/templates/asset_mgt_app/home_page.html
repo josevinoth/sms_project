@@ -73,7 +73,11 @@
     <hr class="hr_style">
     <button type="button" class="collapsible"><i class="fa fa-suitcase" aria-hidden="true"></i>  Packaging Management System (PMS)</button>
     <div class="content">
-        <a href=""> --TBD--</a>
+        <a href="{% url 'ininspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Inward Inspection Report</a>
+        <a href="{% url 'ouinspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Outward Inspection Report</a>
+        <a href="{% url 'materialstock_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Stock</a>
+        <a href="{% url 'packingjobs_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Packing Jobs</a>
+
     </div>
     <hr class="hr_style">
     <button type="button" class="collapsible"><i class="fa fa-chart-line"></i> Sales Management System (SMS)</button>
