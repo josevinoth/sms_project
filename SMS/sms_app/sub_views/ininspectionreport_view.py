@@ -41,7 +41,7 @@ def ininspectreport_add(request, ininspectreport_id=0):
             'role': role,
             'first_name': first_name,
         }
-        return render(request, "asset_mgt_app/ininspectionreport_list.html", context)
+        return render(request, "asset_mgt_app/ininspectionreport_add.html", context)
     else:
         if ininspectreport_id == 0:
             form = IninspectreportForm(request.POST)
