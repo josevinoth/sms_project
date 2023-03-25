@@ -247,7 +247,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quote Ref</span>
 									</div>
-									{% render_field form.s_quote_ref class="form-control" %}
+									{% render_field form.s_quote_ref id="s_quote_ref" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -416,24 +416,23 @@ function decmaker_enabler() {
 <script>
 function pc_enabler() {
   var jn3=document.getElementById("s_customer_prospective").value
-  alert(jn3)
-  if (jn3==2)
+  if (jn3==1)
 	{
-<!--		document.getElementById("s_noreason_cp").disabled=true-->
-<!--		document.getElementById("s_yesdate_quote").disabled=false-->
 		$('#s_noreason_cp').addClass('disable_a_href');
 		$('#s_yesdate_quote').removeClass('disable_a_href');
+		$('#s_quote_ref').removeClass('disable_a_href');
 		document.getElementById("s_noreason_cp").value=""
 		document.getElementById("s_yesdate_quote").value=""
+		document.getElementById("s_quote_ref").value=""
 	}
   else
   	{
-<!--		document.getElementById("s_noreason_cp").disabled=false-->
-<!--		document.getElementById("s_yesdate_quote").disabled=true-->
 		$('#s_noreason_cp').removeClass('disable_a_href');
 		$('#s_yesdate_quote').addClass('disable_a_href');
+		$('#s_quote_ref').addClass('disable_a_href');
 		document.getElementById("s_noreason_cp").value=""
 		document.getElementById("s_yesdate_quote").value=""
+		document.getElementById("s_quote_ref").value=""
 	}
 }
 </script>

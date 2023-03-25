@@ -22,7 +22,7 @@ class SalesInfo(models.Model):
     s_Person_name = models.CharField(max_length=30)
     s_department = models.CharField(max_length=30)
     s_designation = models.CharField(max_length=30)
-    s_contact_no = models.IntegerField(max_length=10)
+    s_contact_no = models.IntegerField()
     s_email_id = models.EmailField(max_length=30,default='')
     s_decision_maker = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,related_name='s_decision_maker', db_column='s_decision_maker', default='')
     s_name_dm = models.CharField(max_length=30)
