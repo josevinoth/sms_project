@@ -4,366 +4,369 @@
 {% load crispy_forms_tags %}
 <form method="POST" action="">
 	{% csrf_token %}
-<div class="row">
-	<div class="col-1"></div>
+	<div class="row">
+		<div class="col-1"></div>
 		<div class="col-10">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Sales</h3></div>
-						<div class="card-body bg-light" >
-							<div class="row">
+					<div class="card-body bg-light" >
+						<div class="row">
 							<div class="col-4">
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Date of call</span>
-  								</div>
-								<!--<input type="date" value="2021-09-09" min="2021-09-09">-->
-								{% render_field form.s_date_of_call type="date" class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Customer New or Existing</span>
-  								</div>
-								{% render_field form.s_customer_new class="form-control" id="s_customer_new" onchange="cusnewexist_enabler()"%}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Customer Name</span>
-  								</div>
-								{% render_field form.s_customer_name class="form-control disable_a_href" id="s_customer_name"%}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Customer New Name</span>
-  								</div>
-								{% render_field form.s_customer_new_name class="form-control disable_a_href" id="s_customer_new_name"%}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
 								<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Customer Type</span>
-  								</div>
-								{% render_field form.s_customer_type class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+									<div class="input-group-prepend">
+										<span class="input-group-text">Date of call</span>
+									</div>
+									<!--<input type="date" value="2021-09-09" min="2021-09-09">-->
+									{% render_field form.s_date_of_call type="date" id="s_date_of_call" onchange="set_date_of_call()" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Customer New or Existing</span>
+									</div>
+									{% render_field form.s_customer_new class="form-control" id="s_customer_new" onchange="cusnewexist_enabler()"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Customer Name</span>
+									</div>
+									{% render_field form.s_customer_name class="form-control disable_a_href" id="s_customer_name"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Customer New Name</span>
+									</div>
+									{% render_field form.s_customer_new_name class="form-control disable_a_href" id="s_customer_new_name"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Customer Type</span>
+									</div>
+									{% render_field form.s_customer_type class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Industry Type</span>
-  								</div>
-								{% render_field form.s_industry_type class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Industry Type</span>
+									</div>
+									{% render_field form.s_industry_type class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Requirement</span>
 									</div>
 									{% render_field form.s_requirement  class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Warehouse Requirement</span>
 									</div>
 									{% render_field form.s_wh_requirement class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Transport Requirement</span>
 									</div>
 									{% render_field form.s_trans_requirement class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Packing Requirement</span>
 									</div>
 									{% render_field form.s_pack_requirement class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Facility management Requirement</span>
 									</div>
 									{% render_field form.s_fac_mgmt_requirement class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								</div>
 
 
 
-							<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Manpower Requirement</span>
 									</div>
 									{% render_field form.s_manpower_requirement class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Supply Type</span>
 									</div>
 									{% render_field form.s_supply_type class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Location</span>
 									</div>
 									{% render_field form.s_location class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Call Type</span>
+										<span class="input-group-text">Type of Call</span>
 									</div>
 									{% render_field form.s_call_type class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								</div>
 							</div>
 							<div class="col-4">
-							<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Call Nature</span>
+										<span class="input-group-text">Nature of Call</span>
 									</div>
 									{% render_field form.s_call_nature class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Call Purpose</span>
+										<span class="input-group-text">Purpose of Call</span>
 									</div>
 									{% render_field form.s_call_purpose class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Name of the Person</span>
 									</div>
 									{% render_field form.s_Person_name class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Department</span>
 									</div>
 									{% render_field form.s_department class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Designation</span>
 									</div>
 									{% render_field form.s_designation class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
+								</div>
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Contact No.</span>
 									</div>
 									{% render_field form.s_contact_no class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								</div>
 
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Email ID</span>
-  								</div>
-								{% render_field form.s_email_id class="form-control" id="myLocation" onchange="myAssetnum()" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Email ID</span>
+									</div>
+									{% render_field form.s_email_id class="form-control" id="myLocation" onchange="myAssetnum()" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 
-							<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Decision Maker</span>
 									</div>
 									{% render_field form.s_decision_maker class="form-control" id="s_decision_maker" onchange="decmaker_enabler()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Name and Designation of Decision Maker</span>
-  								</div>
-								{% render_field form.s_name_desg_dm class="form-control disable_a_href" id="s_name_desg_dm" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Name of Joint call Participant</span>
-  								</div>
-								{% render_field form.s_joint_call_name class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Volume/Business potential of the customer</span>
-  								</div>
-								{% render_field form.s_vol_bus_customer class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Name Decision Maker</span>
+									</div>
+									{% render_field form.s_name_dm class="form-control disable_a_href" id="s_name_dm" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Designation Decision Maker</span>
+									</div>
+									{% render_field form.s_designation_dm class="form-control disable_a_href" id="s_designation_dm" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Joint call Participant</span>
+									</div>
+									{% render_field form.s_joint_call_name class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Volume/Business potential of the customer</span>
+									</div>
+									{% render_field form.s_vol_bus_customer class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" > Prospective Customer</span>
-  								</div>
-								{% render_field form.s_customer_prospective class="form-control" id="s_customer_prospective" onchange="pc_enabler()"%}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" > If no reason</span>
-  								</div>
-								{% render_field form.s_noreason_cp class="form-control disable_a_href" id="s_noreason_cp"%}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" > If Yes Date of Quote sent</span>
-  								</div>
-								{% render_field form.s_yesdate_quote type="date" class="form-control disable_a_href" id="s_yesdate_quote" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" > Prospective Customer</span>
+									</div>
+									{% render_field form.s_customer_prospective class="form-control" id="s_customer_prospective" onchange="pc_enabler()"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" > If no reason</span>
+									</div>
+									{% render_field form.s_noreason_cp class="form-control disable_a_href" id="s_noreason_cp"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" > If Yes Date of Quote sent</span>
+									</div>
+									{% render_field form.s_yesdate_quote type="date" class="form-control disable_a_href" id="s_yesdate_quote" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 
 							</div>
 							<div class="col-4">
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Quote Ref</span>
-  								</div>
-								{% render_field form.s_quote_ref class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Business Won or Not</span>
-  								</div>
-								{% render_field form.s_bus_won_not class="form-control" id="s_bus_won_not" onchange="Buswonnot_enabler()" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div><div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Not Reason</span>
-  								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quote Ref</span>
+									</div>
+									{% render_field form.s_quote_ref class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Won?</span>
+									</div>
+									{% render_field form.s_bus_won_not class="form-control" id="s_bus_won_not" onchange="Buswonnot_enabler()" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div><div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">If No, Reason?</span>
+								</div>
 								{% render_field form.s_not_reason class="form-control disable_a_href" id="s_not_reason"%}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text"> Yes Date to start business</span>
-  								</div>
-								{% render_field form.s_yesdate_business type="date" class="form-control disable_a_href" id="s_yesdate_business"%}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">KYC</span>
-  								</div>
-								{% render_field form.s_kyc class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Contract</span>
-  								</div>
-								{% render_field form.s_contract class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Rate Approval</span>
-  								</div>
-								{% render_field form.s_rate_approval class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Expected Profit</span>
-  								</div>
-								{% render_field form.s_expected_prof class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" > Approver Name</span>
-  								</div>
-								{% render_field form.s_approver_name class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Status</span>
-  								</div>
-								{% render_field form.s_status class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text"> Yes Date to start business</span>
+									</div>
+									{% render_field form.s_yesdate_business type="date" class="form-control disable_a_href" id="s_yesdate_business"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">KYC</span>
+									</div>
+									{% render_field form.s_kyc class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Contract</span>
+									</div>
+									{% render_field form.s_contract class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Rate Approval</span>
+									</div>
+									{% render_field form.s_rate_approval class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Expected Profit</span>
+									</div>
+									{% render_field form.s_expected_prof class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" > Approver Name</span>
+									</div>
+									{% render_field form.s_approver_name class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Status</span>
+									</div>
+									{% render_field form.s_status class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" > Next Meeting Scheduled date</span>
-  								</div>
-								{% render_field form.s_next_meet_schd_date type="date" class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" > Next Meeting Scheduled date</span>
+									</div>
+									{% render_field form.s_next_meet_schd_date type="date" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" > Credit Period</span>
+									</div>
+									{% render_field form.s_credit_period class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Complaints / Compliments </span>
+									</div>
+									{% render_field form.s_complain_complement class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 							</div>
 							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Meeting Cancelled with remarks</span>
-  								</div>
-								{% render_field form.s_meet_cancel_remark class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" > Credit Period</span>
-  								</div>
-								{% render_field form.s_credit_period class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Complaints / Compliments </span>
-  								</div>
-								{% render_field form.s_complain_complement class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Minutes of meeting </span>
-  								</div>
+								<div class="input-group-prepend">
+									<span class="input-group-text" >Minutes of meeting </span>
+								</div>
 								{% render_field form.s_minutes_of_meet class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Remark</span>
-  								</div>
+								<div class="input-group-prepend">
+									<span class="input-group-text" >Remark</span>
+								</div>
 								{% render_field form.s_remark class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 
-							</div>
-
-							<button onclick="random()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-							 <a href="{% url 'sales_list' %}" class="btn btn-danger float-right">
-                    		<i class="fas fa-times"></i> Cancel </a>
 						</div>
+
+						<button onclick="random()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'sales_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel </a>
+					</div>
 				</div>
 			</div>
 		</div>
-	<div class="col-1"></div>
-</div>
+		<div class="col-1"></div>
+	</div>
 </form>
+
+<script>
+function set_date_of_call() {
+	$( ".s_date_of_call" ).datepicker({ defaultDate: -1 });
+	}
+</script>
 
 <script>
 function cusnewexist_enabler() {
   var jn5=document.getElementById("s_customer_new").value
-  alert(jn5)
   if (jn5==2)
 	{
-<!--		document.getElementById("s_customer_name").disabled=false-->
-<!--		document.getElementById("s_customer_new_name").disabled=true-->
 		$('#s_customer_name').removeClass('disable_a_href');
 		$('#s_customer_new_name').addClass('disable_a_href');
 		document.getElementById("s_customer_name").value=""
@@ -371,8 +374,6 @@ function cusnewexist_enabler() {
 	}
   else
   	{
-<!--		document.getElementById("s_customer_name").disabled=true-->
-<!--		document.getElementById("s_customer_new_name").disabled=false-->
 		$('#s_customer_name').addClass('disable_a_href');
 		$('#s_customer_new_name').removeClass('disable_a_href');
 		document.getElementById("s_customer_name").value=""
@@ -384,18 +385,19 @@ function cusnewexist_enabler() {
 <script>
 function decmaker_enabler() {
   var jn6=document.getElementById("s_decision_maker").value
-  alert(jn6)
-  if (jn6==3)
+  if (jn6==2)
 	{
-<!--		document.getElementById("s_name_desg_dm").disabled=false-->
-		$('#s_name_desg_dm').removeClass('disable_a_href');
-		document.getElementById("s_name_desg_dm").value=""
+		$('#s_name_dm').removeClass('disable_a_href');
+		$('#s_designation_dm').removeClass('disable_a_href');
+		document.getElementById("s_name_dm").value=""
+		document.getElementById("s_designation_dm").value=""
 	}
   else
   	{
-<!--		document.getElementById("s_name_desg_dm").disabled=true-->
-		$('#s_name_desg_dm').addClass('disable_a_href');
-		document.getElementById("s_name_desg_dm").value=""
+		$('#s_name_dm').addClass('disable_a_href');
+		$('#s_designation_dm').addClass('disable_a_href');
+		document.getElementById("s_name_dm").value=""
+		document.getElementById("s_designation_dm").value=""
 	}
 }
 </script>
@@ -428,11 +430,8 @@ function pc_enabler() {
 <script>
 function Buswonnot_enabler() {
   var jn4=document.getElementById("s_bus_won_not").value
-  alert(jn4)
-  if (jn4==2)
+  if (jn4==1)
 	{
-<!--		document.getElementById("s_not_reason").disabled=true-->
-<!--		document.getElementById("s_yesdate_business").disabled=false-->
 		$('#s_not_reason').addClass('disable_a_href');
 		$('#s_yesdate_business').removeClass('disable_a_href');
 		document.getElementById("s_not_reason").value=""
@@ -440,8 +439,6 @@ function Buswonnot_enabler() {
 	}
   else
   	{
-<!--		document.getElementById("s_not_reason").disabled=false-->
-<!--		document.getElementById("s_yesdate_business").disabled=true-->
 		$('#s_not_reason').removeClass('disable_a_href');
 		$('#s_yesdate_business').addClass('disable_a_href');
 		document.getElementById("s_not_reasona").value=""

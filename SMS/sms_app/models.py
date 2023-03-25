@@ -1,4 +1,6 @@
 from django.db import models
+from.sub_models.faciltiy_requirement_mod import faciltiyrequirementinfo
+from.sub_models.manpower_requirement_mod import manpowerrequirementinfo
 from.sub_models.requirements_info_mod import RequirementsInfo
 from .sub_models.cus_new_exist_mod import Cusnewexist
 from .sub_models.industry_type_mod import Industrytype
