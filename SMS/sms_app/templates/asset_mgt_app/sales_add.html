@@ -164,7 +164,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Contact No.</span>
 									</div>
-									{% render_field form.s_contact_no class="form-control" %}
+									{% render_field form.s_contact_no class="form-control" title="Please Enter 10 Digit Mobile Number" pattern="[1-9]{1}[0-9]{9}"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
@@ -201,7 +201,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">EmailID Decision Maker</span>
 									</div>
-									{% render_field form.s_emailid_dm class="form-control" %}
+									{% render_field form.s_emailid_dm class="form-control disable_a_href" id="s_emailid_dm" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -396,15 +396,19 @@ function decmaker_enabler() {
 	{
 		$('#s_name_dm').removeClass('disable_a_href');
 		$('#s_designation_dm').removeClass('disable_a_href');
+		$('#s_emailid_dm').removeClass('disable_a_href');
 		document.getElementById("s_name_dm").value=""
 		document.getElementById("s_designation_dm").value=""
+		document.getElementById("s_emailid_dm").value=""
 	}
   else
   	{
 		$('#s_name_dm').addClass('disable_a_href');
 		$('#s_designation_dm').addClass('disable_a_href');
+		$('#s_emailid_dm').addClass('disable_a_href');
 		document.getElementById("s_name_dm").value="Same As Above"
 		document.getElementById("s_designation_dm").value="Same As Above"
+		document.getElementById("s_emailid_dm").value="Same As Above"
 	}
 }
 </script>
