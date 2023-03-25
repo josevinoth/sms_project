@@ -349,8 +349,8 @@
 								{% render_field form.s_remark class="form-control" %}
 								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
-							{% render_field form.s_updated_by id="s_updated_by" class="form-control" %}
-							{% render_field form.s_created_by id="s_created_by" class="form-control" %}
+							{% render_field form.s_updated_by id="s_updated_by" hidden="True" class="form-control" %}
+							{% render_field form.s_created_by id="s_created_by" hidden="True" class="form-control" %}
 						</div>
 
 						<button onclick="random()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
