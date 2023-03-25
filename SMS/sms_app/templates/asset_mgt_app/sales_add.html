@@ -104,7 +104,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Supply Type</span>
+										<span class="input-group-text">Type of Supply</span>
 									</div>
 									{% render_field form.s_supply_type class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -141,7 +141,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Name of the Person</span>
+										<span class="input-group-text">Name of the Person Met</span>
 									</div>
 									{% render_field form.s_Person_name class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -199,6 +199,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">EmailID Decision Maker</span>
+									</div>
+									{% render_field form.s_emailid_dm class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text" >Joint call Participant</span>
 									</div>
 									{% render_field form.s_joint_call_name class="form-control" %}
@@ -226,16 +233,16 @@
 									{% render_field form.s_noreason_cp class="form-control disable_a_href" id="s_noreason_cp"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+
+							</div>
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" > If Yes Date of Quote sent</span>
+										<span class="input-group-text" > If Yes, Date of Quote sent</span>
 									</div>
 									{% render_field form.s_yesdate_quote type="date" class="form-control disable_a_href" id="s_yesdate_quote" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-
-							</div>
-							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quote Ref</span>

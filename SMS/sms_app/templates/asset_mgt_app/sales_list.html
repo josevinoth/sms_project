@@ -27,40 +27,31 @@
     <thead class="thead-dark">
         <tr>
             <th>Date of call</th>
+             <th>Customer New or Existing</th>
             <th>Customer Name</th>
-            <th>Customer Type</th>
-            <th>Customer New or Existing</th>
+            <th>New Customer Name</th>
             <th>Industry Type</th>
-            <th>QR Code</th>
             <th>Edit</th>
             <th>Delete</th>
+        </tr>
     </thead>
     <tbody>
         {% for salesinfo in sales_list %}
             <tr>
                 <td> {{salesinfo.s_date_of_call}}</td>
-                <td> {{salesinfo.s_customer_name}}</td>
-                <td> {{salesinfo.s_customer_type}}</td>
                 <td> {{salesinfo.s_customer_new}}</td>
+                <td> {{salesinfo.s_customer_name}}</td>
+                <td> {{salesinfo.s_customer_new_name}}</td>
                 <td> {{salesinfo.s_industry_type}}</td>
                 <td>
-                    <form action="{% url 'asset_qr_id' salesinfo.id %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn">
-                            <i class="fas fa-qrcode"></i>
-                        </button>
-                    </form>
-
-                </td>
-                <td>
                     <a href="{% url 'sales_update' salesinfo.id %}" >
-                        <i class="far fa-edit"></i>
+                        <i class="far fa-edit btn btn-primary"></i>
                     </a>
                 </td>
                 <td>
                     <form action="{% url 'sales_delete' salesinfo.id %}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn">
+                        <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt" onclick="return confirm('Are you sure?');"></i>
                         </button>
                     </form>
