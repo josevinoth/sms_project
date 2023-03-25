@@ -143,7 +143,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Name of the Person Met</span>
 									</div>
-									{% render_field form.s_Person_name class="form-control" %}
+									{% render_field form.s_Person_name id="s_Person_name" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -157,14 +157,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Designation</span>
 									</div>
-									{% render_field form.s_designation class="form-control" %}
+									{% render_field form.s_designation id="s_designation" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Contact No.</span>
 									</div>
-									{% render_field form.s_contact_no class="form-control" title="Please Enter 10 Digit Mobile Number" pattern="[1-9]{1}[0-9]{9}"%}
+									{% render_field form.s_contact_no id="s_contact_no" class="form-control" title="Please Enter 10 Digit Mobile Number" pattern="[1-9]{1}[0-9]{9}"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
@@ -172,7 +172,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Email ID</span>
 									</div>
-									{% render_field form.s_email_id class="form-control" id="myLocation" onchange="myAssetnum()" %}
+									{% render_field form.s_email_id class="form-control" id="s_email_id" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
@@ -199,7 +199,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">EmailID Decision Maker</span>
+										<span class="input-group-text">Email ID Decision Maker</span>
 									</div>
 									{% render_field form.s_emailid_dm class="form-control disable_a_href" id="s_emailid_dm" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -322,7 +322,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" > Credit Period</span>
+										<span class="input-group-text" > Credit Period (Days)</span>
 									</div>
 									{% render_field form.s_credit_period class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -349,7 +349,8 @@
 								{% render_field form.s_remark class="form-control" %}
 								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
-
+							{% render_field form.s_updated_by id="s_updated_by" class="form-control" %}
+							{% render_field form.s_created_by id="s_created_by" class="form-control" %}
 						</div>
 
 						<button onclick="random()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
@@ -364,9 +365,19 @@
 </form>
 
 <script>
-function set_date_of_call() {
-	$( ".s_date_of_call" ).datepicker({ defaultDate: -1 });
+$(document).ready(function() {
+	document.getElementById("s_updated_by").value ='{{user_id}}';
+	var created_by= '{{created_by}}';
+	var created_by_1=document.getElementById("s_created_by").value;
+	if (created_by_1=="")
+	{
+		document.getElementById("s_created_by").value ='{{created_by}}';
 	}
+	else
+	{
+		document.getElementById("s_created_by").value =created_by_1;
+	}
+	});
 </script>
 
 <script>
@@ -392,23 +403,24 @@ function cusnewexist_enabler() {
 <script>
 function decmaker_enabler() {
   var jn6=document.getElementById("s_decision_maker").value
-  if (jn6==2)
+  if (jn6==1)
 	{
+		$('#s_name_dm').addClass('disable_a_href');
+		$('#s_designation_dm').addClass('disable_a_href');
+		$('#s_emailid_dm').addClass('disable_a_href');
+		var dm_name=document.getElementById("s_Person_name").value
+		document.getElementById("s_name_dm").value=dm_name
+		document.getElementById("s_designation_dm").value=document.getElementById("s_designation").value
+		document.getElementById("s_emailid_dm").value=document.getElementById("s_email_id").value
+	}
+  else
+  	{
 		$('#s_name_dm').removeClass('disable_a_href');
 		$('#s_designation_dm').removeClass('disable_a_href');
 		$('#s_emailid_dm').removeClass('disable_a_href');
 		document.getElementById("s_name_dm").value=""
 		document.getElementById("s_designation_dm").value=""
 		document.getElementById("s_emailid_dm").value=""
-	}
-  else
-  	{
-		$('#s_name_dm').addClass('disable_a_href');
-		$('#s_designation_dm').addClass('disable_a_href');
-		$('#s_emailid_dm').addClass('disable_a_href');
-		document.getElementById("s_name_dm").value="Same As Above"
-		document.getElementById("s_designation_dm").value="Same As Above"
-		document.getElementById("s_emailid_dm").value="Same As Above"
 	}
 }
 </script>
@@ -456,40 +468,5 @@ function Buswonnot_enabler() {
 	}
 }
 </script>
-
-
-
-
-
-
-<!--<script>-->
-<!--function myAssetnum() {-->
-<!--  selectElement = document.querySelector('#myLocation');-->
-<!--  output = selectElement.options[selectElement.selectedIndex].value;-->
-<!--	if (output==1)-->
-<!--	{-->
-<!--		nam="BLR"-->
-<!--	}-->
-<!--	else if(output==2)-->
-<!--	{-->
-<!--		nam="MAA"-->
-<!--	}-->
-<!--	else if(output==3)-->
-<!--	{-->
-<!--		nam="PNY"-->
-<!--	}-->
-<!--	else if(output==4)-->
-<!--	{-->
-<!--		nam="HYD"-->
-<!--	}-->
-<!--	else-->
-<!--	{-->
-<!--		nam="TCR"-->
-<!--	}-->
-<!--  var ran=Math.floor((Math.random() * 1000000) + 1)-->
-<!--  document.getElementById("aset_num").value =nam+"_"+ ran;-->
-<!--}-->
-<!--</script>-->
-
 {% endblock content %}
 

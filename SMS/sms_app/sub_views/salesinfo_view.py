@@ -26,6 +26,14 @@ def sales_add(request, sales_id=0):
     if request.method == "GET":
         if sales_id == 0:
             form = SalesinfoaddForm()
+            created_by=user_id
+            context = {
+                'form': form,
+                'role': role,
+                'first_name': first_name,
+                'created_by': created_by,
+                'user_id': user_id,
+            }
         else:
             factory = qrcode.image.svg.SvgImage
             img = qrcode.make(request.POST.get("qr_text", ""), image_factory=factory, box_size=10)
@@ -35,11 +43,12 @@ def sales_add(request, sales_id=0):
             # print(context)
             salesinfo = SalesInfo.objects.get(pk=sales_id)
             form = SalesinfoaddForm(instance=salesinfo)
-        context={
-            'form': form,
-            'role': role,
-            'first_name': first_name,
-        }
+            context={
+                'form': form,
+                'role': role,
+                'first_name': first_name,
+                'user_id': user_id,
+            }
         return render(request, "asset_mgt_app/sales_add.html", context)
     else:
         if sales_id == 0:

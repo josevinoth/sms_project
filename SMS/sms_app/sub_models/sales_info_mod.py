@@ -45,9 +45,13 @@ class SalesInfo(models.Model):
     s_status = models.ForeignKey(Salestatus,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_remark = models.TextField(blank=True, null=True)
     s_next_meet_schd_date = models.DateField(null = True,blank=True)
-    s_credit_period = models.CharField(blank=True, null=True,max_length=30)
+    s_credit_period = models.IntegerField(blank=True, null=True)
     s_complain_complement = models.CharField(blank=True, null=True,max_length=30)
     s_minutes_of_meet = models.TextField(blank=True, null=True,max_length=500)
     s_test = models.CharField(blank=True, null=True,max_length=30)
+    s_created_at = models.DateTimeField(null=True, auto_now_add=True)
+    s_updated_at = models.DateTimeField(null=True, auto_now=True)
+    s_updated_by = models.ForeignKey(MyUser, related_name='s_updated_by', db_column='s_updated_by',on_delete=models.CASCADE, null=True,)
+    s_created_by = models.ForeignKey(MyUser, related_name='s_created_by', db_column='s_created_by',on_delete=models.CASCADE, blank=True, null=True,)
     def __str__(self):
         return self.s_customer_name
