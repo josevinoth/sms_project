@@ -348,7 +348,6 @@ $(document).ready(function() {
 			var SGST_val=document.getElementById("bill_sgst").value
 			var CGST_val=document.getElementById("bill_cgst").value
 			var total_post_GST=total_pre_GST+(total_pre_GST*(SGST_val/100)+total_pre_GST*(CGST_val/100))
-			alert(total_post_GST)
 			document.getElementById("bill_customer_type").value =customer_model;
 			document.getElementById("bill_customer_short_name").value =customer_short_name;
 			document.getElementById("bill_customer_code").value =customer_code;

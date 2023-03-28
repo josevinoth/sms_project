@@ -38,10 +38,15 @@ def invoice_add(request,invoice_id=0):
             weight_sum=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_volume_weight'))['wh_goods_volume_weight__sum']
             no_of_days=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Max('wh_storage_time'))['wh_storage_time__max']
             no_of_pieces=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
-            min_check_in_time=min(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkin_time'))
-            max_check_out_time=max(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkout_time'))
-            print('min_check_in_time',min_check_in_time)
-            print('max_check_out_time',max_check_out_time)
+            try:
+                min_check_in_time=min(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkin_time'))
+            except:
+                min_check_in_time =0
+            try:
+                max_check_out_time=max(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkout_time'))
+            except:
+                max_check_out_time=0
+
             job_num = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).distinct().values_list('wh_job_no',flat=True))
             crane_time=0
             forklift_time=0
