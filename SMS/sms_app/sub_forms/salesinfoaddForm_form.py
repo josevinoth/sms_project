@@ -1,11 +1,11 @@
 from django import forms
 from ..models import SalesInfo
 class SalesinfoaddForm(forms.ModelForm):
-
     class Meta:
         model = SalesInfo
         fields = '__all__'
 
+    s_approver_name=forms.CheckboxSelectMultiple()
     def __init__(self, *args, **kwargs):
         super(SalesinfoaddForm,self).__init__(*args, **kwargs)
         self.fields['s_customer_name'].empty_label = "--Select--"

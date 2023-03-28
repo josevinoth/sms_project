@@ -18,12 +18,12 @@
 										<span class="input-group-text">Date of call</span>
 									</div>
 									<!--<input type="date" value="2021-09-09" min="2021-09-09">-->
-									{% render_field form.s_date_of_call type="date" id="s_date_of_call" onchange="set_date_of_call()" class="form-control" %}
+									{% render_field form.s_date_of_call type="date" id="s_date_of_call" onchange="set_date_of_call()" class="form-control"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Customer New or Existing</span>
+										<span class="input-group-text" >Existing Customer or New</span>
 									</div>
 									{% render_field form.s_customer_new class="form-control" id="s_customer_new" onchange="cusnewexist_enabler()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -37,7 +37,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Customer New Name</span>
+										<span class="input-group-text" >New Customer Name</span>
 									</div>
 									{% render_field form.s_customer_new_name class="form-control disable_a_href" id="s_customer_new_name"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -46,7 +46,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Customer Type</span>
 									</div>
-									{% render_field form.s_customer_type class="form-control" %}
+									{% render_field form.s_customer_type class="form-control"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
@@ -164,7 +164,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Contact No.</span>
 									</div>
-									{% render_field form.s_contact_no id="s_contact_no" class="form-control" title="Please Enter 10 Digit Mobile Number" pattern="[1-9]{1}[0-9]{9}"%}
+									{% render_field form.s_contact_no id="s_contact_no" class="form-control" title="Please Enter 10 Digit Mobile Number" pattern="[0-9]{10}" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 

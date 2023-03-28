@@ -14,12 +14,12 @@
 <div class="container-fluid row">
     <div class="col-md-1">
         <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i>
+            <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
     <div class="col-md-1">
         <a href="{% url 'customer_insert' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i>
+            <i class="fas fa-plus"></i> Add
         </a>
     </div>
 </div>
@@ -45,9 +45,9 @@
         {% for customerinfo in customer_list %}
         <tr>
             <td> {{customerinfo.cu_created_at}}</td>
-            <td> {{customerinfo.cu_name}}</td>
-            <td> {{customerinfo.cu_customercode}}</td>
             <td> {{customerinfo.cu_nameshort}}</td>
+            <td> {{customerinfo.cu_customercode}}</td>
+            <td> {{customerinfo.cu_name}}</td>
             <td> {{customerinfo.cu_businessmodel}}</td>
             <td> {{customerinfo.cu_customerperson}}</td>
             <td> {{customerinfo.cu_contactno}}</td>
