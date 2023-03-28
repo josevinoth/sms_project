@@ -43,10 +43,10 @@ def stock_value_reports(request):
     first_name = request.session.get('first_name')
     invoice_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1).values_list('wh_goods_invoice',flat=True).distinct()
     checkin_goods_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1)
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM sms_app_warehouse_goods_info w INNER JOIN sms_app_gatein_info g ON w.wh_job_no=g.gatein_job_no INNER JOIN sms_app_loadingbay_info l ON w.wh_job_no=l.lb_job_no LEFT JOIN sms_app_dispatch_info d on w.wh_dispatch_num=d.dispatch_num")
+    row = cursor.fetchall()
 
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM Warehouse_goods_info WHERE id = 1")
-        row = cursor.fetchone()
     for i in invoice_list:
         goods_list.append(Gatein_info.objects.filter(gatein_invoice=i))
 
@@ -55,6 +55,7 @@ def stock_value_reports(request):
                 'first_name': first_name,
                 'checkin_goods_list': checkin_goods_list,
                 'goods_list': goods_list,
+                'row': row,
                  }
     return render(request,"asset_mgt_app/stock_values_report.html",context)
 
@@ -64,7 +65,6 @@ def damage_reports_list(request):
     damage_list=DamagereportInfo.objects.all()
     gate_in_list=Gatein_info.objects.all()
     result_list = list(chain(damage_list, gate_in_list))
-    print(result_list)
     context = {
                 'result_list':result_list,
                 'damage_list': DamagereportInfo.objects.all(),
@@ -87,7 +87,6 @@ def damage_report_pdf(request):
     wh_job_id = request.session.get('ses_gatein_id_nam')
     print('wh_job_id',wh_job_id)
     damage_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id)
-    print(damage_list)
     context={
         'damage_list':damage_list,
     }
@@ -104,27 +103,3 @@ def damage_report_pdf(request):
     if pisa_status.err:
         return HttpResponse('We has some error <pre>'+ html +'</pre>')
     return response
-    # # Create the HttpResponse object with the appropriate PDF headers.
-    # response = HttpResponse(content_type='application/pdf')
-    # response['Content-Disposition'] = 'attachment; filename="Damage_Report.pdf"'
-    #
-    # buffer = BytesIO()
-    #
-    # # Create the PDF object, using the BytesIO object as its "file."
-    # p = canvas.Canvas(buffer)
-    # ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-    # print(ses_gatein_id_nam)
-    # # Draw things on the PDF. Here's where the PDF generation happens.
-    # # See the ReportLab documentation for the full list of functionality.
-    # # p.drawString(100, 100, "Hello world.")
-    # p.drawString(50, 100, ses_gatein_id_nam)
-    # p.setTitle("ReportLab PDF Generation User Guide")
-    # # Close the PDF object cleanly.
-    # p.showPage()
-    # p.save()
-    #
-    # # Get the value of the BytesIO buffer and write it to the response.
-    # pdf = buffer.getvalue()
-    # buffer.close()
-    # response.write(pdf)
-    # return response

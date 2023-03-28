@@ -4,11 +4,11 @@
 {% block content %}
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
-        <div class="col-4"></div>
-        <div class="col-4 rounded text-center bg-info">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
             <h3>Stock Value Report</h3>
         </div>
-        <div class="col-4"></div>
+        <div class="col-5"></div>
     </div>
 </div>
 <div class="container-fluid row">
@@ -28,135 +28,101 @@
     <table  id="stock_value_report" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
-            <th>WH Job Number</th>
-            <th>Shipper Invoice</th>
-            <th>PO Number</th>
-            <th>Customer Name</th>
-            <th>Customer Type</th>
-            <th>Shipper</th>
+            <th>Job Number</th>
+            <th>Stock Number</th>
+            <th>Date Of Arrival</th>
+            <th>Unloading Start Time</th>
+            <th>Unloading End Time</th>
+            <th>FRD Time</th>
+            <th>Transporter</th>
+            <th>Truck Number</th>
+            <th>Consigner</th>
             <th>Consignee</th>
-            <th>No of Pieces</th>
-            <th>Invoice Weight</th>
-            <th>Actual Weight</th>
+            <th>Docs Received</th>
+            <th>HAWB</th>
+            <th>Destination</th>
+            <th>Invoice Number</th>
+            <th>Case Number</th>
+            <th>Number of Pieces</th>
+            <th>Weight (kg)</th>
+            <th>Package Type</th>
+            <th>Invoice Weight(kg)</th>
             <th>UOM</th>
             <th>Length</th>
             <th>Width</th>
             <th>Height</th>
+            <th>Volume Weight</th>
             <th>CBM</th>
-            <th>Fumigation Status</th>
-            <th>Goods Status</th>
             <th>Invoice Value</th>
             <th>Invoice Currency</th>
-            <th>Invoice Value (INR)</th>
+            <th>Invoice (INR)</th>
+            <th>S-Bill #</th>
+            <th>S-Bill Date</th>
+            <th>E-Way Bill#</th>
+            <th>Fumigation Status</th>
+            <th>Check In-Out?</th>
+            <th>Branch</th>
+            <th>Unit</th>
+            <th>Bay</th>
             <th>Storage Days</th>
         </tr>
         </thead>
         <tbody>
-        {% for stock_value in results %}
+        {% for stock_value in row %}
         <tr>
             <td> {{stock_value.1}}</td>
+            <td> {{stock_value.19}}</td>
+            <td> {{stock_value.48}}</td>
+            <td> {{stock_value.76}}</td>
+            <td> {{stock_value.77}}</td>
+            <td> {{""}}</td>
+            <td> {{stock_value.57}}</td>
+            <td> {{stock_value.58}}</td>
+            <td> {{stock_value.21}}</td>
+            <td> {{stock_value.22}}</td>
+            <td> {{stock_value.87}}</td>
+            <td> {{stock_value.100}}</td>
+            <td> {{stock_value.102}}</td>
             <td> {{stock_value.2}}</td>
+            <td> {{""}}</td>
             <td> {{stock_value.3}}</td>
-<!--            <td> {{stock_value.wh_customer_name}}</td>-->
-<!--            <td> {{stock_value.wh_customer_type}}</td>-->
-<!--            <td> {{stock_value.wh_consigner}}</td>-->
-<!--            <td> {{stock_value.wh_consignee}}</td>-->
-<!--            <td> {{stock_value.wh_goods_pieces}}</td>-->
-<!--            <td> {{stock_value.wh_goods_weight}}</td>-->
-<!--            <td> {{stock_value.wh_goods_volume_weight}}</td>-->
-<!--            <td> {{stock_value.wh_uom}}</td>-->
-<!--            <td> {{stock_value.wh_goods_length}}</td>-->
-<!--            <td> {{stock_value.wh_goods_width}}</td>-->
-<!--            <td> {{stock_value.wh_goods_height}}</td>-->
-<!--            <td> {{stock_value.wh_CBM}}</td>-->
-<!--            <td> {{stock_value.wh_fumigation_date}}</td>-->
-<!--            <td> {{stock_value.wh_check_in_out}}</td>-->
-<!--            <td> {{stock_value.wh_invoice_value}}</td>-->
-<!--            <td> {{stock_value.wh_invoice_currency}}</td>-->
-<!--            <td> {{stock_value.wh_invoice_amount_inr}}</td>-->
-<!--            <td> {{stock_value.wh_storage_time}}</td>-->
+            <td> {{stock_value.7}}</td>
+            <td> {{stock_value.28}}</td>
+            <td> {{stock_value.52}}</td>
+            <td> {{stock_value.34}}</td>
+            <td> {{stock_value.4}}</td>
+            <td> {{stock_value.5}}</td>
+            <td> {{stock_value.6}}</td>
+            <td> {{stock_value.8}}</td>
+            <td> {{stock_value.10}}</td>
+            <td> {{stock_value.41}}</td>
+            <td> {{stock_value.40}}</td>
+            <td> {{stock_value.39}}</td>
+            <td> {{""}}</td>
+            <td> {{""}}</td>
+            <td> {{stock_value.74}}</td>
+            <td> {{stock_value.38}}</td>
+            <td> {{stock_value.25}}</td>
+            <td> {{stock_value.24}}</td>
+            <td> {{stock_value.33}}</td>
+            <td> {{stock_value.23}}</td>
+            <td> {{stock_value.18}}</td>
         </tr>
-
         {% endfor %}
         </tbody>
-        <!--        <tfoot>-->
-        <!--        <tr>-->
-        <!--            <th colspan="9" style="text-align:right">Total:</th>-->
-        <!--            <th></th>-->
-        <!--        </tr>-->
-        <!--        </tfoot>-->
     </table>
 </div>
-<script src="/path/to/cdn/jquery.slim.min.js"></script>
-<script src="/path/to/jquery-numbersinwords.js"></script>
+
 <script>
     $(document).ready(function() {
-    $('#stock_value_report').DataTable({
+        $('#stock_value_report').DataTable({
+<!--        scrollY: 800,-->
         scrollX: true,
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
     });
-
-} );
+});
 </script>
-<!--<script>-->
-<!--    $(document).ready(function() {-->
-<!--    $('#stock_value_report').DataTable({-->
-<!--        footerCallback: function (row, data, start, end, display) {-->
-<!--            var api = this.api();-->
-<!--            // Remove the formatting to get integer data for summation-->
-<!--            var intVal = function (i) {-->
-<!--                return typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;-->
-<!--            };-->
-
-<!--            // Total over all pages-->
-<!--            total = api-->
-<!--                .column(9)-->
-<!--                .data()-->
-<!--                .reduce(function (a, b) {-->
-<!--                    return intVal(a) + intVal(b);-->
-<!--                }, 0);-->
-
-<!--            // Total over this page-->
-<!--            pageTotal = api-->
-<!--                .column(9, { page: 'current' })-->
-<!--                .data()-->
-<!--                .reduce(function (a, b) {-->
-<!--                    return intVal(a) + intVal(b);-->
-<!--                }, 0);-->
-
-<!--            // Update footer-->
-<!--            $(api.column(9).footer()).html('INR ' + (pageTotal).toFixed(2));-->
-<!--        },-->
-<!--        initComplete: function () {-->
-<!--            this.api()-->
-<!--                .columns()-->
-<!--                .every(function () {-->
-<!--                    var column = this;-->
-<!--                    var select = $('<select><option value=""></option></select>')-->
-<!--                        .appendTo($(column.header()).empty())-->
-<!--                        .on('change', function () {-->
-<!--                            var val = $.fn.dataTable.util.escapeRegex($(this).val());-->
-<!--                            column.search(val ? '^' + val + '$' : '', true, false).draw();-->
-<!--                        });-->
-
-<!--                    column-->
-<!--                        .data()-->
-<!--                        .unique()-->
-<!--                        .sort()-->
-<!--                        .each(function (d, j) {-->
-<!--                            select.append('<option value="' + d + '">' + d + '</option>');-->
-<!--                        });-->
-<!--                });-->
-<!--        },-->
-<!--        scrollY: "600px",-->
-<!--&lt;!&ndash;        scrollX: true,&ndash;&gt;-->
-<!--        scrollCollapse: true,-->
-<!--        autoWidth:true,-->
-
-<!--        dom: 'lBfrtip',-->
-<!--        buttons: [-->
-<!--            'copy', 'csv', 'excel', 'print'-->
-<!--        ],-->
-<!--    });-->
-<!--} );-->
-<!--</script>-->
 {% endblock content %}
