@@ -12,6 +12,8 @@ class Gatein_info(models.Model):
     gatein_consignee = models.CharField(blank=True, null=True, max_length=20)
     gatein_no_of_pkg = models.IntegerField(blank=True, null=True)
     gatein_weight = models.FloatField(blank=True, null=True,default=0.0)
+    gatein_actual_weight = models.FloatField(blank=True, null=True,default=0.0)
+    gatein_actual_count = models.IntegerField(blank=True, null=True,default=0)
     gatein_driver = models.CharField(blank=True, null=True, max_length=20)
     gatein_contact_number = models.CharField(blank=True, null=True, max_length=20)
     gatein_DL_number = models.CharField(blank=True, null=True, max_length=20)

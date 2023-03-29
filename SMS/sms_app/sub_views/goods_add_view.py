@@ -25,12 +25,10 @@ def goods_add(request, goods_id=0):
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     ses_gatein_no_of_pkg_nam = request.session.get('ses_gatein_no_of_pkg')
     ses_gatein_weight_nam = request.session.get('ses_gatein_weight')
-    print(ses_gatein_id_nam)
     wh_job_id = ses_gatein_id_nam
     gatein_no_of_pkg_val = ses_gatein_no_of_pkg_nam
     gatein_weight_val = ses_gatein_weight_nam
     gatein_wh_job_id=Gatein_info.objects.get(gatein_job_no=wh_job_id).id
-    print('gatein_wh_job_id',gatein_wh_job_id)
     shipper_invoice=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_invoice
     # Gate In Status Check
     try:
@@ -53,7 +51,6 @@ def goods_add(request, goods_id=0):
     try:
         goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
                                                                                                 flat=True)  # count records
-        print(list(goods_status))
         goods_status_list = list(goods_status)
         if goods_status_list == []:
             damage_after_status = "Empty"
@@ -61,17 +58,14 @@ def goods_add(request, goods_id=0):
             damage_after_status = "None"
         elif all(element == 5 for element in (goods_status_list)):
             damage_after_status = "Completed"  # get goods status
-            print('damage_after_status', damage_after_status)
         else:
             damage_after_status = "No Status"  # get goods status
-            print('damage_after_status', damage_after_status)
     except ObjectDoesNotExist:
         damage_after_status = "No Status"
 
     # Warehousein Status Check
     try:
         warehousein_stack_layer = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_stack_layer', flat=True)  # count records
-        print("warehousein_stack_layer_list", list(warehousein_stack_layer))
         warehousein_stack_layer_list = list(warehousein_stack_layer)
         if warehousein_stack_layer_list == []:
             warehousein_status = "Empty"
@@ -79,37 +73,37 @@ def goods_add(request, goods_id=0):
             warehousein_status = "None"
         elif None not in warehousein_stack_layer_list:
             warehousein_status = "Completed"  # get goods status
-            print('warehousein_status', warehousein_status)
         else:
             warehousein_status = "No Status"  # get goods status
-            print('warehousein_status', warehousein_status)
     except ObjectDoesNotExist:
         warehousein_status = "No Status"
 
     raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces', flat=True)
     cumsum = sum(raw_data)
-    print("Cumulative Sum is", cumsum)
+
     tot_package = request.session.get('ses_gatein_no_of_pkg')
     invoice_weight = request.session.get('ses_gatein_weight')
-    print("Total Package is", tot_package)
-    print("goods_status_list",goods_status_list)
-    print("damage_after_status",damage_after_status)
-    print("warehousein_status",warehousein_status)
+
     goods_checkin_weight = \
     Warehouse_goods_info.objects.filter(wh_job_no=ses_gatein_id_nam).aggregate(Sum('wh_goods_weight'))[
-        'wh_goods_weight__sum']
+            'wh_goods_weight__sum']
     goods_checkin_count = \
     Warehouse_goods_info.objects.filter(wh_job_no=ses_gatein_id_nam).aggregate(Sum('wh_goods_pieces'))[
-        'wh_goods_pieces__sum']
+            'wh_goods_pieces__sum']
     if goods_checkin_weight:
         goods_checkin_weight_val = round(goods_checkin_weight, 2)
+        Gatein_info.objects.filter(gatein_job_no=ses_gatein_id_nam).update(gatein_actual_weight=goods_checkin_weight_val)
     else:
         goods_checkin_weight_val = 0.0
+        Gatein_info.objects.filter(gatein_job_no=ses_gatein_id_nam).update(gatein_actual_weight=goods_checkin_weight_val)
 
     if goods_checkin_count:
         goods_checkin_count_val = round(goods_checkin_count, 2)
+        Gatein_info.objects.filter(gatein_job_no=ses_gatein_id_nam).update(gatein_actual_count=goods_checkin_count_val)
     else:
         goods_checkin_count_val = 0
+        Gatein_info.objects.filter(gatein_job_no=ses_gatein_id_nam).update(gatein_actual_count=goods_checkin_count_val)
+
     if request.method == "GET":
         if goods_id == 0:
             print("I am inside Get add Goods")
