@@ -2,11 +2,11 @@
 {% block content %}
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
-        <div class="col-4"></div>
-        <div class="col-4 rounded text-center bg-info">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
             <h3>Sales List</h3>
         </div>
-        <div class="col-4"></div>
+        <div class="col-5"></div>
     </div>
 </div>
 <div class="container-fluid row">
@@ -28,11 +28,16 @@
         <tr>
             <th>Created On</th>
             <th>Created By</th>
+            <th>Sale Number</th>
             <th>Date of call</th>
              <th>Customer New or Existing</th>
             <th>Customer Name</th>
             <th>New Customer Name</th>
             <th>Industry Type</th>
+            <th>Quote Date</th>
+            <th>Business Start Date</th>
+            <th>Days to Start Business</th>
+            <th>Status</th>
             <th>Updated On</th>
             <th>Updated By</th>
             <th>Edit</th>
@@ -44,11 +49,16 @@
             <tr>
                 <td> {{salesinfo.s_created_at}}</td>
                 <td> {{salesinfo.s_created_by}}</td>
+                <td> {{salesinfo.s_sale_number}}</td>
                 <td> {{salesinfo.s_date_of_call}}</td>
                 <td> {{salesinfo.s_customer_new}}</td>
                 <td> {{salesinfo.s_customer_name}}</td>
                 <td> {{salesinfo.s_customer_new_name}}</td>
                 <td> {{salesinfo.s_industry_type}}</td>
+                <td> {{salesinfo.s_yesdate_quote}}</td>
+                <td> {{salesinfo.s_yesdate_business}}</td>
+                <td> {{salesinfo.s_business_start_days}}</td>
+                <td> {{salesinfo.s_status}}</td>
                 <td> {{salesinfo.s_updated_at}}</td>
                 <td> {{salesinfo.s_updated_by}}</td>
                 <td>

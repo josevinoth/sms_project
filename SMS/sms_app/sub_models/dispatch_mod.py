@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import MyUser,StatusList,VehicletypeInfo,CustomerInfo,TrbusinesstypeInfo,CustomerdepartmentInfo,GstexcemptionInfo
+from ..models import StatusList,VehicletypeInfo,GstexcemptionInfo
 
 class Dispatch_info(models.Model):
     dispatch_depature_date = models.CharField(null=False,max_length=20)

@@ -15,6 +15,12 @@
 							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Sales Number</span>
+									</div>
+									{% render_field form.s_sale_number id="s_sale_number" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Date of call</span>
 									</div>
 									<!--<input type="date" value="2021-09-09" min="2021-09-09">-->
@@ -55,13 +61,6 @@
 										<span class="input-group-text">Industry Type</span>
 									</div>
 									{% render_field form.s_industry_type class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Requirement</span>
-									</div>
-									{% render_field form.s_requirement  class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -123,8 +122,6 @@
 									{% render_field form.s_call_type class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Nature of Call</span>
@@ -132,6 +129,8 @@
 									{% render_field form.s_call_nature class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Purpose of Call</span>
@@ -178,28 +177,28 @@
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Decision Maker</span>
+										<span class="input-group-text">Decision Maker (DM)</span>
 									</div>
 									{% render_field form.s_decision_maker class="form-control" id="s_decision_maker" onchange="decmaker_enabler()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Name Decision Maker</span>
+										<span class="input-group-text" >Name (DM))</span>
 									</div>
 									{% render_field form.s_name_dm class="form-control disable_a_href" id="s_name_dm" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Designation Decision Maker</span>
+										<span class="input-group-text" >Designation (DM)</span>
 									</div>
 									{% render_field form.s_designation_dm class="form-control disable_a_href" id="s_designation_dm" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Email ID Decision Maker</span>
+										<span class="input-group-text">Email ID (DM))</span>
 									</div>
 									{% render_field form.s_emailid_dm class="form-control disable_a_href" id="s_emailid_dm" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -213,22 +212,28 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Volume/Business potential of the customer</span>
+										<span class="input-group-text" >Volume potential</span>
 									</div>
-									{% render_field form.s_vol_bus_customer class="form-control" %}
+									{% render_field form.s_vol_customer class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" > Prospective Customer</span>
+										<span class="input-group-text" >Business potential</span>
+									</div>
+									{% render_field form.s_bus_customer class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Prospective Customer?</span>
 									</div>
 									{% render_field form.s_customer_prospective class="form-control" id="s_customer_prospective" onchange="pc_enabler()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" > If no reason</span>
+										<span class="input-group-text" > If no, Reason?</span>
 									</div>
 									{% render_field form.s_noreason_cp class="form-control disable_a_href" id="s_noreason_cp"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -238,9 +243,9 @@
 							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" > If Yes, Date of Quote sent</span>
+										<span class="input-group-text" > If Yes, Date of Quote</span>
 									</div>
-									{% render_field form.s_yesdate_quote type="date" class="form-control disable_a_href" id="s_yesdate_quote" %}
+									{% render_field form.s_yesdate_quote type="date" class="form-control disable_a_href" onchange="buss_days_calc()" id="s_yesdate_quote" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -265,9 +270,9 @@
 							</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text"> Yes Date to start business</span>
+										<span class="input-group-text">If Yes, Business Start Date</span>
 									</div>
-									{% render_field form.s_yesdate_business type="date" class="form-control disable_a_href" id="s_yesdate_business"%}
+									{% render_field form.s_yesdate_business type="date" class="form-control disable_a_href" onchange="buss_days_calc()" id="s_yesdate_business"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -351,9 +356,10 @@
 							</div>
 							{% render_field form.s_updated_by id="s_updated_by" hidden="True" class="form-control" %}
 							{% render_field form.s_created_by id="s_created_by" hidden="True" class="form-control" %}
+							{% render_field form.s_business_start_days id="s_business_start_days" hidden="True" class="form-control" %}
 						</div>
 
-						<button onclick="random()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<button onclick="salenum()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'sales_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel </a>
 					</div>
@@ -363,7 +369,6 @@
 		<div class="col-1"></div>
 	</div>
 </form>
-
 <script>
 $(document).ready(function() {
 	document.getElementById("s_updated_by").value ='{{user_id}}';
@@ -377,7 +382,35 @@ $(document).ready(function() {
 	{
 		document.getElementById("s_created_by").value =created_by_1;
 	}
+	pc_enabler()
+	Buswonnot_enabler()
+	decmaker_enabler()
+	cusnewexist_enabler()
+	buss_days_calc()
 	});
+</script>
+<script>
+function salenum() {
+  var ran=Math.floor((Math.random() * 1000000) + 1)
+  var jn=document.getElementById("s_sale_number").value
+  if (jn=="")
+  {
+  	document.getElementById("s_sale_number").value ="S_"+ ran;
+  }
+  else
+  {
+  	document.getElementById("s_sale_number").value =jn;
+  }
+}
+</script>
+<script>
+function buss_days_calc() {
+	var bus_start_date=new Date(document.getElementById("s_yesdate_business").value)
+	var bus_quote_date=new Date(document.getElementById("s_yesdate_quote").value)
+	days=bus_start_date-bus_quote_date
+	var res = Math.abs(bus_start_date - bus_quote_date) / (1000*86400);
+	document.getElementById("s_business_start_days").value=res
+}
 </script>
 
 <script>
@@ -387,7 +420,6 @@ function cusnewexist_enabler() {
 	{
 		$('#s_customer_name').removeClass('disable_a_href');
 		$('#s_customer_new_name').addClass('disable_a_href');
-		document.getElementById("s_customer_name").value=""
 		document.getElementById("s_customer_new_name").value=""
 	}
   else
@@ -395,7 +427,6 @@ function cusnewexist_enabler() {
 		$('#s_customer_name').addClass('disable_a_href');
 		$('#s_customer_new_name').removeClass('disable_a_href');
 		document.getElementById("s_customer_name").value=""
-		document.getElementById("s_customer_new_name").value=""
 	}
 }
 </script>
@@ -418,9 +449,6 @@ function decmaker_enabler() {
 		$('#s_name_dm').removeClass('disable_a_href');
 		$('#s_designation_dm').removeClass('disable_a_href');
 		$('#s_emailid_dm').removeClass('disable_a_href');
-		document.getElementById("s_name_dm").value=""
-		document.getElementById("s_designation_dm").value=""
-		document.getElementById("s_emailid_dm").value=""
 	}
 }
 </script>
@@ -434,15 +462,13 @@ function pc_enabler() {
 		$('#s_yesdate_quote').removeClass('disable_a_href');
 		$('#s_quote_ref').removeClass('disable_a_href');
 		document.getElementById("s_noreason_cp").value=""
-		document.getElementById("s_yesdate_quote").value=""
-		document.getElementById("s_quote_ref").value=""
+
 	}
   else
   	{
 		$('#s_noreason_cp').removeClass('disable_a_href');
 		$('#s_yesdate_quote').addClass('disable_a_href');
 		$('#s_quote_ref').addClass('disable_a_href');
-		document.getElementById("s_noreason_cp").value=""
 		document.getElementById("s_yesdate_quote").value=""
 		document.getElementById("s_quote_ref").value=""
 	}
@@ -457,13 +483,11 @@ function Buswonnot_enabler() {
 		$('#s_not_reason').addClass('disable_a_href');
 		$('#s_yesdate_business').removeClass('disable_a_href');
 		document.getElementById("s_not_reason").value=""
-		document.getElementById("s_yesdate_business").value=""
 	}
   else
   	{
 		$('#s_not_reason').removeClass('disable_a_href');
 		$('#s_yesdate_business').addClass('disable_a_href');
-		document.getElementById("s_not_reasona").value=""
 		document.getElementById("s_yesdate_business").value=""
 	}
 }

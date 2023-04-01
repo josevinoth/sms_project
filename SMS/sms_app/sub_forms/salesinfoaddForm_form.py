@@ -12,7 +12,6 @@ class SalesinfoaddForm(forms.ModelForm):
         self.fields['s_customer_type'].empty_label = "--Select--"
         self.fields['s_customer_new'].empty_label = "--Select--"
         self.fields['s_industry_type'].empty_label = "--Select--"
-        self.fields['s_requirement'].empty_label = "--Select--"
         self.fields['s_wh_requirement'].empty_label = "--Select--"
         self.fields['s_trans_requirement'].empty_label = "--Select--"
         self.fields['s_pack_requirement'].empty_label = "--Select--"
@@ -32,3 +31,5 @@ class SalesinfoaddForm(forms.ModelForm):
         self.fields['s_rate_approval'].empty_label = "--Select--"
         self.fields['s_approver_name'].empty_label = "--Select--"
         self.fields['s_status'].empty_label = "--Select--"
+        self.fields['s_noreason_cp'].empty_label = "--Select--"
+        self.fields['s_not_reason'].empty_label = "--Select--"

@@ -1,7 +1,9 @@
 from django.db import models
+from.sub_models.yesno_info_mod import YesNoInfo
+from.sub_models.prespective_customer_no_info_mod import Prespectivec_customer_NoInfo
+from.sub_models.business_won_no_info_mod import Business_won_NoInfo
 from.sub_models.faciltiy_requirement_mod import faciltiyrequirementinfo
 from.sub_models.manpower_requirement_mod import manpowerrequirementinfo
-from.sub_models.requirements_info_mod import RequirementsInfo
 from .sub_models.cus_new_exist_mod import Cusnewexist
 from .sub_models.industry_type_mod import Industrytype
 from .sub_models.wh_requirement_mod import Whrequirementinfo
