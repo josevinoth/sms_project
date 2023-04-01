@@ -41,6 +41,7 @@ class BilingInfo(models.Model):
     bill_updated_at = models.DateTimeField(null=True, auto_now=True)
     bill_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
 
+
     class Meta:
         ordering = ["bill_invoice_ref"]
 
