@@ -118,7 +118,13 @@
 									{% render_field invoice_form.bill_weight id="bill_weight" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">No of Pieces</span>
+									</div>
+									{% render_field invoice_form.bill_no_of_pallets class="form-control disable_a_href" id="bill_no_of_pallets" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">No Of Days</span>
@@ -138,13 +144,6 @@
 										<span class="input-group-text">Wh Storage Charges</span>
 									</div>
 									{% render_field invoice_form.bill_wh_storage_charges class="form-control disable_a_href" id="bill_wh_storage_charges" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">No of Pieces</span>
-									</div>
-									{% render_field invoice_form.bill_no_of_pallets class="form-control disable_a_href" id="bill_no_of_pallets" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">

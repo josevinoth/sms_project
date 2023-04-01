@@ -1,12 +1,15 @@
 from django.db import models
-from ..models import MyUser,PaymentcycleInfo,GstexcemptionInfo,GstmodelInfo,PaymenttypeInfo,CrcountfromInfo,TrbusinesstypeInfo,CustomertypeInfo
+from ..models import Business_Sol_info,MyUser,PaymentcycleInfo,GstexcemptionInfo,GstmodelInfo,PaymenttypeInfo,CrcountfromInfo,TrbusinesstypeInfo,CustomertypeInfo
 
+def customercontractinfo_directory_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
 
+    return 'Customercontractfiles/{0}/{1}'.format(instance.lbimg_job_no, filename)
 class CustomerInfo(models.Model):
     cu_customercode = models.CharField(max_length=100,default = '')
     cu_name = models.CharField(max_length=100,default = '')
     cu_type= models.ForeignKey(CustomertypeInfo,on_delete=models.CASCADE, default='')
-    cu_address =  models.CharField(max_length=200,default = '')
+    cu_address =  models.TextField(max_length=500,default = '')
     cu_nameshort = models.CharField(max_length=100,default = '')
     cu_pan = models.CharField(max_length=10,default = '')
     cu_gst =models.CharField(max_length=30,default = '')
@@ -26,9 +29,13 @@ class CustomerInfo(models.Model):
     cu_lastmodifiedby = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     cu_created_at = models.DateTimeField(null=True, auto_now_add=True)
     cu_updated_at = models.DateTimeField(null=True, auto_now=True)
-
+    cu_business_sol = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE,blank=True,null=True)
+    cu_contract_validity_from = models.DateTimeField(blank=True,null=True)
+    cu_contract_validity_to = models.DateTimeField(blank=True,null=True)
+    cu_contract = models.FileField(upload_to=customercontractinfo_directory_path, null=True)
     class Meta:
         ordering = ["cu_name"]
 
     def __str__(self):
         return self.cu_name
+

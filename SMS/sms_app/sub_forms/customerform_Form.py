@@ -20,3 +20,4 @@ class CustomeraddForm(forms.ModelForm):
         self.fields['cu_creditcountfrom'].empty_label = "--Select--"
         self.fields['cu_lastmodifiedby'].empty_label = "--Select--"
         self.fields['cu_businessmodel'].empty_label = "--Select--"
+        self.fields['cu_business_sol'].empty_label = "--Select--"

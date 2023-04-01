@@ -20,14 +20,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Name</span>
 									</div>
-									{% render_field form.cu_name class="form-control" %}
+									{% render_field form.cu_nameshort class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Name (Short)</span>
 									</div>
-									{% render_field form.cu_nameshort class="form-control" %}
+									{% render_field form.cu_name class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -42,13 +42,6 @@
 										<span class="input-group-text">Customer Type</span>
 									</div>
 									{% render_field form.cu_type class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Address</span>
-									</div>
-									{% render_field form.cu_address type="textarea" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -91,6 +84,13 @@
 										<span class="input-group-text">Email</span>
 									</div>
 									{% render_field form.cu_email class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Address</span>
+									</div>
+									{% render_field form.cu_address type="textarea" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -156,6 +156,13 @@
 										<span class="input-group-text">Business Model</span>
 									</div>
 									{% render_field form.cu_businessmodel class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Solutions</span>
+									</div>
+									{% render_field form.cu_business_sol class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field form.cu_lastmodifiedby id="cu_lastmodifiedby" hidden="True" class="form-control disable_a_href" %}

@@ -280,7 +280,6 @@ def invoice_list_query(request):
     checkouttime_list=[]
     check_in_out_list=[]
     first_name = request.session.get('first_name')
-
     # # Get invoice list from Gate-In table
     # invoice_list=Gatein_info.objects.all().values_list('gatein_invoice',flat=True)
     # print('invoice_list',invoice_list)

@@ -1,4 +1,5 @@
 from django.db import models
+from.sub_models.business_solutions_mod import Business_Sol_info
 from.sub_models.yesno_info_mod import YesNoInfo
 from.sub_models.prespective_customer_no_info_mod import Prespectivec_customer_NoInfo
 from.sub_models.business_won_no_info_mod import Business_won_NoInfo

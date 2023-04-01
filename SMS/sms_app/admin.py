@@ -1,6 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth.models import User
-from .models import Prespectivec_customer_NoInfo,Business_won_NoInfo,YesNoInfo,faciltiyrequirementinfo,manpowerrequirementinfo,CustomerInfo,CustomertypeInfo,Busnotwon,Salestatus,Callpurpose,Callnature,Calltype,Supplyinfo,Packreuqirementinfo,Transrequirementinfo,Whrequirementinfo,Industrytype,Cusnewexist,servicetype_info,ExpenseTypeInfo,ExpenseUOMInfo,Fumigation_ActionInfo,Department_info,RoleInfo,PaymentcycleInfo,StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo,StackingInfo,Wh_chargetype
+from .models import Business_Sol_info,Prespectivec_customer_NoInfo,Business_won_NoInfo,YesNoInfo,faciltiyrequirementinfo,manpowerrequirementinfo,CustomerInfo,CustomertypeInfo,Busnotwon,Salestatus,Callpurpose,Callnature,Calltype,Supplyinfo,Packreuqirementinfo,Transrequirementinfo,Whrequirementinfo,Industrytype,Cusnewexist,servicetype_info,ExpenseTypeInfo,ExpenseUOMInfo,Fumigation_ActionInfo,Department_info,RoleInfo,PaymentcycleInfo,StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo,StackingInfo,Wh_chargetype
 
 # Register your models here.
 admin.site.register(StatusList)
@@ -41,6 +40,7 @@ admin.site.register(faciltiyrequirementinfo)
 admin.site.register(YesNoInfo)
 admin.site.register(Business_won_NoInfo)
 admin.site.register(Prespectivec_customer_NoInfo)
+admin.site.register(Business_Sol_info)
 
 
 
