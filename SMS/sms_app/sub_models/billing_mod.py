@@ -13,7 +13,7 @@ class BilingInfo(models.Model):
     bill_customer_short_name=models.CharField(max_length=60,default = '',blank=True, null=True)
     bill_customer_contact=models.CharField(max_length=200,default = '',blank=True, null=True)
     bill_customer_person=models.CharField(max_length=200,default = '',blank=True, null=True)
-    bill_e_invoice = models.CharField(max_length=50, default='',blank=True, null=True)
+    bill_e_invoice = models.CharField(max_length=60, default='',blank=True, null=True)
     bill_weight = models.FloatField(default=0.0,null=True,blank=True)
     bill_start_date=models.DateTimeField(null=True,blank=True)
     bill_end_date=models.DateTimeField(null=True,blank=True)
