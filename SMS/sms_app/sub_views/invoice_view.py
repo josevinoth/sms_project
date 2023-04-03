@@ -177,8 +177,8 @@ def load_whrate_model(request):
     # WH Charge
     # wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=total_weight,whrm_min_wt__gte=total_weight, whrm_charge_type=1).values('whrm_rate')
     try:
-        wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=total_weight,
-                                                  whrm_min_wt__gte=total_weight, whrm_charge_type=1).values('whrm_rate')
+        wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_min_wt__lte=total_weight,whrm_max_wt__gte=total_weight,
+                                                   whrm_charge_type=1).values('whrm_rate')
     except:
         wh_rate=0
 
@@ -187,7 +187,7 @@ def load_whrate_model(request):
     else:
         wh_rate_val = 0.0
     # Loading_unloading charge
-    piece_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=weight_per_piece,whrm_min_wt__gte=weight_per_piece, whrm_charge_type=3).values('whrm_rate')
+    piece_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_min_wt__lte=weight_per_piece, whrm_max_wt__gte=weight_per_piece,whrm_charge_type=3).values('whrm_rate')
     if piece_rate:
         piece_rate_val = piece_rate[0]['whrm_rate']
     else:

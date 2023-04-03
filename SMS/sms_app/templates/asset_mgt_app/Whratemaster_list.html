@@ -14,12 +14,12 @@
 <div class="container-fluid row">
     <div class="col-md-1">
       <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i>
+        <i class="fas fa-arrow-left"></i> Back
       </a>
     </div>
     <div class="col-md-1">
       <a href="{% url 'whratemaster_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i>
+        <i class="fas fa-plus"></i> Add
       </a>
     </div>
 </div>
@@ -31,8 +31,8 @@
             <th>Customer Name</th>
             <th>Customer Business</th>
             <th>Charge Type</th>
-            <th>Max Weight (kg)</th>
             <th>Min weight (kg)</th>
+            <th>Max Weight (kg)</th>
 <!--            <th>Item (pcs or Space)</th>-->
             <th>Rate (INR)</th>
 <!--            <th>Cost (INR)</th>-->
@@ -48,8 +48,8 @@
                 <td> {{whratemasterinfo.whrm_customer_name}}</td>
                 <td> {{whratemasterinfo.whrm_businessmodel}}</td>
                 <td> {{whratemasterinfo.whrm_charge_type}}</td>
+                 <td> {{whratemasterinfo.whrm_min_wt}}</td>
                 <td> {{whratemasterinfo.whrm_max_wt}}</td>
-                <td> {{whratemasterinfo.whrm_min_wt}}</td>
 <!--                <td> {{whratemasterinfo.whrm_item}}</td>-->
                 <td> {{whratemasterinfo.whrm_rate}}</td>
 <!--                <td> {{whratemasterinfo.whrm_total}}</td>-->
