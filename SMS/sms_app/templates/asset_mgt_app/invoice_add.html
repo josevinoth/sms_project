@@ -374,10 +374,15 @@ $(document).ready(function() {
 		var fumigation_charges_val=document.getElementById("bill_tot_fumigation_charges").value
 		var wh_storage_charges_val=document.getElementById("bill_wh_storage_charges").value
 		var wh_loading_un_charges_val=document.getElementById("bill_loading_charge").value
-		var total_pre_GST=((parseFloat(fumigation_charges_val))+(parseFloat(wh_storage_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(crane_2hr_val))+(parseFloat(crane_aft2hr_val1))+(parseFloat(forklift_2hr_val))+(parseFloat(forklift_aft2hr_val1)));
+		var tot_crane_charges_val=document.getElementById("bill_tot_crane_charges").value
+		var tot_forklift_charges_val=document.getElementById("bill_tot_forklift_charges").value
+		var total_pre_GST=((parseFloat(fumigation_charges_val))+(parseFloat(wh_storage_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(tot_crane_charges_val))+(parseFloat(tot_forklift_charges_val)));
+		alert(total_pre_GST)
 		var SGST_val=document.getElementById("bill_sgst").value
 		var CGST_val=document.getElementById("bill_cgst").value
 		var total_post_GST=total_pre_GST+(total_pre_GST*(SGST_val/100)+total_pre_GST*(CGST_val/100))
+		document.getElementById("bill_total_pre_gst").value =total_pre_GST.toFixed(2);
+       	document.getElementById("bill_total_post_gst").value =total_post_GST.toFixed(2);
 	}
 </script>
 
