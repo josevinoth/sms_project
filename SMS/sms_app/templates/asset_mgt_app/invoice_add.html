@@ -372,15 +372,12 @@ $(document).ready(function() {
 <script>
 	function fumigation_charge_change_fn() {
 		var fumigation_charges_val=document.getElementById("bill_tot_fumigation_charges").value
-		alert(fumigation_charges_val)
 		var wh_storage_charges_val=document.getElementById("bill_wh_storage_charges").value
 		var wh_loading_un_charges_val=document.getElementById("bill_loading_charge").value
 		var total_pre_GST=((parseFloat(fumigation_charges_val))+(parseFloat(wh_storage_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(crane_2hr_val))+(parseFloat(crane_aft2hr_val1))+(parseFloat(forklift_2hr_val))+(parseFloat(forklift_aft2hr_val1)));
-		alert(bill_total_pre_gst_val)
 		var SGST_val=document.getElementById("bill_sgst").value
 		var CGST_val=document.getElementById("bill_cgst").value
 		var total_post_GST=total_pre_GST+(total_pre_GST*(SGST_val/100)+total_pre_GST*(CGST_val/100))
-		alert(total_post_GST)
 	}
 </script>
 
