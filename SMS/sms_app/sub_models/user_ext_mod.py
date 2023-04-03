@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
-from ..models import RoleInfo,Location_info,DesignationInfo,Department_info
+from ..models import RoleInfo,Location_info,DesignationInfo,Business_Sol_info
 
 class User_extInfo(models.Model):
     STATUS_CHOICE = (
@@ -26,7 +26,7 @@ class User_extInfo(models.Model):
         ('User', 'User')
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE,null=True)
-    department = models.ForeignKey(Department_info, on_delete=models.CASCADE, null=True,default='')
+    department = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, null=True,default='')
     emp_contact = models.CharField(max_length=10,null=True,default='')
     emp_designation = models.ForeignKey(DesignationInfo, on_delete=models.CASCADE, null=True,default='')
     emp_branch = models.ForeignKey(Location_info, on_delete=models.CASCADE, null=True,default='')

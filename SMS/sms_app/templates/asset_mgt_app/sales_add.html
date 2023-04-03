@@ -258,22 +258,16 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Business Won?</span>
-									</div>
-									{% render_field form.s_bus_won_not class="form-control" id="s_bus_won_not" onchange="Buswonnot_enabler()" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div><div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">If No, Reason?</span>
-								</div>
-								{% render_field form.s_not_reason class="form-control disable_a_href" id="s_not_reason"%}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Rate Approval</span>
 									</div>
 									{% render_field form.s_rate_approval class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" > Credit Period (Days)</span>
+									</div>
+									{% render_field form.s_credit_period class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -290,6 +284,19 @@
 									{% render_field form.s_approver_name class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Won?</span>
+									</div>
+									{% render_field form.s_bus_won_not class="form-control" id="s_bus_won_not" onchange="Buswonnot_enabler()" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div><div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">If No, Reason?</span>
+								</div>
+								{% render_field form.s_not_reason class="form-control disable_a_href" id="s_not_reason"%}
+								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">If Yes, Business Start Date</span>
@@ -324,13 +331,6 @@
 										<span class="input-group-text" > Next Meeting Date</span>
 									</div>
 									{% render_field form.s_next_meet_schd_date type="date" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" > Credit Period (Days)</span>
-									</div>
-									{% render_field form.s_credit_period class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">

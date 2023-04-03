@@ -20,14 +20,14 @@
 							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Voucher Date</span>
+										<span class="input-group-text">Invoice Date</span>
 									</div>
-									{% render_field invoice_form.bill_invoice_date type="datetime-local" id="bill_invoice_date" class="form-control" %}
+									{% render_field invoice_form.bill_invoice_date type="date" id="bill_invoice_date" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Voucher Number</span>
+										<span class="input-group-text">BVM Invoice Number</span>
 									</div>
 									{% render_field invoice_form.bill_invoice_ref id="bill_invoice_ref" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -377,7 +377,6 @@ $(document).ready(function() {
 		var tot_crane_charges_val=document.getElementById("bill_tot_crane_charges").value
 		var tot_forklift_charges_val=document.getElementById("bill_tot_forklift_charges").value
 		var total_pre_GST=((parseFloat(fumigation_charges_val))+(parseFloat(wh_storage_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(tot_crane_charges_val))+(parseFloat(tot_forklift_charges_val)));
-		alert(total_pre_GST)
 		var SGST_val=document.getElementById("bill_sgst").value
 		var CGST_val=document.getElementById("bill_cgst").value
 		var total_post_GST=total_pre_GST+(total_pre_GST*(SGST_val/100)+total_pre_GST*(CGST_val/100))
