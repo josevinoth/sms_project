@@ -1,6 +1,9 @@
 from django.db import models
 from ..models import Prespectivec_customer_NoInfo,MyUser,Business_won_NoInfo,faciltiyrequirementinfo,Busnotwon,YesNoInfo,CustomertypeInfo,Salestatus,Calltype,Callnature,Callpurpose,Cusnewexist,Industrytype,Packreuqirementinfo,Supplyinfo,Transrequirementinfo,Whrequirementinfo,Location_info,CustomerInfo
 
+def sales_directory_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    return 'Sales_Files/{0}/{1}'.format(instance.s_sale_number, filename)
 class SalesInfo(models.Model):
     s_date_of_call = models.DateField(null = True,blank=True)
     s_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE,blank=True, null=True,related_name='s_customer_name', db_column='s_customer_name', default='')
@@ -15,9 +18,6 @@ class SalesInfo(models.Model):
     s_manpower_requirement = models.CharField(blank=True, null=True,max_length=30)
     s_supply_type = models.ForeignKey(Supplyinfo,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_location = models.ForeignKey(Location_info,blank=True, null=True, on_delete=models.CASCADE, default='')
-    s_call_type = models.ForeignKey(Calltype,blank=True, null=True, on_delete=models.CASCADE, default='')
-    s_call_nature = models.ForeignKey(Callnature,blank=True, null=True, on_delete=models.CASCADE, default='')
-    s_call_purpose = models.ForeignKey(Callpurpose,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_Person_name = models.CharField(max_length=30)
     s_department = models.CharField(max_length=30)
     s_designation = models.CharField(max_length=30)
@@ -43,16 +43,16 @@ class SalesInfo(models.Model):
     s_expected_prof = models.IntegerField(blank=True, null=True)
     s_approver_name = models.ForeignKey(MyUser, related_name='s_approver_name', db_column='s_approver_name',on_delete=models.CASCADE, blank=True, null=True,)
     s_status = models.ForeignKey(Salestatus,blank=True, null=True, on_delete=models.CASCADE, default='')
-    s_remark = models.TextField(blank=True, null=True)
     s_next_meet_schd_date = models.DateField(null = True,blank=True)
     s_credit_period = models.IntegerField(blank=True, null=True)
     s_complain_complement = models.CharField(blank=True, null=True,max_length=30)
-    s_minutes_of_meet = models.TextField(blank=True, null=True,max_length=500)
     s_created_at = models.DateTimeField(null=True, auto_now_add=True)
     s_updated_at = models.DateTimeField(null=True, auto_now=True)
     s_updated_by = models.ForeignKey(MyUser, related_name='s_updated_by', db_column='s_updated_by',on_delete=models.CASCADE, null=True,)
     s_created_by = models.ForeignKey(MyUser, related_name='s_created_by', db_column='s_created_by',on_delete=models.CASCADE, blank=True, null=True,)
     s_business_start_days=models.IntegerField(null = True,blank=True,default=0)
     s_sale_number = models.CharField(blank=True, null=True,max_length=30)
+    s_attachment = models.FileField(upload_to=sales_directory_path, null=True, blank=True)
+
     def __str__(self):
         return self.s_customer_name

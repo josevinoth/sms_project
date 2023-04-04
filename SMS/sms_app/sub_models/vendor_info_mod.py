@@ -3,11 +3,9 @@ from ..models import MyUser,Location_info,servicetype_info,ActiveinactiveInfo
 
 def vendor_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-
-    return 'Vendorfiles/{0}/{1}'.format(instance.vend_agreement_number, filename)
+    return 'Vendorfiles/{0}/{1}'.format(instance.vend_name, filename)
 class Vendor_info(models.Model):
     vend_name = models.CharField(max_length=100,null=True,blank=True)
-    vend_agreement_number = models.CharField(max_length=100,null=True,blank=True)
     vend_description = models.CharField(max_length=100, default='')
     vend_contact = models.CharField(max_length=10)
     vend_contact_per = models.CharField(max_length=50, default='')

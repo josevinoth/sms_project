@@ -1,0 +1,73 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+<form method="POST" action="">
+	{% csrf_token %}
+
+	<!--{{form.as_p}}-->
+
+	<div class="row">
+		<div class="col-3"></div>
+		<div class="col-6">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Sales Comments</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="">Sales Number</span>
+									</div>
+									{% render_field sales_comments_form.sc_sales_number id="sc_sales_number" class="form-control disable_a_href" id="sc_sales_number"%}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="">Type of Call</span>
+									</div>
+									{% render_field sales_comments_form.sc_call_type id="sc_call_type" class="form-control" id="sc_sales_number"%}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="">Nature of Call</span>
+									</div>
+									{% render_field sales_comments_form.sc_call_nature id="sc_call_nature" class="form-control" id="sc_sales_number"%}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="">Purpose of Call</span>
+									</div>
+									{% render_field sales_comments_form.sc_call_purpose id="sc_call_purpose" class="form-control" id="sc_sales_number"%}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Comments</span>
+									</div>
+									{% render_field sales_comments_form.sc_comments class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								{% render_field sales_comments_form.sc_updated_by id="sc_updated_by" hidden="True" class="form-control" %}
+							</div>
+						</div>
+						<button onclick="random()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{{request.META.HTTP_REFERER}}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel </a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-3"></div>
+	</div>
+</form>
+
+<script>
+$(document).ready(function() {
+	var sale_num='{{ses_sales_num_val}}';
+	document.getElementById("sc_sales_number").value=sale_num
+	document.getElementById("sc_updated_by").value='{{user_id}}'
+  });
+</script>
+
+{% endblock content %}
+

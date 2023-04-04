@@ -4,8 +4,6 @@ class SalesinfoaddForm(forms.ModelForm):
     class Meta:
         model = SalesInfo
         fields = '__all__'
-
-    s_approver_name=forms.CheckboxSelectMultiple()
     def __init__(self, *args, **kwargs):
         super(SalesinfoaddForm,self).__init__(*args, **kwargs)
         self.fields['s_customer_name'].empty_label = "--Select--"
@@ -19,9 +17,6 @@ class SalesinfoaddForm(forms.ModelForm):
         self.fields['s_manpower_requirement'].empty_label = "--Select--"
         self.fields['s_supply_type'].empty_label = "--Select--"
         self.fields['s_location'].empty_label = "--Select--"
-        self.fields['s_call_type'].empty_label = "--Select--"
-        self.fields['s_call_nature'].empty_label = "--Select--"
-        self.fields['s_call_purpose'].empty_label = "--Select--"
         self.fields['s_decision_maker'].empty_label = "--Select--"
         self.fields['s_customer_prospective'].empty_label = "--Select--"
         self.fields['s_bus_won_not'].empty_label = "--Select--"

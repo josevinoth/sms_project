@@ -81,7 +81,7 @@ from .sub_views.message_test import message_test
 from .sub_views.gatein_pre_add_view import gatein_pre_add,gatein_pre_list,gatein_pre_delete
 from .sub_views.invoice_view import invoice_list,invoice_add,invoice_delete,shipper_invoice_list,shipper_invoice_add,shipper_invoice_remove,load_whrate_model,invoice_list_open
 from .sub_views.expense_view import expense_add,expense_list,expense_delete
-from .sub_views.salesinfo_view import sales_add,sales_list,sales_delete
+from .sub_views.salesinfo_view import sales_add,sales_list,sales_delete,sales_comments_list,sales_comments_add,sales_comments_delete
 from .sub_views.ininspectionreport_view import ininspectreport_add,ininspectreport_list,ininspectreport_delete
 from .sub_views.ouinspectionreport_view import ouinspectreport_add,ouinspectreport_list,ouinspectreport_delete
 from .sub_views.materialstock_view import materialstock_add,materialstock_list,materialstock_delete

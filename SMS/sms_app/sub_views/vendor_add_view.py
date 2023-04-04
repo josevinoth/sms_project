@@ -7,7 +7,6 @@ from ..models import Vendor_info
 def vendor_add(request,vendor_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    print('user_id',user_id)
     if request.method == "GET":
         if vendor_id == 0:
             form = VendoraddForm()

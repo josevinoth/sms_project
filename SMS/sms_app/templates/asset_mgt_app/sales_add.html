@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
-<form method="POST" action="">
+<form method="POST" action="" enctype="multipart/form-data">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-1"></div>
@@ -91,9 +91,6 @@
 									{% render_field form.s_fac_mgmt_requirement class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-
-
-
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Manpower Requirement</span>
@@ -115,29 +112,8 @@
 									{% render_field form.s_location class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Type of Call</span>
-									</div>
-									{% render_field form.s_call_type class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
 							</div>
 							<div class="col-4">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Nature of Call</span>
-									</div>
-									{% render_field form.s_call_nature class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Purpose of Call</span>
-									</div>
-									{% render_field form.s_call_purpose class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Name of the Person Met</span>
@@ -231,10 +207,6 @@
 									{% render_field form.s_customer_prospective class="form-control" id="s_customer_prospective" onchange="pc_enabler()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-
-
-							</div>
-							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" > If no, Reason?</span>
@@ -242,6 +214,8 @@
 									{% render_field form.s_noreason_cp class="form-control disable_a_href" id="s_noreason_cp"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" > If Yes, Date of Quote</span>
@@ -325,7 +299,6 @@
 									{% render_field form.s_status class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" > Next Meeting Date</span>
@@ -341,26 +314,23 @@
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text" >Minutes of meeting </span>
-								</div>
-								{% render_field form.s_minutes_of_meet class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text" >Remark</span>
-								</div>
-								{% render_field form.s_remark class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
 							{% render_field form.s_updated_by id="s_updated_by" hidden="True" class="form-control" %}
 							{% render_field form.s_created_by id="s_created_by" hidden="True" class="form-control" %}
 							{% render_field form.s_business_start_days id="s_business_start_days" hidden="True" class="form-control" %}
 						</div>
-
-						<button onclick="salenum()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3 bg-dark block">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Attachment</span>
+									</div>
+									{% render_field form.s_attachment class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="col-6"></div>
+						</div>
+						<button  type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'sales_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel </a>
 					</div>
@@ -370,6 +340,7 @@
 		<div class="col-1"></div>
 	</div>
 </form>
+{% include "asset_mgt_app/sales_comments_list_WOH.html" %}
 <script>
 $(document).ready(function() {
 	document.getElementById("s_updated_by").value ='{{user_id}}';
@@ -388,6 +359,7 @@ $(document).ready(function() {
 	decmaker_enabler()
 	cusnewexist_enabler()
 	buss_days_calc()
+	salenum()
 	});
 </script>
 <script>
