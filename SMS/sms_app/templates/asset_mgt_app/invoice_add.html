@@ -242,14 +242,14 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">CGST</span>
+										<span class="input-group-text">CGST (@9%)</span>
 									</div>
 									{% render_field invoice_form.bill_cgst class="form-control disable_a_href" id="bill_cgst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">SGST</span>
+										<span class="input-group-text">SGST (@9%)</span>
 									</div>
 									{% render_field invoice_form.bill_sgst class="form-control disable_a_href" id="bill_sgst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -344,9 +344,9 @@ $(document).ready(function() {
 			var forklift_time_val=document.getElementById("bill_tot_forklift_time").value
 			var forklift_charges_val=forklift_2hr_val+(forklift_aft2hr_val*(forklift_time_val-2))
 			var total_pre_GST=((parseFloat(fumigation_charges_val))+(parseFloat(wh_storage_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(crane_charges_val))+(parseFloat(forklift_charges_val)));
-			var SGST_val=document.getElementById("bill_sgst").value
-			var CGST_val=document.getElementById("bill_cgst").value
-			var total_post_GST=total_pre_GST+(total_pre_GST*(SGST_val/100)+total_pre_GST*(CGST_val/100))
+			document.getElementById("bill_cgst").value=parseFloat(total_pre_GST*(9/100))
+			document.getElementById("bill_sgst").value=parseFloat(total_pre_GST*(9/100))
+			var total_post_GST=total_pre_GST+(total_pre_GST*(9/100)+total_pre_GST*(9/100))
 			document.getElementById("bill_customer_type").value =customer_model;
 			document.getElementById("bill_customer_short_name").value =customer_short_name;
 			document.getElementById("bill_customer_code").value =customer_code;
@@ -376,12 +376,13 @@ $(document).ready(function() {
 		var wh_loading_un_charges_val=document.getElementById("bill_loading_charge").value
 		var tot_crane_charges_val=document.getElementById("bill_tot_crane_charges").value
 		var tot_forklift_charges_val=document.getElementById("bill_tot_forklift_charges").value
-		var total_pre_GST=((parseFloat(fumigation_charges_val))+(parseFloat(wh_storage_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(tot_crane_charges_val))+(parseFloat(tot_forklift_charges_val)));
-		var SGST_val=document.getElementById("bill_sgst").value
-		var CGST_val=document.getElementById("bill_cgst").value
-		var total_post_GST=total_pre_GST+(total_pre_GST*(SGST_val/100)+total_pre_GST*(CGST_val/100))
+		var total_pre_GST=(parseFloat(fumigation_charges_val))+(parseFloat(wh_storage_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(tot_crane_charges_val))+(parseFloat(tot_forklift_charges_val));
+		document.getElementById("bill_cgst").value=parseFloat(total_pre_GST*(9/100)).toFixed(2)
+		document.getElementById("bill_sgst").value=parseFloat(total_pre_GST*(9/100)).toFixed(2)
+		var total_post_GST=total_pre_GST+(total_pre_GST*(9/100)+total_pre_GST*(9/100))
 		document.getElementById("bill_total_pre_gst").value =total_pre_GST.toFixed(2);
        	document.getElementById("bill_total_post_gst").value =total_post_GST.toFixed(2);
+
 	}
 </script>
 
