@@ -24,8 +24,8 @@ def dispatch_add(request, dispatch_id=0):
     first_name = request.session.get('first_name')
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     tot_package = request.POST.get('gatein_no_of_pkg')
-    print(ses_gatein_id_nam)
     wh_job_id = ses_gatein_id_nam
+    user_id = request.session.get('ses_userID')
     # dispatch_list = Dispatch_info.objects.filter(dispatch_job_no=wh_job_id)
     # Gate In Status Check
     try:
@@ -48,7 +48,6 @@ def dispatch_add(request, dispatch_id=0):
     try:
         goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
                                                                                             flat=True)  # count records
-        print(list(goods_status))
         goods_status_list = list(goods_status)
         if goods_status_list != []:
             if goods_status_list[0] == 5:
@@ -57,20 +56,16 @@ def dispatch_add(request, dispatch_id=0):
                 result = False
         else:
             result = False
-        print(result)
         if (result):
             damage_after_status = "Completed"  # get goods status
-            print(damage_after_status)
         else:
             damage_after_status = "No Status"  # get goods status
-            print(damage_after_status)
     except ObjectDoesNotExist:
         damage_after_status = "No Status"
     # Warehousein Status Check
     try:
         warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
             'wh_check_in_out', flat=True)  # count records
-        print(list(warehousein_status))
         warehousein_status_list = list(warehousein_status)
         if warehousein_status_list != []:
             if warehousein_status_list[0] == 1:
@@ -79,13 +74,10 @@ def dispatch_add(request, dispatch_id=0):
                 result = False
         else:
             result = False
-        print(result)
         if (result):
             warehousein_status = "Completed"  # get goods status
-            print(warehousein_status)
         else:
             warehousein_status = "No Status"  # get goods status
-            print(warehousein_status)
     except ObjectDoesNotExist:
         warehousein_status = "No Status"
     # warehousein_status = "Completed"
@@ -108,6 +100,7 @@ def dispatch_add(request, dispatch_id=0):
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
+                'user_id': user_id,
             }
         else:
             print("I am inside get edit Dispatch")
@@ -133,6 +126,7 @@ def dispatch_add(request, dispatch_id=0):
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
                 'dispatch_goods_list':dispatch_goods_list,
+                'user_id':user_id,
             }
         return render(request, "asset_mgt_app/dispatch_add.html", context)
     else:
@@ -150,21 +144,13 @@ def dispatch_add(request, dispatch_id=0):
             wh_job_no_list = list(
                 Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_job_no',
                                                                                               flat=True).distinct())
-            print('dispatch_status_id', dispatch_status_id)
-            print('dispatch_status', dispatch_status)
-            print('dispatch_num', dispatch_num)
-            print('wh_job_no_list', wh_job_no_list)
             if dispatch_status_id == 5:
                 for wh_job in wh_job_no_list:
-                    print(Gatein_info.objects.get(gatein_job_no=wh_job).gatein_job_status)
                     Gatein_info.objects.filter(gatein_job_no=wh_job).update(gatein_job_status=1)
-                    print(Gatein_info.objects.get(gatein_job_no=wh_job).gatein_job_status)
             else:
                 print("Not Completed")
                 for wh_job in wh_job_no_list:
-                    print(Gatein_info.objects.get(gatein_job_no=wh_job).gatein_job_status)
                     Gatein_info.objects.filter(gatein_job_no=wh_job).update(gatein_job_status=2)
-                    print(Gatein_info.objects.get(gatein_job_no=wh_job).gatein_job_status)
 
     if dispatch_form.is_valid():
         dispatch_form.save()
@@ -200,7 +186,6 @@ def dispatch_goods_list(request,dispatch_id):
     dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
     request.session['ses_dispatch_num_val'] = dispatch_num_val
     # # dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-    print(dispatch_num_val)
     dispatch_master_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1)
     goods_list=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
     context = {'goods_list' : goods_list,
@@ -216,9 +201,7 @@ def dispatch_remove_goods(request,dispatch_id):
     dispatch_goods_checkin = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=1)
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=0)
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=None)
-    print(dispatch_goods_checkin)
     wh_dispatch_num=request.session.get('ses_dispatch_num_val')
-    print(wh_dispatch_num)
     # dispatch_dipatch_num_checkin = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=1)
     first_name = request.session.get('first_name')
     context = {
@@ -234,7 +217,6 @@ def dispatch_add_goods(request,dispatch_id):
     dispatch_goods_checkout = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=2)
     dispatch_num_update = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num=dispatch_num_val)
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=datetime.now())
-    print(dispatch_goods_checkout)
     first_name = request.session.get('first_name')
     check_in_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkin_time
     check_out_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkout_time
@@ -261,7 +243,6 @@ def qr_dispatch_decoder(request,dispatch_id):
     camera=True
     dispatch_num_val = request.session.get('ses_dispatch_num_val')
     stock_num_val = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_qr_rand_num
-    print(stock_num_val)
     while camera==True:
         success, img = cap.read()
         for qrcode in decode(img):
@@ -269,8 +250,6 @@ def qr_dispatch_decoder(request,dispatch_id):
             t1=text.replace("{","")
             t2=t1.replace("}","")
             t3=t2.replace("'","")
-            print(text)
-            print(t3)
             polygon_Points = np.array([qrcode.polygon], np.int32)
             polygon_Points = polygon_Points.reshape(-1, 1, 2)
             rect_Points = qrcode.rect
@@ -282,7 +261,6 @@ def qr_dispatch_decoder(request,dispatch_id):
                 Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num=dispatch_num_val)
                 Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=datetime.now())
                 messages.success(request,'Stock Matching.Approved for Dispatch')
-                print("Stock Matching.Approved to Move")
                 time.sleep(5)
                 check_in_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkin_time
                 check_out_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkout_time
@@ -295,15 +273,12 @@ def qr_dispatch_decoder(request,dispatch_id):
                 storage_minutes = divmod(duration_in_s, 60)[0]  # Seconds in a minute = 60
                 # date_dif_final=(storage_days[0], storage_hours[0], storage_minutes[0])
                 # print(date_dif_final)
-                print("Storage_Days", storage_days)
-                print("Storage_Hours", storage_hours)
                 Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff_days)
                 return redirect(request.META['HTTP_REFERER'])
             else:
                 time.sleep(5)
                 cv2.destroyAllWindows()
                 messages.error(request, 'Stock Not Matching')
-                print("Stock Not Matching")
                 return redirect(request.META['HTTP_REFERER'])
 
         cv2.imshow("Video", img)

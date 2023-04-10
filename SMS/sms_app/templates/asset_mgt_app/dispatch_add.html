@@ -146,6 +146,7 @@
 									{% render_field dispatch_form.dispatch_status class="form-control"  %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								{% render_field dispatch_form.dispatch_updated_by hidden="True" id="dispatch_updated_by" class="form-control"  %}
 							</div>
 						</div>
 						<div class="row">
@@ -188,8 +189,6 @@ function AWB_enabler() {
   alert(jn3)
   if (jn3==2)
 	{
-<!--		document.getElementById("dispatch_MAWB").disabled=false-->
-<!--		document.getElementById("dispatch_HAWB").disabled=false-->
 		$('#dispatch_MAWB').removeClass('disable_a_href');
 		$('#dispatch_HAWB').removeClass('disable_a_href');
 		document.getElementById("dispatch_MAWB").value=""
@@ -197,8 +196,6 @@ function AWB_enabler() {
 	}
   else
   	{
-<!--		document.getElementById("dispatch_MAWB").disabled=true-->
-<!--		document.getElementById("dispatch_HAWB").disabled=true-->
 		$('#dispatch_MAWB').addClass('disable_a_href');
 		$('#dispatch_HAWB').addClass('disable_a_href');
 		document.getElementById("dispatch_MAWB").value=""
@@ -212,7 +209,9 @@ $(document).ready(function() {
 	var loadingbay_status_id='{{loadingbay_status}}';
 	var damage_before_status_id='{{damage_before_status}}';
 	var damage_after_status_id='{{damage_after_status}}';
-	var warehousein_status_id='{{warehousein_status}}';
+	document.getElementById("dispatch_updated_by").value='{{user_id}}';
+
+	var warehousein_status_id='{{user_id}}';
 	if (gatein_status_id =="Completed"){
 		$('#loadingbay_btn').removeClass('disable_a_href');
 		$('#loadingbay_btn1').removeClass('disable_a_href');
