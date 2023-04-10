@@ -35,7 +35,7 @@ def invoice_add(request,invoice_id=0):
             invoice_form = InvoiceaddForm(instance=invoice)
             voucher_num = BilingInfo.objects.get(pk=invoice_id).bill_invoice_ref
             shipper_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num)
-            weight_sum=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_volume_weight'))['wh_goods_volume_weight__sum']
+            weight_sum=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
             no_of_days=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Max('wh_storage_time'))['wh_storage_time__max']
             no_of_pieces=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
             try:
