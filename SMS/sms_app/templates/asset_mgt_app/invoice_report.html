@@ -1,0 +1,83 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Invoice Report</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'invoice_list' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'invoice_insert' %}" class="btn btn-success btn-block btn-lg">-->
+<!--            <i class="fas fa-plus"></i> Add-->
+<!--        </a>-->
+<!--    </div>-->
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="invoice_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>BVM Invoice</th>
+            <th>Job No</th>
+            <th>Shipper Name</th>
+            <th>Shipper Invoice</th>
+            <th>Warehouse Charges</th>
+            <th>Shipment In-Date</th>
+            <th>Shipment Out-Date</th>
+            <th>No Of Days</th>
+            <th>Per Day Warehouse Charges</th>
+            <th>Warehouse Storage Charges</th>
+            <th>No Of Pallets</th>
+            <th>Rate Per Pallet</th>
+            <th>Warehouse Loading Charges</th>
+            <th>Warehouse Un-Loading Charges</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for invoiceinfo in row %}
+        <tr>
+            <td> {{invoiceinfo.0}}</td>
+            <td> {{invoiceinfo.1}}</td>
+            <td> {{invoiceinfo.2}}</td>
+            <td> {{invoiceinfo.3}}</td>
+            <td> {{invoiceinfo.4}}</td>
+            <td> {{invoiceinfo.5}}</td>
+            <td> {{invoiceinfo.6}}</td>
+            <td> {{invoiceinfo.7}}</td>
+            <td> {{invoiceinfo.8}}</td>
+            <td> {{invoiceinfo.9}}</td>
+            <td> {{invoiceinfo.10}}</td>
+            <td> {{invoiceinfo.11}}</td>
+            <td> {{invoiceinfo.12}}</td>
+            <td> {{invoiceinfo.13}}</td>
+            <td> {{invoiceinfo.14}}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#invoice_list').DataTable(
+        {
+        scrollY: "600px",
+<!--        scrollX: true,-->
+        scrollCollapse: true,
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+    } );
+} );
+</script>
+{% endblock content %}

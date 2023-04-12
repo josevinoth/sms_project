@@ -10,6 +10,7 @@ from django.contrib import messages
 from ..forms import InvoiceaddForm
 from ..models import Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
 from django.shortcuts import render, redirect
+from django.db import connection
 
 # Invoicecity
 @login_required(login_url='login_page')
@@ -82,6 +83,36 @@ def invoice_add(request,invoice_id=0):
             print("Main Form Not Saved")
         return redirect('/SMS/invoice_list')
 @login_required(login_url='login_page')
+def invoice_report(request):
+    first_name = request.session.get('first_name')
+    cursor = connection.cursor()
+    # cursor.execute("SELECT * FROM sms_app_warehouse_goods_info w INNER JOIN sms_app_gatein_info g ON w.wh_job_no=g.gatein_job_no INNER JOIN sms_app_loadingbay_info l ON w.wh_job_no=l.lb_job_no LEFT JOIN sms_app_dispatch_info d on w.wh_dispatch_num=d.dispatch_num")
+    cursor.execute("SELECT DISTINCT\
+	        b.bill_invoice_ref,\
+	        w.wh_job_no as WH_Job_Number,\
+	        w.wh_consigner as Shipper_Name,\
+	        w.wh_goods_invoice as Invoice,\
+	        b.bill_weight as Shippment_Weight,\
+	        b.bill_start_date as Start_Date,\
+	        b.bill_end_date as End_Date,\
+            b.bill_no_of_days as No_Of_Days,\
+	        b.bill_per_day_wh_charges,\
+	        b.bill_wh_storage_charges as Warehouse_Storage_Charges,\
+	        b.bill_no_of_pallets as No_Of_Pallets_Boxes,\
+	        b.bill_rate_per_pallet as Rate_Per_Pallet,\
+	        b.bill_loading_charge as Warehouse_Loading_Charges,\
+	        b.bill_unloading_charge as Warehouse_Unloading_Charges,\
+	        b.bill_total_post_gst as Total_Charges\
+	        FROM sms_app_bilinginfo b\
+	        INNER JOIN sms_app_warehouse_goods_info w ON b.bill_invoice_ref=w.wh_voucher_num\
+            where b.bill_status_id='5'")
+    row = cursor.fetchall()
+    context =   {
+                'first_name': first_name,
+                'row': row,
+                }
+    return render(request,"asset_mgt_app/invoice_report.html",context)
+@login_required(login_url='login_page')
 def invoice_list(request):
     first_name = request.session.get('first_name')
     invoice_list_val = BilingInfo.objects.all()
@@ -94,6 +125,12 @@ def invoice_list(request):
 @login_required(login_url='login_page')
 def invoice_delete(request,invoice_id):
     invoice_del = BilingInfo.objects.get(pk=invoice_id)
+    invoice_ref=BilingInfo.objects.get(pk=invoice_id).bill_invoice_ref
+    wh_jobs=list(Warehouse_goods_info.objects.filter(wh_voucher_num=invoice_ref).values_list('wh_job_no',flat=True))
+    print('wh_jobs',wh_jobs)
+    print('invoice_ref',invoice_ref)
+    for i in wh_jobs:
+        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_voucher_num=None)
     invoice_del.delete()
     return redirect('/SMS/invoice_list')
 

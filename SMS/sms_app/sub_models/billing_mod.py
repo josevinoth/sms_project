@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import VehicletypeInfo,CustomerInfo,MyUser,PaymentcycleInfo,GstexcemptionInfo,TrbusinesstypeInfo
+from ..models import StatusList,CustomerInfo,MyUser,TrbusinesstypeInfo
 
 
 class BilingInfo(models.Model):
@@ -40,6 +40,7 @@ class BilingInfo(models.Model):
     bill_created_on = models.DateTimeField(null=True, auto_now_add=True)
     bill_updated_at = models.DateTimeField(null=True, auto_now=True)
     bill_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+    bill_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, null=True,default=6)
 
 
     class Meta:

@@ -261,6 +261,13 @@
 									{% render_field invoice_form.bill_total_post_gst class="form-control disable_a_href" id="bill_total_post_gst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Status</span>
+									</div>
+									{% render_field invoice_form.bill_status class="form-control" id="bill_status" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 							</div>
 						</div>
 						<button type="submit" class="btn btn-success" onclick="myjobnum()"><i class="fas fa-check"></i> Save</button>
