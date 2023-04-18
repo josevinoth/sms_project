@@ -5,8 +5,7 @@ def sales_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
     return 'Sales_Files/{0}/{1}'.format(instance.s_sale_number, filename)
 class SalesInfo(models.Model):
-    s_date_of_call = models.DateField(null = True,blank=True)
-    s_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE,blank=True, null=True,related_name='s_customer_name', db_column='s_customer_name', default='')
+    s_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE,related_name='s_customer_name', db_column='s_customer_name', default='')
     s_customer_new_name = models.CharField(blank=True, null=True,max_length=30)
     s_customer_type = models.ForeignKey(CustomertypeInfo,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_customer_new = models.ForeignKey(Cusnewexist, on_delete=models.CASCADE, default='')
@@ -45,7 +44,6 @@ class SalesInfo(models.Model):
     s_status = models.ForeignKey(Salestatus,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_next_meet_schd_date = models.DateField(null = True,blank=True)
     s_credit_period = models.IntegerField(blank=True, null=True)
-    s_complain_complement = models.CharField(blank=True, null=True,max_length=30)
     s_created_at = models.DateTimeField(null=True, auto_now_add=True)
     s_updated_at = models.DateTimeField(null=True, auto_now=True)
     s_updated_by = models.ForeignKey(MyUser, related_name='s_updated_by', db_column='s_updated_by',on_delete=models.CASCADE, null=True,)

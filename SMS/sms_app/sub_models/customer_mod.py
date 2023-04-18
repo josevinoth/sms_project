@@ -4,7 +4,7 @@ from ..models import Business_Sol_info,MyUser,PaymentcycleInfo,GstexcemptionInfo
 def customercontractinfo_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
 
-    return 'Customercontractfiles/{0}/{1}'.format(instance.lbimg_job_no, filename)
+    return 'Customercontractfiles/{0}/{1}'.format(instance.cu_name, filename)
 class CustomerInfo(models.Model):
     cu_customercode = models.CharField(max_length=100,default = '')
     cu_name = models.CharField(max_length=100,default = '')

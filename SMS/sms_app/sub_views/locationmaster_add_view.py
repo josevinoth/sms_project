@@ -143,9 +143,7 @@ def load_customer_model(request):
     unit_name_list = []
     lm_customer_name_id = request.GET.get('lm_customer_name_id')
     total_weight = request.GET.get('total_weight')
-    print('total_weight',total_weight)
     customer_id=CustomerInfo.objects.get(cu_name=lm_customer_name_id).id
-    print(customer_id)
     customer_businessmodel = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_businessmodel')
     customer_short_name = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_nameshort')
     customer_code = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customercode')
@@ -153,7 +151,7 @@ def load_customer_model(request):
     customer_person = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customerperson')
     customer_contact = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_contactno')
     customer_address = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_address')
-    print('customer_businessmodel',customer_businessmodel)
+    customer_type = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_type')
     customer_businessmodel_val=customer_businessmodel[0]['cu_businessmodel'] #Get value from Queryset
     customer_short_name_val=customer_short_name[0]['cu_nameshort'] #Get value from Queryset
     customer_code_val=customer_code[0]['cu_customercode'] #Get value from Queryset
@@ -161,7 +159,8 @@ def load_customer_model(request):
     customer_person_val=customer_person[0]['cu_customerperson'] #Get value from Queryset
     customer_contact_val = customer_contact[0]['cu_contactno']  # Get value from Queryset
     customer_address_val = customer_address[0]['cu_address']  # Get value from Queryset
-    print('customer_businessmodel_val',customer_businessmodel_val)
+    customer_type_val = customer_type[0]['cu_type']  # Get value from Queryset
+    print('customer_type_val',customer_type_val)
     lm_customer_model_id=TrbusinesstypeInfo.objects.filter(id=customer_businessmodel_val).values('tb_trbusinesstype')
     customer_businessmodel_txt= lm_customer_model_id[0]['tb_trbusinesstype']  # Get value from Queryset
     # wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=total_weight,whrm_min_wt__gte=total_weight,whrm_charge_type=1).values('whrm_rate')
@@ -177,7 +176,7 @@ def load_customer_model(request):
         'customer_person_val':customer_person_val,
         'customer_contact_val':customer_contact_val,
         'customer_address_val':customer_address_val,
-        # 'wh_rate_val':wh_rate_val,
+        'customer_type_val':customer_type_val,
     }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))

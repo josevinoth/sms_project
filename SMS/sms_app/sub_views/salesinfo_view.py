@@ -34,6 +34,7 @@ def sales_add(request, sales_id=0):
                 'created_by': created_by,
                 'user_id': user_id,
             }
+            return render(request, "asset_mgt_app/sales_add.html", context)
         else:
             # print(context)
             salesinfo = SalesInfo.objects.get(pk=sales_id)
@@ -50,7 +51,7 @@ def sales_add(request, sales_id=0):
                 'user_id': user_id,
                 'comments_list_filterd': comments_list_filterd,
             }
-        return render(request, "asset_mgt_app/sales_add.html", context)
+            return render(request, "asset_mgt_app/sales_edit.html", context)
     else:
         if sales_id == 0:
             form = SalesinfoaddForm(request.POST,request.FILES)
@@ -112,6 +113,7 @@ def sales_comments_add(request, sales_comments_id=0):
         else:
             print("Main form not saved")
         return redirect('/SMS/sales_list')
+        # return redirect(request.META['HTTP_REFERER'])
 @login_required(login_url='login_page')
 def sales_comments_list(request):
     user_id = request.session.get('ses_userID')

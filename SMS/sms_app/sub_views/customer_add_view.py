@@ -21,10 +21,10 @@ def customer_add(request,customer_id=0):
         return render(request, "asset_mgt_app/customer_add.html",context )
     else:
         if customer_id == 0:
-            form = CustomeraddForm(request.POST)
+            form = CustomeraddForm(request.POST,request.FILES)
         else:
             customer = CustomerInfo.objects.get(pk=customer_id)
-            form = CustomeraddForm(request.POST,instance=customer)
+            form = CustomeraddForm(request.POST,request.FILES,instance=customer)
         if form.is_valid():
             print("Form is Valid")
             form.save()

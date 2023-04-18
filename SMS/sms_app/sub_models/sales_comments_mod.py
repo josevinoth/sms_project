@@ -10,7 +10,9 @@ class Sales_Comments_Info(models.Model):
     sc_created_at = models.DateTimeField(null=True, auto_now_add=True)
     sc_updated_at = models.DateTimeField(null=True, auto_now=True)
     sc_comments = models.TextField(null=True, blank=True)
-
+    sc_complaints = models.TextField(null=True, blank=True)
+    sc_compliments = models.TextField(null=True, blank=True)
+    sc_date_of_call = models.DateField()
 
     class Meta:
         ordering = ["sc_sales_number"]

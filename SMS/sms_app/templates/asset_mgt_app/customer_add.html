@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="">
+<form method="POST" action="" enctype="multipart/form-data" >
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
@@ -90,7 +90,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Address</span>
 									</div>
-									{% render_field form.cu_address type="textarea" class="form-control" %}
+									{% render_field form.cu_address class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -132,7 +132,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Payment Cycle</span>
+										<span class="input-group-text">Billing Cycle</span>
 									</div>
 									{% render_field form.cu_paymentcycle class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -165,10 +165,28 @@
 									{% render_field form.cu_business_sol class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Contract Valid From</span>
+									</div>
+									{% render_field form.cu_contract_validity_from type="Datetime-local" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Contract Valid To</span>
+									</div>
+									{% render_field form.cu_contract_validity_to type="Datetime-local" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Contract Attachment</span>
+									</div>
+									{% render_field form.cu_contract  class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								{% render_field form.cu_lastmodifiedby id="cu_lastmodifiedby" hidden="True" class="form-control disable_a_href" %}
-							</div>
-							<div class="message">
-								{{form.errors}}
 							</div>
 							<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						</div>
