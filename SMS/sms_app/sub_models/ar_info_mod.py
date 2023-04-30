@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import StatusList,BilingInfo,Bvmproduct,CustomerdepartmentInfo,Business_Sol_info,Location_info,CustomerInfo
+from ..models import MyUser,StatusList,BilingInfo,Bvmproduct,CustomerdepartmentInfo,Business_Sol_info,Location_info,CustomerInfo
 
 class Ar_Info(models.Model):
     ar_company = models.ForeignKey(Business_Sol_info,on_delete=models.CASCADE,default='')
@@ -26,8 +26,10 @@ class Ar_Info(models.Model):
     ar_rec_from_operation_date = models.IntegerField(blank=True, null=True, default=0.0)
     ar_rec_from_invoice_date = models.IntegerField(blank=True, null=True, default=0.0)
     ar_rec_from_submission_date = models.IntegerField(blank=True, null=True, default=0.0)
-    ar_status = models.ForeignKey(StatusList,blank=True, null=True, on_delete=models.CASCADE, default='')
-
+    ar_status = models.ForeignKey(StatusList,blank=True, null=True, on_delete=models.CASCADE, default=6)
+    ar_created_at = models.DateTimeField(null=True, auto_now_add=True)
+    ar_updated_at = models.DateTimeField(null=True, auto_now=True)
+    ar_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     class Meta:
         ordering = ["ar_company"]
 

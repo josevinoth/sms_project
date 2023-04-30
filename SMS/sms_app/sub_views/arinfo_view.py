@@ -34,6 +34,7 @@ def ar_add(request, ar_id=0):
             'form': form,
             'role': role,
             'first_name': first_name,
+            'user_id': user_id,
         }
         return render(request, "asset_mgt_app/ar_add.html", context)
     else:

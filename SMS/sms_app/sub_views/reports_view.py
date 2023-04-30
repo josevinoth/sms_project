@@ -41,8 +41,10 @@ def stock_value_reports(request):
     goods_list_new=[]
 
     first_name = request.session.get('first_name')
-    invoice_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1).values_list('wh_goods_invoice',flat=True).distinct()
-    checkin_goods_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1)
+    invoice_list=Warehouse_goods_info.objects.all().values_list('wh_goods_invoice',flat=True).distinct()
+    print('invoice_list',invoice_list)
+    checkin_goods_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1).distinct()
+    print('checkin_goods_list',checkin_goods_list)
     cursor = connection.cursor()
     # cursor.execute("SELECT * FROM sms_app_warehouse_goods_info w INNER JOIN sms_app_gatein_info g ON w.wh_job_no=g.gatein_job_no INNER JOIN sms_app_loadingbay_info l ON w.wh_job_no=l.lb_job_no LEFT JOIN sms_app_dispatch_info d on w.wh_dispatch_num=d.dispatch_num")
     cursor.execute("SELECT \
@@ -103,7 +105,7 @@ def stock_value_reports(request):
                 'goods_list': goods_list,
                 'row': row,
                  }
-    return render(request,"asset_mgt_app/stock_values_report.html",context)
+    return render(request,"asset_mgt_app/stock_values_report_new.html",context)
 
 @login_required(login_url='login_page')
 def damage_reports_list(request):
