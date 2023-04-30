@@ -107,6 +107,7 @@ from.sub_models.ou_inspection_report_mod import Ouinspectreport
 from.sub_models.material_stock_mod import Materialstock
 from.sub_models.packing_jobs_mod import Packingjobs
 from.sub_models.sales_comments_mod import Sales_Comments_Info
+from.sub_models.ar_info_mod import Ar_Info
 
 
 
