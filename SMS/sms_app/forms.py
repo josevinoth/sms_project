@@ -75,3 +75,4 @@ from.sub_forms.ininspectionreportForm_form import IninspectreportForm
 from.sub_forms.ouinspectionreportForm_form import OuinspectreportForm
 from.sub_forms.materialstockForm_Form import MaterialstockForm
 from.sub_forms.packingjobsForm_Form import PackingjobsForm
+from.sub_forms.ArinfoaddForm_form import ArinfoaddForm

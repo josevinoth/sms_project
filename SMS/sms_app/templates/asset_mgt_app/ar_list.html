@@ -1,0 +1,69 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-4"></div>
+        <div class="col-4 rounded text-center bg-info">
+            <h3>Accounts Receivable List</h3>
+        </div>
+        <div class="col-4"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'ar_insert' %}" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i> Add
+      </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+<table id="ar_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Company</th>
+            <th>Product</th>
+            <th>Branch</th>
+            <th>Operation Date</th>
+            <th>Invoice Number</th>
+            <th>Edit</th>
+            <th>Delete</th>
+    </thead>
+    <tbody>
+        {% for arinfo in ar_list %}
+            <tr>
+                <td> {{arinfo.ar_company}}</td>
+                <td> {{arinfo.ar_product}}</td>
+                <td> {{arinfo.ar_branch}}</td>
+                <td> {{arinfo.ar_operation_date}}</td>
+                <td> {{arinfo.ar_invoice_num}}</td>
+
+                <td>
+                    <a class= "btn btn-primary" href="{% url 'ar_update' arinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'ar_delete' arinfo.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt" onclick="return confirm('Are you sure?');"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#ar_list').DataTable();
+} );
+</script>
+{% endblock content %}

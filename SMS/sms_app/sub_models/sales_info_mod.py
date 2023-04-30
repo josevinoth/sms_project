@@ -24,7 +24,7 @@ class SalesInfo(models.Model):
     s_email_id = models.EmailField(max_length=30,default='')
     s_decision_maker = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE,related_name='s_decision_maker', db_column='s_decision_maker', default='')
     s_name_dm = models.CharField(max_length=30)
-    s_designation_dm = models.CharField(max_length=30)
+    s_designation_dm = models.CharField(max_length=30,default='')
     s_emailid_dm = models.EmailField(max_length=30,default='')
     s_joint_call_name = models.CharField(blank=True, null=True,max_length=30)
     s_vol_customer = models.CharField(blank=True, null=True,max_length=30)
