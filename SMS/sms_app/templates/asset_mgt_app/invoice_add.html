@@ -342,9 +342,17 @@ $(document).ready(function() {
 					crane_2hr_val=0
 					crane_aft2hr_val=0
 				}
+			else if (crane_time_tot_val <=2)
+				{
+					crane_aft2hr_val=0
+				}
 			if (forklift_time_tot_val ==0)
 				{
 					forklift_2hr_val=0
+					forklift_aft2hr_val=0
+				}
+			else if (forklift_time_tot_val <=2)
+				{
 					forklift_aft2hr_val=0
 				}
 			var forklift_aft2hr_val1=forklift_aft2hr_val*(forklift_time_tot_val-2);
