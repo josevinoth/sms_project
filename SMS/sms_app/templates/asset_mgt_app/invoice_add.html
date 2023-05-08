@@ -337,6 +337,16 @@ $(document).ready(function() {
 			var forklift_2hr_val=JSON.parse(data)["forklift_2hr_val"];
 			var forklift_aft2hr_val=JSON.parse(data)["forklift_aft2hr_val"];
 			var crane_aft2hr_val1=crane_aft2hr_val*(crane_time_tot_val-2);
+			if (crane_time_tot_val ==0)
+				{
+					crane_2hr_val=0
+					crane_aft2hr_val=0
+				}
+			if (forklift_time_tot_val ==0)
+				{
+					forklift_2hr_val=0
+					forklift_aft2hr_val=0
+				}
 			var forklift_aft2hr_val1=forklift_aft2hr_val*(forklift_time_tot_val-2);
 			var no_of_days_val=document.getElementById("bill_no_of_days").value
 			var no_of_pieces=document.getElementById("bill_no_of_pallets").value
