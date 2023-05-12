@@ -134,8 +134,6 @@
 									{% render_field gatein_form.gatein_no_of_pkg id="gatein_no_of_pkg" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Invoice weight-Gross(Kg)</span>
@@ -145,9 +143,39 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Destination</span>
+									</div>
+									{% render_field gatein_form.gatein_destination id="gatein_destination" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">HAWB</span>
+									</div>
+									{% render_field gatein_form.gatein_hawb id="gatein_hawb" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">S-Bill</span>
+									</div>
+									{% render_field gatein_form.gatein_sbill id="gatein_sbill" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">S-Bill Date</span>
+									</div>
+									{% render_field gatein_form.gatein_sbill_date id="gatein_sbill_date" type="Date" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Pre-GateIn</span>
 									</div>
-									{% render_field gatein_form.gatein_pre_id id="gatein_pre_id" class="form-control" %}
+									{% render_field gatein_form.gatein_pre_id class="form-control" id="gatein_pre_id"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">

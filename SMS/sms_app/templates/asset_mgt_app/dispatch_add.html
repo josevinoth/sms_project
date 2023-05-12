@@ -10,16 +10,15 @@
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center">
 						<div class="row">
-							<div class="col-3"></div>
-							<div class="col-5">
+							<div class="col-4"></div>
+							<div class="col-4">
 								<h3>Add/Update Dispatch</h3>
 							</div>
 							<div class="col-4">
-								<a href="#" class="btn btn-warning btn-block" id="delivery_chalan_btn">
-									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>
-								</a>
+<!--								<a href="#" class="btn btn-warning btn-block" id="delivery_chalan_btn">-->
+<!--									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>-->
+<!--								</a>-->
 							</div>
-
 						</div>
 					</div>
 					<div class="card-body bg-light" >
@@ -30,6 +29,20 @@
 										<span class="input-group-text">Dispatch Number</span>
 									</div>
 									{% render_field dispatch_form.dispatch_num class="form-control" id="dispatch_num" readonly=True %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Truck Number</span>
+									</div>
+									{% render_field dispatch_form.dispatch_truck_number class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Truck Type</span>
+									</div>
+									{% render_field dispatch_form.dispatch_truck_type class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -67,20 +80,6 @@
 									{% render_field dispatch_form.dispatch_transporter class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Truck Number</span>
-									</div>
-									{% render_field dispatch_form.dispatch_truck_number class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Truck Type</span>
-									</div>
-									{% render_field dispatch_form.dispatch_truck_type class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
@@ -101,21 +100,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Sticker Fixed?</span>
 									</div>
-									{% render_field dispatch_form.dispatch_sticker_pasted_BVM class="form-control" id="dispatch_sticker_pasted_BVM" onchange="AWB_enabler()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">HAWB</span>
-									</div>
-									{% render_field dispatch_form.dispatch_HAWB class="form-control disable_a_href"  id="dispatch_HAWB" %}
+									{% render_field dispatch_form.dispatch_sticker_pasted_bvm class="form-control" id="dispatch_sticker_pasted_BVM"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">MAWB</span>
 									</div>
-									{% render_field dispatch_form.dispatch_MAWB class="form-control disable_a_href"  id="dispatch_MAWB" %}
+									{% render_field dispatch_form.dispatch_mawb class="form-control"  id="dispatch_MAWB" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -130,6 +122,13 @@
 										<span class="input-group-text">E-Way Bill</span>
 									</div>
 									{% render_field dispatch_form.dispatch_eWaybill class="form-control"  %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Shipping Date</span>
+									</div>
+									{% render_field dispatch_form.dispatch_ship_date id="dispatch_ship_date" type="Datetime-local" class="form-control"  %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -169,40 +168,7 @@
 	</div>
 </form>
 {% include "asset_mgt_app/dispatch_goods_list.html" %}
-<script>
-function dispatch_num_fn() {
-  var ran=Math.floor((Math.random() * 1000000) + 1)
-  var jn2=document.getElementById("dispatch_num").value
-  if (jn2=="")
-	{
-		document.getElementById("dispatch_num").value ="Dispatch_"+ ran;
-	}
-	else
-	{
-  		document.getElementById("dispatch_num").value=jn2;
-  	}
-}
-</script>
-<script>
-function AWB_enabler() {
-  var jn3=document.getElementById("dispatch_sticker_pasted_BVM").value
-  alert(jn3)
-  if (jn3==2)
-	{
-		$('#dispatch_MAWB').removeClass('disable_a_href');
-		$('#dispatch_HAWB').removeClass('disable_a_href');
-		document.getElementById("dispatch_MAWB").value=""
-		document.getElementById("dispatch_HAWB").value=""
-	}
-  else
-  	{
-		$('#dispatch_MAWB').addClass('disable_a_href');
-		$('#dispatch_HAWB').addClass('disable_a_href');
-		document.getElementById("dispatch_MAWB").value=""
-		document.getElementById("dispatch_HAWB").value=""
-	}
-}
-</script>
+
 <script>
 $(document).ready(function() {
 	var gatein_status_id = '{{gatein_status}}';
@@ -231,7 +197,22 @@ $(document).ready(function() {
 	if (warehousein_status_id =="Completed"){
 		$('#storage_btn').removeClass('disable_a_href');
 		}
+	dispatch_num_fn()
   });
+</script>
+<script>
+function dispatch_num_fn() {
+  var ran=Math.floor((Math.random() * 1000000) + 1)
+  var jn2=document.getElementById("dispatch_num").value
+  if (jn2=="")
+	{
+		document.getElementById("dispatch_num").value ="Dispatch_"+ ran;
+	}
+	else
+	{
+  		document.getElementById("dispatch_num").value=jn2;
+  	}
+}
 </script>
 <script>
     $("#dispatch_customer").change(function () {

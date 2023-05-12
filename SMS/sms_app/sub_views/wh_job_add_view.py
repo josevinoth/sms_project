@@ -20,7 +20,6 @@ def wh_job_add(request, gatein_id=0):
             gatein_info = Gatein_info.objects.get(pk=gatein_id)
             get_jobnum=Gatein_info.objects.get(pk=gatein_id).gatein_job_no
             request.session['ses_jobnum'] = get_jobnum
-            print(get_jobnum)
             set_jobnum = request.session.get('ses_jobnum')
             loadingbay_info=Loadingbay_Info.objects.get(lb_job_no=set_jobnum)
             loadingbay_form = LoadingbayddForm(instance=loadingbay_info)
@@ -42,7 +41,6 @@ def wh_job_add(request, gatein_id=0):
         else:
             gatein_info = Gatein_info.objects.get(pk=gatein_id)
             get_jobnum = Gatein_info.objects.get(pk=gatein_id).gatein_job_no
-            print(get_jobnum)
             set_jobnum = request.session.get('ses_jobnum')
             loadingbay_info = Loadingbay_Info.objects.get(lb_job_no=set_jobnum)
             gatein_form = GateinaddForm(request.POST, instance=gatein_info)

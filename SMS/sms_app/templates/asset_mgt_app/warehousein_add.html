@@ -34,10 +34,6 @@
 		<a class="btn  border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
 		<a class="btn  border focus border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>
 		<a class="btn  border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
-<!--		<a class="btn  border border-dark disable_a_href" id="dispatch_btn" href="{% url 'dispatch_insert' %}">Dispatch</a>-->
-<!--		<a class="btn  border border-dark disable_a_href" id="billing_btn">Billing</a>-->
-<!--		<a class="btn  border border-dark disable_a_href" id="expense_btn">Expenses</a>-->
-<!--		<a class="btn  border border-dark disable_a_href" id="reports_btn">Reports</a>-->
 	</div>
 	<div class="col-2"></div>
 </div>
@@ -45,9 +41,6 @@
 <hr>
 <form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" data-branches-url="{% url 'load_units' %}" novalidate>
 	{% csrf_token %}
-
-	<!--{{form.as_p}}-->
-
 	<div class="row">
 		<div class="col-2"></div>
 		<div class="col-8">
@@ -59,15 +52,15 @@
 							<div class="col-6">
 								<h3>Add/Update Warehouse-In</h3>
 							</div>
-<!--							<div class="col-2">-->
-<!--								<a href="#" class="btn btn-warning btn-block ">-->
-<!--									Delivery Chelan          <i class="fa fa-download" aria-hidden="true"></i>-->
-<!--								</a>-->
-<!--							</div>-->
+							<!--							<div class="col-2">-->
+							<!--								<a href="#" class="btn btn-warning btn-block ">-->
+							<!--									Delivery Chelan          <i class="fa fa-download" aria-hidden="true"></i>-->
+							<!--								</a>-->
+							<!--							</div>-->
 							<div class="col-3">
-<!--								<a href="#" class="btn btn-warning btn-block">-->
-<!--									Damage Report          <i class="fa fa-download" aria-hidden="true"></i>-->
-<!--								</a>-->
+								<!--								<a href="#" class="btn btn-warning btn-block">-->
+								<!--									Damage Report          <i class="fa fa-download" aria-hidden="true"></i>-->
+								<!--								</a>-->
 							</div>
 						</div>
 					</div>
@@ -170,7 +163,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Weight (Pysical)</span>
+										<span class="input-group-text" >Weight (Physical)</span>
 									</div>
 									{% render_field warehousein_form.wh_goods_weight id="weight" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -200,7 +193,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >CBM</span>
 									</div>
-									{% render_field warehousein_form.wh_CBM class="form-control disable_a_href" id="cbm" %}
+									{% render_field warehousein_form.wh_cbm class="form-control disable_a_href" id="cbm" %}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -284,14 +277,18 @@
 								</div>
 								<div class="input-group input-group-sm mb-3" >
 									<div class="input-group-prepend">
+										<span class="input-group-text" >Check-In Time</span>
+									</div>
+									{% render_field warehousein_form.wh_checkin_time type="Datetime-local" class="form-control"%}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3" >
+									<div class="input-group-prepend">
 										<span class="input-group-text" >Goods Status</span>
 									</div>
 									{% render_field warehousein_form.wh_check_in_out class="form-control disable_a_href"%}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								{% render_field warehousein_form.wh_invoice_value id="wh_invoice_value" class="form-control "%}
-								{% render_field warehousein_form.wh_invoice_currency id="wh_invoice_currency" class="form-control "%}
-								{% render_field warehousein_form.wh_invoice_amount_inr id="wh_invoice_amount_inr" class="form-control "%}
 								<!--								<div class="input-group input-group-sm mb-3">-->
 								<!--									<div class="input-group-prepend">-->
 								<!--										<span class="input-group-text" >Status</span>-->
@@ -470,7 +467,6 @@ $(document).ready(function() {
 	var invoice_value_val='{{invoice_value}}'
 	var invoice_currency_val='{{invoice_currency}}'
 	var invoice_amount_inr_val='{{invoice_amount_inr}}'
-
 	document.getElementById("wh_invoice_value").value =invoice_value_val;
 	document.getElementById("wh_invoice_currency").value =invoice_currency_val;
 	document.getElementById("wh_invoice_amount_inr").value =invoice_amount_inr_val;
@@ -552,7 +548,6 @@ $(document).ready(function() {
 		$('#warehousein_btn').removeClass('disable_a_href');
 		$('#warehousein_btn').addClass('btn-warning');
 	}
-
 
 	if (user_role_val=="User")
 	{

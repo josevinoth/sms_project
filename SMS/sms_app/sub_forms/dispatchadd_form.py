@@ -12,5 +12,5 @@ class DispatchaddForm(forms.ModelForm):
         super(DispatchaddForm, self).__init__(*args, **kwargs)
         self.fields['dispatch_status'].empty_label = "--Select--"
         self.fields['dispatch_truck_type'].empty_label = "--Select--"
-        self.fields['dispatch_sticker_pasted_BVM'].empty_label = "--Select--"
+        self.fields['dispatch_sticker_pasted_bvm'].empty_label = "--Select--"
         self.fields['dispatch_cargo_picked'].empty_label = "--Select--"

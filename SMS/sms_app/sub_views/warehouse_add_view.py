@@ -2,11 +2,11 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.utils import timezone
 from django.utils.datetime_safe import datetime
 
-from ..forms import GoodsaddForm,WarehoseinaddForm
+from ..forms import GoodsaddForm,WarehoseinaddForm,WarehoseoutaddForm
 from ..models import Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
@@ -32,9 +32,34 @@ def warehousein_add(request, warehousein_id=0):
     # get emp role
     user_role=User_extInfo.objects.get(user_id=user_id).emp_role
     # Get stock value
-    invoice_value=Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_value
-    invoice_currency = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_currency
-    invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_amount_in
+    job_no_list=Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
+    print('invoice_list', job_no_list)
+    for i in job_no_list:
+        invoice_count=Warehouse_goods_info.objects.filter(wh_job_no=i).count()
+        print('invoice_count',invoice_count)
+        invoice_weight = Gatein_info.objects.get(gatein_job_no=i).gatein_weight
+        invoice_package = Gatein_info.objects.get(gatein_job_no=i).gatein_no_of_pkg
+        invoice_value = Loadingbay_Info.objects.get(lb_job_no=i).lb_stock_invoice_value
+        invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=i).lb_stock_amount_in
+        invoice_value_unit = round((invoice_value / invoice_package), 2)
+        invoice_amount_inr_unit = round((invoice_amount_inr / invoice_package), 2)
+        invoice_weight_unit = round((invoice_weight / invoice_count), 2)
+        print('Job No',i)
+        print('invoice_amount_inr_unit',invoice_amount_inr_unit)
+        print('invoice_weight_unit',invoice_weight_unit)
+        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_invoice_amount_inr=invoice_amount_inr_unit)
+        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_invoice_weight_unit=invoice_weight_unit)
+    # job_no_list_wh=Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
+    # for j in job_no_list_wh:
+    #     Warehouse_goods_info.objects.filter(wh_job_no=j).update(wh_invoice_amount_inr=invoice_amount_inr)
+    #     Warehouse_goods_info.objects.filter(wh_job_no=j).update(wh_invoice_weight_unit=invoice_weight_unit)
+    # invoice_weight = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_weight
+    # invoice_package=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_no_of_pkg
+    # invoice_value=Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_value
+    # invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_amount_in
+    # invoice_value_unit=round((invoice_value/invoice_package),2)
+    # invoice_amount_inr_unit=round((invoice_amount_inr/invoice_package),2)
+    # invoice_weight_unit = round((invoice_weight / invoice_package), 2)
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -47,15 +72,13 @@ def warehousein_add(request, warehousein_id=0):
         loadingbay_status = "No Status"
     # Damage/Before Status Check
     try:
-        damage_before_status = DamagereportInfo.objects.get(
-            dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
+        damage_before_status = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
     except ObjectDoesNotExist:
         damage_before_status = "No Status"
 
     # Damage/After Status Check
     try:
-        goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
-                                                                                                flat=True)  # count records
+        goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',flat=True)  # count records
         goods_status_list = list(goods_status)
         if goods_status_list == []:
             damage_after_status = "Empty"
@@ -70,8 +93,7 @@ def warehousein_add(request, warehousein_id=0):
 
     # Warehousein Status Check
     try:
-        warehousein_stack_layer = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
-            'wh_stack_layer', flat=True)  # count records
+        warehousein_stack_layer = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_stack_layer', flat=True)  # count records
         warehousein_stack_layer_list = list(warehousein_stack_layer)
         if warehousein_stack_layer_list == []:
             warehousein_status = "Empty"
@@ -83,7 +105,6 @@ def warehousein_add(request, warehousein_id=0):
             warehousein_status = "No Status"  # get goods status
     except ObjectDoesNotExist:
         warehousein_status = "No Status"
-
     if request.method == "GET":
         if warehousein_id == 0:
             print("I am inside Get add warehousein")
@@ -104,9 +125,8 @@ def warehousein_add(request, warehousein_id=0):
                 'user_role':user_role,
                 'user_branch_id':user_branch_id,
                 'user_branch':user_branch,
-                'invoice_value':invoice_value,
-                'invoice_currency':invoice_currency,
-                'invoice_amount_inr':invoice_amount_inr
+                'invoice_value':invoice_value_unit,
+                'invoice_amount_inr':invoice_amount_inr_unit
             }
         else:
             print("I am inside get edit warehousein")
@@ -130,9 +150,8 @@ def warehousein_add(request, warehousein_id=0):
                 'user_role': user_role,
                 'user_branch_id': user_branch_id,
                 'user_branch': user_branch,
-                'invoice_value': invoice_value,
-                'invoice_currency': invoice_currency,
-                'invoice_amount_inr': invoice_amount_inr
+                'invoice_value': invoice_value_unit,
+                'invoice_amount_inr': invoice_amount_inr_unit
             }
         return render(request, "asset_mgt_app/warehousein_add.html", context)
     else:
@@ -206,14 +225,56 @@ def warehousein_add(request, warehousein_id=0):
             messages.error(request, 'Record not Updated!')
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
+@login_required(login_url='login_page')
+def warehouseout_add(request, warehouseout_id=0):
+    first_name = request.session.get('first_name')
+    if request.method == "GET":
+        print("I am inside get edit warehouseout")
+        ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
+        warehouseoutinfo = Warehouse_goods_info.objects.get(pk=warehouseout_id)
+        warehouseout_form = WarehoseoutaddForm(instance=warehouseoutinfo)
+        context = {
+                      'first_name': first_name,
+                      'warehouseout_form': warehouseout_form,
+        }
+        return render(request, "asset_mgt_app/warehouseout_add.html", context)
+    else:
+        print("I am inside post edit warehouseout")
+        print('warehouseout_id',warehouseout_id)
+        warehouseoutinfo = Warehouse_goods_info.objects.get(pk=warehouseout_id)
+        warehouseout_form = WarehoseoutaddForm(request.POST, instance=warehouseoutinfo)
+    if warehouseout_form.is_valid():
+        warehouseout_form.save()
+        print("warehouseoutinfo is Valid")
+        dispatch_num_val = request.session.get('ses_dispatch_num_val')
+        print('dispatch_num_val', dispatch_num_val)
+        Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_check_in_out=2)
+        Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_dispatch_num=dispatch_num_val)
+        check_in_date = Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time
+        check_out_date = Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkout_time
+        date_diff = (check_out_date - check_in_date)  # Differnce between dates
+        date_diff_days = date_diff.days
+        duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
+        storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
+        # storage_days = (check_out_date - check_in_date).days  # In days
+        storage_days = float(round(storage_hours / 24, 2))  # In days
+        Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_storage_time=date_diff_days)
+    else:
+        print("warehouseoutinfo is Not-Valid")
+    return redirect('/SMS/warehouseout_cancel')
 
-
-# # Delete goods
-# @login_required(login_url='login_page')
-# def goods_delete(request, goods_id):
-#     goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
-#     goodsinfo.delete()
-#     return redirect('/SMS/goods_insert')
+@login_required(login_url='login_page')
+def warehouseout_cancel(request):
+    dispatch_num_val = request.session.get('ses_dispatch_num_val')
+    first_name = request.session.get('first_name')
+    dispatch_master_list = Warehouse_goods_info.objects.filter(wh_check_in_out=1)
+    goods_list = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
+    context = {'goods_list': goods_list,
+               'first_name': first_name,
+               'dispatch_master_list': dispatch_master_list,
+               'dispatch_num_val': dispatch_num_val,
+               }
+    return render(request, "asset_mgt_app/dispatch_goods_list_woh.html", context)
 
 # Search Space Availability
 @login_required(login_url='login_page')
