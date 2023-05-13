@@ -20,5 +20,4 @@ class Dispatch_info(models.Model):
     dispatch_created_at = models.DateTimeField(null=True, auto_now_add=True)
     dispatch_updated_at = models.DateTimeField(null=True, auto_now=True)
     dispatch_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
-    dispatch_ship_date = models.DateTimeField(null=True, blank=True)
     dispatch_mawb = models.CharField(null=True, max_length=100)

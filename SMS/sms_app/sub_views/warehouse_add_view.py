@@ -32,23 +32,23 @@ def warehousein_add(request, warehousein_id=0):
     # get emp role
     user_role=User_extInfo.objects.get(user_id=user_id).emp_role
     # Get stock value
-    job_no_list=Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
-    print('invoice_list', job_no_list)
-    for i in job_no_list:
-        invoice_count=Warehouse_goods_info.objects.filter(wh_job_no=i).count()
-        print('invoice_count',invoice_count)
-        invoice_weight = Gatein_info.objects.get(gatein_job_no=i).gatein_weight
-        invoice_package = Gatein_info.objects.get(gatein_job_no=i).gatein_no_of_pkg
-        invoice_value = Loadingbay_Info.objects.get(lb_job_no=i).lb_stock_invoice_value
-        invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=i).lb_stock_amount_in
-        invoice_value_unit = round((invoice_value / invoice_package), 2)
-        invoice_amount_inr_unit = round((invoice_amount_inr / invoice_package), 2)
-        invoice_weight_unit = round((invoice_weight / invoice_count), 2)
-        print('Job No',i)
-        print('invoice_amount_inr_unit',invoice_amount_inr_unit)
-        print('invoice_weight_unit',invoice_weight_unit)
-        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_invoice_amount_inr=invoice_amount_inr_unit)
-        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_invoice_weight_unit=invoice_weight_unit)
+    # job_no_list=Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
+    # print('invoice_list', job_no_list)
+    # for i in job_no_list:
+    #     invoice_count=Warehouse_goods_info.objects.filter(wh_job_no=i).count()
+    #     print('invoice_count',invoice_count)
+    #     invoice_weight = Gatein_info.objects.get(gatein_job_no=i).gatein_weight
+    #     invoice_package = Gatein_info.objects.get(gatein_job_no=i).gatein_no_of_pkg
+    #     invoice_value = Loadingbay_Info.objects.get(lb_job_no=i).lb_stock_invoice_value
+    #     invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=i).lb_stock_amount_in
+    #     invoice_value_unit = round((invoice_value / invoice_package), 2)
+    #     invoice_amount_inr_unit = round((invoice_amount_inr / invoice_package), 2)
+    #     invoice_weight_unit = round((invoice_weight / invoice_count), 2)
+    #     print('Job No',i)
+    #     print('invoice_amount_inr_unit',invoice_amount_inr_unit)
+    #     print('invoice_weight_unit',invoice_weight_unit)
+    #     Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_invoice_amount_inr=invoice_amount_inr_unit)
+    #     Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_invoice_weight_unit=invoice_weight_unit)
     # job_no_list_wh=Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
     # for j in job_no_list_wh:
     #     Warehouse_goods_info.objects.filter(wh_job_no=j).update(wh_invoice_amount_inr=invoice_amount_inr)
@@ -125,8 +125,8 @@ def warehousein_add(request, warehousein_id=0):
                 'user_role':user_role,
                 'user_branch_id':user_branch_id,
                 'user_branch':user_branch,
-                'invoice_value':invoice_value_unit,
-                'invoice_amount_inr':invoice_amount_inr_unit
+                # 'invoice_value':invoice_value_unit,
+                # 'invoice_amount_inr':invoice_amount_inr_unit
             }
         else:
             print("I am inside get edit warehousein")
@@ -150,8 +150,8 @@ def warehousein_add(request, warehousein_id=0):
                 'user_role': user_role,
                 'user_branch_id': user_branch_id,
                 'user_branch': user_branch,
-                'invoice_value': invoice_value_unit,
-                'invoice_amount_inr': invoice_amount_inr_unit
+                # 'invoice_value': invoice_value_unit,
+                # 'invoice_amount_inr': invoice_amount_inr_unit
             }
         return render(request, "asset_mgt_app/warehousein_add.html", context)
     else:
