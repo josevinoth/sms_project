@@ -22,6 +22,8 @@ class Ar_Info(models.Model):
     ar_due_from_submission_date = models.IntegerField(blank=True, null=True,default=0.0)
     ar_payment_received_date = models.DateField(blank=True, null=True)
     ar_payment_received_amount = models.FloatField(blank=True, null=True, default=0.0)
+    ar_total_payment_received_amount = models.FloatField(blank=True, null=True, default=0.0)
+    ar_balance_payment = models.FloatField(blank=True, null=True, default=0.0)
     ar_tds= models.FloatField(blank=True, null=True, default=0.0)
     ar_rec_from_operation_date = models.IntegerField(blank=True, null=True, default=0.0)
     ar_rec_from_invoice_date = models.IntegerField(blank=True, null=True, default=0.0)
