@@ -2,22 +2,11 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
-from django.utils import timezone
-from django.utils.datetime_safe import datetime
-
+from django.http import HttpResponse
 from ..forms import GoodsaddForm,WarehoseinaddForm,WarehoseoutaddForm
 from ..models import Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
-
-# # List goods
-# @login_required(login_url='login_page')
-# def goods_list(request):
-#     first_name = request.session.get('first_name')
-#     context = {'goods_list': Warehouse_goods_info.objects.all(),'first_name': first_name}
-#     return render(request, "asset_mgt_app/goods_list.html", context)
-
 
 # Add goods
 @login_required(login_url='login_page')
@@ -31,35 +20,7 @@ def warehousein_add(request, warehousein_id=0):
     user_branch_id = Location_info.objects.get(loc_name=user_branch).id
     # get emp role
     user_role=User_extInfo.objects.get(user_id=user_id).emp_role
-    # Get stock value
-    # job_no_list=Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
-    # print('invoice_list', job_no_list)
-    # for i in job_no_list:
-    #     invoice_count=Warehouse_goods_info.objects.filter(wh_job_no=i).count()
-    #     print('invoice_count',invoice_count)
-    #     invoice_weight = Gatein_info.objects.get(gatein_job_no=i).gatein_weight
-    #     invoice_package = Gatein_info.objects.get(gatein_job_no=i).gatein_no_of_pkg
-    #     invoice_value = Loadingbay_Info.objects.get(lb_job_no=i).lb_stock_invoice_value
-    #     invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=i).lb_stock_amount_in
-    #     invoice_value_unit = round((invoice_value / invoice_package), 2)
-    #     invoice_amount_inr_unit = round((invoice_amount_inr / invoice_package), 2)
-    #     invoice_weight_unit = round((invoice_weight / invoice_count), 2)
-    #     print('Job No',i)
-    #     print('invoice_amount_inr_unit',invoice_amount_inr_unit)
-    #     print('invoice_weight_unit',invoice_weight_unit)
-    #     Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_invoice_amount_inr=invoice_amount_inr_unit)
-    #     Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_invoice_weight_unit=invoice_weight_unit)
-    # job_no_list_wh=Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
-    # for j in job_no_list_wh:
-    #     Warehouse_goods_info.objects.filter(wh_job_no=j).update(wh_invoice_amount_inr=invoice_amount_inr)
-    #     Warehouse_goods_info.objects.filter(wh_job_no=j).update(wh_invoice_weight_unit=invoice_weight_unit)
-    # invoice_weight = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_weight
-    # invoice_package=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_no_of_pkg
-    # invoice_value=Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_value
-    # invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_amount_in
-    # invoice_value_unit=round((invoice_value/invoice_package),2)
-    # invoice_amount_inr_unit=round((invoice_amount_inr/invoice_package),2)
-    # invoice_weight_unit = round((invoice_weight / invoice_package), 2)
+
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -125,8 +86,6 @@ def warehousein_add(request, warehousein_id=0):
                 'user_role':user_role,
                 'user_branch_id':user_branch_id,
                 'user_branch':user_branch,
-                # 'invoice_value':invoice_value_unit,
-                # 'invoice_amount_inr':invoice_amount_inr_unit
             }
         else:
             print("I am inside get edit warehousein")
@@ -150,8 +109,6 @@ def warehousein_add(request, warehousein_id=0):
                 'user_role': user_role,
                 'user_branch_id': user_branch_id,
                 'user_branch': user_branch,
-                # 'invoice_value': invoice_value_unit,
-                # 'invoice_amount_inr': invoice_amount_inr_unit
             }
         return render(request, "asset_mgt_app/warehousein_add.html", context)
     else:
@@ -189,7 +146,29 @@ def warehousein_add(request, warehousein_id=0):
                 else:
                     messages.success(request, 'Goods Stored!')
                     warehousein_form.save()
+            # Update Invoice weight, qty,value
+            wh_invoice_list = Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
+            print('wh_invoice_list',wh_invoice_list)
+            for wh_job_id in wh_invoice_list:
+                invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('id',flat=True)
+                invoice_weight = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_weight
+                invoice_package = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_no_of_pkg
+                invoice_value = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_value
+                invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_amount_in
+                for i in range(0,len(invoice_id)):
+                    print(i)
+                    if i==0:
+                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=invoice_amount_inr)
+                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=invoice_weight)
+                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=invoice_value)
+                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=invoice_package)
+                    else:
+                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=0.0)
+                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=0.0)
+                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=0.0)
+                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=0)
 
+            # update area and volume
             Branch_val = request.POST.get('wh_branch')
             Unit_val = request.POST.get('wh_unit')
             Bay_val = request.POST.get('wh_bay')
@@ -225,6 +204,7 @@ def warehousein_add(request, warehousein_id=0):
             messages.error(request, 'Record not Updated!')
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
+
 @login_required(login_url='login_page')
 def warehouseout_add(request, warehouseout_id=0):
     first_name = request.session.get('first_name')
@@ -302,12 +282,6 @@ def load_units_origin(request):
     for i in range(units_count):
         unit_list.append(units[i]['unit_name'])
         unit_id.append(units_id[i]['id'])
-    # for j in unit_id:
-    #     print("j",j)
-    #     unit_name=UnitInfo.objects.filter(id=j).values('unit_name')
-    #     print("unit_name",list(unit_name))
-    #     unit_name_list.append(unit_name[0]['unit_name'])
-    # print('unit_name_list',unit_name_list)
     data = {
         'unit_id':unit_id,
         'unit_name_list': unit_list,

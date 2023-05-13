@@ -16,7 +16,7 @@ class Dispatch_info(models.Model):
     dispatch_comments = models.CharField(null=False, max_length=20)
     dispatch_cargo_picked = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,null=False,related_name='dispatch_cargo_picked', db_column='dispatch_cargo_picked')
     dispatch_num = models.CharField(null=False, max_length=20)
-    dispatch_eWaybill = models.CharField(null=False, max_length=30)
+    dispatch_ewaybill = models.CharField(null=False, max_length=30)
     dispatch_created_at = models.DateTimeField(null=True, auto_now_add=True)
     dispatch_updated_at = models.DateTimeField(null=True, auto_now=True)
     dispatch_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)

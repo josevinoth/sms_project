@@ -44,10 +44,12 @@ class Warehouse_goods_info(models.Model):
     wh_consigner = models.CharField(blank=True, null=True, max_length=20)
     wh_consignee = models.CharField(blank=True, null=True, max_length=20)
     wh_comments = models.TextField(blank=True, null=True)
+    wh_invoice_value= models.FloatField(blank=True, null=True,default=0.0)
     wh_invoice_amount_inr = models.FloatField(blank=True, null=True,default=0.0)
     wh_voucher_num = models.CharField(blank=True, null=True, max_length=20)
     wh_po_num = models.CharField(blank=True, null=True, max_length=100)
     wh_invoice_weight_unit = models.FloatField(blank=True, null=True,default=0.0)
+    wh_invoice_qty = models.IntegerField(blank=True, null=True,default=0)
 
 
 

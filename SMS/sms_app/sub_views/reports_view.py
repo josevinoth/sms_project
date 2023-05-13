@@ -46,64 +46,64 @@ def stock_value_reports(request):
     cursor = connection.cursor()
     # cursor.execute("SELECT * FROM sms_app_warehouse_goods_info w INNER JOIN sms_app_gatein_info g ON w.wh_job_no=g.gatein_job_no INNER JOIN sms_app_loadingbay_info l ON w.wh_job_no=l.lb_job_no LEFT JOIN sms_app_dispatch_info d on w.wh_dispatch_num=d.dispatch_num")
     cursor.execute("SELECT \
-    		w.wh_job_no as WH_Job_Number,\
-           	w.wh_qr_rand_num as Stock_number,\
-    		w.wh_customer_name as Customer,\
-    	  	g.gatein_arrival_date as Arrival_Date,\
-           	l.lb_stock_unloading_start_time as Loading_Time,\
-           	l.lb_stock_unloading_end_time as Unloading_Time,\
-           	g.gatein_transporter as Transporter,\
-           	g.gatein_truck_number as Truck_Number,\
-           	g.gatein_shipper as Consignee,\
-           	g.gatein_consignee as Consigner,\
-           	re.received_not_name as DOCS_Received,\
-    		g.gatein_hawb as HAWB,\
-    	   	d.dispatch_destination as Destination,\
-           	g.gatein_invoice as Customer_Invoice,\
-    		w.wh_goods_weight as Checkin_Weight,\
-    		w.wh_goods_pieces as Checkin_Qty,\
-    		p.package_type as Package_Type,\
-    		w.wh_invoice_weight_unit as Invoice_Weight,\
-    		g.gatein_no_of_pkg as Invoice_Qty,\
-    		w.wh_goods_length as Length,\
-    		w.wh_goods_width as Width,\
-    		w.wh_goods_height as Height,\
-    		w.wh_goods_volume_weight as Volume_Weight,\
-    		w.wh_cbm as CBM,\
-            l.lb_stock_invoice_value as Invoice_Value,\
-    		c.currency_type as Currency_Type,\
-    		w.wh_invoice_amount_inr as Invoice_Value_INR,\
-    		d.dispatch_destination as E_Way_Bill,\
-    		w.wh_fumigation_date as Fumigation_Date,\
-    		lo.loc_name as Branch,\
-    		u.unit_name as Unit,\
-    		b.bay_bayname as bay,\
-           	ch.check_in_out_name as Checked_In_Out,\
-    		w.wh_storage_time as Storage_Days,\
-            uo.uom_name as UOM,\
-            w.wh_po_num as Case_Number,\
-            d.dispatch_MAWB as MAWB,\
-            g.gatein_sbill as S_Bill,\
-            g.gatein_sbill_date as S_Bill_Date,\
-            d.dispatch_ship_date as Ship_Date,\
-            d.dispatch_truck_number as Truck_Number,\
-            vt.vt_vehicletype as Truck_Type,\
-            d.dispatch_depature_date as Truck_Out_Time,\
-            lp.lp_name as Labels_Pasted_By\
-    FROM sms_app_warehouse_goods_info w\
-    INNER JOIN sms_app_gatein_info g ON g.gatein_job_no=w.wh_job_no\
-    INNER JOIN sms_app_loadingbay_info l ON l.lb_job_no=w.wh_job_no\
-    Left JOIN sms_app_dispatch_info d on d.dispatch_num=w.wh_dispatch_num\
-    LEFT JOIN sms_app_unitinfo u ON u.id=w.wh_unit_id\
-    LEFT JOIN sms_app_location_info lo ON lo.id=w.wh_branch_id\
-    LEFT JOIN sms_app_bayinfo b ON b.id=w.wh_bay_id\
-    LEFT JOIN sms_app_packagetype_info p ON p.id=w.wh_goods_package_type_id\
-    LEFT JOIN sms_app_currency_type c ON c.id=l.lb_stock_invoice_currency_id\
-    LEFT JOIN sms_app_received_not re ON re.id=l.lb_packing_list\
-    LEFT JOIN sms_app_check_in_out ch ON ch.id=w.wh_check_in_out\
-    LEFT JOIN sms_app_uom uo ON uo.id=w.wh_uom\
-    LEFT JOIN sms_app_vehicletypeinfo vt ON vt.id = d.dispatch_truck_type_id\
-    LEFT JOIN sms_app_labels_pasted_info lp ON lp.id = d.dispatch_sticker_pasted_bvm")
+        		w.wh_job_no as WH_Job_Number,\
+               	w.wh_qr_rand_num as Stock_number,\
+        		w.wh_customer_name as Customer,\
+        	  	g.gatein_arrival_date as Arrival_Date,\
+               	l.lb_stock_unloading_start_time as Loading_Time,\
+               	l.lb_stock_unloading_end_time as Unloading_Time,\
+               	g.gatein_transporter as Transporter,\
+               	g.gatein_truck_number as Truck_Number,\
+               	g.gatein_shipper as Consignee,\
+               	g.gatein_consignee as Consigner,\
+               	re.received_not_name as DOCS_Received,\
+        		g.gatein_hawb as HAWB,\
+        	   	d.dispatch_destination as Destination,\
+               	g.gatein_invoice as Customer_Invoice,\
+        		w.wh_goods_weight as Checkin_Weight,\
+        		w.wh_goods_pieces as Checkin_Qty,\
+        		p.package_type as Package_Type,\
+        		w.wh_invoice_weight_unit as Invoice_Weight,\
+        		g.gatein_no_of_pkg as Invoice_Qty,\
+        		w.wh_goods_length as Length,\
+        		w.wh_goods_width as Width,\
+        		w.wh_goods_height as Height,\
+        		w.wh_goods_volume_weight as Volume_Weight,\
+        		w.wh_cbm as CBM,\
+                w.wh_invoice_value as Invoice_Value,\
+        		c.currency_type as Currency_Type,\
+        		w.wh_invoice_amount_inr as Invoice_Value_INR,\
+        		d.dispatch_ewaybill as E_Way_Bill,\
+        		w.wh_fumigation_date as Fumigation_Date,\
+        		lo.loc_name as Branch,\
+        		u.unit_name as Unit,\
+        		b.bay_bayname as bay,\
+               	ch.check_in_out_name as Checked_In_Out,\
+        		w.wh_storage_time as Storage_Days,\
+                uo.uom_name as UOM,\
+                w.wh_po_num as Case_Number,\
+                d.dispatch_mawb as MAWB,\
+                g.gatein_sbill as S_Bill,\
+                g.gatein_sbill_date as S_Bill_Date,\
+                d.dispatch_truck_number as Truck_Number,\
+                vt.vt_vehicletype as Truck_Type,\
+                d.dispatch_depature_date as Truck_Out_Time,\
+                lp.lp_name as Labels_Pasted_By,\
+                w.wh_invoice_qty as Invoice_Qty\
+        FROM sms_app_warehouse_goods_info w\
+        INNER JOIN sms_app_gatein_info g ON g.gatein_job_no=w.wh_job_no\
+        INNER JOIN sms_app_loadingbay_info l ON l.lb_job_no=w.wh_job_no\
+        Left JOIN sms_app_dispatch_info d on d.dispatch_num=w.wh_dispatch_num\
+        LEFT JOIN sms_app_unitinfo u ON u.id=w.wh_unit_id\
+        LEFT JOIN sms_app_location_info lo ON lo.id=w.wh_branch_id\
+        LEFT JOIN sms_app_bayinfo b ON b.id=w.wh_bay_id\
+        LEFT JOIN sms_app_packagetype_info p ON p.id=w.wh_goods_package_type_id\
+        LEFT JOIN sms_app_currency_type c ON c.id=l.lb_stock_invoice_currency_id\
+        LEFT JOIN sms_app_received_not re ON re.id=l.lb_packing_list\
+        LEFT JOIN sms_app_check_in_out ch ON ch.id=w.wh_check_in_out\
+        LEFT JOIN sms_app_uom uo ON uo.id=w.wh_uom\
+        LEFT JOIN sms_app_vehicletypeinfo vt ON vt.id = d.dispatch_truck_type_id\
+        LEFT JOIN sms_app_labels_pasted_info lp ON lp.id = d.dispatch_sticker_pasted_bvm")
     row = cursor.fetchall()
 
     for i in invoice_list:
