@@ -147,26 +147,28 @@ def warehousein_add(request, warehousein_id=0):
                     messages.success(request, 'Goods Stored!')
                     warehousein_form.save()
             # Update Invoice weight, qty,value
-            wh_invoice_list = Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
-            print('wh_invoice_list',wh_invoice_list)
-            for wh_job_id in wh_invoice_list:
-                invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('id',flat=True)
-                invoice_weight = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_weight
-                invoice_package = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_no_of_pkg
-                invoice_value = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_value
-                invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_amount_in
-                for i in range(0,len(invoice_id)):
-                    print(i)
-                    if i==0:
-                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=invoice_amount_inr)
-                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=invoice_weight)
-                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=invoice_value)
-                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=invoice_package)
-                    else:
-                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=0.0)
-                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=0.0)
-                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=0.0)
-                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=0)
+            # wh_invoice_list = Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
+            # print('wh_invoice_list',wh_invoice_list)
+            # for wh_job_id in wh_invoice_list:
+            invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('id',flat=True)
+            job_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_job_no',flat=True)
+            invoice_weight = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_weight
+            invoice_package = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_no_of_pkg
+            invoice_value = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_value
+            invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_amount_in
+            for i in range(0,len(invoice_id)):
+                print(i)
+                print(job_num[i])
+                if i==0:
+                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=invoice_amount_inr)
+                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=invoice_weight)
+                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=invoice_value)
+                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=invoice_package)
+                else:
+                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=0.0)
+                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=0.0)
+                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=0.0)
+                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=0)
 
             # update area and volume
             Branch_val = request.POST.get('wh_branch')
@@ -190,8 +192,8 @@ def warehousein_add(request, warehousein_id=0):
                         LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_final)
                     else:
                         print("No Area")
-                else:
-                    print('check_in_out_list', check_in_out_list[j]['wh_check_in_out'])
+                # else:
+                #     print('check_in_out_list', check_in_out_list[j]['wh_check_in_out'])
 
             total_area_data=LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_size
             total_volume_data=LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_total_volume
