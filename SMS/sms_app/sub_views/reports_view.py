@@ -58,7 +58,7 @@ def stock_value_reports(request):
                	g.gatein_consignee as Consigner,\
                	re.received_not_name as DOCS_Received,\
         		g.gatein_hawb as HAWB,\
-        	   	d.dispatch_destination as Destination,\
+        	   	g.gatein_destination as Destination,\
                	g.gatein_invoice as Customer_Invoice,\
         		w.wh_goods_weight as Checkin_Weight,\
         		w.wh_goods_pieces as Checkin_Qty,\
@@ -68,13 +68,13 @@ def stock_value_reports(request):
         		w.wh_goods_length as Length,\
         		w.wh_goods_width as Width,\
         		w.wh_goods_height as Height,\
-        		w.wh_goods_volume_weight as Volume_Weight,\
+        		w.wh_chargeable_weight as Volume_Weight,\
         		w.wh_cbm as CBM,\
                 w.wh_invoice_value as Invoice_Value,\
         		c.currency_type as Currency_Type,\
         		w.wh_invoice_amount_inr as Invoice_Value_INR,\
         		d.dispatch_ewaybill as E_Way_Bill,\
-        		w.wh_fumigation_date as Fumigation_Date,\
+        		yn.ge_gstexcepmtion as Fumigation_Status,\
         		lo.loc_name as Branch,\
         		u.unit_name as Unit,\
         		b.bay_bayname as bay,\
@@ -103,7 +103,8 @@ def stock_value_reports(request):
         LEFT JOIN sms_app_check_in_out ch ON ch.id=w.wh_check_in_out\
         LEFT JOIN sms_app_uom uo ON uo.id=w.wh_uom\
         LEFT JOIN sms_app_vehicletypeinfo vt ON vt.id = d.dispatch_truck_type_id\
-        LEFT JOIN sms_app_labels_pasted_info lp ON lp.id = d.dispatch_sticker_pasted_bvm")
+        LEFT JOIN sms_app_labels_pasted_info lp ON lp.id = d.dispatch_sticker_pasted_bvm\
+        LEFT JOIN sms_app_gstexcemptioninfo yn ON yn.id = w.wh_fumigation_process")
     row = cursor.fetchall()
 
     for i in invoice_list:
