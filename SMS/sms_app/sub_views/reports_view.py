@@ -89,7 +89,9 @@ def stock_value_reports(request):
                 vt.vt_vehicletype as Truck_Type,\
                 d.dispatch_depature_date as Truck_Out_Time,\
                 lp.lp_name as Labels_Pasted_By,\
-                w.wh_invoice_qty as Invoice_Qty\
+                w.wh_invoice_qty as Invoice_Qty,\
+                w.wh_gross_weight as Gross_Weight,\
+                w.wh_total_qty as Total_Qty\
         FROM sms_app_warehouse_goods_info w\
         INNER JOIN sms_app_gatein_info g ON g.gatein_job_no=w.wh_job_no\
         INNER JOIN sms_app_loadingbay_info l ON l.lb_job_no=w.wh_job_no\
