@@ -8,7 +8,7 @@ from ..forms import GoodsaddForm
 from ..models import Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
-
+from random import randint
 # List goods
 @login_required(login_url='login_page')
 def goods_list(request):
@@ -103,6 +103,13 @@ def goods_add(request, goods_id=0):
     else:
         goods_checkin_count_val = 0
         Gatein_info.objects.filter(gatein_job_no=ses_gatein_id_nam).update(gatein_actual_count=goods_checkin_count_val)
+        # Generate Random WH_Job number
+    try:
+        last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
+    except ObjectDoesNotExist:
+        last_id = 0
+    print(last_id)
+    wh_stock_num = randint(10000, 99999) + last_id + 1
 
     if request.method == "GET":
         if goods_id == 0:
@@ -127,6 +134,7 @@ def goods_add(request, goods_id=0):
                 'goods_checkin_count': goods_checkin_count_val,
                 'gatein_wh_job_id': gatein_wh_job_id,
                 'shipper_invoice': shipper_invoice,
+                'wh_stock_num':wh_stock_num
             }
         else:
             print("I am inside get edit Goods")
@@ -178,14 +186,9 @@ def goods_add(request, goods_id=0):
 
             else:
                 messages.success(request, 'Record Updated Successfully')
-
-            # if weight_cumsum > invoice_weight:
-            #     messages.error(request, 'Record Not Updated.Goods Check-In weight Exceeded Invoice Weight')
-            #     transaction.set_rollback(True)
-            # else:
-            #     messages.success(request, 'Record Updated Successfully')
         else:
             print("Form is not Valid")
+            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
 

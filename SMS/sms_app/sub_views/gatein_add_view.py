@@ -1,3 +1,6 @@
+from random import randint
+
+from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import render, redirect
 from ..forms import GateinaddForm
@@ -17,6 +20,12 @@ def gatein_add(request, gatein_id=0):
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     tot_package = request.POST.get('gatein_no_of_pkg')
     wh_job_id = ses_gatein_id_nam
+    # Generate Random WH_Job number
+    try:
+        last_id=(Gatein_info.objects.values_list('id',flat=True)).last()
+    except ObjectDoesNotExist:
+        last_id =0
+    wh_job_num = randint(10000, 99999) + last_id+1
     if request.method == "GET":
         if gatein_id == 0:
             print("I am inside Get add Gatein")
@@ -31,6 +40,7 @@ def gatein_add(request, gatein_id=0):
                 'wh_job_id': wh_job_id,
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
                 'user_branch':user_branch,
+                'wh_job_num':wh_job_num,
             }
         else:
             print("I am inside get edit Gatein")
@@ -131,6 +141,7 @@ def gatein_add(request, gatein_id=0):
         if gatein_form.is_valid():
             print("Form is Valid")
             gatein_form.save()
+            messages.success(request, 'Record Updated Successfully')
             # raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
             # cumsum = sum(raw_data)
             # print("Sum is",cumsum)
@@ -143,7 +154,9 @@ def gatein_add(request, gatein_id=0):
             #     messages.info(request, 'Record Updated Successfully')
         else:
             print("Form is In-Valid")
-        return redirect('/SMS/gatein_list')
+            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+        return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/gatein_list')
 # List WH Job
 @login_required(login_url='login_page')
 def gatein_list(request):

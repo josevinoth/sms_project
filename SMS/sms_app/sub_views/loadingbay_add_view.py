@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.shortcuts import render, redirect
 from ..forms import LoadingbayddForm,LoadingbayImagesForm
 from django.contrib.auth.decorators import login_required
@@ -135,16 +136,18 @@ def loadingbay_add(request, loadingbay_id=0):
         if loadingbay_form.is_valid():
             print("Main Form Saved")
             loadingbay_form.save()
+            messages.success(request, 'Record Updated Successfully')
         else:
             print("Main Form Not saved")
+            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
 
         if loadingbayimg_form.is_valid():
             print("SubForm Saved")
             loadingbayimg_form.save()
         else:
             print("Sub Form Not saved")
-
-        return redirect('/SMS/gatein_list')
+        return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/gatein_list')
 
 # # List WH Job
 # @login_required(login_url='login_page')

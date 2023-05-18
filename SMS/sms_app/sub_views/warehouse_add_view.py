@@ -26,6 +26,7 @@ def warehousein_add(request, warehousein_id=0):
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
     except ObjectDoesNotExist:
         gatein_status = "No Status"
+
     # Loading Bay Status Check
     try:
         loadingbay_status = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_status  # fetch loadingbay status

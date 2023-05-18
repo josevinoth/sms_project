@@ -312,8 +312,19 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
 						<!--<input class="btn btn-success" type="submit" name="Create User">-->
-						<button type="submit" class="btn btn-success" onclick="stocknum()"><i class="fas fa-check"></i> Save</button>
+						<button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Save</button>
 						<!--						<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">-->
 						<!--							<i class="fas fa-times"></i> Cancel</a>-->
 					</div>
@@ -445,6 +456,7 @@ $(document).ready(function() {
 	challan_damage_btn_active()
 	package_type_chng()
 	fumigation_process_chng()
+	stocknum()
   });
 </script>
 
@@ -505,10 +517,10 @@ function fumigation_process_chng() {
 <script>
 function stocknum() {
  	var jn1=document.getElementById("wh_qr_rand_num").value;
-  	var ran=Math.floor((Math.random() * 1000000) + 1)
+  	var wh_stock_num_val= '{{wh_stock_num}}';
   if (jn1=="")
 	{
-	  document.getElementById("wh_qr_rand_num").value ="Stock_"+ ran;
+	  document.getElementById("wh_qr_rand_num").value ="Stock_"+ wh_stock_num_val;
 	}
   else
 	{

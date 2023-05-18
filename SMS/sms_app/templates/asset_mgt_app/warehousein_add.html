@@ -11,10 +11,10 @@
 	<div class="col-8 btn-group mx-auto text-center">
 		{% if gatein_list %}
 		{% for gateininfo in gatein_list %}
-		<a class="btn  border border-dark" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+		<a class="btn  border border-dark disable_a_href" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border border-dark" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
+		<a class="btn  border border-dark disable_a_href" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
 		{% endif %}
 
 		{% if loadingbay_list %}
@@ -456,6 +456,7 @@ function chargeable_weight_fn() {
 <script>
 $(document).ready(function() {
 	var gatein_status_id = '{{gatein_status}}';
+
 	var loadingbay_status_id='{{loadingbay_status}}';
 	var damage_before_status_id='{{damage_before_status}}';
 	var damage_after_status_id='{{damage_after_status}}';
@@ -464,13 +465,8 @@ $(document).ready(function() {
 	var user_role_val='{{user_role}}';
 	var user_branch_id_val='{{user_branch_id}}';
 	var user_branch_val1='{{user_branch}}';
-	var invoice_value_val='{{invoice_value}}'
 	var invoice_currency_val='{{invoice_currency}}'
 	var invoice_amount_inr_val='{{invoice_amount_inr}}'
-	document.getElementById("wh_invoice_value").value =invoice_value_val;
-	document.getElementById("wh_invoice_currency").value =invoice_currency_val;
-	document.getElementById("wh_invoice_amount_inr").value =invoice_amount_inr_val;
-
 	if (gatein_status_id =="Completed")
 	{
 		$('#gatein_btn').removeClass('disable_a_href');
@@ -558,7 +554,6 @@ $(document).ready(function() {
 		}
 		else
 		{
-			alert("branch_val")
 			document.getElementById("wh_branch").value =branch_val;
 		}
 	}

@@ -141,9 +141,8 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_status = Dispatch_info.objects.get(pk=dispatch_id).dispatch_status
             dispatch_status_id = StatusList.objects.get(status_title=dispatch_status).id
             dispatch_num = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-            wh_job_no_list = list(
-                Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_job_no',
-                                                                                              flat=True).distinct())
+            wh_job_no_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_job_no',flat=True).distinct())
+            print('dispatch_status_id', dispatch_status_id)
             if dispatch_status_id == 5:
                 for wh_job in wh_job_no_list:
                     Gatein_info.objects.filter(gatein_job_no=wh_job).update(gatein_job_status=1)
@@ -160,6 +159,7 @@ def dispatch_add(request, dispatch_id=0):
     else:
         print("Form Not Saved")
     return redirect('/SMS/dispatch_list')
+
 # List Dispatch Job
 @login_required(login_url='login_page')
 def dispatch_list(request):

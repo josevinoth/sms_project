@@ -176,12 +176,20 @@
 
 								</div>
 							</div>
-							<div class="message">
-								{{damagereport_form.errors}}
-							</div>
 							<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						</div>
-						<button type="submit" class="btn btn-success " onclick="grnnum()"><i class="fas fa-check"></i> Save</button>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success " ><i class="fas fa-check"></i> Save</button>
 						<!--						<a href="{% url 'damagereport_list' %}" class="btn btn-danger float-right">-->
 						<!--							<i class="fas fa-times"></i> Cancel-->
 						<!--						</a>-->
@@ -194,26 +202,26 @@
 </form>
 <script>
 function grnnum() {
-  var ran=Math.floor((Math.random() * 1000000) + 1)
   var jn=document.getElementById("grn_num").value
   var user_branch='{{user_branch}}';
+  var wh_grn_num_val= '{{wh_grn_num}}';
   if (jn=="")
 	{
 		if (user_branch=="BVM Chennai")
 			{
-		 		document.getElementById("grn_num").value ="MAA_"+"GRN_"+ ran;
+		 		document.getElementById("grn_num").value ="MAA_"+"GRN_"+ wh_grn_num_val;
 		 	}
 		else if (user_branch=="BVM Benguluru")
 			{
-		 		document.getElementById("grn_num").value ="BLR_"+"GRN_"+ ran;
+		 		document.getElementById("grn_num").value ="BLR_"+"GRN_"+ wh_grn_num_val;
 		 	}
 		else if (user_branch=="BVM Hyderabad")
 			{
-				document.getElementById("grn_num").value ="HYD_"+"GRN_"+ ran;
+				document.getElementById("grn_num").value ="HYD_"+"GRN_"+ wh_grn_num_val;
 			}
 		else
 			{
-				document.getElementById("grn_num").value ="PNY_"+"GRN_"+ ran;
+				document.getElementById("grn_num").value ="PNY_"+"GRN_"+ wh_grn_num_val;
 			}
 	}
 	else
@@ -329,7 +337,7 @@ $(document).ready(function() {
 		$('#warehousein_btn').removeClass('disable_a_href');
 		$('#warehousein_btn').addClass('btn-warning');
 	}
-
+	grnnum()
   });
 </script>
 {% endblock content %}

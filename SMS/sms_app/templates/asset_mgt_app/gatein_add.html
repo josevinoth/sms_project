@@ -238,7 +238,18 @@
 								{% render_field gatein_form.gatein_job_status id="gatein_job_status" hidden="True" class="form-control" %}
 							</div>
 						</div>
-						<button type="submit" class="btn btn-success" onclick="myjobnum()"><i class="fas fa-check"></i> Save</button>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success" ><i class="fas fa-check"></i> Save</button>
 					</div>
 				</div>
 			</div>
@@ -248,26 +259,26 @@
 </form>
 <script>
 function myjobnum() {
-  var ran=Math.floor((Math.random() * 1000000) + 1)
   var jn=document.getElementById("job_num").value
   var user_branch='{{user_branch}}';
+  var wh_job_num_val= '{{wh_job_num}}';
   if (jn=="")
 	{
 		if (user_branch=="BVM Chennai")
 			{
-				document.getElementById("job_num").value ="MAA_"+"WH_Job_"+ ran;
+				document.getElementById("job_num").value ="MAA_"+"WH_Job_"+ wh_job_num_val;
 			}
 		else if (user_branch=="BVM Benguluru")
 			{
-				document.getElementById("job_num").value ="BLR_"+"WH_Job_"+ ran;
+				document.getElementById("job_num").value ="BLR_"+"WH_Job_"+ wh_job_num_val;
 			}
 		else if (user_branch=="BVM Hyderabad")
 			{
-				document.getElementById("job_num").value ="HYD_"+"WH_Job_"+ ran;
+				document.getElementById("job_num").value ="HYD_"+"WH_Job_"+ wh_job_num_val;
 			}
 		else
 			{
-				document.getElementById("job_num").value ="PNY_"+"WH_Job_"+ ran;
+				document.getElementById("job_num").value ="PNY_"+"WH_Job_"+ wh_job_num_val;
 			}
 	}
 	else
@@ -362,6 +373,7 @@ $(document).ready(function() {
 		$('#warehousein_btn').addClass('btn-warning');
 	}
 	document.getElementById("gatein_updated_by").value ='{{user_id}}';
+	myjobnum()
   });
 </script>
 <script>

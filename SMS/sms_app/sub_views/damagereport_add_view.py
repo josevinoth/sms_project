@@ -1,17 +1,23 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from ..forms import DamagereportaddForm,DamagereportImagesForm
 from ..models import DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from ..models import User_extInfo
+from random import randint
 @login_required(login_url='login_page')
 def damagereport_add(request,damagereport_id=0):
     first_name = request.session.get('first_name')
     wh_job_id = request.session.get('ses_gatein_id_nam')
     user_id = request.session.get('ses_userID')
-    print('user_id', user_id)
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
-    print('user_branch', user_branch)
+    # Generate Random GRN number
+    try:
+        last_id=(DamagereportInfo.objects.values_list('id',flat=True)).last()
+    except ObjectDoesNotExist:
+        last_id =0
+    wh_grn_num = randint(10000, 99999) + last_id+1
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -85,6 +91,7 @@ def damagereport_add(request,damagereport_id=0):
                 'damage_before_status': damage_before_status,
                 'warehousein_status': warehousein_status,
                 'user_branch': user_branch,
+                'wh_grn_num':wh_grn_num,
             }
         else:
             print("I am inside get edit damagereport")
@@ -125,16 +132,18 @@ def damagereport_add(request,damagereport_id=0):
         if damagereport_form.is_valid():
             print("Main Form Saved")
             damagereport_form.save()
+            messages.success(request, 'Record Updated Successfully')
         else:
             print("Main Form Not saved")
+            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
 
         if damagereportimg_form.is_valid():
             print("SubForm Saved")
             damagereportimg_form.save()
         else:
             print("Sub Form Not saved")
-
-        return redirect('/SMS/gatein_list')
+        return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/gatein_list')
 
 # List damagereport
 @login_required(login_url='login_page')
