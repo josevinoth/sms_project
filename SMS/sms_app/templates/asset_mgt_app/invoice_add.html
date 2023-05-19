@@ -303,6 +303,8 @@ $(document).ready(function() {
 	document.getElementById("bill_tot_forklift_time").value ='{{forklift_time}}';
 	document.getElementById("bill_start_date").value ='{{min_check_in_time}}';
 	document.getElementById("bill_end_date").value ='{{max_check_out_time}}';
+	document.getElementById("bill_loading_charge").value ='{{total_loading_cost}}';
+	document.getElementById("bill_unloading_charge").value ='{{total_loading_cost}}';
 });
 </script>
 <script>
@@ -361,8 +363,8 @@ $(document).ready(function() {
 			var wh_storage_charges_val=(wh_rate*no_of_days_val).toFixed(2)
 			var wh_loading_un_charges_val=(no_of_pieces*piece_rate).toFixed(2)
 			document.getElementById("bill_wh_storage_charges").value=wh_storage_charges_val
-			document.getElementById("bill_loading_charge").value=wh_loading_un_charges_val
-			document.getElementById("bill_unloading_charge").value=wh_loading_un_charges_val
+<!--			document.getElementById("bill_loading_charge").value=wh_loading_un_charges_val-->
+<!--			document.getElementById("bill_unloading_charge").value=wh_loading_un_charges_val-->
 			var fumigation_charges_val=document.getElementById("bill_tot_fumigation_charges").value
 			var crane_time_val=document.getElementById("bill_tot_crane_time").value
 			var crane_charges_val=crane_2hr_val+(crane_aft2hr_val*(crane_time_val-2))

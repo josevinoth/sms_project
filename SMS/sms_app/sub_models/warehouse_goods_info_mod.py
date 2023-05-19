@@ -53,7 +53,7 @@ class Warehouse_goods_info(models.Model):
     wh_gross_weight = models.FloatField(blank=True, null=True, default=0.0)
     wh_total_qty = models.IntegerField(blank=True, null=True, default=0)
     wh_loading_charge_unit = models.FloatField(blank=True, null=True, default=0.0)
-    wh_total_loading_charge = models.FloatField(blank=True, null=True, default=0.0)
+    wh_total_loading_cost = models.FloatField(blank=True, null=True, default=0.0)
 
 
 

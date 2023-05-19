@@ -39,6 +39,7 @@ def invoice_add(request,invoice_id=0):
             weight_sum=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
             no_of_days=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Max('wh_storage_time'))['wh_storage_time__max']
             no_of_pieces=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
+            total_loading_cost=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_total_loading_cost'))['wh_total_loading_cost__sum']
             try:
                 min_check_in_time=min(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkin_time'))
             except:
@@ -67,6 +68,7 @@ def invoice_add(request,invoice_id=0):
                 'forklift_time':forklift_time,
                 'min_check_in_time':min_check_in_time,
                 'max_check_out_time':max_check_out_time,
+                'total_loading_cost':total_loading_cost,
                 }
         return render(request, "asset_mgt_app/invoice_add.html", context)
     else:

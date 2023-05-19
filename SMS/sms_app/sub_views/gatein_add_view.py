@@ -155,8 +155,8 @@ def gatein_add(request, gatein_id=0):
         else:
             print("Form is In-Valid")
             messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-        return redirect(request.META['HTTP_REFERER'])
-        # return redirect('/SMS/gatein_list')
+        # return redirect(request.META['HTTP_REFERER'])
+        return redirect('/SMS/gatein_list')
 # List WH Job
 @login_required(login_url='login_page')
 def gatein_list(request):

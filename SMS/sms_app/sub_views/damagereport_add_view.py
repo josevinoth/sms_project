@@ -142,8 +142,8 @@ def damagereport_add(request,damagereport_id=0):
             damagereportimg_form.save()
         else:
             print("Sub Form Not saved")
-        return redirect(request.META['HTTP_REFERER'])
-        # return redirect('/SMS/gatein_list')
+        # return redirect(request.META['HTTP_REFERER'])
+        return redirect('/SMS/gatein_list')
 
 # List damagereport
 @login_required(login_url='login_page')

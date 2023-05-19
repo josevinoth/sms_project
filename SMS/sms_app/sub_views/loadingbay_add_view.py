@@ -15,9 +15,6 @@ def loadingbay_add(request, loadingbay_id=0):
     currency_EUR=Currency_type.objects.get(currency_type="EUR").converision_value
     currency_INR=Currency_type.objects.get(currency_type="INR").converision_value
     currency_USD=Currency_type.objects.get(currency_type="USD").converision_value
-    print("EUR Currency",currency_EUR)
-    print("INR Currency",currency_INR)
-    print("USD Currency",currency_USD)
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -38,7 +35,7 @@ def loadingbay_add(request, loadingbay_id=0):
     try:
         goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
                                                                                                 flat=True)  # count records
-        print(list(goods_status))
+
         goods_status_list = list(goods_status)
         if goods_status_list == []:
             damage_after_status = "Empty"
@@ -46,10 +43,8 @@ def loadingbay_add(request, loadingbay_id=0):
             damage_after_status = "None"
         elif all(element == 5 for element in (goods_status_list)):
             damage_after_status = "Completed"  # get goods status
-            print('damage_after_status', damage_after_status)
         else:
             damage_after_status = "No Status"  # get goods status
-            print('damage_after_status', damage_after_status)
     except ObjectDoesNotExist:
         damage_after_status = "No Status"
 
@@ -57,7 +52,6 @@ def loadingbay_add(request, loadingbay_id=0):
     try:
         warehousein_stack_layer = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
             'wh_stack_layer', flat=True)  # count records
-        print("warehousein_stack_layer_list", list(warehousein_stack_layer))
         warehousein_stack_layer_list = list(warehousein_stack_layer)
         if warehousein_stack_layer_list == []:
             warehousein_status = "Empty"
@@ -65,15 +59,12 @@ def loadingbay_add(request, loadingbay_id=0):
             warehousein_status = "None"
         elif None not in warehousein_stack_layer_list:
             warehousein_status = "Completed"  # get goods status
-            print('warehousein_status', warehousein_status)
         else:
             warehousein_status = "No Status"  # get goods status
-            print('warehousein_status', warehousein_status)
     except ObjectDoesNotExist:
         warehousein_status = "No Status"
 
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-    print(ses_gatein_id_nam)
     wh_job_id = ses_gatein_id_nam
     if request.method == "GET":
         if loadingbay_id == 0:
@@ -146,8 +137,8 @@ def loadingbay_add(request, loadingbay_id=0):
             loadingbayimg_form.save()
         else:
             print("Sub Form Not saved")
-        return redirect(request.META['HTTP_REFERER'])
-        # return redirect('/SMS/gatein_list')
+        # return redirect(request.META['HTTP_REFERER'])
+        return redirect('/SMS/gatein_list')
 
 # # List WH Job
 # @login_required(login_url='login_page')
