@@ -2,7 +2,8 @@ from random import randint
 
 from django.contrib import messages
 from django.db import transaction
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
@@ -10,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from ..models import User_extInfo
 import json
+
 # Add WH Job
 @transaction.atomic
 @login_required(login_url='login_page')
@@ -18,8 +20,8 @@ def gatein_add(request, gatein_id=0):
     user_id = request.session.get('ses_userID')
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-    tot_package = request.POST.get('gatein_no_of_pkg')
     wh_job_id = ses_gatein_id_nam
+    tot_package = request.POST.get('gatein_no_of_pkg')
     # Generate Random WH_Job number
     try:
         last_id=(Gatein_info.objects.values_list('id',flat=True)).last()
@@ -134,29 +136,30 @@ def gatein_add(request, gatein_id=0):
         if gatein_id == 0:
             print("I am inside post add Gatein")
             gatein_form = GateinaddForm(request.POST)
+            if gatein_form.is_valid():
+                print("Form is Valid")
+                gatein_form.save()
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Form is In-Valid")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            job_num=request.POST.get('gatein_job_no')
+            job_id=Gatein_info.objects.get(gatein_job_no=job_num).id
+            url = 'gatein_update/' + str(job_id)
+            return redirect(url)
         else:
             print("I am inside post edit Gatein")
             gatein_info = Gatein_info.objects.get(pk=gatein_id)
             gatein_form = GateinaddForm(request.POST, instance=gatein_info)
-        if gatein_form.is_valid():
-            print("Form is Valid")
-            gatein_form.save()
-            messages.success(request, 'Record Updated Successfully')
-            # raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
-            # cumsum = sum(raw_data)
-            # print("Sum is",cumsum)
-            # print("Total Package is", tot_package)
-            # if cumsum > float(tot_package):
-            #     messages.info(request, 'Total Packages count is lower than package count inside Warehouse ')
-            #     transaction.set_rollback(True)
-            #     return redirect(request.META['HTTP_REFERER'])
-            # else:
-            #     messages.info(request, 'Record Updated Successfully')
-        else:
-            print("Form is In-Valid")
-            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-        # return redirect(request.META['HTTP_REFERER'])
-        return redirect('/SMS/gatein_list')
+            if gatein_form.is_valid():
+                print("Form is Valid")
+                gatein_form.save()
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Form is In-Valid")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/gatein_list')
 # List WH Job
 @login_required(login_url='login_page')
 def gatein_list(request):

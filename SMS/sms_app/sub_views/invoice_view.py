@@ -129,8 +129,6 @@ def invoice_delete(request,invoice_id):
     invoice_del = BilingInfo.objects.get(pk=invoice_id)
     invoice_ref=BilingInfo.objects.get(pk=invoice_id).bill_invoice_ref
     wh_jobs=list(Warehouse_goods_info.objects.filter(wh_voucher_num=invoice_ref).values_list('wh_job_no',flat=True))
-    print('wh_jobs',wh_jobs)
-    print('invoice_ref',invoice_ref)
     for i in wh_jobs:
         Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_voucher_num=None)
     invoice_del.delete()

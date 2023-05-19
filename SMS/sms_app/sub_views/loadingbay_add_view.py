@@ -10,7 +10,6 @@ from django.core.exceptions import ObjectDoesNotExist
 def loadingbay_add(request, loadingbay_id=0):
     first_name = request.session.get('first_name')
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-    print(ses_gatein_id_nam)
     wh_job_id = request.session.get('ses_gatein_id_nam')
     currency_EUR=Currency_type.objects.get(currency_type="EUR").converision_value
     currency_INR=Currency_type.objects.get(currency_type="INR").converision_value
@@ -118,27 +117,44 @@ def loadingbay_add(request, loadingbay_id=0):
             print("I am inside post add Loading bay")
             loadingbay_form = LoadingbayddForm(request.POST)
             loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES)
+            if loadingbay_form.is_valid():
+                print("Main Form Saved")
+                loadingbay_form.save()
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Main Form Not saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+
+            if loadingbayimg_form.is_valid():
+                print("SubForm Saved")
+                loadingbayimg_form.save()
+            else:
+                print("Sub Form Not saved")
+            job_num = request.POST.get('lb_job_no')
+            job_id = Loadingbay_Info.objects.get(lb_job_no=job_num).id
+            url = 'loadingbay_update/' + str(job_id)
+            return redirect(url)
         else:
             print("I am inside post edit Loading bay")
             loadingbay_info = Loadingbay_Info.objects.get(pk=loadingbay_id)
             loadingbay_form = LoadingbayddForm(request.POST, instance=loadingbay_info)
             loadingbayimg_info=Loadingbayimages_Info.objects.get(lbimg_job_no=wh_job_id)
             loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES,instance=loadingbayimg_info)
-        if loadingbay_form.is_valid():
-            print("Main Form Saved")
-            loadingbay_form.save()
-            messages.success(request, 'Record Updated Successfully')
-        else:
-            print("Main Form Not saved")
-            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            if loadingbay_form.is_valid():
+                print("Main Form Saved")
+                loadingbay_form.save()
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Main Form Not saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
 
-        if loadingbayimg_form.is_valid():
-            print("SubForm Saved")
-            loadingbayimg_form.save()
-        else:
-            print("Sub Form Not saved")
-        # return redirect(request.META['HTTP_REFERER'])
-        return redirect('/SMS/gatein_list')
+            if loadingbayimg_form.is_valid():
+                print("SubForm Saved")
+                loadingbayimg_form.save()
+            else:
+                print("Sub Form Not saved")
+            return redirect(request.META['HTTP_REFERER'])
+            # return redirect('/SMS/gatein_list')
 
 # # List WH Job
 # @login_required(login_url='login_page')
