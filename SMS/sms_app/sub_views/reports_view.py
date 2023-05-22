@@ -58,7 +58,7 @@ def stock_value_reports(request):
                	g.gatein_consignee as Consigner,\
                	re.received_not_name as DOCS_Received,\
         		g.gatein_hawb as HAWB,\
-        	   	g.gatein_destination as Destination,\
+        	   	d.dispatch_destination as Destination,\
                	g.gatein_invoice as Customer_Invoice,\
         		w.wh_goods_weight as Checkin_Weight,\
         		w.wh_goods_pieces as Checkin_Qty,\

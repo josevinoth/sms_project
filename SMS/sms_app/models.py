@@ -111,6 +111,7 @@ from.sub_models.sales_comments_mod import Sales_Comments_Info
 from.sub_models.bvm_product_mod import Bvmproduct
 from.sub_models.ar_info_mod import Ar_Info
 from .sub_models.stock_report_combo_mod import Stock_report_combo
+from .sub_models.sales_target_mod import Sales_target_info
 
 
 

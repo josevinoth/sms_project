@@ -348,4 +348,8 @@ urlpatterns = [
     path('ar_insert/', views.ar_add, name='ar_insert'),  # Add ar
     path('ar_update/<int:ar_id>', views.ar_add, name='ar_update'),# update ar
     path('ar_delete/<int:ar_id>', views.ar_delete, name='ar_delete'),# delete ar
+    path('sales_target_list/', views.sales_target_list, name='sales_target_list'),  # List ar
+    path('sales_target_insert/', views.sales_target_add, name='sales_target_insert'),  # Add ar
+    path('sales_target_update/<int:sales_target_id>', views.sales_target_add, name='sales_target_update'),  # update ar
+    path('sales_target_delete/<int:sales_target_id>', views.sales_target_delete, name='sales_target_delete'),  # delete ar
 ]
