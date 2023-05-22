@@ -219,21 +219,21 @@ $(document).ready(function() {
 </script>
 <script>
 	function update_rates_fn() {
-		var exp_rate_val=parseFloat(document.getElementById("exp_rate").value).toFixed(2)
-		var exp_quantity_val=parseFloat(document.getElementById("exp_quantity").value).toFixed(2)
-		var exp_amount_val=parseFloat(exp_rate_val*exp_quantity_val).toFixed(2)
-		var exp_gst_rate_val=parseFloat(document.getElementById("exp_gst_rate").value).toFixed(2)
-		var exp_gst_amount_val=parseFloat((exp_amount_val*exp_gst_rate_val)/100).toFixed(2)
+		var exp_rate_val=parseFloat(document.getElementById("exp_rate").value)
+		var exp_quantity_val=parseFloat(document.getElementById("exp_quantity").value)
+		var exp_amount_val=parseFloat(exp_rate_val*exp_quantity_val)
+		var exp_gst_rate_val=parseFloat(document.getElementById("exp_gst_rate").value)
+		var exp_gst_amount_val=parseFloat((exp_amount_val*exp_gst_rate_val)/100)
 		var exp_total_amount_val=parseFloat(exp_gst_amount_val)+parseFloat(exp_amount_val)
-		var exp_tds_rate_val=parseFloat(document.getElementById("exp_tds_rate").value).toFixed(2)
-		var exp_tds_amount_val=parseFloat((exp_amount_val)*exp_tds_rate_val/100).toFixed(2)
-		var exp_amount_payable_val=parseFloat(exp_total_amount_val-exp_tds_amount_val).toFixed(2)
+		var exp_tds_rate_val=parseFloat(document.getElementById("exp_tds_rate").value)
+		var exp_tds_amount_val=parseFloat((exp_amount_val)*exp_tds_rate_val/100)
+		var exp_amount_payable_val=parseFloat(exp_total_amount_val-exp_tds_amount_val)
 
-		document.getElementById("exp_amount").value=exp_amount_val
-		document.getElementById("exp_gst_amount").value=exp_gst_amount_val
-		document.getElementById("exp_total_amount").value=exp_total_amount_val
-		document.getElementById("exp_tds_amount").value=exp_tds_amount_val
-		document.getElementById("exp_amount_payable").value=exp_amount_payable_val
+		document.getElementById("exp_amount").value=exp_amount_val.toFixed(2)
+		document.getElementById("exp_gst_amount").value=exp_gst_amount_val.toFixed(2)
+		document.getElementById("exp_total_amount").value=exp_total_amount_val.toFixed(2)
+		document.getElementById("exp_tds_amount").value=exp_tds_amount_val.toFixed(2)
+		document.getElementById("exp_amount_payable").value=exp_amount_payable_val.toFixed(2)
 
 	}
 </script>
