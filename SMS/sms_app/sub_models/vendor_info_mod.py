@@ -24,5 +24,8 @@ class Vendor_info(models.Model):
     vend_created_at = models.DateTimeField(null=True, auto_now_add=True)
     vend_updated_at = models.DateTimeField(null=True, auto_now=True)
     vend_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        ordering = ["vend_name"]
     def __str__(self):
         return self.vend_name
