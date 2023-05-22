@@ -10,7 +10,7 @@ class ExpenseInfo(models.Model):
     exp_vendor_bill_date=models.DateTimeField(blank=True, null=True)
     exp_service_start_date=models.DateTimeField(blank=True, null=True)
     exp_service_end_date=models.DateTimeField(blank=True, null=True)
-    exp_expense_type = models.ForeignKey(ExpenseTypeInfo, on_delete=models.CASCADE,blank=True, null=True)
+    exp_expense_type = models.ForeignKey(ExpenseTypeInfo, on_delete=models.CASCADE)
     exp_uom = models.ForeignKey(ExpenseUOMInfo, on_delete=models.CASCADE, blank=True, null=True)
     exp_rate=models.FloatField(default=0.0,blank=True,null=True)
     exp_remarks=models.TextField(max_length=300,blank=True,null=True)
