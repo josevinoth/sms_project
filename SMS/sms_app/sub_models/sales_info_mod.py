@@ -21,7 +21,7 @@ class SalesInfo(models.Model):
     s_department = models.CharField(max_length=30)
     s_designation = models.CharField(max_length=30)
     s_contact_no = models.CharField(max_length=10)
-    s_email_id = models.EmailField(max_length=30,default='')
+    s_email_id = models.EmailField(max_length=100,default='')
     s_decision_maker = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE,related_name='s_decision_maker', db_column='s_decision_maker', default='')
     s_name_dm = models.CharField(max_length=30)
     s_designation_dm = models.CharField(max_length=30,default='')
