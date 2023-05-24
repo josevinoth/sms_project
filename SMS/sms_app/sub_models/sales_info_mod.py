@@ -41,7 +41,7 @@ class SalesInfo(models.Model):
     s_rate_approval = models.ForeignKey(YesNoInfo,blank=True, null=True, related_name='s_rate_approval', db_column='s_rate_approval',on_delete=models.CASCADE, default='')
     s_expected_prof = models.IntegerField(blank=True, null=True)
     s_approver_name = models.ForeignKey(MyUser, related_name='s_approver_name', db_column='s_approver_name',on_delete=models.CASCADE, blank=True, null=True,)
-    s_status = models.ForeignKey(Salestatus,blank=True, null=True, on_delete=models.CASCADE, default='')
+    s_status = models.ForeignKey(Salestatus,blank=True, null=True, on_delete=models.CASCADE, default=1)
     s_next_meet_schd_date = models.DateField(null = True,blank=True)
     s_credit_period = models.IntegerField(blank=True, null=True)
     s_created_at = models.DateTimeField(null=True, auto_now_add=True)
