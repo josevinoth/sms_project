@@ -45,6 +45,23 @@ def gatein_pre_add(request, gatein_pre_id=0):
             print("I am inside post add Gatein")
             gatein_pre_form = Gatein_preaddForm(request.POST)
             gatein_preimg_form = Gatein_pre_att_addForm(request.POST,request.FILES)
+            if gatein_pre_form.is_valid():
+                print("Main Form is Valid")
+                gatein_pre_form.save()
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Main Form is In-Valid")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+
+            if gatein_preimg_form.is_valid():
+                print("Sub Form is Valid")
+                gatein_preimg_form.save()
+            else:
+                print("Sub Form Not Valid")
+            pre_gatein_num = request.POST.get('gatein_pre_number')
+            job_id = Gatein_pre_info.objects.get(gatein_pre_number=pre_gatein_num).id
+            url = 'gatein_pre_update/' + str(job_id)
+            return redirect(url)
         else:
             gatein_pre_number_sess = request.POST.get('gatein_pre_number')
             print("I am inside post edit Gatein")
@@ -54,19 +71,21 @@ def gatein_pre_add(request, gatein_pre_id=0):
             gatein_preimg_info = Gatein_pre_info_att.objects.get(gatein_pre_number_att=gatein_pre_number_sess)
             gatein_preimg_form = Gatein_pre_att_addForm(request.POST,request.FILES, instance=gatein_preimg_info)
 
-        if gatein_pre_form.is_valid():
-            print("Main Form is Valid")
-            gatein_pre_form.save()
-        else:
-            print("Main Form is In-Valid")
+            if gatein_pre_form.is_valid():
+                print("Main Form is Valid")
+                gatein_pre_form.save()
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Main Form is In-Valid")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
 
-        if gatein_preimg_form.is_valid():
-            print("Sub Form is Valid")
-            gatein_preimg_form.save()
-        else:
-            print("Sub Form Not Valid")
-
-        return redirect('/SMS/gatein_pre_list')
+            if gatein_preimg_form.is_valid():
+                print("Sub Form is Valid")
+                gatein_preimg_form.save()
+            else:
+                print("Sub Form Not Valid")
+            return redirect(request.META['HTTP_REFERER'])
+            # return redirect('/SMS/gatein_pre_list')
 # List WH Job
 @login_required(login_url='login_page')
 def gatein_pre_list(request):
