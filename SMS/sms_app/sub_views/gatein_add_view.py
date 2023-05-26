@@ -23,9 +23,8 @@ def gatein_add(request, gatein_id=0):
     wh_job_id = ses_gatein_id_nam
     tot_package = request.POST.get('gatein_no_of_pkg')
     # Generate Random WH_Job number
-    try:
-        last_id=(Gatein_info.objects.values_list('id',flat=True)).last()
-    except ObjectDoesNotExist:
+    last_id=(Gatein_info.objects.values_list('id',flat=True)).last()
+    if last_id==None:
         last_id =0
     wh_job_num = randint(10000, 99999) + last_id+1
     if request.method == "GET":
