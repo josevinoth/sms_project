@@ -18,6 +18,7 @@
         <tr>
             <th>WH Job Number</th>
             <th>WH Stock Number</th>
+            <th>Number Of Pieces</th>
             <th>Dispatch Number</th>
             <th>Shipper Invoice</th>
             <th>Customer Name</th>
@@ -42,6 +43,7 @@
             <td>
                 <a class="" href="{% url 'warehousein_update' goodsinfo.id %}" onclick="return confirm('Are you sure to view?');">{{goodsinfo.wh_qr_rand_num}}</a>
             </td>
+            <td> {{goodsinfo.wh_goods_pieces}}</td>
             <td> {{goodsinfo.wh_dispatch_num}}</td>
             <td> {{goodsinfo.wh_goods_invoice}}</td>
             <td> {{goodsinfo.wh_customer_name}}</td>

@@ -233,27 +233,38 @@ def warehouseout_add(request, warehouseout_id=0):
         return render(request, "asset_mgt_app/warehouseout_add.html", context)
     else:
         print("I am inside post edit warehouseout")
-        print('warehouseout_id',warehouseout_id)
         warehouseoutinfo = Warehouse_goods_info.objects.get(pk=warehouseout_id)
         warehouseout_form = WarehoseoutaddForm(request.POST, instance=warehouseoutinfo)
-    if warehouseout_form.is_valid():
-        warehouseout_form.save()
-        print("warehouseoutinfo is Valid")
-        dispatch_num_val = request.session.get('ses_dispatch_num_val')
-        print('dispatch_num_val', dispatch_num_val)
-        Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_check_in_out=2)
-        Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_dispatch_num=dispatch_num_val)
-        check_in_date = Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time
-        check_out_date = Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkout_time
-        date_diff = (check_out_date - check_in_date)  # Differnce between dates
-        date_diff_days = date_diff.days
-        duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
-        storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
-        # storage_days = (check_out_date - check_in_date).days  # In days
-        storage_days = float(round(storage_hours / 24, 2))  # In days
-        Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_storage_time=date_diff_days)
-    else:
-        print("warehouseoutinfo is Not-Valid")
+        wh_job_num=Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_job_no
+        s_bill=Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_sbill
+        s_bill_date=Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_sbill_date
+        stock_number=Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_qr_rand_num
+        fumigation_action=Warehouse_goods_info.objects.get(wh_qr_rand_num=stock_number).wh_fumigation_action
+        fumigation_date=Warehouse_goods_info.objects.get(wh_qr_rand_num=stock_number).wh_fumigation_date
+        if s_bill==None or s_bill_date==None:
+            messages.error(request, 'S_Bill Number Or S_Bil Date not entered for this Stock')
+            return redirect(request.META['HTTP_REFERER'])
+        elif str(fumigation_action)=='BVM' and fumigation_date==None:
+            messages.error(request, 'Fumigation Date not entered for this Stock')
+            return redirect(request.META['HTTP_REFERER'])
+        else:
+            if warehouseout_form.is_valid():
+                warehouseout_form.save()
+                print("warehouseoutinfo is Valid")
+                dispatch_num_val = request.session.get('ses_dispatch_num_val')
+                Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_check_in_out=2)
+                Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_dispatch_num=dispatch_num_val)
+                check_in_date = Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time
+                check_out_date = Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkout_time
+                date_diff = (check_out_date - check_in_date)  # Differnce between dates
+                date_diff_days = date_diff.days
+                duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
+                storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
+                # storage_days = (check_out_date - check_in_date).days  # In days
+                storage_days = float(round(storage_hours / 24, 2))  # In days
+                Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_storage_time=date_diff_days)
+            else:
+                print("warehouseoutinfo is Not-Valid")
     return redirect('/SMS/warehouseout_cancel')
 
 @login_required(login_url='login_page')

@@ -273,7 +273,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Fumigation Action?</span>
 									</div>
-									{% render_field goods_form.wh_fumigation_action id="wh_fumigation_action" class="form-control disable_a_href"%}
+									{% render_field goods_form.wh_fumigation_action id="wh_fumigation_action" class="form-control disable_a_href" onchange="fumigation_action_chng()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -457,6 +457,7 @@ $(document).ready(function() {
 	package_type_chng()
 	fumigation_process_chng()
 	stocknum()
+	fumigation_action_chng()
   });
 </script>
 
@@ -503,13 +504,23 @@ function fumigation_process_chng() {
 	if (fumigation_process==2)
 	 	{
 	 		$('#wh_fumigation_action').removeClass('disable_a_href');
-	 		$('#wh_fumigation_date').removeClass('disable_a_href');
 	 	}
 	else
 	 	{
 	 		$('#wh_fumigation_action').addClass('disable_a_href');
 	 		document.getElementById("wh_fumigation_action").value=3
-	 		document.getElementById("wh_fumigation_date").value ="";
+	 	}
+}
+</script>
+<script>
+function fumigation_action_chng() {
+	var fumigation_action=document.getElementById("wh_fumigation_action").value;
+	if (fumigation_action==1)
+	 	{
+	 		$('#wh_fumigation_date').removeClass('disable_a_href');
+	 	}
+	else
+	 	{
 	 		$('#wh_fumigation_date').addClass('disable_a_href');
 	 	}
 }

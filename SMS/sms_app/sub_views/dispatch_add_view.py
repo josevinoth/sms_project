@@ -212,8 +212,8 @@ def dispatch_remove_goods(request,dispatch_id):
 @login_required(login_url='login_page')
 def dispatch_add_goods(request,dispatch_id):
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
-    dispatch_goods_checkout = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=2)
-    dispatch_num_update = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num=dispatch_num_val)
+    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=2)
+    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num=dispatch_num_val)
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=datetime.now())
     first_name = request.session.get('first_name')
     check_in_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkin_time
