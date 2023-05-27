@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
-<form method="POST" action="" id="sales_add" enctype="multipart/form-data" data-load_customer_model-url="{% url 'load_customer_model' %}" novalidate>
+<form method="POST" action="" id="sales_add" enctype="multipart/form-data" data-load_customer_model-url="{% url 'load_customer_model' %}">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-1"></div>
