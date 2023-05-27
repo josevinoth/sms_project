@@ -10,6 +10,3 @@ class InvoiceaddForm(forms.ModelForm):
         super(InvoiceaddForm, self).__init__(*args, **kwargs)
         self.fields['bill_customer_name'].empty_label = "--Select--"
         self.fields['bill_status'].empty_label = "--Select--"
-        # self.fields['loc_city'].empty_label = "--Select--"
-        # self.fields['loc_status'].empty_label = "--Select--"
-
