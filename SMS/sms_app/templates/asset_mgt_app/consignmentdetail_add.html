@@ -48,6 +48,7 @@
 									{% render_field con_det_form.co_consignee class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner Invoice</span>
@@ -87,7 +88,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Ebill No.</span>
+										<span class="input-group-text">Eway bill No.</span>
 									</div>
 									{% render_field con_det_form.co_ebillno class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -113,13 +114,7 @@
 									{% render_field con_det_form.co_containerdescription class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Dimension</span>
-									</div>
-									{% render_field con_det_form.co_dimension class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Movement</span>
@@ -134,8 +129,33 @@
 									{% render_field con_det_form.co_status class="form-control" id="consignment_status" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Reference No.</span>
+									</div>
+									{% render_field con_det_form.co_cusrefnum class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Type</span>
+									</div>
+									{% render_field con_det_form.co_businesstype class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								{% render_field con_det_form.co_lastmodifiedby id="co_lastmodifiedby" hidden="True" class="form-control" %}
 							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
@@ -148,6 +168,7 @@
 		<div class="col-2"></div>
 	</div>
 	</div>
+	{% include "asset_mgt_app/consignmentdetail_list_woh.html" %}
 </form>
 <script>
 $(document).ready(function() {

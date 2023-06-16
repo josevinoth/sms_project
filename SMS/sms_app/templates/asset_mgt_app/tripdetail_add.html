@@ -16,7 +16,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field form.tr_enquirynumber id="tr_enquirynumber" class="form-control" %}
+									{% render_field form.tr_enquirynumber id="tr_enquirynumber" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -30,16 +30,10 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Number</span>
 									</div>
-									{% render_field form.tr_tripnumber id="tr_tripnumber" class="form-control" %}
+									{% render_field form.tr_tripnumber id="tr_tripnumber" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Business Type</span>
-									</div>
-									{% render_field form.tr_transportbusinesstype id="tr_transportbusinesstype" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Source</span>
@@ -156,6 +150,7 @@
 		</div>
 		<div class="col-1"></div>
 	</div>
+	{% include "asset_mgt_app/tripdetail_list_woh.html" %}
 </form>
 <script>
 $(document).ready(function() {

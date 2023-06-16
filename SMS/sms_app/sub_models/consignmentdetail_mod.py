@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import MyUser,MovementtypeInfo,StatusList
+from ..models import MyUser,MovementtypeInfo,StatusList,YesNoInfo,TrbusinesstypeInfo
 
 class ConsignmentdetailInfo(models.Model):
     co_enquirynumber = models.CharField(max_length=10,default = '')
@@ -22,7 +22,8 @@ class ConsignmentdetailInfo(models.Model):
     co_lastmodifiedby = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     co_created_at = models.DateTimeField(null=True, auto_now_add=True)
     co_updated_at = models.DateTimeField(null=True, auto_now=True)
-
+    co_cusrefnum = models.ForeignKey(YesNoInfo,on_delete=models.CASCADE,blank=True,null=True)
+    co_businesstype = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, blank=True,null=True)
 
 
     def __str__(self):

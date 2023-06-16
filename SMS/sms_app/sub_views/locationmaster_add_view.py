@@ -152,6 +152,7 @@ def load_customer_model(request):
     customer_contact = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_contactno')
     customer_address = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_address')
     customer_type = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_type')
+    customer_email = CustomerInfo.objects.get(cu_name=lm_customer_name_id).cu_email
     customer_businessmodel_val=customer_businessmodel[0]['cu_businessmodel'] #Get value from Queryset
     customer_short_name_val=customer_short_name[0]['cu_nameshort'] #Get value from Queryset
     customer_code_val=customer_code[0]['cu_customercode'] #Get value from Queryset
@@ -177,6 +178,7 @@ def load_customer_model(request):
         'customer_contact_val':customer_contact_val,
         'customer_address_val':customer_address_val,
         'customer_type_val':customer_type_val,
+        'customer_email':customer_email,
     }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))

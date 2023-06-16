@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from ..forms import ConsignmentdetailaddForm
 from ..models import ConsignmentdetailInfo,VehicledetailInfo,EnquirynoteInfo
@@ -11,6 +12,8 @@ def consignmentdetail_add(request,consignmentdetail_id=0):
         if consignmentdetail_id == 0:
             print("I am inside Get add consignmentdetails")
             con_det_form = ConsignmentdetailaddForm()
+            enquiry_num = request.session.get('ses_enquiry_note')
+            print(enquiry_num)
         else:
             print("I am inside get edit consignmentdetails")
             consignmentdetail=ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
@@ -21,6 +24,7 @@ def consignmentdetail_add(request,consignmentdetail_id=0):
             'user_id': user_id,
             'con_det_form': con_det_form,
             'enquiry_num': enquiry_num,
+            'consignmentdetail_list': ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num),
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
     else:
@@ -34,9 +38,12 @@ def consignmentdetail_add(request,consignmentdetail_id=0):
         if con_det_form.is_valid():
             con_det_form.save()
             print("Main Form is Valid")
+            messages.success(request, 'Record Updated Successfully')
         else:
             print("Main Form is not Valid")
-        return redirect('/SMS/consignmentdetail_list')
+            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+        return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/consignmentdetail_list')
 
 # List consignmentdetail
 @login_required(login_url='login_page')

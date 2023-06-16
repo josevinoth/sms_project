@@ -42,6 +42,7 @@ def tripclosure_add(request,tripclosure_id=0):
             'trip_num': trip_num,
             'user_id': user_id,
             'role': role,
+            # 'tripclosure_list': TripdetailInfo.objects.filter(tc_enquirynumber=enquiry_num),
         }
         return render(request, "asset_mgt_app/tripclosure_add.html", context)
     else:
@@ -57,7 +58,8 @@ def tripclosure_add(request,tripclosure_id=0):
             print("Main Form Saved")
         else:
             print("Main Form not Saved")
-        return redirect('/SMS/enquirynote_list')
+        return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/enquirynote_list')
 
 # List tripclosure
 @login_required(login_url='login_page')

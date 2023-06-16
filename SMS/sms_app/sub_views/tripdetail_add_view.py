@@ -35,6 +35,7 @@ def tripdetail_add(request,tripdetail_id=0):
             'user_id': user_id,
             'enquiry_num': enquiry_num,
             'consignment_num': consignment_num,
+            'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num),
         }
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
     else:
@@ -53,7 +54,8 @@ def tripdetail_add(request,tripdetail_id=0):
             print("Main Form Saved")
         else:
             print("Main Form not Saved")
-        return redirect('/SMS/enquirynote_list')
+        return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/enquirynote_list')
 
 # List tripdetail
 @login_required(login_url='login_page')

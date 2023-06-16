@@ -11,3 +11,5 @@ class ConsignmentdetailaddForm(forms.ModelForm):
         super(ConsignmentdetailaddForm,self).__init__(*args, **kwargs)
         self.fields['co_movement'].empty_label = "--Select--"
         self.fields['co_status'].empty_label = "--Select--"
+        self.fields['co_cusrefnum'].empty_label = "--Select--"
+        self.fields['co_businesstype'].empty_label = "--Select--"

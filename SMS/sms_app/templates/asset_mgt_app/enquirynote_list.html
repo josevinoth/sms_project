@@ -55,7 +55,7 @@
             <td> {{enquirynoteinfo.en_vehicletype}}</td>
             <td> {{enquirynoteinfo.en_assignedto}}</td>
             <td>
-                <a class="link" href="{% url 'consignment_note_connect' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_consignmentdetails}}</a>
+                <a class="link" href="{% url 'consignmentdetail_update' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_consignmentdetails}}</a>
             </td>
             {% if enquirynoteinfo.en_consignmentdetails %}
             <td>

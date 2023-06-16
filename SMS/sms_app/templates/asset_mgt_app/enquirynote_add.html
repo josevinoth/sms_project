@@ -41,21 +41,21 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Department</span>
 									</div>
-									{% render_field form.en_customerdepartment class="form-control" %}
+									{% render_field form.en_customerdepartment id="en_customerdepartment" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Contact</span>
 									</div>
-									{% render_field form.en_customercontact class="form-control" %}
+									{% render_field form.en_customercontact id="en_customercontact" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Email</span>
 									</div>
-									{% render_field form.en_customeremail class="form-control" %}
+									{% render_field form.en_customeremail id="en_customeremail" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -93,6 +93,13 @@
 										<span class="input-group-text">To Location</span>
 									</div>
 									{% render_field form.en_tolocation class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Pick-Up Date & Time</span>
+									</div>
+									{% render_field form.en_pickupdatetime id="en_pickupdatetime" type="Datetime-local" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field form.en_status hidden="true" class="form-control" %}
@@ -141,7 +148,11 @@ $(document).ready(function() {
         },
 		success: function (data) {
 			var customer_model=JSON.parse(data)["customer_short_name_val"];
+			var customer_contact=JSON.parse(data)["customer_contact_val"]
+			var customer_email=JSON.parse(data)["customer_email"]
 			document.getElementById("en_customercode").value =customer_model;
+			document.getElementById("en_customercontact").value =customer_contact;
+			document.getElementById("en_customeremail").value =customer_email;
         }
       });
 

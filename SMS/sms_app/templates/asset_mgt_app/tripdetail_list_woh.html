@@ -1,0 +1,90 @@
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+<!--    <div class="row">-->
+<!--        <div class="col-5"></div>-->
+<!--        <div class="col-2 rounded text-center text-light bg-info">-->
+<!--            <h3>Trip Details List</h3>-->
+<!--        </div>-->
+<!--        <div class="col-5"></div>-->
+<!--    </div>-->
+<!--</div>-->
+<!--<div class="container-fluid row">-->
+<!--    <div class="col-md-1">-->
+<!--      <a href="{% url 'enquirynote_list' %}" class="btn btn-primary btn-block btn-lg">-->
+<!--        <i class="fas fa-arrow-left"></i> Back-->
+<!--      </a>-->
+<!--    </div>-->
+    <div class="col-md-1">
+      <a href="{% url 'tripdetail_insert' %}" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i> Add
+      </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+<table  id="tripdetail_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Created On</th>
+            <th>Enquiry Number</th>
+            <th>Consignment Number</th>
+            <th>Trip Number</th>
+            <th>From Location</th>
+            <th>Starting KM</th>
+            <th>Starting Date & Time</th>
+            <th>To Location</th>
+            <th>Ending KM</th>
+            <th>Ending Date & Time</th>
+            <th>Seal Number</th>
+            <th>Container Number</th>
+            <th>Trip Status</th>
+            <th>Updated By</th>
+            <th>Updated On</th>
+            <th>Edit</th>
+            <th>Delete</th>
+    </thead>
+    <tbody>
+        {% for tripdetailinfo in tripdetail_list %}
+            <tr>
+                <td> {{tripdetailinfo.tr_created_at}}</td>
+                <td> {{tripdetailinfo.tr_enquirynumber}}</td>
+                <td> {{tripdetailinfo.tr_consignmentnumber}}</td>
+                <td> {{tripdetailinfo.tr_tripnumber}}</td>
+                <td> {{tripdetailinfo.tr_fromlocation}}</td>
+                <td> {{tripdetailinfo.tr_startingkm}}</td>
+                <td> {{tripdetailinfo.tr_startingdate}}</td>
+                <td> {{tripdetailinfo.tr_tolocation}}</td>
+                <td> {{tripdetailinfo.tr_endingkm}}</td>
+                <td> {{tripdetailinfo.tr_endingdate}}</td>
+                <td> {{tripdetailinfo.tr_sealnumber}}</td>
+                <td> {{tripdetailinfo.tr_containernumber}}</td>
+                <td> {{tripdetailinfo.tr_status}}</td>
+                <td> {{tripdetailinfo.tr_updated_by}}</td>
+                <td> {{tripdetailinfo.tr_updated_at}}</td>
+                <td>
+
+                    <a class="btn btn-primary" href="{% url 'tripdetail_update' tripdetailinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'tripdetail_delete' tripdetailinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#tripdetail_list').DataTable();
+} );
+</script>
+
+{% endblock content %}

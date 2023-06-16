@@ -69,9 +69,15 @@ def enquirynote_list(request):
             EnquirynoteInfo.objects.filter(en_enquirynumber=k).update(en_tripclosure=trip_closure_trip_data)
     enquiry_num_list=EnquirynoteInfo.objects.filter()
     for m in enquiry_num_list:
+        print(m)
         try:
-            consignment_status = ConsignmentdetailInfo.objects.get(co_enquirynumber=m).co_status
-            consignment_status_id = StatusList.objects.get(status_title=consignment_status).id
+            consignment_status_id_list=[]
+            consignment_status = ConsignmentdetailInfo.objects.filter(co_enquirynumber=m).values_list('co_status',flat=True)
+            print(consignment_status)
+            for i in consignment_status:
+                consignment_status_id_list = consignment_status_id_list.append(StatusList.objects.get(status_title=i).id)
+            if all(element == 5 for element in (consignment_status_id_list)):
+                consignment_status_id=5
         except ObjectDoesNotExist:
             consignment_status_id=6
         try:
@@ -92,7 +98,7 @@ def enquirynote_list(request):
 
     context = {
                 'enquirynote_list' : EnquirynoteInfo.objects.all(),
-                'consignmentdetail_list': ConsignmentdetailInfo.objects.all(),
+                # 'consignmentdetail_list': ConsignmentdetailInfo.objects.all(),
                 'first_name': first_name
                 }
     return render(request,"asset_mgt_app/enquirynote_list.html",context)
@@ -103,6 +109,7 @@ def consignment_note_connect(request,enquirynote_id):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     enquiry_num=EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
+    request.session['ses_enquiry_note']=enquiry_num
     try:
         consignment_num=ConsignmentdetailInfo.objects.get(co_enquirynumber=enquiry_num).co_consignmentnumber
     except ObjectDoesNotExist:
@@ -124,6 +131,7 @@ def consignment_note_connect(request,enquirynote_id):
             'con_det_form': con_det_form,
             'enquiry_num': enquiry_num,
             'user_id': user_id,
+            'consignmentdetail_list': ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num),
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
     else:
