@@ -113,7 +113,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Shipment Weight</span>
+										<span class="input-group-text">Shipment Weight (kg)</span>
 									</div>
 									{% render_field invoice_form.bill_weight id="bill_weight" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -141,7 +141,7 @@
 <!--								</div>-->
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Wh Storage cost</span>
+										<span class="input-group-text">Wh Storage cost (INR)</span>
 									</div>
 									{% render_field invoice_form.bill_wh_storage_charges class="form-control disable_a_href" id="bill_wh_storage_charges" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -155,21 +155,21 @@
 <!--								</div>-->
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Loading Cost</span>
+										<span class="input-group-text">Total Loading Cost (INR)</span>
 									</div>
 									{% render_field invoice_form.bill_loading_charge class="form-control disable_a_href" id="bill_loading_charge" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Unloading Cost</span>
+										<span class="input-group-text">Total Unloading Cost (INR)</span>
 									</div>
 									{% render_field invoice_form.bill_unloading_charge class="form-control disable_a_href" id="bill_unloading_charge" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Fumigation Cost</span>
+										<span class="input-group-text">Fumigation Cost (INR)</span>
 									</div>
 									{% render_field invoice_form.bill_tot_fumigation_charges class="form-control" id="bill_tot_fumigation_charges" onchange="fumigation_charge_change_fn()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -222,41 +222,41 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Crane Cost</span>
+										<span class="input-group-text">Total Crane Cost (INR)</span>
 									</div>
 									{% render_field invoice_form.bill_tot_crane_charges class="form-control disable_a_href" id="bill_tot_crane_charges" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Forklift Cost</span>
+										<span class="input-group-text">Total Forklift Cost (INR)</span>
 									</div>
 									{% render_field invoice_form.bill_tot_forklift_charges class="form-control disable_a_href" id="bill_tot_forklift_charges" %}
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total (Before GST)</span>
+										<span class="input-group-text">Total (Before GST) (INR)</span>
 									</div>
 									{% render_field invoice_form.bill_total_pre_gst class="form-control disable_a_href" id="bill_total_pre_gst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">CGST (@9%)</span>
+										<span class="input-group-text">CGST (@9%) (INR)</span>
 									</div>
 									{% render_field invoice_form.bill_cgst class="form-control disable_a_href" id="bill_cgst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">SGST (@9%)</span>
+										<span class="input-group-text">SGST (@9%) (INR)</span>
 									</div>
 									{% render_field invoice_form.bill_sgst class="form-control disable_a_href" id="bill_sgst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Post GST</span>
+										<span class="input-group-text">Total Post GST (INR)</span>
 									</div>
 									{% render_field invoice_form.bill_total_post_gst class="form-control disable_a_href" id="bill_total_post_gst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
