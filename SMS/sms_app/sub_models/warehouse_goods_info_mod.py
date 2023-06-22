@@ -54,6 +54,14 @@ class Warehouse_goods_info(models.Model):
     wh_total_qty = models.IntegerField(blank=True, null=True, default=0)
     wh_loading_charge_unit = models.FloatField(blank=True, null=True, default=0.0)
     wh_total_loading_cost = models.FloatField(blank=True, null=True, default=0.0)
+    wh_storage_cost_per_day = models.FloatField(blank=True, null=True, default=0.0)
+    wh_storage_cost_total = models.FloatField(blank=True, null=True, default=0.0)
+    wh_forklift_cost = models.FloatField(blank=True, null=True, default=0.0)
+    wh_forklift_cost_l2hr = models.FloatField(blank=True, null=True, default=0.0)
+    wh_forklift_cost_g2hr = models.FloatField(blank=True, null=True, default=0.0)
+    wh_crane_cost = models.FloatField(blank=True, null=True, default=0.0)
+    wh_crane_cost_l2h = models.FloatField(blank=True, null=True, default=0.0)
+    wh_crane_cost_g2h = models.FloatField(blank=True, null=True, default=0.0)
 
 
 

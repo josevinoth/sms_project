@@ -37,9 +37,17 @@
             <th>Customer Name</th>
             <th>Customer Type</th>
             <th>No of Pieces</th>
-            <th>Loading Cost/Piece</th>
-            <th>Total Loading Cost</th>
-            <th>Total Un-Loading Cost</th>
+            <th>Loading Cost/Piece (INR)</th>
+            <th>Total Loading Cost (INR)</th>
+            <th>Total Un-Loading Cost (INR)</th>
+            <th>Storage Cost/Day (INR)</th>
+            <th>Total Storage Cost (INR)</th>
+            <th>Crane Cost upto 2hr (INR)</th>
+            <th>Crane Cost after 2hr (INR)</th>
+            <th>Crane Cost (INR)</th>
+            <th>Forklift Cost upto 2hr (INR)</th>
+            <th>Forklift Cost after 2hr (INR)</th>
+            <th>Forklift Cost (INR)</th>
             <th>Weight</th>
             <th>In Time</th>
             <th>Out Time</th>
@@ -59,6 +67,14 @@
             <td> {{shipperinvoiceinfo.wh_loading_charge_unit}}</td>
             <td> {{shipperinvoiceinfo.wh_total_loading_cost}}</td>
             <td> {{shipperinvoiceinfo.wh_total_loading_cost}}</td>
+            <td> {{shipperinvoiceinfo.wh_storage_cost_per_day}}</td>
+            <td> {{shipperinvoiceinfo.wh_storage_cost_total}}</td>
+            <td> {{shipperinvoiceinfo.wh_crane_cost_l2h}}</td>
+            <td> {{shipperinvoiceinfo.wh_crane_cost_g2h}}</td>
+            <td> {{shipperinvoiceinfo.wh_crane_cost}}</td>
+            <td> {{shipperinvoiceinfo.wh_forklift_cost_l2hr}}</td>
+            <td> {{shipperinvoiceinfo.wh_forklift_cost_g2hr}}</td>
+            <td> {{shipperinvoiceinfo.wh_forklift_cost}}</td>
             <td> {{shipperinvoiceinfo.wh_goods_weight}}</td>
             <td> {{shipperinvoiceinfo.wh_checkin_time}}</td>
             <td> {{shipperinvoiceinfo.wh_checkout_time}}</td>

@@ -145,9 +145,6 @@
 									{% render_field loadingbayimg_form.lbimg_inward_pod id="lbimg_inward_pod" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-6">
-								{% render_field loadingbayimg_form.lbimg_job_no id="lbimg_job_no" value=request.session.ses_gatein_id_nam class="form-control" %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">E-way Bill#</span>
@@ -170,9 +167,12 @@
 									{% render_field loadingbay_form.lb_mh_manual class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-6">
+								{% render_field loadingbayimg_form.lbimg_job_no id="lbimg_job_no" value=request.session.ses_gatein_id_nam class="form-control" %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Forklift</span>
+										<span class="input-group-text">Forklift?</span>
 									</div>
 									<!--									<input type="checkbox" class="form-control" name="lb_mh_forklift" id="lb_mh_forklift">-->
 									{% render_field loadingbay_form.lb_mh_forklift id="lb_mh_forklift" onchange="lb_crane_forklift_change()" class="form-control" %}
@@ -185,9 +185,56 @@
 									{% render_field loadingbay_form.lb_forklift_time id="lb_forklift_time" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+								<div class="row">
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Forklift Charges<2hr</span>
+											</div>
+											{% render_field loadingbay_form.lb_forklift_charges_std_l2hr id="lb_forklift_charges_std_l2hr" class="form-control disable_a_href" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Forklift Charges<2hr (Mod)</span>
+											</div>
+											{% render_field loadingbay_form.lb_forklift_charges_mod_l2h id="lb_forklift_charges_mod_l2h" class="form-control disable_a_href" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Forklift Charges>2hr</span>
+											</div>
+											{% render_field loadingbay_form.lb_forklift_charges_std_g2hr id="lb_forklift_charges_std_g2hr" class="form-control disable_a_href" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Forklift Charges>2hr (Mod)</span>
+											</div>
+											{% render_field loadingbay_form.lb_forklift_charges_mod_g2hr id="lb_forklift_charges_mod_g2hr" class="form-control disable_a_href" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Crane</span>
+										<span class="input-group-text">No Of Forklifts</span>
+									</div>
+									{% render_field loadingbay_form.lb_no_of_forklift id="lb_no_of_forklift" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Crane?</span>
 									</div>
 									<!--									<input type="checkbox" class="form-control" name="lb_mh_crane" id="lb_mh_crane">-->
 									{% render_field loadingbay_form.lb_mh_crane id="lb_mh_crane" onchange="lb_crane_forklift_change()" class="form-control" %}
@@ -198,6 +245,53 @@
 										<span class="input-group-text">Crane Hours</span>
 									</div>
 									{% render_field loadingbay_form.lb_crane_time id="lb_crane_time" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="row">
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Crane Charges<2hr</span>
+											</div>
+											{% render_field loadingbay_form.lb_crane_charges_std_l2hr id="lb_crane_charges_std_l2hr" class="form-control disable_a_href" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Crane Charges<2hr (Mod)</span>
+											</div>
+											{% render_field loadingbay_form.lb_crane_charges_mod_l2h id="lb_crane_charges_mod_l2h" class="form-control disable_a_href" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Crane Charges>2hr</span>
+											</div>
+											{% render_field loadingbay_form.lb_crane_charges_std_g2hr id="lb_crane_charges_std_g2hr" class="form-control disable_a_href" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Crane Charges>2hr (Mod)</span>
+											</div>
+											{% render_field loadingbay_form.lb_crane_charges_mod_g2hr id="lb_crane_charges_mod_g2hr" class="form-control disable_a_href" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">No Of Cranes</span>
+									</div>
+									{% render_field loadingbay_form.lb_no_of_crane id="lb_no_of_crane" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -262,6 +356,10 @@ $(document).ready(function() {
 	var damage_after_status_id='{{damage_after_status}}';
 	var warehousein_status_id='{{warehousein_status}}';
 
+	document.getElementById("lb_crane_charges_std_l2hr").value='{{crane_1st_2hr}}'
+	document.getElementById("lb_crane_charges_std_g2hr").value='{{crane_nxt_2hr}}'
+	document.getElementById("lb_forklift_charges_std_l2hr").value='{{forklift_1st_2hr}}'
+	document.getElementById("lb_forklift_charges_std_g2hr").value='{{forklift_nxt_2hr}}'
 	if (gatein_status_id =="Completed")
 	{
 		$('#gatein_btn').removeClass('disable_a_href');
@@ -343,6 +441,7 @@ $(document).ready(function() {
 	inv_curr_change();
 	challan_damage_btn_active();
 	lb_crane_forklift_change();
+
   });
 </script>
 <script>
@@ -409,23 +508,42 @@ function lb_status_change() {
 function lb_crane_forklift_change() {
 	var lb_crane_status_val=document.getElementById("lb_mh_crane").value;
 	var lb_forklift_status_val=document.getElementById("lb_mh_forklift").value;
-	if (lb_crane_status_val=="true")
-	{
-		$('#lb_crane_time').removeClass('disable_a_href');
-	}
-	else
-	{
-		$('#lb_crane_time').addClass('disable_a_href');
-	}
-
 	if (lb_forklift_status_val=="true")
 	{
 		$('#lb_forklift_time').removeClass('disable_a_href');
+		$('#lb_forklift_charges_mod_l2h').removeClass('disable_a_href');
+		$('#lb_forklift_charges_mod_g2hr').removeClass('disable_a_href');
+		$('#lb_no_of_forklift').removeClass('disable_a_href');
+
 	}
 	else
 	{
 		$('#lb_forklift_time').addClass('disable_a_href');
+		$('#lb_forklift_charges_mod_l2h').addClass('disable_a_href');
+		$('#lb_forklift_charges_mod_g2hr').addClass('disable_a_href');
+		$('#lb_no_of_forklift').addClass('disable_a_href');
+		document.getElementById("lb_forklift_charges_mod").value=0.0;
+		document.getElementById("lb_no_of_forklift").value=0.0;
 	}
+
+	if (lb_crane_status_val=="true")
+	{
+		$('#lb_crane_time').removeClass('disable_a_href');
+		$('#lb_crane_charges_mod_l2h').removeClass('disable_a_href');
+		$('#lb_crane_charges_mod_g2hr').removeClass('disable_a_href');
+		$('#lb_no_of_crane').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#lb_crane_time').addClass('disable_a_href');
+		$('#lb_crane_charges_mod_l2h').addClass('disable_a_href');
+		$('#lb_crane_charges_mod_g2hr').addClass('disable_a_href');
+		$('#lb_no_of_crane').addClass('disable_a_href');
+		document.getElementById("lb_crane_charges_mod").value=0.0;
+		document.getElementById("lb_no_of_crane").value=0.0;
+	}
+
+
 }
 </script>
 {% endblock content %}

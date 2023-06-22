@@ -68,8 +68,8 @@ from .sub_models.peo_mod import Peo_reg
 from .sub_models.damagereport_mod import DamagereportInfo,DamagereportImages
 from .sub_models.user_ext_mod import User_extInfo
 from .sub_models.whstoragetype_mod import WhstoragetypeInfo
-from .sub_models.Whratemaster_mod import WhratemasterInfo
 from .sub_models.vehicletype_mod import VehicletypeInfo
+from .sub_models.Whratemaster_mod import WhratemasterInfo
 from .sub_models.materialhandling_mod import Materialhandling_Info
 from .sub_models.movementtype_mod import MovementtypeInfo
 from .sub_models.received_not_mod import Received_not

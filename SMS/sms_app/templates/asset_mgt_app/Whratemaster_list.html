@@ -4,11 +4,11 @@
 {% block content %}
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
-        <div class="col-4"></div>
-        <div class="col-4 rounded text-center bg-info">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
             <h3>Warehouse Rate Master List</h3>
         </div>
-        <div class="col-4"></div>
+        <div class="col-5"></div>
     </div>
 </div>
 <div class="container-fluid row">
@@ -31,6 +31,7 @@
             <th>Customer Name</th>
             <th>Customer Business</th>
             <th>Charge Type</th>
+            <th>Vehicle Type</th>
             <th>Min weight (kg)</th>
             <th>Max Weight (kg)</th>
 <!--            <th>Item (pcs or Space)</th>-->
@@ -48,6 +49,7 @@
                 <td> {{whratemasterinfo.whrm_customer_name}}</td>
                 <td> {{whratemasterinfo.whrm_businessmodel}}</td>
                 <td> {{whratemasterinfo.whrm_charge_type}}</td>
+                <td> {{whratemasterinfo.whrm_vehicle_type}}</td>
                  <td> {{whratemasterinfo.whrm_min_wt}}</td>
                 <td> {{whratemasterinfo.whrm_max_wt}}</td>
 <!--                <td> {{whratemasterinfo.whrm_item}}</td>-->

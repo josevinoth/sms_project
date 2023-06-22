@@ -12,4 +12,4 @@ class WhratemasteraddForm(forms.ModelForm):
         self.fields['whrm_customer_name'].empty_label = "--Select--"
         self.fields['whrm_businessmodel'].empty_label = "--Select--"
         self.fields['whrm_charge_type'].empty_label = "--Select--"
-        # self.fields['whrm_updated_by'].empty_label = "--Select--"
+        self.fields['whrm_vehicle_type'].empty_label = "--Select--"

@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" id="whratemaster" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" novalidate >
+<form method="POST" id="whratemaster" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" >
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-3"></div>
@@ -31,6 +31,13 @@
 										<span class="input-group-text" >Charge Type</span>
 									</div>
 									{% render_field form.whrm_charge_type id="whrm_charge_type" onchange="change_charge_type()" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Veicle Type</span>
+									</div>
+									{% render_field form.whrm_vehicle_type id="whrm_vehicle_type" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -95,9 +102,36 @@
     });
  </script>
 <script>
+function change_charge_type() {
+	var jn=document.getElementById("whrm_charge_type").value
+	if (jn==1)
+	{
+		$('#whrm_vehicle_type').removeClass('disable_a_href');
+		$('#whrm_min_wt').addClass('disable_a_href');
+		$('#whrm_max_wt').addClass('disable_a_href');
+		document.getElementById("whrm_vehicle_type").value=""
+	}
+	else if (jn==3)
+	{
+		$('#whrm_vehicle_type').addClass('disable_a_href');
+		$('#whrm_min_wt').removeClass('disable_a_href');
+		$('#whrm_max_wt').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#whrm_vehicle_type').addClass('disable_a_href');
+		$('#whrm_min_wt').addClass('disable_a_href');
+		$('#whrm_max_wt').addClass('disable_a_href');
+		document.getElementById("whrm_min_wt").value=0.0
+		document.getElementById("whrm_max_wt").value=0.0
+	}
+}
+ </script>
+<script>
 $(document).ready(function() {
 <!--	calculate_total()-->
 	document.getElementById("whrm_updated_by").value ='{{user_id}}';
+	change_charge_type()
   });
 </script>
 

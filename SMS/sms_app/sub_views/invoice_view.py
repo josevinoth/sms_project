@@ -8,7 +8,7 @@ import json
 from django.contrib import messages
 
 from ..forms import InvoiceaddForm
-from ..models import Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
+from ..models import Gatein_info,VehicletypeInfo,Dispatch_info,Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
 from django.shortcuts import render, redirect
 from django.db import connection
 
@@ -37,9 +37,15 @@ def invoice_add(request,invoice_id=0):
             voucher_num = BilingInfo.objects.get(pk=invoice_id).bill_invoice_ref
             shipper_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num)
             weight_sum=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
+            crane_cost_sum=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_crane_cost'))['wh_crane_cost__sum']
+            forklift_cost_sum=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_forklift_cost'))['wh_forklift_cost__sum']
+            wh_storage_cost_sum=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_storage_cost_total'))['wh_storage_cost_total__sum']
             no_of_days=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Max('wh_storage_time'))['wh_storage_time__max']
             no_of_pieces=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
             total_loading_cost=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_total_loading_cost'))['wh_total_loading_cost__sum']
+            print('no_of_pieces',no_of_pieces)
+            print('wh_storage_cost_sum',wh_storage_cost_sum)
+            print('total_loading_cost',total_loading_cost)
             try:
                 min_check_in_time=min(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkin_time'))
             except:
@@ -69,6 +75,9 @@ def invoice_add(request,invoice_id=0):
                 'min_check_in_time':min_check_in_time,
                 'max_check_out_time':max_check_out_time,
                 'total_loading_cost':total_loading_cost,
+                'wh_storage_cost_sum':wh_storage_cost_sum,
+                'crane_cost_sum':crane_cost_sum,
+                'forklift_cost_sum':forklift_cost_sum,
                 }
         return render(request, "asset_mgt_app/invoice_add.html", context)
     else:
@@ -150,10 +159,120 @@ def shipper_invoice_list(request,voucher_id):
     return render(request,"asset_mgt_app/shipper_invoice_list.html",context)
 @login_required(login_url='login_page')
 def shipper_invoice_add(request,voucher_id):
+    global crane_cost_l2hr
     first_name = request.session.get('first_name')
     voucher_num_val = request.session.get('ses_voucher_num_val')
-    voucher_num_update=Warehouse_goods_info.objects.filter(pk=voucher_id).update(wh_voucher_num=voucher_num_val)
-    shipper_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
+    stock_num=Warehouse_goods_info.objects.get(pk=voucher_id).wh_qr_rand_num
+    wh_job_num=Warehouse_goods_info.objects.get(pk=voucher_id).wh_job_no
+    dispatch_num=Warehouse_goods_info.objects.get(pk=voucher_id).wh_dispatch_num
+    customer_name=Warehouse_goods_info.objects.get(pk=voucher_id).wh_customer_name
+    customer_id=CustomerInfo.objects.get(cu_name=customer_name).id
+    vehicle_type=Dispatch_info.objects.get(dispatch_num=dispatch_num).dispatch_truck_type
+    vehicle_type_id=VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
+    try:
+        warehouse_charge=WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
+    except ObjectDoesNotExist:
+        warehouse_charge =None
+    print('warehouse_charge',warehouse_charge)
+    if warehouse_charge==None:
+        messages.error(request, 'Warehouse Storage Cost not available in master for selected Customer and Vehicle Type!')
+        return redirect(request.META['HTTP_REFERER'])
+    else:
+        Warehouse_goods_info.objects.filter(pk=voucher_id).update(wh_voucher_num=voucher_num_val)
+        shipper_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
+        invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_num).values_list('id', flat=True)
+        job_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_num).values_list('wh_job_no', flat=True)
+        max_storage_days=max(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_num).values_list('wh_storage_time', flat=True))
+
+        # //Calculate Crane and Forklift cost
+        customer_name = Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_customer
+        customer_id = CustomerInfo.objects.get(cu_name=customer_name).id
+
+        try:
+            crane_hours=Loadingbay_Info.objects.get(lb_job_no=wh_job_num).lb_crane_time
+            forklift_hours=Loadingbay_Info.objects.get(lb_job_no=wh_job_num).lb_forklift_time
+            forklift_charge_l2h=Loadingbay_Info.objects.get(lb_job_no=wh_job_num).lb_forklift_charges_mod_l2h
+            forklift_charge_g2h=Loadingbay_Info.objects.get(lb_job_no=wh_job_num).lb_forklift_charges_mod_g2hr
+            crane_charge_l2h=Loadingbay_Info.objects.get(lb_job_no=wh_job_num).lb_crane_charges_mod_l2h
+            crane_charge_g2h=Loadingbay_Info.objects.get(lb_job_no=wh_job_num).lb_crane_charges_mod_g2hr
+            no_of_cranes=Loadingbay_Info.objects.get(lb_job_no=wh_job_num).lb_no_of_crane
+            no_of_forklifts=Loadingbay_Info.objects.get(lb_job_no=wh_job_num).lb_no_of_forklift
+        except ObjectDoesNotExist:
+            crane_hours = None
+            forklift_hours = None
+            forklift_charge_l2h = None
+            forklift_charge_g2h = None
+            crane_charge_l2h = 0
+            crane_charge_g2h = 0
+            no_of_cranes = 0
+            no_of_forklifts = 0
+        crane_cost=0
+        forklift_cost=0
+        if crane_hours<=2 and forklift_hours<=2:
+            print("inside Condition 1")
+            crane_cost_l2hr = round((2 * crane_charge_l2h * no_of_cranes), 2)
+            crane_cost_g2hr = 0
+            forklift_cost_l2hr = round((2 * forklift_charge_l2h * no_of_forklifts), 2)
+            forklift_cost_g2hr = 0
+            crane_cost = crane_cost_l2hr + crane_cost_g2hr
+            forklift_cost = forklift_cost_l2hr + forklift_cost_g2hr
+        elif forklift_hours <= 2 and crane_hours>2:
+            print("inside Condition 3")
+            crane_hours_aft_2 = int(crane_hours) - 2
+            crane_cost_l2hr = round((2 * crane_charge_l2h * no_of_cranes), 2)
+            crane_cost_g2hr = round((crane_charge_g2h * crane_hours_aft_2 * no_of_cranes), 2)
+            forklift_cost_l2hr = round((2 * forklift_charge_l2h * no_of_forklifts), 2)
+            forklift_cost_g2hr = 0
+
+            crane_cost = crane_cost_l2hr + crane_cost_g2hr
+            forklift_cost = forklift_cost_l2hr + forklift_cost_g2hr
+        elif crane_hours <= 2 and forklift_hours>2:
+            print("inside Condition 4")
+            forklift_hours_aft_2 = forklift_hours - 2
+            crane_cost_l2hr = round((2 * crane_charge_l2h * no_of_cranes), 2)
+            crane_cost_g2hr = 0
+            forklift_cost_l2hr = round((2 * forklift_charge_l2h * no_of_forklifts), 2)
+            forklift_cost_g2hr = round((forklift_charge_g2h * forklift_hours_aft_2 * no_of_forklifts), 2)
+
+            crane_cost = crane_cost_l2hr + crane_cost_g2hr
+            forklift_cost = forklift_cost_l2hr + forklift_cost_g2hr
+        else:
+            print("inside Condition 5")
+            crane_hours_aft_2 = int(crane_hours) - 2
+            forklift_hours_aft_2 = forklift_hours - 2
+            crane_cost_l2hr =round((2 * crane_charge_l2h * no_of_cranes),2)
+            crane_cost_g2hr =round((crane_charge_g2h * crane_hours_aft_2 * no_of_cranes), 2)
+            forklift_cost_l2hr=round((2 * forklift_charge_l2h * no_of_forklifts),2)
+            forklift_cost_g2hr =round((forklift_charge_g2h * forklift_hours_aft_2 * no_of_forklifts),2)
+
+            crane_cost = crane_cost_l2hr+crane_cost_g2hr
+            forklift_cost = forklift_cost_l2hr+forklift_cost_g2hr
+
+        for i in range(0, len(invoice_id)):
+            print(i)
+            print(job_num[i])
+            if i == 0:
+                storage_cost_total =round((warehouse_charge*max_storage_days),2)
+                print('storage_cost_total',storage_cost_total)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=warehouse_charge)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_l2h=crane_cost_l2hr)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_g2h=crane_cost_g2hr)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost=crane_cost)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost_l2hr=forklift_cost_l2hr)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost_g2hr=forklift_cost_g2hr)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost=forklift_cost)
+
+            else:
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=0)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=0)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_l2h=0)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_g2h=0)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost=0)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost_l2hr=0)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost_g2hr=0)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost=0)
+        messages.success(request,'Invoice List Updated Successfully!')
     context =   {
                 # 'shipper_invoice_list' : shipper_invoice_list,
                 'first_name': first_name,
@@ -175,6 +294,7 @@ def shipper_invoice_remove(request,voucher_id):
 @login_required(login_url='login_page')
 def load_whrate_model(request):
     lm_customer_name_id = request.GET.get('lm_customer_name_id')
+    print('lm_customer_name_id',lm_customer_name_id)
     total_weight = request.GET.get('total_weight')
     if total_weight:
         total_weight_1=float(total_weight.replace(',',''))
@@ -269,7 +389,6 @@ def load_whrate_model(request):
         crane_aft2hr_val = crane_aft2hr[0]['whrm_rate']
     else:
         crane_aft2hr_val = 0.0
-
     data = {
         'customer_businessmodel_val':customer_businessmodel_val,
         'customer_short_name_val':customer_short_name_val,

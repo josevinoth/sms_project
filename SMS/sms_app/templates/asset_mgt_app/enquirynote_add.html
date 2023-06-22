@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" id="enquiry_note" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" novalidate>
+<form method="POST" id="enquiry_note" action="" data-load_customer_model-url="{% url 'load_customer_model' %}">
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->

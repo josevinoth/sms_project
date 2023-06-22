@@ -31,6 +31,16 @@ class Loadingbay_Info(models.Model):
     lb_mh_handtrolley = models.BooleanField(null=True)
     lb_crane_time = models.FloatField(blank=False, null=False,default=0.0)
     lb_forklift_time = models.FloatField(blank=False, null=False,default=0.0)
+    lb_forklift_charges_std_l2hr = models.FloatField(blank=False, null=False,default=0.0)
+    lb_crane_charges_std_l2hr = models.FloatField(blank=False, null=False,default=0.0)
+    lb_forklift_charges_mod_l2h = models.FloatField(blank=False, null=False, default=0.0)
+    lb_crane_charges_mod_l2h = models.FloatField(blank=False, null=False, default=0.0)
+    lb_forklift_charges_std_g2hr = models.FloatField(blank=False, null=False, default=0.0)
+    lb_crane_charges_std_g2hr = models.FloatField(blank=False, null=False, default=0.0)
+    lb_forklift_charges_mod_g2hr = models.FloatField(blank=False, null=False, default=0.0)
+    lb_crane_charges_mod_g2hr = models.FloatField(blank=False, null=False, default=0.0)
+    lb_no_of_crane= models.IntegerField(blank=False, null=False, default=0)
+    lb_no_of_forklift= models.IntegerField(blank=False, null=False, default=0)
 
 class Loadingbayimages_Info(models.Model):
     lbimg_job_no = models.CharField(max_length=300, null=True, default='')

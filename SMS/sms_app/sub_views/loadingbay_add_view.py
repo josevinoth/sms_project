@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from ..forms import LoadingbayddForm,LoadingbayImagesForm
 from django.contrib.auth.decorators import login_required
-from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,Loadingbayimages_Info,Currency_type
+from ..models import WhratemasterInfo,CustomerInfo,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,Loadingbayimages_Info,Currency_type
 from django.core.exceptions import ObjectDoesNotExist
 
 # Add WH Job
@@ -26,14 +26,12 @@ def loadingbay_add(request, loadingbay_id=0):
         loadingbay_status = "No Status"
     # Damage/Before Status Check
     try:
-        damage_before_status = DamagereportInfo.objects.get(
-            dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
+        damage_before_status = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
     except ObjectDoesNotExist:
         damage_before_status = "No Status"
     # Damage/After Status Check
     try:
-        goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
-                                                                                                flat=True)  # count records
+        goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',flat=True)  # count records
 
         goods_status_list = list(goods_status)
         if goods_status_list == []:
@@ -65,6 +63,23 @@ def loadingbay_add(request, loadingbay_id=0):
 
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     wh_job_id = ses_gatein_id_nam
+
+    # //Calculate Crane and Forklift cost
+    wh_job_id = request.session.get('ses_gatein_id_nam')
+    customer_name = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_customer
+    customer_id = CustomerInfo.objects.get(cu_name=customer_name).id
+    try:
+        crane_1st_2hr = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=5).whrm_rate
+        crane_nxt_2hr = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=6).whrm_rate
+        forklift_1st_2hr = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=4).whrm_rate
+        forklift_nxt_2hr = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=7).whrm_rate
+
+    except ObjectDoesNotExist:
+        crane_1st_2hr = None
+        crane_nxt_2hr = None
+        forklift_1st_2hr = None
+        forklift_nxt_2hr = None
+
     if request.method == "GET":
         if loadingbay_id == 0:
             print("I am inside Get add Loading bay")
@@ -86,6 +101,10 @@ def loadingbay_add(request, loadingbay_id=0):
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
+                'crane_1st_2hr': crane_1st_2hr,
+                'crane_nxt_2hr': crane_nxt_2hr,
+                'forklift_1st_2hr': forklift_1st_2hr,
+                'forklift_nxt_2hr': forklift_nxt_2hr,
             }
         else:
             print("I am inside get edit loading bay")
@@ -110,6 +129,10 @@ def loadingbay_add(request, loadingbay_id=0):
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
+                'crane_1st_2hr': crane_1st_2hr,
+                'crane_nxt_2hr': crane_nxt_2hr,
+                'forklift_1st_2hr': forklift_1st_2hr,
+                'forklift_nxt_2hr': forklift_nxt_2hr,
             }
         return render(request, "asset_mgt_app/loadingbay_add.html", context)
     else:
@@ -118,16 +141,25 @@ def loadingbay_add(request, loadingbay_id=0):
             loadingbay_form = LoadingbayddForm(request.POST)
             loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES)
             if loadingbay_form.is_valid():
-                print("Main Form Saved")
-                loadingbay_form.save()
-                messages.success(request, 'Record Updated Successfully')
+                if crane_1st_2hr == None or crane_nxt_2hr == None or forklift_1st_2hr == None or forklift_nxt_2hr == None:
+                    messages.error(request,
+                                   'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
+                    return redirect(request.META['HTTP_REFERER'])
+                else:
+                    print("Main Form Saved")
+                    loadingbay_form.save()
+                    messages.success(request, 'Record Updated Successfully')
             else:
                 print("Main Form Not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
 
             if loadingbayimg_form.is_valid():
-                print("SubForm Saved")
-                loadingbayimg_form.save()
+                if crane_1st_2hr == None or crane_nxt_2hr == None or forklift_1st_2hr == None or forklift_nxt_2hr == None:
+                    messages.error(request,'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
+                    return redirect(request.META['HTTP_REFERER'])
+                else:
+                    print("SubForm Saved")
+                    loadingbayimg_form.save()
             else:
                 print("Sub Form Not saved")
             job_num = request.POST.get('lb_job_no')
@@ -141,16 +173,26 @@ def loadingbay_add(request, loadingbay_id=0):
             loadingbayimg_info=Loadingbayimages_Info.objects.get(lbimg_job_no=wh_job_id)
             loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES,instance=loadingbayimg_info)
             if loadingbay_form.is_valid():
-                print("Main Form Saved")
-                loadingbay_form.save()
-                messages.success(request, 'Record Updated Successfully')
+                if crane_1st_2hr == None or crane_nxt_2hr == None or forklift_1st_2hr == None or forklift_nxt_2hr == None:
+                    messages.error(request,
+                                   'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
+                    return redirect(request.META['HTTP_REFERER'])
+                else:
+                    loadingbay_form.save()
+                    print("Main Form Saved")
+                    messages.success(request, 'Record Updated Successfully')
             else:
                 print("Main Form Not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
 
             if loadingbayimg_form.is_valid():
-                print("SubForm Saved")
-                loadingbayimg_form.save()
+                if crane_1st_2hr == None or crane_nxt_2hr == None or forklift_1st_2hr == None or forklift_nxt_2hr == None:
+                    messages.error(request,
+                                   'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
+                    return redirect(request.META['HTTP_REFERER'])
+                else:
+                    print("SubForm Saved")
+                    loadingbayimg_form.save()
             else:
                 print("Sub Form Not saved")
             return redirect(request.META['HTTP_REFERER'])

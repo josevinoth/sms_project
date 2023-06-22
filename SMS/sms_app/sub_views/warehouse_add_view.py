@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from ..forms import GoodsaddForm,WarehoseinaddForm,WarehoseoutaddForm
-from ..models import Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
+from ..models import WhratemasterInfo,CustomerInfo,Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -147,7 +147,7 @@ def warehousein_add(request, warehousein_id=0):
                 else:
                     messages.success(request, 'Goods Stored!')
                     warehousein_form.save()
-            # Update Invoice weight, qty,value
+            # //Update Invoice weight, qty,value
             # wh_invoice_list = Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
             # for wh_job_id in wh_invoice_list:
             invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('id',flat=True)
@@ -236,15 +236,16 @@ def warehouseout_add(request, warehouseout_id=0):
         warehouseoutinfo = Warehouse_goods_info.objects.get(pk=warehouseout_id)
         warehouseout_form = WarehoseoutaddForm(request.POST, instance=warehouseoutinfo)
         wh_job_num=Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_job_no
-        s_bill=Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_sbill
-        s_bill_date=Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_sbill_date
+        # s_bill=Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_sbill
+        # s_bill_date=Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_sbill_date
         stock_number=Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_qr_rand_num
         fumigation_action=Warehouse_goods_info.objects.get(wh_qr_rand_num=stock_number).wh_fumigation_action
         fumigation_date=Warehouse_goods_info.objects.get(wh_qr_rand_num=stock_number).wh_fumigation_date
-        if s_bill==None or s_bill_date==None:
-            messages.error(request, 'S_Bill Number Or S_Bil Date not entered for this Stock')
-            return redirect(request.META['HTTP_REFERER'])
-        elif str(fumigation_action)=='BVM' and fumigation_date==None:
+        # if s_bill==None or s_bill_date==None:
+        #     messages.error(request, 'S_Bill Number Or S_Bil Date not entered for this Stock')
+        #     return redirect(request.META['HTTP_REFERER'])
+        # elif str(fumigation_action)=='BVM' and fumigation_date==None:
+        if str(fumigation_action)=='BVM' and fumigation_date==None:
             messages.error(request, 'Fumigation Date not entered for this Stock')
             return redirect(request.META['HTTP_REFERER'])
         else:

@@ -31,8 +31,8 @@ class Gatein_info(models.Model):
     gatein_po_num = models.CharField(blank=True, null=True, max_length=100)
     gatein_destination = models.CharField(blank=True, null=True, max_length=100)
     gatein_hawb = models.CharField(blank=True, null=True, max_length=100)
-    gatein_sbill = models.CharField(blank=True, null=True, max_length=100)
-    gatein_sbill_date = models.DateField(blank=True, null=True)
+    # gatein_sbill = models.CharField(blank=True, null=True, max_length=100)
+    # gatein_sbill_date = models.DateField(blank=True, null=True)
 
     class Meta:
         ordering = ["gatein_invoice"]
