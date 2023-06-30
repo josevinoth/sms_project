@@ -1,4 +1,5 @@
 from django.db import models
+from .sub_models.trip_status_mod import Tripstatusinfo
 from .sub_models.labels_pasted_mod import Labels_pasted_Info
 from.sub_models.business_solutions_mod import Business_Sol_info
 from.sub_models.yesno_info_mod import YesNoInfo

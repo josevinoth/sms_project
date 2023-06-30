@@ -6,13 +6,18 @@ class TripdetailaddForm(forms.ModelForm):
     class Meta:
         model = TripdetailInfo
         fields = '__all__'
+        # fields = ['tr_enquirynumber', 'tr_consignmentnumber', 'tr_tripnumber', 'tr_transportbusinesstype',
+        #           'tr_vehiclesource', 'tr_vehicletype', 'tr_vehiclenumber', 'tr_drivername', 'tr_drivernumber',
+        #           'tr_fromlocation', 'tr_startingkm', 'tr_startingdate', 'tr_sealnumber', 'tr_containernumber',
+        #           'tr_tolocation', 'tr_endingkm', 'tr_endingdate', 'tr_status', 'tr_updated_by']
 
-    # def __init__(self, *args, **kwargs):
-    #     super(AssetinfoaddForm,self).__init__(*args, **kwargs)
-    #     self.fields['asset_product'].empty_label = "--Select--"
-    #     self.fields['asset_location'].empty_label = "--Select--"
-    #     self.fields['asset_vendor'].empty_label = "--Select--"
-    #     self.fields['asset_insurance_details'].empty_label = "--Select--"
-    #     self.fields['asset_assignedto'].empty_label = "--Select--"
-    #     self.fields['asset_assignedto'].required = False
-    #     self.fields['asset_unit'].empty_label = "--Select--"
+    def __init__(self, *args, **kwargs):
+        super(TripdetailaddForm,self).__init__(*args, **kwargs)
+        self.fields['tr_consignmentnumber'].empty_label = "--Select--"
+        self.fields['tr_vehiclesource'].empty_label = "--Select--"
+        self.fields['tr_transportbusinesstype'].empty_label = "--Select--"
+        self.fields['tr_vehicletype'].empty_label = "--Select--"
+        self.fields['tr_vehiclenumber'].empty_label = "--Select--"
+        self.fields['tr_fromlocation'].empty_label = "--Select--"
+        self.fields['tr_tolocation'].empty_label = "--Select--"
+        self.fields['tr_status'].empty_label = "--Select--"

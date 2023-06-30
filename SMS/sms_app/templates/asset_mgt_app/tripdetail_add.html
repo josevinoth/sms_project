@@ -11,134 +11,194 @@
 					<div class="card-header text-center"><h3>Add/Update Trip Detail</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-4">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field form.tr_enquirynumber id="tr_enquirynumber" class="form-control disable_a_href" %}
+									{% render_field trip_det_form.tr_enquirynumber id="tr_enquirynumber" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control" %}
+									{% render_field trip_det_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Number</span>
 									</div>
-									{% render_field form.tr_tripnumber id="tr_tripnumber" class="form-control disable_a_href" %}
+									{% render_field trip_det_form.tr_tripnumber id="tr_tripnumber" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Type</span>
+									</div>
+									{% render_field trip_det_form.tr_transportbusinesstype id="tr_transportbusinesstype" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Source</span>
 									</div>
-									{% render_field form.tr_vehiclesource id="tr_vehiclesource" class="form-control" %}
+									{% render_field trip_det_form.tr_vehiclesource id="tr_vehiclesource" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Type</span>
 									</div>
-									{% render_field form.tr_vehicletype id="tr_vehicletype" class="form-control" %}
+									{% render_field trip_det_form.tr_vehicletype id="tr_vehicletype" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number</span>
 									</div>
-									{% render_field form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control" %}
+									{% render_field trip_det_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Name</span>
 									</div>
-									{% render_field form.tr_drivername id="tr_drivername" class="form-control" %}
+									{% render_field trip_det_form.tr_drivername id="tr_drivername" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Number</span>
 									</div>
-									{% render_field form.tr_drivernumber id="tr_drivernumber" class="form-control" %}
+									{% render_field trip_det_form.tr_drivernumber id="tr_drivernumber" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">From Location</span>
 									</div>
-									{% render_field form.tr_fromlocation class="form-control" %}
+									{% render_field trip_det_form.tr_fromlocation class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Starting KM</span>
 									</div>
-									{% render_field form.tr_startingkm class="form-control" %}
+									{% render_field trip_det_form.tr_startingkm class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Staring Date</span>
 									</div>
-									{% render_field form.tr_startingdate type="Date" class="form-control" %}
+									{% render_field trip_det_form.tr_startingdate type="Datetime-local" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Seal Number</span>
 									</div>
-									{% render_field form.tr_sealnumber class="form-control" %}
+									{% render_field trip_det_form.tr_sealnumber class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Container Number</span>
 									</div>
-									{% render_field form.tr_containernumber class="form-control" %}
+									{% render_field trip_det_form.tr_containernumber class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">To Location</span>
 									</div>
-									{% render_field form.tr_tolocation class="form-control" %}
+									{% render_field trip_det_form.tr_tolocation class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Ending KM</span>
 									</div>
-									{% render_field form.tr_endingkm class="form-control" %}
+									{% render_field trip_det_form.tr_endingkm class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Ending Date</span>
 									</div>
-									{% render_field form.tr_endingdate type="Date" class="form-control" %}
+									{% render_field trip_det_form.tr_endingdate type="Datetime-local" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								{% render_field trip_det_form.tr_updated_by id="tr_updated_by" hidden="true" class="form-control" %}
+							</div>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Trip Cost</span>
+									</div>
+									{% render_field trip_det_form.tr_tripcost class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Parking Cost</span>
+									</div>
+									{% render_field trip_det_form.tr_parkingcost class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Toll Cost</span>
+									</div>
+									{% render_field trip_det_form.tr_tollcost class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Loading Cost</span>
+									</div>
+									{% render_field trip_det_form.tr_loadingcost class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Un-Loading Cost</span>
+									</div>
+									{% render_field trip_det_form.tr_unloadingcost class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Un-Loading Cost</span>
+									</div>
+									{% render_field trip_det_form.tr_unloadingcost class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
-									{% render_field form.tr_status class="form-control" %}
+									{% render_field trip_det_form.tr_status class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								{% render_field form.tr_updated_by id="tr_updated_by" hidden="true" class="form-control" %}
 							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
+							<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Remarks</span>
+									</div>
+									{% render_field trip_det_form.tr_remarks class="form-control" %}
+								</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
@@ -156,7 +216,6 @@
 $(document).ready(function() {
 	document.getElementById("tr_updated_by").value ='{{user_id}}';
 	document.getElementById("tr_enquirynumber").value ='{{enquiry_num}}';
-	document.getElementById("tr_consignmentnumber").value ='{{consignment_num}}';
 	tripnum();
   });
 </script>
@@ -173,6 +232,17 @@ function tripnum() {
 	{
   		document.getElementById("tr_tripnumber").value=jn;
   	}
+}
+</script>
+
+<script>
+function load_consignment_num() {
+var len = (unit_name).length;
+var unit_name=JSON.parse(data)["unit_name_list"];
+var unit_id=JSON.parse(data)["unit_id"];
+	$('#wh_unit').empty().append("<option value='0'>--Select--</option>");
+	for( var i = 0; i<len; i++){
+    $("#wh_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
 }
 </script>
 {% endblock content %}

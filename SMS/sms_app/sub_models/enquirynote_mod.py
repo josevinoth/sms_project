@@ -17,10 +17,10 @@ class EnquirynoteInfo(models.Model):
     en_updatedon = models.DateTimeField(null=True, auto_now=True)
     en_created_at = models.DateTimeField(null=True, auto_now_add=True)
     en_updated_by = models.ForeignKey(MyUser, related_name='en_updated_by', db_column='en_updated_by',on_delete=models.CASCADE, null=True)
-    en_consignmentdetails = models.CharField(max_length=100,null=True,blank=True)
+    en_consignmentdetails = models.CharField(max_length=1000,null=True,blank=True)
     en_vehicledetails = models.CharField(max_length=100, null=True,blank=True)
-    en_tripdetails = models.CharField(max_length=100, null=True,blank=True)
-    en_tripclosure = models.CharField(max_length=100, null=True,blank=True)
+    en_tripdetails = models.CharField(max_length=1000, null=True,blank=True)
+    en_tripclosure = models.CharField(max_length=1000, null=True,blank=True)
     en_pickupdatetime =  models.DateTimeField(null=True, blank=True)
     def __str__(self):
         return self.en_enquirynumber

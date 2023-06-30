@@ -1,7 +1,7 @@
 from random import randint
 from django.contrib import messages
 from django.db import transaction
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required

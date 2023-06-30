@@ -2,15 +2,24 @@
 
 
 {% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Product Type</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
 <div class="container-fluid row">
     <div class="col-md-1">
       <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i>
+        <i class="fas fa-arrow-left"></i> Back
       </a>
     </div>
     <div class="col-md-1">
       <a href="{% url 'producttype_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i>
+        <i class="fas fa-plus"></i> Add
       </a>
     </div>
 </div>
@@ -30,14 +39,14 @@
                 <td> {{producttypeinfo.prod_type_title}}</td>
                 <td>
 
-                    <a href="{% url 'producttype_update' producttypeinfo.id %}" >
+                    <a class="btn btn-primary href="{% url 'producttype_update' producttypeinfo.id %}" >
                         <i class="far fa-edit"></i>
                     </a>
                 </td>
                 <td>
                     <form action="{% url 'producttype_delete' producttypeinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn">
+                        <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </form>

@@ -37,7 +37,6 @@
             <th>Assigned To</th>
             <th>Consignment Details</th>
             <th>Trip Details</th>
-            <th>Trip Closure</th>
             <th>Updated On</th>
             <th>Updated By</th>
             <th>Status</th>
@@ -55,22 +54,16 @@
             <td> {{enquirynoteinfo.en_vehicletype}}</td>
             <td> {{enquirynoteinfo.en_assignedto}}</td>
             <td>
-                <a class="link" href="{% url 'consignmentdetail_update' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_consignmentdetails}}</a>
+                <a class="link" href="{% url 'consignmentdetail_nav' enquirynoteinfo.id%}" >{{enquirynoteinfo.en_consignmentdetails}}</a>
             </td>
             {% if enquirynoteinfo.en_consignmentdetails %}
             <td>
-                <a class="link" href="{% url 'tripdetail_update' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripdetails}}</a>
+                <a class="link" href="{% url 'tripdetail_nav' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripdetails}}</a>
             </td>
             {%else%}
             <td>
-                <a class="link disable_a_href_list" href="{% url 'tripdetail_update' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripdetails}}</a>
+                <a class="link disable_a_href_list" href="{% url 'tripdetail_nav' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripdetails}}</a>
             </td>
-            {% endif %}
-
-            {% if enquirynoteinfo.en_tripdetails %}
-                <td> <a class="link" href="{% url 'tripclosure_update' enquirynoteinfo.id %}" > {{enquirynoteinfo.en_tripclosure}}</a></td>
-            {%else%}
-                <td> <a class="link disable_a_href_list" href="{% url 'tripclosure_update' enquirynoteinfo.id %}" > {{enquirynoteinfo.en_tripclosure}}</a></td>
             {% endif %}
             <td> {{enquirynoteinfo.en_updatedon}}</td>
             <td> {{enquirynoteinfo.en_updated_by}}</td>

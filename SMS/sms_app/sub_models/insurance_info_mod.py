@@ -25,5 +25,8 @@ class Insurance_Info(models.Model):
     ins_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     ins_remarks= models.TextField(blank=True, null=True)
     ins_attachment = models.FileField(upload_to=insurance_directory_path, null=True)
+
+    class Meta:
+        ordering = ["ins_name"]
     def __str__(self):
         return self.ins_name

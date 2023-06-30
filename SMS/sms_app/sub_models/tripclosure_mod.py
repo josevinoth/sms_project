@@ -1,9 +1,9 @@
 from django.db import models
-from ..models import MyUser,StatusList
+from ..models import ConsignmentdetailInfo,MyUser,StatusList
 
 class TripclosureInfo(models.Model):
     tc_enquirynumber = models.CharField(max_length=10,default = '')
-    tc_consignmentnumber = models.CharField(max_length=10,default = '')
+    tc_consignmentnumber = models.ForeignKey(ConsignmentdetailInfo, on_delete=models.CASCADE)
     tc_tripnumber = models.CharField(max_length=10, default='')
     tc_tripcost = models.IntegerField(default='')
     tc_parkingcost = models.IntegerField(default='')

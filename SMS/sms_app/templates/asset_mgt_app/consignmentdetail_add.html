@@ -18,35 +18,42 @@
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
 									{% render_field con_det_form.co_enquirynumber id="co_enquirynumber" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
 									{% render_field con_det_form.co_consignmentnumber id="co_consignmentnumber" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer</span>
+									</div>
+									{% render_field con_det_form.co_customer id="co_customer" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Type</span>
+									</div>
+									{% render_field con_det_form.co_businesstype class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Date</span>
 									</div>
 									{% render_field con_det_form.co_consignmentdate type="Date" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner</span>
 									</div>
 									{% render_field con_det_form.co_consigner class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignee</span>
 									</div>
 									{% render_field con_det_form.co_consignee class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
@@ -54,94 +61,92 @@
 										<span class="input-group-text">Consigner Invoice</span>
 									</div>
 									{% render_field con_det_form.co_consignerinvoice class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner Value</span>
 									</div>
 									{% render_field con_det_form.co_consignervalue class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Value in INR</span>
 									</div>
 									{% render_field con_det_form.co_valueininr class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">No. Of Pieces</span>
-									</div>
-									{% render_field con_det_form.co_noofpieces class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">No. Of Pieces</span>
+									</div>
+									{% render_field con_det_form.co_noofpieces class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Weight</span>
 									</div>
 									{% render_field con_det_form.co_weight class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Eway bill No.</span>
 									</div>
 									{% render_field con_det_form.co_ebillno class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Date Of Issue</span>
 									</div>
 									{% render_field con_det_form.co_dateofissue type="Date" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Date Of Validity</span>
 									</div>
 									{% render_field con_det_form.co_dateofvalidity type="Date" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Container Description</span>
 									</div>
 									{% render_field con_det_form.co_containerdescription class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dimension</span>
+									</div>
+									{% render_field con_det_form.co_dimension class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Movement</span>
 									</div>
 									{% render_field con_det_form.co_movement class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
 									{% render_field con_det_form.co_status class="form-control" id="consignment_status" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Reference No.</span>
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Customer Reference No.</span>
+											</div>
+											{% render_field con_det_form.co_cusrefnum class="form-control" %}
+										</div>
 									</div>
-									{% render_field con_det_form.co_cusrefnum class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Business Type</span>
+									<div class="col-2">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<!--<span class="input-group-text">Customer Reference No.</span>-->
+											</div>
+											{% render_field con_det_form.co_cusrefnum_check id="co_cusrefnum_check" class="form-control" %}
+										</div>
 									</div>
-									{% render_field con_det_form.co_businesstype class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field con_det_form.co_lastmodifiedby id="co_lastmodifiedby" hidden="True" class="form-control" %}
 							</div>
@@ -174,6 +179,11 @@
 $(document).ready(function() {
 	document.getElementById("co_lastmodifiedby").value ='{{user_id}}';
 	document.getElementById("co_enquirynumber").value ='{{enquiry_num}}';
+	var customer=document.getElementById("co_customer").value
+	if (customer=="")
+		{
+			document.getElementById("co_customer").value='{{customer_id}}';
+		}
 	consignment_num();
   });
 </script>

@@ -16,56 +16,56 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field form.tc_enquirynumber id="tc_enquirynumber" class="form-control" %}
+									{% render_field tripclosure_form.tc_enquirynumber id="tc_enquirynumber" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field form.tc_consignmentnumber id="tc_consignmentnumber" class="form-control" %}
+									{% render_field tripclosure_form.tc_consignmentnumber id="tc_consignmentnumber" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Number</span>
 									</div>
-									{% render_field form.tc_tripnumber id="tc_tripnumber" class="form-control" %}
+									{% render_field tripclosure_form.tc_tripnumber id="tc_tripnumber" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Cost</span>
 									</div>
-									{% render_field form.tc_tripcost class="form-control" %}
+									{% render_field tripclosure_form.tc_tripcost class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Parking Cost</span>
 									</div>
-									{% render_field form.tc_parkingcost class="form-control" %}
+									{% render_field tripclosure_form.tc_parkingcost class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Toll Cost</span>
 									</div>
-									{% render_field form.tc_tollcost class="form-control" %}
+									{% render_field tripclosure_form.tc_tollcost class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Loading Cost</span>
 									</div>
-									{% render_field form.tc_loadingcost class="form-control" %}
+									{% render_field tripclosure_form.tc_loadingcost class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading Cost</span>
 									</div>
-									{% render_field form.tc_unloadingcost class="form-control" %}
+									{% render_field tripclosure_form.tc_unloadingcost class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -74,15 +74,22 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Finance Status</span>
 									</div>
-									{% render_field form.tc_financestatus class="form-control" %}
+									{% render_field tripclosure_form.tc_financestatus class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								{% render_field form.tc_updated_by id="tc_updated_by" hidden="True" class="form-control" %}
+								{% render_field tripclosure_form.tc_updated_by id="tc_updated_by" hidden="True" class="form-control" %}
 							</div>
-							<div class="message">
-								{{form.errors}}
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
 							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
+							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
@@ -100,7 +107,7 @@
 $(document).ready(function() {
 	document.getElementById("tc_updated_by").value ='{{user_id}}';
 	document.getElementById("tc_enquirynumber").value ='{{enquiry_num}}';
-	document.getElementById("tc_consignmentnumber").value ='{{consignment_num}}';
+<!--	document.getElementById("tc_consignmentnumber").value ='{{consignment_num}}';-->
 	document.getElementById("tc_tripnumber").value ='{{trip_num}}';
 	tripnum();
   });

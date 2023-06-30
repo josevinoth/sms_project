@@ -41,8 +41,8 @@
             <th>Trip Status</th>
             <th>Updated By</th>
             <th>Updated On</th>
-<!--            <th>Edit</th>-->
-<!--            <th>Delete</th>-->
+            <th>Edit</th>
+            <th>Delete</th>
     </thead>
     <tbody>
         {% for tripdetailinfo in tripdetail_list %}
@@ -62,20 +62,20 @@
                 <td> {{tripdetailinfo.tr_status}}</td>
                 <td> {{tripdetailinfo.tr_updated_by}}</td>
                 <td> {{tripdetailinfo.tr_updated_at}}</td>
-<!--                <td>-->
+                <td>
 
-<!--                    <a href="{% url 'tripdetail_update' tripdetailinfo.id %}" >-->
-<!--                        <i class="far fa-edit"></i>-->
-<!--                    </a>-->
-<!--                </td>-->
-<!--                <td>-->
-<!--                    <form action="{% url 'tripdetail_delete' tripdetailinfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
-<!--                        {% csrf_token %}-->
-<!--                        <button type="submit" class="btn">-->
-<!--                            <i class="fas fa-trash-alt"></i>-->
-<!--                        </button>-->
-<!--                    </form>-->
-<!--                </td>-->
+                    <a class="btn btn-primary" href="{% url 'tripdetail_update' tripdetailinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'tripdetail_delete' tripdetailinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
             </tr>
         {% endfor %}
     </tbody>

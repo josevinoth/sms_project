@@ -7,15 +7,19 @@ class AssetInfo(models.Model):
     asset_unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE, default='')
     asset_model = models.CharField(max_length=30)
     asset_make = models.CharField(max_length=30)
-    asset_assignedto = models.ForeignKey(MyUser,on_delete=models.CASCADE, default='')
+    asset_assignedto = models.ForeignKey(MyUser,on_delete=models.CASCADE, related_name='asset_assignedto',db_column='asset_assignedto',default='')
     asset_serial_num1 = models.CharField(max_length=10,default='')
     asset_assignedon = models.CharField(blank=True, null=True,max_length=30)
-    asset_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    asset_cost = models.DecimalField(max_digits=10, decimal_places=2,default=0.0)
     asset_order_number=models.CharField(blank=True, null=True,max_length=30)
     asset_purchase_date=models.DateField()
     asset_location = models.ForeignKey(Location_info, on_delete=models.CASCADE, default='')
     asset_vendor = models.ForeignKey(Vendor_info, on_delete=models.CASCADE, default='')
     asset_insurance_details = models.ForeignKey(Insurance_Info, on_delete=models.CASCADE, default='')
-
+    asset_Id = models.CharField(max_length=10, default='')
+    asset_created_at = models.DateTimeField(null=True, auto_now_add=True)
+    asset_updated_at = models.DateTimeField(null=True, auto_now=True)
+    asset_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,related_name='asset_updated_by',db_column='asset_updated_by')
+    asset_remarks = models.TextField(max_length=300,null=True,blank=True)
     def __str__(self):
         return self.asset_number

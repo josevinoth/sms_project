@@ -45,35 +45,15 @@ def enquirynote_add(request,enquirynote_id=0):
 # List enquirynote
 @login_required(login_url='login_page')
 def enquirynote_list(request):
+    global consignment_status_id, trip_details_status_id
     print("Inside Enquiry List")
     first_name = request.session.get('first_name')
-    open_cons_num_end_data=EnquirynoteInfo.objects.filter(en_consignmentdetails=None).values_list('en_enquirynumber',flat=True)
-    enquiry_list_cons_data=ConsignmentdetailInfo.objects.filter().values_list('co_enquirynumber',flat=True)
-    for i in open_cons_num_end_data:
-        if i in enquiry_list_cons_data:
-            cons_num_cons_data=ConsignmentdetailInfo.objects.get(co_enquirynumber=i).co_consignmentnumber
-            EnquirynoteInfo.objects.filter(en_enquirynumber=i).update(en_consignmentdetails=cons_num_cons_data)
-
-    open_trip_num_data = EnquirynoteInfo.objects.filter(en_tripdetails=None).values_list('en_enquirynumber',flat=True)
-    trip_list_data=TripdetailInfo.objects.filter().values_list('tr_enquirynumber',flat=True)
-    for j in open_trip_num_data:
-        if j in trip_list_data:
-            trip_num_trip_data = TripdetailInfo.objects.get(tr_enquirynumber=j).tr_tripnumber
-            EnquirynoteInfo.objects.filter(en_enquirynumber=j).update(en_tripdetails=trip_num_trip_data)
-
-    open_trip_cloure_data=EnquirynoteInfo.objects.filter(en_tripclosure=None).values_list('en_enquirynumber',flat=True)
-    trip_closure_list_data=TripclosureInfo.objects.filter().values_list('tc_enquirynumber',flat=True)
-    for k in open_trip_cloure_data:
-        if k in trip_closure_list_data:
-            trip_closure_trip_data=TripclosureInfo.objects.get(tc_enquirynumber=k).tc_tripnumber
-            EnquirynoteInfo.objects.filter(en_enquirynumber=k).update(en_tripclosure=trip_closure_trip_data)
     enquiry_num_list=EnquirynoteInfo.objects.filter()
     for m in enquiry_num_list:
         print(m)
         try:
             consignment_status_id_list=[]
             consignment_status = ConsignmentdetailInfo.objects.filter(co_enquirynumber=m).values_list('co_status',flat=True)
-            print(consignment_status)
             for i in consignment_status:
                 consignment_status_id_list = consignment_status_id_list.append(StatusList.objects.get(status_title=i).id)
             if all(element == 5 for element in (consignment_status_id_list)):
@@ -81,8 +61,12 @@ def enquirynote_list(request):
         except ObjectDoesNotExist:
             consignment_status_id=6
         try:
-            trip_details_status = TripdetailInfo.objects.get(tr_enquirynumber=m).tr_status
-            trip_details_status_id = StatusList.objects.get(status_title=trip_details_status).id
+            trip_status_id_list=[]
+            trip_details_status = TripdetailInfo.objects.filter(tr_enquirynumber=m).values_list('tr_status',flat=True)
+            for j in trip_details_status:
+                trip_status_id_list = trip_status_id_list.append(StatusList.objects.get(status_title=j).id)
+            if all(element == 5 for element in (trip_status_id_list)):
+                trip_details_status_id=5
         except ObjectDoesNotExist:
             trip_details_status_id = 6
         try:
@@ -98,7 +82,8 @@ def enquirynote_list(request):
 
     context = {
                 'enquirynote_list' : EnquirynoteInfo.objects.all(),
-                # 'consignmentdetail_list': ConsignmentdetailInfo.objects.all(),
+                'consignmentdetail_list': ConsignmentdetailInfo.objects.all(),
+                'tripdetails_list': TripdetailInfo.objects.all(),
                 'first_name': first_name
                 }
     return render(request,"asset_mgt_app/enquirynote_list.html",context)
@@ -155,6 +140,16 @@ def consignment_note_connect(request,enquirynote_id):
 #Delete enquirynote
 @login_required(login_url='login_page')
 def enquirynote_delete(request,enquirynote_id):
+    enquiry_num = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
+    consignment_num_list = list(ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num).values_list('co_consignmentnumber',flat=True))
+    tripdetails_list=list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list('tr_tripnumber',flat=True))
+    for i in consignment_num_list:
+        consignment_note=ConsignmentdetailInfo.objects.get(co_consignmentnumber=i)
+        consignment_note.delete()
+    for j in tripdetails_list:
+        print(j)
+        tripdetails_note=TripdetailInfo.objects.get(tr_tripnumber=j)
+        tripdetails_note.delete()
     enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
     enquirynote.delete()
     return redirect('/SMS/enquirynote_list')
