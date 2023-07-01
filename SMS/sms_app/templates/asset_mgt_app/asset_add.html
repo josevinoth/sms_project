@@ -31,7 +31,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" id="">Asset Number</span>
 									</div>
-									{% render_field form.asset_number class="form-control" id="aset_num" readonly=True%}
+									{% render_field form.asset_number class="form-control" id="asset_number" readonly=True%}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -156,8 +156,8 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("asset_updated_by").value ='{{user_id}}';
-	var asset_num=document.getElementById("aset_num").value;
-	if (aset_num=="")
+	var asset_num=document.getElementById("asset_number").value;
+	if (asset_num=="")
 	{
 		$('#myLocation').removeClass('disable_a_href');
 	}
@@ -221,7 +221,7 @@ function myAssetnum() {
 	}
 <!--  var ran=Math.floor((Math.random() * 1000000) + 1)-->
   var ran='{{asset_num}}';
-  document.getElementById("aset_num").value =nam+"_"+ ran;
+  document.getElementById("asset_number").value =nam+"_"+ ran;
 }
 </script>
 {% endblock content %}

@@ -16,7 +16,7 @@ class AssetInfo(models.Model):
     asset_location = models.ForeignKey(Location_info, on_delete=models.CASCADE, default='')
     asset_vendor = models.ForeignKey(Vendor_info, on_delete=models.CASCADE, default='')
     asset_insurance_details = models.ForeignKey(Insurance_Info, on_delete=models.CASCADE, default='')
-    asset_Id = models.CharField(max_length=10, default='')
+    asset_Id = models.CharField(max_length=50, default='')
     asset_created_at = models.DateTimeField(null=True, auto_now_add=True)
     asset_updated_at = models.DateTimeField(null=True, auto_now=True)
     asset_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,related_name='asset_updated_by',db_column='asset_updated_by')
