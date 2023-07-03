@@ -136,11 +136,8 @@ def dispatch_remove_goods(request,dispatch_id):
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     # dispatch_dipatch_num_checkin = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=1)
     first_name = request.session.get('first_name')
-    # program to update stock list in dispatch database
-    dispatch_num_list = list(Dispatch_info.objects.all().values_list('dispatch_num', flat=True))
-    for i in dispatch_num_list:
-        dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=i).values_list('wh_goods_invoice', flat=True).distinct())
-        Dispatch_info.objects.filter(dispatch_num=i).update(dispatch_invoice_list=dispatch_invoice_list)
+    dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice', flat=True).distinct())
+    Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
     context = {
                'first_name': first_name,
                }
