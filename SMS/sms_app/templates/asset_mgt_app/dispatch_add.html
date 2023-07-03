@@ -139,6 +139,7 @@
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field dispatch_form.dispatch_updated_by hidden="True" id="dispatch_updated_by" class="form-control"  %}
+								{% render_field dispatch_form.dispatch_invoice_list id="dispatch_invoice_list" class="form-control"  %}
 							</div>
 						</div>
 						<div class="row">
@@ -164,32 +165,7 @@
 
 <script>
 $(document).ready(function() {
-	var gatein_status_id = '{{gatein_status}}';
-	var loadingbay_status_id='{{loadingbay_status}}';
-	var damage_before_status_id='{{damage_before_status}}';
-	var damage_after_status_id='{{damage_after_status}}';
 	document.getElementById("dispatch_updated_by").value='{{user_id}}';
-
-	var warehousein_status_id='{{user_id}}';
-	if (gatein_status_id =="Completed"){
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		}
-
-	if (loadingbay_status_id =="Completed"){
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		}
-
-	if (damage_before_status_id =="Completed"){
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		}
-	if (damage_after_status_id =="Completed"){
-		$('#warehousein_btn').removeClass('disable_a_href');
-		}
-	if (warehousein_status_id =="Completed"){
-		$('#storage_btn').removeClass('disable_a_href');
-		}
 	dispatch_num_fn()
   });
 </script>

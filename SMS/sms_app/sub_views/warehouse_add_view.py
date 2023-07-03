@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from ..forms import GoodsaddForm,WarehoseinaddForm,WarehoseoutaddForm
-from ..models import WhratemasterInfo,CustomerInfo,Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
+from ..models import Dispatch_info,CustomerInfo,Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -274,6 +274,8 @@ def warehouseout_cancel(request):
     first_name = request.session.get('first_name')
     dispatch_master_list = Warehouse_goods_info.objects.filter(wh_check_in_out=1)
     goods_list = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
+    dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice',flat=True).distinct())
+    Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
     context = {'goods_list': goods_list,
                'first_name': first_name,
                'dispatch_master_list': dispatch_master_list,

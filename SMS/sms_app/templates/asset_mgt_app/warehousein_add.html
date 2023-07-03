@@ -279,14 +279,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Check-In Time</span>
 									</div>
-									{% render_field warehousein_form.wh_checkin_time type="Datetime-local" class="form-control"%}
+									{% render_field warehousein_form.wh_checkin_time id="wh_checkin_time" type="Datetime-local" class="form-control"%}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3" >
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Goods Status</span>
 									</div>
-									{% render_field warehousein_form.wh_check_in_out class="form-control disable_a_href"%}
+									{% render_field warehousein_form.wh_check_in_out id="wh_check_in_out" class="form-control disable_a_href"%}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<!--								<div class="input-group input-group-sm mb-3">-->
@@ -456,7 +456,6 @@ function chargeable_weight_fn() {
 <script>
 $(document).ready(function() {
 	var gatein_status_id = '{{gatein_status}}';
-
 	var loadingbay_status_id='{{loadingbay_status}}';
 	var damage_before_status_id='{{damage_before_status}}';
 	var damage_after_status_id='{{damage_after_status}}';
@@ -556,6 +555,19 @@ $(document).ready(function() {
 		{
 			document.getElementById("wh_branch").value =branch_val;
 		}
+	}
+
+<!--	Check goods status and disable check-in time-->
+	var goods_status=document.getElementById("wh_check_in_out").value
+	if (goods_status==2)
+	{
+		$('#wh_checkin_time').addClass('disable_a_href');
+		$('#wh_branch').addClass('disable_a_href');
+	}
+	else
+	{
+		$('#wh_checkin_time').removeClass('disable_a_href');
+		$('#wh_branch').removeClass('disable_a_href');
 	}
   });
 </script>

@@ -26,61 +26,6 @@ def dispatch_add(request, dispatch_id=0):
     tot_package = request.POST.get('gatein_no_of_pkg')
     wh_job_id = ses_gatein_id_nam
     user_id = request.session.get('ses_userID')
-    # dispatch_list = Dispatch_info.objects.filter(dispatch_job_no=wh_job_id)
-    # Gate In Status Check
-    try:
-        gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
-    except ObjectDoesNotExist:
-        gatein_status = "No Status"
-    # Loading Bay Status Check
-    try:
-        loadingbay_status = Loadingbay_Info.objects.get(
-            lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
-    except ObjectDoesNotExist:
-        loadingbay_status = "No Status"
-    # Damage/Before Status Check
-    try:
-        damage_before_status = DamagereportInfo.objects.get(
-            dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
-    except ObjectDoesNotExist:
-        damage_before_status = "No Status"
-    # Damage/After Status Check
-    try:
-        goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
-                                                                                            flat=True)  # count records
-        goods_status_list = list(goods_status)
-        if goods_status_list != []:
-            if goods_status_list[0] == 5:
-                result = all(element == (goods_status_list[0]) for element in (goods_status_list))
-            else:
-                result = False
-        else:
-            result = False
-        if (result):
-            damage_after_status = "Completed"  # get goods status
-        else:
-            damage_after_status = "No Status"  # get goods status
-    except ObjectDoesNotExist:
-        damage_after_status = "No Status"
-    # Warehousein Status Check
-    try:
-        warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
-            'wh_check_in_out', flat=True)  # count records
-        warehousein_status_list = list(warehousein_status)
-        if warehousein_status_list != []:
-            if warehousein_status_list[0] == 1:
-                result = all(element == (warehousein_status_list[0]) for element in (warehousein_status_list))
-            else:
-                result = False
-        else:
-            result = False
-        if (result):
-            warehousein_status = "Completed"  # get goods status
-        else:
-            warehousein_status = "No Status"  # get goods status
-    except ObjectDoesNotExist:
-        warehousein_status = "No Status"
-    # warehousein_status = "Completed"
     dispatch_list = Dispatch_info.objects.all()
     if request.method == "GET":
         if dispatch_id == 0:
@@ -89,44 +34,24 @@ def dispatch_add(request, dispatch_id=0):
             context = {
                 'first_name': first_name,
                 'dispatch_form': dispatch_form,
-                'loadingbay_list': Loadingbay_Info.objects.filter(lb_job_no=wh_job_id),
-                'damagereport_list': DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id),
-                'gatein_list': Gatein_info.objects.filter(gatein_job_no=wh_job_id),
                 'wh_job_id': wh_job_id,
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
                 'dispatch_list':dispatch_list,
-                'gatein_status': gatein_status,
-                'loadingbay_status': loadingbay_status,
-                'damage_before_status': damage_before_status,
-                'damage_after_status': damage_after_status,
-                'warehousein_status': warehousein_status,
                 'user_id': user_id,
             }
         else:
             print("I am inside get edit Dispatch")
             dispatch_info = Dispatch_info.objects.get(pk=dispatch_id)
             dispatch_form = DispatchaddForm(instance=dispatch_info)
-            loadingbay_list= Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
-            gatein_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id)
-            goods_list= Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
-            # dispatch_list = Dispatch_info.objects.filter(dispatch_job_no=wh_job_id)
             dispatch_list = Dispatch_info.objects.all()
             dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
             dispatch_goods_list= Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
             context = {
                 'dispatch_form': dispatch_form,
                 'first_name': first_name,
-                'loadingbay_list': loadingbay_list,
-                'gatein_list':gatein_list,
-                'goods_list': goods_list,
                 'dispatch_list':dispatch_list,
-                'gatein_status':gatein_status,
-                'loadingbay_status':loadingbay_status,
-                'damage_before_status':damage_before_status,
-                'damage_after_status': damage_after_status,
-                'warehousein_status': warehousein_status,
-                'dispatch_goods_list':dispatch_goods_list,
                 'user_id':user_id,
+                'dispatch_goods_list':dispatch_goods_list,
             }
         return render(request, "asset_mgt_app/dispatch_add.html", context)
     else:
@@ -138,6 +63,7 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_info = Dispatch_info.objects.get(pk=dispatch_id)
             dispatch_form = DispatchaddForm(request.POST, instance=dispatch_info)
 
+            # Update Dispatch status is Gate-In Datatabse
             dispatch_status = Dispatch_info.objects.get(pk=dispatch_id).dispatch_status
             dispatch_status_id = StatusList.objects.get(status_title=dispatch_status).id
             dispatch_num = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
@@ -172,7 +98,11 @@ def dispatch_list(request):
 #Delete Dispatch Job
 @login_required(login_url='login_page')
 def dispatch_delete(request,dispatch_id):
-    # wh_job_id=Dispatch_info.objects.get(pk=dispatch_id).dispatch_job_no
+    dispatch_num=Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
+    stock_list=list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_qr_rand_num',flat=True))
+    for i in stock_list:
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=None)
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=1)
     # wh_job_id = request.session.get('ses_dispatch_id_nam')
     dispatch_del = Dispatch_info.objects.get(pk=dispatch_id)
     dispatch_del.delete()
@@ -187,6 +117,7 @@ def dispatch_goods_list(request,dispatch_id):
     request.session['ses_dispatch_num_val'] = dispatch_num_val
     # # dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
     dispatch_master_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1)
+    print('dispatch_master_list',dispatch_master_list)
     goods_list=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
     context = {'goods_list' : goods_list,
                'first_name': first_name,
@@ -201,9 +132,14 @@ def dispatch_remove_goods(request,dispatch_id):
     dispatch_goods_checkin = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=1)
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=0)
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=None)
-    wh_dispatch_num=request.session.get('ses_dispatch_num_val')
+    dispatch_num_val=request.session.get('ses_dispatch_num_val')
     # dispatch_dipatch_num_checkin = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=1)
     first_name = request.session.get('first_name')
+    # program to update stock list in dispatch database
+    dispatch_num_list = list(Dispatch_info.objects.all().values_list('dispatch_num', flat=True))
+    for i in dispatch_num_list:
+        dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=i).values_list('wh_goods_invoice', flat=True).distinct())
+        Dispatch_info.objects.filter(dispatch_num=i).update(dispatch_invoice_list=dispatch_invoice_list)
     context = {
                'first_name': first_name,
                }
@@ -225,6 +161,8 @@ def dispatch_add_goods(request,dispatch_id):
     # storage_days = (check_out_date - check_in_date).days  # In days
     storage_days = float(round(storage_hours / 24,2))  # In days
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff_days)
+    dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice', flat=True).distinct())
+    Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
     context = {
                 'first_name': first_name,
                 'dispatch_goods_list':dispatch_goods_list,
