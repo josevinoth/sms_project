@@ -139,7 +139,7 @@
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field dispatch_form.dispatch_updated_by hidden="True" id="dispatch_updated_by" class="form-control"  %}
-								{% render_field dispatch_form.dispatch_invoice_list id="dispatch_invoice_list" class="form-control"  %}
+								{% render_field dispatch_form.dispatch_invoice_list hidden="True" id="dispatch_invoice_list" class="form-control"  %}
 							</div>
 						</div>
 						<div class="row">
@@ -171,7 +171,8 @@ $(document).ready(function() {
 </script>
 <script>
 function dispatch_num_fn() {
-  var ran=Math.floor((Math.random() * 1000000) + 1)
+<!--  var ran=Math.floor((Math.random() * 1000000) + 1)-->
+  var ran='{{dispatch_num}}'
   var jn2=document.getElementById("dispatch_num").value
   if (jn2=="")
 	{

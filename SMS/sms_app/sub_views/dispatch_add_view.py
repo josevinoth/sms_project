@@ -1,17 +1,11 @@
-
+from random import randint
 import time
 from datetime import datetime
-
 from django.db import transaction
 from django.shortcuts import render, redirect
-from django.template.defaultfilters import join
-# from django.utils.datetime_safe import datetime
-from pyzbar import pyzbar
-
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import StatusList,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Dispatch_info
-from django.core.exceptions import ObjectDoesNotExist
+from ..models import StatusList,Gatein_info,Warehouse_goods_info,Dispatch_info
 from django.contrib import messages
 import cv2
 import numpy as np
@@ -27,6 +21,12 @@ def dispatch_add(request, dispatch_id=0):
     wh_job_id = ses_gatein_id_nam
     user_id = request.session.get('ses_userID')
     dispatch_list = Dispatch_info.objects.all()
+    # Generate Random Dispatch number
+    last_id = (Dispatch_info.objects.values_list('id', flat=True)).last()
+    if last_id == None:
+        last_id = 0
+    ran=randint(10000, 99999)
+    dispatch_num =  ran + last_id + 1
     if request.method == "GET":
         if dispatch_id == 0:
             print("I am inside Get add dispatch")
@@ -38,6 +38,7 @@ def dispatch_add(request, dispatch_id=0):
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
                 'dispatch_list':dispatch_list,
                 'user_id': user_id,
+                'dispatch_num': dispatch_num,
             }
         else:
             print("I am inside get edit Dispatch")
