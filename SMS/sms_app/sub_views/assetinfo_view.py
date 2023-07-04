@@ -26,13 +26,11 @@ def assetinfo_add(request, asset_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
-    print('user_id',user_id)
     # Generate Random Asset number
     last_id = (AssetInfo.objects.values_list('id', flat=True)).last()
     if last_id == None:
         last_id = 0
     asset_num = randint(10000, 99999) + last_id + 1
-    print('asset_num',asset_num)
     if request.method == "GET":
         if asset_id == 0:
             print("Inside Get Asset Add")

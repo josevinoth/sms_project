@@ -319,20 +319,20 @@ def load_units_origin(request):
 @login_required(login_url='login_page')
 def load_units(request):
     # Fetch unit
-    unit_list=[]
-    unit_name=[]
+    unit_list = []
+    unit_name = []
     unit_name_list = []
     wh_branch_id = request.GET.get('branchId')
     # Fetch Unit Details
-    units = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id).values('lm_wh_unit').distinct()
-    units_count=units.count()
-    for i in range(units_count):
-        unit_list.append(units[i]['lm_wh_unit'])
-    for j in unit_list:
-        unit_name=UnitInfo.objects.filter(id=j).values('unit_name')
+    units = list(
+        LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id).values_list('lm_wh_unit', flat=True).distinct())
+    units.sort()
+    for j in units:
+        unit_name = UnitInfo.objects.filter(id=j).values('unit_name')
         unit_name_list.append(unit_name[0]['unit_name'])
+    print('unit_name_list', unit_name_list)
     data = {
-        'unit_id':unit_list,
+        'unit_id':units,
         'unit_name_list': unit_name_list,
     }
     return HttpResponse(json.dumps(data))
