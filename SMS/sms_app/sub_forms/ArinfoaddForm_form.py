@@ -16,3 +16,4 @@ class ArinfoaddForm(forms.ModelForm):
         self.fields['ar_customer_name'].empty_label = "--Select--"
         self.fields['ar_customer_dept'].empty_label = "--Select--"
         self.fields['ar_status'].empty_label = "--Select--"
+        self.fields['ar_sales_person'].empty_label = "--Select--"

@@ -35,6 +35,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text" >Sales Executive</span>
+									</div>
+									{% render_field form.ar_sales_person class="form-control" id="ar_branch"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text" >Operation Date</span>
 									</div>
 									{% render_field form.ar_operation_date type="Date" onchange="Amt_cal()" class="form-control" id="ar_operation_date" %}

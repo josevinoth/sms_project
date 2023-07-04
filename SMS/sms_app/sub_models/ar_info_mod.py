@@ -31,7 +31,8 @@ class Ar_Info(models.Model):
     ar_status = models.ForeignKey(StatusList,blank=True, null=True, on_delete=models.CASCADE, default=6)
     ar_created_at = models.DateTimeField(null=True, auto_now_add=True)
     ar_updated_at = models.DateTimeField(null=True, auto_now=True)
-    ar_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+    ar_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE,related_name='ar_updated_by', db_column='ar_updated_by',  null=True)
+    ar_sales_person = models.ForeignKey(MyUser, on_delete=models.CASCADE,related_name='ar_sales_person', db_column='ar_sales_person', null=True)
     class Meta:
         ordering = ["ar_company"]
 
