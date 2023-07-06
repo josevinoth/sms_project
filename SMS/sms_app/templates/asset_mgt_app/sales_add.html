@@ -349,7 +349,9 @@ $(document).ready(function() {
 </script>
 <script>
 function salenum() {
-  var ran=Math.floor((Math.random() * 1000000) + 1)
+<!--  var ran=Math.floor((Math.random() * 1000000) + 1)-->
+  var ran='{{sales_num}}'
+  alert(ran)
   var jn=document.getElementById("s_sale_number").value
   if (jn=="")
   {

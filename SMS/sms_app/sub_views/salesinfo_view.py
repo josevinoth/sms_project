@@ -2,9 +2,7 @@ from django.contrib.auth.decorators import login_required
 from ..forms import SalescommentForm,SalesinfoaddForm
 from ..models import Sales_Comments_Info,User_extInfo,SalesInfo
 from django.shortcuts import render, redirect
-import qrcode
-from io import BytesIO
-import qrcode.image.svg
+from random import randint
 @login_required(login_url='login_page')
 def sales_list(request):
     first_name = request.session.get('first_name')
@@ -23,6 +21,11 @@ def sales_add(request, sales_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
+    # Generate Random sales number
+    last_id = (SalesInfo.objects.values_list('id', flat=True)).last()
+    if last_id == None:
+        last_id = 0
+    sales_num = randint(10000, 99999) + last_id + 1
     if request.method == "GET":
         if sales_id == 0:
             form = SalesinfoaddForm()
@@ -33,6 +36,7 @@ def sales_add(request, sales_id=0):
                 'first_name': first_name,
                 'created_by': created_by,
                 'user_id': user_id,
+                'sales_num': sales_num,
             }
             return render(request, "asset_mgt_app/sales_add.html", context)
         else:
@@ -43,13 +47,13 @@ def sales_add(request, sales_id=0):
             sale_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
             request.session['ses_sales_num'] = sale_num
             comments_list_filterd = Sales_Comments_Info.objects.filter(sc_sales_number=sale_num)
-
             context={
                 'form': form,
                 'role': role,
                 'first_name': first_name,
                 'user_id': user_id,
                 'comments_list_filterd': comments_list_filterd,
+                'sales_num': sales_num,
             }
             return render(request, "asset_mgt_app/sales_edit.html", context)
     else:
