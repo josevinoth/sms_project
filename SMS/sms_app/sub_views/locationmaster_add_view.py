@@ -14,13 +14,10 @@ def locationmaster_add(request,locationmaster_id=0):
     if request.method == "GET":
         if locationmaster_id == 0:
             con_val = request.GET.get('lm_concatenate')
-            print(con_val)
             print('Inside Get')
             lm_record_count = LocationmasterInfo.objects.filter(lm_concatenate=con_val).count()
-            print("Record Count", lm_record_count)
             if lm_record_count == 1:
                 print('Inside GET first loop')
-                print('Record Exist')
                 messages.info(request, 'Record Exist')
                 return redirect(request.META['HTTP_REFERER'])
             else:
@@ -40,12 +37,8 @@ def locationmaster_add(request,locationmaster_id=0):
             Branch_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_location.id
             Unit_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_unit.id
             Bay_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_areaside.id
-            print("Branch", Branch_val)
-            print("Unit", Unit_val)
-            print("Bay", Bay_val)
             wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,
                                                                 wh_bay_id=Bay_val)
-            print("Goods List Count",wh_goods_list)
             stack_layer = wh_goods_list.values('wh_stack_layer_id')
             volume = wh_goods_list.values('wh_goods_volume_weight')
             area = wh_goods_list.values('wh_goods_area')
@@ -59,8 +52,6 @@ def locationmaster_add(request,locationmaster_id=0):
                         area_final = round((area_final + area[j]['wh_goods_area']),3)
                     else:
                         print("No Area")
-            print("Total_Area", area_final)
-            print("Total_Volume", volume_final)
             locationmaster=LocationmasterInfo.objects.get(pk=locationmaster_id)
             form = LocationmasteraddForm(instance=locationmaster)
             context = {
@@ -73,15 +64,11 @@ def locationmaster_add(request,locationmaster_id=0):
     else:
         if locationmaster_id == 0:
             con_val = request.POST.get('lm_concatenate')
-            print(con_val)
             print('Inside Post')
             lm_record_check=LocationmasterInfo.objects.filter(lm_concatenate=con_val)
-            print('lm_record_check',lm_record_check)
             lm_record_count=LocationmasterInfo.objects.filter(lm_concatenate=con_val).count()
-            print("Record Count",lm_record_count)
             if lm_record_count==1:
                 print('Inside Post first loop')
-                print('Record Exist')
                 messages.info(request, 'Record Exist')
                 return redirect(request.META['HTTP_REFERER'])
             else:
@@ -93,15 +80,12 @@ def locationmaster_add(request,locationmaster_id=0):
         else:
             print('Inside Post Else')
             con_val = request.POST.get('lm_concatenate')
-            print(con_val)
             # con_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_concatenate
             # if form.is_valid():
             #     form.save()
             lm_record_count = LocationmasterInfo.objects.filter(lm_concatenate=con_val).count()
-            print("Record Count",lm_record_count)
             if lm_record_count>1:
                 print('Inside Post Else first loop')
-                print('Record Exist')
                 messages.info(request, 'Record Exist')
                 return redirect(request.META['HTTP_REFERER'])
             else:
@@ -133,7 +117,6 @@ def locationmaster_delete(request,locationmaster_id):
 @login_required(login_url='login_page')
 def update_location_master(request):
     wh_branch=LocationmasterInfo.object.all()
-    print(wh_branch)
 
 #Get Customer Model
 @login_required(login_url='login_page')
@@ -161,14 +144,11 @@ def load_customer_model(request):
     customer_contact_val = customer_contact[0]['cu_contactno']  # Get value from Queryset
     customer_address_val = customer_address[0]['cu_address']  # Get value from Queryset
     customer_type_val = customer_type[0]['cu_type']  # Get value from Queryset
-    print('customer_type_val',customer_type_val)
     lm_customer_model_id=TrbusinesstypeInfo.objects.filter(id=customer_businessmodel_val).values('tb_trbusinesstype')
     customer_businessmodel_txt= lm_customer_model_id[0]['tb_trbusinesstype']  # Get value from Queryset
     # wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=total_weight,whrm_min_wt__gte=total_weight,whrm_charge_type=1).values('whrm_rate')
     # wh_rate_val=wh_rate[0]['whrm_rate']
     # wh_rate = 1
-    # print('wh_rate', wh_rate)
-    # print('wh_rate_val', wh_rate_val)
     data = {
         'customer_businessmodel_val':customer_businessmodel_val,
         'customer_short_name_val':customer_short_name_val,

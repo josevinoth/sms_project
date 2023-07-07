@@ -148,9 +148,12 @@ def shipper_invoice_list(request,voucher_id):
     first_name = request.session.get('first_name')
     voucher_num_val = BilingInfo.objects.get(pk=voucher_id).bill_invoice_ref
     customer_name_val = BilingInfo.objects.get(pk=voucher_id).bill_customer_name
+    print(customer_name_val)
+    print('voucher_num_val',voucher_num_val)
     request.session['ses_voucher_num_val'] = voucher_num_val
     shipper_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
     invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_check_in_out=2,wh_voucher_num=None)
+    print(list(invoice_list_master))
     context =   {
                 'shipper_invoice_list' : shipper_invoice_list,
                 'first_name': first_name,
@@ -159,7 +162,7 @@ def shipper_invoice_list(request,voucher_id):
     return render(request,"asset_mgt_app/shipper_invoice_list.html",context)
 @login_required(login_url='login_page')
 def shipper_invoice_add(request,voucher_id):
-    global crane_cost_l2hr
+    global crane_cost_l2hr, piece_rate_val, total_loading_cost
     first_name = request.session.get('first_name')
     voucher_num_val = request.session.get('ses_voucher_num_val')
     stock_num=Warehouse_goods_info.objects.get(pk=voucher_id).wh_qr_rand_num
@@ -184,10 +187,33 @@ def shipper_invoice_add(request,voucher_id):
         job_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_num).values_list('wh_job_no', flat=True)
         max_storage_days=max(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_num).values_list('wh_storage_time', flat=True))
 
+        # Calculate loading/unloading charge per unit
+        # wh_job_num=Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True)
+        # for wh_job_id in wh_job_num:
+        stock_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_num).values_list('wh_qr_rand_num', flat=True)
+        for i in list(stock_num):
+            total_weight = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_goods_weight
+            no_of_pieces = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_goods_pieces
+            try:
+                weight_per_piece = ((total_weight) / (no_of_pieces))
+            except ZeroDivisionError:
+                weight_per_piece = float(0.0)
+            customer = Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_customer
+            customer_id = CustomerInfo.objects.get(cu_name=customer).id
+            # Loading_unloading charge
+            piece_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id,
+                                                         whrm_min_wt__lte=weight_per_piece,
+                                                         whrm_max_wt__gte=weight_per_piece,
+                                                         whrm_charge_type=3).values('whrm_rate')
+            if piece_rate:
+                piece_rate_val = piece_rate[0]['whrm_rate']
+            else:
+                piece_rate_val = 0.0
+            total_loading_cost = piece_rate_val * no_of_pieces
+
         # //Calculate Crane and Forklift cost
         customer_name = Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_customer
         customer_id = CustomerInfo.objects.get(cu_name=customer_name).id
-
         try:
             crane_hours=Loadingbay_Info.objects.get(lb_job_no=wh_job_num).lb_crane_time
             forklift_hours=Loadingbay_Info.objects.get(lb_job_no=wh_job_num).lb_forklift_time
@@ -262,6 +288,8 @@ def shipper_invoice_add(request,voucher_id):
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost_l2hr=forklift_cost_l2hr)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost_g2hr=forklift_cost_g2hr)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost=forklift_cost)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_loading_charge_unit=piece_rate_val)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_loading_cost=total_loading_cost)
 
             else:
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=0)
@@ -272,6 +300,8 @@ def shipper_invoice_add(request,voucher_id):
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost_l2hr=0)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost_g2hr=0)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost=0)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_loading_charge_unit=0)
+                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_loading_cost=0)
         messages.success(request,'Invoice List Updated Successfully!')
     context =   {
                 # 'shipper_invoice_list' : shipper_invoice_list,
