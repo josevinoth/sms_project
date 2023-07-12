@@ -113,9 +113,11 @@ def invoice_report(request):
 	        b.bill_rate_per_pallet as Rate_Per_Pallet,\
 	        b.bill_loading_charge as Warehouse_Loading_Charges,\
 	        b.bill_unloading_charge as Warehouse_Unloading_Charges,\
-	        b.bill_total_post_gst as Total_Charges\
+	        b.bill_total_post_gst as Total_Charges,\
+	        v.vt_vehicletype as Truck_type\
 	        FROM sms_app_bilinginfo b\
 	        INNER JOIN sms_app_warehouse_goods_info w ON b.bill_invoice_ref=w.wh_voucher_num\
+	        INNER JOIN sms_app_VehicletypeInfo v ON v.id=w.wh_truck_type_id\
             where b.bill_status_id='5'")
     row = cursor.fetchall()
     context =   {
@@ -187,29 +189,29 @@ def shipper_invoice_add(request,voucher_id):
         job_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_num).values_list('wh_job_no', flat=True)
         max_storage_days=max(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_num).values_list('wh_storage_time', flat=True))
 
-        # Calculate loading/unloading charge per unit
-        # wh_job_num=Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True)
-        # for wh_job_id in wh_job_num:
+        # Calculate Loading & Unloading Cost
         stock_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_num).values_list('wh_qr_rand_num', flat=True)
+        total_weight =0
+        no_of_pieces =0
         for i in list(stock_num):
-            total_weight = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_goods_weight
-            no_of_pieces = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_goods_pieces
-            try:
-                weight_per_piece = ((total_weight) / (no_of_pieces))
-            except ZeroDivisionError:
-                weight_per_piece = float(0.0)
-            customer = Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_customer
-            customer_id = CustomerInfo.objects.get(cu_name=customer).id
-            # Loading_unloading charge
-            piece_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id,
-                                                         whrm_min_wt__lte=weight_per_piece,
-                                                         whrm_max_wt__gte=weight_per_piece,
-                                                         whrm_charge_type=3).values('whrm_rate')
-            if piece_rate:
-                piece_rate_val = piece_rate[0]['whrm_rate']
-            else:
-                piece_rate_val = 0.0
-            total_loading_cost = piece_rate_val * no_of_pieces
+            total_weight = total_weight+ Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_goods_weight
+            no_of_pieces = no_of_pieces+ Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_goods_pieces
+        try:
+            weight_per_piece = ((total_weight) / (no_of_pieces))
+        except ZeroDivisionError:
+            weight_per_piece = float(0.0)
+        customer = Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_customer
+        customer_id = CustomerInfo.objects.get(cu_name=customer).id
+        # Loading_unloading charge
+        piece_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id,
+                                                        whrm_min_wt__lte=weight_per_piece,
+                                                        whrm_max_wt__gte=weight_per_piece,
+                                                        whrm_charge_type=3).values('whrm_rate')
+        if piece_rate:
+            piece_rate_val = piece_rate[0]['whrm_rate']
+        else:
+            piece_rate_val = 0.0
+        total_loading_cost = piece_rate_val * no_of_pieces
 
         # //Calculate Crane and Forklift cost
         customer_name = Gatein_info.objects.get(gatein_job_no=wh_job_num).gatein_customer
@@ -278,8 +280,8 @@ def shipper_invoice_add(request,voucher_id):
             print(i)
             print(job_num[i])
             if i == 0:
-                storage_cost_total =round((warehouse_charge*max_storage_days),2)
-                print('storage_cost_total',storage_cost_total)
+                no_of_shipper_invoice = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).values_list('wh_goods_invoice',flat=True).distinct()).count()
+                storage_cost_total =round((warehouse_charge*max_storage_days),2)/no_of_shipper_invoice
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=warehouse_charge)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_l2h=crane_cost_l2hr)

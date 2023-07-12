@@ -255,6 +255,10 @@ def warehouseout_add(request, warehouseout_id=0):
                 dispatch_num_val = request.session.get('ses_dispatch_num_val')
                 Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_check_in_out=2)
                 Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_dispatch_num=dispatch_num_val)
+                dispatch_num_val = request.session.get('ses_dispatch_num_val')
+                vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).dispatch_truck_type
+                Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_truck_type=vehicle_type)
+                print('vehicle_type', vehicle_type)
                 check_in_date = Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time
                 check_out_date = Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkout_time
                 date_diff = (check_out_date - check_in_date)  # Differnce between dates

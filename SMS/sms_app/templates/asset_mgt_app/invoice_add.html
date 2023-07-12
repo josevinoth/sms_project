@@ -125,13 +125,12 @@
 									{% render_field invoice_form.bill_no_of_pallets class="form-control disable_a_href" id="bill_no_of_pallets" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-<!--								<div class="input-group input-group-sm mb-3">-->
-<!--									<div class="input-group-prepend">-->
-<!--										<span class="input-group-text">No Of Days</span>-->
-<!--									</div>-->
-<!--									{% render_field invoice_form.bill_no_of_days class="form-control disable_a_href" id="bill_no_of_days" %}-->
-<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-<!--								</div>-->
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">No Of Days</span>
+									</div>
+									{% render_field invoice_form.bill_no_of_days class="form-control disable_a_href" id="bill_no_of_days" %}
+								</div>
 <!--								<div class="input-group input-group-sm mb-3">-->
 <!--									<div class="input-group-prepend">-->
 <!--										<span class="input-group-text">Wh Charges/Day</span>-->
@@ -297,12 +296,12 @@
 $(document).ready(function() {
 	document.getElementById("bill_updated_by").value ='{{user_id}}';
 	document.getElementById("bill_weight").value ='{{weight_sum}}';
-<!--	document.getElementById("bill_no_of_days").value ='{{no_of_days}}';-->
+	document.getElementById("bill_no_of_days").value ='{{no_of_days}}';
 	document.getElementById("bill_no_of_pallets").value ='{{no_of_pieces}}';
 	document.getElementById("bill_tot_crane_time").value ='{{crane_time}}';
 	document.getElementById("bill_tot_forklift_time").value ='{{forklift_time}}';
-	document.getElementById("bill_start_date").value ='{{min_check_in_time}}';
-	document.getElementById("bill_end_date").value ='{{max_check_out_time}}';
+<!--	document.getElementById("bill_start_date").value ='{{min_check_in_time}}';-->
+<!--	document.getElementById("bill_end_date").value ='{{max_check_out_time}}';-->
 	document.getElementById("bill_loading_charge").value ='{{total_loading_cost}}';
 	document.getElementById("bill_unloading_charge").value ='{{total_loading_cost}}';
 	document.getElementById("bill_wh_storage_charges").value ='{{wh_storage_cost_sum}}';
