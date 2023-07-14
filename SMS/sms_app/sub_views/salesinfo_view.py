@@ -120,6 +120,7 @@ def sales_comments_add(request, sales_comments_id=0):
         # return redirect(request.META['HTTP_REFERER'])
 @login_required(login_url='login_page')
 def sales_comments_list(request):
+    first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
     comments_list=Sales_Comments_Info.objects.all()
@@ -127,8 +128,9 @@ def sales_comments_list(request):
         'comments_list':comments_list,
         'role': role,
         'user_id': user_id,
+        'first_name': first_name,
     }
-    return render(request, "asset_mgt_app/sales_list.html", context)
+    return render(request, "asset_mgt_app/sales_comments_list.html", context)
 @login_required(login_url='login_page')
 def sales_comments_delete(request, sales_comments_id):
     salescommentsinfo = Sales_Comments_Info.objects.get(pk=sales_comments_id)
