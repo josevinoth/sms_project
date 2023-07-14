@@ -95,8 +95,10 @@ def locationmaster_add(request,locationmaster_id=0):
                 if form.is_valid():
                     # LocationmasterInfo.objects.filter(pk=locationmaster_id).update(lm_area_occupied=area_final)
                     # LocationmasterInfo.objects.filter(pk=locationmaster_id).update(lm_volume_occupied=volume_final)
-
                     form.save()
+                    print('Form Saved Successfully')
+                else:
+                    print('Form Not Saved Successfully')
             return redirect('/SMS/locationmaster_list')
 
 # List locationmaster

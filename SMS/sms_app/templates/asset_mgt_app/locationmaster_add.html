@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" id="location_master" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" novalidate>
+<form method="POST" id="location_master" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" >
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
@@ -108,16 +108,12 @@
 								</div>
 								{% render_field form.lm_concatenate  type="hidden" id="lm_concatenate" class="form-control" %}
 								<div class="message message-warning">
-										{% for message in messages %}
-										<p>{{message}}</p>
-										{% endfor %}
+									{% for message in messages %}
+									<p>{{message}}</p>
+									{% endfor %}
 									{{form.error_messages}}
 								</div>
-
 							</div>
-						</div>
-						<div class="message">
-							{{form.errors}}
 						</div>
 						<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>

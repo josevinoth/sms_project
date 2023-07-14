@@ -40,6 +40,7 @@
             <th>Invoice Amount (INR)</th>
             <th>Updated By</th>
             <th>Updated On</th>
+             <th>Status</th>
             <th>Shipper Invoice List</th>
             <th>Edit</th>
             <th>Delete</th>
@@ -57,6 +58,7 @@
             <td> {{invoiceinfo.bill_total_post_gst}}</td>
             <td> {{invoiceinfo.bill_updated_by}}</td>
             <td> {{invoiceinfo.bill_updated_at}}</td>
+            <td> {{invoiceinfo.bill_status}}</td>
 
             <td>
                 <a class="btn btn-warning" href="{% url 'shipperinvoice_list' invoiceinfo.id %}" >
@@ -91,7 +93,7 @@
         scrollCollapse: true,
         dom: 'lBfrtip',
         buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print'
+            'copy', 'csv', 'excel', 'print'
         ]
     } );
 } );

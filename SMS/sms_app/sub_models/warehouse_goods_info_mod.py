@@ -62,6 +62,7 @@ class Warehouse_goods_info(models.Model):
     wh_crane_cost = models.FloatField(blank=True, null=True, default=0.0)
     wh_crane_cost_l2h = models.FloatField(blank=True, null=True, default=0.0)
     wh_crane_cost_g2h = models.FloatField(blank=True, null=True, default=0.0)
+    wh_total_invoice_cost = models.FloatField(blank=True, null=True, default=0.0)
     wh_truck_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, null=True,blank=True)
 
 

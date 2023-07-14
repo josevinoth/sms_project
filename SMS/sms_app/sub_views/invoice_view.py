@@ -20,16 +20,10 @@ def invoice_add(request,invoice_id=0):
     if request.method == "GET":
         if invoice_id == 0:
             invoice_form = InvoiceaddForm()
-            # weight_sum=0
-            # no_of_days=0
-            # no_of_pieces=0
             context={
                 'invoice_form': invoice_form,
                 'first_name':first_name,
                 'user_id':user_id,
-                # 'weight_sum':weight_sum,
-                # 'no_of_days':no_of_days,
-                # 'no_of_pieces':no_of_pieces,
             }
         else:
             invoice = BilingInfo.objects.get(pk=invoice_id)
@@ -43,9 +37,6 @@ def invoice_add(request,invoice_id=0):
             no_of_days=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Max('wh_storage_time'))['wh_storage_time__max']
             no_of_pieces=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
             total_loading_cost=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_total_loading_cost'))['wh_total_loading_cost__sum']
-            print('no_of_pieces',no_of_pieces)
-            print('wh_storage_cost_sum',wh_storage_cost_sum)
-            print('total_loading_cost',total_loading_cost)
             try:
                 min_check_in_time=min(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkin_time'))
             except:
@@ -96,33 +87,35 @@ def invoice_add(request,invoice_id=0):
 @login_required(login_url='login_page')
 def invoice_report(request):
     first_name = request.session.get('first_name')
-    cursor = connection.cursor()
-    # cursor.execute("SELECT * FROM sms_app_warehouse_goods_info w INNER JOIN sms_app_gatein_info g ON w.wh_job_no=g.gatein_job_no INNER JOIN sms_app_loadingbay_info l ON w.wh_job_no=l.lb_job_no LEFT JOIN sms_app_dispatch_info d on w.wh_dispatch_num=d.dispatch_num")
-    cursor.execute("SELECT DISTINCT\
-	        b.bill_invoice_ref,\
-	        w.wh_job_no as WH_Job_Number,\
-	        w.wh_consigner as Shipper_Name,\
-	        w.wh_goods_invoice as Invoice,\
-	        b.bill_weight as Shippment_Weight,\
-	        b.bill_start_date as Start_Date,\
-	        b.bill_end_date as End_Date,\
-            b.bill_no_of_days as No_Of_Days,\
-	        b.bill_per_day_wh_charges,\
-	        b.bill_wh_storage_charges as Warehouse_Storage_Charges,\
-	        b.bill_no_of_pallets as No_Of_Pallets_Boxes,\
-	        b.bill_rate_per_pallet as Rate_Per_Pallet,\
-	        b.bill_loading_charge as Warehouse_Loading_Charges,\
-	        b.bill_unloading_charge as Warehouse_Unloading_Charges,\
-	        b.bill_total_post_gst as Total_Charges,\
-	        v.vt_vehicletype as Truck_type\
-	        FROM sms_app_bilinginfo b\
-	        INNER JOIN sms_app_warehouse_goods_info w ON b.bill_invoice_ref=w.wh_voucher_num\
-	        INNER JOIN sms_app_VehicletypeInfo v ON v.id=w.wh_truck_type_id\
-            where b.bill_status_id='5'")
-    row = cursor.fetchall()
+    goods_list=Warehouse_goods_info.objects.exclude(wh_voucher_num=None)
+    # cursor = connection.cursor()
+    # # cursor.execute("SELECT * FROM sms_app_warehouse_goods_info w INNER JOIN sms_app_gatein_info g ON w.wh_job_no=g.gatein_job_no INNER JOIN sms_app_loadingbay_info l ON w.wh_job_no=l.lb_job_no LEFT JOIN sms_app_dispatch_info d on w.wh_dispatch_num=d.dispatch_num")
+    # cursor.execute("SELECT DISTINCT\
+	#         b.bill_invoice_ref,\
+	#         w.wh_job_no as WH_Job_Number,\
+	#         w.wh_consigner as Shipper_Name,\
+	#         w.wh_goods_invoice as Invoice,\
+	#         b.bill_weight as Shippment_Weight,\
+	#         b.bill_start_date as Start_Date,\
+	#         b.bill_end_date as End_Date,\
+    #         b.bill_no_of_days as No_Of_Days,\
+	#         b.bill_per_day_wh_charges,\
+	#         b.bill_wh_storage_charges as Warehouse_Storage_Charges,\
+	#         b.bill_no_of_pallets as No_Of_Pallets_Boxes,\
+	#         b.bill_rate_per_pallet as Rate_Per_Pallet,\
+	#         b.bill_loading_charge as Warehouse_Loading_Charges,\
+	#         b.bill_unloading_charge as Warehouse_Unloading_Charges,\
+	#         b.bill_total_post_gst as Total_Charges,\
+	#         v.vt_vehicletype as Truck_type\
+	#         FROM sms_app_bilinginfo b\
+	#         INNER JOIN sms_app_warehouse_goods_info w ON b.bill_invoice_ref=w.wh_voucher_num\
+	#         INNER JOIN sms_app_VehicletypeInfo v ON v.id=w.wh_truck_type_id\
+    #         where b.bill_status_id='5'")
+    # row = cursor.fetchall()
     context =   {
                 'first_name': first_name,
-                'row': row,
+                # 'row': row,
+                'goods_list': goods_list,
                 }
     return render(request,"asset_mgt_app/invoice_report.html",context)
 @login_required(login_url='login_page')
@@ -292,7 +285,6 @@ def shipper_invoice_add(request,voucher_id):
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost=forklift_cost)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_loading_charge_unit=piece_rate_val)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_loading_cost=total_loading_cost)
-
             else:
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=0)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=0)
@@ -304,6 +296,16 @@ def shipper_invoice_add(request,voucher_id):
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost=0)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_loading_charge_unit=0)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_loading_cost=0)
+
+        # update total invoice cost in warehouse goods table
+        total_invoice_cost=BilingInfo.objects.get(bill_invoice_ref=voucher_num_val).bill_total_post_gst
+        stock_id = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).values_list('id', flat=True)
+        for i in range(0, len(stock_id)):
+            if i==0:
+                Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_total_invoice_cost=total_invoice_cost)
+            else:
+                Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_total_invoice_cost=0)
+
         messages.success(request,'Invoice List Updated Successfully!')
     context =   {
                 # 'shipper_invoice_list' : shipper_invoice_list,
