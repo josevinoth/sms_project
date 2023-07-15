@@ -273,10 +273,6 @@ def shipper_invoice_add(request,voucher_id):
             print(i)
             print(job_num[i])
             if i == 0:
-                no_of_shipper_invoice = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).values_list('wh_goods_invoice',flat=True).distinct()).count()
-                storage_cost_total =round((warehouse_charge*max_storage_days),2)/no_of_shipper_invoice
-                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=warehouse_charge)
-                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_l2h=crane_cost_l2hr)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_g2h=crane_cost_g2hr)
                 Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost=crane_cost)
@@ -302,9 +298,15 @@ def shipper_invoice_add(request,voucher_id):
         stock_id = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).values_list('id', flat=True)
         for i in range(0, len(stock_id)):
             if i==0:
+                no_of_shipper_invoice = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).values_list('wh_goods_invoice',flat=True).distinct()).count()
+                storage_cost_total = round((warehouse_charge * max_storage_days), 2)
                 Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_total_invoice_cost=total_invoice_cost)
+                Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_storage_cost_per_day=warehouse_charge)
+                Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_storage_cost_total=storage_cost_total)
             else:
                 Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_total_invoice_cost=0)
+                Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_storage_cost_per_day=0)
+                Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_storage_cost_total=0)
 
         messages.success(request,'Invoice List Updated Successfully!')
     context =   {
