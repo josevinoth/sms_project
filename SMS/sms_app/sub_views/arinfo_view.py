@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from ..forms import ArinfoaddForm
-from ..models import User_extInfo,Ar_Info
+from ..models import Ar_comments_Info,User_extInfo,Ar_Info
 from django.shortcuts import render, redirect
 import qrcode
 from io import BytesIO
@@ -27,15 +27,24 @@ def ar_add(request, ar_id=0):
     if request.method == "GET":
         if ar_id == 0:
             form = ArinfoaddForm()
+            context = {
+                'form': form,
+                'role': role,
+                'first_name': first_name,
+                'user_id': user_id,
+            }
         else:
+            invoice_number=Ar_Info.objects.get(pk=ar_id).ar_invoice_num
+            arcomments_list= Ar_comments_Info.objects.filter(arc_invoice_num=invoice_number)
             arinfo = Ar_Info.objects.get(pk=ar_id)
             form = ArinfoaddForm(instance=arinfo)
-        context={
-            'form': form,
-            'role': role,
-            'first_name': first_name,
-            'user_id': user_id,
-        }
+            context={
+                'form': form,
+                'role': role,
+                'first_name': first_name,
+                'user_id': user_id,
+                'arcomments_list': arcomments_list,
+            }
         return render(request, "asset_mgt_app/ar_add.html", context)
     else:
         if ar_id == 0:

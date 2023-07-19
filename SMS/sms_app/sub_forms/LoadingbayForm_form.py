@@ -1,13 +1,14 @@
 from django import forms
 from django.forms import HiddenInput
-
-from ..models import Loadingbay_Info,Loadingbayimages_Info
+# from easy_select2 import select2_modelform
+from ..models import City,Loadingbay_Info,Loadingbayimages_Info
 
 class LoadingbayddForm(forms.ModelForm):
     class Meta:
         model = Loadingbay_Info
         # fields = ['lb_job_no','lb_invoice']
         fields = '__all__'
+        # lb_mh_manual=select2_modelform(City)
 
     def __init__(self, *args, **kwargs):
         super(LoadingbayddForm, self).__init__(*args, **kwargs)
