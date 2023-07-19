@@ -35,12 +35,12 @@ def arcomments_add(request,arcomments_id=0):
             invoice_updated_by = MyUser.objects.get(id=int(request.POST.get('arc_updated_by')))
             invoice_customer = CustomerInfo.objects.get(id=int(request.POST.get('arc_customer')))
             invoice_number = request.POST.get('arc_invoice_num')
+            customer_contact_name = request.POST.get('arc_customer_contact_name')
+            customer_contact_designation = request.POST.get('arc_customer_contact_designation')
             invoice_number_list = list(invoice_number.split(','))
-            print(type(invoice_updated_by))
-            print(type(invoice_customer))
             for i in range(0, count(list(invoice_number_list))):
                 instance = Ar_comments_Info(arc_invoice_num=invoice_number_list[i], arc_comments=invoice_comments,
-                                            arc_customer=invoice_customer, arc_updated_by=invoice_updated_by)
+                                            arc_customer=invoice_customer, arc_updated_by=invoice_updated_by,arc_customer_contact_name=customer_contact_name,arc_customer_contact_designation=customer_contact_designation)
                 instance.save()
             messages.success(request, 'Record Updated Successfully')
         else:
