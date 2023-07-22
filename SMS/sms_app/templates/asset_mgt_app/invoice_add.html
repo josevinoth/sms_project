@@ -307,6 +307,15 @@ $(document).ready(function() {
 	document.getElementById("bill_wh_storage_charges").value ='{{wh_storage_cost_sum}}';
 	document.getElementById("bill_tot_crane_charges").value ='{{crane_cost_sum}}';
 	document.getElementById("bill_tot_forklift_charges").value ='{{forklift_cost_sum}}';
+	bvm_invoice=document.getElementById("bill_customer_name").value
+	if (bvm_invoice=="")
+	{
+		$('#bill_customer_name').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#bill_customer_name').addClass('disable_a_href');
+	}
 	fumigation_charge_change_fn()
 });
 </script>

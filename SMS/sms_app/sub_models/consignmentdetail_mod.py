@@ -23,7 +23,7 @@ class ConsignmentdetailInfo(models.Model):
     co_lastmodifiedby = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     co_created_at = models.DateTimeField(null=True, auto_now_add=True)
     co_updated_at = models.DateTimeField(null=True, auto_now=True)
-    co_cusrefnum = models.CharField(max_length=80)
+    co_cusrefnum = models.CharField(max_length=80,null=True,blank=True)
     co_cusrefnum_check = models.BooleanField(blank=True,null=True)
     co_businesstype = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, blank=True,null=True)
 

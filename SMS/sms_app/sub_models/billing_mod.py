@@ -5,7 +5,7 @@ from ..models import StatusList,CustomerInfo,MyUser,TrbusinesstypeInfo
 class BilingInfo(models.Model):
     bill_invoice_ref=models.CharField(max_length=30)
     bill_invoice_date=models.DateField()
-    bill_customer_name=models.ForeignKey(CustomerInfo,on_delete=models.CASCADE, default='',blank=True, null=True)
+    bill_customer_name=models.ForeignKey(CustomerInfo,on_delete=models.CASCADE)
     bill_customer_type=models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, default='',blank=True, null=True)
     bill_customer_GST=models.CharField(max_length=80,default = '',blank=True, null=True)
     bill_customer_code=models.CharField(max_length=60,default = '',blank=True, null=True)
