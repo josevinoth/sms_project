@@ -31,6 +31,7 @@ def invoice_add(request,invoice_id=0):
             dispatch_num = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_dispatch_num',flat=True)).distinct()
             customer_name = BilingInfo.objects.get(bill_invoice_ref=voucher_num).bill_customer_name
             customer_id = CustomerInfo.objects.get(cu_name=customer_name).id
+            customer_type = str(CustomerInfo.objects.get(cu_name=customer_name).cu_businessmodel)
             try:
                 vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num[0]).dispatch_truck_type
             except IndexError:
@@ -64,13 +65,15 @@ def invoice_add(request,invoice_id=0):
                     weight_per_piece = ((total_weight) / (no_of_pieces))
                 except ZeroDivisionError:
                     weight_per_piece = float(0.0)
-
-                piece_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id,whrm_min_wt__lte=weight_per_piece,whrm_max_wt__gte=weight_per_piece,whrm_charge_type=3).values('whrm_rate')
-                if piece_rate:
-                    piece_rate_val = piece_rate[0]['whrm_rate']
+                if customer_type=="Exclusive":
+                    piece_rate=0
                 else:
-                    messages.error(request,'Loading/Unloading Charges not available in master for selected Customer!')
-                    return redirect(request.META['HTTP_REFERER'])
+                    try:
+                        piece_rate = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_min_wt__lte=weight_per_piece,whrm_max_wt__gte=weight_per_piece,whrm_charge_type=3)
+                    except ObjectDoesNotExist:
+                        messages.error(request,'Loading/Unloading Charges not available in master for selected Customer!')
+                        return redirect(request.META['HTTP_REFERER'])
+                piece_rate_val=piece_rate.whrm_rate
                 total_loading_cost = piece_rate_val * no_of_pieces
 
                 # Calculate Crane and Forklift cost
