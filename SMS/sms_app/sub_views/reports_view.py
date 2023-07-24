@@ -83,8 +83,6 @@ def stock_value_reports(request):
                 uo.uom_name as UOM,\
                 w.wh_po_num as Case_Number,\
                 d.dispatch_mawb as MAWB,\
-                g.gatein_sbill as S_Bill,\
-                g.gatein_sbill_date as S_Bill_Date,\
                 d.dispatch_truck_number as Truck_Number,\
                 vt.vt_vehicletype as Truck_Type,\
                 d.dispatch_depature_date as Truck_Out_Time,\
