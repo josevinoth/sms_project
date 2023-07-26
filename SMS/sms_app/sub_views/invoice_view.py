@@ -8,6 +8,7 @@ from django.contrib import messages
 from ..forms import InvoiceaddForm
 from ..models import VehicletypeInfo,Dispatch_info,Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
 from django.shortcuts import render, redirect
+from datetime import timedelta, date
 
 # Invoicecity
 @login_required(login_url='login_page')
@@ -17,10 +18,20 @@ def invoice_add(request,invoice_id=0):
     if request.method == "GET":
         if invoice_id == 0:
             invoice_form = InvoiceaddForm()
+            date_today=date.today()
+            year=date_today.year
+            month=date_today.month
+            first_date = date(year, month, 1)
+            if month == 12:
+                last_date = date(year, month, 31)
+            else:
+                last_date = date(year, month + 1, 1) + timedelta(days=-1)
             context={
                 'invoice_form': invoice_form,
                 'first_name':first_name,
                 'user_id':user_id,
+                'first':str(first_date),
+                'last':str(last_date),
             }
         else:
             invoice = BilingInfo.objects.get(pk=invoice_id)
@@ -37,27 +48,28 @@ def invoice_add(request,invoice_id=0):
             except IndexError:
                 messages.error(request,'Click "Shipper Invoice List" button to add shipper invoice and proceed!')
                 return redirect(request.META['HTTP_REFERER'])
-            if vehicle_type:
-                vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
-            else:
-                vehicle_type_id=1
-            try:
-                warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
-            except ObjectDoesNotExist:
-                warehouse_charge = None
 
-            if warehouse_charge == None:
-                messages.error(request,'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
-                return redirect(request.META['HTTP_REFERER'])
-            else:
-                max_storage_days = max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_storage_time',flat=True))
-
-
+            vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
             shipper_invoice = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_goods_invoice',flat=True)).distinct()
-            shipper_invoice_count=len(shipper_invoice)
-            warehouse_charge_1 = warehouse_charge / shipper_invoice_count
+            shipper_invoice_count = len(shipper_invoice)
 
             for k in shipper_invoice:
+                try:
+                    if customer_type== "Exclusive":
+                        warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1).whrm_rate
+                        warehouse_charge_1 = warehouse_charge / shipper_invoice_count
+                        storage_cost_total = round((warehouse_charge_1), 2)
+                    else:
+                        warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
+                        max_storage_days = max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_goods_invoice=k).values_list('wh_storage_time',flat=True))
+                        warehouse_charge_1 = warehouse_charge / shipper_invoice_count
+                        storage_cost_total = round((warehouse_charge_1 * max_storage_days), 2)
+
+                except ObjectDoesNotExist:
+                    messages.error(request,'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
+                    return redirect(request.META['HTTP_REFERER'])
+
+
                 # Calculate Loading & Unloading Charge
                 total_weight = Warehouse_goods_info.objects.filter(wh_goods_invoice=k).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
                 no_of_pieces = Warehouse_goods_info.objects.filter(wh_goods_invoice=k).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
@@ -65,16 +77,18 @@ def invoice_add(request,invoice_id=0):
                     weight_per_piece = ((total_weight) / (no_of_pieces))
                 except ZeroDivisionError:
                     weight_per_piece = float(0.0)
+
                 if customer_type=="Exclusive":
-                    piece_rate=0
+                    piece_rate_val = 0
+                    total_loading_cost = piece_rate_val * no_of_pieces
                 else:
                     try:
-                        piece_rate = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_min_wt__lte=weight_per_piece,whrm_max_wt__gte=weight_per_piece,whrm_charge_type=3)
+                        piece_rate = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_min_wt__lte=weight_per_piece,whrm_max_wt__gte=weight_per_piece, whrm_charge_type=3)
+                        piece_rate_val = piece_rate.whrm_rate
+                        total_loading_cost = piece_rate_val * no_of_pieces
                     except ObjectDoesNotExist:
                         messages.error(request,'Loading/Unloading Charges not available in master for selected Customer!')
                         return redirect(request.META['HTTP_REFERER'])
-                piece_rate_val=piece_rate.whrm_rate
-                total_loading_cost = piece_rate_val * no_of_pieces
 
                 # Calculate Crane and Forklift cost
                 try:
@@ -139,7 +153,6 @@ def invoice_add(request,invoice_id=0):
                 invoice_id.sort()
                 for i in range(0, len(invoice_id)):
                     if i == 0:
-                        storage_cost_total = round((warehouse_charge_1 * max_storage_days), 2)
                         Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=warehouse_charge_1)
                         Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
                         Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_l2h=crane_cost_l2hr)
@@ -247,7 +260,6 @@ def invoice_report(request):
     goods_list=Warehouse_goods_info.objects.exclude(wh_voucher_num=None)
     context =   {
                 'first_name': first_name,
-                # 'row': row,
                 'goods_list': goods_list,
                 }
     return render(request,"asset_mgt_app/invoice_report.html",context)
@@ -276,10 +288,13 @@ def shipper_invoice_list(request,voucher_id):
     first_name = request.session.get('first_name')
     voucher_num_val = BilingInfo.objects.get(pk=voucher_id).bill_invoice_ref
     customer_name_val = BilingInfo.objects.get(pk=voucher_id).bill_customer_name
+    customer_type = str(CustomerInfo.objects.get(cu_name=customer_name_val).cu_businessmodel)
     request.session['ses_voucher_num_val'] = voucher_num_val
     shipper_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
-    invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_check_in_out=2,wh_voucher_num=None)
-    print(list(invoice_list_master))
+    if customer_type=="Exclusive":
+        invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_check_in_out=1,wh_voucher_num=None)
+    else:
+        invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val, wh_check_in_out=2,wh_voucher_num=None)
     context =   {
                 'shipper_invoice_list' : shipper_invoice_list,
                 'first_name': first_name,
@@ -288,7 +303,6 @@ def shipper_invoice_list(request,voucher_id):
     return render(request,"asset_mgt_app/shipper_invoice_list.html",context)
 @login_required(login_url='login_page')
 def shipper_invoice_add(request,voucher_id):
-    global crane_cost_l2hr, piece_rate_val, total_loading_cost
     first_name = request.session.get('first_name')
     voucher_num_val = request.session.get('ses_voucher_num_val')
     Warehouse_goods_info.objects.filter(pk=voucher_id).update(wh_voucher_num=voucher_num_val)
@@ -314,26 +328,6 @@ def shipper_invoice_remove(request,voucher_id):
 def load_whrate_model(request):
     lm_customer_name_id = request.GET.get('lm_customer_name_id')
     print('lm_customer_name_id',lm_customer_name_id)
-    total_weight = request.GET.get('total_weight')
-    if total_weight:
-        total_weight_1=float(total_weight.replace(',',''))
-    else:
-        total_weight_1=0.0
-
-    no_of_pieces = request.GET.get('no_of_pieces')
-    if no_of_pieces:
-        no_of_pieces_1=float((no_of_pieces.replace(',','')))
-    else:
-        no_of_pieces_1=0.0
-
-    voucher_num = request.GET.get('voucher_num')
-
-    try:
-        weight_per_piece=((total_weight_1)/(no_of_pieces_1))
-    except ZeroDivisionError:
-        weight_per_piece =float(0.0)
-
-    customer_id=CustomerInfo.objects.get(cu_name=lm_customer_name_id).id
     customer_businessmodel = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_businessmodel')
     customer_short_name = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_nameshort')
     customer_code = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customercode')
@@ -348,66 +342,6 @@ def load_whrate_model(request):
     customer_person_val=customer_person[0]['cu_customerperson'] #Get value from Queryset
     customer_contact_val = customer_contact[0]['cu_contactno']  # Get value from Queryset
     customer_address_val = customer_address[0]['cu_address']  # Get value from Queryset
-    lm_customer_model_id=TrbusinesstypeInfo.objects.filter(id=customer_businessmodel_val).values('tb_trbusinesstype')
-    customer_businessmodel_txt= lm_customer_model_id[0]['tb_trbusinesstype']  # Get value from Queryset
-    # WH Charge
-    # wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_max_wt__lte=total_weight,whrm_min_wt__gte=total_weight, whrm_charge_type=1).values('whrm_rate')
-    try:
-        wh_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_min_wt__lte=total_weight,whrm_max_wt__gte=total_weight,
-                                                   whrm_charge_type=1).values('whrm_rate')
-    except:
-        wh_rate=0
-
-    if wh_rate:
-        wh_rate_val = wh_rate[0]['whrm_rate']
-    else:
-        wh_rate_val = 0.0
-    # Loading_unloading charge
-    piece_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_min_wt__lte=weight_per_piece, whrm_max_wt__gte=weight_per_piece,whrm_charge_type=3).values('whrm_rate')
-    if piece_rate:
-        piece_rate_val = piece_rate[0]['whrm_rate']
-    else:
-        piece_rate_val = 0.0
-        # wh_rate = 1
-
-    # Get Crane and forklift time
-    wh_job_list= (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values('wh_job_no').distinct())
-    wh_job_list_lb=(Loadingbay_Info.objects.all().values_list('lb_job_no', flat=True))
-    crane_time_tot=0
-    forklift_time_tot=0
-    for a in wh_job_list:
-        b=a['wh_job_no']
-        if b in wh_job_list_lb:
-            crane_time_val=float(Loadingbay_Info.objects.filter(lb_job_no=b).values('lb_crane_time')[0]['lb_crane_time'])
-            forklift_time_val=float(Loadingbay_Info.objects.filter(lb_job_no=b).values('lb_forklift_time')[0]['lb_forklift_time'])
-            crane_time_tot=crane_time_tot+crane_time_val
-            forklift_time_tot=forklift_time_tot+forklift_time_val
-
-    forklift_2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=4).values('whrm_rate')
-    if forklift_2hr:
-        forklift_2hr_val = forklift_2hr[0]['whrm_rate']
-    else:
-        forklift_2hr_val = 0.0
-
-    forklift_aft2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=7).values('whrm_rate')
-    if forklift_aft2hr:
-        forklift_aft2hr_val = forklift_aft2hr[0]['whrm_rate']
-    else:
-        forklift_aft2hr_val = 0.0
-
-    crane_2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=5).values(
-        'whrm_rate')
-    if crane_2hr:
-        crane_2hr_val = crane_2hr[0]['whrm_rate']
-    else:
-        crane_2hr_val = 0.0
-
-    crane_aft2hr = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=6).values(
-        'whrm_rate')
-    if crane_aft2hr:
-        crane_aft2hr_val = crane_aft2hr[0]['whrm_rate']
-    else:
-        crane_aft2hr_val = 0.0
     data = {
         'customer_businessmodel_val':customer_businessmodel_val,
         'customer_short_name_val':customer_short_name_val,
@@ -416,21 +350,33 @@ def load_whrate_model(request):
         'customer_person_val':customer_person_val,
         'customer_contact_val':customer_contact_val,
         'customer_address_val':customer_address_val,
-        'wh_rate_val':wh_rate_val,
-        'piece_rate_val':piece_rate_val,
-        'crane_time_tot':crane_time_tot,
-        'forklift_time_tot':forklift_time_tot,
-        'forklift_2hr_val':forklift_2hr_val,
-        'forklift_aft2hr_val':forklift_aft2hr_val,
-        'crane_2hr_val':crane_2hr_val,
-        'crane_aft2hr_val':crane_aft2hr_val,
     }
     return HttpResponse(json.dumps(data))
 
 @login_required(login_url='login_page')
-def invoice_list_open(request):
+def case_to_case_invoice_list_open(request):
     first_name = request.session.get('first_name')
-    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1)
+    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type="Case To Case")
+    context={
+        'open_invoice_list':open_invoice_list,
+        'first_name': first_name,
+    }
+    return render(request, "asset_mgt_app/invoice_list_open.html", context)\
+
+@login_required(login_url='login_page')
+def dedicated_invoice_list_open(request):
+    first_name = request.session.get('first_name')
+    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type="Dedicated")
+    context={
+        'open_invoice_list':open_invoice_list,
+        'first_name': first_name,
+    }
+    return render(request, "asset_mgt_app/invoice_list_open.html", context)\
+
+@login_required(login_url='login_page')
+def exclusive_invoice_list_open(request):
+    first_name = request.session.get('first_name')
+    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1,wh_customer_type="Exclusive")
     context={
         'open_invoice_list':open_invoice_list,
         'first_name': first_name,
@@ -438,98 +384,8 @@ def invoice_list_open(request):
     return render(request, "asset_mgt_app/invoice_list_open.html", context)
 @login_required(login_url='login_page')
 def invoice_list_query(request):
-    checkedout_invoice_list=[]
-    final_goods_list=[]
-    matching_invoice_list=[]
-    wh_job_num_list=[]
-    customer_invoice_list=[]
-    customer_name_list=[]
-    customer_type_list=[]
-    consigner_list=[]
-    consignee_list=[]
-    start_date_list=[]
-    min_start_date_list=[]
-    end_date_list=[]
-    max_end_date_list=[]
-    checkintime_list=[]
-    checkouttime_list=[]
-    check_in_out_list=[]
     first_name = request.session.get('first_name')
-    # # Get invoice list from Gate-In table
-    # invoice_list=Gatein_info.objects.all().values_list('gatein_invoice',flat=True)
-    # print('invoice_list',invoice_list)
-    #
-    # # Get invoice list from WH_Goods Table
-    # invoice_goods_list=Warehouse_goods_info.objects.all().values_list('wh_goods_invoice',flat=True)
-    # print('invoice_goods_list',invoice_goods_list)
-    #
-    # # Check invoice from Gate-in list inside WH_Goods list
-    # for i in range(0,len(invoice_list)):
-    #     print(invoice_list[i])
-    #     if invoice_list[i] in invoice_goods_list:
-    #         print("In list")
-    #         matching_invoice_list.append(invoice_list[i])
-    #     else:
-    #         print("Not in list")
-    #
-    # # store matching invoice as list
-    # print('matching_invoice_list',matching_invoice_list)
-    #
-    # # For matching invoices get check-In-Out Status
-    # for j in range(0,len(matching_invoice_list)):
-    #     goods_check_in_out_list=(Warehouse_goods_info.objects.filter(wh_goods_invoice=matching_invoice_list[j])).values_list('wh_check_in_out',flat=True)
-    #     print('goods_check_in_out_list',goods_check_in_out_list)
-    #     # Get all invoice which are checked out
-    #     if all(status == 2 for status in (goods_check_in_out_list)):
-    #         checkedout_invoice_list.append(matching_invoice_list[j])
-    #
-    # # Final list of Invoices checked-out
-    # print('Checked_Out-invoice_list',checkedout_invoice_list)
-    #
-    # # Get desired elements for list of Invoices checked-out
-    # for k in checkedout_invoice_list:
-    #     wh_job_num_list.append((Gatein_info.objects.get(gatein_invoice=k).gatein_job_no))
-    #     customer_invoice_list.append((Gatein_info.objects.get(gatein_invoice=k).gatein_invoice))
-    #     customer_name_list.append((Gatein_info.objects.get(gatein_invoice=k).gatein_customer))
-    #     customer_type_list.append((Gatein_info.objects.get(gatein_invoice=k).gatein_customer_type))
-    #     consigner_list.append((Gatein_info.objects.get(gatein_invoice=k).gatein_shipper))
-    #     consignee_list.append((Gatein_info.objects.get(gatein_invoice=k).gatein_consignee))
-    #
-    # print('wh_job_num_list',wh_job_num_list)
-    # print('gatein_invoice_list',customer_invoice_list)
-    # print('customer_name_list',customer_name_list)
-    # print('customer_type_list',customer_type_list)
-    # print('consigner_list',consigner_list)
-    # print('consignee_list',consignee_list)
-    #
-    # # Get min start date and max end date for an invoice
-    # for inv in checkedout_invoice_list:
-    #     print('inv',inv)
-    #     start_date_list.append(min(Warehouse_goods_info.objects.filter(wh_goods_invoice=inv).values_list('wh_checkin_time', flat=True)))
-    #     end_date_list.append(max(Warehouse_goods_info.objects.filter(wh_goods_invoice=inv).values_list('wh_checkout_time', flat=True)))
-    # print('start_date_list',start_date_list)
-    # print('end_date_list',end_date_list)
-    # invoice_list_final=[]
-    # for k in checkedout_invoice_list:
-    #     print(k)
-    #     invoice_list=Warehouse_goods_info.objects.filter(wh_goods_invoice=k)
-    #     invoice_list_final.append(invoice_list)
-    # print('invoice_list',invoice_list)
-    # print('invoice_list_final',invoice_list_final)
-    #
-    # for inv in checkedout_invoice_list:
-    #     final_goods_list.append(Gatein_info.objects.filter(gatein_invoice=inv).all())
-    # print(final_goods_list)
     context = {
         'first_name': first_name,
-        # 'invoice_list' : checkedout_invoice_list,
-        # 'checkedout_invoice_list': checkedout_invoice_list,
-        # 'wh_job_num_list': wh_job_num_list,
-        # 'customer_invoice_list':customer_invoice_list,
-        # 'customer_name_list': customer_name_list,
-        # 'customer_type_list': customer_type_list,
-        # 'consigner_list': consigner_list,
-        # 'consignee_list': consignee_list,
-        # 'len':len(wh_job_num_list),
     }
     return render(request,"asset_mgt_app/invoice_list.html",context)

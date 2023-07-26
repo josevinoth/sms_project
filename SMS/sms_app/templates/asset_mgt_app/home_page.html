@@ -124,7 +124,9 @@
         <a href="{% url 'dispatch_list' %}"><i class="fas fa-shopping-cart"></i> Dispatch</a>
         <button type="button" class="collapsible"><i class="fa fa-credit-card" aria-hidden="true"></i> Invoice</button>
         <div class="content">
-            <a href="{% url 'open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Open invoice <span class="badge badge-light">{{checked_out_goods}}</span></a>
+            <a href="{% url 'case_to_case_open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Case To Case <span class="badge badge-light">{{case_to_case_list}}</span></a>
+            <a href="{% url 'dedicated_open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Dedicated <span class="badge badge-light">{{dedicated_list}}</span></a>
+            <a href="{% url 'exclusive_open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Exclusive <span class="badge badge-light">{{exclusive_list}}</span></a>
             <a href="{% url 'invoice_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice List</a>
         </div>
         <a href="{% url 'expense_list' %}"><i class="fa fa-microchip" aria-hidden="true"></i> Expense</a>

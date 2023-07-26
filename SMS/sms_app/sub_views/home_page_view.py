@@ -10,8 +10,9 @@ def home_page(request):
     user_id = request.session.get('ses_userID')
     role=User_extInfo.objects.get(user=user_id).emp_role
     ses_username = request.session.get('ses_username', request.POST.get('username'))
-    checked_out_goods_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2).values_list('wh_job_no',flat=True).distinct())
-    checked_out_goods=len(checked_out_goods_list)
+    case_to_case_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type="Case To Case").values_list('wh_job_no',flat=True).distinct())
+    dedicated_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type="Dedicated").values_list('wh_job_no',flat=True).distinct())
+    exclusive_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1,wh_customer_type="Exclusive").values_list('wh_job_no',flat=True).distinct())
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
@@ -23,7 +24,9 @@ def home_page(request):
                'sum_service_cost':Service_Info.objects.aggregate(sum=Sum('ser_cost'))['sum'] or 0.00,
                'ses_username': ses_username,
                'first_name': first_name,
-               'checked_out_goods': checked_out_goods,
+               'case_to_case_list': len(case_to_case_list),
+               'dedicated_list': len(dedicated_list),
+               'exclusive_list': len(exclusive_list),
                'role': role,
                }
     return render(request, 'asset_mgt_app/home_page.html', context)

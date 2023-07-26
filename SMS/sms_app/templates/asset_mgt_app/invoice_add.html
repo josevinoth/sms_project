@@ -101,14 +101,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Billing Start Date</span>
 									</div>
-									{% render_field invoice_form.bill_start_date type="datetime-local" id="bill_start_date" class="form-control " %}
+									{% render_field invoice_form.bill_start_date type="date" id="bill_start_date" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Billing End Date</span>
 									</div>
-									{% render_field invoice_form.bill_end_date type="datetime-local" id="bill_end_date" class="form-control " %}
+									{% render_field invoice_form.bill_end_date type="date" id="bill_end_date" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -131,13 +131,6 @@
 									</div>
 									{% render_field invoice_form.bill_no_of_days class="form-control disable_a_href" id="bill_no_of_days" %}
 								</div>
-<!--								<div class="input-group input-group-sm mb-3">-->
-<!--									<div class="input-group-prepend">-->
-<!--										<span class="input-group-text">Wh Charges/Day</span>-->
-<!--									</div>-->
-<!--									{% render_field invoice_form.bill_per_day_wh_charges class="form-control disable_a_href" id="bill_per_day_wh_charges" %}-->
-<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-<!--								</div>-->
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wh Storage cost (INR)</span>
@@ -145,13 +138,6 @@
 									{% render_field invoice_form.bill_wh_storage_charges class="form-control disable_a_href" id="bill_wh_storage_charges" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-<!--								<div class="input-group input-group-sm mb-3">-->
-<!--									<div class="input-group-prepend">-->
-<!--										<span class="input-group-text">Rate Per Pallet</span>-->
-<!--									</div>-->
-<!--									{% render_field invoice_form.bill_rate_per_pallet class="form-control disable_a_href" id="bill_rate_per_pallet" %}-->
-<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-<!--								</div>-->
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Loading Cost (INR)</span>
@@ -179,34 +165,6 @@
 
 							</div>
 							<div class="col-4">
-<!--								<div class="input-group input-group-sm mb-3">-->
-<!--									<div class="input-group-prepend">-->
-<!--										<span class="input-group-text">Crane Rate 1st 2Hr</span>-->
-<!--									</div>-->
-<!--									{% render_field invoice_form.bill_crane_hrs_1 class="form-control disable_a_href" id="bill_crane_hrs_1" %}-->
-<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-<!--								</div>-->
-<!--								<div class="input-group input-group-sm mb-3">-->
-<!--									<div class="input-group-prepend">-->
-<!--										<span class="input-group-text">Crane Rate after 2Hr</span>-->
-<!--									</div>-->
-<!--									{% render_field invoice_form.bill_crane_hrs_2 class="form-control disable_a_href" id="bill_crane_hrs_2" %}-->
-<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-<!--								</div>-->
-<!--								<div class="input-group input-group-sm mb-3">-->
-<!--									<div class="input-group-prepend">-->
-<!--										<span class="input-group-text">Forklift Rate 1st 2Hr</span>-->
-<!--									</div>-->
-<!--									{% render_field invoice_form.bill_forklift_hrs_1 class="form-control disable_a_href" id="bill_forklift_hrs_1" %}-->
-<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-<!--								</div>-->
-<!--								<div class="input-group input-group-sm mb-3">-->
-<!--									<div class="input-group-prepend">-->
-<!--										<span class="input-group-text">Forklift Rate after 2Hr</span>-->
-<!--									</div>-->
-<!--									{% render_field invoice_form.bill_forklift_hrs_2 class="form-control disable_a_href" id="bill_forklift_hrs_2" %}-->
-<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
-<!--								</div>-->
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Crane Hours</span>
@@ -307,7 +265,10 @@ $(document).ready(function() {
 	document.getElementById("bill_wh_storage_charges").value ='{{wh_storage_cost_sum}}';
 	document.getElementById("bill_tot_crane_charges").value ='{{crane_cost_sum}}';
 	document.getElementById("bill_tot_forklift_charges").value ='{{forklift_cost_sum}}';
+	document.getElementById("bill_start_date").value='{{first}}';
+	document.getElementById("bill_end_date").value='{{last}}';
 	bvm_invoice=document.getElementById("bill_customer_name").value
+
 	if (bvm_invoice=="")
 	{
 		$('#bill_customer_name').removeClass('disable_a_href');
@@ -342,55 +303,6 @@ $(document).ready(function() {
 			var customer_person=JSON.parse(data)["customer_person_val"];
 			var customer_contact=JSON.parse(data)["customer_contact_val"];
 			var customer_address=JSON.parse(data)["customer_address_val"];
-<!--			var wh_rate=JSON.parse(data)["wh_rate_val"];-->
-<!--			var piece_rate=JSON.parse(data)["piece_rate_val"];-->
-<!--			var crane_time_tot_val=JSON.parse(data)["crane_time_tot"];-->
-<!--			var forklift_time_tot_val=JSON.parse(data)["forklift_time_tot"];-->
-<!--			var crane_2hr_val=JSON.parse(data)["crane_2hr_val"];-->
-<!--			var crane_aft2hr_val=JSON.parse(data)["crane_aft2hr_val"];-->
-<!--			var forklift_2hr_val=JSON.parse(data)["forklift_2hr_val"];-->
-<!--			var forklift_aft2hr_val=JSON.parse(data)["forklift_aft2hr_val"];-->
-<!--			var crane_aft2hr_val1=crane_aft2hr_val*(crane_time_tot_val-2);-->
-<!--			if (crane_time_tot_val ==0)-->
-<!--				{-->
-<!--					crane_2hr_val=0-->
-<!--					crane_aft2hr_val=0-->
-<!--				}-->
-<!--			else if (crane_time_tot_val <=2)-->
-<!--				{-->
-<!--					crane_aft2hr_val=0-->
-<!--				}-->
-<!--			if (forklift_time_tot_val ==0)-->
-<!--				{-->
-<!--					forklift_2hr_val=0-->
-<!--					forklift_aft2hr_val=0-->
-<!--				}-->
-<!--			else if (forklift_time_tot_val <=2)-->
-<!--				{-->
-<!--					forklift_aft2hr_val=0-->
-<!--				}-->
-<!--			var forklift_aft2hr_val1=forklift_aft2hr_val*(forklift_time_tot_val-2);-->
-<!--			var no_of_days_val=document.getElementById("bill_no_of_days").value-->
-<!--			var no_of_pieces=document.getElementById("bill_no_of_pallets").value-->
-<!--			var wh_storage_charges_val='{{wh_storage_cost_sum}}'-->
-<!--			alert(wh_storage_charges_val)-->
-<!--			var wh_storage_charges_val=(wh_rate*no_of_days_val).toFixed(2)-->
-<!--			var wh_loading_un_charges_val='{{total_loading_cost}}'-->
-<!--			alert(wh_loading_un_charges_val)-->
-<!--			document.getElementById("bill_wh_storage_charges").value=wh_storage_charges_val-->
-<!--			document.getElementById("bill_loading_charge").value=wh_loading_un_charges_val-->
-<!--			document.getElementById("bill_unloading_charge").value=wh_loading_un_charges_val-->
-<!--			var fumigation_charges_val=document.getElementById("bill_tot_fumigation_charges").value-->
-<!--			var crane_time_val=document.getElementById("bill_tot_crane_time").value-->
-<!--			var crane_charges_val='{{crane_cost_sum}}'-->
-<!--			var forklift_time_val=document.getElementById("bill_tot_forklift_time").value-->
-<!--			var forklift_charges_val='{{forklift_cost_sum}}'-->
-<!--			var total_pre_GST=((parseFloat(fumigation_charges_val))+(parseFloat(wh_storage_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(wh_loading_un_charges_val))+(parseFloat(crane_charges_val))+(parseFloat(forklift_charges_val)));-->
-<!--			alert(total_pre_GST)-->
-<!--			document.getElementById("bill_cgst").value=(parseFloat(total_pre_GST*(9/100))).toFixed(2)-->
-<!--			document.getElementById("bill_sgst").value=(parseFloat(total_pre_GST*(9/100))).toFixed(2)-->
-<!--			var total_post_GST=(total_pre_GST+(total_pre_GST*(9/100)+total_pre_GST*(9/100))).toFixed(2)-->
-<!--			alert(total_post_GST)-->
 			document.getElementById("bill_customer_type").value =customer_model;
 			document.getElementById("bill_customer_short_name").value =customer_short_name;
 			document.getElementById("bill_customer_code").value =customer_code;
@@ -398,17 +310,7 @@ $(document).ready(function() {
 			document.getElementById("bill_customer_person").value =customer_person;
 			document.getElementById("bill_customer_contact").value =customer_contact;
 			document.getElementById("bill_customer_address").value =customer_address;
-<!--			document.getElementById("bill_per_day_wh_charges").value =wh_rate.toFixed(2);-->
-<!--			document.getElementById("bill_rate_per_pallet").value =piece_rate.toFixed(2);-->
-<!--			document.getElementById("bill_crane_hrs_1").value =crane_2hr_val.toFixed(2);-->
-<!--			document.getElementById("bill_crane_hrs_2").value =crane_aft2hr_val.toFixed(2);-->
-<!--       		document.getElementById("bill_forklift_hrs_1").value =forklift_2hr_val.toFixed(2);-->
-<!--       		document.getElementById("bill_forklift_hrs_2").value =forklift_aft2hr_val.toFixed(2);-->
-<!--       		document.getElementById("bill_tot_crane_charges").value =crane_charges_val.toFixed(2);-->
-<!--       		document.getElementById("bill_tot_forklift_charges").value =forklift_charges_val.toFixed(2);-->
-<!--       		document.getElementById("bill_total_pre_gst").value =total_pre_GST.toFixed(2);-->
-<!--			document.getElementById("bill_total_post_gst").value =total_post_GST.toFixed(2);-->
-       			fumigation_charge_change_fn()
+       		fumigation_charge_change_fn()
        }
       });
     }).change();
