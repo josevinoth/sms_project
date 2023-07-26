@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from ..forms import AssetinfoaddForm
-from ..models import User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
+from ..models import TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
 from django.shortcuts import render, redirect
 from django.db.models import Sum
 
@@ -10,9 +10,13 @@ def home_page(request):
     user_id = request.session.get('ses_userID')
     role=User_extInfo.objects.get(user=user_id).emp_role
     ses_username = request.session.get('ses_username', request.POST.get('username'))
-    case_to_case_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type="Case To Case").values_list('wh_job_no',flat=True).distinct())
-    dedicated_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type="Dedicated").values_list('wh_job_no',flat=True).distinct())
-    exclusive_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1,wh_customer_type="Exclusive").values_list('wh_job_no',flat=True).distinct())
+    case_to_case=str(TrbusinesstypeInfo.objects.get(id=1))
+    exlcusive=str(TrbusinesstypeInfo.objects.get(id=2))
+    dedicated=str(TrbusinesstypeInfo.objects.get(id=3))
+    house_hold=str(TrbusinesstypeInfo.objects.get(id=4))
+    case_to_case_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type=case_to_case).values_list('wh_job_no',flat=True).distinct())
+    dedicated_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type=dedicated).values_list('wh_job_no',flat=True).distinct())
+    exclusive_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1,wh_customer_type=exlcusive).values_list('wh_job_no',flat=True).distinct())
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),

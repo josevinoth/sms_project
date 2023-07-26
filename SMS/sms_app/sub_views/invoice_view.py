@@ -42,7 +42,8 @@ def invoice_add(request,invoice_id=0):
             dispatch_num = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_dispatch_num',flat=True)).distinct()
             customer_name = BilingInfo.objects.get(bill_invoice_ref=voucher_num).bill_customer_name
             customer_id = CustomerInfo.objects.get(cu_name=customer_name).id
-            customer_type = str(CustomerInfo.objects.get(cu_name=customer_name).cu_businessmodel)
+            customer_type = CustomerInfo.objects.get(cu_name=customer_name).cu_businessmodel
+            customer_type_id = TrbusinesstypeInfo.objects.get(tb_trbusinesstype=customer_type).id
             try:
                 vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num[0]).dispatch_truck_type
             except IndexError:
@@ -55,7 +56,7 @@ def invoice_add(request,invoice_id=0):
 
             for k in shipper_invoice:
                 try:
-                    if customer_type== "Exclusive":
+                    if customer_type_id== 2:
                         warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1).whrm_rate
                         warehouse_charge_1 = warehouse_charge / shipper_invoice_count
                         storage_cost_total = round((warehouse_charge_1), 2)
@@ -78,7 +79,7 @@ def invoice_add(request,invoice_id=0):
                 except ZeroDivisionError:
                     weight_per_piece = float(0.0)
 
-                if customer_type=="Exclusive":
+                if customer_type_id==2:
                     piece_rate_val = 0
                     total_loading_cost = piece_rate_val * no_of_pieces
                 else:
@@ -288,12 +289,15 @@ def shipper_invoice_list(request,voucher_id):
     first_name = request.session.get('first_name')
     voucher_num_val = BilingInfo.objects.get(pk=voucher_id).bill_invoice_ref
     customer_name_val = BilingInfo.objects.get(pk=voucher_id).bill_customer_name
-    customer_type = str(CustomerInfo.objects.get(cu_name=customer_name_val).cu_businessmodel)
+    customer_type = CustomerInfo.objects.get(cu_name=customer_name_val).cu_businessmodel
+    customer_type_id = TrbusinesstypeInfo.objects.get(tb_trbusinesstype=customer_type).id
     request.session['ses_voucher_num_val'] = voucher_num_val
     shipper_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
-    if customer_type=="Exclusive":
+    if customer_type_id==2:
+        print("Inside Exclusive Loop")
         invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_check_in_out=1,wh_voucher_num=None)
     else:
+        print("Inside Non Exclusive Loop")
         invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val, wh_check_in_out=2,wh_voucher_num=None)
     context =   {
                 'shipper_invoice_list' : shipper_invoice_list,
@@ -356,7 +360,8 @@ def load_whrate_model(request):
 @login_required(login_url='login_page')
 def case_to_case_invoice_list_open(request):
     first_name = request.session.get('first_name')
-    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type="Case To Case")
+    case_to_case = str(TrbusinesstypeInfo.objects.get(id=1))
+    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type=case_to_case)
     context={
         'open_invoice_list':open_invoice_list,
         'first_name': first_name,
@@ -366,7 +371,8 @@ def case_to_case_invoice_list_open(request):
 @login_required(login_url='login_page')
 def dedicated_invoice_list_open(request):
     first_name = request.session.get('first_name')
-    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type="Dedicated")
+    dedicated = str(TrbusinesstypeInfo.objects.get(id=3))
+    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type=dedicated)
     context={
         'open_invoice_list':open_invoice_list,
         'first_name': first_name,
@@ -376,7 +382,8 @@ def dedicated_invoice_list_open(request):
 @login_required(login_url='login_page')
 def exclusive_invoice_list_open(request):
     first_name = request.session.get('first_name')
-    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1,wh_customer_type="Exclusive")
+    exlcusive = str(TrbusinesstypeInfo.objects.get(id=2))
+    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1,wh_customer_type=exlcusive)
     context={
         'open_invoice_list':open_invoice_list,
         'first_name': first_name,
