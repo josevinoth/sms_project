@@ -1,7 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" novalidate >
+<form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-2"></div>

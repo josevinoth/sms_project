@@ -82,8 +82,16 @@
     </table>
 </div>
 <script>
-    $(document).ready(function() {
-        $('#dispatch_list').DataTable();
-} );
+$(document).ready(function() {
+    $('#dispatch_list').DataTable({
+<!--        scrollY: "600px",-->
+<!--        scrollX: true,-->
+<!--        scrollCollapse: true,-->
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
+});
 </script>
 {% endblock content %}
