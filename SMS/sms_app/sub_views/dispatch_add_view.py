@@ -69,7 +69,6 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_status_id = StatusList.objects.get(status_title=dispatch_status).id
             dispatch_num = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
             wh_job_no_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_job_no',flat=True).distinct())
-            print('dispatch_status_id', dispatch_status_id)
             if dispatch_status_id == 5:
                 for wh_job in wh_job_no_list:
                     Gatein_info.objects.filter(gatein_job_no=wh_job).update(gatein_job_status=1)
@@ -118,7 +117,6 @@ def dispatch_goods_list(request,dispatch_id):
     request.session['ses_dispatch_num_val'] = dispatch_num_val
     # # dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
     dispatch_master_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1)
-    print('dispatch_master_list',dispatch_master_list)
     goods_list=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
     context = {'goods_list' : goods_list,
                'first_name': first_name,
@@ -134,7 +132,6 @@ def dispatch_remove_goods(request,dispatch_id):
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=0)
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=None)
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
-    # dispatch_dipatch_num_checkin = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=1)
     first_name = request.session.get('first_name')
     dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice', flat=True).distinct())
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
@@ -201,12 +198,7 @@ def qr_dispatch_decoder(request,dispatch_id):
                 date_diff=(check_out_date - check_in_date) # Differnce between dates
                 date_diff_days = date_diff.days
                 duration_in_s = date_diff.total_seconds() # Total number of seconds between dates
-                # storage_days = (check_out_date - check_in_date).days # In days
                 storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
-                storage_days = float(round(storage_hours/24))  # In days
-                storage_minutes = divmod(duration_in_s, 60)[0]  # Seconds in a minute = 60
-                # date_dif_final=(storage_days[0], storage_hours[0], storage_minutes[0])
-                # print(date_dif_final)
                 Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff_days)
                 return redirect(request.META['HTTP_REFERER'])
             else:

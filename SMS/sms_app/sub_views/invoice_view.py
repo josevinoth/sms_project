@@ -8,30 +8,22 @@ from django.contrib import messages
 from ..forms import InvoiceaddForm
 from ..models import VehicletypeInfo,Dispatch_info,Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
 from django.shortcuts import render, redirect
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
+
 
 # Invoicecity
 @login_required(login_url='login_page')
 def invoice_add(request,invoice_id=0):
+    global min_check_in_time, max_check_out_time, max_storage_days
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     if request.method == "GET":
         if invoice_id == 0:
             invoice_form = InvoiceaddForm()
-            date_today=date.today()
-            year=date_today.year
-            month=date_today.month
-            first_date = date(year, month, 1)
-            if month == 12:
-                last_date = date(year, month, 31)
-            else:
-                last_date = date(year, month + 1, 1) + timedelta(days=-1)
             context={
                 'invoice_form': invoice_form,
                 'first_name':first_name,
                 'user_id':user_id,
-                'first':str(first_date),
-                'last':str(last_date),
             }
         else:
             invoice = BilingInfo.objects.get(pk=invoice_id)
@@ -44,13 +36,6 @@ def invoice_add(request,invoice_id=0):
             customer_id = CustomerInfo.objects.get(cu_name=customer_name).id
             customer_type = CustomerInfo.objects.get(cu_name=customer_name).cu_businessmodel
             customer_type_id = TrbusinesstypeInfo.objects.get(tb_trbusinesstype=customer_type).id
-            try:
-                vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num[0]).dispatch_truck_type
-            except IndexError:
-                messages.error(request,'Click "Shipper Invoice List" button to add shipper invoice and proceed!')
-                return redirect(request.META['HTTP_REFERER'])
-
-            vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
             shipper_invoice = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_goods_invoice',flat=True)).distinct()
             shipper_invoice_count = len(shipper_invoice)
 
@@ -60,12 +45,33 @@ def invoice_add(request,invoice_id=0):
                         warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1).whrm_rate
                         warehouse_charge_1 = warehouse_charge / shipper_invoice_count
                         storage_cost_total = round((warehouse_charge_1), 2)
+                        date_today = date.today()
+                        year = date_today.year
+                        month = date_today.month
+                        min_check_in_time = date(year, month, 1)
+                        if month == 12:
+                            max_check_out_time = date(year, month, 31)
+                        else:
+                            max_check_out_time = date(year, month + 1, 1) + timedelta(days=-1)
+                        max_storage_days = ((max_check_out_time - min_check_in_time).days)+1
                     else:
-                        warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
-                        max_storage_days = max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_goods_invoice=k).values_list('wh_storage_time',flat=True))
+                        try:
+                            vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num[0]).dispatch_truck_type
+                        except IndexError:
+                            messages.error(request,'Click "Shipper Invoice List" button to add shipper invoice and proceed!')
+                            return redirect(request.META['HTTP_REFERER'])
+                        vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
+                        try:
+                            min_check_in_time = datetime.date((min(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_checkin_time')))[0])
+                            max_check_out_time = datetime.date((max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_checkout_time')))[0])
+                        except:
+                            min_check_in_time = 0
+                            max_check_out_time = 0
+                        warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
+                        # max_storage_days = max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_goods_invoice=k).values_list('wh_storage_time', flat=True))
+                        max_storage_days = ((max_check_out_time-min_check_in_time).days)
                         warehouse_charge_1 = warehouse_charge / shipper_invoice_count
                         storage_cost_total = round((warehouse_charge_1 * max_storage_days), 2)
-
                 except ObjectDoesNotExist:
                     messages.error(request,'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
                     return redirect(request.META['HTTP_REFERER'])
@@ -75,7 +81,7 @@ def invoice_add(request,invoice_id=0):
                 total_weight = Warehouse_goods_info.objects.filter(wh_goods_invoice=k).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
                 no_of_pieces = Warehouse_goods_info.objects.filter(wh_goods_invoice=k).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
                 try:
-                    weight_per_piece = ((total_weight) / (no_of_pieces))
+                    weight_per_piece = round((total_weight) / (no_of_pieces),2)
                 except ZeroDivisionError:
                     weight_per_piece = float(0.0)
 
@@ -186,14 +192,6 @@ def invoice_add(request,invoice_id=0):
             no_of_days=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Max('wh_storage_time'))['wh_storage_time__max']
             no_of_pieces=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
             total_loading_cost=Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).aggregate(Sum('wh_total_loading_cost'))['wh_total_loading_cost__sum']
-            try:
-                min_check_in_time=min(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkin_time'))
-            except:
-                min_check_in_time =0
-            try:
-                max_check_out_time=max(Warehouse_goods_info.objects.filter(wh_voucher_num = voucher_num).values_list('wh_checkout_time'))
-            except:
-                max_check_out_time=0
 
             job_num = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).distinct().values_list('wh_job_no',flat=True))
             crane_time=0
@@ -201,19 +199,19 @@ def invoice_add(request,invoice_id=0):
             for i in job_num:
                 crane_time=crane_time+Loadingbay_Info.objects.get(lb_job_no=i).lb_crane_time
                 forklift_time=forklift_time+Loadingbay_Info.objects.get(lb_job_no=i).lb_forklift_time
-            total_invoice_cost=wh_storage_cost_sum+total_loading_cost+total_loading_cost+crane_cost_sum+forklift_cost_sum
             context= {
                 'user_id':user_id,
                 'invoice_form': invoice_form,
                 'first_name': first_name,
                 'shipper_invoice_list':shipper_invoice_list,
                 'weight_sum':weight_sum,
-                'no_of_days':no_of_days,
+                # 'no_of_days':no_of_days,
+                'no_of_days':max_storage_days,
                 'no_of_pieces':no_of_pieces,
                 'crane_time':crane_time,
                 'forklift_time':forklift_time,
-                'min_check_in_time':min_check_in_time,
-                'max_check_out_time':max_check_out_time,
+                'min_check_in_time':str(min_check_in_time),
+                'max_check_out_time':str(max_check_out_time),
                 'total_loading_cost':total_loading_cost,
                 'wh_storage_cost_sum':wh_storage_cost_sum,
                 'crane_cost_sum':crane_cost_sum,

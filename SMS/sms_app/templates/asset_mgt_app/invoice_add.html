@@ -258,15 +258,13 @@ $(document).ready(function() {
 	document.getElementById("bill_no_of_pallets").value ='{{no_of_pieces}}';
 	document.getElementById("bill_tot_crane_time").value ='{{crane_time}}';
 	document.getElementById("bill_tot_forklift_time").value ='{{forklift_time}}';
-<!--	document.getElementById("bill_start_date").value ='{{min_check_in_time}}';-->
-<!--	document.getElementById("bill_end_date").value ='{{max_check_out_time}}';-->
 	document.getElementById("bill_loading_charge").value ='{{total_loading_cost}}';
 	document.getElementById("bill_unloading_charge").value ='{{total_loading_cost}}';
 	document.getElementById("bill_wh_storage_charges").value ='{{wh_storage_cost_sum}}';
 	document.getElementById("bill_tot_crane_charges").value ='{{crane_cost_sum}}';
 	document.getElementById("bill_tot_forklift_charges").value ='{{forklift_cost_sum}}';
-	document.getElementById("bill_start_date").value='{{first}}';
-	document.getElementById("bill_end_date").value='{{last}}';
+	document.getElementById("bill_start_date").value='{{min_check_in_time}}';
+	document.getElementById("bill_end_date").value='{{max_check_out_time}}';
 	bvm_invoice=document.getElementById("bill_customer_name").value
 
 	if (bvm_invoice=="")

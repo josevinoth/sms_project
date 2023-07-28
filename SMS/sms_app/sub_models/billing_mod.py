@@ -17,7 +17,7 @@ class BilingInfo(models.Model):
     bill_weight = models.FloatField(default=0.0,null=True,blank=True)
     bill_start_date=models.DateField(null=True,blank=True)
     bill_end_date=models.DateField(null=True,blank=True)
-    bill_no_of_days=models.IntegerField(default=0,null=True,blank=True)
+    bill_no_of_days=models.IntegerField(default=0.0,null=True,blank=True)
     bill_per_day_wh_charges = models.FloatField(default=0.0,null=True,blank=True)
     bill_wh_storage_charges = models.FloatField(default=0.0,null=True,blank=True)
     bill_no_of_pallets = models.IntegerField(default=0,null=True,blank=True)

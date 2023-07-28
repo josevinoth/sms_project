@@ -1,3 +1,4 @@
+from datetime import timedelta, date, datetime
 import json
 
 from django.contrib import messages
@@ -258,9 +259,8 @@ def warehouseout_add(request, warehouseout_id=0):
                 dispatch_num_val = request.session.get('ses_dispatch_num_val')
                 vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).dispatch_truck_type
                 Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_truck_type=vehicle_type)
-                print('vehicle_type', vehicle_type)
-                check_in_date = Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time
-                check_out_date = Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkout_time
+                check_in_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time)
+                check_out_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkout_time)
                 date_diff = (check_out_date - check_in_date)  # Differnce between dates
                 date_diff_days = date_diff.days
                 duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
