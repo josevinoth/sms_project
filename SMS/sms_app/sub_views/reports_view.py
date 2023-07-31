@@ -63,7 +63,7 @@ def stock_value_reports(request):
                	g.gatein_invoice as Customer_Invoice,\
                 w.wh_po_num as Case_Number,\
         		w.wh_gross_weight as Checkin_Weight,\
-        		w.wh_total_qty as Checkin_Qty,\
+        		w.wh_goods_pieces as Dims_Qty,\
         		p.package_type as Package_Type,\
         		w.wh_invoice_weight_unit as Invoice_Weight,\
         		g.gatein_no_of_pkg as Invoice_Qty,\
@@ -76,7 +76,7 @@ def stock_value_reports(request):
                 w.wh_invoice_value as Invoice_Value,\
         		c.currency_type as Currency_Type,\
         		w.wh_invoice_amount_inr as Invoice_Value_INR,\
-        		d.dispatch_ewaybill as E_Way_Bill,\
+        		l.lb_eway_bill as E_Way_Bill,\
         		yn.ge_gstexcepmtion as Fumigation_Status,\
                 ch.check_in_out_name as Checked_In_Out,\
         		lo.loc_name as Branch,\
