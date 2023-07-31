@@ -23,7 +23,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Date Of Call</span>
 									</div>
-									{% render_field sales_comments_form.sc_date_of_call id="sc_date_of_call" type="Date" class="form-control"%}
+									{% render_field sales_comments_form.sc_date_of_call id="sc_date_of_call"  type="Date" onclick="date_of_call_change()" class="form-control"%}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -84,6 +84,7 @@ $(document).ready(function() {
 	document.getElementById("sc_sales_number").value=sale_num
 	document.getElementById("sc_updated_by").value='{{user_id}}'
 	purpose_call_change()
+	date_of_call_change()
   });
 </script>
 
@@ -104,6 +105,11 @@ $(document).ready(function() {
 	  	}
 }
 </script>
-
+<script>
+	function date_of_call_change() {
+        document.getElementById("sc_date_of_call").min="06/30/2023"
+        document.getElementById("sc_date_of_call").max="07/30/2023"
+    });
+</script>
 {% endblock content %}
 

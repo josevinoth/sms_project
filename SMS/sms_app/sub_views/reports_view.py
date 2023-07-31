@@ -54,17 +54,20 @@ def stock_value_reports(request):
                	l.lb_stock_unloading_end_time as Unloading_Time,\
                	g.gatein_transporter as Transporter,\
                	g.gatein_truck_number as Truck_Number,\
-               	g.gatein_shipper as Consignee,\
-               	g.gatein_consignee as Consigner,\
+               	g.gatein_shipper as Consigner,\
+               	g.gatein_consignee as Consignee,\
                	re.received_not_name as DOCS_Received,\
+                d.dispatch_mawb as MAWB,\
         		g.gatein_hawb as HAWB,\
-        	   	d.dispatch_destination as Destination,\
+        	   	g.gatein_destination as Destination,\
                	g.gatein_invoice as Customer_Invoice,\
-        		w.wh_goods_weight as Checkin_Weight,\
-        		w.wh_goods_pieces as Checkin_Qty,\
+                w.wh_po_num as Case_Number,\
+        		w.wh_gross_weight as Checkin_Weight,\
+        		w.wh_total_qty as Checkin_Qty,\
         		p.package_type as Package_Type,\
         		w.wh_invoice_weight_unit as Invoice_Weight,\
         		g.gatein_no_of_pkg as Invoice_Qty,\
+                uo.uom_name as UOM,\
         		w.wh_goods_length as Length,\
         		w.wh_goods_width as Width,\
         		w.wh_goods_height as Height,\
@@ -75,21 +78,15 @@ def stock_value_reports(request):
         		w.wh_invoice_amount_inr as Invoice_Value_INR,\
         		d.dispatch_ewaybill as E_Way_Bill,\
         		yn.ge_gstexcepmtion as Fumigation_Status,\
+                ch.check_in_out_name as Checked_In_Out,\
         		lo.loc_name as Branch,\
         		u.unit_name as Unit,\
         		b.bay_bayname as bay,\
-               	ch.check_in_out_name as Checked_In_Out,\
         		w.wh_storage_time as Storage_Days,\
-                uo.uom_name as UOM,\
-                w.wh_po_num as Case_Number,\
-                d.dispatch_mawb as MAWB,\
                 d.dispatch_truck_number as Truck_Number,\
                 vt.vt_vehicletype as Truck_Type,\
                 d.dispatch_depature_date as Truck_Out_Time,\
-                lp.lp_name as Labels_Pasted_By,\
-                w.wh_invoice_qty as Invoice_Qty,\
-                w.wh_gross_weight as Gross_Weight,\
-                w.wh_total_qty as Total_Qty\
+                lp.lp_name as Labels_Pasted_By\
         FROM sms_app_warehouse_goods_info w\
         INNER JOIN sms_app_gatein_info g ON g.gatein_job_no=w.wh_job_no\
         INNER JOIN sms_app_loadingbay_info l ON l.lb_job_no=w.wh_job_no\
