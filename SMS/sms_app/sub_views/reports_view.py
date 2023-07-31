@@ -63,8 +63,8 @@ def stock_value_reports(request):
                	g.gatein_invoice as Customer_Invoice,\
                 w.wh_po_num as Case_Number,\
                 w.wh_invoice_qty as Invoice_Qty,\
-        		w.wh_gross_weight as Checkin_Weight,\
                 w.wh_invoice_weight_unit as Invoice_Weight,\
+        		w.wh_gross_weight as Checkin_Weight,\
                 uo.uom_name as UOM,\
             	w.wh_goods_length as Length,\
             	w.wh_goods_width as Width,\
