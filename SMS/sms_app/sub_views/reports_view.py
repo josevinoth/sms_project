@@ -66,7 +66,7 @@ def stock_value_reports(request):
         		w.wh_goods_pieces as Dims_Qty,\
         		p.package_type as Package_Type,\
         		w.wh_invoice_weight_unit as Invoice_Weight,\
-        		g.gatein_no_of_pkg as Invoice_Qty,\
+        		w.wh_invoice_qty as Invoice_Qty,\
                 uo.uom_name as UOM,\
         		w.wh_goods_length as Length,\
         		w.wh_goods_width as Width,\
