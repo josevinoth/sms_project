@@ -62,15 +62,15 @@ def stock_value_reports(request):
         	   	g.gatein_destination as Destination,\
                	g.gatein_invoice as Customer_Invoice,\
                 w.wh_po_num as Case_Number,\
+                w.wh_invoice_qty as Invoice_Qty,\
         		w.wh_gross_weight as Checkin_Weight,\
+                w.wh_invoice_weight_unit as Invoice_Weight,\
+                uo.uom_name as UOM,\
+            	w.wh_goods_length as Length,\
+            	w.wh_goods_width as Width,\
+            	w.wh_goods_height as Height,\
         		w.wh_goods_pieces as Dims_Qty,\
         		p.package_type as Package_Type,\
-        		w.wh_invoice_weight_unit as Invoice_Weight,\
-        		w.wh_invoice_qty as Invoice_Qty,\
-                uo.uom_name as UOM,\
-        		w.wh_goods_length as Length,\
-        		w.wh_goods_width as Width,\
-        		w.wh_goods_height as Height,\
         		w.wh_chargeable_weight as Volume_Weight,\
         		w.wh_cbm as CBM,\
                 w.wh_invoice_value as Invoice_Value,\
