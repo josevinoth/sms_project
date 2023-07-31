@@ -1,0 +1,85 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Requirements List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'requirements_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="requirements_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <!--            <th>Product Category</th>-->
+            <th>Requirement Number</th>
+            <th>Backlogs</th>
+            <th>Module</th>
+            <th>Phase</th>
+            <th>Owner</th>
+            <th>Assigned On</th>
+            <th>Bug/Improvements?</th>
+            <th>Implemented On</th>
+            <th>Implemented By</th>
+            <th>Status</th>
+            <th>Remarks</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+        {% for requirementsinfo in requirements_list %}
+        <tr>
+            <td> {{requirementsinfo.req_number}}</td>
+            <td> {{requirementsinfo.req_backlogs}}</td>
+            <td> {{requirementsinfo.req_module}}</td>
+            <td> {{requirementsinfo.req_phase}}</td>
+            <td> {{requirementsinfo.req_owner}}</td>
+            <td> {{requirementsinfo.req_assignedon}}</td>
+            <td> {{requirementsinfo.req_bugimprove}}</td>
+            <td> {{requirementsinfo.req_implementedon}}</td>
+            <td> {{requirementsinfo.req_implementedby}}</td>
+            <td> {{requirementsinfo.req_status}}</td>
+            <td> {{requirementsinfo.req_remarks}}</td>
+            <td>
+
+                <a class="btn btn-primary" href="{% url 'requirements_update' requirementsinfo.id %}" class="btn btn-primary">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'requirements_delete' requirementsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#requirements_list').DataTable();
+} );
+</script>
+
+{% endblock content %}

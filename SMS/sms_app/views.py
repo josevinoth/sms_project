@@ -89,4 +89,5 @@ from .sub_views.packingjobs_view import packingjobs_add,packingjobs_list,packing
 from .sub_views.arinfo_view import ar_add,ar_list,ar_delete
 from .sub_views.sales_target_add_view import sales_target_add,sales_target_list,sales_target_delete
 from .sub_views.arcomments_add_view import arcomments_add,arcomments_list,arcomments_delete
+from .sub_views.Requirements_add_view import requirements_add,requirements_list,requirements_delete
 
