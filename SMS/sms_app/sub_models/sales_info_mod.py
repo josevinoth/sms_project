@@ -51,6 +51,7 @@ class SalesInfo(models.Model):
     s_business_start_days=models.IntegerField(null = True,blank=True,default=0)
     s_sale_number = models.CharField(blank=True, null=True,max_length=30)
     s_attachment = models.FileField(upload_to=sales_directory_path, null=True, blank=True)
-
+    class Meta:
+        ordering = ["s_sale_number"]
     def __str__(self):
         return self.s_sale_number
