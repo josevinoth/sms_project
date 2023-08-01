@@ -38,7 +38,7 @@
 	<div class="col-2"></div>
 </div>
 <hr>
-<form method="POST" action="" enctype="multipart/form-data">
+<form method="POST" action="" enctype="multipart/form-data" id="loadingbay_add" data-currency_value-url="{% url 'load_currency_value' %}">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-2"></div>
@@ -415,31 +415,51 @@ function challan_damage_btn_active() {
 	 }
 }
 </script>
+<!--Fetch Units-->
 <script>
-function inv_curr_change() {
-	 var currency_type =document.getElementById("lb_stock_invoice_currency").value;
-	 var invoice_value_val=document.getElementById("lb_stock_invoice_value").value;
-	 var lb_status_val=document.getElementById("lb_status").value;
-	 if (lb_status_val==6)
-	 {
-	 if (currency_type==1)
-	 {
-	 		conversion_rate_val='{{currency_INR}}';
-	 		document.getElementById("lb_stock_currency_con").value=conversion_rate_val;
-	 } else if (currency_type==2)
-	 {
-	 		conversion_rate_val='{{currency_USD}}';
-	 		document.getElementById("lb_stock_currency_con").value=conversion_rate_val;
-	 } else if (currency_type==3)
-	 {
-	 		conversion_rate_val='{{currency_EUR}}';
-	 		document.getElementById("lb_stock_currency_con").value=conversion_rate_val;
-	 }
-	 var amount_INR_val=(invoice_value_val*conversion_rate_val).toFixed(2)
-	 document.getElementById("lb_stock_amount_in").value=amount_INR_val
-	 }
-}
-</script>
+   $("#lb_stock_invoice_currency").change(function () {
+      var url = $("#loadingbay_add").attr("data-currency_value-url");
+      var currency_type = $(this).val();
+      $.ajax({
+        url: url,
+        data: {
+          'currency_type': currency_type,
+        },
+		success: function (data) {
+			conversion_rate_val=JSON.parse(data)["currency_value"]
+			document.getElementById("lb_stock_currency_con").value=conversion_rate_val;
+        	var invoice_value_val=document.getElementById("lb_stock_invoice_value").value;
+        	var amount_INR_val=(invoice_value_val*conversion_rate_val).toFixed(2)
+        	document.getElementById("lb_stock_amount_in").value=amount_INR_val
+        }
+      });
+    });
+ </script>
+<!--<script>-->
+<!--function inv_curr_change() {-->
+<!--	 var currency_type =document.getElementById("lb_stock_invoice_currency").value;-->
+<!--	 var invoice_value_val=document.getElementById("lb_stock_invoice_value").value;-->
+<!--	 var lb_status_val=document.getElementById("lb_status").value;-->
+<!--	 if (lb_status_val==6)-->
+<!--	 {-->
+<!--	 if (currency_type==1)-->
+<!--	 {-->
+<!--	 		conversion_rate_val='{{currency_INR}}';-->
+<!--	 		document.getElementById("lb_stock_currency_con").value=conversion_rate_val;-->
+<!--	 } else if (currency_type==2)-->
+<!--	 {-->
+<!--	 		conversion_rate_val='{{currency_USD}}';-->
+<!--	 		document.getElementById("lb_stock_currency_con").value=conversion_rate_val;-->
+<!--	 } else if (currency_type==3)-->
+<!--	 {-->
+<!--	 		conversion_rate_val='{{currency_EUR}}';-->
+<!--	 		document.getElementById("lb_stock_currency_con").value=conversion_rate_val;-->
+<!--	 }-->
+<!--	 var amount_INR_val=(invoice_value_val*conversion_rate_val).toFixed(2)-->
+<!--	 document.getElementById("lb_stock_amount_in").value=amount_INR_val-->
+<!--	 }-->
+<!--}-->
+<!--</script>-->
 <script>
 function lb_status_change() {
 	var lb_status_val=document.getElementById("lb_status").value;
@@ -494,8 +514,6 @@ function lb_crane_forklift_change() {
 		document.getElementById("lb_crane_charges_mod").value=0.0;
 		document.getElementById("lb_no_of_crane").value=0.0;
 	}
-
-
 }
 </script>
 {% endblock content %}

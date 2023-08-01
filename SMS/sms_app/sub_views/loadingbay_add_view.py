@@ -4,6 +4,8 @@ from ..forms import LoadingbayddForm,LoadingbayImagesForm
 from django.contrib.auth.decorators import login_required
 from ..models import WhratemasterInfo,CustomerInfo,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,Loadingbayimages_Info,Currency_type
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse
+import json
 
 # Add WH Job
 @login_required(login_url='login_page')
@@ -198,18 +200,14 @@ def loadingbay_add(request, loadingbay_id=0):
             return redirect(request.META['HTTP_REFERER'])
             # return redirect('/SMS/gatein_list')
 
-# # List WH Job
-# @login_required(login_url='login_page')
-# def gatein_list(request):
-#     first_name = request.session.get('first_name')
-#     context = {'Gatein_list' : Gatein_info.objects.all(),'first_name': first_name,}
-#     return render(request,"asset_mgt_app/gatein_list.html",context)
-#
-# #Delete WH Job
-# @login_required(login_url='login_page')
-# def gatein_delete(request,gatein_id):
-#     gatein = Gatein_info.objects.get(pk=gatein_id)
-#     gatein.delete()
-#     return redirect('/SMS/gatein_list')
-
+@login_required(login_url='login_page')
+def load_currency_value(request):
+    currency_type = request.GET.get('currency_type')
+    # Fetch Currency Value
+    currency_value = Currency_type.objects.get(id=currency_type).converision_value
+    print('currency_value', currency_value)
+    data = {
+        'currency_value': currency_value,
+    }
+    return HttpResponse(json.dumps(data))
 

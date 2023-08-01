@@ -144,6 +144,7 @@ urlpatterns = [
     path('gatein_pre_delete/<int:gatein_pre_id>/', views.gatein_pre_delete, name='gatein_pre_delete'),  # Delete gatein pre
     path('loadingbay_update/<int:loadingbay_id>/', views.loadingbay_add, name='loadingbay_update'),  # loadingbay update
     path('loadingbay_insert', views.loadingbay_add, name='loadingbay_insert'),  # loadingbay insert
+    path('load_currency_value/', views.load_currency_value, name='load_currency_value'), #Load currency coversion value
     path('wh_job_insert', views.wh_job_add, name='wh_job_insert'),  # wh Job insert
     path('wh_job_update/<int:gatein_id>/', views.wh_job_add, name='wh_job_update'),  # wh_job update
     path('wh_job_list', views.wh_job_list, name='wh_job_list'),  # wh Job list
