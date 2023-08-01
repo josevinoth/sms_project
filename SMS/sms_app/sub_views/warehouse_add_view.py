@@ -334,7 +334,6 @@ def load_units(request):
     for j in units:
         unit_name = UnitInfo.objects.filter(id=j).values('unit_name')
         unit_name_list.append(unit_name[0]['unit_name'])
-    print('unit_name_list', unit_name_list)
     data = {
         'unit_id':units,
         'unit_name_list': unit_name_list,
@@ -372,30 +371,27 @@ def load_bays_origin(request):
     }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))
+
+# Load Bays
 @login_required(login_url='login_page')
 def load_bays(request):
     # Fetch Bays
     bay_list = []
-    bay_name = []
     bay_name_list = []
     wh_branch_id = request.GET.get('branchId')
     untid_id = request.GET.get('unitId')
     # Fetch Bay details
-    bays = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id,lm_wh_unit=untid_id).values('lm_areaside').distinct()
-    bays_count = bays.count()
-    for k in range(bays_count):
-        bay_list.append(bays[k]['lm_areaside'])
-    for m in bay_list:
-        bay_name=BayInfo.objects.filter(id=m).values('bay_bayname')
-        bay_name_list.append(bay_name[0]['bay_bayname'])
+    bays_list = list(LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id, lm_wh_unit=untid_id).values_list('lm_areaside',flat=True))
+    bays_list.sort()
+    for j in bays_list:
+        bay_name = BayInfo.objects.get(id=j).bay_bayname
+        bay_name_list.append(bay_name)
     data = {
-        'bay_id':bay_list,
-        'bay_name_list':bay_name_list,
+        'bay_id': bay_list,
+        'bay_name_list': bay_name_list,
     }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))
-
-# Load Bays
 @login_required(login_url='login_page')
 def load_area_volume(request):
     # Fetch Area & Volume
