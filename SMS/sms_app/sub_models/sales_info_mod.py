@@ -53,4 +53,4 @@ class SalesInfo(models.Model):
     s_attachment = models.FileField(upload_to=sales_directory_path, null=True, blank=True)
 
     def __str__(self):
-        return self.s_customer_name
+        return self.s_sale_number

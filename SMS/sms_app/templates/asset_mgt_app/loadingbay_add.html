@@ -34,21 +34,12 @@
 		<a class="btn  border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
 		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>
 		<a class="btn  border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
-		<!--		<a class="btn  border border-dark disable_a_href" id="dispatch_btn" href="{% url 'dispatch_insert' %}">Dispatch</a>-->
-		<!--		<a class="btn  border border-dark disable_a_href" id="billing_btn">Billing</a>-->
-		<!--		<a class="btn  border border-dark disable_a_href" id="expense_btn">Expenses</a>-->
-		<!--		<a class="btn  border border-dark disable_a_href" id="reports_btn">Reports</a>-->
 	</div>
 	<div class="col-2"></div>
 </div>
-
 <hr>
-
 <form method="POST" action="" enctype="multipart/form-data">
 	{% csrf_token %}
-
-	<!--{{form.as_p}}-->
-
 	<div class="row">
 		<div class="col-2"></div>
 		<div class="col-8">
@@ -80,92 +71,78 @@
 										<span class="input-group-text">WH Job Number</span>
 									</div>
 									{% render_field loadingbay_form.lb_job_no id="lb_job_no" value=request.session.ses_gatein_id_nam class="form-control disable_a_href"  %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipper Invoice</span>
 									</div>
 									{% render_field loadingbay_form.lb_invoice value=request.session.ses_wh_invoice class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipper Invoice Value</span>
 									</div>
 									{% render_field loadingbay_form.lb_stock_invoice_value id="lb_stock_invoice_value" onchange="inv_curr_change()" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipper Invoice Currency</span>
 									</div>
 									{% render_field loadingbay_form.lb_stock_invoice_currency id="lb_stock_invoice_currency" class="form-control" onchange="inv_curr_change()" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Conversion Rate</span>
 									</div>
 									{% render_field loadingbay_form.lb_stock_currency_con id="lb_stock_currency_con" class="form-control disable_a_href" onchange="inv_curr_change()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Amount In (INR)</span>
 									</div>
 									{% render_field loadingbay_form.lb_stock_amount_in id="lb_stock_amount_in" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading Start Time</span>
 									</div>
 									{% render_field loadingbay_form.lb_stock_unloading_start_time type="datetime-local" class="form-control" id="lb_stock_unloading_start_time" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading End Time</span>
 									</div>
 									{% render_field loadingbay_form.lb_stock_unloading_end_time class="form-control" type="datetime-local" id="lb_stock_unloading_end_time" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Original Documents Pouch</span>
 									</div>
 									{% render_field loadingbay_form.lb_packing_list class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Inward POD</span>
 									</div>
 									{% render_field loadingbayimg_form.lbimg_inward_pod id="lbimg_inward_pod" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">E-way Bill#</span>
 									</div>
 									{% render_field loadingbay_form.lb_eway_bill class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">E-way Bill Validity</span>
 									</div>
 									{% render_field loadingbay_form.lb_validity_date type="datetime-local" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Manual</span>
 									</div>
-									<!--									<input type="checkbox" class="form-control" name="lb_mh_manual" id="lb_mh_manual">-->
 									{% render_field loadingbay_form.lb_mh_manual class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
 							<div class="col-6">
@@ -174,16 +151,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Forklift?</span>
 									</div>
-									<!--									<input type="checkbox" class="form-control" name="lb_mh_forklift" id="lb_mh_forklift">-->
 									{% render_field loadingbay_form.lb_mh_forklift id="lb_mh_forklift" onchange="lb_crane_forklift_change()" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Forklift Hours</span>
 									</div>
 									{% render_field loadingbay_form.lb_forklift_time id="lb_forklift_time" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="row">
 									<div class="col-6">
@@ -192,7 +166,6 @@
 												<span class="input-group-text">Forklift Charges<2hr</span>
 											</div>
 											{% render_field loadingbay_form.lb_forklift_charges_std_l2hr id="lb_forklift_charges_std_l2hr" class="form-control disable_a_href" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
 									<div class="col-6">
@@ -201,7 +174,6 @@
 												<span class="input-group-text">Forklift Charges<2hr (Mod)</span>
 											</div>
 											{% render_field loadingbay_form.lb_forklift_charges_mod_l2h id="lb_forklift_charges_mod_l2h" class="form-control disable_a_href" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
 								</div>
@@ -212,7 +184,6 @@
 												<span class="input-group-text">Forklift Charges>2hr</span>
 											</div>
 											{% render_field loadingbay_form.lb_forklift_charges_std_g2hr id="lb_forklift_charges_std_g2hr" class="form-control disable_a_href" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
 									<div class="col-6">
@@ -221,7 +192,6 @@
 												<span class="input-group-text">Forklift Charges>2hr (Mod)</span>
 											</div>
 											{% render_field loadingbay_form.lb_forklift_charges_mod_g2hr id="lb_forklift_charges_mod_g2hr" class="form-control disable_a_href" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
 								</div>
@@ -230,22 +200,18 @@
 										<span class="input-group-text">No Of Forklifts</span>
 									</div>
 									{% render_field loadingbay_form.lb_no_of_forklift id="lb_no_of_forklift" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Crane?</span>
 									</div>
-									<!--									<input type="checkbox" class="form-control" name="lb_mh_crane" id="lb_mh_crane">-->
 									{% render_field loadingbay_form.lb_mh_crane id="lb_mh_crane" onchange="lb_crane_forklift_change()" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Crane Hours</span>
 									</div>
 									{% render_field loadingbay_form.lb_crane_time id="lb_crane_time" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="row">
 									<div class="col-6">
@@ -254,7 +220,6 @@
 												<span class="input-group-text">Crane Charges<2hr</span>
 											</div>
 											{% render_field loadingbay_form.lb_crane_charges_std_l2hr id="lb_crane_charges_std_l2hr" class="form-control disable_a_href" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
 									<div class="col-6">
@@ -263,7 +228,6 @@
 												<span class="input-group-text">Crane Charges<2hr (Mod)</span>
 											</div>
 											{% render_field loadingbay_form.lb_crane_charges_mod_l2h id="lb_crane_charges_mod_l2h" class="form-control disable_a_href" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
 								</div>
@@ -274,7 +238,6 @@
 												<span class="input-group-text">Crane Charges>2hr</span>
 											</div>
 											{% render_field loadingbay_form.lb_crane_charges_std_g2hr id="lb_crane_charges_std_g2hr" class="form-control disable_a_href" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
 									<div class="col-6">
@@ -283,7 +246,6 @@
 												<span class="input-group-text">Crane Charges>2hr (Mod)</span>
 											</div>
 											{% render_field loadingbay_form.lb_crane_charges_mod_g2hr id="lb_crane_charges_mod_g2hr" class="form-control disable_a_href" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
 								</div>
@@ -292,42 +254,32 @@
 										<span class="input-group-text">No Of Cranes</span>
 									</div>
 									{% render_field loadingbay_form.lb_no_of_crane id="lb_no_of_crane" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Hand Trolley</span>
 									</div>
-									<!--									<input type="checkbox" class="form-control" name="lb_mh_handtrolley" id="lb_mh_handtrolley">-->
 									{% render_field loadingbay_form.lb_mh_handtrolley class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">OTL Check Acceptance</span>
 									</div>
 									{% render_field loadingbay_form.lb_otl_check id="lb_otl_check" class="form-control" onchange="challan_damage_btn_active()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Offload Acceptance</span>
 									</div>
 									{% render_field loadingbay_form.lb_offload_acceptance id="lb_offload_acceptance" class="form-control" onchange="challan_damage_btn_active()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
 									{% render_field loadingbay_form.lb_status class="form-control" id="lb_status" onchange="lb_status_change()" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
-							<div class="message">
-								{{loadingbay_form.errors}}
-							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
 						</div>
 						<div class="row">
 							<div class="col-1"></div>

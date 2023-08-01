@@ -30,6 +30,14 @@ def goods_add(request, goods_id=0):
     gatein_weight_val = ses_gatein_weight_nam
     gatein_wh_job_id=Gatein_info.objects.get(gatein_job_no=wh_job_id).id
     shipper_invoice=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_invoice
+
+    # Generate Random WH_stock number
+    try:
+        last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
+    except ObjectDoesNotExist:
+        last_id = 0
+    wh_stock_num = randint(10000, 99999) + last_id + 1
+
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -103,13 +111,6 @@ def goods_add(request, goods_id=0):
     else:
         goods_checkin_count_val = 0
         Gatein_info.objects.filter(gatein_job_no=ses_gatein_id_nam).update(gatein_actual_count=goods_checkin_count_val)
-        # Generate Random WH_Job number
-    try:
-        last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
-    except ObjectDoesNotExist:
-        last_id = 0
-    print(last_id)
-    wh_stock_num = randint(10000, 99999) + last_id + 1
 
     if request.method == "GET":
         if goods_id == 0:
