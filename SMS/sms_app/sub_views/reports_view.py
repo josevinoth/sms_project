@@ -57,7 +57,6 @@ def stock_value_reports(request):
                	g.gatein_shipper as Consigner,\
                	g.gatein_consignee as Consignee,\
                	re.received_not_name as DOCS_Received,\
-                d.dispatch_mawb as MAWB,\
         		g.gatein_hawb as HAWB,\
         	   	g.gatein_destination as Destination,\
                	g.gatein_invoice as Customer_Invoice,\
@@ -77,6 +76,7 @@ def stock_value_reports(request):
         		c.currency_type as Currency_Type,\
         		w.wh_invoice_amount_inr as Invoice_Value_INR,\
         		l.lb_eway_bill as E_Way_Bill,\
+        		l.lb_validity_date as E_Way_Bill_Validity,\
         		yn.ge_gstexcepmtion as Fumigation_Status,\
                 ch.check_in_out_name as Checked_In_Out,\
         		lo.loc_name as Branch,\
@@ -86,7 +86,8 @@ def stock_value_reports(request):
                 d.dispatch_truck_number as Truck_Number,\
                 vt.vt_vehicletype as Truck_Type,\
                 d.dispatch_depature_date as Truck_Out_Time,\
-                lp.lp_name as Labels_Pasted_By\
+                lp.lp_name as Labels_Pasted_By,\
+                d.dispatch_mawb as MAWB\
         FROM sms_app_warehouse_goods_info w\
         INNER JOIN sms_app_gatein_info g ON g.gatein_job_no=w.wh_job_no\
         INNER JOIN sms_app_loadingbay_info l ON l.lb_job_no=w.wh_job_no\

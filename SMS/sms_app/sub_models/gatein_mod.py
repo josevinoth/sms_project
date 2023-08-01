@@ -3,7 +3,7 @@ from ..models import Stock_type,MyUser,StatusList,VehicletypeInfo,CustomerInfo,T
 
 class Gatein_info(models.Model):
     gatein_job_no = models.CharField(blank=False, null=False, max_length=20)
-    gatein_invoice = models.CharField(blank=False, null=False,max_length=20)
+    gatein_invoice = models.CharField(blank=False, null=False,max_length=400)
     gatein_customer = models.ForeignKey(CustomerInfo,on_delete=models.CASCADE, blank=False, null=False)
     gatein_customer_type = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, blank=False, null=False)
     gatein_arrival_date = models.CharField(blank=True, null=True,max_length=20)
@@ -28,7 +28,7 @@ class Gatein_info(models.Model):
     gatein_updated_at = models.DateTimeField(null=True,auto_now=True)
     gatein_updated_by = models.ForeignKey(MyUser,on_delete=models.CASCADE,null=True)
     gatein_job_status = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, default=2)
-    gatein_po_num = models.CharField(blank=True, null=True, max_length=100)
+    gatein_po_num = models.CharField(blank=True, null=True, max_length=500)
     gatein_destination = models.CharField(blank=True, null=True, max_length=100)
     gatein_hawb = models.CharField(blank=True, null=True, max_length=100)
     # gatein_sbill = models.CharField(blank=True, null=True, max_length=100)
