@@ -381,9 +381,9 @@ def load_bays(request):
     wh_branch_id = request.GET.get('branchId')
     untid_id = request.GET.get('unitId')
     # Fetch Bay details
-    bays_list = list(LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id, lm_wh_unit=untid_id).values_list('lm_areaside',flat=True))
-    bays_list.sort()
-    for j in bays_list:
+    bay_list = list(LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id, lm_wh_unit=untid_id).values_list('lm_areaside',flat=True))
+    bay_list.sort()
+    for j in bay_list:
         bay_name = BayInfo.objects.get(id=j).bay_bayname
         bay_name_list.append(bay_name)
     data = {
@@ -400,6 +400,9 @@ def load_area_volume(request):
     bayId = request.GET.get('bayId')
     req_area_val = float(request.GET.get('req_area_val'))
     req_volume_val = float(request.GET.get('req_volume_val'))
+    print('wh_branch_id',wh_branch_id)
+    print('untid_id',untid_id)
+    print('bayId',bayId)
     # Fetch Bay details
     lm_available_area_val = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id,lm_wh_unit=untid_id,lm_areaside=bayId).values('lm_available_area').distinct()
     lm_available_volume_val = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id,lm_wh_unit=untid_id,lm_areaside=bayId).values('lm_available_volume').distinct()

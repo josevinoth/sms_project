@@ -392,30 +392,30 @@
 <!--Fetch Available Area and Volume-->
 <script>
    $("#wh_stack_layer").change(function () {
-      var url = $("#goods_add").attr("data-bay-url");
-      var branchId = document.getElementById("wh_branch").value;
-      var unitId = document.getElementById("wh_unit").value;
-      var bayId = document.getElementById("wh_bay").value;
+      	var url = $("#goods_add").attr("data-bay-url");
+      	var branchId = document.getElementById("wh_branch").value;
+      	var unitId = document.getElementById("wh_unit").value;
+      	var bayId = document.getElementById("wh_bay").value;
    		var req_area_val = document.getElementById("req_area").value;
    		var req_volume_val = document.getElementById("volume_weight").value;
-      $.ajax({
-        url: '{% url 'load_area_volume' %}',
-        data: {
-			'req_area_val':req_area_val,
-			'req_volume_val':req_volume_val,
-          	'branchId':branchId,
-          	'unitId': unitId,
-          	'bayId': bayId,
-        },
-		success: function (data) {
-			$("#wh_available_area").empty();
-			$("#wh_available_volume").empty();
-			var available_area_final=JSON.parse(data)["available_area_final"];
-        	var available_volume_final=JSON.parse(data)["available_volume_final"];
-			$("#wh_available_area").val(available_area_final);
-			$("#wh_available_volume").val(available_volume_final);
-        }
-      });
+		  $.ajax({
+			url: '{% url 'load_area_volume' %}',
+			data: {
+				'req_area_val':req_area_val,
+				'req_volume_val':req_volume_val,
+				'branchId':branchId,
+				'unitId': unitId,
+				'bayId': bayId,
+			},
+			success: function (data) {
+				$("#wh_available_area").empty();
+				$("#wh_available_volume").empty();
+				var available_area_final=JSON.parse(data)["available_area_final"];
+				var available_volume_final=JSON.parse(data)["available_volume_final"];
+				$("#wh_available_area").val(available_area_final);
+				$("#wh_available_volume").val(available_volume_final);
+			}
+		  });
     });
 </script>
 
