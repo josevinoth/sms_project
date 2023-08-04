@@ -64,14 +64,14 @@ def sales_add(request, sales_id=0):
                 form.save()
                 print("Sales Form Saved")
                 messages.success(request, 'Record Updated Successfully')
-                sales_num = request.POST.get('s_sale_number')
-                sales_id = SalesInfo.objects.get(s_sale_number=sales_num).id
-                url = 'sales_update/' + str(sales_id)
-                return redirect(url)
             else:
                 print("Sales Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
                 return redirect(request.META['HTTP_REFERER'])
+            sales_num = request.POST.get('s_sale_number')
+            sales_id = SalesInfo.objects.get(s_sale_number=sales_num).id
+            url = 'sales_update/' + str(sales_id)
+            return redirect(url)
         else:
             sale_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
             request.session['ses_sales_num'] = sale_num
