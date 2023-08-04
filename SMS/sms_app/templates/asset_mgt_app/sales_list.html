@@ -16,7 +16,7 @@
         </a>
     </div>
     <div class="col-md-1">
-        <a href="{% url 'sales_insert' %}" class="btn btn-success btn-block btn-lg">
+        <a href="{% url 'sales_update' %}" class="btn btn-success btn-block btn-lg">
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
@@ -74,10 +74,10 @@
                 </a>
             </td>
             <td>
-                <form action="{% url 'sales_delete' salesinfo.id %}" method="post" >
+                <form action="{% url 'sales_delete' salesinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt" onclick="return confirm('Are you sure?');"></i>
+                        <i class="fas fa-trash-alt" ></i>
                     </button>
                 </form>
             </td>
