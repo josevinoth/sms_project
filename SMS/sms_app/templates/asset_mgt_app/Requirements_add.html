@@ -18,35 +18,36 @@
 										<span class="input-group-text">Requirement Number</span>
 									</div>
 									{% render_field form.req_number id="req_number" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Backlogs</span>
 									</div>
 									{% render_field form.req_backlogs id="req_backlogs" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Module</span>
 									</div>
 									{% render_field form.req_module id="req_module" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Phase</span>
 									</div>
 									{% render_field form.req_phase id="req_phase" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Owner</span>
+										<span class="input-group-text">Raised By</span>
 									</div>
 									{% render_field form.req_owner id="req_owner" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Raised On</span>
+									</div>
+									{% render_field form.req_raisedon type="datetime-local" id="req_raisedon" class="form-control " %}
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
@@ -54,7 +55,6 @@
 										<span class="input-group-text">Bug/Improvements?</span>
 									</div>
 									{% render_field form.req_bugimprove id="req_bugimprove" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
@@ -62,28 +62,24 @@
 										<span class="input-group-text">Implemented By</span>
 									</div>
 									{% render_field form.req_implementedby id="req_implementedby" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Implemented On</span>
 									</div>
 									{% render_field form.req_implementedon id="req_implementedon" type="Date" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
 									{% render_field form.req_status id="req_status" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Remarks</span>
 									</div>
 									{% render_field form.req_remarks id="req_remarks" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field form.req_updated_by id="req_updated_by" hidden="True" class="form-control" %}
 							</div>
