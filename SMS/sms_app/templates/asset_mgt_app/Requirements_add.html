@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="requirements_add"  >
+<form method="POST" action="" id="requirements_add" enctype="multipart/form-data"  >
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-3"></div>
@@ -82,8 +82,19 @@
 									{% render_field form.req_remarks id="req_remarks" class="form-control " %}
 								</div>
 								{% render_field form.req_updated_by id="req_updated_by" hidden="True" class="form-control" %}
-							</div>
-							<div class="row">
+								<div class="row container-fluid">
+<!--									<div class="col-6">-->
+										<div class="input-group input-group-sm mb-3 bg-dark block">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Attachment</span>
+											</div>
+											{% render_field form.req_attachment class="form-control" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+<!--									</div>-->
+									<div class="col-6"></div>
+								</div>
+								<div class="row">
 								<div class="col-1"></div>
 								<div class="col-10">
 									<div class="message text-center">
@@ -93,6 +104,7 @@
 									</div>
 								</div>
 								<div class="col-1"></div>
+							</div>
 							</div>
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>

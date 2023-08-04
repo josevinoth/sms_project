@@ -31,7 +31,8 @@
             <th>Backlogs</th>
             <th>Module</th>
             <th>Phase</th>
-            <th>Owner</th>
+            <th>Raised By</th>
+            <th>Raised On</th>
             <th>Bug/Improvements?</th>
             <th>Implemented On</th>
             <th>Implemented By</th>
@@ -51,6 +52,7 @@
             <td> {{requirementsinfo.req_module}}</td>
             <td> {{requirementsinfo.req_phase}}</td>
             <td> {{requirementsinfo.req_owner}}</td>
+            <td> {{requirementsinfo.req_raisedon}}</td>
             <td> {{requirementsinfo.req_bugimprove}}</td>
             <td> {{requirementsinfo.req_implementedon}}</td>
             <td> {{requirementsinfo.req_implementedby}}</td>
@@ -59,7 +61,6 @@
             <td> {{requirementsinfo.req_updated_at}}</td>
             <td> {{requirementsinfo.req_updated_by}}</td>
             <td>
-
                 <a class="btn btn-primary" href="{% url 'requirements_update' requirementsinfo.id %}" class="btn btn-primary">
                     <i class="far fa-edit"></i>
                 </a>

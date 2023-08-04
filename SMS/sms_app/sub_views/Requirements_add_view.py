@@ -3,6 +3,8 @@ from ..forms import RequirementForm
 from ..models import RequirementsInfo
 from django.shortcuts import render, redirect
 from random import randint
+from django.contrib import messages
+
 @login_required(login_url='login_page')
 def requirements_add(request,requirements_id=0):
     first_name = request.session.get('first_name')
@@ -27,13 +29,16 @@ def requirements_add(request,requirements_id=0):
         return render(request, "asset_mgt_app/requirements_add.html", context)
     else:
         if requirements_id == 0:
-            form = RequirementForm(request.POST)
+            form = RequirementForm(request.POST,request.FILES)
         else:
             requirements = RequirementsInfo.objects.get(pk=requirements_id)
-            form = RequirementForm(request.POST,instance=requirements)
+            form = RequirementForm(request.POST,request.FILES,instance=requirements)
         if form.is_valid():
             form.save()
-        return redirect('/SMS/requirements_list')
+            print("Requirement Form is Valid")
+            messages.success(request, 'Record Updated Successfully')
+        return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/requirements_list')
 
 # List requirements
 @login_required(login_url='login_page')
