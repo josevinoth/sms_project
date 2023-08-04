@@ -60,22 +60,31 @@ def sales_add(request, sales_id=0):
     else:
         if sales_id == 0:
             form = SalesinfoaddForm(request.POST,request.FILES)
+            if form.is_valid():
+                form.save()
+                print("Sales Form Saved")
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Sales Form not saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+
+            sales_num = request.POST.get('s_sale_number')
+            sales_id = SalesInfo.objects.get(s_sale_number=sales_num).id
+            url = 'sales_update/' + str(sales_id)
+            return redirect(url)
         else:
             sale_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
             request.session['ses_sales_num'] = sale_num
             salesinfo = SalesInfo.objects.get(pk=sales_id)
             form = SalesinfoaddForm(request.POST,request.FILES, instance=salesinfo)
-        if form.is_valid():
-            form.save()
-            print("Sales Form Saved")
-            messages.success(request, 'Record Updated Successfully')
-        else:
-            print("Sales Form not saved")
-            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-        sales_num = request.POST.get('s_sale_number')
-        sales_id = SalesInfo.objects.get(s_sale_number=sales_num).id
-        url = 'sales_update/' + str(sales_id)
-        return redirect(url)
+            if form.is_valid():
+                form.save()
+                print("Sales Form Saved")
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Sales Form not saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/sales_list')
 
 # Delete Assets
