@@ -6,7 +6,7 @@ def sales_directory_path(instance, filename):
     return 'Sales_Files/{0}/{1}'.format(instance.s_sale_number, filename)
 class SalesInfo(models.Model):
     s_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE,related_name='s_customer_name', db_column='s_customer_name', blank=True, null=True)
-    s_customer_new_name = models.CharField(blank=True, null=True,max_length=50)
+    s_customer_new_name = models.CharField(blank=True, null=True,max_length=500)
     s_customer_type = models.ForeignKey(CustomertypeInfo,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_customer_new = models.ForeignKey(Cusnewexist, on_delete=models.CASCADE, default='')
     s_industry_type = models.ForeignKey(Industrytype,blank=True, null=True, on_delete=models.CASCADE, default='')
@@ -17,7 +17,7 @@ class SalesInfo(models.Model):
     s_manpower_requirement = models.CharField(blank=True, null=True,max_length=30)
     s_supply_type = models.ForeignKey(Supplyinfo,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_location = models.ForeignKey(Location_info,blank=True, null=True, on_delete=models.CASCADE, default='')
-    s_Person_name = models.CharField(max_length=50)
+    s_Person_name = models.CharField(max_length=100)
     s_department = models.CharField(max_length=50)
     s_designation = models.CharField(max_length=50)
     s_contact_no = models.CharField(max_length=10)
