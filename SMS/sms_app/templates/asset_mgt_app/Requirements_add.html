@@ -121,6 +121,16 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("req_updated_by").value ='{{user_id}}';
+	var raised_by=document.getElementById("req_owner").value
+	if (raised_by=="")
+	{
+		document.getElementById("req_owner").value='{{user_id}}'
+	}
+	else
+	{
+		document.getElementById("req_owner").value=raised_by
+	}
+	alert(raised_by)
 	reqnum()
 	});
 </script>
