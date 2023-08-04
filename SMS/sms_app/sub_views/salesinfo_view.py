@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from ..forms import SalescommentForm,SalesinfoaddForm
 from ..models import Sales_Comments_Info,User_extInfo,SalesInfo
@@ -66,10 +67,16 @@ def sales_add(request, sales_id=0):
             form = SalesinfoaddForm(request.POST,request.FILES, instance=salesinfo)
         if form.is_valid():
             form.save()
-            print("Main Form Saved")
+            print("Sales Form Saved")
+            messages.success(request, 'Record Updated Successfully')
         else:
-            print("Main form not saved")
-        return redirect('/SMS/sales_list')
+            print("Sales Form not saved")
+            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+        sales_num = request.POST.get('s_sale_number')
+        sales_id = SalesInfo.objects.get(s_sale_number=sales_num).id
+        url = 'sales_update/' + str(sales_id)
+        return redirect(url)
+        # return redirect('/SMS/sales_list')
 
 # Delete Assets
 @login_required(login_url='login_page')
