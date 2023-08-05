@@ -14,7 +14,7 @@ class RequirementsInfo(models.Model):
     req_implementedby = models.ForeignKey(MyUser, on_delete=models.CASCADE,related_name='req_implementedby', db_column='req_implementedby', null=True,blank=True)
     req_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=2,null=True)
     req_remarks = models.TextField(max_length=500, default='',blank=True, null=True)
-    req_raisedon = models.DateTimeField(null=True,blank=True)
+    req_raisedon = models.DateField(null=True,blank=True)
     req_implementedon = models.DateField(null=True,blank=True)
     req_created_at = models.DateTimeField(null=True, auto_now_add=True)
     req_updated_at = models.DateTimeField(null=True, auto_now=True)

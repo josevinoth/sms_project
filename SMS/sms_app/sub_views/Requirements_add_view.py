@@ -33,10 +33,14 @@ def requirements_add(request,requirements_id=0):
         else:
             requirements = RequirementsInfo.objects.get(pk=requirements_id)
             form = RequirementForm(request.POST,request.FILES,instance=requirements)
+
         if form.is_valid():
             form.save()
             print("Requirement Form is Valid")
             messages.success(request, 'Record Updated Successfully')
+        else:
+            print("Requirement Form is Not Valid")
+            messages.error(request, 'Record Not Updated Successfully')
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/requirements_list')
 
