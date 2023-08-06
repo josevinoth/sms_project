@@ -80,7 +80,14 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#requirements_list').DataTable();
+    $('#requirements_list').DataTable({
+<!--        scrollY: 800,-->
+<!--        scrollX: true,-->
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    });
 } );
 </script>
 

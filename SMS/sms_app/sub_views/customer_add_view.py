@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from ..forms import CustomeraddForm
 from ..models import CustomerInfo
@@ -22,15 +23,30 @@ def customer_add(request,customer_id=0):
     else:
         if customer_id == 0:
             form = CustomeraddForm(request.POST,request.FILES)
+            if form.is_valid():
+                form.save()
+                print("Customer Form is Valid")
+                customer_name = request.POST.get('cu_nameshort')
+                customer_id = CustomerInfo.objects.get(cu_nameshort=customer_name).id
+                url = 'customer_update/' + str(customer_id)
+                messages.success(request, 'Record Updated Successfully')
+                return redirect(url)
+            else:
+                print("Form is Not Valid")
+                messages.error(request, 'Record Not Updated Successfully')
+                return redirect(request.META['HTTP_REFERER'])
         else:
             customer = CustomerInfo.objects.get(pk=customer_id)
             form = CustomeraddForm(request.POST,request.FILES,instance=customer)
-        if form.is_valid():
-            print("Form is Valid")
-            form.save()
-        else:
-            print("Form is Not Valid")
-        return redirect('/SMS/customer_list')
+            if form.is_valid():
+                form.save()
+                print("Customer Form is Valid")
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Form is Not Valid")
+                messages.error(request, 'Record Not Updated Successfully')
+            return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/customer_list')
 
 # List customer
 @login_required(login_url='login_page')

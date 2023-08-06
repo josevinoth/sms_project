@@ -10,7 +10,7 @@ class Loadingbay_Info(models.Model):
     lb_job_no = models.CharField(blank=False, null=False, max_length=50,default='')
     lb_invoice = models.CharField(blank=False, null=False,max_length=100,default='')
     # lb_material_handling = models.ForeignKey(Materialhandling_Info,on_delete=models.CASCADE,related_name='lb_material_handling', db_column='lb_material_handling')
-    lb_packing_list = models.ForeignKey(Received_not, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list')
+    lb_packing_list = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list')
     # lb_inward_pod = models.FileField(upload_to=loadingbay_directory_path, null=True)
     lb_eway_bill= models.CharField(blank=False, null=False, max_length=20,default='')
     lb_validity_date= models.DateTimeField(null=True)
