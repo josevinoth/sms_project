@@ -32,6 +32,7 @@
             <th>Insurance Name</th>
             <th>Policy Number</th>
             <th>Insurance Type</th>
+            <th>Vehicle Type</th>
             <th>Start Date</th>
             <th>Expiry Date</th>
             <th>Remaining Days</th>
@@ -51,6 +52,7 @@
                 <td> {{insuranceinfo.ins_name}}</td>
                 <td> {{insuranceinfo.ins_policy_no}}</td>
                 <td> {{insuranceinfo.ins_type}}</td>
+                <td> {{insuranceinfo.ins_vehicle_no}}</td>
                 <td> {{insuranceinfo.ins_start_date}}</td>
                 <td> {{insuranceinfo.ins_expiry_date}}</td>
                 <td> {{insuranceinfo.ins_validity_remaining}}</td>
@@ -81,7 +83,12 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#insurance_list').DataTable();
+    $('#insurance_list').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    });
 } );
 </script>
 {% endblock content %}
