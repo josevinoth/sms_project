@@ -251,12 +251,20 @@ def warehouseout_add(request, warehouseout_id=0):
             return redirect(request.META['HTTP_REFERER'])
         else:
             if warehouseout_form.is_valid():
+                dispatch_num_val = request.session.get('ses_dispatch_num_val')
+                Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_dispatch_num=dispatch_num_val)
+                Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_check_in_out=2)
                 warehouseout_form.save()
                 print("warehouseoutinfo is Valid")
-                dispatch_num_val = request.session.get('ses_dispatch_num_val')
-                Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_check_in_out=2)
-                Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_dispatch_num=dispatch_num_val)
-                dispatch_num_val = request.session.get('ses_dispatch_num_val')
+                # dispatch_num_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).id
+                # print('dispatch_num_id', dispatch_num_id)
+                wh_dispatch_list=list(Warehouse_goods_info.objects.all().values_list('wh_dispatch_num',flat=True))
+                for i in wh_dispatch_list:
+                    print(i)
+                    if i != 'None':
+                        dispatch_num_id = Dispatch_info.objects.get(dispatch_num=i).id
+                        print('dispatch_num_id', dispatch_num_id)
+                        Warehouse_goods_info.objects.filter(wh_dispatch_num=i).update(wh_dispatch_id=dispatch_num_id)
                 vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).dispatch_truck_type
                 Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_truck_type=vehicle_type)
                 check_in_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time)

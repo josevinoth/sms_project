@@ -13,6 +13,7 @@ def loadingbay_add(request, loadingbay_id=0):
     first_name = request.session.get('first_name')
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     wh_job_id = request.session.get('ses_gatein_id_nam')
+    shipper_invoice = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_invoice
     currency_EUR=Currency_type.objects.get(currency_type="EUR").converision_value
     currency_INR=Currency_type.objects.get(currency_type="INR").converision_value
     currency_USD=Currency_type.objects.get(currency_type="USD").converision_value
@@ -64,7 +65,6 @@ def loadingbay_add(request, loadingbay_id=0):
         warehousein_status = "No Status"
 
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-    wh_job_id = ses_gatein_id_nam
 
     # //Calculate Crane and Forklift cost
     wh_job_id = request.session.get('ses_gatein_id_nam')
@@ -107,6 +107,7 @@ def loadingbay_add(request, loadingbay_id=0):
                 'crane_nxt_2hr': crane_nxt_2hr,
                 'forklift_1st_2hr': forklift_1st_2hr,
                 'forklift_nxt_2hr': forklift_nxt_2hr,
+                'shipper_invoice': shipper_invoice,
             }
         else:
             print("I am inside get edit loading bay")
@@ -135,6 +136,7 @@ def loadingbay_add(request, loadingbay_id=0):
                 'crane_nxt_2hr': crane_nxt_2hr,
                 'forklift_1st_2hr': forklift_1st_2hr,
                 'forklift_nxt_2hr': forklift_nxt_2hr,
+                'shipper_invoice': shipper_invoice,
             }
         return render(request, "asset_mgt_app/loadingbay_add.html", context)
     else:
@@ -148,11 +150,11 @@ def loadingbay_add(request, loadingbay_id=0):
                                    'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
                     return redirect(request.META['HTTP_REFERER'])
                 else:
-                    print("Main Form Saved")
+                    print("Loadingbay Main Form Saved")
                     loadingbay_form.save()
                     messages.success(request, 'Record Updated Successfully')
             else:
-                print("Main Form Not saved")
+                print("Loadingbay Main Form Not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
 
             if loadingbayimg_form.is_valid():
@@ -160,10 +162,11 @@ def loadingbay_add(request, loadingbay_id=0):
                     messages.error(request,'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
                     return redirect(request.META['HTTP_REFERER'])
                 else:
-                    print("SubForm Saved")
+                    print("Loadingbay SubForm Saved")
                     loadingbayimg_form.save()
             else:
-                print("Sub Form Not saved")
+                print("Loadingbay Sub Form Not saved")
+
             job_num = request.POST.get('lb_job_no')
             job_id = Loadingbay_Info.objects.get(lb_job_no=job_num).id
             url = 'loadingbay_update/' + str(job_id)
@@ -181,10 +184,10 @@ def loadingbay_add(request, loadingbay_id=0):
                     return redirect(request.META['HTTP_REFERER'])
                 else:
                     loadingbay_form.save()
-                    print("Main Form Saved")
+                    print("Loadingbay Main Form Saved")
                     messages.success(request, 'Record Updated Successfully')
             else:
-                print("Main Form Not saved")
+                print("Loadingbay Main Form Not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
 
             if loadingbayimg_form.is_valid():
@@ -193,10 +196,20 @@ def loadingbay_add(request, loadingbay_id=0):
                                    'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
                     return redirect(request.META['HTTP_REFERER'])
                 else:
-                    print("SubForm Saved")
+                    print("Loadingbay SubForm Saved")
                     loadingbayimg_form.save()
             else:
-                print("Sub Form Not saved")
+                print("Loadingbay Sub Form Not saved")
+            loadingbay_wh_job_list = list(Loadingbay_Info.objects.all().values_list('lb_job_no', flat=True))
+            for i in loadingbay_wh_job_list:
+                print(i)
+                if i != 'None':
+                    try:
+                        loadingbay_job_num_id = Loadingbay_Info.objects.get(lb_job_no=i).id
+                        print('gatein_job_num_id', loadingbay_job_num_id)
+                        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_lb_job_no_id=loadingbay_job_num_id)
+                    except ObjectDoesNotExist:
+                        pass
             return redirect(request.META['HTTP_REFERER'])
             # return redirect('/SMS/gatein_list')
 
@@ -205,7 +218,6 @@ def load_currency_value(request):
     currency_type = request.GET.get('currency_type')
     # Fetch Currency Value
     currency_value = Currency_type.objects.get(id=currency_type).converision_value
-    print('currency_value', currency_value)
     data = {
         'currency_value': currency_value,
     }

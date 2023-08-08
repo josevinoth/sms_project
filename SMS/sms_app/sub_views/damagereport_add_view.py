@@ -38,7 +38,6 @@ def damagereport_add(request,damagereport_id=0):
     try:
         goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
                                                                                                 flat=True)  # count records
-        print(list(goods_status))
         goods_status_list = list(goods_status)
         if goods_status_list == []:
             damage_after_status = "Empty"
@@ -46,10 +45,8 @@ def damagereport_add(request,damagereport_id=0):
             damage_after_status = "None"
         elif all(element == 5 for element in (goods_status_list)):
             damage_after_status = "Completed"  # get goods status
-            print('damage_after_status', damage_after_status)
         else:
             damage_after_status = "No Status"  # get goods status
-            print('damage_after_status', damage_after_status)
     except ObjectDoesNotExist:
         damage_after_status = "No Status"
 
@@ -57,7 +54,6 @@ def damagereport_add(request,damagereport_id=0):
     try:
         warehousein_stack_layer = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
             'wh_stack_layer', flat=True)  # count records
-        print("warehousein_stack_layer_list", list(warehousein_stack_layer))
         warehousein_stack_layer_list = list(warehousein_stack_layer)
         if warehousein_stack_layer_list == []:
             warehousein_status = "Empty"
@@ -65,10 +61,8 @@ def damagereport_add(request,damagereport_id=0):
             warehousein_status = "None"
         elif None not in warehousein_stack_layer_list:
             warehousein_status = "Completed"  # get goods status
-            print('warehousein_status', warehousein_status)
         else:
             warehousein_status = "No Status"  # get goods status
-            print('warehousein_status', warehousein_status)
     except ObjectDoesNotExist:
         warehousein_status = "No Status"
 
@@ -99,9 +93,6 @@ def damagereport_add(request,damagereport_id=0):
             damagereport_form = DamagereportaddForm(instance=damagereport_info)
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.FILES, instance=damagereportimg_info)
-            print("gatein_status",gatein_status)
-            print("loadingbay_status",loadingbay_status)
-            print("damage_before_status",damage_before_status)
             context = {
                 'damagereport_form': damagereport_form,
                 'damagereportimg_form':damagereportimg_form,
@@ -147,18 +138,28 @@ def damagereport_add(request,damagereport_id=0):
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.POST,request.FILES,instance=damagereportimg_info)
             if damagereport_form.is_valid():
-                print("Main Form Saved")
+                print("Damage_Report Main Form Saved")
                 damagereport_form.save()
                 messages.success(request, 'Record Updated Successfully')
             else:
-                print("Main Form Not saved")
+                print("Damage_Report Form Not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
 
             if damagereportimg_form.is_valid():
-                print("SubForm Saved")
+                print("Damage_Report SubForm Saved")
                 damagereportimg_form.save()
             else:
-                print("Sub Form Not saved")
+                print("Damage_Report Sub Form Not saved")
+            dr_wh_job_list = list(DamagereportInfo.objects.all().values_list('dam_wh_job_num', flat=True))
+            for i in dr_wh_job_list:
+                print(i)
+                if i != 'None':
+                    try:
+                        dr_job_num_id = DamagereportInfo.objects.get(dam_wh_job_num=i).id
+                        print('gatein_job_num_id', dr_job_num_id)
+                        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_Dam_rep_job_num_id=dr_job_num_id)
+                    except ObjectDoesNotExist:
+                        pass
             return redirect(request.META['HTTP_REFERER'])
             # return redirect('/SMS/gatein_list')
 

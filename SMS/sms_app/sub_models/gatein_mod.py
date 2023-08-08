@@ -35,7 +35,7 @@ class Gatein_info(models.Model):
     # gatein_sbill_date = models.DateField(blank=True, null=True)
 
     class Meta:
-        ordering = ["gatein_invoice"]
+        ordering = ["gatein_job_no"]
 
     def __str__(self):
         return self.gatein_invoice

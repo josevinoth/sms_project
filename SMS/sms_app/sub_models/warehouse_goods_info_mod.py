@@ -2,10 +2,13 @@ import django
 from django.db import models
 from django.utils import timezone
 
-from ..models import VehicletypeInfo,Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
+from ..models import DamagereportInfo,Loadingbay_Info,Gatein_info,Dispatch_info,VehicletypeInfo,Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
 
 class Warehouse_goods_info(models.Model):
     wh_job_no = models.CharField(blank=False, null=False, max_length=20, default='')
+    wh_gate_injob_no_id = models.ForeignKey(Gatein_info, on_delete=models.CASCADE, related_name='wh_job_no_id',db_column='wh_job_no_id', null=True, blank=True)
+    wh_lb_job_no_id = models.ForeignKey(Loadingbay_Info, on_delete=models.CASCADE, related_name='wh_lb_job_no_id',db_column='wh_lb_job_no_id', null=True, blank=True)
+    wh_Dam_rep_job_num_id = models.ForeignKey(DamagereportInfo, on_delete=models.CASCADE,related_name='wh_Dam_rep_job_num_id', db_column='wh_Dam_rep_job_num_id',null=True, blank=True)
     wh_goods_invoice = models.CharField(blank=True, null=True, max_length=20)
     wh_goods_pieces = models.FloatField(default=0.0)
     wh_goods_length = models.FloatField(default=0.0)
@@ -64,6 +67,7 @@ class Warehouse_goods_info(models.Model):
     wh_crane_cost_g2h = models.FloatField(blank=True, null=True, default=0.0)
     wh_total_invoice_cost = models.FloatField(blank=True, null=True, default=0.0)
     wh_truck_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, null=True,blank=True)
+    wh_dispatch_id= models.ForeignKey(Dispatch_info, on_delete=models.CASCADE, null=True,blank=True)
 
 
 

@@ -127,10 +127,12 @@ def dispatch_goods_list(request,dispatch_id):
 
 @login_required(login_url='login_page')
 def dispatch_remove_goods(request,dispatch_id):
-    dispatch_num_update = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num="None")
-    dispatch_goods_checkin = Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=1)
+    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num="None")
+    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_id="")
+    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=1)
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=0)
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=None)
+    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_id="")
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
     dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice', flat=True).distinct())

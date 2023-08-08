@@ -172,34 +172,8 @@ def goods_add(request, goods_id=0):
             goods_form = GoodsaddForm(request.POST, instance=goodsinfo)
 
         if goods_form.is_valid():
-            print("Form is Valid")
+            print("Goods Form is Valid")
             goods_form.save()
-
-            # # Calculate loading/unloading charge per unit
-            # # wh_job_num=Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True)
-            # # for wh_job_id in wh_job_num:
-            # stock_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num',flat=True)
-            # for i in list(stock_num):
-            #     total_weight = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_goods_weight
-            #     no_of_pieces = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_goods_pieces
-            #     try:
-            #         weight_per_piece = ((total_weight) / (no_of_pieces))
-            #     except ZeroDivisionError:
-            #         weight_per_piece = float(0.0)
-            #     customer = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_customer
-            #     customer_id = CustomerInfo.objects.get(cu_name=customer).id
-            #     # Loading_unloading charge
-            #     piece_rate = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id,
-            #                                                     whrm_min_wt__lte=weight_per_piece,
-            #                                                     whrm_max_wt__gte=weight_per_piece,
-            #                                                     whrm_charge_type=3).values('whrm_rate')
-            #     if piece_rate:
-            #         piece_rate_val = piece_rate[0]['whrm_rate']
-            #     else:
-            #         piece_rate_val = 0.0
-            #     total_loading_cost =piece_rate_val*no_of_pieces
-            #     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_loading_charge_unit=piece_rate_val)
-            #     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_total_loading_cost=total_loading_cost)
 
             # Validate Invoice vs Actual weight & qty
             raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
@@ -213,12 +187,21 @@ def goods_add(request, goods_id=0):
             elif weight_cumsum > invoice_weight:
                 messages.error(request, 'Record Not Updated.Goods Check-In weight Exceeds Invoice Weight')
                 # transaction.set_rollback(True)
-
             else:
                 messages.success(request, 'Record Updated Successfully')
         else:
             print("Form is not Valid")
             messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+        goods_wh_job_list = list(Warehouse_goods_info.objects.all().values_list('wh_job_no', flat=True))
+        for i in goods_wh_job_list:
+            print(i)
+            if i != 'None':
+                try:
+                    gatein_job_num_id = Gatein_info.objects.get(gatein_job_no=i).id
+                    print('gatein_job_num_id', gatein_job_num_id)
+                    Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_gate_injob_no_id=gatein_job_num_id)
+                except ObjectDoesNotExist:
+                    pass
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
 

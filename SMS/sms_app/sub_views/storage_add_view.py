@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 
 from ..forms import GoodsaddForm,WarehoseinaddForm
-from ..models import Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo
+from ..models import Dispatch_info,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -86,6 +86,7 @@ def storage_list(request):
         'damagereport_list': DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id),
         'loadingbay_list': Loadingbay_Info.objects.filter(lb_job_no=wh_job_id),
         'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
+        'dispatch_list': Dispatch_info.objects.all(),
         'gatein_status': gatein_status,
         'loadingbay_status': loadingbay_status,
         'damage_before_status': damage_before_status,

@@ -76,7 +76,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipper Invoice</span>
 									</div>
-									{% render_field loadingbay_form.lb_invoice value=request.session.ses_wh_invoice class="form-control disable_a_href" %}
+									{% render_field loadingbay_form.lb_invoice id="lb_invoice" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -307,6 +307,7 @@ $(document).ready(function() {
 	var damage_before_status_id='{{damage_before_status}}';
 	var damage_after_status_id='{{damage_after_status}}';
 	var warehousein_status_id='{{warehousein_status}}';
+	document.getElementById("lb_invoice").value='{{shipper_invoice}}'
 
 	document.getElementById("lb_crane_charges_std_l2hr").value='{{crane_1st_2hr}}'
 	document.getElementById("lb_crane_charges_std_g2hr").value='{{crane_nxt_2hr}}'
