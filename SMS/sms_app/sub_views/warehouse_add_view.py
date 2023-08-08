@@ -262,9 +262,12 @@ def warehouseout_add(request, warehouseout_id=0):
                 for i in wh_dispatch_list:
                     print(i)
                     if i != 'None':
-                        dispatch_num_id = Dispatch_info.objects.get(dispatch_num=i).id
-                        print('dispatch_num_id', dispatch_num_id)
-                        Warehouse_goods_info.objects.filter(wh_dispatch_num=i).update(wh_dispatch_id=dispatch_num_id)
+                        try:
+                            dispatch_num_id = Dispatch_info.objects.get(dispatch_num=i).id
+                            print('dispatch_num_id', dispatch_num_id)
+                            Warehouse_goods_info.objects.filter(wh_dispatch_num=i).update(wh_dispatch_id=dispatch_num_id)
+                        except ObjectDoesNotExist:
+                            pass
                 vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).dispatch_truck_type
                 Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_truck_type=vehicle_type)
                 check_in_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time)
