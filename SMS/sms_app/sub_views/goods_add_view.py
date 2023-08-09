@@ -211,16 +211,6 @@ def goods_add(request, goods_id=0):
         else:
             print("Form is not Valid")
             messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-        goods_wh_job_list = list(Warehouse_goods_info.objects.all().values_list('wh_job_no', flat=True))
-        for i in goods_wh_job_list:
-            print(i)
-            if i != 'None':
-                try:
-                    gatein_job_num_id = Gatein_info.objects.get(gatein_job_no=i).id
-                    print('gatein_job_num_id', gatein_job_num_id)
-                    Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_gate_injob_no_id=gatein_job_num_id)
-                except ObjectDoesNotExist:
-                    pass
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/stock_list')
 
