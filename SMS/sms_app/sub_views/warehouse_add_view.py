@@ -244,11 +244,13 @@ def warehouseout_add(request, warehouseout_id=0):
             return redirect(request.META['HTTP_REFERER'])
         else:
             if warehouseout_form.is_valid():
+                warehouseout_form.save()
                 dispatch_num_val = request.session.get('ses_dispatch_num_val')
+                print('warehouseout_id',warehouseout_id)
+                print('dispatch_num_val',dispatch_num_val)
                 Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_dispatch_num=dispatch_num_val)
                 Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_check_in_out=2)
-                warehouseout_form.save()
-                print("warehouseoutinfo is Valid")
+                print("warehouseoutinfo is Jose Valid")
                 try:
                     dispatch_num_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).id
                     Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_num_id)
