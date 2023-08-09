@@ -149,8 +149,6 @@ def warehousein_add(request, warehousein_id=0):
                     messages.success(request, 'Goods Stored!')
                     warehousein_form.save()
             # //Update Invoice weight, qty,value
-            # wh_invoice_list = Warehouse_goods_info.objects.all().values_list('wh_job_no',flat=True).distinct()
-            # for wh_job_id in wh_invoice_list:
             invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('id',flat=True)
             stock_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num',flat=True)
             job_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_job_no',flat=True)
@@ -165,8 +163,6 @@ def warehousein_add(request, warehousein_id=0):
                 total_qty=total_qty+(Warehouse_goods_info.objects.get(wh_qr_rand_num=j).wh_goods_pieces)
 
             for i in range(0,len(invoice_id)):
-                print(i)
-                print(job_num[i])
                 if i==0:
                     Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=invoice_amount_inr)
                     Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=invoice_weight)
@@ -204,9 +200,6 @@ def warehousein_add(request, warehousein_id=0):
                         LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_final)
                     else:
                         print("No Area")
-                # else:
-                #     print('check_in_out_list', check_in_out_list[j]['wh_check_in_out'])
-
             total_area_data=LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_size
             total_volume_data=LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_total_volume
             available_area_final =round((total_area_data-area_final),3)
@@ -256,18 +249,12 @@ def warehouseout_add(request, warehouseout_id=0):
                 Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_check_in_out=2)
                 warehouseout_form.save()
                 print("warehouseoutinfo is Valid")
-                # dispatch_num_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).id
-                # print('dispatch_num_id', dispatch_num_id)
-                wh_dispatch_list=list(Warehouse_goods_info.objects.all().values_list('wh_dispatch_num',flat=True))
-                for i in wh_dispatch_list:
-                    print(i)
-                    if i != 'None':
-                        try:
-                            dispatch_num_id = Dispatch_info.objects.get(dispatch_num=i).id
-                            print('dispatch_num_id', dispatch_num_id)
-                            Warehouse_goods_info.objects.filter(wh_dispatch_num=i).update(wh_dispatch_id=dispatch_num_id)
-                        except ObjectDoesNotExist:
-                            pass
+                try:
+                    dispatch_num_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).id
+                    Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_num_id)
+                except ObjectDoesNotExist:
+                    pass
+
                 vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).dispatch_truck_type
                 Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_truck_type=vehicle_type)
                 check_in_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time)
@@ -366,16 +353,11 @@ def load_bays_origin(request):
     bays_id = BayInfo.objects.filter(bay_branch_name=wh_branch_id,Bay_unit_name=untid_id).values('id').distinct()
     bays_count = bays.count()
     for k in range(bays_count):
-        print("k",k)
         bay_list.append(bays[k]['bay_bayname'])
         bay_id.append(bays_id[k]['id'])
     # for m in bay_list:
-    #     print("m",m)
     #     bay_name=BayInfo.objects.filter(id=m).values('bay_bayname')
     #     bay_name_list.append(bay_name[0]['bay_bayname'])
-    #     print(bay_name)
-    # print(bay_name_list)
-    # print(len(list(bay_name_list)))
     data = {
         'bay_id':bay_id,
         'bay_name_list':bay_list,
@@ -411,9 +393,6 @@ def load_area_volume(request):
     bayId = request.GET.get('bayId')
     req_area_val = float(request.GET.get('req_area_val'))
     req_volume_val = float(request.GET.get('req_volume_val'))
-    print('wh_branch_id',wh_branch_id)
-    print('untid_id',untid_id)
-    print('bayId',bayId)
     # Fetch Bay details
     lm_available_area_val = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id,lm_wh_unit=untid_id,lm_areaside=bayId).values('lm_available_area').distinct()
     lm_available_volume_val = LocationmasterInfo.objects.filter(lm_wh_location=wh_branch_id,lm_wh_unit=untid_id,lm_areaside=bayId).values('lm_available_volume').distinct()

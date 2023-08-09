@@ -189,6 +189,25 @@ def goods_add(request, goods_id=0):
                 # transaction.set_rollback(True)
             else:
                 messages.success(request, 'Record Updated Successfully')
+
+            # update gate-in, Loading bay, damage report ID in Warehouse_goods_info table
+            try:
+                gatein_job_num_id = Gatein_info.objects.get(gatein_job_no=wh_job_id).id
+                Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_gate_injob_no_id=gatein_job_num_id)
+            except ObjectDoesNotExist:
+                pass
+
+            try:
+                loadingbay_job_num_id = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).id
+                Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_lb_job_no_id=loadingbay_job_num_id)
+            except ObjectDoesNotExist:
+                pass
+
+            try:
+                dr_job_num_id = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).id
+                Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_Dam_rep_job_num_id=dr_job_num_id)
+            except ObjectDoesNotExist:
+                pass
         else:
             print("Form is not Valid")
             messages.error(request, 'Record Not Saved.Please Enter All Required Fields')

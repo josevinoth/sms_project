@@ -146,8 +146,7 @@ def loadingbay_add(request, loadingbay_id=0):
             loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES)
             if loadingbay_form.is_valid():
                 if crane_1st_2hr == None or crane_nxt_2hr == None or forklift_1st_2hr == None or forklift_nxt_2hr == None:
-                    messages.error(request,
-                                   'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
+                    messages.error(request,'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
                     return redirect(request.META['HTTP_REFERER'])
                 else:
                     print("Loadingbay Main Form Saved")
@@ -192,24 +191,13 @@ def loadingbay_add(request, loadingbay_id=0):
 
             if loadingbayimg_form.is_valid():
                 if crane_1st_2hr == None or crane_nxt_2hr == None or forklift_1st_2hr == None or forklift_nxt_2hr == None:
-                    messages.error(request,
-                                   'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
+                    messages.error(request,'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
                     return redirect(request.META['HTTP_REFERER'])
                 else:
                     print("Loadingbay SubForm Saved")
                     loadingbayimg_form.save()
             else:
                 print("Loadingbay Sub Form Not saved")
-            loadingbay_wh_job_list = list(Loadingbay_Info.objects.all().values_list('lb_job_no', flat=True))
-            for i in loadingbay_wh_job_list:
-                print(i)
-                if i != 'None':
-                    try:
-                        loadingbay_job_num_id = Loadingbay_Info.objects.get(lb_job_no=i).id
-                        print('gatein_job_num_id', loadingbay_job_num_id)
-                        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_lb_job_no_id=loadingbay_job_num_id)
-                    except ObjectDoesNotExist:
-                        pass
             return redirect(request.META['HTTP_REFERER'])
             # return redirect('/SMS/gatein_list')
 

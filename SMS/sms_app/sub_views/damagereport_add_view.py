@@ -150,16 +150,6 @@ def damagereport_add(request,damagereport_id=0):
                 damagereportimg_form.save()
             else:
                 print("Damage_Report Sub Form Not saved")
-            dr_wh_job_list = list(DamagereportInfo.objects.all().values_list('dam_wh_job_num', flat=True))
-            for i in dr_wh_job_list:
-                print(i)
-                if i != 'None':
-                    try:
-                        dr_job_num_id = DamagereportInfo.objects.get(dam_wh_job_num=i).id
-                        print('gatein_job_num_id', dr_job_num_id)
-                        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_Dam_rep_job_num_id=dr_job_num_id)
-                    except ObjectDoesNotExist:
-                        pass
             return redirect(request.META['HTTP_REFERER'])
             # return redirect('/SMS/gatein_list')
 
