@@ -90,7 +90,7 @@ def invoice_add(request,invoice_id=0):
                     total_loading_cost = piece_rate_val * no_of_pieces
                 else:
                     try:
-                        piece_rate = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_min_wt__lte=weight_per_piece,whrm_max_wt__gte=weight_per_piece, whrm_charge_type=3)
+                        piece_rate = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_min_wt__lte=weight_per_piece,whrm_max_wt__gt=weight_per_piece, whrm_charge_type=3)
                         piece_rate_val = piece_rate.whrm_rate
                         total_loading_cost = piece_rate_val * no_of_pieces
                     except ObjectDoesNotExist:
