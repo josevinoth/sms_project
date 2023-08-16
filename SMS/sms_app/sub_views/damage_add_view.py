@@ -12,7 +12,11 @@ def damage_add(request,damage_id=0):
         else:
             damage=DamageInfo.objects.get(pk=damage_id)
             form = DamageaddForm(instance=damage)
-        return render(request, "asset_mgt_app/damage_add.html", {'form': form,'first_name': first_name})
+        context={
+                'form': form,
+                'first_name': first_name,
+                }
+        return render(request, "asset_mgt_app/damage_add.html",context )
     else:
         if damage_id == 0:
             form = DamageaddForm(request.POST)

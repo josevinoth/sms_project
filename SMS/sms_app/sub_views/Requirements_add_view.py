@@ -1,4 +1,6 @@
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+
 from ..forms import RequirementForm
 from ..models import RequirementsInfo
 from django.shortcuts import render, redirect
@@ -31,10 +33,17 @@ def requirements_add(request,requirements_id=0):
         if requirements_id == 0:
             form = RequirementForm(request.POST,request.FILES)
             if form.is_valid():
+                # Generate Random requirement number
+                try:
+                    last_id = (RequirementsInfo.objects.values_list('id', flat=True)).last()
+                    req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
+                except ObjectDoesNotExist:
+                    req_num_next = str('Req_') + str(randint(10000, 99999))
                 form.save()
                 print("Requirement Form is Valid")
-                req_number = request.POST.get('req_number')
-                req_id = RequirementsInfo.objects.get(req_number=req_number).id
+                last_id = (RequirementsInfo.objects.values_list('id', flat=True)).last()
+                RequirementsInfo.objects.filter(id=last_id).update(req_number=req_num_next)
+                req_id = RequirementsInfo.objects.get(req_number=req_num_next).id
                 messages.success(request, 'Record Updated Successfully')
                 return redirect('/SMS/requirements_update/'+ str(req_id))
             else:

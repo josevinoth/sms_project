@@ -235,7 +235,8 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
-						<button type="submit" class="btn btn-success" onclick="	myjobnum()"><i class="fas fa-check"></i> Save</button>
+<!--						<button type="submit" class="btn btn-success" onclick="	myjobnum()"><i class="fas fa-check"></i> Save</button>-->
+						<button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Save</button>
 					</div>
 				</div>
 			</div>
@@ -243,36 +244,36 @@
 		<div class="col-2"></div>
 	</div>
 </form>
-<script>
-function myjobnum() {
-  var jn=document.getElementById("job_num").value
-  var user_branch='{{user_branch}}';
-  var wh_job_num_val= '{{wh_job_num}}';
-  if (jn=="")
-	{
-		if (user_branch=="BVM Chennai")
-			{
-				document.getElementById("job_num").value ="MAA_"+"WH_Job_"+ wh_job_num_val;
-			}
-		else if (user_branch=="BVM Benguluru")
-			{
-				document.getElementById("job_num").value ="BLR_"+"WH_Job_"+ wh_job_num_val;
-			}
-		else if (user_branch=="BVM Hyderabad")
-			{
-				document.getElementById("job_num").value ="HYD_"+"WH_Job_"+ wh_job_num_val;
-			}
-		else
-			{
-				document.getElementById("job_num").value ="PNY_"+"WH_Job_"+ wh_job_num_val;
-			}
-	}
-	else
-	{
-  		document.getElementById("job_num").value=jn;
-  	}
-}
-</script>
+<!--<script>-->
+<!--function myjobnum() {-->
+<!--  var jn=document.getElementById("job_num").value-->
+<!--  var user_branch='{{user_branch}}';-->
+<!--  var wh_job_num_val= '{{wh_job_num}}';-->
+<!--  if (jn=="")-->
+<!--	{-->
+<!--		if (user_branch=="BVM Chennai")-->
+<!--			{-->
+<!--				document.getElementById("job_num").value ="MAA_"+"WH_Job_"+ wh_job_num_val;-->
+<!--			}-->
+<!--		else if (user_branch=="BVM Benguluru")-->
+<!--			{-->
+<!--				document.getElementById("job_num").value ="BLR_"+"WH_Job_"+ wh_job_num_val;-->
+<!--			}-->
+<!--		else if (user_branch=="BVM Hyderabad")-->
+<!--			{-->
+<!--				document.getElementById("job_num").value ="HYD_"+"WH_Job_"+ wh_job_num_val;-->
+<!--			}-->
+<!--		else-->
+<!--			{-->
+<!--				document.getElementById("job_num").value ="PNY_"+"WH_Job_"+ wh_job_num_val;-->
+<!--			}-->
+<!--	}-->
+<!--	else-->
+<!--	{-->
+<!--  		document.getElementById("job_num").value=jn;-->
+<!--  	}-->
+<!--}-->
+<!--</script>-->
 <script>
 $(document).ready(function() {
 	var gatein_status_id = '{{gatein_status}}';

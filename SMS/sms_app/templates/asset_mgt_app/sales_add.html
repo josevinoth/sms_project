@@ -355,24 +355,24 @@ $(document).ready(function() {
 	decmaker_enabler()
 	cusnewexist_enabler()
 	buss_days_calc()
-	salenum()
+<!--	salenum()-->
 	});
 </script>
-<script>
-function salenum() {
-<!--  var ran=Math.floor((Math.random() * 1000000) + 1)-->
-  var ran='{{sales_num}}'
-  var jn=document.getElementById("s_sale_number").value
-  if (jn=="")
-  {
-  	document.getElementById("s_sale_number").value ="S_"+ ran;
-  }
-  else
-  {
-  	document.getElementById("s_sale_number").value =jn;
-  }
-}
-</script>
+<!--<script>-->
+<!--function salenum() {-->
+<!--&lt;!&ndash;  var ran=Math.floor((Math.random() * 1000000) + 1)&ndash;&gt;-->
+<!--  var ran='{{sales_num}}'-->
+<!--  var jn=document.getElementById("s_sale_number").value-->
+<!--  if (jn=="")-->
+<!--  {-->
+<!--  	document.getElementById("s_sale_number").value ="S_"+ ran;-->
+<!--  }-->
+<!--  else-->
+<!--  {-->
+<!--  	document.getElementById("s_sale_number").value =jn;-->
+<!--  }-->
+<!--}-->
+<!--</script>-->
 <script>
 function buss_days_calc() {
 	var bus_start_date=new Date(document.getElementById("s_yesdate_business").value)

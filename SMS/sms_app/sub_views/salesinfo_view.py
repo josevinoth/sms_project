@@ -1,5 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+
 from ..forms import SalescommentForm,SalesinfoaddForm
 from ..models import Sales_Comments_Info,User_extInfo,SalesInfo
 from django.shortcuts import render, redirect
@@ -10,7 +12,7 @@ def sales_list(request):
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
     context = {
-        'sales_list': SalesInfo.objects.all(),
+        'sales_list': SalesInfo.objects.filter(s_created_by=user_id),
         'first_name': first_name,
         'role': role,
     }
@@ -22,11 +24,11 @@ def sales_add(request, sales_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
-    # Generate Random sales number
-    last_id = (SalesInfo.objects.values_list('id', flat=True)).last()
-    if last_id == None:
-        last_id = 0
-    sales_num = randint(10000, 99999) + last_id + 1
+    # # Generate Random sales number
+    # last_id = (SalesInfo.objects.values_list('id', flat=True)).last()
+    # if last_id == None:
+    #     last_id = 0
+    # sales_num = randint(10000, 99999) + last_id + 1
     if request.method == "GET":
         if sales_id == 0:
             form = SalesinfoaddForm()
@@ -37,7 +39,7 @@ def sales_add(request, sales_id=0):
                 'first_name': first_name,
                 'created_by': created_by,
                 'user_id': user_id,
-                'sales_num': sales_num,
+                # 'sales_num': sales_num,
             }
             return render(request, "asset_mgt_app/sales_add.html", context)
         else:
@@ -54,20 +56,28 @@ def sales_add(request, sales_id=0):
                 'first_name': first_name,
                 'user_id': user_id,
                 'comments_list_filterd': comments_list_filterd,
-                'sales_num': sales_num,
+                # 'sales_num': sales_num,
             }
             return render(request, "asset_mgt_app/sales_edit.html", context)
     else:
         if sales_id == 0:
             form = SalesinfoaddForm(request.POST, request.FILES)
             if form.is_valid():
+                try:
+                    last_id = (SalesInfo.objects.values_list('id', flat=True)).last()
+                    sales_num_next =str('S_')+str(int(((SalesInfo.objects.get(id=last_id)).s_sale_number).replace('S_', ''))+1)
+                except ObjectDoesNotExist:
+                    sales_num_next = str('S_') + str(randint(10000, 99999))
+
                 form.save()
                 print("Sales Form Saved")
+                last_id = (SalesInfo.objects.values_list('id', flat=True)).last()
+                SalesInfo.objects.filter(id=last_id).update(s_sale_number=sales_num_next)
                 messages.success(request, 'Record Updated Successfully')
-                sales_num = request.POST.get('s_sale_number')
-                sales_id = SalesInfo.objects.get(s_sale_number=sales_num).id
-                url = 'sales_update/' + str(sales_id)
-                print(url)
+                # sales_num = request.POST.get('s_sale_number')
+                sales_id = SalesInfo.objects.get(s_sale_number=sales_num_next).id
+                # url = 'sales_update/' + str(sales_id)
+                # print(url)
                 return redirect('/SMS/sales_update/' + str(sales_id))
                 # return redirect(url)
             else:

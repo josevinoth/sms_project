@@ -456,7 +456,7 @@ $(document).ready(function() {
 	challan_damage_btn_active()
 	package_type_chng()
 	fumigation_process_chng()
-	stocknum()
+<!--	stocknum()-->
 	fumigation_action_chng()
   });
 </script>
@@ -529,18 +529,18 @@ function fumigation_action_chng() {
 	 	}
 }
 </script>
-<script>
-function stocknum() {
- 	var jn1=document.getElementById("wh_qr_rand_num").value;
-  	var wh_stock_num_val= '{{wh_stock_num}}';
-  if (jn1=="")
-	{
-	  document.getElementById("wh_qr_rand_num").value ="Stock_"+ wh_stock_num_val;
-	}
-  else
-	{
-	   document.getElementById("wh_qr_rand_num").value =jn1;
-	}
-}
-</script>
+<!--<script>-->
+<!--function stocknum() {-->
+<!-- 	var jn1=document.getElementById("wh_qr_rand_num").value;-->
+<!--  	var wh_stock_num_val= '{{wh_stock_num}}';-->
+<!--  if (jn1=="")-->
+<!--	{-->
+<!--	  document.getElementById("wh_qr_rand_num").value ="Stock_"+ wh_stock_num_val;-->
+<!--	}-->
+<!--  else-->
+<!--	{-->
+<!--	   document.getElementById("wh_qr_rand_num").value =jn1;-->
+<!--	}-->
+<!--}-->
+<!--</script>-->
 {% endblock content %}

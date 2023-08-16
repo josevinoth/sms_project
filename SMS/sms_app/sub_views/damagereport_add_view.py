@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from ..forms import DamagereportaddForm,DamagereportImagesForm
-from ..models import DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages
+from ..models import Location_info,DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from ..models import User_extInfo
@@ -12,12 +12,8 @@ def damagereport_add(request,damagereport_id=0):
     wh_job_id = request.session.get('ses_gatein_id_nam')
     user_id = request.session.get('ses_userID')
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
-    # Generate Random GRN number
-    try:
-        last_id=(DamagereportInfo.objects.values_list('id',flat=True)).last()
-    except ObjectDoesNotExist:
-        last_id =0
-    wh_grn_num = randint(10000, 99999) + last_id+1
+    user_branch_id = Location_info.objects.get(loc_name=user_branch).id
+
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -30,14 +26,12 @@ def damagereport_add(request,damagereport_id=0):
         loadingbay_status = "No Status"
     # Damage/Before Status Check
     try:
-        damage_before_status = DamagereportInfo.objects.get(
-            dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
+        damage_before_status = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
     except ObjectDoesNotExist:
         damage_before_status = "No Status"
     # Damage/After Status Check
     try:
-        goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
-                                                                                                flat=True)  # count records
+        goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',flat=True)  # count records
         goods_status_list = list(goods_status)
         if goods_status_list == []:
             damage_after_status = "Empty"
@@ -85,7 +79,6 @@ def damagereport_add(request,damagereport_id=0):
                 'damage_before_status': damage_before_status,
                 'warehousein_status': warehousein_status,
                 'user_branch': user_branch,
-                'wh_grn_num':wh_grn_num,
             }
         else:
             print("I am inside get edit damagereport")
@@ -116,21 +109,42 @@ def damagereport_add(request,damagereport_id=0):
             damagereportimg_form=DamagereportImagesForm(request.POST,request.FILES)
             if damagereport_form.is_valid():
                 print("Main Form Saved")
+                if damagereportimg_form.is_valid():
+                    print("SubForm Saved")
+                    damagereportimg_form.save()
+                else:
+                    print("Sub Form Not saved")
+                # Generate Random GRN number
+                if user_branch_id == 1:
+                    branch = 'BLR_GRN_'
+                elif user_branch_id == 2:
+                    branch = 'MAA_GRN_'
+                elif user_branch_id == 3:
+                    branch = 'PNY_GRN_'
+                else:
+                    branch = 'HYD_GRN_'
+                try:
+                    group = []
+                    for i in wh_job_id:
+                        try:
+                            int(i)
+                            group.append(i)
+                        except ValueError:
+                            pass
+                    wh_grn_num_next = str(branch) + str(int(''.join(group)))
+                except ObjectDoesNotExist:
+                    wh_grn_num_next = str(branch) + str(randint(10000, 99999))
                 damagereport_form.save()
+                last_id = (DamagereportInfo.objects.values_list('id', flat=True)).last()
+                DamagereportInfo.objects.filter(id=last_id).update(dam_GRN_num=wh_grn_num_next)
                 messages.success(request, 'Record Updated Successfully')
+                job_id = DamagereportInfo.objects.get(dam_GRN_num=wh_grn_num_next).id
+                url = 'damagereport_update/' + str(job_id)
+                return redirect(url)
             else:
                 print("Main Form Not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-
-            if damagereportimg_form.is_valid():
-                print("SubForm Saved")
-                damagereportimg_form.save()
-            else:
-                print("Sub Form Not saved")
-            job_num = request.POST.get('dam_wh_job_num')
-            job_id = DamagereportInfo.objects.get(dam_wh_job_num=job_num).id
-            url = 'damagereport_update/' + str(job_id)
-            return redirect(url)
+                return redirect(request.META['HTTP_REFERER'])
         else:
             print("I am inside post edit damagereport")
             damagereport_info = DamagereportInfo.objects.get(pk=damagereport_id)

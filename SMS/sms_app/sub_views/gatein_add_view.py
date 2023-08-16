@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
+from ..models import Location_info,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from ..models import User_extInfo
@@ -18,14 +18,10 @@ def gatein_add(request, gatein_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+    user_branch_id = Location_info.objects.get(loc_name=user_branch).id
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     wh_job_id = ses_gatein_id_nam
     tot_package = request.POST.get('gatein_no_of_pkg')
-    # Generate Random WH_Job number
-    last_id=(Gatein_info.objects.values_list('id',flat=True)).last()
-    if last_id==None:
-        last_id =0
-    wh_job_num = randint(10000, 99999) + last_id+1
     if request.method == "GET":
         if gatein_id == 0:
             print("I am inside Get add Gatein")
@@ -40,7 +36,6 @@ def gatein_add(request, gatein_id=0):
                 'wh_job_id': wh_job_id,
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
                 'user_branch':user_branch,
-                'wh_job_num':wh_job_num,
             }
         else:
             print("I am inside get edit Gatein")
@@ -63,7 +58,7 @@ def gatein_add(request, gatein_id=0):
             request.session['ses_consignee'] = Gatein_info.objects.get(pk=gatein_id).gatein_consignee
             request.session['ses_po_num'] = wh_po_num
             request.session['ses_wh_gatein_id'] = gatein_id
-            # wh_job_id_sess=request.session.get('ses_gatein_id_nam')
+
             # Gate In Status Check
             try:
                 gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -138,15 +133,39 @@ def gatein_add(request, gatein_id=0):
             gatein_form = GateinaddForm(request.POST)
             if gatein_form.is_valid():
                 print("Form is Valid")
+                # Generate Random WH_job number
+                if user_branch_id == 1:
+                    branch = 'BLR_WH_Job_'
+                elif user_branch_id == 2:
+                    branch = 'MAA_WH_Job_'
+                elif user_branch_id == 3:
+                    branch = 'PNY_WH_Job_'
+                else:
+                    branch = 'HYD_WH_Job_'
+                try:
+                    last_id = (Gatein_info.objects.values_list('id', flat=True)).last()
+                    wh_job_num=Gatein_info.objects.get(id=last_id).gatein_job_no
+                    group=[]
+                    for i in wh_job_num:
+                        try:
+                            int(i)
+                            group.append(i)
+                        except ValueError:
+                            pass
+                    wh_job_num_next = str(branch) + str(int(''.join(group)) + 1)
+                except ObjectDoesNotExist:
+                    wh_job_num_next = str(branch) + str(randint(10000, 99999))
                 gatein_form.save()
+                last_id = (Gatein_info.objects.values_list('id', flat=True)).last()
+                Gatein_info.objects.filter(id=last_id).update(gatein_job_no=wh_job_num_next)
                 messages.success(request, 'Record Updated Successfully')
+                job_id = Gatein_info.objects.get(gatein_job_no=wh_job_num_next).id
+                url = 'gatein_update/' + str(job_id)
+                return redirect(url)
             else:
                 print("Form is In-Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-            job_num=request.POST.get('gatein_job_no')
-            job_id=Gatein_info.objects.get(gatein_job_no=job_num).id
-            url = 'gatein_update/' + str(job_id)
-            return redirect(url)
+                return redirect(request.META['HTTP_REFERER'])
         else:
             print("I am inside post edit Gatein")
             gatein_info = Gatein_info.objects.get(pk=gatein_id)

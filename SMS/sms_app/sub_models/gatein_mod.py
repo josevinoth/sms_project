@@ -2,7 +2,7 @@ from django.db import models
 from ..models import Stock_type,MyUser,StatusList,VehicletypeInfo,CustomerInfo,TrbusinesstypeInfo,CustomerdepartmentInfo,Gatein_pre_info,GstexcemptionInfo
 
 class Gatein_info(models.Model):
-    gatein_job_no = models.CharField(blank=False, null=False, max_length=200)
+    gatein_job_no = models.CharField(blank=True, null=True, max_length=200)
     gatein_invoice = models.CharField(blank=False, null=False,max_length=400)
     gatein_customer = models.ForeignKey(CustomerInfo,on_delete=models.CASCADE, blank=False, null=False)
     gatein_customer_type = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, blank=False, null=False)

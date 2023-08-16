@@ -5,7 +5,7 @@ def requirements_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
     return 'Req_Files/{0}/{1}'.format(instance.req_number, filename)
 class RequirementsInfo(models.Model):
-    req_number = models.CharField(max_length=100, default='')
+    req_number = models.CharField(max_length=100,null=True,blank=True, default='')
     req_backlogs = models.TextField(max_length=500, default='')
     req_module = models.ForeignKey(Reqmodule, on_delete=models.CASCADE, default='')
     req_phase = models.CharField(max_length=100, default=1)

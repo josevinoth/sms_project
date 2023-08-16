@@ -187,36 +187,36 @@
 		<div class="col-2"></div>
 	</div>
 </form>
-<script>
-function grnnum() {
-  var jn=document.getElementById("grn_num").value
-  var user_branch='{{user_branch}}';
-  var wh_grn_num_val= '{{wh_grn_num}}';
-  if (jn=="")
-	{
-		if (user_branch=="BVM Chennai")
-			{
-		 		document.getElementById("grn_num").value ="MAA_"+"GRN_"+ wh_grn_num_val;
-		 	}
-		else if (user_branch=="BVM Benguluru")
-			{
-		 		document.getElementById("grn_num").value ="BLR_"+"GRN_"+ wh_grn_num_val;
-		 	}
-		else if (user_branch=="BVM Hyderabad")
-			{
-				document.getElementById("grn_num").value ="HYD_"+"GRN_"+ wh_grn_num_val;
-			}
-		else
-			{
-				document.getElementById("grn_num").value ="PNY_"+"GRN_"+ wh_grn_num_val;
-			}
-	}
-	else
-	{
-  		document.getElementById("grn_num").value=jn;
-  	}
-}
-</script>
+<!--<script>-->
+<!--function grnnum() {-->
+<!--  var jn=document.getElementById("grn_num").value-->
+<!--  var user_branch='{{user_branch}}';-->
+<!--  var wh_grn_num_val= '{{wh_grn_num}}';-->
+<!--  if (jn=="")-->
+<!--	{-->
+<!--		if (user_branch=="BVM Chennai")-->
+<!--			{-->
+<!--		 		document.getElementById("grn_num").value ="MAA_"+"GRN_"+ wh_grn_num_val;-->
+<!--		 	}-->
+<!--		else if (user_branch=="BVM Benguluru")-->
+<!--			{-->
+<!--		 		document.getElementById("grn_num").value ="BLR_"+"GRN_"+ wh_grn_num_val;-->
+<!--		 	}-->
+<!--		else if (user_branch=="BVM Hyderabad")-->
+<!--			{-->
+<!--				document.getElementById("grn_num").value ="HYD_"+"GRN_"+ wh_grn_num_val;-->
+<!--			}-->
+<!--		else-->
+<!--			{-->
+<!--				document.getElementById("grn_num").value ="PNY_"+"GRN_"+ wh_grn_num_val;-->
+<!--			}-->
+<!--	}-->
+<!--	else-->
+<!--	{-->
+<!--  		document.getElementById("grn_num").value=jn;-->
+<!--  	}-->
+<!--}-->
+<!--</script>-->
 <script>
 function challan_damage_btn_active() {
 	var damage_type_val =document.getElementById("dam_damage_type").value;
@@ -324,7 +324,7 @@ $(document).ready(function() {
 		$('#warehousein_btn').removeClass('disable_a_href');
 		$('#warehousein_btn').addClass('btn-warning');
 	}
-	grnnum()
+<!--	grnnum()-->
   });
 </script>
 {% endblock content %}

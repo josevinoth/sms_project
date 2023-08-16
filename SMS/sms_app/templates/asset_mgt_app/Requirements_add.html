@@ -131,21 +131,21 @@ $(document).ready(function() {
 	{
 		document.getElementById("req_owner").value=raised_by
 	}
-	reqnum()
+<!--	reqnum()-->
 	});
 </script>
-<script>
-function reqnum() {
-  var ran='{{req_num}}'
-  var jn=document.getElementById("req_number").value
-  if (jn=="")
-  {
-  	document.getElementById("req_number").value ="Req_"+ ran;
-  }
-  else
-  {
-  	document.getElementById("req_number").value =jn;
-  }
-}
-</script>
+<!--<script>-->
+<!--function reqnum() {-->
+<!--  var ran='{{req_num}}'-->
+<!--  var jn=document.getElementById("req_number").value-->
+<!--  if (jn=="")-->
+<!--  {-->
+<!--  	document.getElementById("req_number").value ="Req_"+ ran;-->
+<!--  }-->
+<!--  else-->
+<!--  {-->
+<!--  	document.getElementById("req_number").value =jn;-->
+<!--  }-->
+<!--}-->
+<!--</script>-->
 {% endblock content %}

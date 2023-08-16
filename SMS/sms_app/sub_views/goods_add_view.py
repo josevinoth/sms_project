@@ -31,13 +31,6 @@ def goods_add(request, goods_id=0):
     gatein_wh_job_id=Gatein_info.objects.get(gatein_job_no=wh_job_id).id
     shipper_invoice=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_invoice
 
-    # Generate Random WH_stock number
-    try:
-        last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
-    except ObjectDoesNotExist:
-        last_id = 0
-    wh_stock_num = randint(10000, 99999) + last_id + 1
-
     # Gate In Status Check
     try:
         gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -135,7 +128,6 @@ def goods_add(request, goods_id=0):
                 'goods_checkin_count': goods_checkin_count_val,
                 'gatein_wh_job_id': gatein_wh_job_id,
                 'shipper_invoice': shipper_invoice,
-                'wh_stock_num':wh_stock_num
             }
         else:
             print("I am inside get edit Goods")
@@ -166,53 +158,70 @@ def goods_add(request, goods_id=0):
         if goods_id == 0:
             print("I am inside post add Goods")
             goods_form = GoodsaddForm(request.POST)
+            if goods_form.is_valid():
+                print("Goods Form is Valid")
+                # Generate Random WH_stock number
+                try:
+                    last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
+                    wh_stock_num = str('Stock_') + str(int(((Warehouse_goods_info.objects.get(id=last_id)).wh_qr_rand_num).replace('Stock_', '')) + 1)
+                except ObjectDoesNotExist:
+                    wh_stock_num = str('Stock_') + str(randint(10000, 99999))
+                # wh_stock_num = last_id + 1
+                goods_form.save()
+                last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
+                Warehouse_goods_info.objects.filter(id=last_id).update(wh_qr_rand_num=wh_stock_num)
+                messages.success(request, 'Record saved successfully')
+            else:
+                print("Sales Form not saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            return redirect(request.META['HTTP_REFERER'])
         else:
             print("I am inside post edit Goods")
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(request.POST, instance=goodsinfo)
+            if goods_form.is_valid():
+                goods_form.save()
+                print("Goods Form is Valid")
+                # Validate Invoice vs Actual weight & qty
+                raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
+                weigth_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_weight',flat=True)
+                cumsum = sum(raw_data)
+                weight_cumsum = sum(weigth_data)
+                if cumsum > tot_package:
+                    messages.error(request, 'Record Not Updated.Number of Pacakges Exceeds Invoice Count')
+                    # transaction.set_rollback(True)
 
-        if goods_form.is_valid():
-            print("Goods Form is Valid")
-            goods_form.save()
+                elif weight_cumsum > invoice_weight:
+                    messages.error(request, 'Record Not Updated.Goods Check-In weight Exceeds Invoice Weight')
+                    # transaction.set_rollback(True)
+                else:
+                    messages.success(request, 'Record Updated Successfully')
 
-            # Validate Invoice vs Actual weight & qty
-            raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
-            weigth_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_weight',flat=True)
-            cumsum = sum(raw_data)
-            weight_cumsum = sum(weigth_data)
-            if cumsum > tot_package:
-                messages.error(request, 'Record Not Updated.Number of Pacakges Exceeds Invoice Count')
-                # transaction.set_rollback(True)
+                # update gate-in ID in Warehouse_goods_info table
+                try:
+                    gatein_job_num_id = Gatein_info.objects.get(gatein_job_no=wh_job_id).id
+                    Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_gate_injob_no_id=gatein_job_num_id)
+                except ObjectDoesNotExist:
+                    pass
 
-            elif weight_cumsum > invoice_weight:
-                messages.error(request, 'Record Not Updated.Goods Check-In weight Exceeds Invoice Weight')
-                # transaction.set_rollback(True)
+                # update Loading bay ID in Warehouse_goods_info table
+                try:
+                    loadingbay_job_num_id = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).id
+                    Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_lb_job_no_id=loadingbay_job_num_id)
+                except ObjectDoesNotExist:
+                    pass
+
+                # update damage report ID in Warehouse_goods_info table
+                try:
+                    dr_job_num_id = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).id
+                    Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_Dam_rep_job_num_id=dr_job_num_id)
+                except ObjectDoesNotExist:
+                    pass
             else:
-                messages.success(request, 'Record Updated Successfully')
-
-            # update gate-in, Loading bay, damage report ID in Warehouse_goods_info table
-            try:
-                gatein_job_num_id = Gatein_info.objects.get(gatein_job_no=wh_job_id).id
-                Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_gate_injob_no_id=gatein_job_num_id)
-            except ObjectDoesNotExist:
-                pass
-
-            try:
-                loadingbay_job_num_id = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).id
-                Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_lb_job_no_id=loadingbay_job_num_id)
-            except ObjectDoesNotExist:
-                pass
-
-            try:
-                dr_job_num_id = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).id
-                Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_Dam_rep_job_num_id=dr_job_num_id)
-            except ObjectDoesNotExist:
-                pass
-        else:
-            print("Form is not Valid")
-            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-        return redirect(request.META['HTTP_REFERER'])
-        # return redirect('/SMS/stock_list')
+                print("Form is not Valid")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            return redirect(request.META['HTTP_REFERER'])
+            # return redirect('/SMS/stock_list')
 
 # Delete goods
 @login_required(login_url='login_page')
