@@ -206,6 +206,27 @@ def warehousein_add(request, warehousein_id=0):
             available_volume_final =round((total_volume_data-volume_final),3)
             LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_area=available_area_final)
             LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_volume=available_volume_final)
+
+            # update gate-in ID in Warehouse_goods_info table
+            try:
+                gatein_job_num_id = Gatein_info.objects.get(gatein_job_no=wh_job_id).id
+                Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_gate_injob_no_id=gatein_job_num_id)
+            except ObjectDoesNotExist:
+                pass
+
+            # update Loading bay ID in Warehouse_goods_info table
+            try:
+                loadingbay_job_num_id = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).id
+                Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_lb_job_no_id=loadingbay_job_num_id)
+            except ObjectDoesNotExist:
+                pass
+
+            # update damage report ID in Warehouse_goods_info table
+            try:
+                dr_job_num_id = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).id
+                Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_Dam_rep_job_num_id=dr_job_num_id)
+            except ObjectDoesNotExist:
+                pass
         else:
             print("warehousein_form is not Valid")
             messages.error(request, 'Record not Updated!')
