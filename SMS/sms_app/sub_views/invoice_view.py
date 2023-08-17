@@ -160,7 +160,7 @@ def invoice_add(request,invoice_id=0):
                 invoice_id.sort()
                 for i in range(0, len(invoice_id)):
                     if i == 0:
-                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=warehouse_charge_1)
+                        Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=round(warehouse_charge_1,2))
                         Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
                         Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_l2h=crane_cost_l2hr)
                         Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_g2h=crane_cost_g2hr)
@@ -293,7 +293,7 @@ def shipper_invoice_list(request,voucher_id):
     shipper_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
     if customer_type_id==2:
         print("Inside Exclusive Loop")
-        invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_check_in_out=1,wh_voucher_num=None)
+        invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_voucher_num=None)
     else:
         print("Inside Non Exclusive Loop")
         invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val, wh_check_in_out=2,wh_voucher_num=None)
