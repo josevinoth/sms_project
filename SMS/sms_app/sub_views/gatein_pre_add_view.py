@@ -51,11 +51,9 @@ def gatein_pre_add(request, gatein_pre_id=0):
                     pre_gatein_num = (int((Gatein_pre_info.objects.get(id=last_id)).gatein_pre_number) + 1)
                 except ObjectDoesNotExist:
                     pre_gatein_num = (randint(10000, 99999))
-                print('pre_gatein_num',pre_gatein_num)
                 gatein_pre_form.save()
                 last_id = (Gatein_pre_info.objects.values_list('id', flat=True)).last()
                 last_id_img = (Gatein_pre_info_att.objects.values_list('id', flat=True)).last()
-                print('last_id_img',last_id_img)
                 Gatein_pre_info.objects.filter(id=last_id).update(gatein_pre_number=pre_gatein_num)
                 messages.success(request, 'Record Updated Successfully')
                 job_id = Gatein_pre_info.objects.get(gatein_pre_number=pre_gatein_num).id
@@ -107,7 +105,6 @@ def gatein_pre_list(request):
 def gatein_pre_delete(request,gatein_pre_id):
     gatein_pre_del = Gatein_pre_info.objects.get(pk=gatein_pre_id)
     gatein_pre_number_sess = Gatein_pre_info.objects.get(pk=gatein_pre_id).gatein_pre_number
-    print(gatein_pre_number_sess)
     gatein_pre_att_del=Gatein_pre_info_att.objects.get(gatein_pre_number_att=gatein_pre_number_sess)
     gatein_pre_del.delete()
     gatein_pre_att_del.delete()
