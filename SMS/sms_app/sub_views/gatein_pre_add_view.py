@@ -57,7 +57,6 @@ def gatein_pre_add(request, gatein_pre_id=0):
                 messages.success(request, 'Record Updated Successfully')
                 job_id = Gatein_pre_info.objects.get(gatein_pre_number=pre_gatein_num).id
                 url = 'gatein_pre_update/' + str(job_id)
-
                 if gatein_preimg_form.is_valid():
                     print("Pre-Gate-in Sub Form is Valid")
                     gatein_preimg_form.save()
