@@ -11,11 +11,6 @@ from django.contrib import messages
 def requirements_add(request,requirements_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    # Generate Random requirement number
-    last_id = (RequirementsInfo.objects.values_list('id', flat=True)).last()
-    if last_id == None:
-        last_id = 0
-    req_num = randint(10000, 99999) + last_id + 1
     if request.method == "GET":
         if requirements_id == 0:
             form = RequirementForm()
@@ -25,7 +20,6 @@ def requirements_add(request,requirements_id=0):
         context={
                 'form': form,
                 'first_name': first_name,
-                'req_num': req_num,
                 'user_id': user_id,
                 }
         return render(request, "asset_mgt_app/requirements_add.html", context)
