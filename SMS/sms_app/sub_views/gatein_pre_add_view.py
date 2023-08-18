@@ -22,8 +22,6 @@ def gatein_pre_add(request, gatein_pre_id=0):
             print("I am inside Get add Pre Gatein")
             gatein_pre_form = Gatein_preaddForm()
         else:
-            gatein_pre_number_sess=Gatein_pre_info.objects.get(pk=gatein_pre_id).gatein_pre_number
-            request.session['gatein_pre_number_sess'] = gatein_pre_number_sess
             gatein_pre_info = Gatein_pre_info.objects.get(pk=gatein_pre_id)
             gatein_pre_form = Gatein_preaddForm(instance=gatein_pre_info)
         context = {
@@ -58,8 +56,6 @@ def gatein_pre_add(request, gatein_pre_id=0):
                 return redirect(request.META['HTTP_REFERER'])
         else:
             print("I am inside post edit Pre Gatein")
-            gatein_pre_number_sess_val =  request.session['gatein_pre_number_sess']
-            print('gatein_pre_number_sess_val',gatein_pre_number_sess_val)
             gatein_pre_info = Gatein_pre_info.objects.get(pk=gatein_pre_id)
             gatein_pre_form = Gatein_preaddForm(request.POST,request.FILES,instance=gatein_pre_info)
 
