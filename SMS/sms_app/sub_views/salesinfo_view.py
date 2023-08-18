@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..forms import SalescommentForm,SalesinfoaddForm
-from ..models import Sales_Comments_Info,User_extInfo,SalesInfo
+from ..models import RoleInfo,Sales_Comments_Info,User_extInfo,SalesInfo
 from django.shortcuts import render, redirect
 from random import randint
 @login_required(login_url='login_page')
@@ -11,8 +11,17 @@ def sales_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
+    role_id=RoleInfo.objects.get(role_name=role).id
+    print('role',role)
+    print('role_id',role_id)
+    if role_id==3:
+        sales_list= SalesInfo.objects.all()
+    elif role_id==1:
+        sales_list = SalesInfo.objects.all()
+    else:
+        sales_list = SalesInfo.objects.filter(s_created_by=user_id)
     context = {
-        'sales_list': SalesInfo.objects.filter(s_created_by=user_id),
+        'sales_list': sales_list,
         'first_name': first_name,
         'role': role,
     }

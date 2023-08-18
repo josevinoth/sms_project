@@ -17,9 +17,9 @@ class Gatein_preaddForm(forms.ModelForm):
 
 class Gatein_pre_att_addForm(forms.ModelForm):
     # dam_OTL_pic = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
-    gatein_pre_number_att = forms.CharField(widget=HiddenInput(), required=False)
-    gatein_pre_shipment_att = forms.FileField(required=False)
-    gatein_pre_cust_appr_att = forms.FileField(required=False)
+    # gatein_pre_number_att = forms.CharField(widget=HiddenInput(), required=False)
+    # gatein_pre_shipment_att = forms.FileField(required=False)
+    # gatein_pre_cust_appr_att = forms.FileField(required=False)
     class Meta:
         model = Gatein_pre_info_att
         fields = '__all__'

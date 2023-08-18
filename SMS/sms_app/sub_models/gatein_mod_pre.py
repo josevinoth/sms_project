@@ -28,6 +28,6 @@ class Gatein_pre_info(models.Model):
         return self.gatein_pre_number
 
 class Gatein_pre_info_att(models.Model):
-    gatein_pre_number_att = models.CharField(max_length=300, null=True, default='')
-    gatein_pre_shipment_att = models.FileField(upload_to=pre_checkin_directory_path, null=True)
-    gatein_pre_cust_appr_att = models.FileField(upload_to=pre_checkin_directory_path, null=True)
+    gatein_pre_number_att = models.CharField(max_length=300, blank=True,null=True, default='')
+    gatein_pre_shipment_att = models.FileField(upload_to=pre_checkin_directory_path, blank=True,null=True)
+    gatein_pre_cust_appr_att = models.FileField(upload_to=pre_checkin_directory_path, blank=True,null=True)

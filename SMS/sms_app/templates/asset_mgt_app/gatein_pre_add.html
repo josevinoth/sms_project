@@ -16,94 +16,81 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Pre Gate-In ID</span>
 									</div>
-									{% render_field gatein_pre_form.gatein_pre_number id="gatein_pre_number" class="form-control disable_a_href" id="gatein_pre_transporter" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									{% render_field gatein_pre_form.gatein_pre_number id="gatein_pre_number" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Branch</span>
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_branch class="form-control disable_a_href" id="gatein_pre_branch" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Transporter</span>
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_transporter class="form-control" id="gatein_pre_transporter" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Truck Number</span>
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_truck_number class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Truck Type</span>
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_truck_type id="gatein_pre_truck_type" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Name</span>
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_driver id="gatein_pre_driver" class="form-control"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Number</span>
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_contact_number class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver DL Number</span>
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_DL_number class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Arrival Date & Time</span>
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_arrival_date_time type="datetime-local" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">OTL</span>
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_otl class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_status class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field gatein_pre_form.gatein_pre_updated_by id="gatein_pre_updated_by" hidden="True" class="form-control" %}
-								{% render_field gatein_preimg_form.gatein_pre_number_att id="gatein_pre_number_att" class="form-control" %}
+								{% render_field gatein_preimg_form.gatein_pre_number_att id="gatein_pre_number_att" hidden="True" value=request.session.gatein_pre_number_sess class="form-control" %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipment Details</span>
 									</div>
 									{% render_field gatein_preimg_form.gatein_pre_shipment_att id="gatein_pre_shipment_att" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Approval</span>
 									</div>
 									{% render_field gatein_preimg_form.gatein_pre_cust_appr_att id="gatein_pre_cust_appr_att" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
 						</div>
@@ -131,26 +118,9 @@
 	</div>
 </form>
 <script>
-function pre_gate_in_num() {
-  var ran=Math.floor((Math.random() * 1000000) + 1)
-  var jn=document.getElementById("gatein_pre_number").value
-  if (jn=="")
-	{
-		document.getElementById("gatein_pre_number").value =ran;
-		document.getElementById("gatein_pre_number_att").value =ran;
-	}
-	else
-	{
-  		document.getElementById("gatein_pre_number").value=jn;
-  		document.getElementById("gatein_pre_number_att").value=jn;
-  	}
-}
-</script>
-<script>
 $(document).ready(function() {
 	document.getElementById("gatein_pre_updated_by").value ='{{user_id}}';
 	document.getElementById("gatein_pre_branch").value ='{{user_branch_id}}';
-	pre_gate_in_num()
   });
 </script>
 
