@@ -172,7 +172,7 @@ def goods_add(request, goods_id=0):
                 Warehouse_goods_info.objects.filter(id=last_id).update(wh_qr_rand_num=wh_stock_num)
                 messages.success(request, 'Record saved successfully')
             else:
-                print("Sales Form not saved")
+                print("Goods Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
             return redirect(request.META['HTTP_REFERER'])
         else:
