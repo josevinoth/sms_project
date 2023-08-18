@@ -20,7 +20,7 @@ def gatein_pre_add(request, gatein_pre_id=0):
     user_branch_id=Location_info.objects.get(loc_name=user_branch).id
     if request.method == "GET":
         if gatein_pre_id == 0:
-            print("I am inside Get add Gatein")
+            print("I am inside Get add Pre Gatein")
             gatein_pre_form = Gatein_preaddForm()
             gatein_preimg_form = Gatein_pre_att_addForm()
         else:
@@ -40,11 +40,11 @@ def gatein_pre_add(request, gatein_pre_id=0):
         return render(request, "asset_mgt_app/gatein_pre_add.html", context)
     else:
         if gatein_pre_id == 0:
-            print("I am inside post add Gatein")
+            print("I am inside post add Pre-Gatein")
             gatein_pre_form = Gatein_preaddForm(request.POST)
             gatein_preimg_form = Gatein_pre_att_addForm(request.POST,request.FILES)
             if gatein_pre_form.is_valid():
-                print("Main Form is Valid")
+                print( "Pre-Gate-in Main Form is Valid")
                 # Generate Random pre-gatein number
                 try:
                     last_id = (Gatein_pre_info.objects.values_list('id', flat=True)).last()
@@ -53,26 +53,27 @@ def gatein_pre_add(request, gatein_pre_id=0):
                     pre_gatein_num = (randint(10000, 99999))
                 gatein_pre_form.save()
                 last_id = (Gatein_pre_info.objects.values_list('id', flat=True)).last()
-                last_id_img = (Gatein_pre_info_att.objects.values_list('id', flat=True)).last()
                 Gatein_pre_info.objects.filter(id=last_id).update(gatein_pre_number=pre_gatein_num)
                 messages.success(request, 'Record Updated Successfully')
                 job_id = Gatein_pre_info.objects.get(gatein_pre_number=pre_gatein_num).id
                 url = 'gatein_pre_update/' + str(job_id)
 
                 if gatein_preimg_form.is_valid():
-                    print("Sub Form is Valid")
+                    print("Pre-Gate-in Sub Form is Valid")
                     gatein_preimg_form.save()
-                    Gatein_pre_info_att.objects.filter(id=last_id_img + 1).update(gatein_pre_number_att=pre_gatein_num)
+                    last_id_img = (Gatein_pre_info_att.objects.values_list('id', flat=True)).last()
+                    Gatein_pre_info_att.objects.filter(id=last_id_img).update(gatein_pre_number_att=pre_gatein_num)
                 else:
-                    print("Sub Form Not Valid")
+                    print("Pre-Gate-in Sub Form Not Valid")
                 return redirect(url)
             else:
-                print("Main Form is In-Valid")
+                print("Pre-Gate-in Main Form is In-Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
                 return redirect(request.META['HTTP_REFERER'])
         else:
-            print("I am inside post edit Gatein")
+            print("I am inside post edit Pre Gatein")
             gatein_pre_number_sess_val =  request.session['gatein_pre_number_sess']
+            print('gatein_pre_number_sess_val',gatein_pre_number_sess_val)
             gatein_pre_info = Gatein_pre_info.objects.get(pk=gatein_pre_id)
             gatein_pre_form = Gatein_preaddForm(request.POST, instance=gatein_pre_info)
             gatein_preimg_info = Gatein_pre_info_att.objects.get(gatein_pre_number_att=gatein_pre_number_sess_val)
