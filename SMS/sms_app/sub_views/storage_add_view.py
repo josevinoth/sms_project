@@ -69,28 +69,22 @@ def storage_list(request):
         warehousein_status = "No Status"
 
     # calculate storage days
-    # stocks=list(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num',flat=True))
-    stocks=list(Warehouse_goods_info.objects.all().values_list('wh_qr_rand_num',flat=True))
+    stocks=list(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num',flat=True))
     for i in stocks:
         goods_status=Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_check_in_out
         goods_status_id=Check_in_out.objects.get(check_in_out_name=goods_status).id
         if goods_status_id==1:
-            try:
-                check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
-                current_date = date.today()
-                date_diff = (current_date - check_in_date)  # Differnce between dates
-                date_diff_days = date_diff.days
-                Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
-            except TypeError:
-                pass
-        else:
-            pass
-        # elif goods_status_id==2:
-        #     check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
-        #     check_out_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkout_time)
-        #     date_diff = (check_out_date - check_in_date)  # Differnce between dates
-        #     date_diff_days = date_diff.days
-        #     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
+            check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
+            current_date = date.today()
+            date_diff = (current_date - check_in_date)  # Differnce between dates
+            date_diff_days = date_diff.days
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
+        elif goods_status_id==2:
+            check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
+            check_out_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkout_time)
+            date_diff = (check_out_date - check_in_date)  # Differnce between dates
+            date_diff_days = date_diff.days
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
     context = {
         'first_name': first_name,
         'warehousein_form': warehousein_form,
