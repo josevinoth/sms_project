@@ -1,0 +1,158 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="" id="stockpurchases_add"  >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Stock Purchases</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Category</span>
+									</div>
+									{% render_field form.sp_category id="sp_category" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Type</span>
+									</div>
+									{% render_field form.sp_stock_type id="sp_stock_type" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Type Of Wood</span>
+									</div>
+									{% render_field form.sp_type_of_wood id="sp_type_of_wood" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Source</span>
+									</div>
+									{% render_field form.sp_source id="sp_source" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor Name</span>
+									</div>
+									{% render_field form.sp_vendor_name id="sp_vendor_bill" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor Bill</span>
+									</div>
+									{% render_field form.sp_vendor_bill id="sp_vendor_bill" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor Bill Date</span>
+									</div>
+									{% render_field form.sp_vendor_bill_date id="sp_vendor_bill_date" type="Date" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Thick/Height</span>
+									</div>
+									{% render_field form.sp_thick_height id="os_thick_height" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width</span>
+									</div>
+									{% render_field form.sp_width id="sp_width" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length</span>
+									</div>
+									{% render_field form.sp_length id="sp_length" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">CFT</span>
+									</div>
+									{% render_field form.sp_cft id="sp_cft" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Price</span>
+									</div>
+									{% render_field form.sp_price id="sp_price" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quantity</span>
+									</div>
+									{% render_field form.sp_quantity id="sp_quantity" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total CFT</span>
+									</div>
+									{% render_field form.sp_total_cft  id="sp_total_cft" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Value</span>
+									</div>
+									{% render_field form.sp_value id="sp_value" class="form-control " %}
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST</span>
+									</div>
+									{% render_field form.sp_gst id="sp_gst" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST Amount</span>
+									</div>
+									{% render_field form.sp_gst_amount id="sp_gst_amount"  class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Bill Amount</span>
+									</div>
+									{% render_field form.sp_totalbill_amount id="sp_totalbill_amount" class="form-control " %}
+								</div>
+								{% render_field form.sp_updated_by id="sp_updated_by" hidden="True" class="form-control" %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'stockpurchases_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("sp_updated_by").value ='{{user_id}}';
+	});
+</script>
+
+{% endblock content %}

@@ -1,0 +1,79 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Quote List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'quote_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="quote_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Date</th>
+            <th>Item Value</th>
+            <th>Freight Charges</th>
+            <th>Handling Charges</th>
+            <th>Total</th>
+            <th>Updated at</th>
+            <th>Updated By</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+        {% for quoteinfo in quote_list %}
+        <tr>
+            <td> {{quoteinfo.qt_date}}</td>
+            <td> {{quoteinfo.qt_item_value}}</td>
+            <td> {{quoteinfo.qt_freight_charges}}</td>
+            <td> {{quoteinfo.qt_handling_charges}}</td>
+            <td> {{quoteinfo.qt_total}}</td>
+            <td> {{quoteinfo.qt_updated_at}}</td>
+            <td> {{quoteinfo.qt_updated_by}}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'quote_update' quoteinfo.id %}" class="btn btn-primary">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'quote_delete' quoteinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#quote_list').DataTable({
+         order: [0, 'asc' ],
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ],
+    });
+} );
+</script>
+
+{% endblock content %}

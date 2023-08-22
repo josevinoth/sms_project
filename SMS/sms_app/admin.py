@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Reqbugimprove,Reqmodule,Tripstatusinfo,Labels_pasted_Info,Bvmproduct,Business_Sol_info,Prespectivec_customer_NoInfo,Business_won_NoInfo,YesNoInfo,faciltiyrequirementinfo,manpowerrequirementinfo,CustomerInfo,CustomertypeInfo,Busnotwon,Salestatus,Callpurpose,Callnature,Calltype,Supplyinfo,Packreuqirementinfo,Transrequirementinfo,Whrequirementinfo,Industrytype,Cusnewexist,servicetype_info,ExpenseTypeInfo,ExpenseUOMInfo,Fumigation_ActionInfo,Department_info,RoleInfo,PaymentcycleInfo,StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo,StackingInfo,Wh_chargetype
+from .models import Source,Category,Stock_type,Naconsumables,Natypeofaccess,Nawoodnorms,Nabvmcustomer,Natypeofwood,Nawoodtreatmentreq,Natypeofplywood,Naplywoodthickness,Natypeofreq,Natypeofpack,Natypeofwork,Naitemname,Reqbugimprove,Reqmodule,Tripstatusinfo,Labels_pasted_Info,Bvmproduct,Business_Sol_info,Prespectivec_customer_NoInfo,Business_won_NoInfo,YesNoInfo,faciltiyrequirementinfo,manpowerrequirementinfo,CustomerInfo,CustomertypeInfo,Busnotwon,Salestatus,Callpurpose,Callnature,Calltype,Supplyinfo,Packreuqirementinfo,Transrequirementinfo,Whrequirementinfo,Industrytype,Cusnewexist,servicetype_info,ExpenseTypeInfo,ExpenseUOMInfo,Fumigation_ActionInfo,Department_info,RoleInfo,PaymentcycleInfo,StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo,StackingInfo,Wh_chargetype
 
 # Register your models here.
 admin.site.register(StatusList)
@@ -46,3 +46,18 @@ admin.site.register(Labels_pasted_Info)
 admin.site.register(Tripstatusinfo)
 admin.site.register(Reqmodule)
 admin.site.register(Reqbugimprove)
+admin.site.register(Naitemname)
+admin.site.register(Natypeofwork)
+admin.site.register(Natypeofpack)
+admin.site.register(Natypeofreq)
+admin.site.register(Naplywoodthickness)
+admin.site.register(Natypeofplywood)
+admin.site.register(Nawoodtreatmentreq)
+admin.site.register(Natypeofwood)
+admin.site.register(Nabvmcustomer)
+admin.site.register(Nawoodnorms)
+admin.site.register(Natypeofaccess)
+admin.site.register(Naconsumables)
+admin.site.register(Stock_type)
+admin.site.register(Category)
+admin.site.register(Source)
