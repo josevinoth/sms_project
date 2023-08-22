@@ -71,7 +71,6 @@ def storage_list(request):
     # calculate storage days
     stocks=list(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num',flat=True))
     for i in stocks:
-        print(i)
         goods_status=Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_check_in_out
         goods_status_id=Check_in_out.objects.get(check_in_out_name=goods_status).id
         if goods_status_id==1:

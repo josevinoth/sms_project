@@ -1,8 +1,12 @@
 from django import forms
+
+
 from ..models import ConsignmentdetailInfo
 
 class ConsignmentdetailaddForm(forms.ModelForm):
     co_cusrefnum_check = forms.BooleanField(required=False)
+    co_cusrefnum = forms.CharField(required=False)
+
     class Meta:
         model = ConsignmentdetailInfo
         fields = '__all__'
@@ -14,9 +18,4 @@ class ConsignmentdetailaddForm(forms.ModelForm):
         self.fields['co_status'].empty_label = "--Select--"
         self.fields['co_cusrefnum'].empty_label = "--Select--"
         self.fields['co_businesstype'].empty_label = "--Select--"
-        co_cusrefnum_check = self.fields('co_cusrefnum_check')
-        print(co_cusrefnum_check)
-        if co_cusrefnum_check == False:
-            self.fields['co_cusrefnum'].required=False
-        else:
-            self.fields['co_cusrefnum'].required = True
+
