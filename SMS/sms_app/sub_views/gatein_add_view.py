@@ -46,8 +46,6 @@ def gatein_add(request, gatein_id=0):
             wh_total_packages = Gatein_info.objects.get(pk=gatein_id).gatein_no_of_pkg
             wh_invoice_weight = Gatein_info.objects.get(pk=gatein_id).gatein_weight
             wh_po_num = Gatein_info.objects.get(pk=gatein_id).gatein_po_num
-            print('wh_customer_name',wh_customer_name)
-            print('wh_customer_type',wh_customer_type)
             request.session['ses_gatein_id_nam'] = wh_job_id
             request.session['ses_customer_name'] = str(wh_customer_name)
             request.session['ses_customer_type'] = str(wh_customer_type)
@@ -143,7 +141,7 @@ def gatein_add(request, gatein_id=0):
                 else:
                     branch = 'HYD_WH_Job_'
                 try:
-                    last_id = (Gatein_info.objects.values_list('id', flat=True)).last()
+                    last_id = Gatein_info.objects.latest('id').id
                     wh_job_num=Gatein_info.objects.get(id=last_id).gatein_job_no
                     group=[]
                     for i in wh_job_num:
@@ -247,4 +245,3 @@ def load_pre_gate_in(request):
         }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))
-

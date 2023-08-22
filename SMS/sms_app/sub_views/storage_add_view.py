@@ -1,11 +1,9 @@
-import json
-
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from datetime import date, datetime
 
-from ..forms import GoodsaddForm,WarehoseinaddForm
-from ..models import Dispatch_info,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo
-from django.shortcuts import render, redirect
+from ..forms import WarehoseinaddForm
+from ..models import Check_in_out,Dispatch_info,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo
+from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist
 
 # Add goods
@@ -15,7 +13,6 @@ def storage_list(request):
     print("I am inside Get add warehousein")
     warehousein_form = WarehoseinaddForm()
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
-    print(ses_gatein_id_nam)
     wh_job_id = ses_gatein_id_nam
     # Gate In Status Check
     try:
@@ -38,7 +35,6 @@ def storage_list(request):
     try:
         goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
                                                                                                 flat=True)  # count records
-        print(list(goods_status))
         goods_status_list = list(goods_status)
         if goods_status_list != []:
             if goods_status_list[0] == 5:
@@ -47,20 +43,16 @@ def storage_list(request):
                 result = False
         else:
             result = False
-        print(result)
         if (result):
             damage_after_status = "Completed"  # get goods status
-            print(damage_after_status)
         else:
             damage_after_status = "No Status"  # get goods status
-            print(damage_after_status)
     except ObjectDoesNotExist:
         damage_after_status = "No Status"
     # Warehousein Status Check
     try:
         warehousein_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
             'wh_check_in_out', flat=True)  # count records
-        print(list(warehousein_status))
         warehousein_status_list = list(warehousein_status)
         if warehousein_status_list != []:
             if warehousein_status_list[0] == 9:
@@ -69,15 +61,31 @@ def storage_list(request):
                 result = False
         else:
             result = False
-        print(result)
         if (result):
             warehousein_status = "Completed"  # get goods status
-            print(warehousein_status)
         else:
             warehousein_status = "No Status"  # get goods status
-            print(warehousein_status)
     except ObjectDoesNotExist:
         warehousein_status = "No Status"
+
+    # calculate storage days
+    stocks=list(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num',flat=True))
+    for i in stocks:
+        print(i)
+        goods_status=Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_check_in_out
+        goods_status_id=Check_in_out.objects.get(check_in_out_name=goods_status).id
+        if goods_status_id==1:
+            check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
+            current_date = date.today()
+            date_diff = (current_date - check_in_date)  # Differnce between dates
+            date_diff_days = date_diff.days
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
+        elif goods_status_id==2:
+            check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
+            check_out_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkout_time)
+            date_diff = (check_out_date - check_in_date)  # Differnce between dates
+            date_diff_days = date_diff.days
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
     context = {
         'first_name': first_name,
         'warehousein_form': warehousein_form,

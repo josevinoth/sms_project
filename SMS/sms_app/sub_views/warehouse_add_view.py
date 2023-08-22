@@ -1,11 +1,11 @@
-from datetime import timedelta, date, datetime
+from datetime import date, datetime
 import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from ..forms import GoodsaddForm,WarehoseinaddForm,WarehoseoutaddForm
-from ..models import Dispatch_info,CustomerInfo,Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
+from ..forms import WarehoseinaddForm,WarehoseoutaddForm
+from ..models import Fumigation_ActionInfo,Dispatch_info,Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -95,6 +95,7 @@ def warehousein_add(request, warehousein_id=0):
             wh_job_id = ses_gatein_id_nam
             goodsinfo = Warehouse_goods_info.objects.get(pk=warehousein_id)
             warehousein_form = WarehoseinaddForm(instance=goodsinfo)
+
             context = {
                 'first_name': first_name,
                 'warehousein_form': warehousein_form,
@@ -242,8 +243,8 @@ def warehouseout_add(request, warehouseout_id=0):
         warehouseoutinfo = Warehouse_goods_info.objects.get(pk=warehouseout_id)
         warehouseout_form = WarehoseoutaddForm(instance=warehouseoutinfo)
         context = {
-                      'first_name': first_name,
-                      'warehouseout_form': warehouseout_form,
+            'first_name': first_name,
+            'warehouseout_form': warehouseout_form,
         }
         return render(request, "asset_mgt_app/warehouseout_add.html", context)
     else:
@@ -267,11 +268,9 @@ def warehouseout_add(request, warehouseout_id=0):
             if warehouseout_form.is_valid():
                 warehouseout_form.save()
                 dispatch_num_val = request.session.get('ses_dispatch_num_val')
-                print('warehouseout_id',warehouseout_id)
-                print('dispatch_num_val',dispatch_num_val)
                 Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_dispatch_num=dispatch_num_val)
                 Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_check_in_out=2)
-                print("warehouseoutinfo is Jose Valid")
+                print("warehouseoutinfo is Valid")
                 try:
                     dispatch_num_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).id
                     Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_num_id)
