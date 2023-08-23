@@ -39,10 +39,10 @@
         {% for goodsinfo in dispatch_master_list %}
         <tr>
             <td> {{goodsinfo.wh_job_no}}</td>
-            <!--            <td> {{goodsinfo.wh_qr_rand_num}}</td>-->
-            <td>
-                <a class="" href="{% url 'warehousein_update' goodsinfo.id %}" onclick="return confirm('Are you sure to view?');">{{goodsinfo.wh_qr_rand_num}}</a>
-            </td>
+                        <td> {{goodsinfo.wh_qr_rand_num}}</td>
+<!--            <td>-->
+<!--                <a class="" href="{% url 'warehousein_update' goodsinfo.id %}" onclick="return confirm('Are you sure to view?');">{{goodsinfo.wh_qr_rand_num}}</a>-->
+<!--            </td>-->
             <td> {{goodsinfo.wh_goods_pieces}}</td>
             <td> {{goodsinfo.wh_dispatch_num}}</td>
             <td> {{goodsinfo.wh_goods_invoice}}</td>
