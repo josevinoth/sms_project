@@ -78,8 +78,8 @@ def invoice_add(request,invoice_id=0):
 
 
                 # Calculate Loading & Unloading Charge
-                total_weight = Warehouse_goods_info.objects.filter(wh_goods_invoice=k).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
-                no_of_pieces = Warehouse_goods_info.objects.filter(wh_goods_invoice=k).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
+                total_weight = Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
+                no_of_pieces = Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
                 try:
                     weight_per_piece = round((total_weight) / (no_of_pieces),2)
                 except ZeroDivisionError:
@@ -156,7 +156,7 @@ def invoice_add(request,invoice_id=0):
                     crane_cost = crane_cost_l2hr + crane_cost_g2hr
                     forklift_cost = forklift_cost_l2hr + forklift_cost_g2hr
 
-                invoice_id = list(Warehouse_goods_info.objects.filter(wh_goods_invoice=k).values_list('id',flat=True))
+                invoice_id = list(Warehouse_goods_info.objects.filter(wh_job_no=k).values_list('id',flat=True))
                 invoice_id.sort()
                 for i in range(0, len(invoice_id)):
                     if i == 0:
