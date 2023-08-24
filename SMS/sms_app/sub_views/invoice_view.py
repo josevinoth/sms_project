@@ -36,14 +36,14 @@ def invoice_add(request,invoice_id=0):
             customer_id = CustomerInfo.objects.get(cu_name=customer_name).id
             customer_type = CustomerInfo.objects.get(cu_name=customer_name).cu_businessmodel
             customer_type_id = TrbusinesstypeInfo.objects.get(tb_trbusinesstype=customer_type).id
-            shipper_invoice = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_goods_invoice',flat=True)).distinct()
-            shipper_invoice_count = len(shipper_invoice)
+            wh_job_num = (Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_job_no',flat=True)).distinct()
+            wh_job_num_count = len(wh_job_num)
 
-            for k in shipper_invoice:
+            for k in wh_job_num:
                 try:
                     if customer_type_id== 2:
                         warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1).whrm_rate
-                        warehouse_charge_1 = warehouse_charge / shipper_invoice_count
+                        warehouse_charge_1 = warehouse_charge / wh_job_num_count
                         storage_cost_total = round((warehouse_charge_1), 2)
                         date_today = date.today()
                         year = date_today.year
@@ -70,7 +70,7 @@ def invoice_add(request,invoice_id=0):
                         warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
                         # max_storage_days = max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_goods_invoice=k).values_list('wh_storage_time', flat=True))
                         max_storage_days = ((max_check_out_time-min_check_in_time).days)
-                        warehouse_charge_1 = warehouse_charge / shipper_invoice_count
+                        warehouse_charge_1 = warehouse_charge / wh_job_num_count
                         storage_cost_total = round((warehouse_charge_1 * max_storage_days), 2)
                 except ObjectDoesNotExist:
                     messages.error(request,'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
