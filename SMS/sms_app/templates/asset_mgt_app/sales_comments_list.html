@@ -29,10 +29,10 @@
             <th>Nature of Call</th>
             <th>Purpose of Call</th>
             <th>Comments</th>
-            <th>Comments By</th>
+            <th>Updated By</th>
             <th>Updated On</th>
-            <th>Edit</th>
-            <th>Delete</th>
+<!--            <th>Edit</th>-->
+<!--            <th>Delete</th>-->
         </thead>
         <tbody>
         {% for commentsinfo in comments_list %}
@@ -47,19 +47,19 @@
             <td> {{commentsinfo.sc_updated_by}}</td>
             <td> {{commentsinfo.sc_updated_at}}</td>
 
-            <td>
-                <a class="btn btn-primary" href="{% url 'sales_comments_update' commentsinfo.id %}">
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
-            <td>
-                <form action="{% url 'sales_comments_delete' commentsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
+<!--            <td>-->
+<!--                <a class="btn btn-primary" href="{% url 'sales_comments_update' commentsinfo.id %}">-->
+<!--                    <i class="far fa-edit"></i>-->
+<!--                </a>-->
+<!--            </td>-->
+<!--            <td>-->
+<!--                <form action="{% url 'sales_comments_delete' commentsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
+<!--                    {% csrf_token %}-->
+<!--                    <button type="submit" class="btn btn-danger">-->
+<!--                        <i class="fas fa-trash-alt"></i>-->
+<!--                    </button>-->
+<!--                </form>-->
+<!--            </td>-->
         </tr>
         {% endfor %}
         </tbody>
