@@ -107,11 +107,16 @@
 									{% render_field form.lm_available_volume id="lm_available_volume" class="form-control disable_a_href" %}
 								</div>
 								{% render_field form.lm_concatenate  type="hidden" id="lm_concatenate" class="form-control" %}
-								<div class="message message-warning">
-									{% for message in messages %}
-									<p>{{message}}</p>
-									{% endfor %}
-									{{form.error_messages}}
+								<div class="row">
+									<div class="col-1"></div>
+									<div class="col-10">
+										<div class="message text-center">
+											{% for message in messages %}
+											<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+											{% endfor %}
+										</div>
+									</div>
+									<div class="col-1"></div>
 								</div>
 							</div>
 						</div>
@@ -129,8 +134,6 @@
 </form>
 <script>
 	$(document).ready(function() {
-		document.getElementById("lm_area_occupied").value ='{{area_final|floatformat:'3'}}';
-		document.getElementById("lm_volume_occupied").value ='{{volume_final|floatformat:'3'}}';
 	 	area_volume_fn()
 	 });
 </script>
@@ -148,8 +151,22 @@ function area_volume_fn() {
   var lm_volume_occupied_val=document.getElementById("lm_volume_occupied").value;
   var area_val=(width_val*length_val).toFixed(3);
   var volume_val=(width_val*length_val*height_val).toFixed(3);
-  var lm_available_area_val=(area_val-lm_area_occupied_val).toFixed(3);
-  var lm_available_volume_val=(volume_val-lm_volume_occupied_val).toFixed(3);
+  alert(lm_area_occupied_val)
+  if (lm_area_occupied_val==0)
+  {
+  	lm_area_occupied_val=0
+  	lm_volume_occupied_val=0
+  	var lm_available_area_val=(area_val-lm_area_occupied_val).toFixed(3);
+  	var lm_available_volume_val=(volume_val-lm_volume_occupied_val).toFixed(3);
+  }
+  else
+  {
+  	lm_area_occupied_val=lm_area_occupied_val
+  	lm_volume_occupied_val=lm_volume_occupied_val
+  	var lm_available_area_val=(area_val-lm_area_occupied_val).toFixed(3);
+  	var lm_available_volume_val=(volume_val-lm_volume_occupied_val).toFixed(3);
+  }
+
   document.getElementById("lm_total_volume").value =volume_val;
   document.getElementById("lm_size").value =area_val;
   document.getElementById("lm_available_area").value =lm_available_area_val;

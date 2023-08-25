@@ -23,42 +23,42 @@ def locationmaster_add(request,locationmaster_id=0):
             else:
                 print('Inside GET second loop')
                 form = LocationmasteraddForm()
-                area_final = 0
-                volume_final = 0
+                area_occupied = 0
+                volume_occupied = 0
                 context = {
                     'form': form,
                     'first_name': first_name,
-                    'area_final': area_final,
-                    'volume_final': volume_final,
+                    'area_occupied': area_occupied,
+                    'volume_occupied': volume_occupied,
                 }
                 return render(request, "asset_mgt_app/locationmaster_add.html", context)
         else:
             print('Inside Get Else')
-            Branch_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_location.id
-            Unit_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_unit.id
-            Bay_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_areaside.id
-            wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,
-                                                                wh_bay_id=Bay_val)
-            stack_layer = wh_goods_list.values('wh_stack_layer_id')
-            volume = wh_goods_list.values('wh_goods_volume_weight')
-            area = wh_goods_list.values('wh_goods_area')
-            check_in_out_list = wh_goods_list.values('wh_check_in_out')
-            area_final = 0
-            volume_final = 0
-            for j in range(len(wh_goods_list)):
-                if check_in_out_list[j]['wh_check_in_out'] == 1:
-                    volume_final = round((volume_final + volume[j]['wh_goods_volume_weight']),3)
-                    if stack_layer[j]['wh_stack_layer_id'] == 1:
-                        area_final = round((area_final + area[j]['wh_goods_area']),3)
-                    else:
-                        print("No Area")
+            # Branch_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_location.id
+            # Unit_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_wh_unit.id
+            # Bay_val = LocationmasterInfo.objects.get(pk=locationmaster_id).lm_areaside.id
+            # wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,
+            #                                                     wh_bay_id=Bay_val)
+            # stack_layer = wh_goods_list.values('wh_stack_layer_id')
+            # volume = wh_goods_list.values('wh_goods_volume_weight')
+            # area = wh_goods_list.values('wh_goods_area')
+            # check_in_out_list = wh_goods_list.values('wh_check_in_out')
+            # area_occupied = 0
+            # volume_occupied = 0
+            # for j in range(len(wh_goods_list)):
+            #     if check_in_out_list[j]['wh_check_in_out'] == 1:
+            #         volume_occupied = round((volume_occupied + volume[j]['wh_goods_volume_weight']),3)
+            #         if stack_layer[j]['wh_stack_layer_id'] == 1:
+            #             area_occupied = round((area_occupied + area[j]['wh_goods_area']),3)
+            #         else:
+            #             print("No Area")
             locationmaster=LocationmasterInfo.objects.get(pk=locationmaster_id)
             form = LocationmasteraddForm(instance=locationmaster)
             context = {
                 'form': form,
                 'first_name': first_name,
-                'area_final':area_final,
-                'volume_final':volume_final,
+                # 'area_occupied':area_occupied,
+                # 'volume_occupied':volume_occupied,
             }
         return render(request, "asset_mgt_app/locationmaster_add.html",context)
     else:
@@ -93,13 +93,17 @@ def locationmaster_add(request,locationmaster_id=0):
                 locationmaster = LocationmasterInfo.objects.get(pk=locationmaster_id)
                 form = LocationmasteraddForm(request.POST, instance=locationmaster)
                 if form.is_valid():
-                    # LocationmasterInfo.objects.filter(pk=locationmaster_id).update(lm_area_occupied=area_final)
-                    # LocationmasterInfo.objects.filter(pk=locationmaster_id).update(lm_volume_occupied=volume_final)
+                    # LocationmasterInfo.objects.filter(pk=locationmaster_id).update(lm_area_occupied=area_occupied)
+                    # LocationmasterInfo.objects.filter(pk=locationmaster_id).update(lm_volume_occupied=volume_occupied)
                     form.save()
                     print('Form Saved Successfully')
+                    messages.success(request, 'Record Updated Successfully')
+                    return redirect(request.META['HTTP_REFERER'])
                 else:
                     print('Form Not Saved Successfully')
-            return redirect('/SMS/locationmaster_list')
+                    messages.error(request, 'Record Not Updated Successfully')
+                    return redirect(request.META['HTTP_REFERER'])
+            # return redirect('/SMS/locationmaster_list')
 
 # List locationmaster
 @login_required(login_url='login_page')

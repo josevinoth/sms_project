@@ -149,6 +149,7 @@ def warehousein_add(request, warehousein_id=0):
                 else:
                     messages.success(request, 'Goods Stored!')
                     warehousein_form.save()
+
             # //Update Invoice weight, qty,value
             invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('id',flat=True)
             stock_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num',flat=True)
@@ -180,29 +181,36 @@ def warehousein_add(request, warehousein_id=0):
                     Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_qty=0)
 
             # update area and volume
-            Branch_val = request.POST.get('wh_branch')
-            Unit_val = request.POST.get('wh_unit')
-            Bay_val = request.POST.get('wh_bay')
-            wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,wh_bay_id=Bay_val)
+            # Branch_val = request.POST.get('wh_branch')
+            # Unit_val = request.POST.get('wh_unit')
+            # Bay_val = request.POST.get('wh_bay')
+            wh_goods_list = Warehouse_goods_info.objects.all()
+            # wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,wh_bay_id=Bay_val)
+            Branch = wh_goods_list.values('wh_branch')
+            Unit = wh_goods_list.values('wh_unit')
+            Bay = wh_goods_list.values('wh_bay')
             stack_layer = wh_goods_list.values('wh_stack_layer_id')
             volume = wh_goods_list.values('wh_goods_volume_weight')
             check_in_out_list = wh_goods_list.values('wh_check_in_out')
             area = wh_goods_list.values('wh_goods_area')
-            area_final = 0
-            volume_final = 0
+            area_occupied = 0
+            volume_occupied = 0
             for j in range(len(wh_goods_list)):
                 if check_in_out_list[j]['wh_check_in_out']==1:
-                    volume_final = volume_final + volume[j]['wh_goods_volume_weight']
-                    LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_volume_occupied=volume_final)
+                    Branch_val=Branch[j]['wh_branch']
+                    Unit_val=Unit[j]['wh_unit']
+                    Bay_val=Bay[j]['wh_bay']
+                    volume_occupied = round(volume_occupied + volume[j]['wh_goods_volume_weight'],3)
+                    LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_volume_occupied=volume_occupied)
                     if stack_layer[j]['wh_stack_layer_id'] == 1:
-                        area_final = area_final + area[j]['wh_goods_area']
-                        LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_final)
+                        area_occupied = round(area_occupied + area[j]['wh_goods_area'],3)
+                        LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_occupied)
                     else:
                         print("No Area")
             total_area_data=LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_size
             total_volume_data=LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_total_volume
-            available_area_final =round((total_area_data-area_final),3)
-            available_volume_final =round((total_volume_data-volume_final),3)
+            available_area_final =round((total_area_data-area_occupied),3)
+            available_volume_final =round((total_volume_data-volume_occupied),3)
             LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_area=available_area_final)
             LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_volume=available_volume_final)
 
@@ -295,25 +303,25 @@ def warehouseout_add(request, warehouseout_id=0):
                 print('Unit',Unit_val)
                 print('Bay',Bay_val)
                 wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,wh_bay_id=Bay_val)
-                area_final = 0
-                volume_final = 0
+                area_occupied = 0
+                volume_occupied = 0
                 stack_layer = wh_goods_list.values('wh_stack_layer_id')
                 volume = wh_goods_list.values('wh_goods_volume_weight')
                 check_in_out_list = wh_goods_list.values('wh_check_in_out')
                 area = wh_goods_list.values('wh_goods_area')
                 for j in range(len(wh_goods_list)):
                     if check_in_out_list[j]['wh_check_in_out'] == 1:
-                        volume_final = volume_final + volume[j]['wh_goods_volume_weight']
-                        LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_volume_occupied=volume_final)
+                        volume_occupied = round(volume_occupied + volume[j]['wh_goods_volume_weight'],3)
+                        LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_volume_occupied=volume_occupied)
                         if stack_layer[j]['wh_stack_layer_id'] == 1:
-                            area_final = area_final + area[j]['wh_goods_area']
-                            LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_final)
+                            area_occupied = round(area_occupied + area[j]['wh_goods_area'],3)
+                            LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_occupied)
                         else:
                             print("No Area")
                 total_area_data = LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_size
                 total_volume_data = LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_total_volume
-                available_area_final = round((total_area_data + area_final), 3)
-                available_volume_final = round((total_volume_data + volume_final), 3)
+                available_area_final = round((total_area_data - area_occupied), 3)
+                available_volume_final = round((total_volume_data - volume_occupied), 3)
                 LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_area=available_area_final)
                 LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_volume=available_volume_final)
             else:

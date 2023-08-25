@@ -1,7 +1,4 @@
-import django
 from django.db import models
-from django.utils import timezone
-
 from ..models import DamagereportInfo,Loadingbay_Info,Gatein_info,Dispatch_info,VehicletypeInfo,Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
 
 class Warehouse_goods_info(models.Model):
