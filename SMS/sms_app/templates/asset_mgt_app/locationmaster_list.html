@@ -78,7 +78,16 @@
 
 <script>
     $(document).ready(function() {
-    $('#locationmaster_list').DataTable();
+    $('#locationmaster_list').DataTable({
+        scrollY: "600px",
+<!--        scrollX: true,-->
+        scrollCollapse: true,
+        order: [1, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    } );
 } );
 </script>
 
