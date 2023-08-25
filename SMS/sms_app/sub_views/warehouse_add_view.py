@@ -201,10 +201,16 @@ def warehousein_add(request, warehousein_id=0):
                     Unit_val=Unit[j]['wh_unit']
                     Bay_val=Bay[j]['wh_bay']
                     volume_occupied = round(volume_occupied + volume[j]['wh_goods_volume_weight'],3)
-                    LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_volume_occupied=volume_occupied)
+                    try:
+                        LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_volume_occupied=volume_occupied)
+                    except ObjectDoesNotExist:
+                        pass
                     if stack_layer[j]['wh_stack_layer_id'] == 1:
                         area_occupied = round(area_occupied + area[j]['wh_goods_area'],3)
-                        LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_occupied)
+                        try:
+                            LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_occupied)
+                        except ObjectDoesNotExist:
+                            pass
                     else:
                         print("No Area")
             total_area_data=LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_size
@@ -299,9 +305,6 @@ def warehouseout_add(request, warehouseout_id=0):
                 Branch_val = request.POST.get('wh_branch')
                 Unit_val = request.POST.get('wh_unit')
                 Bay_val = request.POST.get('wh_bay')
-                print('Branch',Branch_val)
-                print('Unit',Unit_val)
-                print('Bay',Bay_val)
                 wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,wh_bay_id=Bay_val)
                 area_occupied = 0
                 volume_occupied = 0
