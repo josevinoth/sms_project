@@ -6,8 +6,9 @@ from django.shortcuts import render
 from django.template.loader import get_template
 from django.http import HttpResponse
 from xhtml2pdf import pisa
-from ..models import Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
+from ..models import Check_in_out,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
 from django.db import connection
+from datetime import date, datetime
 
 @login_required(login_url='login_page')
 def reports(request):
@@ -39,7 +40,6 @@ def stock_value_reports(request):
     print("Inside Stock Value Report")
     goods_list=[]
     goods_list_new=[]
-
     first_name = request.session.get('first_name')
     invoice_list=Warehouse_goods_info.objects.all().values_list('wh_goods_invoice',flat=True).distinct()
     checkin_goods_list=Warehouse_goods_info.objects.all().values_list().distinct()
@@ -105,6 +105,24 @@ def stock_value_reports(request):
         LEFT JOIN sms_app_labels_pasted_info lp ON lp.id = d.dispatch_sticker_pasted_bvm\
         LEFT JOIN sms_app_gstexcemptioninfo yn ON yn.id = w.wh_fumigation_process")
     row = cursor.fetchall()
+
+    # calculate storage days
+    # stocks=list(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num',flat=True))
+    stocks = list(Warehouse_goods_info.objects.all().values_list('wh_qr_rand_num', flat=True))
+    for i in stocks:
+        goods_status = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_check_in_out
+        goods_status_id = Check_in_out.objects.get(check_in_out_name=goods_status).id
+        if goods_status_id == 1:
+            try:
+                check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
+                current_date = date.today()
+                date_diff = (current_date - check_in_date)  # Differnce between dates
+                date_diff_days = date_diff.days
+                Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
+            except TypeError:
+                pass
+        else:
+            pass
 
     for i in invoice_list:
         goods_list.append(Gatein_info.objects.filter(gatein_invoice=i))

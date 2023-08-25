@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from ..forms import WarehoseinaddForm,WarehoseoutaddForm
-from ..models import Fumigation_ActionInfo,Dispatch_info,Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
+from ..models import Dispatch_info,Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -183,8 +183,7 @@ def warehousein_add(request, warehousein_id=0):
             Branch_val = request.POST.get('wh_branch')
             Unit_val = request.POST.get('wh_unit')
             Bay_val = request.POST.get('wh_bay')
-            wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,
-                                                                wh_bay_id=Bay_val)
+            wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,wh_bay_id=Bay_val)
             stack_layer = wh_goods_list.values('wh_stack_layer_id')
             volume = wh_goods_list.values('wh_goods_volume_weight')
             check_in_out_list = wh_goods_list.values('wh_check_in_out')
@@ -194,8 +193,7 @@ def warehousein_add(request, warehousein_id=0):
             for j in range(len(wh_goods_list)):
                 if check_in_out_list[j]['wh_check_in_out']==1:
                     volume_final = volume_final + volume[j]['wh_goods_volume_weight']
-                    LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,
-                                                      lm_areaside=Bay_val).update(lm_volume_occupied=volume_final)
+                    LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_volume_occupied=volume_final)
                     if stack_layer[j]['wh_stack_layer_id'] == 1:
                         area_final = area_final + area[j]['wh_goods_area']
                         LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_final)
@@ -279,15 +277,45 @@ def warehouseout_add(request, warehouseout_id=0):
 
                 vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).dispatch_truck_type
                 Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_truck_type=vehicle_type)
-                check_in_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time)
-                check_out_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkout_time)
-                date_diff = (check_out_date - check_in_date)  # Differnce between dates
-                date_diff_days = date_diff.days
-                duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
-                storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
-                # storage_days = (check_out_date - check_in_date).days  # In days
-                storage_days = float(round(storage_hours / 24, 2))  # In days
-                Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_storage_time=date_diff_days)
+                # check_in_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time)
+                # check_out_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkout_time)
+                # date_diff = (check_out_date - check_in_date)  # Differnce between dates
+                # date_diff_days = date_diff.days
+                # duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
+                # storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
+                # # storage_days = (check_out_date - check_in_date).days  # In days
+                # storage_days = float(round(storage_hours / 24, 2))  # In days
+                # Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_storage_time=date_diff_days)
+
+                # Update area and volume back to location master
+                Branch_val = request.POST.get('wh_branch')
+                Unit_val = request.POST.get('wh_unit')
+                Bay_val = request.POST.get('wh_bay')
+                print('Branch',Branch_val)
+                print('Unit',Unit_val)
+                print('Bay',Bay_val)
+                wh_goods_list = Warehouse_goods_info.objects.filter(wh_branch_id=Branch_val, wh_unit_id=Unit_val,wh_bay_id=Bay_val)
+                area_final = 0
+                volume_final = 0
+                stack_layer = wh_goods_list.values('wh_stack_layer_id')
+                volume = wh_goods_list.values('wh_goods_volume_weight')
+                check_in_out_list = wh_goods_list.values('wh_check_in_out')
+                area = wh_goods_list.values('wh_goods_area')
+                for j in range(len(wh_goods_list)):
+                    if check_in_out_list[j]['wh_check_in_out'] == 1:
+                        volume_final = volume_final + volume[j]['wh_goods_volume_weight']
+                        LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_volume_occupied=volume_final)
+                        if stack_layer[j]['wh_stack_layer_id'] == 1:
+                            area_final = area_final + area[j]['wh_goods_area']
+                            LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_final)
+                        else:
+                            print("No Area")
+                total_area_data = LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_size
+                total_volume_data = LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_total_volume
+                available_area_final = round((total_area_data + area_final), 3)
+                available_volume_final = round((total_volume_data + volume_final), 3)
+                LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_area=available_area_final)
+                LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_volume=available_volume_final)
             else:
                 print("warehouseoutinfo is Not-Valid")
     return redirect('/SMS/warehouseout_cancel')
