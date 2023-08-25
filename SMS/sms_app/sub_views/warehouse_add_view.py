@@ -277,15 +277,15 @@ def warehouseout_add(request, warehouseout_id=0):
 
                 vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).dispatch_truck_type
                 Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_truck_type=vehicle_type)
-                # check_in_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time)
-                # check_out_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkout_time)
-                # date_diff = (check_out_date - check_in_date)  # Differnce between dates
-                # date_diff_days = date_diff.days
-                # duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
-                # storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
-                # # storage_days = (check_out_date - check_in_date).days  # In days
-                # storage_days = float(round(storage_hours / 24, 2))  # In days
-                # Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_storage_time=date_diff_days)
+                check_in_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkin_time)
+                check_out_date = datetime.date(Warehouse_goods_info.objects.get(pk=warehouseout_id).wh_checkout_time)
+                date_diff = (check_out_date - check_in_date)  # Differnce between dates
+                date_diff_days = date_diff.days
+                duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
+                storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
+                # storage_days = (check_out_date - check_in_date).days  # In days
+                storage_days = float(round(storage_hours / 24, 2))  # In days
+                Warehouse_goods_info.objects.filter(pk=warehouseout_id).update(wh_storage_time=date_diff_days)
 
                 # Update area and volume back to location master
                 Branch_val = request.POST.get('wh_branch')
