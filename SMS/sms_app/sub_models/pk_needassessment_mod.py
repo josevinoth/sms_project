@@ -23,8 +23,8 @@ class PkneedassessmentInfo(models.Model):
     na_type_of_access = models.ForeignKey(Natypeofaccess,on_delete=models.CASCADE,default='')
     na_consumables = models.ForeignKey(Naconsumables,on_delete=models.CASCADE,default='')
     na_remarks = models.TextField(max_length=300,null=True,blank=True)
-    na_created_at = models.DateField(null=True, auto_now_add=True)
-    na_updated_at = models.DateField(null=True, auto_now=True)
+    na_created_at = models.DateTimeField(null=True, auto_now_add=True)
+    na_updated_at = models.DateTimeField(null=True, auto_now=True)
     na_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='na_updated_by',db_column='na_updated_by', null=True)
 
     class Meta:

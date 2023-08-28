@@ -126,7 +126,6 @@ def stock_value_reports(request):
 
     for i in invoice_list:
         goods_list.append(Gatein_info.objects.filter(gatein_invoice=i))
-
     context = {
                 'stock_value_list': Loadingbay_Info.objects.all(),
                 'first_name': first_name,

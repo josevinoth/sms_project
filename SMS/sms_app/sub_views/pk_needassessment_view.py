@@ -30,13 +30,13 @@ def needassessment_add(request,needassessment_id=0):
             if form.is_valid():
                 # Generate Random Assessment number
                 try:
-                    last_id = (PkneedassessmentInfo.objects.values_list('id', flat=True)).last()
+                    last_id = PkneedassessmentInfo.objects.latest('id').id
                     assessment_num_next = str('Assess_') + str(int(((PkneedassessmentInfo.objects.get(id=last_id)).na_assessment_num).replace('Assess_', '')) + 1)
                 except ObjectDoesNotExist:
                     assessment_num_next = str('Assess_') + str(randint(10000, 99999))
                 form.save()
                 print("needassessment Form is Valid")
-                last_id = (PkneedassessmentInfo.objects.values_list('id', flat=True)).last()
+                last_id = PkneedassessmentInfo.objects.latest('id').id
                 PkneedassessmentInfo.objects.filter(id=last_id).update(na_assessment_num=assessment_num_next)
                 messages.success(request, 'Record Updated Successfully')
                 return redirect('/SMS/needassessment_update/'+ str(last_id))
