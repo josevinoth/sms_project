@@ -1,8 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 
-from ..forms import PkneedassessmentForm
-from ..models import PkneedassessmentInfo
+from ..forms import PkneedassessmentForm,NadimensionForm
+from ..models import PkneedassessmentInfo,Nadimension
 from django.shortcuts import render, redirect
 from random import randint
 from django.contrib import messages
@@ -39,6 +39,7 @@ def needassessment_add(request,needassessment_id=0):
                 last_id = PkneedassessmentInfo.objects.latest('id').id
                 PkneedassessmentInfo.objects.filter(id=last_id).update(na_assessment_num=assessment_num_next)
                 messages.success(request, 'Record Updated Successfully')
+                request.session['na_assessment_num'] = last_id
                 return redirect('/SMS/needassessment_update/'+ str(last_id))
             else:
                 print("needassessment Form is Not Valid")
@@ -70,3 +71,53 @@ def needassessment_delete(request,needassessment_id):
     needassessment = PkneedassessmentInfo.objects.get(pk=needassessment_id)
     needassessment.delete()
     return redirect('/SMS/needassessment_list')
+
+@login_required(login_url='login_page')
+def na_dimension_add(request, na_dimension_id=0):
+    context = {}
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    na_assessment_num_id=request.session.get('na_assessment_num')
+    print(na_assessment_num_id)
+    if request.method == "GET":
+        if na_dimension_id == 0:
+            form = NadimensionForm()
+        else:
+            # print(context)
+            na_dimensioninfo = Nadimension.objects.get(pk=na_dimension_id)
+            form = NadimensionForm(instance=na_dimensioninfo)
+        context={
+            'form': form,
+            'first_name': first_name,
+            'user_id': user_id,
+            'na_assessment_num_id': na_assessment_num_id,
+        }
+        return render(request, "asset_mgt_app/na_dimension_add.html", context)
+    else:
+        if na_dimension_id == 0:
+            form = NadimensionForm(request.POST)
+        else:
+            na_dimensioninfo = Nadimension.objects.get(pk=na_dimension_id)
+            form = NadimensionForm(request.POST, instance=na_dimensioninfo)
+        if form.is_valid():
+            form.save()
+            print("Main Form Saved")
+        else:
+            print("Main form not saved")
+        return redirect('/SMS/needassessment_list')
+        # return redirect(request.META['HTTP_REFERER'])
+@login_required(login_url='login_page')
+def na_dimension_list(request):
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    context = {
+        'user_id': user_id,
+        'first_name': first_name,
+    }
+    return render(request, "asset_mgt_app/na_dimension_list.html", context)
+@login_required(login_url='login_page')
+def na_dimension_delete(request, na_dimension_id):
+    na_dimensioninfo = Nadimension.objects.get(pk=na_dimension_id)
+    na_dimensioninfo.delete()
+    return redirect(request.META['HTTP_REFERER'])
+    # return redirect('/SMS/sales_list')

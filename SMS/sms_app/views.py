@@ -90,7 +90,7 @@ from .sub_views.arinfo_view import ar_add,ar_list,ar_delete
 from .sub_views.sales_target_add_view import sales_target_add,sales_target_list,sales_target_delete
 from .sub_views.arcomments_add_view import arcomments_add,arcomments_list,arcomments_delete
 from .sub_views.Requirements_add_view import requirements_add,requirements_list,requirements_delete
-from .sub_views.pk_needassessment_view import needassessment_add,needassessment_list,needassessment_delete
+from .sub_views.pk_needassessment_view import needassessment_add,needassessment_list,needassessment_delete,na_dimension_add,na_dimension_list,na_dimension_delete
 from .sub_views.pk_quote_view import quote_add,quote_list,quote_delete
 from .sub_views.pk_openingstock_view import openingstock_add,openingstock_list,openingstock_delete
 from .sub_views.pk_stockpurchases_view import stockpurchases_add,stockpurchases_list,stockpurchases_delete

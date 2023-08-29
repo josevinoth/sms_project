@@ -386,4 +386,8 @@ urlpatterns = [
     path('purchaseorder_insert/', views.purchaseorder_add, name='purchaseorder_insert'),  # Add purchaseorder
     path('purchaseorder_update/<int:purchaseorder_id>', views.purchaseorder_add, name='purchaseorder_update'),# update purchaseorder
     path('purchaseorder_delete/<int:purchaseorder_id>', views.purchaseorder_delete, name='purchaseorder_delete'),# delete purchaseorder
+    path('na_dimension_list/', views.na_dimension_list, name='na_dimension_list'),  # List Na Dimension
+    path('na_dimension_insert/', views.na_dimension_add, name='na_dimension_insert'),  # Add Na Dimension
+    path('na_dimension_update/<int:na_dimension_id>', views.na_dimension_add, name='na_dimension_update'),  # update Na Dimension
+    path('na_dimension_delete/<int:na_dimension_id>', views.na_dimension_delete, name='na_dimension_delete'),  # delete Na Dimension
 ]
