@@ -5,8 +5,8 @@
 <form method="POST" action="" id="needassessment_add"   >
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col-3"></div>
+		<div class="col-6">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Need Assessment</h3></div>
@@ -30,24 +30,6 @@
 										<span class="input-group-text">Customer Name</span>
 									</div>
 									{% render_field form.na_customer_name id="na_customer_name" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">No of Dimension</span>
-									</div>
-									{% render_field form.na_noof_dimension id="na_noof_dimension" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Item Name</span>
-									</div>
-									{% render_field form.na_item_name id="na_item_name" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Dimension</span>
-									</div>
-									{% render_field form.na_dimension id="na_dimension" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -167,15 +149,10 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
+		<div class="col-3"></div>
 	</div>
 </form>
 <div class="container-fluid row">
-    <!--    <div class="col-md-1">-->
-    <!--      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-    <!--        <i class="fas fa-arrow-left"></i> Back-->
-    <!--      </a>-->
-    <!--    </div>-->
     <div class="col-md-1">
           <a href="{% url 'na_dimension_insert' %}" id = "add_dim_btn" class="btn btn-success btn-block btn-lg disable_a_href">
             <i class="fas fa-plus"></i> Insert
@@ -196,6 +173,8 @@
             <th>Quantity</th>
             <th>Updated On</th>
             <th>Updated By</th>
+            <th>Edit</th>
+            <th>Delete</th>
         </thead>
         <tbody>
         {% for na_dimensioninfo in na_dimension_list %}
@@ -209,6 +188,19 @@
             <td> {{na_dimensioninfo.nad_quantity}}</td>
             <td> {{na_dimensioninfo.nad_updated_at}}</td>
             <td> {{na_dimensioninfo.nad_updated_by}}</td>
+			<td>
+                <a class="btn btn-primary" href="{% url 'na_dimension_update' na_dimensioninfo.id %}" class="btn btn-primary">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'na_dimension_delete' na_dimensioninfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
         </tbody>
@@ -226,7 +218,6 @@
         ]
     });
     var assessment_num = document.getElementById("na_assessment_num").value
-    alert(assessment_num)
     if (assessment_num =="")
 	{
 		$('#add_dim_btn').addClass('disable_a_href');

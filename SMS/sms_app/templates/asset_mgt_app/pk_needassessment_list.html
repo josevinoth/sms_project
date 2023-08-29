@@ -20,11 +20,6 @@
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
-    <div class="col-md-2">
-        <a href="{% url 'na_dimension_list' %}" class="btn btn-warning btn-block btn-lg">
-            <i class="fa fa-book" aria-hidden="true"></i> Na Dimension List
-        </a>
-    </div>
 </div>
 <hr>
 <div class="container-fluid">
@@ -34,15 +29,11 @@
             <th>Assessment NO.</th>
             <th>Date</th>
             <th>Customer Name</th>
-            <th>No of Dimension</th>
-            <th>Item Name</th>
-            <th>Dimension</th>
             <th>Job Weight</th>
             <th>Type Of Work</th>
             <th>Type Of Packing</th>
             <th>Type Of Requirement</th>
             <th>Plywood Thickness</th>
-            <th>Remarks</th>
             <th>Updated at</th>
             <th>Updated By</th>
             <th>Edit</th>
@@ -54,15 +45,11 @@
             <td> {{needassessmentinfo.na_assessment_num}}</td>
             <td> {{needassessmentinfo.na_date}}</td>
             <td> {{needassessmentinfo.na_customer_name}}</td>
-            <td> {{needassessmentinfo.na_noof_dimension}}</td>
-            <td> {{needassessmentinfo.na_item_name}}</td>
-            <td> {{needassessmentinfo.na_dimension}}</td>
             <td> {{needassessmentinfo.na_job_weight}}</td>
             <td> {{needassessmentinfo.na_type_of_work}}</td>
             <td> {{needassessmentinfo.na_type_of_pack}}</td>
             <td> {{needassessmentinfo.na_type_of_req}}</td>
             <td> {{needassessmentinfo.na_plywood_thickness}}</td>
-            <td> {{needassessmentinfo.na_remarks}}</td>
             <td> {{needassessmentinfo.na_updated_at}}</td>
             <td> {{needassessmentinfo.na_updated_by}}</td>
             <td>

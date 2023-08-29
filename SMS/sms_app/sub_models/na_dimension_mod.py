@@ -1,9 +1,9 @@
 from django.db import models
-from ..models import PkneedassessmentInfo,MyUser
+from ..models import Naitemname,PkneedassessmentInfo,MyUser
 
 class Nadimension(models.Model):
     nad_assess_num = models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='')
-    nad_item_name = models.CharField(max_length=100, null=True, blank=True)
+    nad_item_name = models.ForeignKey(Naitemname, on_delete=models.CASCADE, default='')
     nad_length = models.FloatField(blank=True, null=True,default=0.0)
     nad_width = models.FloatField(blank=True, null=True,default=0.0)
     nad_height = models.FloatField(blank=True, null=True,default=0.0)

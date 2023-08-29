@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Source,Category,Stock_type,Naconsumables,Natypeofaccess,Nawoodnorms,Nabvmcustomer,Natypeofwood,Nawoodtreatmentreq,Natypeofplywood,Naplywoodthickness,Natypeofreq,Natypeofpack,Natypeofwork,Naitemname,Reqbugimprove,Reqmodule,Tripstatusinfo,Labels_pasted_Info,Bvmproduct,Business_Sol_info,Prespectivec_customer_NoInfo,Business_won_NoInfo,YesNoInfo,faciltiyrequirementinfo,manpowerrequirementinfo,CustomerInfo,CustomertypeInfo,Busnotwon,Salestatus,Callpurpose,Callnature,Calltype,Supplyinfo,Packreuqirementinfo,Transrequirementinfo,Whrequirementinfo,Industrytype,Cusnewexist,servicetype_info,ExpenseTypeInfo,ExpenseUOMInfo,Fumigation_ActionInfo,Department_info,RoleInfo,PaymentcycleInfo,StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo,StackingInfo,Wh_chargetype
+from .models import Tr_businesstype_Info,Tr_triptype_Info,Source,Category,Stock_type,Naconsumables,Natypeofaccess,Nawoodnorms,Nabvmcustomer,Natypeofwood,Nawoodtreatmentreq,Natypeofplywood,Naplywoodthickness,Natypeofreq,Natypeofpack,Natypeofwork,Naitemname,Reqbugimprove,Reqmodule,Tripstatusinfo,Labels_pasted_Info,Bvmproduct,Business_Sol_info,Prespectivec_customer_NoInfo,Business_won_NoInfo,YesNoInfo,faciltiyrequirementinfo,manpowerrequirementinfo,CustomerInfo,CustomertypeInfo,Busnotwon,Salestatus,Callpurpose,Callnature,Calltype,Supplyinfo,Packreuqirementinfo,Transrequirementinfo,Whrequirementinfo,Industrytype,Cusnewexist,servicetype_info,ExpenseTypeInfo,ExpenseUOMInfo,Fumigation_ActionInfo,Department_info,RoleInfo,PaymentcycleInfo,StatusList,Country,State,City,Check_in_out,GstexcemptionInfo,UOM,Received_not,UploadInfo,DamagereportInfo,ActiveinactiveInfo,StackingInfo,Wh_chargetype
 
 # Register your models here.
 admin.site.register(StatusList)
@@ -61,3 +61,5 @@ admin.site.register(Naconsumables)
 admin.site.register(Stock_type)
 admin.site.register(Category)
 admin.site.register(Source)
+admin.site.register(Tr_businesstype_Info)
+admin.site.register(Tr_triptype_Info)

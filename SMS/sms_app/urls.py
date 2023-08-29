@@ -390,4 +390,5 @@ urlpatterns = [
     path('na_dimension_insert/', views.na_dimension_add, name='na_dimension_insert'),  # Add Na Dimension
     path('na_dimension_update/<int:na_dimension_id>', views.na_dimension_add, name='na_dimension_update'),  # update Na Dimension
     path('na_dimension_delete/<int:na_dimension_id>', views.na_dimension_delete, name='na_dimension_delete'),  # delete Na Dimension
+    path('na_dimension_cancel', views.na_dimension_cancel, name='na_dimension_cancel'),  # cancel Na Dimension
 ]

@@ -17,3 +17,7 @@ class EnquirynoteaddForm(forms.ModelForm):
         self.fields['en_status'].empty_label = "--Select--"
         self.fields['en_fromlocaion'].empty_label = "--Select--"
         self.fields['en_tolocation'].empty_label = "--Select--"
+        self.fields['en_touchpoint'].empty_label = "--Select--"
+        self.fields['en_business_type'].empty_label = "--Select--"
+        self.fields['en_movement_type'].empty_label = "--Select--"
+        self.fields['en_trip_type'].empty_label = "--Select--"

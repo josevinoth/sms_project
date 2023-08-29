@@ -11,17 +11,25 @@ from django.contrib import messages
 def needassessment_add(request,needassessment_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-
     if request.method == "GET":
         if needassessment_id == 0:
             form = PkneedassessmentForm()
-        else:
-            needassessment=PkneedassessmentInfo.objects.get(pk=needassessment_id)
-            form = PkneedassessmentForm(instance=needassessment)
-        context={
+            context = {
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
+            }
+        else:
+            needassessment=PkneedassessmentInfo.objects.get(pk=needassessment_id)
+            form = PkneedassessmentForm(instance=needassessment)
+            needassessment_id=PkneedassessmentInfo.objects.get(pk=needassessment_id).id
+            request.session['na_assessment_id'] = needassessment_id
+            na_dimension_list=Nadimension.objects.filter(nad_assess_num=needassessment_id)
+            context={
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'na_dimension_list': na_dimension_list,
                 }
         return render(request, "asset_mgt_app/pk_needassessment_add.html", context)
     else:
@@ -36,10 +44,9 @@ def needassessment_add(request,needassessment_id=0):
                     assessment_num_next = str('Assess_') + str(randint(10000, 99999))
                 form.save()
                 print("needassessment Form is Valid")
-                last_id = PkneedassessmentInfo.objects.latest('id').id
+                last_id = (PkneedassessmentInfo.objects.latest('id')).id
                 PkneedassessmentInfo.objects.filter(id=last_id).update(na_assessment_num=assessment_num_next)
                 messages.success(request, 'Record Updated Successfully')
-                request.session['na_assessment_num'] = last_id
                 return redirect('/SMS/needassessment_update/'+ str(last_id))
             else:
                 print("needassessment Form is Not Valid")
@@ -73,17 +80,20 @@ def needassessment_delete(request,needassessment_id):
     return redirect('/SMS/needassessment_list')
 
 @login_required(login_url='login_page')
-def na_dimension_add(request, na_dimension_id=0):
-    context = {}
+def na_dimension_cancel(request,needassessment_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    na_assessment_num_id=request.session.get('na_assessment_num')
-    print(na_assessment_num_id)
+    needassessment_id=request.session.get('na_assessment_id')
+    return redirect('/SMS/needassessment_update/' + str(needassessment_id))
+@login_required(login_url='login_page')
+def na_dimension_add(request, na_dimension_id=0):
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    na_assessment_num_id=request.session.get('na_assessment_id')
     if request.method == "GET":
         if na_dimension_id == 0:
             form = NadimensionForm()
         else:
-            # print(context)
             na_dimensioninfo = Nadimension.objects.get(pk=na_dimension_id)
             form = NadimensionForm(instance=na_dimensioninfo)
         context={
@@ -102,10 +112,12 @@ def na_dimension_add(request, na_dimension_id=0):
         if form.is_valid():
             form.save()
             print("Main Form Saved")
+            messages.success(request,"Record Updated Successfully")
         else:
             print("Main form not saved")
-        return redirect('/SMS/needassessment_list')
-        # return redirect(request.META['HTTP_REFERER'])
+            messages.error(request,"Record Not Updated Successfully")
+        # return redirect('/SMS/needassessment_list')
+        return redirect(request.META['HTTP_REFERER'])
 @login_required(login_url='login_page')
 def na_dimension_list(request):
     first_name = request.session.get('first_name')

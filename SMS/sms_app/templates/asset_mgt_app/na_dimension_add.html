@@ -21,7 +21,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
-									{% render_field form.nad_assess_num id="nad_assess_num" Readonly="True" class="form-control" %}
+									{% render_field form.nad_assess_num id="nad_assess_num" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -68,7 +68,7 @@
 							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success" id="save-btn" ><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'na_dimension_list' %}" class="btn btn-danger float-right">
+						<a href="{% url 'na_dimension_cancel' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</div>
@@ -84,74 +84,4 @@ $(document).ready(function() {
 	document.getElementById("nad_assess_num").value ='{{na_assessment_num_id}}';
 	});
 </script>
-<!--&lt;!&ndash;	Ar comments Table&ndash;&gt;-->
-<!--<div class="container-fluid">-->
-<!--	<table  id="ar_invoice_list" class="table table-striped table-bordered">-->
-<!--		<thead class="thead-dark">-->
-<!--		<tr>-->
-<!--			<th></th>-->
-<!--			<th>ID</th>-->
-<!--			<th>Invoice Number</th>-->
-<!--			<th>Customer</th>-->
-<!--		</thead>-->
-<!--		<tbody>-->
-<!--		{% for ar_invoiceinfo in ar_invoice_list %}-->
-<!--		<tr>-->
-<!--			<td></td>-->
-<!--			<td> {{ar_invoiceinfo.id}}</td>-->
-<!--			<td> {{ar_invoiceinfo.ar_invoice_num}}</td>-->
-<!--			<td> {{ar_invoiceinfo.ar_customer_name}}</td>-->
-<!--		</tr>-->
-<!--		{% endfor %}-->
-<!--		</tbody>-->
-<!--	</table>-->
-<!--</div>-->
-<!--<script>-->
-<!--$(document).ready(function (){-->
-<!--	document.getElementById("arc_updated_by").value ={{user_id}};-->
-<!--  var table=new DataTable('#ar_invoice_list', {-->
-<!--    columnDefs: [-->
-<!--        {-->
-<!--            orderable: false,-->
-<!--            className: 'select-checkbox',-->
-<!--            targets: 0-->
-<!--        }-->
-<!--    ],-->
-<!--    select: {-->
-<!--        style: 'os',-->
-<!--        selector: 'td:first-child'-->
-<!--    },-->
-<!--    order: [[1, 'asc']]-->
-<!--});-->
-
-<!--   // Handle form submission event-->
-<!--   $('#save-btn').on('click', function(){-->
-<!--      	var rows_selected = table.column(0).selected();-->
-<!--      	let selectedValues = table.rows( { selected: true } ).data();-->
-<!--      	var len1=( selectedValues ).length;-->
-<!--      	console.log( len1 );-->
-<!--      	var len=( selectedValues[0] ).length;-->
-<!--      	console.log( selectedValues );-->
-<!--      	console.log( selectedValues[0] );-->
-<!--      	console.log( len );-->
-<!--      	var elements = [];-->
-<!--      	for (var i = 0; i < len1; i++) {-->
-<!--				console.log(selectedValues[i][2]);-->
-<!--				elements.push(selectedValues[i][2]);-->
-<!--			}-->
-<!--		document.getElementById("arc_invoice_num").value=elements;-->
-<!--     });-->
-<!--	invoice=document.getElementById("arc_invoice_num").value-->
-<!--	if (invoice=="")-->
-<!--		{-->
-<!--			document.getElementById("arc_invoice_num").value =elements;-->
-<!--		}-->
-<!--		else-->
-<!--		{-->
-<!--			document.getElementById("arc_invoice_num").value =invoice;-->
-<!--			$('#ar_invoice_list').parents('div.dataTables_wrapper').first().hide();-->
-<!--		}-->
-<!--});-->
-<!--</script>-->
-
-<!--{% endblock content %}-->
+{% endblock content %}

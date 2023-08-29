@@ -1,13 +1,10 @@
 from django.db import models
-from ..models import MyUser,Naitemname,Natypeofwork,Natypeofpack,Natypeofreq,Naplywoodthickness,Natypeofplywood,CustomerInfo,Nawoodtreatmentreq,Natypeofwood,Nabvmcustomer,Nawoodnorms,VehicletypeInfo,Natypeofaccess,Naconsumables
+from ..models import MyUser,Natypeofwork,Natypeofpack,Natypeofreq,Naplywoodthickness,Natypeofplywood,CustomerInfo,Nawoodtreatmentreq,Natypeofwood,Nabvmcustomer,Nawoodnorms,VehicletypeInfo,Natypeofaccess,Naconsumables
 
 class PkneedassessmentInfo(models.Model):
     na_assessment_num = models.CharField(max_length=100,null=True,blank=True, default='')
     na_date = models.DateField(blank=True, null=True)
     na_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
-    na_noof_dimension = models.IntegerField(blank=True, null=True,default=0.0)
-    na_item_name = models.ForeignKey(Naitemname, on_delete=models.CASCADE, default='')
-    na_dimension = models.FloatField(blank=True, null=True,default=0.0)
     na_job_weight = models.FloatField(blank=True, null=True,default=0.0)
     na_type_of_work = models.ForeignKey(Natypeofwork,on_delete=models.CASCADE,default='')
     na_type_of_pack= models.ForeignKey(Natypeofpack,on_delete=models.CASCADE,default='')
@@ -28,7 +25,7 @@ class PkneedassessmentInfo(models.Model):
     na_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='na_updated_by',db_column='na_updated_by', null=True)
 
     class Meta:
-        ordering = ["na_customer_name"]
+        ordering = ["na_assessment_num"]
 
     def __str__(self):
-        return self.na_customer_name
+        return self.na_assessment_num

@@ -57,6 +57,7 @@ def sales_add(request, sales_id=0):
             form = SalesinfoaddForm(instance=salesinfo)
             ses_sales_num_val = request.session.get('ses_sales_num')
             sale_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
+            sale_num_id=SalesInfo.objects.get(s_sale_number=sale_num).id
             request.session['ses_sales_num'] = sale_num
             comments_list_filterd = Sales_Comments_Info.objects.filter(sc_sales_number=sale_num)
             context={

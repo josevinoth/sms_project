@@ -29,11 +29,8 @@ def consignmentdetail_nav(request,consignmentdetail_id=0):
     if con_det_form.is_valid():
         con_det_form.save()
         print("Main Form is Valid")
-        consignmentdetail_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num).values_list(
-            'co_consignmentnumber', flat=True)
-        print('consignmentdetail_list', consignmentdetail_list)
-        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(
-            en_consignmentdetails=list(consignmentdetail_list))
+        consignmentdetail_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num).values_list('co_consignmentnumber', flat=True)
+        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_consignmentdetails=list(consignmentdetail_list))
         messages.success(request, 'Record Updated Successfully')
     else:
         print("Main Form is not Valid")

@@ -1,4 +1,6 @@
 from django.db import models
+from .sub_models.tr_businesstype_mod import Tr_businesstype_Info
+from .sub_models.tr_triptype_mod import Tr_triptype_Info
 from .sub_models.trip_status_mod import Tripstatusinfo
 from .sub_models.labels_pasted_mod import Labels_pasted_Info
 from.sub_models.business_solutions_mod import Business_Sol_info

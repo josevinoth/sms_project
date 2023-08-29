@@ -50,7 +50,6 @@ def enquirynote_list(request):
     first_name = request.session.get('first_name')
     enquiry_num_list=EnquirynoteInfo.objects.filter()
     for m in enquiry_num_list:
-        print(m)
         try:
             consignment_status_id_list=[]
             consignment_status = ConsignmentdetailInfo.objects.filter(co_enquirynumber=m).values_list('co_status',flat=True)

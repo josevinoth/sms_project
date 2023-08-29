@@ -10,7 +10,6 @@ class PkneedassessmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PkneedassessmentForm,self).__init__(*args, **kwargs)
         self.fields['na_customer_name'].empty_label = "--Select--"
-        self.fields['na_item_name'].empty_label = "--Select--"
         self.fields['na_type_of_work'].empty_label = "--Select--"
         self.fields['na_type_of_pack'].empty_label = "--Select--"
         self.fields['na_type_of_req'].empty_label = "--Select--"
