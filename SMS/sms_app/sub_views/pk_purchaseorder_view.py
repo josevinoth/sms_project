@@ -1,4 +1,6 @@
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+
 from ..forms import PkpurchaseorderForm
 from ..models import PkpurchaseorderInfo
 from django.shortcuts import render, redirect
@@ -26,8 +28,18 @@ def purchaseorder_add(request,purchaseorder_id=0):
         if purchaseorder_id == 0:
             form = PkpurchaseorderForm(request.POST)
             if form.is_valid():
+                # Generate Random purchaseorder number
+                try:
+                    last_id = PkpurchaseorderInfo.objects.latest('id').id
+                    purchaseorder_num_next = str('purorder_') + str(
+                        int(((PkpurchaseorderInfo.objects.get(id=last_id)).po_num).replace('purorder_',
+                                                                                                       '')) + 1)
+                except ObjectDoesNotExist:
+                    purchaseorder_num_next = str('purorder_') + str(randint(10000, 99999))
                 form.save()
                 print("PkpurchaseorderInfo Form is Valid")
+                last_id = (PkpurchaseorderInfo.objects.latest('id')).id
+                PkpurchaseorderInfo.objects.filter(id=last_id).update(po_num=purchaseorder_num_next)
                 messages.success(request, 'Record Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
                 # return redirect('/SMS/purchaseorder_update/')

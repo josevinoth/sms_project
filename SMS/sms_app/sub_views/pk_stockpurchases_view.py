@@ -1,4 +1,6 @@
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+
 from ..forms import PkstockpurchasesForm
 from ..models import PkstockpurchasesInfo
 from django.shortcuts import render, redirect
@@ -26,8 +28,18 @@ def stockpurchases_add(request,stockpurchases_id=0):
         if stockpurchases_id == 0:
             form = PkstockpurchasesForm(request.POST)
             if form.is_valid():
+                # Generate Random stockpurchases number
+                try:
+                    last_id = PkstockpurchasesInfo.objects.latest('id').id
+                    stockpurchases_num_next = str('stkpur_') + str(
+                        int(((PkstockpurchasesInfo.objects.get(id=last_id)).sp_stockpurchase_num).replace('stkpur_',
+                                                                                                       '')) + 1)
+                except ObjectDoesNotExist:
+                    stockpurchases_num_next = str('stkpur_') + str(randint(10000, 99999))
                 form.save()
                 print("stockpurchases Form is Valid")
+                last_id = (PkstockpurchasesInfo.objects.latest('id')).id
+                PkstockpurchasesInfo.objects.filter(id=last_id).update(sp_stockpurchase_num=stockpurchases_num_next)
                 messages.success(request, 'Record Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
                 # return redirect('/SMS/stockpurchases_update/')

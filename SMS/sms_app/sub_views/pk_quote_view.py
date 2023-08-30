@@ -1,4 +1,6 @@
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+
 from ..forms import PkquoteForm
 from ..models import PkquoteInfo
 from django.shortcuts import render, redirect
@@ -26,8 +28,16 @@ def quote_add(request,quote_id=0):
         if quote_id == 0:
             form = PkquoteForm(request.POST)
             if form.is_valid():
+                # Generate Random quote number
+                try:
+                    last_id = PkquoteInfo.objects.latest('id').id
+                    quote_num_next = str('quote_') + str(int(((PkquoteInfo.objects.get(id=last_id)).qt_quote_num).replace('quote_','')) + 1)
+                except ObjectDoesNotExist:
+                    quote_num_next = str('quote_') + str(randint(10000, 99999))
                 form.save()
                 print("quote Form is Valid")
+                last_id = (PkquoteInfo.objects.latest('id')).id
+                PkquoteInfo.objects.filter(id=last_id).update(qt_quote_num=quote_num_next)
                 messages.success(request, 'Record Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
                 # return redirect('/SMS/quote_update/')

@@ -2,6 +2,7 @@ from django.db import models
 from ..models import MyUser,Category,Stock_type,Natypeofwood,Source,Vendor_info
 
 class PkstockpurchasesInfo(models.Model):
+    sp_stockpurchase_num = models.CharField(max_length=100, null=True, blank=True, default='')
     sp_category = models.ForeignKey(Category, on_delete=models.CASCADE, default='')
     sp_stock_type = models.ForeignKey(Stock_type, on_delete=models.CASCADE, default='')
     sp_type_of_wood= models.ForeignKey(Natypeofwood, on_delete=models.CASCADE, default='')

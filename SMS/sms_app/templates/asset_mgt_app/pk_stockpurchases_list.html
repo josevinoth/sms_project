@@ -26,6 +26,8 @@
     <table  id="stockpurchases_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>Created On</th>
+            <th>Stock Purchases Number</th>
             <th>Category</th>
             <th>Stock Type</th>
             <th>Type Of Wood</th>
@@ -47,6 +49,8 @@
         <tbody>
         {% for stockpurchasesinfo in stockpurchases_list %}
         <tr>
+            <td> {{stockpurchasesinfo.sp_created_at}}</td>
+            <td> {{stockpurchasesinfo.sp_stockpurchase_num}}</td>
             <td> {{stockpurchasesinfo.sp_category}}</td>
             <td> {{stockpurchasesinfo.sp_stock_type}}</td>
             <td> {{stockpurchasesinfo.sp_type_of_wood}}</td>

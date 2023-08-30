@@ -15,6 +15,12 @@
 							<div class="col-12">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Quote Number</span>
+									</div>
+									{% render_field form.qt_quote_num id="qt_quote_num" readonly="True"  class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Date</span>
 									</div>
 									{% render_field form.qt_date id="qt_date" type="Date" class="form-control" %}

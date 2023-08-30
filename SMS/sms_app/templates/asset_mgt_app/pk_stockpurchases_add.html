@@ -15,6 +15,12 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Purchases Number</span>
+									</div>
+									{% render_field form.sp_stockpurchase_num id="sp_stockpurchase_num" readonly="True"  class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Category</span>
 									</div>
 									{% render_field form.sp_category id="sp_category" class="form-control " %}
@@ -67,6 +73,9 @@
 									</div>
 									{% render_field form.sp_width id="sp_width" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-6">
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Length</span>
@@ -85,8 +94,6 @@
 									</div>
 									{% render_field form.sp_price id="sp_price" class="form-control " %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quantity</span>

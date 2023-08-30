@@ -2,6 +2,7 @@ from django.db import models
 from ..models import MyUser,Natypeofwood,Stock_type,Category,Source
 
 class PkopeningstockInfo(models.Model):
+    os_openingstock_num = models.CharField(max_length=100, null=True, blank=True, default='')
     os_item_num = models.IntegerField(blank=True, null=True,default=0.0)
     os_category = models.ForeignKey(Category, on_delete=models.CASCADE, default='')
     os_stock_type = models.ForeignKey(Stock_type, on_delete=models.CASCADE, default='')

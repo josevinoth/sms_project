@@ -15,6 +15,12 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Opening Stock Number</span>
+									</div>
+									{% render_field form.os_openingstock_num id="os_openingstock_num" readonly="True"  class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Item No.</span>
 									</div>
 									{% render_field form.os_item_num id="os_item_num"  class="form-control" %}
