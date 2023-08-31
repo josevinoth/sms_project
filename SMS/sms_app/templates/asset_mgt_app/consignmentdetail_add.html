@@ -12,7 +12,7 @@
 					<div class="card-header text-center"><h3>Add/Update Consignment Details</h3></div>
 					<div class="card-body bg-light">
 						<div class="row">
-							<div class="col-6">
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
@@ -23,19 +23,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field con_det_form.co_consignmentnumber id="co_consignmentnumber" class="form-control disable_a_href" %}
+									{% render_field con_det_form.co_consignmentnumber id="co_consignmentnumber" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer</span>
 									</div>
 									{% render_field con_det_form.co_customer id="co_customer" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Business Type</span>
-									</div>
-									{% render_field con_det_form.co_businesstype class="form-control" %}
 								</div>
 								<div class="row">
 									<div class="col-10">
@@ -49,7 +43,6 @@
 									<div class="col-2">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<!--<span class="input-group-text">Customer Reference No.</span>-->
 											</div>
 											{% render_field con_det_form.co_cusrefnum_check id="co_cusrefnum_check" class="form-control" %}
 										</div>
@@ -57,9 +50,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Consignment Date</span>
+										<span class="input-group-text">Consignment Note Date</span>
 									</div>
 									{% render_field con_det_form.co_consignmentdate type="Date" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Frieght Amount (INR)</span>
+									</div>
+									{% render_field con_det_form.co_freight_amount id="co_freight_amount" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -73,7 +72,8 @@
 									</div>
 									{% render_field con_det_form.co_consignee class="form-control" %}
 								</div>
-
+							</div>
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner Invoice</span>
@@ -82,18 +82,48 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Currency Type</span>
+									</div>
+									{% render_field con_det_form.co_currency_type id="co_currency_type" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner Value</span>
 									</div>
 									{% render_field con_det_form.co_consignervalue class="form-control" %}
 								</div>
-							</div>
-							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consigner Invoice Date</span>
+									</div>
+									{% render_field con_det_form.co_consignerinvoice_date id="co_consignerinvoice_date" type="Date" class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Value in INR</span>
 									</div>
 									{% render_field con_det_form.co_valueininr class="form-control" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST Payable By</span>
+									</div>
+									{% render_field con_det_form.co_gst_payable_by id="co_gst_payable_by" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Seal Number</span>
+									</div>
+									{% render_field con_det_form.co_seal_number id="co_seal_number" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Container Number</span>
+									</div>
+									{% render_field con_det_form.co_container_number id="co_container_number" class="form-control" %}
+								</div>
+							</div>
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">No. Of Pieces</span>
@@ -135,12 +165,6 @@
 										<span class="input-group-text">Dimension</span>
 									</div>
 									{% render_field con_det_form.co_dimension class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Movement</span>
-									</div>
-									{% render_field con_det_form.co_movement class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">

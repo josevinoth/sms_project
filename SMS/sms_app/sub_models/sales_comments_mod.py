@@ -1,8 +1,8 @@
 from django.db import models
-from ..models import Callpurpose,Callnature,Calltype,MyUser
+from ..models import SalesInfo,Callpurpose,Callnature,Calltype,MyUser
 
 class Sales_Comments_Info(models.Model):
-    sc_sales_number = models.CharField(max_length=30,default = '')
+    sc_sales_number = models.ForeignKey(SalesInfo, related_name='SalesInfo', db_column='SalesInfo',on_delete=models.CASCADE, null=True,)
     sc_call_type = models.ForeignKey(Calltype,on_delete=models.CASCADE, default='')
     sc_call_nature = models.ForeignKey(Callnature,on_delete=models.CASCADE, default='')
     sc_call_purpose = models.ForeignKey(Callpurpose,on_delete=models.CASCADE, default='')
