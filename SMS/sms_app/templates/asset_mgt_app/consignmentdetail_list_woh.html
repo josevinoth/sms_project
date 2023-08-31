@@ -1,19 +1,4 @@
 {% block content %}
-<!--<div class="container-fluid" style="padding:15px;">-->
-<!--    <div class="row">-->
-<!--        <div class="col-5"></div>-->
-<!--        <div class="col-2 rounded text-center text-light bg-info">-->
-<!--            <h3>Consignment List</h3>-->
-<!--        </div>-->
-<!--        <div class="col-5"></div>-->
-<!--    </div>-->
-<!--</div>-->
-<!--<div class="container-fluid row">-->
-<!--    <div class="col-md-1">-->
-<!--      <a href="{% url 'enquirynote_list' %}" class="btn btn-primary btn-block btn-lg">-->
-<!--        <i class="fas fa-arrow-left"></i> Back-->
-<!--      </a>-->
-<!--    </div>-->
     <div class="col-md-1">
       <a href="{% url 'consignmentdetail_insert' %}"  id="modal" class="btn btn-success btn-block btn-lg">
         <i class="fas fa-plus"></i> Add
@@ -41,7 +26,6 @@
             <th>Date of Validity</th>
             <th>Container Description</th>
             <th>Dimension</th>
-            <th>Movement</th>
             <th>Status</th>
             <th>Updated On</th>
             <th>Updated By</th>
@@ -67,7 +51,6 @@
                 <td> {{consignmentdetailinfo.co_dateofvalidity}}</td>
                 <td> {{consignmentdetailinfo.co_containerdescription}}</td>
                 <td> {{consignmentdetailinfo.co_dimension}}</td>
-                <td> {{consignmentdetailinfo.co_movement}}</td>
                 <td> {{consignmentdetailinfo.co_status}}</td>
                 <td> {{consignmentdetailinfo.co_updated_at}}</td>
                 <td> {{consignmentdetailinfo.co_lastmodifiedby}}</td>
