@@ -1,11 +1,6 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<div class="col-md-1">
-	<a href="{% url 'na_dimension_list' %}" class="btn btn-primary btn-block btn-lg">
-		<i class="fas fa-arrow-left"></i> Back
-	</a>
-</div>
 <form method="POST" action="">
 	{% csrf_token %}
 	<div class="row">

@@ -2,7 +2,6 @@ from django.db import models
 from ..models import MyUser,Category,Stock_type,Natypeofwood,Source,Vendor_info
 
 class PkstockpurchasesInfo(models.Model):
-    sp_stockpurchase_num = models.CharField(max_length=100, null=True, blank=True, default='')
     sp_category = models.ForeignKey(Category, on_delete=models.CASCADE, default='')
     sp_stock_type = models.ForeignKey(Stock_type, on_delete=models.CASCADE, default='')
     sp_type_of_wood= models.ForeignKey(Natypeofwood, on_delete=models.CASCADE, default='')
@@ -24,9 +23,10 @@ class PkstockpurchasesInfo(models.Model):
     sp_created_at = models.DateField(null=True, auto_now_add=True)
     sp_updated_at = models.DateField(null=True, auto_now=True)
     sp_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='sp_updated_by',db_column='sp_updated_by', null=True)
+    sp_purchase_num=models.CharField(max_length=50,blank=True,null=True)
 
     class Meta:
-        ordering = ["sp_vendor_name"]
+        ordering = ["sp_purchase_num"]
 
     def __str__(self):
-        return self.sp_vendor_name
+        return self.sp_purchase_num

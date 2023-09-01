@@ -2,22 +2,22 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="quote_add"  >
+<form method="POST" action="" id="quotes_add"   >
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-3"></div>
 		<div class="col-6">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Quote</h3></div>
+					<div class="card-header text-center"><h3>Add/Update Quotes</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col-12">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Quote Number</span>
+										<span class="input-group-text">Quotes Number</span>
 									</div>
-									{% render_field form.qt_quote_num id="qt_quote_num" readonly="True"  class="form-control" %}
+									{% render_field form.qt_quotes_num id="qt_quotes_num" readonly="True"  class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -47,31 +47,31 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total</span>
 									</div>
-									{% render_field form.qt_total id="qt_total" class="form-control " %}
+									{% render_field form.qt_total id="qt_total"  class="form-control " %}
 								</div>
 								{% render_field form.qt_updated_by id="qt_updated_by" hidden="True" class="form-control" %}
-						</div>
-					</div>
-					<div class="row">
-						<div class="col-1"></div>
-						<div class="col-10">
-							<div class="message text-center">
-								{% for message in messages %}
-								<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-								{% endfor %}
 							</div>
 						</div>
-						<div class="col-1"></div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'quotes_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
 					</div>
-					<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-					<a href="{% url 'quote_list' %}" class="btn btn-danger float-right">
-						<i class="fas fa-times"></i> Cancel
-					</a>
 				</div>
 			</div>
 		</div>
-	</div>
-	<div class="col-2"></div>
+		<div class="col-2"></div>
 	</div>
 </form>
 <script>

@@ -33,11 +33,6 @@ def sales_add(request, sales_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
-    # # Generate Random sales number
-    # last_id = (SalesInfo.objects.values_list('id', flat=True)).last()
-    # if last_id == None:
-    #     last_id = 0
-    # sales_num = randint(10000, 99999) + last_id + 1
     if request.method == "GET":
         if sales_id == 0:
             form = SalesinfoaddForm()
@@ -52,14 +47,25 @@ def sales_add(request, sales_id=0):
             }
             return render(request, "asset_mgt_app/sales_add.html", context)
         else:
-            # print(context)
+            # # Update sales ID in sales comments table
+            # sales_comments_num_list = list(SalesInfo.objects.all().values_list('s_sale_number', flat=True))
+            # for i in sales_comments_num_list:
+            #     print(i)
+            #     try:
+            #         sales_num_id = SalesInfo.objects.get(s_sale_number=i).id
+            #     except ObjectDoesNotExist:
+            #         pass
+            #     print(sales_num_id)
+            #     Sales_Comments_Info.objects.filter(sc_sales_number=i).update(sc_sales_number=sales_num_id)
+
             salesinfo = SalesInfo.objects.get(pk=sales_id)
             form = SalesinfoaddForm(instance=salesinfo)
             ses_sales_num_val = request.session.get('ses_sales_num')
             sale_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
             sale_num_id=SalesInfo.objects.get(s_sale_number=sale_num).id
-            request.session['ses_sales_num'] = sale_num
-            comments_list_filterd = Sales_Comments_Info.objects.filter(sc_sales_number=sale_num)
+            request.session['ses_sales_num_id'] = sale_num_id
+            comments_list_filterd = Sales_Comments_Info.objects.filter(sc_sales_number=sale_num_id)
+
             context={
                 'form': form,
                 'role': role,
@@ -106,7 +112,7 @@ def sales_add(request, sales_id=0):
             else:
                 print("Sales Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-            return redirect(request.META['HTTP_REFERER'])
+        return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/sales_list')
 
 # Delete Assets
@@ -127,7 +133,7 @@ def sales_comments_add(request, sales_comments_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
-    ses_sales_num_val=request.session.get('ses_sales_num')
+    ses_sales_num_id=request.session.get('ses_sales_num_id')
     if request.method == "GET":
         if sales_comments_id == 0:
             sales_comments_form = SalescommentForm()
@@ -140,7 +146,7 @@ def sales_comments_add(request, sales_comments_id=0):
             'role': role,
             'first_name': first_name,
             'user_id': user_id,
-            'ses_sales_num_val': ses_sales_num_val,
+            'ses_sales_num_id': ses_sales_num_id,
         }
         return render(request, "asset_mgt_app/sales_comments_add.html", context)
     else:

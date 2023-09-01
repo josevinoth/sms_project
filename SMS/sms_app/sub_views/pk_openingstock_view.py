@@ -31,17 +31,17 @@ def openingstock_add(request,openingstock_id=0):
                 # Generate Random Opening Stock number
                 try:
                     last_id = PkopeningstockInfo.objects.latest('id').id
-                    openingstock_num_next = str('openstk_') + str(
-                        int(((PkopeningstockInfo.objects.get(id=last_id)).os_openingstock_num).replace('openstk_','')) + 1)
+                    openingstock_num_next = str('OS_') + str(
+                        int(((PkopeningstockInfo.objects.get(id=last_id)).os_stock_number).replace('OS_','')) + 1)
                 except ObjectDoesNotExist:
-                    openingstock_num_next = str('openstk_') + str(randint(10000, 99999))
+                    openingstock_num_next = str('OS_') + str(1000000)
                 form.save()
                 print("openingstock Form is Valid")
                 last_id = (PkopeningstockInfo.objects.latest('id')).id
-                PkopeningstockInfo.objects.filter(id=last_id).update(os_openingstock_num=openingstock_num_next)
+                PkopeningstockInfo.objects.filter(id=last_id).update(os_stock_number=openingstock_num_next)
                 messages.success(request, 'Record Updated Successfully')
-                return redirect(request.META['HTTP_REFERER'])
-                # return redirect('/SMS/openingstock_update/')
+                # return redirect(request.META['HTTP_REFERER'])
+                return redirect('/SMS/openingstock_update/'+str(last_id))
             else:
                 print("openingstock Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')

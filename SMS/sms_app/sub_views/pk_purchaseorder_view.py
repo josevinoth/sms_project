@@ -31,11 +31,10 @@ def purchaseorder_add(request,purchaseorder_id=0):
                 # Generate Random purchaseorder number
                 try:
                     last_id = PkpurchaseorderInfo.objects.latest('id').id
-                    purchaseorder_num_next = str('purorder_') + str(
-                        int(((PkpurchaseorderInfo.objects.get(id=last_id)).po_num).replace('purorder_',
-                                                                                                       '')) + 1)
+                    purchaseorder_num_next = str('PO_') + str(
+                        int(((PkpurchaseorderInfo.objects.get(id=last_id)).po_num).replace('PO_','')) + 1)
                 except ObjectDoesNotExist:
-                    purchaseorder_num_next = str('purorder_') + str(randint(10000, 99999))
+                    purchaseorder_num_next = str('PO_') + str(1000000)
                 form.save()
                 print("PkpurchaseorderInfo Form is Valid")
                 last_id = (PkpurchaseorderInfo.objects.latest('id')).id
