@@ -28,7 +28,6 @@
         <tr>
             <th>Created On</th>
             <th>Opening Stock NUmber</th>
-            <th>Item No.</th>
             <th>Category</th>
             <th>Stock Type</th>
             <th>Type Of Wood</th>
@@ -48,8 +47,7 @@
         {% for openingstockinfo in openingstock_list %}
         <tr>
             <td> {{openingstockinfo.os_created_at}}</td>
-            <td> {{openingstockinfo.os_openingstock_num}}</td>
-            <td> {{openingstockinfo.os_item_num}}</td>
+            <td> {{openingstockinfo.os_stock_number}}</td>
             <td> {{openingstockinfo.os_category}}</td>
             <td> {{openingstockinfo.os_stock_type}}</td>
             <td> {{openingstockinfo.os_type_of_wood}}</td>

@@ -31,18 +31,18 @@ def stockpurchases_add(request,stockpurchases_id=0):
                 # Generate Random stockpurchases number
                 try:
                     last_id = PkstockpurchasesInfo.objects.latest('id').id
-                    stockpurchases_num_next = str('stkpur_') + str(
-                        int(((PkstockpurchasesInfo.objects.get(id=last_id)).sp_stockpurchase_num).replace('stkpur_',
+                    stockpurchases_num_next = str('SP_') + str(
+                        int(((PkstockpurchasesInfo.objects.get(id=last_id)).sp_purchase_num).replace('SP_',
                                                                                                        '')) + 1)
                 except ObjectDoesNotExist:
-                    stockpurchases_num_next = str('stkpur_') + str(randint(10000, 99999))
+                    stockpurchases_num_next = str('SP_') + str(1000000)
                 form.save()
                 print("stockpurchases Form is Valid")
                 last_id = (PkstockpurchasesInfo.objects.latest('id')).id
-                PkstockpurchasesInfo.objects.filter(id=last_id).update(sp_stockpurchase_num=stockpurchases_num_next)
+                PkstockpurchasesInfo.objects.filter(id=last_id).update(sp_purchase_num=stockpurchases_num_next)
                 messages.success(request, 'Record Updated Successfully')
-                return redirect(request.META['HTTP_REFERER'])
-                # return redirect('/SMS/stockpurchases_update/')
+                # return redirect(request.META['HTTP_REFERER'])
+                return redirect('/SMS/stockpurchases_update/'+str(last_id))
             else:
                 print("stockpurchases Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
