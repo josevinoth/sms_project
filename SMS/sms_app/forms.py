@@ -85,3 +85,5 @@ from.sub_forms.pk_stockpurchasesForm_form import PkstockpurchasesForm
 from.sub_forms.pk_purchaseorderForm_form import PkpurchaseorderForm
 from.sub_forms.na_dimensionForm import NadimensionForm
 from.sub_forms.pk_quotesForm_form import PkquotesForm
+from.sub_forms.pk_costingForm_form import PkcostingForm
+from.sub_forms.pk_costing_summaryForm_form import PkcostingsummaryForm

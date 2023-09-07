@@ -1,0 +1,87 @@
+{% block content %}
+<div class="container-fluid row">
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
+<!--            <i class="fas fa-arrow-left"></i> Back-->
+<!--        </a>-->
+<!--    </div>-->
+    <div class="col-md-1">
+        <a href="{% url 'costing_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="costing_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Created On</th>
+            <th>Assessment Number</th>
+            <th>Cost Type</th>
+            <th>Cost Description</th>
+            <th>Width(inch)</th>
+            <th>Height(inch)</th>
+            <th>Type Of Wood</th>
+            <th>UOM</th>
+            <th>Quantity</th>
+            <th>Size</th>
+            <th>CFT</th>
+            <th>Rate</th>
+            <th>Days</th>
+            <th>Total Cost</th>
+            <th>Updated at</th>
+            <th>Updated By</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+        {% for costinginfo in costing_list %}
+        <tr>
+            <td> {{costinginfo.ct_created_at}}</td>
+            <td> {{costinginfo.ct_assessment_num}}</td>
+            <td> {{costinginfo.ct_cost_type}}</td>
+            <td> {{costinginfo.ct_cost_description}}</td>
+            <td> {{costinginfo.ct_width}}</td>
+            <td> {{costinginfo.ct_height}}</td>
+            <td> {{costinginfo.ct_type_of_wood}}</td>
+            <td> {{costinginfo.ct_quantity}}</td>
+            <td> {{costinginfo.ct_size}}</td>
+            <td> {{costinginfo.ct_uom}}</td>
+            <td> {{costinginfo.ct_cft}}</td>
+            <td> {{costinginfo.ct_rate}}</td>
+            <td> {{costinginfo.ct_days}}</td>
+            <td> {{costinginfo.ct_total_cost}}</td>
+            <td> {{costinginfo.ct_updated_at}}</td>
+            <td> {{costinginfo.ct_updated_by}}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'costing_update' costinginfo.id %}" class="btn btn-primary">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'costing_delete' costinginfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#costing_list').DataTable({
+         order: [0, 'asc' ],
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ],
+    });
+} );
+</script>
+
+{% endblock content %}

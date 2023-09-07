@@ -391,4 +391,12 @@ urlpatterns = [
     path('quotes_insert/', views.quotes_add, name='quotes_insert'),  # Add quotes
     path('quotes_update/<int:quotes_id>', views.quotes_add, name='quotes_update'),# update quotes
     path('quotes_delete/<int:quotes_id>', views.quotes_delete, name='quotes_delete'),# delete quotes
+    path('costing_list/', views.costing_list, name='costing_list'),  # List costing
+    path('costing_insert/', views.costing_add, name='costing_insert'),  # Add costing
+    path('costing_update/<int:costing_id>', views.costing_add, name='costing_update'),  # update costing
+    path('costing_delete/<int:costing_id>', views.costing_delete, name='costing_delete'),  # delete costing
+    path('costingsummary_list/', views.costingsummary_list, name='costingsummary_list'),  # List costingsummary
+    path('costingsummary_insert/', views.costingsummary_add, name='costingsummary_insert'),  # Add costingsummary
+    path('costingsummary_update/<int:costingsummary_id>', views.costingsummary_add, name='costingsummary_update'),  # update costingsummary
+    path('costingsummary_delete/<int:costingsummary_id>', views.costingsummary_delete, name='costingsummary_delete'),  # delete costingsummary
 ]

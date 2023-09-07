@@ -52,6 +52,7 @@
             <td> {{needassessmentinfo.na_plywood_thickness}}</td>
             <td> {{needassessmentinfo.na_updated_at}}</td>
             <td> {{needassessmentinfo.na_updated_by}}</td>
+
             <td>
                 <a class="btn btn-primary" href="{% url 'needassessment_update' needassessmentinfo.id %}" class="btn btn-primary">
                     <i class="far fa-edit"></i>
@@ -69,6 +70,7 @@
         {% endfor %}
         </tbody>
     </table>
+
 </div>
 <script>
     $(document).ready(function() {

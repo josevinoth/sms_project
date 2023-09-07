@@ -1,0 +1,151 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="" id="costing_add"   >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-3"></div>
+		<div class="col-6">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Costing</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-12">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Assessment Number</span>
+									</div>
+									{% render_field form.ct_assessment_num id="ct_assessment_num"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Costing Type</span>
+									</div>
+									{% render_field form.ct_cost_type id="ct_cost_type" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Cost Description</span>
+									</div>
+									{% render_field form.ct_cost_description id="ct_cost_description" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width(inch)</span>
+									</div>
+									{% render_field form.ct_width id="ct_width" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height(inch)</span>
+									</div>
+									{% render_field form.ct_height id="ct_height" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Type Of Wood</span>
+									</div>
+									{% render_field form.ct_type_of_wood id="ct_type_of_wood" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">UOM</span>
+									</div>
+									{% render_field form.ct_uom id="ct_uom" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quantity</span>
+									</div>
+									{% render_field form.ct_quantity id="ct_quantity" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Size</span>
+									</div>
+									{% render_field form.ct_size id="ct_size" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">CFT</span>
+									</div>
+									{% render_field form.ct_cft id="ct_cft" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Rate</span>
+									</div>
+									{% render_field form.ct_rate id="ct_rate" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Days</span>
+									</div>
+									{% render_field form.ct_days id="ct_days" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Cost</span>
+									</div>
+									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control " %}
+								</div>
+								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
+
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'costingsummary_insert' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-3"></div>
+	</div>
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("ct_updated_by").value ='{{user_id}}';
+	document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
+	});
+</script>
+
+<script>
+$(document).ready(function () {
+    // Function to calculate total cost
+    function calculateTotalCost() {
+        // Get the values of Rate and CFT fields
+        var rate = parseFloat($("#ct_rate").val()) || 0;
+        var cft = parseFloat($("#ct_cft").val()) || 0;
+
+        // Calculate the total cost
+        var totalCost = rate * cft;
+
+        // Update the Total Cost field with the calculated value
+        $("#ct_total_cost").val(totalCost.toFixed(2)); // You can adjust the number of decimal places as needed
+    }
+
+    // Attach an input event listener to the Rate and CFT fields
+    $("#ct_rate, #ct_cft").on("input", calculateTotalCost);
+
+    // Call the calculateTotalCost function initially to set the initial value
+    calculateTotalCost();
+});
+</script>
+
+{% endblock content %}

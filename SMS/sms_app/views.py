@@ -95,3 +95,5 @@ from .sub_views.pk_openingstock_view import openingstock_add,openingstock_list,o
 from .sub_views.pk_stockpurchases_view import stockpurchases_add,stockpurchases_list,stockpurchases_delete
 from .sub_views.pk_purchaseorder_view import purchaseorder_add,purchaseorder_list,purchaseorder_delete
 from .sub_views.pk_quotes_view import quotes_add,quotes_list,quotes_delete
+from .sub_views.pk_costing_view import costing_add,costing_list,costing_delete
+from .sub_views.pk_costing_summary_view import costingsummary_add,costingsummary_list,costingsummary_delete
