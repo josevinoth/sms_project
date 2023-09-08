@@ -10,6 +10,21 @@ import json
 # Add WH Job
 @login_required(login_url='login_page')
 def loadingbay_add(request, loadingbay_id=0):
+    loading_date=list(Loadingbay_Info.objects.all().values_list('lb_stock_unloading_start_time',flat=True))
+    unloading_date=list(Loadingbay_Info.objects.all().values_list('lb_stock_unloading_end_time',flat=True))
+    for i in loading_date:
+        if i!=None:
+            lb_id = Loadingbay_Info.objects.get(lb_stock_unloading_start_time=i).id
+            i = i[:-6]
+            Loadingbay_Info.objects.filter(pk=lb_id).update(lb_stock_unloading_start_time=i)
+
+    for j in unloading_date:
+        if j!=None:
+            lb_id = Loadingbay_Info.objects.get(lb_stock_unloading_end_time=j).id
+            j = j[:-6]
+            Loadingbay_Info.objects.filter(pk=lb_id).update(lb_stock_unloading_end_time=j)
+
+
     first_name = request.session.get('first_name')
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     wh_job_id = request.session.get('ses_gatein_id_nam')
