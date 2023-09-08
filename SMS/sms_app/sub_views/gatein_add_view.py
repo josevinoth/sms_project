@@ -15,6 +15,14 @@ import json
 @transaction.atomic
 @login_required(login_url='login_page')
 def gatein_add(request, gatein_id=0):
+    arrival_date=list(Gatein_info.objects.all().values_list('gatein_arrival_date',flat=True))
+    for i in arrival_date:
+        if i!=None:
+            lb_id = list(Gatein_info.objects.filter(gatein_arrival_date=i).values_list('id',flat=True))
+            i = i[:-6]
+            for j in lb_id:
+                Gatein_info.objects.filter(pk=j).update(gatein_arrival_date=i)
+
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
