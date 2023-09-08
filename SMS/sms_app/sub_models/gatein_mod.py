@@ -6,7 +6,7 @@ class Gatein_info(models.Model):
     gatein_invoice = models.CharField(blank=False, null=False,max_length=400)
     gatein_customer = models.ForeignKey(CustomerInfo,on_delete=models.CASCADE, blank=False, null=False)
     gatein_customer_type = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, blank=False, null=False)
-    gatein_arrival_date = models.CharField(blank=True, null=True,max_length=20)
+    gatein_arrival_date = models.DateTimeField(blank=True, null=True)
     gatein_department = models.ForeignKey(CustomerdepartmentInfo,on_delete=models.CASCADE, blank=False, null=False)
     gatein_shipper = models.CharField(blank=True, null=True, max_length=200)
     gatein_consignee = models.CharField(blank=True, null=True, max_length=20)
