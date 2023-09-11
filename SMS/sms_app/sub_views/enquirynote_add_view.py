@@ -1,10 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.contrib import messages
 from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm
 from ..models import StatusList,TripclosureInfo,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect
-
 @login_required(login_url='login_page')
 def enquirynote_add(request,enquirynote_id=0):
     first_name = request.session.get('first_name')
@@ -31,16 +30,38 @@ def enquirynote_add(request,enquirynote_id=0):
         if enquirynote_id == 0:
             print("I am inside post add Enuirynote")
             form = EnquirynoteaddForm(request.POST)
+            if form.is_valid():
+                try:
+                    last_id = EnquirynoteInfo.objects.latest('id').id
+                    enquiry_num_next = str('EN_') + str(
+                        int(((EnquirynoteInfo.objects.get(id=last_id)).en_enquirynumber).replace('EN_', '')) + 1)
+                except ObjectDoesNotExist:
+                    enquiry_num_next = str('EN_') + str(1000000)
+                form.save()
+                print("Enquiry Main Form Saved")
+                last_id = EnquirynoteInfo.objects.latest('id').id
+                EnquirynoteInfo.objects.filter(id=last_id).update(en_enquirynumber=enquiry_num_next)
+                messages.success(request, 'Record Updated Successfully')
+                enquiry_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num_next).id
+                return redirect('/SMS/enquirynote_update/' + str(enquiry_id))
+            else:
+                print("Enquiry Main Form not Saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+                return redirect(request.META['HTTP_REFERER'])
         else:
             print("I am inside post edit Enquirynote")
             enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
             form = EnquirynoteaddForm(request.POST,instance=enquirynote)
-        if form.is_valid():
-            form.save()
-            print("Main Form Saved")
-        else:
-            print("Main Form not Saved")
-        return redirect('/SMS/enquirynote_list')
+            if form.is_valid():
+                form.save()
+                print("Enquiry Main Form Saved")
+                messages.success(request, 'Record Updated Successfully')
+                return redirect(request.META['HTTP_REFERER'])
+            else:
+                print("Enquiry Main Form not Saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+                return redirect(request.META['HTTP_REFERER'])
+            # return redirect('/SMS/enquirynote_list')
 
 # List enquirynote
 @login_required(login_url='login_page')
@@ -48,7 +69,7 @@ def enquirynote_list(request):
     global consignment_status_id, trip_details_status_id
     print("Inside Enquiry List")
     first_name = request.session.get('first_name')
-    enquiry_num_list=EnquirynoteInfo.objects.filter()
+    enquiry_num_list=EnquirynoteInfo.objects.all()
     for m in enquiry_num_list:
         try:
             consignment_status_id_list=[]
@@ -69,8 +90,12 @@ def enquirynote_list(request):
         except ObjectDoesNotExist:
             trip_details_status_id = 6
         try:
-            trip_closure_status = TripclosureInfo.objects.get(tc_enquirynumber=m).tc_financestatus
-            trip_closure_status_id = StatusList.objects.get(status_title=trip_closure_status).id
+            trip_closure_status_id=[]
+            trip_closure_status = TripclosureInfo.objects.filter(tc_enquirynumber=m).values_list('tc_financestatus',flat=True)
+            for k in trip_closure_status:
+                trip_closure_status_id.append(StatusList.objects.get(status_title=k).id)
+            if all(element == 5 for element in (trip_closure_status_id)):
+                trip_closure_status_id=5
         except ObjectDoesNotExist:
             trip_closure_status_id = 6
 
@@ -140,13 +165,13 @@ def consignment_note_connect(request,enquirynote_id):
 @login_required(login_url='login_page')
 def enquirynote_delete(request,enquirynote_id):
     enquiry_num = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
-    consignment_num_list = list(ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num).values_list('co_consignmentnumber',flat=True))
-    tripdetails_list=list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list('tr_tripnumber',flat=True))
+    enquiry_num_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).id
+    consignment_num_list = list(ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id).values_list('co_consignmentnumber',flat=True))
+    tripdetails_list=list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id).values_list('tr_tripnumber',flat=True))
     for i in consignment_num_list:
         consignment_note=ConsignmentdetailInfo.objects.get(co_consignmentnumber=i)
         consignment_note.delete()
     for j in tripdetails_list:
-        print(j)
         tripdetails_note=TripdetailInfo.objects.get(tr_tripnumber=j)
         tripdetails_note.delete()
     enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)

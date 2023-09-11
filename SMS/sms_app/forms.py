@@ -45,7 +45,7 @@ from .sub_forms.movementtypeform_Form import MovementtypeaddForm
 from .sub_forms.trbusinesstypeform_Form import TrbusinesstypeaddForm
 from .sub_forms.vehiclesourceform_Form import VehiclesourceaddForm
 from .sub_forms.vehiclenumberform_Form import VehiclenumberaddForm
-from .sub_forms.tripclosureform_Form import TripclosureaddForm
+from .sub_forms.tripclosureform_Form import TripclosureaddForm,TripclosurefilesForm
 from .sub_forms.vhmanufacturerform_Form import VhmanufactureraddForm
 from .sub_forms.vehiclemodelform_Form import VehiclemodeladdForm
 from .sub_forms.ownershipform_Form import OwnershipaddForm
@@ -87,3 +87,4 @@ from.sub_forms.na_dimensionForm import NadimensionForm
 from.sub_forms.pk_quotesForm_form import PkquotesForm
 from.sub_forms.pk_costingForm_form import PkcostingForm
 from.sub_forms.pk_costing_summaryForm_form import PkcostingsummaryForm
+from.sub_forms.vehicle_allotment_Form import VehicleallotmentForm

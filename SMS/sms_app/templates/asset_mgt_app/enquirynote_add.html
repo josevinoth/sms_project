@@ -17,7 +17,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field form.en_enquirynumber id="en_enquirynumber" class="form-control disable_a_href" %}
+									{% render_field form.en_enquirynumber id="en_enquirynumber" readonly="True" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -115,7 +115,18 @@
 								{% render_field form.en_updated_by id="en_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>
-						<button type="submit" class="btn btn-success" onclick="enq_num()"><i class="fas fa-check"></i> Submit</button>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
@@ -126,20 +137,6 @@
 		<div class="col-2"></div>
 	</div>
 </form>
-<script>
-function enq_num() {
-  var ran=Math.floor((Math.random() * 1000000) + 1)
-  var jn=document.getElementById("en_enquirynumber").value
-   if (jn=="")
-	   {
-			document.getElementById("en_enquirynumber").value ="EN_"+ ran;
-	   }
-   else
-		{
-			document.getElementById("en_enquirynumber").value =jn;
-		}
-	}
-</script>>
 <script>
 $(document).ready(function() {
 	document.getElementById("en_updated_by").value ='{{user_id}}';

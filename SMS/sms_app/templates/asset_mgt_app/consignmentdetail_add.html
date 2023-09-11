@@ -203,28 +203,20 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("co_lastmodifiedby").value ='{{user_id}}';
-	document.getElementById("co_enquirynumber").value ='{{enquiry_num}}';
+	var enquiry_num_id=document.getElementById("co_enquirynumber").value
+	if (enquiry_num_id=="")
+		{
+			document.getElementById("co_enquirynumber").value ='{{enquiry_num_id}}';
+		}
+	else
+		{
+			document.getElementById("co_enquirynumber").value =enquiry_num_id;
+		}
 	var customer=document.getElementById("co_customer").value
 	if (customer=="")
 		{
 			document.getElementById("co_customer").value='{{customer_id}}';
 		}
-	consignment_num();
   });
 </script>
-
-<script>
-function consignment_num() {
-  var ran=Math.floor((Math.random() * 1000000) + 1)
-  var jn=document.getElementById("co_consignmentnumber").value
-   if (jn=="")
-	   {
-			document.getElementById("co_consignmentnumber").value ="CON_"+ ran;
-	   }
-   else
-		{
-			document.getElementById("co_consignmentnumber").value =jn;
-		}
-	}
-</script>>
 {% endblock content %}

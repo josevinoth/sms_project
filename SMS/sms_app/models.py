@@ -89,7 +89,7 @@ from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from .sub_models.vehiclesource_mod import VehiclesourceInfo
 from .sub_models.vehiclenumber_mod import VehiclenumberInfo
 from .sub_models.vehicledetail_mod import VehicledetailInfo
-from .sub_models.tripdetail_mod import TripdetailInfo
+from .sub_models.tripdetail_mod import TripdetailInfo,Trip_category_info,Trip_closure_files_Info
 from .sub_models.tripclosure_mod import TripclosureInfo
 from .sub_models.vhmanufacturer_mod import VhmanufacturerInfo
 from .sub_models.vehiclemodel_mod import VehiclemodelInfo
@@ -146,3 +146,5 @@ from .sub_models.cost_description_mod import Costdescription
 from .sub_models.unit_of_measure_mod import Unitofmeasure
 from .sub_models.pk_costing_mod import PkcostingInfo
 from .sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
+from .sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+from .sub_models.test_info_mod import TestInfo

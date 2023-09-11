@@ -399,4 +399,10 @@ urlpatterns = [
     path('costingsummary_insert/', views.costingsummary_add, name='costingsummary_insert'),  # Add costingsummary
     path('costingsummary_update/<int:costingsummary_id>', views.costingsummary_add, name='costingsummary_update'),  # update costingsummary
     path('costingsummary_delete/<int:costingsummary_id>', views.costingsummary_delete, name='costingsummary_delete'),  # delete costingsummary
+    path('vehicle_allotment_list/', views.vehicle_allotment_list, name='vehicle_allotment_list'),  # List vehicle_allotment
+    path('vehicle_allotment_insert/', views.vehicle_allotment_add, name='vehicle_allotment_insert'),  # Add vehicle_allotment
+    path('vehicle_allotment_update/<int:vehicle_allotment_id>', views.vehicle_allotment_add, name='vehicle_allotment_update'),  # update vehicle_allotment
+    path('vehicle_allotment_delete/<int:vehicle_allotment_id>', views.vehicle_allotment_delete, name='vehicle_allotment_delete'),  # delete vehicle_allotment
+    path('vehicle_allotment_nav/<int:vehicle_allotment_id>', views.vehicle_allotment_nav, name='vehicle_allotment_nav'),  # nav vehicle_allotment
+
 ]

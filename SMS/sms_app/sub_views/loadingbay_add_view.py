@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from ..forms import LoadingbayddForm,LoadingbayImagesForm
 from django.contrib.auth.decorators import login_required
-from ..models import WhratemasterInfo,CustomerInfo,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,Loadingbayimages_Info,Currency_type
+from ..models import TestInfo,WhratemasterInfo,CustomerInfo,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,Loadingbayimages_Info,Currency_type
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 import json
@@ -10,21 +10,6 @@ import json
 # Add WH Job
 @login_required(login_url='login_page')
 def loadingbay_add(request, loadingbay_id=0):
-    loading_date=list(Loadingbay_Info.objects.all().values_list('lb_stock_unloading_start_time',flat=True))
-    unloading_date=list(Loadingbay_Info.objects.all().values_list('lb_stock_unloading_end_time',flat=True))
-    for i in loading_date:
-        if i!=None:
-            lb_id = Loadingbay_Info.objects.get(lb_stock_unloading_start_time=i).id
-            i = i[:-6]
-            Loadingbay_Info.objects.filter(pk=lb_id).update(lb_stock_unloading_start_time=i)
-
-    for j in unloading_date:
-        if j!=None:
-            lb_id = Loadingbay_Info.objects.get(lb_stock_unloading_end_time=j).id
-            j = j[:-6]
-            Loadingbay_Info.objects.filter(pk=lb_id).update(lb_stock_unloading_end_time=j)
-
-
     first_name = request.session.get('first_name')
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     wh_job_id = request.session.get('ses_gatein_id_nam')
@@ -98,6 +83,14 @@ def loadingbay_add(request, loadingbay_id=0):
         forklift_nxt_2hr = None
 
     if request.method == "GET":
+        job_list=list(TestInfo.objects.all().values_list('stock_num',flat=True))
+        for i in job_list:
+            try:
+                arrival_date=TestInfo.objects.get(stock_num=i).date_of_arrival
+                print(type(arrival_date))
+                Gatein_info.objects.filter(gatein_job_no=i).update(gatein_arrival_date=arrival_date)
+            except ObjectDoesNotExist:
+                pass
         if loadingbay_id == 0:
             print("I am inside Get add Loading bay")
             loadingbay_form = LoadingbayddForm()

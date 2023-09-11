@@ -1,7 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" action="">
+<form method="POST" action="" enctype="multipart/form-data">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-2"></div>
@@ -16,68 +16,114 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field tripclosure_form.tc_enquirynumber id="tc_enquirynumber" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									{% render_field tripclosure_form.tr_enquirynumber id="tr_enquirynumber" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field tripclosure_form.tc_consignmentnumber id="tc_consignmentnumber" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									{% render_field tripclosure_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Number</span>
 									</div>
-									{% render_field tripclosure_form.tc_tripnumber id="tc_tripnumber" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									{% render_field tripclosure_form.tr_tripnumber id="tr_tripnumber" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Cost</span>
 									</div>
 									{% render_field tripclosure_form.tc_tripcost class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Parking Cost</span>
 									</div>
 									{% render_field tripclosure_form.tc_parkingcost class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Toll Cost</span>
 									</div>
 									{% render_field tripclosure_form.tc_tollcost class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Loading Cost</span>
 									</div>
 									{% render_field tripclosure_form.tc_loadingcost class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading Cost</span>
 									</div>
 									{% render_field tripclosure_form.tc_unloadingcost class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weighment Cost</span>
+									</div>
+									{% render_field tripclosure_form.tc_weighmentcost id="tc_weighmentcost" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Handling Cost</span>
+									</div>
+									{% render_field tripclosure_form.tc_handlingcost id="tc_handlingcost" class="form-control" %}
 								</div>
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Trip Cost</span>
+									</div>
+									{% render_field tripclosurefiles_form.tcf_trip_cost id="tcf_trip_cost" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Parking Cost</span>
+									</div>
+									{% render_field tripclosurefiles_form.tcf_parking_cost id="tcf_parking_cost" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Toll Cost</span>
+									</div>
+									{% render_field tripclosurefiles_form.tcf_toll_cost id="tcf_toll_cost" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Loading Cost</span>
+									</div>
+									{% render_field tripclosurefiles_form.tcf_loading_cost id="tcf_loading_cost" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Un-Loading Cost</span>
+									</div>
+									{% render_field tripclosurefiles_form.tcf_unloading_cost id="tcf_unloading_cost" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weighment Cost</span>
+									</div>
+									{% render_field tripclosurefiles_form.tcf_weighment_cost id="tcf_weighment_cost" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Handling Cost</span>
+									</div>
+									{% render_field tripclosurefiles_form.tcf_handling_cost id="tcf_handling_cost" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Finance Status</span>
 									</div>
 									{% render_field tripclosure_form.tc_financestatus class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								{% render_field tripclosure_form.tc_updated_by id="tc_updated_by" hidden="True" class="form-control" %}
+								{% render_field tripclosure_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
+								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
 							</div>
 						</div>
 						<div class="row">
@@ -105,11 +151,16 @@
 </form>
 <script>
 $(document).ready(function() {
-	document.getElementById("tc_updated_by").value ='{{user_id}}';
-	document.getElementById("tc_enquirynumber").value ='{{enquiry_num}}';
-<!--	document.getElementById("tc_consignmentnumber").value ='{{consignment_num}}';-->
-	document.getElementById("tc_tripnumber").value ='{{trip_num}}';
-	tripnum();
-  });
+	document.getElementById("tr_updated_by").value ='{{user_id}}';
+	var tr_enquirynumber_val=document.getElementById("tr_enquirynumber").value;
+	if (tr_enquirynumber_val=="")
+	{
+		document.getElementById("tr_enquirynumber").value ='{{enquiry_num}}';
+	}
+	else
+	{
+		document.getElementById("tr_enquirynumber").value =tr_enquirynumber_val;
+	}
+ });
 </script>
 {% endblock content %}

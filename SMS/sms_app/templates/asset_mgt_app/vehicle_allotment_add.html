@@ -1,0 +1,149 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" action="">
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Vehicle Allotment</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Enquiry Number</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_enquirynumber id="va_enquirynumber" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consignment Number</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_consignmentnumber id="va_consignmentnumber" class="form-control" %}
+								</div>
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Vehicle Type Requested</span>
+											</div>
+											{% render_field vehicle_allotment_form.va_vehicletype id="va_vehicletype" class="form-control" %}
+										</div>
+									</div>
+									<div class="col-2">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<!--										<span class="input-group-text">Vehicle Type Requested</span>-->
+											</div>
+											{% render_field vehicle_allotment_form.va_vehicletype_selection_requested id="va_vehicletype_selection_requested" class="form-control" %}
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Vehicle Type Placed</span>
+											</div>
+											{% render_field vehicle_allotment_form.va_vehicletype_placed id="va_vehicletype_placed" class="form-control" %}
+										</div>
+									</div>
+									<div class="col-2">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<!--										<span class="input-group-text">Vehicle Type Requested</span>-->
+											</div>
+											{% render_field vehicle_allotment_form.va_vehicletype_selection_placed id="va_vehicletype_selection_placed" class="form-control" %}
+										</div>
+									</div>
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Source</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_vehiclesource id="va_vehiclesource" class="form-control" %}
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Number</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Driver Name</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Driver Number</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Driver License</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control" %}
+								</div>
+								{% render_field vehicle_allotment_form.va_updated_by id="va_updated_by" hidden="True" class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3 container-fluid">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Remarks</span>
+								</div>
+								{% render_field vehicle_allotment_form.va_remarks class="form-control" %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+	{% include "asset_mgt_app/vehicle_allotment_list_woh.html" %}
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("va_updated_by").value ='{{user_id}}';
+	document.getElementById("va_enquirynumber").value ='{{enquiry_num_id}}';
+	load_consignment_num();
+  });
+</script>
+
+<!--<script>-->
+<!--function load_consignment_num() {-->
+<!--	alert('Jose')-->
+<!--	var consignment_number='{{consignment_number}}'-->
+<!--	var consignment_id={{consignment_id}}-->
+<!--	alert(consignment_number)-->
+<!--	alert(consignment_id)-->
+<!--	var len=(consignment_id).length-->
+<!--	alert(len)-->
+<!--	$('#va_consignmentnumber').empty().append("<option value='0'>&#45;&#45;Select&#45;&#45;</option>");-->
+<!--	for( var i = 0; i<len; i++){-->
+<!--	$('#va_consignmentnumber').append("<option value='"+consignment_id[i]+"'>"+consignment_number[i]+"</option>");-->
+<!--}-->
+<!--</script>-->
+{% endblock content %}

@@ -47,17 +47,6 @@ def sales_add(request, sales_id=0):
             }
             return render(request, "asset_mgt_app/sales_add.html", context)
         else:
-            # # Update sales ID in sales comments table
-            # sales_comments_num_list = list(SalesInfo.objects.all().values_list('s_sale_number', flat=True))
-            # for i in sales_comments_num_list:
-            #     print(i)
-            #     try:
-            #         sales_num_id = SalesInfo.objects.get(s_sale_number=i).id
-            #     except ObjectDoesNotExist:
-            #         pass
-            #     print(sales_num_id)
-            #     Sales_Comments_Info.objects.filter(sc_sales_number=i).update(sc_sales_number=sales_num_id)
-
             salesinfo = SalesInfo.objects.get(pk=sales_id)
             form = SalesinfoaddForm(instance=salesinfo)
             ses_sales_num_val = request.session.get('ses_sales_num')
@@ -72,7 +61,6 @@ def sales_add(request, sales_id=0):
                 'first_name': first_name,
                 'user_id': user_id,
                 'comments_list_filterd': comments_list_filterd,
-                # 'sales_num': sales_num,
             }
             return render(request, "asset_mgt_app/sales_edit.html", context)
     else:
@@ -80,14 +68,14 @@ def sales_add(request, sales_id=0):
             form = SalesinfoaddForm(request.POST, request.FILES)
             if form.is_valid():
                 try:
-                    last_id = (SalesInfo.objects.values_list('id', flat=True)).last()
+                    last_id = SalesInfo.objects.latest('id').id
                     sales_num_next =str('S_')+str(int(((SalesInfo.objects.get(id=last_id)).s_sale_number).replace('S_', ''))+1)
                 except ObjectDoesNotExist:
                     sales_num_next = str('S_') + str(randint(10000, 99999))
 
                 form.save()
                 print("Sales Form Saved")
-                last_id = (SalesInfo.objects.values_list('id', flat=True)).last()
+                last_id = SalesInfo.objects.latest('id').id
                 SalesInfo.objects.filter(id=last_id).update(s_sale_number=sales_num_next)
                 messages.success(request, 'Record Updated Successfully')
                 # sales_num = request.POST.get('s_sale_number')

@@ -1,9 +1,9 @@
 from django.db import models
-from ..models import Currency_type,CustomerInfo,MyUser,GST_payable_info,StatusList
+from ..models import EnquirynoteInfo,Currency_type,CustomerInfo,MyUser,GST_payable_info,StatusList
 
 class ConsignmentdetailInfo(models.Model):
-    co_enquirynumber = models.CharField(max_length=10,default = '')
-    co_consignmentnumber = models.CharField(max_length=10,default = '')
+    co_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE,blank=True,null=True)
+    co_consignmentnumber = models.CharField(max_length=20,blank=True,null=True)
     co_consignmentdate = models.DateField(blank=True,null=True)
     co_customer = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE,blank=True,null=True)
     co_currency_type = models.ForeignKey(Currency_type, on_delete=models.CASCADE,blank=True,null=True)

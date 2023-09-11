@@ -2,7 +2,7 @@ from django.db import models
 from ..models import Tr_triptype_Info,MovementtypeInfo,Tr_businesstype_Info,CustomerInfo,CustomerdepartmentInfo,MyUser,VehiclecategoryInfo,VehicletypeInfo,StatusList,City
 
 class EnquirynoteInfo(models.Model):
-    en_enquirynumber = models.CharField(max_length=100,default = '')
+    en_enquirynumber = models.CharField(max_length=100,null=True,blank=True)
     en_customername = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
     en_customercode = models.CharField(max_length=100,default = '')
     en_customerdepartment = models.ForeignKey(CustomerdepartmentInfo, on_delete=models.CASCADE, default='')
@@ -21,6 +21,7 @@ class EnquirynoteInfo(models.Model):
     en_consignmentdetails = models.CharField(max_length=1000,null=True,blank=True)
     en_vehicledetails = models.CharField(max_length=100, null=True,blank=True)
     en_tripdetails = models.CharField(max_length=1000, null=True,blank=True)
+    en_vehicle_allotment = models.CharField(max_length=1000, null=True,blank=True)
     en_tripclosure = models.CharField(max_length=1000, null=True,blank=True)
     en_pickupdatetime =  models.DateTimeField(null=True, blank=True)
     en_business_type = models.ForeignKey(Tr_businesstype_Info, on_delete=models.CASCADE, default="",null=True,blank=True)
