@@ -83,14 +83,6 @@ def loadingbay_add(request, loadingbay_id=0):
         forklift_nxt_2hr = None
 
     if request.method == "GET":
-        job_list=list(TestInfo.objects.all().values_list('stock_num',flat=True))
-        for i in job_list:
-            try:
-                arrival_date=TestInfo.objects.get(stock_num=i).date_of_arrival
-                print(type(arrival_date))
-                Gatein_info.objects.filter(gatein_job_no=i).update(gatein_arrival_date=arrival_date)
-            except ObjectDoesNotExist:
-                pass
         if loadingbay_id == 0:
             print("I am inside Get add Loading bay")
             loadingbay_form = LoadingbayddForm()
