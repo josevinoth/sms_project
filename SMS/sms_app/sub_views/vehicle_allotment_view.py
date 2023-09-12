@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 from ..forms import VehicleallotmentForm
-from ..models import ConsignmentdetailInfo,VehicledetailInfo,EnquirynoteInfo,Vehicle_allotmentInfo
+from ..models import VehiclemasterInfo,ConsignmentdetailInfo,VehicledetailInfo,EnquirynoteInfo,Vehicle_allotmentInfo
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
@@ -87,7 +87,7 @@ def vehicle_allotment_add(request,vehicle_allotment_id=0):
             vehicle_allotment_list = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id).values_list('va_vehiclenumber', flat=True))
             vehicle_numbers=[]
             for i in vehicle_allotment_list:
-                vehicle_numbers.append(str(VehicledetailInfo.objects.get(id=i).ve_vehiclenumber))
+                vehicle_numbers.append(str(VehiclemasterInfo.objects.get(id=i).vm_registrationnumber))
             EnquirynoteInfo.objects.filter(id=enquiry_num_id).update(en_vehicle_allotment=vehicle_numbers)
             messages.success(request, 'Record Updated Successfully')
         else:
