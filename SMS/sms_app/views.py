@@ -40,7 +40,7 @@ from .sub_views.whstoragetype_add_view import whstoragetype_add,whstoragetype_li
 from .sub_views.role_add_view import role_add,role_list,role_delete
 from .sub_views.password_reset_request_view import password_reset_request
 from .sub_views.wh_job_add_view import wh_job_add,wh_job_list,wh_job_delete
-from .sub_views.gatein_add_view import gatein_add,gatein_list,gatein_delete,load_pre_gate_in
+from .sub_views.gatein_add_view import gatein_add,gatein_list,gatein_delete,load_pre_gate_in,get_queryset
 from .sub_views.loadingbay_add_view import loadingbay_add,load_currency_value
 from .sub_views.enquirynote_add_view import enquirynote_add,enquirynote_list,enquirynote_delete,consignment_note_connect
 from .sub_views.consignmentdetail_add_view import consignmentdetail_add,consignmentdetail_list,consignmentdetail_delete,consignmentdetail_nav
@@ -98,3 +98,4 @@ from .sub_views.pk_quotes_view import quotes_add,quotes_list,quotes_delete
 from .sub_views.pk_costing_view import costing_add,costing_list,costing_delete
 from .sub_views.pk_costing_summary_view import costingsummary_add,costingsummary_list,costingsummary_delete
 from .sub_views.vehicle_allotment_view import vehicle_allotment_list,vehicle_allotment_add,vehicle_allotment_delete,vehicle_allotment_nav
+from .sub_views.DatatablesServerSideView_view import ItemListView

@@ -1,6 +1,8 @@
 from random import randint
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import render, redirect
 
 from ..forms import GateinaddForm
@@ -10,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from ..models import User_extInfo
 import json
+from django.views.generic import ListView
 
 # Add WH Job
 @transaction.atomic
@@ -186,12 +189,41 @@ def gatein_add(request, gatein_id=0):
             return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/gatein_list')
 # List WH Job
+
 @login_required(login_url='login_page')
 def gatein_list(request):
     first_name = request.session.get('first_name')
-    context = {'Gatein_list' : Gatein_info.objects.all(),'first_name': first_name,}
+    Gatein_list= Gatein_info.objects.all()
+    page_number = request.GET.get('page')
+    paginator = Paginator(Gatein_list, 100000000)
+    page_obj = paginator.get_page(page_number)
+    context = {
+        # 'Gatein_list' : Gatein_list,
+        'first_name': first_name,
+        'page_obj': page_obj,
+    }
     return render(request,"asset_mgt_app/gatein_list.html",context)
 
+def get_queryset(request):
+    first_name = request.session.get('first_name')
+    query = request.GET.get("q")
+    print(query)
+    if query:
+        Gatein_list= Gatein_info.objects.filter(Q(gatein_job_no__contains=query)|Q(gatein_invoice__contains=query)).order_by('id')
+        page_number = request.GET.get('page')
+        paginator = Paginator(Gatein_list, 10)
+        page_obj = paginator.get_page(page_number)
+    else:
+        Gatein_list = Gatein_info.objects.all()
+        page_number = request.GET.get('page')
+        paginator = Paginator(Gatein_list, 10)
+        page_obj = paginator.get_page(page_number)
+    context = {
+        'Gatein_list': Gatein_list,
+        'first_name': first_name,
+        'page_obj': page_obj,
+    }
+    return render(request, "asset_mgt_app/gatein_list.html", context)
 #Delete WH Job
 @login_required(login_url='login_page')
 def gatein_delete(request,gatein_id):

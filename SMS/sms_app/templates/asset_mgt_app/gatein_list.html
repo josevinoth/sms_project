@@ -21,6 +21,20 @@
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
+    <div class="col-md-1">
+        <a href="{% url 'gatein_list' %}" class="btn btn-warning btn-block btn-lg">
+            <i class="fas fa-plus"></i> Show All
+        </a>
+    </div>
+    <div class="col-md-3">
+        <!-- Search Form -->
+        <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'search' %}" method="get">
+            <div class="form-group mb-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Master Search" aria-label="Search" name="q">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </form>
+    </div>
 </div>
 <hr>
 <div class="container-fluid">
@@ -39,7 +53,7 @@
             <th>Delete</th>
         </thead>
         <tbody>
-        {% for gateininfo in Gatein_list %}
+        {% for gateininfo in page_obj %}
         <tr>
             <td> {{gateininfo.gatein_created_at}}</td>
             <td> {{gateininfo.gatein_pre_id}}</td>
@@ -66,37 +80,31 @@
         {% endfor %}
         </tbody>
     </table>
-</div>
-</div>
-<!--<div class="container-fluid row">-->
-<!--    {% for contact in page_obj %}-->
-<!--    {# Each "contact" is a Contact model object. #}-->
-<!--    {{ contact.gatein_created_at}}<br>-->
-<!--    {{ contact.gatein_pre_id}}<br>-->
-<!--    {% endfor %}-->
-<!--</div>-->
-<!--<div class="pagination">-->
-<!--    <span class="step-links">-->
-<!--        {% if page_obj.has_previous %}-->
-<!--            <a href="?page=1">&laquo; first</a>-->
-<!--            <a href="?page={{ page_obj.previous_page_number }}">previous</a>-->
-<!--        {% endif %}-->
+    <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a class="btn btn-warning" href="?page=1">First</a>
+            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
 
-<!--        <span class="current">-->
-<!--            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.-->
-<!--        </span>-->
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
 
-<!--        {% if page_obj.has_next %}-->
-<!--            <a href="?page={{ page_obj.next_page_number }}">next</a>-->
-<!--            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>-->
-<!--        {% endif %}-->
-<!--    </span>-->
-<!--</div>-->
+        {% if page_obj.has_next %}
+            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+        {% endif %}
+    </span>
+    </div>
+</div>
+
 <script>
     $(document).ready(function() {
     $('#gatein_list').DataTable( {
+        "deferLoading": 0,
         order: [2, 'desc' ],
-        dom: 'lBfrtip',
+        dom: 'Bfrti',
         buttons: [
             'copy', 'csv', 'excel','print'
         ]
