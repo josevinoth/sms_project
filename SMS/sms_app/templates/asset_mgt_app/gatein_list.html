@@ -26,11 +26,13 @@
             <i class="fas fa-plus"></i> Show All
         </a>
     </div>
-    <div class="col-md-3">
-        <!-- Search Form -->
+
+    <div class="col-md-1">
         <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'search' %}" method="get">
-            <div class="form-group mb-0">
-                <input class="form-control mr-sm-2" type="search" placeholder="Master Search" aria-label="Search" name="q">
+            <div class="form-group">
+                <input type="search" class="form-control" id="pre_gate_in" placeholder="Pre Gate-In" name="pre_gate_in">
+                <input type="search" class="form-control" id="job_number" placeholder="Job Number" name="job_number">
+                <input type="search" class="form-control" id="invoice_number" placeholder="Invoice Number" name="invoice_number">
                 <button class="btn btn-primary" type="submit">Search</button>
             </div>
         </form>
@@ -104,7 +106,7 @@
     $('#gatein_list').DataTable( {
         "deferLoading": 0,
         order: [2, 'desc' ],
-        dom: 'Bfrti',
+        dom: 'lBfrti',
         buttons: [
             'copy', 'csv', 'excel','print'
         ]

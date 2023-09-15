@@ -206,18 +206,33 @@ def gatein_list(request):
 
 def get_queryset(request):
     first_name = request.session.get('first_name')
-    query = request.GET.get("q")
-    print(query)
-    if query:
-        Gatein_list= Gatein_info.objects.filter(Q(gatein_job_no__contains=query)|Q(gatein_invoice__contains=query)).order_by('id')
+    pre_gate_in = request.GET.get("pre_gate_in")
+    job_number = request.GET.get("job_number")
+    invoice_number = request.GET.get("invoice_number")
+    print(pre_gate_in)
+    if job_number:
+        Gatein_list = Gatein_info.objects.filter(Q(gatein_job_no__contains=job_number)).order_by('id')
         page_number = request.GET.get('page')
-        paginator = Paginator(Gatein_list, 10)
+        paginator = Paginator(Gatein_list, 50)
         page_obj = paginator.get_page(page_number)
-    else:
+    if pre_gate_in:
+        pre_gatein_id=Gatein_pre_info.objects.get(gatein_pre_number=pre_gate_in).id
+        Gatein_list = Gatein_info.objects.filter(Q(gatein_pre_id=pre_gatein_id)).order_by('id')
+        page_number = request.GET.get('page')
+        paginator = Paginator(Gatein_list,100)
+        page_obj = paginator.get_page(page_number)
+    if invoice_number:
+        Gatein_list = Gatein_info.objects.filter(Q(gatein_invoice__contains=invoice_number)).order_by('id')
+        page_number = request.GET.get('page')
+        paginator = Paginator(Gatein_list,100)
+        page_obj = paginator.get_page(page_number)
+
+    if invoice_number=="" and pre_gate_in=="" and job_number=="":
         Gatein_list = Gatein_info.objects.all()
         page_number = request.GET.get('page')
-        paginator = Paginator(Gatein_list, 10)
+        paginator = Paginator(Gatein_list,100)
         page_obj = paginator.get_page(page_number)
+
     context = {
         'Gatein_list': Gatein_list,
         'first_name': first_name,
