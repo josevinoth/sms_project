@@ -1,7 +1,11 @@
 from random import randint
 import time
 from datetime import datetime
+
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
@@ -59,6 +63,27 @@ def dispatch_add(request, dispatch_id=0):
         if dispatch_id == 0:
             print("I am inside post add dispatch")
             dispatch_form = DispatchaddForm(request.POST)
+
+            if dispatch_form.is_valid():
+                # Generate Random pre-Dispatch number
+                try:
+                    last_id = (Dispatch_info.objects.latest('id')).id
+                    # last_id = (Gatein_pre_info.objects.values_list('gatein_pre_number',flat=True)).last()
+                    dispatch_num_next = str('Dispatch_') + str(
+                        (int((Dispatch_info.objects.get(id=last_id).dispatch_num).replace('Dispatch_', '')) + 1))
+                    print(dispatch_num_next)
+                except ObjectDoesNotExist:
+                    dispatch_num_next = str('Dispatch_') + str(randint(10000, 999999))
+                dispatch_form.save()
+                print("Form Saved")
+                last_id = (Dispatch_info.objects.latest('id')).id
+                Dispatch_info.objects.filter(id=last_id).update(dispatch_num=dispatch_num_next)
+                messages.success(request, 'Record Updated Successfully')
+                # sales_num = request.POST.get('s_sale_number')
+                dipstach_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_next).id
+
+                return redirect('/SMS/dispatch_update/' + str(dipstach_id))
+                # return redirect(request.META['HTTP_REFERER'])
         else:
             print("I am inside post edit dispatch")
             dispatch_info = Dispatch_info.objects.get(pk=dispatch_id)
@@ -77,22 +102,30 @@ def dispatch_add(request, dispatch_id=0):
                 for wh_job in wh_job_no_list:
                     Gatein_info.objects.filter(gatein_job_no=wh_job).update(gatein_job_status=2)
 
-    if dispatch_form.is_valid():
-        dispatch_form.save()
-        print("Form Saved")
-        messages.success(request, 'Record Updated Successfully')
-        # return redirect(request.META['HTTP_REFERER'])
-    else:
-        print("Form Not Saved")
-    return redirect('/SMS/dispatch_list')
+        if dispatch_form.is_valid():
+            dispatch_form.save()
+            print("Form Saved")
+            messages.success(request, 'Record Updated Successfully')
+            return redirect(request.META['HTTP_REFERER'])
+        else:
+            print("Form Not Saved")
+            messages.error(request, 'Record Not Updated Successfully')
+            return redirect(request.META['HTTP_REFERER'])
+    # return redirect('/SMS/dispatch_list')
 
 # List Dispatch Job
 @login_required(login_url='login_page')
 def dispatch_list(request):
     first_name = request.session.get('first_name')
+    dispatch_list= Dispatch_info.objects.all()
+    page_number = request.GET.get('page')
+    paginator = Paginator(dispatch_list, 100000000)
+    page_obj = paginator.get_page(page_number)
     context = {
-                'Dispatch_list' : Dispatch_info.objects.all(),
-                'first_name': first_name,}
+        'dispatch_list': dispatch_list,
+        'first_name': first_name,
+        'page_obj': page_obj,
+    }
     return render(request,"asset_mgt_app/dispatch_list.html",context)
 
 #Delete Dispatch Job
@@ -216,4 +249,22 @@ def qr_dispatch_decoder(request,dispatch_id):
             break
 
     return redirect(request.META['HTTP_REFERER'])
+
+@login_required(login_url='login_page')
+def dispatch_search(request):
+    first_name = request.session.get('first_name')
+    dispatch_number = request.GET.get('dispatch_number')
+    if not dispatch_number:
+        dispatch_number = ""
+    dispatch_list = Dispatch_info.objects.filter(Q(dispatch_num__icontains =dispatch_number)|Q(dispatch_num__isnull=True)).order_by('id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(dispatch_list, 50)
+    page_obj = paginator.get_page(page_number)
+    context = {
+        # 'sales_list': sales_list,
+        'first_name': first_name,
+        'page_obj': page_obj,
+        }
+    return render(request, "asset_mgt_app/dispatch_list.html", context)
+
 

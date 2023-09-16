@@ -10,15 +10,28 @@
     </div>
 </div>
 <div class="container-fluid row">
-    <!--    <div class="col-md-1">-->
-    <!--      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-    <!--        <i class="fas fa-arrow-left"></i>-->
-    <!--      </a>-->
-    <!--    </div>-->
+        <div class="col-md-1">
+          <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+          </a>
+        </div>
     <div class="col-md-1">
         <a href="{% url 'dispatch_insert' %}" class="btn btn-success btn-block btn-lg">
             <i class="fas fa-plus"></i> Add
         </a>
+    </div>
+         <div class="col-md-1">
+        <a href="{% url 'dispatch_list' %}" class="btn btn-warning btn-block btn-lg">
+            <i class="fa fa-eye" aria-hidden="true"></i> Show All
+        </a>
+    </div>
+    <div class="col-md-1">
+        <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'dispatch_search' %}" method="get">
+            <div class="form-group">
+                <input type="search" class="form-control" id="dispatch_number" placeholder="Dispatch Number" name="dispatch_number">
+                <button class="btn btn-primary" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
+            </div>
+        </form>
     </div>
 </div>
 <hr>
@@ -42,7 +55,7 @@
             <th>Delete</th>
         </thead>
         <tbody>
-        {% for dispatchinfo in Dispatch_list %}
+        {% for dispatchinfo in page_obj %}
         <tr>
             <td> {{dispatchinfo.dispatch_created_at}}</td>
             <td> {{dispatchinfo.dispatch_num}}</td>
@@ -78,6 +91,23 @@
         {% endfor %}
         </tbody>
     </table>
+    <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a class="btn btn-warning" href="?page=1">First</a>
+            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+        {% endif %}
+    </span>
+    </div>
 </div>
 <script>
 $(document).ready(function() {

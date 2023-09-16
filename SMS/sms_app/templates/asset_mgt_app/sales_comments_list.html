@@ -17,14 +17,14 @@
     </div>
       <div class="col-md-1">
         <a href="{% url 'sales_comments_list' %}" class="btn btn-warning btn-block btn-lg">
-            <i class="fas fa-plus"></i> Show All
+            <i class="fa fa-eye" aria-hidden="true"></i> Show All
         </a>
     </div>
     <div class="col-md-1">
         <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'sales_comments_search' %}" method="get">
             <div class="form-group">
                 <input type="search" class="form-control" id="sales_number" placeholder="Sales Number" name="sales_number">
-                <button class="btn btn-primary" type="submit">Search</button>
+                <button class="btn btn-primary" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
             </div>
         </form>
     </div>

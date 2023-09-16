@@ -15,9 +15,9 @@
 								<h3>Add/Update Dispatch</h3>
 							</div>
 							<div class="col-4">
-<!--								<a href="#" class="btn btn-warning btn-block" id="delivery_chalan_btn">-->
-<!--									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>-->
-<!--								</a>-->
+								<!--								<a href="#" class="btn btn-warning btn-block" id="delivery_chalan_btn">-->
+								<!--									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>-->
+								<!--								</a>-->
 							</div>
 						</div>
 					</div>
@@ -80,52 +80,45 @@
 										<span class="input-group-text">Transporter</span>
 									</div>
 									{% render_field dispatch_form.dispatch_transporter class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Depature Date & Time</span>
 									</div>
 									{% render_field dispatch_form.dispatch_depature_date type="datetime-local" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Cargo Picked?</span>
 									</div>
 									{% render_field dispatch_form.dispatch_cargo_picked class="form-control"  %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Sticker Fixed?</span>
 									</div>
 									{% render_field dispatch_form.dispatch_sticker_pasted_bvm class="form-control" id="dispatch_sticker_pasted_BVM"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">MAWB</span>
 									</div>
 									{% render_field dispatch_form.dispatch_mawb class="form-control"  id="dispatch_MAWB" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Comments</span>
-									</div>
-									{% render_field dispatch_form.dispatch_comments class="form-control"  %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
 									{% render_field dispatch_form.dispatch_status class="form-control"  %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field dispatch_form.dispatch_updated_by hidden="True" id="dispatch_updated_by" class="form-control"  %}
 								{% render_field dispatch_form.dispatch_invoice_list hidden="True" id="dispatch_invoice_list" class="form-control"  %}
+							</div>
+							<div class="input-group input-group-sm mb-3 container-fluid">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Comments</span>
+								</div>
+								{% render_field dispatch_form.dispatch_comments class="form-control"  %}
 							</div>
 						</div>
 						<div class="row">
@@ -137,8 +130,8 @@
 							</div>
 							<div class="col-2"></div>
 						</div>
-						<button type="submit" class="btn btn-success" onclick="dispatch_num_fn()"><i class="fas fa-check"></i> Save</button>
-						<a href="{% url 'dispatch_list' %}" class="btn btn-danger float-right">
+						<button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Save</button>
+						<a href="{% url 'dispatch_search' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel </a>
 					</div>
 				</div>
@@ -152,23 +145,7 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("dispatch_updated_by").value='{{user_id}}';
-	dispatch_num_fn()
   });
-</script>
-<script>
-function dispatch_num_fn() {
-<!--  var ran=Math.floor((Math.random() * 1000000) + 1)-->
-  var ran='{{dispatch_num}}'
-  var jn2=document.getElementById("dispatch_num").value
-  if (jn2=="")
-	{
-		document.getElementById("dispatch_num").value ="Dispatch_"+ ran;
-	}
-	else
-	{
-  		document.getElementById("dispatch_num").value=jn2;
-  	}
-}
 </script>
 <script>
     $("#dispatch_customer").change(function () {
