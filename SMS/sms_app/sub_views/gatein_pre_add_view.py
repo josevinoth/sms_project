@@ -104,7 +104,7 @@ def pre_gatein_search(request):
         truck_number = ""
     if not driver_name:
         driver_name = ""
-    Gatein_pre_list = Gatein_pre_info.objects.filter((Q(gatein_pre_number__contains=pre_gate_in)|Q(gatein_pre_number__isnull=True)) & (Q(gatein_pre_truck_number__contains=truck_number)|Q(gatein_pre_truck_number__isnull=True)) & (Q(gatein_pre_driver__contains=driver_name)|Q(gatein_pre_driver__isnull=True))).order_by('id')
+    Gatein_pre_list = Gatein_pre_info.objects.filter((Q(gatein_pre_number__icontains =pre_gate_in)|Q(gatein_pre_number__isnull=True)) & (Q(gatein_pre_truck_number__icontains =truck_number)|Q(gatein_pre_truck_number__isnull=True)) & (Q(gatein_pre_driver__icontains =driver_name)|Q(gatein_pre_driver__isnull=True))).order_by('id')
     page_number = request.GET.get('page')
     paginator = Paginator(Gatein_pre_list, 50)
     page_obj = paginator.get_page(page_number)

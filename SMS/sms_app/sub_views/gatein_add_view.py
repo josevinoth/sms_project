@@ -206,7 +206,7 @@ def get_queryset(request):
         job_number = ""
     if not invoice_number:
         invoice_number = ""
-    Gatein_list = Gatein_info.objects.filter((Q(gatein_job_no__contains=job_number)|Q(gatein_job_no__isnull=True)) & (Q(gatein_invoice__contains=invoice_number)|Q(gatein_invoice__isnull=True)) & (Q(gatein_pre_id__gatein_pre_number__contains=pre_gate_in)|Q(gatein_pre_id__isnull=True))).order_by('id')
+    Gatein_list = Gatein_info.objects.filter((Q(gatein_job_no__icontains =job_number)|Q(gatein_job_no__isnull=True)) & (Q(gatein_invoice__icontains =invoice_number)|Q(gatein_invoice__isnull=True)) & (Q(gatein_pre_id__gatein_pre_number__icontains =pre_gate_in)|Q(gatein_pre_id__isnull=True))).order_by('id')
     page_number = request.GET.get('page')
     paginator = Paginator(Gatein_list, 50)
     page_obj = paginator.get_page(page_number)
