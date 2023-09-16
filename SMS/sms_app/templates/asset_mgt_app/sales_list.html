@@ -21,9 +21,17 @@
         </a>
     </div>
     <div class="col-md-2">
-        <a href="{% url 'sales_comments_list' %}" class="btn btn-warning btn-block btn-lg">
+        <a href="{% url 'sales_comments_search' %}" class="btn btn-warning btn-block btn-lg">
             <i class="fa fa-book" aria-hidden="true"></i> Sales Comment List
         </a>
+    </div>
+    <div class="col-md-1">
+        <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'sales_search' %}" method="get">
+            <div class="form-group">
+                <input type="search" class="form-control" id="sales_number" placeholder="Sales Number" name="sales_number">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </form>
     </div>
 </div>
 <hr>
@@ -51,7 +59,7 @@
         </tr>
         </thead>
         <tbody>
-        {% for salesinfo in sales_list %}
+        {% for salesinfo in page_obj %}
         <tr>
             <td> {{salesinfo.s_created_at}}</td>
             <td> {{salesinfo.s_created_by}}</td>
@@ -85,12 +93,27 @@
         {% endfor %}
         </tbody>
     </table>
+    <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a class="btn btn-warning" href="?page=1">First</a>
+            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+        {% endif %}
+    </span>
+    </div>
 </div>
 <script>
     $(document).ready(function() {
     $('#sales_list').DataTable({
-<!--        scrollY: 800,-->
-<!--        scrollX: true,-->
         order: [2, 'desc' ],
         dom: 'lBfrtip',
         buttons: [

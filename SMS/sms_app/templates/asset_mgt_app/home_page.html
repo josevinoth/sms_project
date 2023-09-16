@@ -90,7 +90,7 @@
     <hr class="hr_style">
     <button type="button" class="collapsible"><i class="fa fa-chart-line"></i> Sales Management System (SMS)</button>
     <div class="content">
-        <a href="{% url 'sales_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Sales List</a>
+        <a href="{% url 'sales_search' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Sales List</a>
         <a href="{% url 'sales_target_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Sales Target</a>
         <a href=""><i class="fa fa-arrow-right" aria-hidden="true"></i> Reports</a>
     </div>
@@ -276,7 +276,7 @@
         </div>
         <br>
     </div>
-    <script>
+<script>
     var coll = document.getElementsByClassName("collapsible");
 var i;
 for (i = 0; i < coll.length; i++) {

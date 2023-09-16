@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 from ..forms import SalescommentForm,SalesinfoaddForm
 from ..models import RoleInfo,Sales_Comments_Info,User_extInfo,SalesInfo
@@ -12,18 +14,21 @@ def sales_list(request):
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id=RoleInfo.objects.get(role_name=role).id
-    print('role',role)
-    print('role_id',role_id)
+
     if role_id==3:
         sales_list= SalesInfo.objects.all()
     elif role_id==1:
         sales_list = SalesInfo.objects.all()
     else:
         sales_list = SalesInfo.objects.filter(s_created_by=user_id)
+    page_number = request.GET.get('page')
+    paginator = Paginator(sales_list, 100000000)
+    page_obj = paginator.get_page(page_number)
     context = {
-        'sales_list': sales_list,
+        # 'sales_list': sales_list,
         'first_name': first_name,
         'role': role,
+        'page_obj': page_obj,
     }
     return render(request, "asset_mgt_app/sales_list.html", context)
 
@@ -155,12 +160,24 @@ def sales_comments_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
-    comments_list=Sales_Comments_Info.objects.all()
+    role_id = RoleInfo.objects.get(role_name=role).id
+
+    if role_id == 3:
+        comments_list=Sales_Comments_Info.objects.all()
+    elif role_id == 1:
+        comments_list=Sales_Comments_Info.objects.all()
+    else:
+        comments_list = Sales_Comments_Info.objects.all(sc_updated_by=user_id)
+    page_number = request.GET.get('page')
+    paginator = Paginator(comments_list, 100000000)
+    page_obj = paginator.get_page(page_number)
+
     context = {
         'comments_list':comments_list,
         'role': role,
         'user_id': user_id,
         'first_name': first_name,
+        'page_obj': page_obj,
     }
     return render(request, "asset_mgt_app/sales_comments_list.html", context)
 @login_required(login_url='login_page')
@@ -170,3 +187,36 @@ def sales_comments_delete(request, sales_comments_id):
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/sales_list')
 
+@login_required(login_url='login_page')
+def sales_search(request):
+    first_name = request.session.get('first_name')
+    sales_number = request.GET.get('sales_number')
+    if not sales_number:
+        sales_number = ""
+    sales_list = SalesInfo.objects.filter((Q(s_sale_number__icontains =sales_number))|(Q(s_sale_number__isnull=True))).order_by('id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(sales_list, 50)
+    page_obj = paginator.get_page(page_number)
+    context = {
+        # 'sales_list': sales_list,
+        'first_name': first_name,
+        'page_obj': page_obj,
+        }
+    return render(request, "asset_mgt_app/sales_list.html", context)
+
+@login_required(login_url='login_page')
+def sales_comments_search(request):
+    first_name = request.session.get('first_name')
+    sales_number = request.GET.get('sales_number')
+    if not sales_number:
+        sales_number = ""
+    sales_list = Sales_Comments_Info.objects.filter(Q(sc_sales_number__s_sale_number__icontains =sales_number)|Q(sc_sales_number__s_sale_number__isnull=True)).order_by('id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(sales_list, 50)
+    page_obj = paginator.get_page(page_number)
+    context = {
+        # 'sales_list': sales_list,
+        'first_name': first_name,
+        'page_obj': page_obj,
+        }
+    return render(request, "asset_mgt_app/sales_comments_list.html", context)

@@ -406,4 +406,6 @@ urlpatterns = [
     path('vehicle_allotment_nav/<int:vehicle_allotment_id>', views.vehicle_allotment_nav, name='vehicle_allotment_nav'),  # nav vehicle_allotment
     path('search/', views.get_queryset, name='search'),  # View Gate-in search
     path('pre_gatein_search/', views.pre_gatein_search, name='pre_gatein_search'),  # View pre Gate-in search
+    path('sales_search/', views.sales_search, name='sales_search'),  # View pre Sales search
+    path('sales_comments_search/', views.sales_comments_search, name='sales_comments_search'),  # View pre Sales comments search
 ]

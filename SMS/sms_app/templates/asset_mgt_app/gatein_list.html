@@ -25,7 +25,6 @@
             <i class="fas fa-plus"></i> Show All
         </a>
     </div>
-
     <div class="col-md-1">
         <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'search' %}" method="get">
             <div class="form-group">
@@ -47,8 +46,6 @@
             <th>Job Number</th>
             <th>Shipper Inovice Number</th>
             <th>Customer Name</th>
-            <!--            <th>Updated On</th>-->
-            <!--            <th>Updated By</th>-->
             <th>Dispatch Status</th>
             <th>Edit</th>
             <th>Delete</th>
@@ -61,8 +58,6 @@
             <td> {{gateininfo.gatein_job_no}}</td>
             <td> {{gateininfo.gatein_invoice}}</td>
             <td> {{gateininfo.gatein_customer}}</td>
-            <!--                <td> {{gateininfo.gatein_updated_at}}</td>-->
-            <!--                <td> {{gateininfo.gatein_updated_by}}</td>-->
             <td> {{gateininfo.gatein_job_status}}</td>
             <td>
                 <a class="btn btn-primary" href="{% url 'gatein_update' gateininfo.id %}" >
