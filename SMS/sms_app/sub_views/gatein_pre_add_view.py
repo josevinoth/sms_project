@@ -1,6 +1,7 @@
 from random import randint
-
+from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from ..forms import Gatein_preaddForm
 from django.contrib.auth.decorators import login_required
@@ -83,5 +84,27 @@ def gatein_pre_delete(request,gatein_pre_id):
     gatein_pre_number_sess = Gatein_pre_info.objects.get(pk=gatein_pre_id).gatein_pre_number
     gatein_pre_del.delete()
     return redirect('/SMS/gatein_pre_list')
+@login_required(login_url='login_page')
+def pre_gatein_search(request):
+    first_name = request.session.get('first_name')
+    pre_gate_in = request.GET.get("pre_gate_in")
+    truck_number = request.GET.get("truck_number")
+    driver_name = request.GET.get("driver_name")
+    if not pre_gate_in:
+        pre_gate_in = ""
+    if not truck_number:
+        truck_number = ""
+    if not driver_name:
+        driver_name = ""
+    Gatein_pre_list = Gatein_pre_info.objects.filter((Q(gatein_pre_number__contains=pre_gate_in)|Q(gatein_pre_number__isnull=True)) & (Q(gatein_pre_truck_number__contains=truck_number)|Q(gatein_pre_truck_number__isnull=True)) & (Q(gatein_pre_driver__contains=driver_name)|Q(gatein_pre_driver__isnull=True))).order_by('id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(Gatein_pre_list, 50)
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'Gatein_pre_list': Gatein_pre_list,
+        'first_name': first_name,
+        'page_obj': page_obj,
+        }
+    return render(request, "asset_mgt_app/gatein_pre_list.html", context)
 
 

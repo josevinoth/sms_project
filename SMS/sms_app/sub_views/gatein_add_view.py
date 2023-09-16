@@ -4,7 +4,6 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
-
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import Location_info,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
@@ -18,14 +17,6 @@ from django.views.generic import ListView
 @transaction.atomic
 @login_required(login_url='login_page')
 def gatein_add(request, gatein_id=0):
-    # arrival_date=list(Gatein_info.objects.all().values_list('gatein_arrival_date',flat=True))
-    # for i in arrival_date:
-    #     if i!=None:
-    #         lb_id = list(Gatein_info.objects.filter(gatein_arrival_date=i).values_list('id',flat=True))
-    #         i = i[:-6]
-    #         for j in lb_id:
-    #             Gatein_info.objects.filter(pk=j).update(gatein_arrival_date=i)
-
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
@@ -203,9 +194,8 @@ def gatein_list(request):
         'page_obj': page_obj,
     }
     return render(request,"asset_mgt_app/gatein_list.html",context)
-
+@login_required(login_url='login_page')
 def get_queryset(request):
-    global context
     first_name = request.session.get('first_name')
     pre_gate_in = request.GET.get("pre_gate_in")
     job_number = request.GET.get("job_number")
@@ -216,54 +206,16 @@ def get_queryset(request):
         job_number = ""
     if not invoice_number:
         invoice_number = ""
-
-    print('pre_gate_in',pre_gate_in)
-    print('job_number',job_number)
-    print('invoice_number',invoice_number)
     Gatein_list = Gatein_info.objects.filter((Q(gatein_job_no__contains=job_number)|Q(gatein_job_no__isnull=True)) & (Q(gatein_invoice__contains=invoice_number)|Q(gatein_invoice__isnull=True)) & (Q(gatein_pre_id__gatein_pre_number__contains=pre_gate_in)|Q(gatein_pre_id__isnull=True))).order_by('id')
     page_number = request.GET.get('page')
     paginator = Paginator(Gatein_list, 50)
     page_obj = paginator.get_page(page_number)
-    # if job_number:
-    #     Gatein_list = Gatein_info.objects.filter(Q(gatein_job_no__contains=job_number)).order_by('id')
-    #     page_number = request.GET.get('page')
-    #     paginator = Paginator(Gatein_list, 50)
-    #     page_obj = paginator.get_page(page_number)
-    # else:
-    #     Gatein_list = Gatein_info.objects.all()
-    #     page_number = request.GET.get('page')
-    #     paginator = Paginator(Gatein_list,100)
-    #     page_obj = paginator.get_page(page_number)
     context = {
         'Gatein_list': Gatein_list,
         'first_name': first_name,
         'page_obj': page_obj,
         }
     return render(request, "asset_mgt_app/gatein_list.html", context)
-    # elif pre_gate_in:
-    #     pre_gatein_id=Gatein_pre_info.objects.get(gatein_pre_number=pre_gate_in).id
-    #     Gatein_list = Gatein_info.objects.filter(Q(gatein_pre_id=pre_gatein_id)).order_by('id')
-    #     page_number = request.GET.get('page')
-    #     paginator = Paginator(Gatein_list,100)
-    #     page_obj = paginator.get_page(page_number)
-    # elif invoice_number:
-    #     Gatein_list = Gatein_info.objects.filter(Q(gatein_invoice__contains=invoice_number)).order_by('id')
-    #     page_number = request.GET.get('page')
-    #     paginator = Paginator(Gatein_list,100)
-    #     page_obj = paginator.get_page(page_number)
-    #
-    # elif invoice_number=="" and pre_gate_in=="" and job_number=="":
-    #     Gatein_list = Gatein_info.objects.all()
-    #     page_number = request.GET.get('page')
-    #     paginator = Paginator(Gatein_list,100)
-    #     page_obj = paginator.get_page(page_number)
-    #
-    #     context = {
-    #         'Gatein_list': Gatein_list,
-    #         'first_name': first_name,
-    #         'page_obj': page_obj,
-    #     }
-    #     return render(request, "asset_mgt_app/gatein_list.html", context)
 #Delete WH Job
 @login_required(login_url='login_page')
 def gatein_delete(request,gatein_id):

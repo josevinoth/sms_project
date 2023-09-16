@@ -78,7 +78,7 @@ from .sub_views.warehouse_add_view import warehousein_add,load_units,load_bays,l
 from .sub_views.storage_add_view import storage_list
 from .sub_views.dispatch_add_view import dispatch_list,dispatch_delete,dispatch_add,dispatch_goods_list,dispatch_remove_goods,dispatch_add_goods,qr_dispatch_decoder
 from .sub_views.message_test import message_test
-from .sub_views.gatein_pre_add_view import gatein_pre_add,gatein_pre_list,gatein_pre_delete
+from .sub_views.gatein_pre_add_view import gatein_pre_add,gatein_pre_list,gatein_pre_delete,pre_gatein_search
 from .sub_views.invoice_view import invoice_list,invoice_add,invoice_delete,shipper_invoice_list,shipper_invoice_add,shipper_invoice_remove,load_whrate_model,case_to_case_invoice_list_open,dedicated_invoice_list_open,exclusive_invoice_list_open,invoice_report
 from .sub_views.expense_view import expense_add,expense_list,expense_delete
 from .sub_views.salesinfo_view import sales_add,sales_list,sales_delete,sales_comments_list,sales_comments_add,sales_comments_delete
