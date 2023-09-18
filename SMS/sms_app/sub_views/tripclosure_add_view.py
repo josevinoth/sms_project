@@ -8,7 +8,7 @@ from django.contrib import messages
 def tripclosure_nav(request,tripclosure_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    print("I am inside Get add tripclosure")
+    print("I a m inside Get add tripclosure")
     tripclosure_form = TripclosureaddForm(request.POST)
     tripclosurefiles_form = TripclosurefilesForm(request.POST,request.FILES)
     enquiry_num = EnquirynoteInfo.objects.get(pk=tripclosure_id).en_enquirynumber
