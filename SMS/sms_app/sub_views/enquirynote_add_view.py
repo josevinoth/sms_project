@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm
-from ..models import StatusList,TripclosureInfo,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo
+from ..models import StatusList,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect
 @login_required(login_url='login_page')
 def enquirynote_add(request,enquirynote_id=0):
@@ -91,7 +91,7 @@ def enquirynote_list(request):
             trip_details_status_id = 6
         try:
             trip_closure_status_id=[]
-            trip_closure_status = TripclosureInfo.objects.filter(tc_enquirynumber=m).values_list('tc_financestatus',flat=True)
+            trip_closure_status = TripdetailInfo.objects.filter(tr_enquirynumber=m).values_list('tc_financestatus',flat=True)
             for k in trip_closure_status:
                 trip_closure_status_id.append(StatusList.objects.get(status_title=k).id)
             if all(element == 5 for element in (trip_closure_status_id)):

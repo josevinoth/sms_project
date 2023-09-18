@@ -90,7 +90,6 @@ from .sub_models.vehiclesource_mod import VehiclesourceInfo
 from .sub_models.vehiclenumber_mod import VehiclenumberInfo
 from .sub_models.vehicledetail_mod import VehicledetailInfo
 from .sub_models.tripdetail_mod import TripdetailInfo,Trip_category_info,Trip_closure_files_Info
-from .sub_models.tripclosure_mod import TripclosureInfo
 from .sub_models.vhmanufacturer_mod import VhmanufacturerInfo
 from .sub_models.vehiclemodel_mod import VehiclemodelInfo
 from .sub_models.ownership_mod import OwnershipInfo
