@@ -65,6 +65,7 @@ def tripdetail_add(request,tripdetail_id=0):
             trip_det_form = TripdetailaddForm(instance=tripdetail)
             tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
+            print(trip_num)
         context = {
             'first_name': first_name,
             'user_id': user_id,
