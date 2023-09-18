@@ -16,19 +16,19 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field tripclosure_form.tr_enquirynumber id="tr_enquirynumber" class="form-control" %}
+									{% render_field tripclosure_form.tr_enquirynumber id="tr_enquirynumber" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field tripclosure_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control" %}
+									{% render_field tripclosure_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Number</span>
 									</div>
-									{% render_field tripclosure_form.tr_tripnumber id="tr_tripnumber" class="form-control" %}
+									{% render_field tripclosure_form.tr_tripnumber id="tr_tripnumber" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -120,7 +120,12 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Finance Status</span>
 									</div>
-									{% render_field tripclosure_form.tc_financestatus class="form-control" %}
+									<select name="tc_financestatus" id="tc_financestatus" class="form-control">
+										<option value="select">--Select--</option>
+										{% for item in status_list  %}
+											<option value="{{item.id}}">{{item.status}}</option>
+										{% endfor %}
+									</select>
 								</div>
 								{% render_field tripclosure_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
 								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
@@ -153,6 +158,7 @@
 $(document).ready(function() {
 	document.getElementById("tr_updated_by").value ='{{user_id}}';
 	var tr_enquirynumber_val=document.getElementById("tr_enquirynumber").value;
+	var user_role_val='{{role}}';
 	if (tr_enquirynumber_val=="")
 	{
 		document.getElementById("tr_enquirynumber").value ='{{enquiry_num}}';

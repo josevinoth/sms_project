@@ -1,6 +1,8 @@
+import html
+
 from django.contrib.auth.decorators import login_required
 from ..forms import TripclosurefilesForm,TripclosureaddForm
-from ..models import User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo
+from ..models import User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,Tripstatusinfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
@@ -15,6 +17,7 @@ def tripclosure_nav(request,tripclosure_id=0):
     enquiry_num_id = EnquirynoteInfo.objects.get(pk=tripclosure_id).id
     request.session['ses_enqiury_id'] = enquiry_num
     tripclosure_list=TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
+    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2])
     context = {
         'first_name': first_name,
         'user_id': user_id,
@@ -22,6 +25,7 @@ def tripclosure_nav(request,tripclosure_id=0):
         'tripclosurefiles_form': tripclosurefiles_form,
         'enquiry_num': enquiry_num,
         'tripclosure_list': tripclosure_list,
+        'status_list': status_list,
     }
     if tripclosure_form.is_valid():
         tripclosure_form.save()
@@ -51,30 +55,31 @@ def tripclosure_add(request,tripclosure_id=0):
         print("I am inside Get edit Trip Closure")
         if tripclosure_id == 0:
             enquiry_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_enquirynumber
-            print(enquiry_num)
-            enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
-            consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             print("I am inside Get add Tripclosure")
             tripclosure_form = TripclosureaddForm()
             tripclosurefiles_form = TripclosurefilesForm()
+            status_list = list(Tripstatusinfo.objects.filter(id__in=[1, 2]))
+            print(status_list)
             context = {
                 'tripclosure_form': tripclosure_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
                 'first_name': first_name,
                 'enquiry_num': enquiry_num,
+                'status_list': status_list,
             }
         else:
             trip_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_tripnumber
             print("Inside Trip closure edit")
-            print(trip_num)
             enquiry_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_enquirynumber
-            print(enquiry_num)
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
             tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
+            # status_list = list(TripdetailInfo.objects.filter(pk=tripclosure_id).values_list('tc_financestatus',flat=True))
+            # print(status_list)
+            status_list = list(Tripstatusinfo.objects.filter(id__in=[1, 2]))
             context = {
                 'tripclosure_form': tripclosure_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
@@ -83,6 +88,7 @@ def tripclosure_add(request,tripclosure_id=0):
                 'consignment_num': consignment_num,
                 'user_id': user_id,
                 'role': role,
+                'status_list': status_list,
                 'tripclosure_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num),
             }
         return render(request, "asset_mgt_app/tripclosure_add.html", context)
@@ -91,6 +97,20 @@ def tripclosure_add(request,tripclosure_id=0):
             print("Inside Trip closure post add")
             tripclosure_form = TripclosureaddForm(request.POST)
             tripclosurefiles_form = TripclosurefilesForm(request.POST,request.FILES)
+            if tripclosure_form.is_valid():
+                tripclosure_form.save()
+                print("Trip Closure Main Form Saved")
+            else:
+                print("Trip Closure Main Form not Saved")
+
+            if tripclosurefiles_form.is_valid():
+                tripclosurefiles_form.save()
+                print("Trip Closure files Form Saved")
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Trip Closure files Form not Saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            return redirect(request.META['HTTP_REFERER'])
         else:
             print("Inside Trip closure post edit")
             trip_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_tripnumber
@@ -99,20 +119,28 @@ def tripclosure_add(request,tripclosure_id=0):
             tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
             tripclosurefiles_form = TripclosurefilesForm(request.POST,request.FILES,instance=tripclosure_files)
 
-    if tripclosure_form.is_valid():
-        tripclosure_form.save()
-        print("Trip Closure Main Form Saved")
-    else:
-        print("Trip Closure Main Form not Saved")
+            if tripclosure_form.is_valid():
+                tripclosure_form.save()
+                print("Trip Closure Main Form Saved")
+                enquiry_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_enquirynumber
+                enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
+                tripclosure_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id).values_list(
+                    'tc_financestatus', flat=True)
+                tripclousre_status = []
+                for i in tripclosure_list:
+                    tripclousre_status.append(Tripstatusinfo.objects.get(id=i).status)
+                EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripclosure=tripclousre_status)
+            else:
+                print("Trip Closure Main Form not Saved")
 
-    if tripclosurefiles_form.is_valid():
-        tripclosurefiles_form.save()
-        print("Trip Closure files Form Saved")
-        messages.success(request, 'Record Updated Successfully')
-    else:
-        print("Trip Closure files Form not Saved")
-        messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-    return redirect(request.META['HTTP_REFERER'])
+            if tripclosurefiles_form.is_valid():
+                tripclosurefiles_form.save()
+                print("Trip Closure files Form Saved")
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Trip Closure files Form not Saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/enquirynote_list')
 
 # List tripclosure
