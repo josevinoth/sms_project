@@ -113,7 +113,7 @@ def vehicle_allotment_delete(request,vehicle_allotment_id):
     vehicle_allotment_list = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id).values_list('va_vehiclenumber',flat=True))
     vehicle_numbers = []
     for i in vehicle_allotment_list:
-        vehicle_numbers.append(str(VehiclemasterInfo.objects.get(id=i).ve_vehiclenumber))
+        vehicle_numbers.append(str(VehiclemasterInfo.objects.get(id=i).vm_registrationnumber))
     try:
         EnquirynoteInfo.objects.filter(id=enquiry_num_id).update(en_vehicle_allotment=vehicle_numbers)
     except ObjectDoesNotExist:
