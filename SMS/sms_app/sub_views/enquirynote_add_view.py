@@ -156,9 +156,9 @@ def consignment_note_connect(request,enquirynote_id):
             con_det_form = ConsignmentdetailaddForm(request.POST, instance=consignmentdetail)
         if con_det_form.is_valid():
             con_det_form.save()
-            print("Main Form is Valid")
+            print("con_det_form Main Form is Valid")
         else:
-            print("Main Form is not Valid")
+            print("con_det_form Form is not Valid")
 
         return redirect('/SMS/enquirynote_list')
 #Delete enquirynote
