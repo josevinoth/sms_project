@@ -44,7 +44,7 @@
                     </a>
                 </td>
                 <td>
-                    <form action="{% url 'role_delete' movementtypeinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    <form action="{% url 'movementtype_delete' movementtypeinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i>
