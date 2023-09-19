@@ -1,11 +1,11 @@
 from django.db import models
-from ..models import MyUser,TrbusinesstypeInfo,VehiclesourceInfo,VehicletypeInfo,VehiclenumberInfo,StatusList
+from ..models import MyUser,TrbusinesstypeInfo,OwnershipInfo,VehicletypeInfo,VehiclenumberInfo,StatusList
 
 class VehicledetailInfo(models.Model):
     ve_enquirynumber = models.CharField(max_length=10,default = '')
     ve_consignmentnumber = models.CharField(max_length=10,default = '')
     ve_transportbusinesstype = models.ForeignKey(TrbusinesstypeInfo, on_delete=models.CASCADE, default='')
-    ve_vehiclesource = models.ForeignKey(VehiclesourceInfo, on_delete=models.CASCADE, default='')
+    ve_vehiclesource = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, default='')
     ve_vehicletype = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='')
     ve_vehiclenumber = models.ForeignKey(VehiclenumberInfo, on_delete=models.CASCADE, default='')
     ve_drivername = models.CharField(max_length=30)

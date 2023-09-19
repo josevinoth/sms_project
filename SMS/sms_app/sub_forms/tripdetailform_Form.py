@@ -12,11 +12,10 @@ class TripdetailaddForm(forms.ModelForm):
     tc_unloadingcost = forms.FloatField(required=False)
     tc_weighmentcost = forms.FloatField(required=False)
     tc_handlingcost = forms.FloatField(required=False)
-    tc_financestatus = forms.FloatField(required=False)
     class Meta:
         model = TripdetailInfo
         # fields = '__all__'
-        fields = ['tr_enquirynumber','tr_consignmentnumber','tr_tripnumber','tr_vehiclesource','tr_vehicletype','tr_vehicletype_placed','tr_vehicletype_selection_requested','tr_vehicletype_selection_placed','tr_vehiclenumber','tr_drivername','tr_driver_lic','tr_drivernumber','tr_departedlocation','tr_departedkm','tr_departeddate','tr_reportedlocation','tr_reportedkm','tr_reporteddate','tr_status','tr_updated_by','tr_category','tr_remarks','tr_loading_time','tr_unloading_time']
+        fields = ['tr_enquirynumber','tr_consignmentnumber','tr_tripnumber','tr_vehiclesource','tr_vehicletype','tr_vehicletype_placed','tr_vehicletype_selection_requested','tr_vehicletype_selection_placed','tr_vehiclenumber','tr_drivername','tr_driver_lic','tr_drivernumber','tr_departedlocation','tr_departedkm','tr_departeddate','tr_reportedlocation','tr_reportedkm','tr_reporteddate','tc_financestatus','tr_updated_by','tr_category','tr_remarks','tr_loading_time','tr_unloading_time']
     def __init__(self, *args, **kwargs):
         super(TripdetailaddForm,self).__init__(*args, **kwargs)
         self.fields['tr_consignmentnumber'].empty_label = "--Select--"
@@ -26,5 +25,5 @@ class TripdetailaddForm(forms.ModelForm):
         self.fields['tr_vehiclenumber'].empty_label = "--Select--"
         self.fields['tr_departedlocation'].empty_label = "--Select--"
         self.fields['tr_reportedlocation'].empty_label = "--Select--"
-        self.fields['tr_status'].empty_label = "--Select--"
+        self.fields['tc_financestatus'].empty_label = "--Select--"
         self.fields['tr_category'].empty_label = "--Select--"

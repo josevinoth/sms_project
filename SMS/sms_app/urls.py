@@ -193,10 +193,6 @@ urlpatterns = [
     path('trbusinesstype_insert', views.trbusinesstype_add, name='trbusinesstype_insert'),  # Add trbusinesstype
     path('trbusinesstype_update/<int:trbusinesstype_id>/', views.trbusinesstype_add, name='trbusinesstype_update'),  # Update trbusinesstype
     path('trbusinesstype_delete/<int:trbusinesstype_id>/', views.trbusinesstype_delete, name='trbusinesstype_delete'),  # Delete trbusinesstype
-    path('vehiclesource_list/', views.vehiclesource_list, name='vehiclesource_list'),  # List vehiclesource,
-    path('vehiclesource_insert', views.vehiclesource_add, name='vehiclesource_insert'),  # Add vehiclesource
-    path('vehiclesource_update/<int:vehiclesource_id>/', views.vehiclesource_add, name='vehiclesource_update'),  # Update vehiclesource
-    path('vehiclesource_delete/<int:vehiclesource_id>/', views.vehiclesource_delete, name='vehiclesource_delete'),  # Delete vehiclesource
     path('vehiclenumber_list/', views.vehiclenumber_list, name='vehiclenumber_list'),  # List vehiclenumber,
     path('vehiclenumber_insert', views.vehiclenumber_add, name='vehiclenumber_insert'),  # Add vehiclenumber
     path('vehiclenumber_update/<int:vehiclenumber_id>/', views.vehiclenumber_add, name='vehiclenumber_update'),  # Update vehiclenumber
@@ -409,4 +405,5 @@ urlpatterns = [
     path('sales_search/', views.sales_search, name='sales_search'),  # View pre Sales search
     path('sales_comments_search/', views.sales_comments_search, name='sales_comments_search'),  # View pre Sales comments search
     path('dispatch_search/', views.dispatch_search, name='dispatch_search'),  # View dispatch search
+    path('load_cost_description/', views.load_cost_description, name='load_cost_description'),  # Load cost description
 ]

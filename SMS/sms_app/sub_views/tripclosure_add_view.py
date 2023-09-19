@@ -17,7 +17,7 @@ def tripclosure_nav(request,tripclosure_id=0):
     enquiry_num_id = EnquirynoteInfo.objects.get(pk=tripclosure_id).id
     request.session['ses_enqiury_id'] = enquiry_num
     tripclosure_list=TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
-    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2])
+    status_list = Tripstatusinfo.objects.filter(id__in=[4,5,6,7])
     context = {
         'first_name': first_name,
         'user_id': user_id,
@@ -58,8 +58,7 @@ def tripclosure_add(request,tripclosure_id=0):
             print("I am inside Get add Tripclosure")
             tripclosure_form = TripclosureaddForm()
             tripclosurefiles_form = TripclosurefilesForm()
-            status_list = list(Tripstatusinfo.objects.filter(id__in=[1, 2]))
-            print(status_list)
+            status_list = list(Tripstatusinfo.objects.filter(id__in=[4,5,6,7]))
             context = {
                 'tripclosure_form': tripclosure_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
@@ -77,9 +76,8 @@ def tripclosure_add(request,tripclosure_id=0):
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
             tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
-            # status_list = list(TripdetailInfo.objects.filter(pk=tripclosure_id).values_list('tc_financestatus',flat=True))
-            # print(status_list)
-            status_list = list(Tripstatusinfo.objects.filter(id__in=[1, 2]))
+            status_selected = (TripdetailInfo.objects.get(pk=tripclosure_id).tc_financestatus.id)
+            status_list = list(Tripstatusinfo.objects.filter(id__in=[4,5,6,7]))
             context = {
                 'tripclosure_form': tripclosure_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
@@ -89,6 +87,7 @@ def tripclosure_add(request,tripclosure_id=0):
                 'user_id': user_id,
                 'role': role,
                 'status_list': status_list,
+                'status_selected': status_selected,
                 'tripclosure_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num),
             }
         return render(request, "asset_mgt_app/tripclosure_add.html", context)

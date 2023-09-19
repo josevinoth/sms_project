@@ -52,7 +52,6 @@ from .sub_views.vehicletype_add_view import vehicletype_add,vehicletype_list,veh
 from .sub_views.tripdetail_add_view import tripdetail_add,tripdetail_list,tripdetail_delete,tripdetail_nav
 from .sub_views.movementtype_add_view import movementtype_add,movementtype_list,movementtype_delete
 from .sub_views.trbusinesstype_add_view import trbusinesstype_add,trbusinesstype_list,trbusinesstype_delete
-from .sub_views.vehiclesource_add_view import vehiclesource_add,vehiclesource_list,vehiclesource_delete
 from .sub_views.vehiclenumber_add_view import vehiclenumber_add,vehiclenumber_list,vehiclenumber_delete
 from .sub_views.tripclosure_add_view import tripclosure_add,tripclosure_list,tripclosure_delete,tripclosure_nav
 from .sub_views.vhmanufacturer_add_view import vhmanufacturer_add,vhmanufacturer_list,vhmanufacturer_delete
@@ -95,6 +94,6 @@ from .sub_views.pk_openingstock_view import openingstock_add,openingstock_list,o
 from .sub_views.pk_stockpurchases_view import stockpurchases_add,stockpurchases_list,stockpurchases_delete
 from .sub_views.pk_purchaseorder_view import purchaseorder_add,purchaseorder_list,purchaseorder_delete
 from .sub_views.pk_quotes_view import quotes_add,quotes_list,quotes_delete
-from .sub_views.pk_costing_view import costing_add,costing_list,costing_delete
+from .sub_views.pk_costing_view import costing_add,costing_list,costing_delete,load_cost_description
 from .sub_views.pk_costing_summary_view import costingsummary_add,costingsummary_list,costingsummary_delete
 from .sub_views.vehicle_allotment_view import vehicle_allotment_list,vehicle_allotment_add,vehicle_allotment_delete,vehicle_allotment_nav

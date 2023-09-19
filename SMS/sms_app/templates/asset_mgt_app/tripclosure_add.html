@@ -118,10 +118,10 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Finance Status</span>
+										<span class="input-group-text">Trip Status</span>
 									</div>
 									<select name="tc_financestatus" id="tc_financestatus" class="form-control">
-										<option value="select">--Select--</option>
+										<option value="2">--Select--</option>
 										{% for item in status_list  %}
 											<option value="{{item.id}}">{{item.status}}</option>
 										{% endfor %}
@@ -157,8 +157,8 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("tr_updated_by").value ='{{user_id}}';
+	document.getElementById("tc_financestatus").value ='{{status_selected}}';
 	var tr_enquirynumber_val=document.getElementById("tr_enquirynumber").value;
-	var user_role_val='{{role}}';
 	if (tr_enquirynumber_val=="")
 	{
 		document.getElementById("tr_enquirynumber").value ='{{enquiry_num}}';

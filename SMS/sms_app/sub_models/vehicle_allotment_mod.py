@@ -1,10 +1,10 @@
 from django.db import models
-from ..models import EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,VehiclesourceInfo
+from ..models import EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo
 
 class Vehicle_allotmentInfo(models.Model):
     va_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE, default='')
     va_consignmentnumber = models.ForeignKey(ConsignmentdetailInfo, on_delete=models.CASCADE, default='')
-    va_vehiclesource = models.ForeignKey(VehiclesourceInfo, on_delete=models.CASCADE, default='')
+    va_vehiclesource = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, default='')
     va_vehicletype = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='va_vehicletype', db_column='va_vehicletype')
     va_vehicletype_placed = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='va_vehicletype_placed', db_column='va_vehicletype_placed')
     va_vehicletype_selection_requested= models.BooleanField(blank=True,null=True)

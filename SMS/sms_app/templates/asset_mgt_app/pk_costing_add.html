@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="costing_add"   >
+<form method="POST" action="" id="costing_add" data-cost_description-url="{% url 'load_cost_description' %}"  >
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-3"></div>
@@ -147,5 +147,34 @@ $(document).ready(function () {
     calculateTotalCost();
 });
 </script>
+
+<script>
+   $("#ct_cost_type").change(function () {
+      var url = $("#costing_add").attr("data-cost_description-url");
+      var cost_type = $(this).val();
+      alert(cost_type)
+      $.ajax({
+        url: url,
+        data: {
+          'cost_type': cost_type,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#ct_cost_description').removeClass('disable_a_href');
+			$("#ct_cost_description").empty();
+			$('#ct_cost_description').empty().append("<option value='0'>--Select--</option>");
+        	var ct_cost_description_name=JSON.parse(data)["cost_description"];
+        	var ct_cost_description_id=JSON.parse(data)["cost_description_id"];
+  			alert(ct_cost_description_name)
+  			alert(ct_cost_description_id)
+        	var len = (ct_cost_description_id).length;
+        	$('#ct_cost_description').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#ct_cost_description").append("<option value='"+ct_cost_description_id[i]+"'>"+ct_cost_description_name[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
 
 {% endblock content %}

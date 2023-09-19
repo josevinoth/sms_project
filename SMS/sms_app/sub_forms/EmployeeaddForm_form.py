@@ -24,7 +24,7 @@ class EmpeditForm(forms.ModelForm):
 class UserexteditForm(forms.ModelForm):
     class Meta:
         model = User_extInfo
-        fields = ['department','emp_contact','emp_designation','emp_branch','emp_role','emp_DOB','emp_DOJ','emp_pan','emp_uan','emp_esi','emp_aadhar']
+        fields = ['department','emp_contact','emp_designation','emp_branch','emp_role','emp_DOB','emp_DOJ','emp_pan','emp_uan','emp_esi','emp_aadhar','emp_organisation']
         # fields = '__all__'
     def __init__(self, *args, **kwargs):
         super(UserexteditForm,self).__init__(*args, **kwargs)
@@ -32,6 +32,7 @@ class UserexteditForm(forms.ModelForm):
         self.fields['emp_branch'].empty_label = "--Select--"
         self.fields['emp_role'].empty_label = "--Select--"
         self.fields['department'].empty_label = "--Select--"
+        self.fields['emp_organisation'].empty_label = "--Select--"
         self.fields['emp_DOB'].required = False
         self.fields['emp_DOJ'].required = False
         self.fields['emp_pan'].required = False

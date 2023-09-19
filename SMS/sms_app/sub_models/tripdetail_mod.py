@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehiclenumberInfo,VehicletypeInfo,VehiclesourceInfo,City,Tripstatusinfo
+from ..models import EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehiclenumberInfo,VehicletypeInfo,OwnershipInfo,City,Tripstatusinfo
 class Trip_category_info(models.Model):
     category = models.CharField(max_length=100, default='')
 
@@ -12,7 +12,7 @@ class TripdetailInfo(models.Model):
     tr_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE, default='')
     tr_consignmentnumber = models.ForeignKey(ConsignmentdetailInfo, on_delete=models.CASCADE, default='')
     tr_tripnumber = models.CharField(max_length=10,default = '',blank=True,null=True)
-    tr_vehiclesource = models.ForeignKey(VehiclesourceInfo, on_delete=models.CASCADE, default='')
+    tr_vehiclesource = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, default='')
     tr_vehicletype = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='tr_vehicletype', db_column='tr_vehicletype')
     tr_vehicletype_placed = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='tr_vehicletype_placed', db_column='tr_vehicletype_placed')
     tr_vehicletype_selection_requested= models.BooleanField(blank=True,null=True)
@@ -27,7 +27,7 @@ class TripdetailInfo(models.Model):
     tr_reportedlocation = models.ForeignKey(City,on_delete=models.CASCADE,related_name='tr_reportedlocation', db_column='tr_reportedlocation',null=True, blank=True)
     tr_reportedkm = models.IntegerField(default =0,null=True, blank=True)
     tr_reporteddate = models.DateTimeField(null=True, blank=True)
-    tr_status = models.ForeignKey(Tripstatusinfo,on_delete=models.CASCADE, related_name='tr_status', db_column='tr_status',default=1)
+    # tr_status = models.ForeignKey(Tripstatusinfo,on_delete=models.CASCADE, related_name='tr_status', db_column='tr_status',default=1)
     tr_updated_at = models.DateTimeField(null=True, auto_now=True)
     tr_created_at = models.DateTimeField(null=True, auto_now_add=True)
     tr_updated_by = models.ForeignKey(MyUser, related_name='tr_updated_by', db_column='tr_updated_by',on_delete=models.CASCADE, null=True)

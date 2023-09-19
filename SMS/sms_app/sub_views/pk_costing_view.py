@@ -1,10 +1,9 @@
+import json
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ObjectDoesNotExist
-
 from ..forms import PkcostingForm
-from ..models import PkcostingInfo
+from ..models import Costdescription,PkcostingInfo
 from django.shortcuts import render, redirect
-from random import randint
+from django.http import HttpResponse
 from django.contrib import messages
 
 @login_required(login_url='login_page')
@@ -73,3 +72,19 @@ def costing_delete(request,costing_id):
     costing = PkcostingInfo.objects.get(pk=costing_id)
     costing.delete()
     return redirect('/SMS/costing_list')
+
+@login_required(login_url='login_page')
+def load_cost_description(request):
+    cost_description_id= []
+    cost_type = request.GET.get('cost_type')
+    # Fetch cost_description Details
+    cost_description = list(Costdescription.objects.filter(cost_type=cost_type).values_list('cost_description', flat=True).distinct())
+    cost_description.sort()
+    for j in cost_description:
+        cost_description_id.append(Costdescription.objects.get(cost_description=j).id)
+    data = {
+        'cost_description':cost_description,
+        'cost_description_id': cost_description_id,
+    }
+    return HttpResponse(json.dumps(data))
+    # return JsonResponse((data))

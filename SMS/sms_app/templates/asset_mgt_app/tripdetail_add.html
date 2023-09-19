@@ -156,9 +156,14 @@
 								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
+										<span class="input-group-text">Trip Status</span>
 									</div>
-									{% render_field trip_det_form.tr_status class="form-control" %}
+									<select name="tc_financestatus" id="tc_financestatus" class="form-control">
+										<option value="2">--Select--</option>
+										{% for item in status_list  %}
+											<option value="{{item.id}}">{{item.status}}</option>
+										{% endfor %}
+									</select>
 								</div>
 							</div>
 							<div class="input-group input-group-sm mb-3 container-fluid">
@@ -194,6 +199,7 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("tr_updated_by").value ='{{user_id}}';
+	document.getElementById("tc_financestatus").value ='{{status_selected}}';
 	document.getElementById("tr_enquirynumber").value ='{{enquiry_num_id}}';
   });
 </script>

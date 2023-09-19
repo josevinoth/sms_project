@@ -43,7 +43,6 @@ from .sub_forms.vehicletypeform_Form import VehicletypeaddForm
 from .sub_forms.tripdetailform_Form import TripdetailaddForm
 from .sub_forms.movementtypeform_Form import MovementtypeaddForm
 from .sub_forms.trbusinesstypeform_Form import TrbusinesstypeaddForm
-from .sub_forms.vehiclesourceform_Form import VehiclesourceaddForm
 from .sub_forms.vehiclenumberform_Form import VehiclenumberaddForm
 from .sub_forms.tripclosureform_Form import TripclosureaddForm,TripclosurefilesForm
 from .sub_forms.vhmanufacturerform_Form import VhmanufactureraddForm

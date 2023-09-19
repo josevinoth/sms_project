@@ -82,7 +82,7 @@ def enquirynote_list(request):
             consignment_status_id=6
         try:
             trip_status_id_list=[]
-            trip_details_status = TripdetailInfo.objects.filter(tr_enquirynumber=m).values_list('tr_status',flat=True)
+            trip_details_status = TripdetailInfo.objects.filter(tr_enquirynumber=m).values_list('tc_financestatus',flat=True)
             for j in trip_details_status:
                 trip_status_id_list = trip_status_id_list.append(StatusList.objects.get(status_title=j).id)
             if all(element == 5 for element in (trip_status_id_list)):

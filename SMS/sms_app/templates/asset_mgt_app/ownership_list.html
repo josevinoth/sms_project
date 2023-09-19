@@ -5,12 +5,12 @@
 <div class="container-fluid row">
     <div class="col-md-1">
       <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i>
+        <i class="fas fa-arrow-left"></i> Back
       </a>
     </div>
     <div class="col-md-1">
       <a href="{% url 'ownership_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i>
+        <i class="fas fa-plus"></i> Add
       </a>
     </div>
 </div>
@@ -19,7 +19,6 @@
 <table  id="ownership_list" class="table table-striped table-bordered">
     <thead class="thead-dark">
         <tr>
-<!--            <th>Product Category</th>-->
             <th>Ownership</th>
             <th>Edit</th>
             <th>Delete</th>
@@ -30,14 +29,14 @@
                 <td> {{ownershipinfo.ow_ownership}}</td>
                 <td>
 
-                    <a href="{% url 'ownership_update' ownershipinfo.id %}" >
+                    <a class="btn btn-primary" href="{% url 'ownership_update' ownershipinfo.id %}" >
                         <i class="far fa-edit"></i>
                     </a>
                 </td>
                 <td>
                     <form action="{% url 'ownership_delete' ownershipinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn">
+                        <button type="submit"class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </form>
