@@ -15,6 +15,7 @@ def vehicle_allotment_nav(request,vehicle_allotment_id=0):
     enquiry_num = EnquirynoteInfo.objects.get(pk=vehicle_allotment_id).en_enquirynumber
     enquiry_num_id = EnquirynoteInfo.objects.get(pk=vehicle_allotment_id).id
     request.session['ses_enqiury_id'] = enquiry_num_id
+    consignment_list=ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
     vehicle_allotment_list=Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id)
     context = {
         'first_name': first_name,
@@ -22,6 +23,7 @@ def vehicle_allotment_nav(request,vehicle_allotment_id=0):
         'vehicle_allotment_form': vehicle_allotment_form,
         'enquiry_num': enquiry_num,
         'enquiry_num_id': enquiry_num_id,
+        'consignment_list': consignment_list,
         'vehicle_allotment_list': vehicle_allotment_list,
     }
     if vehicle_allotment_form.is_valid():
@@ -31,7 +33,8 @@ def vehicle_allotment_nav(request,vehicle_allotment_id=0):
         vehicle_allotment_list = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id).values_list('va_vehiclenumber', flat=True))
         vehicle_numbers = []
         for i in vehicle_allotment_list:
-            vehicle_numbers.append(str(VehiclemasterInfo.objects.get(id=i).ve_vehiclenumber))
+            print(i)
+            vehicle_numbers.append(str(VehiclemasterInfo.objects.get(id=i).vm_registrationnumber))
         try:
             EnquirynoteInfo.objects.filter(id=enquiry_num_id).update(en_vehicle_allotment=vehicle_numbers)
         except ObjectDoesNotExist:
@@ -55,22 +58,36 @@ def vehicle_allotment_add(request,vehicle_allotment_id=0):
             print("I am inside Get add vehicle_allotments")
             enquiry_num_id = request.session.get('ses_enqiury_id')
             vehicle_allotment_form = VehicleallotmentForm()
+            consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+            context = {
+                'first_name': first_name,
+                'user_id': user_id,
+                'vehicle_allotment_form': vehicle_allotment_form,
+                'enquiry_num_id': enquiry_num_id,
+                'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id),
+                'consignment_id': consignment_id,
+                'consignment_number': consignment_number,
+                'consignment_list': consignment_list,
+            }
         else:
             print("I am inside Get edit vehicle_allotments")
             enquiry_num= Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id).va_enquirynumber
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             vehicle_allotment = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
             vehicle_allotment_form = VehicleallotmentForm(instance=vehicle_allotment)
-        print(enquiry_num_id)
-        context = {
-            'first_name': first_name,
-            'user_id': user_id,
-            'vehicle_allotment_form': vehicle_allotment_form,
-            'enquiry_num_id': enquiry_num_id,
-            'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id),
-            'consignment_id':consignment_id,
-            'consignment_number':consignment_number,
-        }
+            consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+            consignment_selected = (Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id).va_consignmentnumber.id)
+            context = {
+                'first_name': first_name,
+                'user_id': user_id,
+                'vehicle_allotment_form': vehicle_allotment_form,
+                'enquiry_num_id': enquiry_num_id,
+                'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id),
+                'consignment_id':consignment_id,
+                'consignment_number':consignment_number,
+                'consignment_list':consignment_list,
+                'consignment_selected':consignment_selected,
+            }
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", context)
     else:
         if vehicle_allotment_id == 0:

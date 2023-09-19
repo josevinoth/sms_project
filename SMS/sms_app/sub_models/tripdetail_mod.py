@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehiclenumberInfo,VehicletypeInfo,OwnershipInfo,City,Tripstatusinfo
+from ..models import EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo,City,Tripstatusinfo
 class Trip_category_info(models.Model):
     category = models.CharField(max_length=100, default='')
 
@@ -17,7 +17,7 @@ class TripdetailInfo(models.Model):
     tr_vehicletype_placed = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='tr_vehicletype_placed', db_column='tr_vehicletype_placed')
     tr_vehicletype_selection_requested= models.BooleanField(blank=True,null=True)
     tr_vehicletype_selection_placed= models.BooleanField(blank=True,null=True)
-    tr_vehiclenumber = models.ForeignKey(VehiclenumberInfo, on_delete=models.CASCADE, default='')
+    tr_vehiclenumber = models.ForeignKey(VehiclemasterInfo, on_delete=models.CASCADE, default='')
     tr_drivername = models.CharField(max_length=30,null=True,blank=True)
     tr_driver_lic = models.CharField(max_length=100,null=True,blank=True)
     tr_drivernumber = models.CharField(max_length=30,null=True,blank=True)

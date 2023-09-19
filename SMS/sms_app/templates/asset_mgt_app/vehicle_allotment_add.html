@@ -22,7 +22,12 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_consignmentnumber id="va_consignmentnumber" class="form-control" %}
+									<select name="va_consignmentnumber" id="va_consignmentnumber" class="form-control">
+										<option value="0">--Select--</option>
+										{% for item in consignment_list  %}
+											<option value="{{item.id}}">{{item.co_consignmentnumber}}</option>
+										{% endfor %}
+									</select>
 								</div>
 								<div class="row">
 									<div class="col-10">
@@ -128,22 +133,8 @@
 $(document).ready(function() {
 	document.getElementById("va_updated_by").value ='{{user_id}}';
 	document.getElementById("va_enquirynumber").value ='{{enquiry_num_id}}';
+	document.getElementById("va_consignmentnumber").value ='{{consignment_selected}}';
 	load_consignment_num();
   });
 </script>
-
-<!--<script>-->
-<!--function load_consignment_num() {-->
-<!--	alert('Jose')-->
-<!--	var consignment_number='{{consignment_number}}'-->
-<!--	var consignment_id={{consignment_id}}-->
-<!--	alert(consignment_number)-->
-<!--	alert(consignment_id)-->
-<!--	var len=(consignment_id).length-->
-<!--	alert(len)-->
-<!--	$('#va_consignmentnumber').empty().append("<option value='0'>&#45;&#45;Select&#45;&#45;</option>");-->
-<!--	for( var i = 0; i<len; i++){-->
-<!--	$('#va_consignmentnumber').append("<option value='"+consignment_id[i]+"'>"+consignment_number[i]+"</option>");-->
-<!--}-->
-<!--</script>-->
 {% endblock content %}

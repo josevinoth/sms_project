@@ -35,7 +35,6 @@ from .sub_forms.GateinForm_form import GateinaddForm
 from .sub_forms.LoadingbayForm_form import LoadingbayddForm,LoadingbayImagesForm
 from .sub_forms.enquirynoteForm_form import EnquirynoteaddForm
 from .sub_forms.consignmentdetailform_Form import ConsignmentdetailaddForm
-from .sub_forms.vehicledetailform_Form import VehicledetailaddForm
 from .sub_forms.customernameform_Form import CustomernameaddForm
 from .sub_forms.vehiclecategoryform_Form import VehiclecategoryaddForm
 from .sub_forms.customerdepartmentform_Form import CustomerdepartmentaddForm
@@ -43,7 +42,6 @@ from .sub_forms.vehicletypeform_Form import VehicletypeaddForm
 from .sub_forms.tripdetailform_Form import TripdetailaddForm
 from .sub_forms.movementtypeform_Form import MovementtypeaddForm
 from .sub_forms.trbusinesstypeform_Form import TrbusinesstypeaddForm
-from .sub_forms.vehiclenumberform_Form import VehiclenumberaddForm
 from .sub_forms.tripclosureform_Form import TripclosureaddForm,TripclosurefilesForm
 from .sub_forms.vhmanufacturerform_Form import VhmanufactureraddForm
 from .sub_forms.vehiclemodelform_Form import VehiclemodeladdForm

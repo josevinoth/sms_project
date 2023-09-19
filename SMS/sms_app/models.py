@@ -86,10 +86,7 @@ from .sub_models.dispatch_mod import Dispatch_info
 from .sub_models.warehouse_goods_info_mod import Warehouse_goods_info
 from .sub_models.enquirynote_mod import EnquirynoteInfo
 from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
-from .sub_models.vehiclenumber_mod import VehiclenumberInfo
 from .sub_models.ownership_mod import OwnershipInfo
-from .sub_models.vehicledetail_mod import VehicledetailInfo
-from .sub_models.tripdetail_mod import TripdetailInfo,Trip_category_info,Trip_closure_files_Info
 from .sub_models.vhmanufacturer_mod import VhmanufacturerInfo
 from .sub_models.vehiclemodel_mod import VehiclemodelInfo
 from .sub_models.body_mod import BodyInfo
@@ -98,6 +95,7 @@ from .sub_models.fueltype_mod import FueltypeInfo
 from .sub_models.vehiclecolour_mod import VehiclecolourInfo
 from .sub_models.permittype_mod import PermittypeInfo
 from .sub_models.vehiclemaster_mod import VehiclemasterInfo
+from .sub_models.tripdetail_mod import TripdetailInfo,Trip_category_info,Trip_closure_files_Info
 from .sub_models.rtratemaster_mod import RtratemasterInfo
 from .sub_models.upload_mod import UploadInfo
 from.sub_models.expense_type_mod import ExpenseTypeInfo
