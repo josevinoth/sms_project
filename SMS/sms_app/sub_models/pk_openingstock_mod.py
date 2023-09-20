@@ -1,9 +1,9 @@
 from django.db import models
-from ..models import MyUser,Natypeofwood,Stock_type,Category,Source
+from ..models import MyUser,Natypeofwood,Pkstocktype,Category,Source
 
 class PkopeningstockInfo(models.Model):
     os_category = models.ForeignKey(Category, on_delete=models.CASCADE, default='')
-    os_stock_type = models.ForeignKey(Stock_type, on_delete=models.CASCADE, default='')
+    os_stock_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE, default='')
     os_type_of_wood= models.ForeignKey(Natypeofwood,on_delete=models.CASCADE,default='')
     os_source = models.ForeignKey(Source,on_delete=models.CASCADE,default='')
     os_thick_height = models.IntegerField(blank=True, null=True,default=0)
@@ -12,9 +12,9 @@ class PkopeningstockInfo(models.Model):
     os_cft = models.FloatField(blank=True, null=True,default=0.0)
     os_price = models.FloatField(blank=True, null=True,default=0.0)
     os_quantity= models.IntegerField(blank=True, null=True,default=0)
-    os_total_cft = models.IntegerField(blank=True, null=True,default=0)
-    os_value = models.IntegerField(blank=True, null=True,default=0)
-    os_gst = models.IntegerField(blank=True, null=True,default=0)
+    os_total_cft = models.FloatField(blank=True, null=True,default=0.0)
+    os_value = models.FloatField(blank=True, null=True,default=0.0)
+    os_gst =models.FloatField(blank=True, null=True,default=0.0)
     os_gst_amount = models.FloatField(blank=True, null=True,default=0.0)
     os_totalbill_amount = models.FloatField(blank=True, null=True,default=0.0)
     os_created_at = models.DateField(null=True, auto_now_add=True)

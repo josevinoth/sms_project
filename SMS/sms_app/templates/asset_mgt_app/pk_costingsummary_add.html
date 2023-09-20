@@ -39,21 +39,21 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost(Without Margin) Charges</span>
-									</div>
-									{% render_field form.cs_total_cost_wom id="cs_total_cost_wom" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Marginn</span>
 									</div>
-									{% render_field form.cs_margin id="cs_margin"  class="form-control " %}
+									{% render_field form.cs_margin id="cs_margin"  onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Cost(With Margin)</span>
 									</div>
 									{% render_field form.cs_total_cost_wm id="cs_total_cost_wm"  class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total CFT</span>
+									</div>
+									{% render_field form.cs_total_cft id="cs_total_cft"  onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -107,12 +107,13 @@
             <th>Assessment Number</th>
             <th>Cost Type</th>
             <th>Cost Description</th>
+            <th>Length</th>
             <th>Width(inch)</th>
             <th>Height(inch)</th>
             <th>Type Of Wood</th>
-            <th>UOM</th>
             <th>Quantity</th>
             <th>Size</th>
+			<th>UOM</th>
             <th>CFT</th>
             <th>Rate</th>
             <th>Days</th>
@@ -129,6 +130,7 @@
             <td> {{costinginfo.ct_assessment_num}}</td>
             <td> {{costinginfo.ct_cost_type}}</td>
             <td> {{costinginfo.ct_cost_description}}</td>
+            <td> {{costinginfo.ct_length}}</td>
             <td> {{costinginfo.ct_width}}</td>
             <td> {{costinginfo.ct_height}}</td>
             <td> {{costinginfo.ct_type_of_wood}}</td>
@@ -178,6 +180,21 @@ $(document).ready(function() {
 		$('#add_costing').removeClass('disable_a_href');
 	}
 	});
+</script>
+
+<script>
+function change_charge_type() {
+var wood_cost=parseFloat(document.getElementById("cs_wood_cost").value) || 0;
+var engineer_cost=parseFloat(document.getElementById("cs_wood_cost").value) || 0;
+var labour_cost=parseFloat(document.getElementById("cs_wood_cost").value) || 0;
+var margin=parseFloat(document.getElementById("cs_margin").value) || 0;
+var total_cost= wood_cost+engineer_cost+labour_cost+margin
+document.getElementById("cs_total_cost_wm").value=total_cost.toFixed(2)
+
+var total_cft=parseFloat(document.getElementById("cs_total_cft").value) || 0;
+var rate_per_cft=total_cost/total_cft
+document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
+}
 </script>
 
 {% endblock content %}

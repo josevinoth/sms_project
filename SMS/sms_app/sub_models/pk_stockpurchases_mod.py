@@ -1,9 +1,9 @@
 from django.db import models
-from ..models import MyUser,Category,Stock_type,Natypeofwood,Source,Vendor_info
+from ..models import MyUser,Category,Pkstocktype,Natypeofwood,Source,Vendor_info,Costdescription,Unitofmeasure
 
 class PkstockpurchasesInfo(models.Model):
     sp_category = models.ForeignKey(Category, on_delete=models.CASCADE, default='')
-    sp_stock_type = models.ForeignKey(Stock_type, on_delete=models.CASCADE, default='')
+    sp_stock_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE, default='')
     sp_type_of_wood= models.ForeignKey(Natypeofwood, on_delete=models.CASCADE, default='')
     sp_source = models.ForeignKey(Source, on_delete=models.CASCADE, default='')
     sp_vendor_name = models.ForeignKey(Vendor_info, on_delete=models.CASCADE, default='')
@@ -24,6 +24,9 @@ class PkstockpurchasesInfo(models.Model):
     sp_updated_at = models.DateField(null=True, auto_now=True)
     sp_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='sp_updated_by',db_column='sp_updated_by', null=True)
     sp_purchase_num=models.CharField(max_length=50,blank=True,null=True)
+    sp_consumable_type = models.ForeignKey(Costdescription, on_delete=models.CASCADE, default='',blank=True, null=True)
+    sp_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='',blank=True, null=True)
+    sp_size = models.FloatField(blank=True, null=True, default=0.0)
 
     class Meta:
         ordering = ["sp_purchase_num"]

@@ -45,21 +45,21 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Thick/Height</span>
+										<span class="input-group-text">Thick/Height (In)</span>
 									</div>
-									{% render_field form.os_thick_height id="os_thick_height" class="form-control " %}
+									{% render_field form.os_thick_height id="os_thick_height" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Width</span>
+										<span class="input-group-text">Width (In)</span>
 									</div>
-									{% render_field form.os_width id="os_width" class="form-control " %}
+									{% render_field form.os_width id="os_width" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Length</span>
+										<span class="input-group-text">Length (Ft)</span>
 									</div>
-									{% render_field form.os_length id="os_length" class="form-control " %}
+									{% render_field form.os_length id="os_length" onchange="change_charge_type()" class="form-control " %}
 								</div>
 
 							</div>
@@ -68,50 +68,50 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">CFT</span>
 									</div>
-									{% render_field form.os_cft id="os_cft" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Price</span>
-									</div>
-									{% render_field form.os_price id="os_price" class="form-control " %}
+									{% render_field form.os_cft id="os_cft" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quantity</span>
 									</div>
-									{% render_field form.os_quantity id="os_quantity" class="form-control " %}
+									{% render_field form.os_quantity id="os_quantity" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total CFT</span>
 									</div>
-									{% render_field form.os_total_cft  id="os_total_cft" class="form-control " %}
+									{% render_field form.os_total_cft  id="os_total_cft" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Value</span>
+										<span class="input-group-text">Price (INR)</span>
 									</div>
-									{% render_field form.os_value id="os_value" class="form-control " %}
+									{% render_field form.os_price id="os_price" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Value (INR)</span>
+									</div>
+									{% render_field form.os_value id="os_value"  class="form-control disable_a_href" %}
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">GST</span>
+										<span class="input-group-text">GST (%)</span>
 									</div>
-									{% render_field form.os_gst id="os_gst" class="form-control " %}
+									{% render_field form.os_gst id="os_gst" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">GST Amount</span>
+										<span class="input-group-text">GST Amount (INR)</span>
 									</div>
-									{% render_field form.os_gst_amount id="os_gst_amount"  class="form-control " %}
+									{% render_field form.os_gst_amount id="os_gst_amount"  class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Bill Amount</span>
+										<span class="input-group-text">Total Bill Amount (INR)</span>
 									</div>
-									{% render_field form.os_totalbill_amount id="os_totalbill_amount" class="form-control " %}
+									{% render_field form.os_totalbill_amount id="os_totalbill_amount" class="form-control disable_a_href" %}
 								</div>
 								{% render_field form.os_updated_by id="os_updated_by" hidden="True" class="form-control" %}
 
@@ -146,4 +146,28 @@ $(document).ready(function() {
 	});
 </script>
 
+<script>
+function change_charge_type() {
+var length = parseFloat(document.getElementById("os_length").value) || 0;
+var height = parseFloat(document.getElementById("os_thick_height").value) || 0;
+var width = parseFloat(document.getElementById("os_width").value) || 0;
+var cft = length*height*width/144;
+document.getElementById("os_cft").value=cft.toFixed(2)
+
+var quantity = parseFloat(document.getElementById("os_quantity").value) || 0;
+var total_cft=cft*quantity
+document.getElementById("os_total_cft").value=total_cft.toFixed(2)
+
+var price = parseFloat(document.getElementById("os_price").value) || 0;
+var value=price*total_cft
+document.getElementById("os_value").value=value.toFixed(2)
+
+var gst = parseFloat(document.getElementById("os_gst").value) || 0;
+var gst_amount=value*gst
+document.getElementById("os_gst_amount").value=gst_amount.toFixed(2)
+
+var total_bill_amount=value*gst_amount
+document.getElementById("os_totalbill_amount").value=total_bill_amount.toFixed(2)
+}
+</script>
 {% endblock content %}

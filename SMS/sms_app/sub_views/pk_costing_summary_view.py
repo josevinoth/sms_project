@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from ..forms import PkcostingsummaryForm
 from ..models import PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
 from django.shortcuts import render, redirect
-
+from django.db.models.aggregates import Sum, Max
 from django.contrib import messages
 
 @login_required(login_url='login_page')
@@ -26,6 +26,18 @@ def costingsummary_add(request,costingsummary_id=0):
             request.session['na_assessment_id'] = needassessment_id
             form = PkcostingsummaryForm(instance=costingsummary)
             costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id)
+            wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_cost_type=1).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            # print(wood_cost)
+            PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_wood_cost=round(wood_cost, 2))
+            total_cft = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=1).aggregate(Sum('ct_cft'))['ct_cft__sum']
+            # print(total_cft)
+            PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_total_cft=round(total_cft, 2))
+            engineer_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=3).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            # print(engineer_cost)
+            PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_engineer_cost=round(engineer_cost, 2))
+            labour_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=2).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']+PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            print(labour_cost)
+            PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_labour_cost=round(labour_cost, 2))
             context={
                     'form': form,
                     'first_name': first_name,

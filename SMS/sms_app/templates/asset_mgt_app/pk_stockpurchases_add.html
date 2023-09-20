@@ -29,7 +29,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field form.sp_stock_type id="sp_stock_type" class="form-control " %}
+									{% render_field form.sp_stock_type id="sp_stock_type" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consumable Type</span>
+									</div>
+									{% render_field form.sp_consumable_type id="sp_consumable_type" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -63,24 +69,24 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Thick/Height</span>
+										<span class="input-group-text">Thick/Height (In)</span>
 									</div>
-									{% render_field form.sp_thick_height id="os_thick_height" class="form-control " %}
+									{% render_field form.sp_thick_height id="sp_thick_height" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Width</span>
+										<span class="input-group-text">Width (In)</span>
 									</div>
-									{% render_field form.sp_width id="sp_width" class="form-control " %}
+									{% render_field form.sp_width id="sp_width" onchange="change_charge_type()" class="form-control " %}
 								</div>
 							</div>
 							<div class="col-6">
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Length</span>
+										<span class="input-group-text">Length (Ft)</span>
 									</div>
-									{% render_field form.sp_length id="sp_length" class="form-control " %}
+									{% render_field form.sp_length id="sp_length" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -90,15 +96,21 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Price</span>
+										<span class="input-group-text">Quantity</span>
 									</div>
-									{% render_field form.sp_price id="sp_price" class="form-control " %}
+									{% render_field form.sp_quantity id="sp_quantity" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity</span>
+										<span class="input-group-text">UOM</span>
 									</div>
-									{% render_field form.sp_quantity id="sp_quantity" class="form-control " %}
+									{% render_field form.sp_uom id="sp_uom" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Size</span>
+									</div>
+									{% render_field form.sp_size id="sp_size" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -108,26 +120,31 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Value</span>
+										<span class="input-group-text">Price (INR)</span>
+									</div>
+									{% render_field form.sp_price id="sp_price" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Value (INR)</span>
 									</div>
 									{% render_field form.sp_value id="sp_value" class="form-control " %}
 								</div>
-
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">GST</span>
+										<span class="input-group-text">GST (%)</span>
 									</div>
-									{% render_field form.sp_gst id="sp_gst" class="form-control " %}
+									{% render_field form.sp_gst id="sp_gst" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">GST Amount</span>
+										<span class="input-group-text">GST Amount (INR)</span>
 									</div>
 									{% render_field form.sp_gst_amount id="sp_gst_amount"  class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Bill Amount</span>
+										<span class="input-group-text">Total Bill Amount (INR)</span>
 									</div>
 									{% render_field form.sp_totalbill_amount id="sp_totalbill_amount" class="form-control " %}
 								</div>
@@ -160,6 +177,65 @@
 $(document).ready(function() {
 	document.getElementById("sp_updated_by").value ='{{user_id}}';
 	});
+</script>
+
+<script>
+function change_charge_type() {
+	var jn=document.getElementById("sp_stock_type").value
+	if ( jn==1)
+	{
+		$('#sp_type_of_wood').removeClass('disable_a_href');
+		$('#sp_thick_height').removeClass('disable_a_href');
+		$('#sp_length').removeClass('disable_a_href');
+		$('#sp_width').removeClass('disable_a_href');
+		$('#sp_cft').removeClass('disable_a_href');
+		$('#sp_total_cft').removeClass('disable_a_href');
+		$('#sp_uom').addClass('disable_a_href');
+		$('#sp_size').addClass('disable_a_href');
+		var length = parseFloat(document.getElementById("sp_length").value) || 0;
+		var height = parseFloat(document.getElementById("sp_thick_height").value) || 0;
+		var width = parseFloat(document.getElementById("sp_width").value) || 0;
+		var cft = length*height*width/144;
+		document.getElementById("sp_cft").value=cft.toFixed(2)
+
+		var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
+		var total_cft=cft*quantity
+		document.getElementById("sp_total_cft").value=total_cft.toFixed(2)
+
+		var price = parseFloat(document.getElementById("sp_price").value) || 0;
+		var value=price*total_cft
+		document.getElementById("sp_value").value=value.toFixed(2)
+
+		var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+		var gst_amount=value*gst
+		document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
+
+		var total_bill_amount=value*gst_amount
+		document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
+	}
+	else if ( jn==2)
+	{
+		$('#sp_type_of_wood').addClass('disable_a_href');
+		$('#sp_thick_height').addClass('disable_a_href');
+		$('#sp_length').addClass('disable_a_href');
+		$('#sp_width').addClass('disable_a_href');
+		$('#sp_cft').addClass('disable_a_href');
+		$('#sp_total_cft').addClass('disable_a_href');
+		$('#sp_uom').removeClass('disable_a_href');
+		$('#sp_size').removeClass('disable_a_href');
+		var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
+		var price = parseFloat(document.getElementById("sp_price").value) || 0;
+		var value=price*quantity
+		document.getElementById("sp_value").value=value.toFixed(2)
+
+		var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+		var gst_amount=value*gst
+		document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
+
+		var total_bill_amount=value*gst_amount
+		document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
+	}
+}
 </script>
 
 {% endblock content %}

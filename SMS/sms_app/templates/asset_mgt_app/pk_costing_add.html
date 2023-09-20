@@ -23,7 +23,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Costing Type</span>
 									</div>
-									{% render_field form.ct_cost_type id="ct_cost_type" class="form-control" %}
+									{% render_field form.ct_cost_type id="ct_cost_type" onchange="change_charge_type()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -33,15 +33,21 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Length(inch)</span>
+									</div>
+									{% render_field form.ct_length id="ct_length" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Width(inch)</span>
 									</div>
-									{% render_field form.ct_width id="ct_width" class="form-control " %}
+									{% render_field form.ct_width id="ct_width" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Height(inch)</span>
 									</div>
-									{% render_field form.ct_height id="ct_height" class="form-control " %}
+									{% render_field form.ct_height id="ct_height" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -59,7 +65,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quantity</span>
 									</div>
-									{% render_field form.ct_quantity id="ct_quantity" class="form-control " %}
+									{% render_field form.ct_quantity id="ct_quantity" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -71,19 +77,19 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">CFT</span>
 									</div>
-									{% render_field form.ct_cft id="ct_cft" class="form-control " %}
+									{% render_field form.ct_cft id="ct_cft" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Rate</span>
 									</div>
-									{% render_field form.ct_rate id="ct_rate" class="form-control " %}
+									{% render_field form.ct_rate id="ct_rate" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Days</span>
 									</div>
-									{% render_field form.ct_days id="ct_days" class="form-control " %}
+									{% render_field form.ct_days id="ct_days" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -126,29 +132,6 @@ $(document).ready(function() {
 </script>
 
 <script>
-$(document).ready(function () {
-    // Function to calculate total cost
-    function calculateTotalCost() {
-        // Get the values of Rate and CFT fields
-        var rate = parseFloat($("#ct_rate").val()) || 0;
-        var cft = parseFloat($("#ct_cft").val()) || 0;
-
-        // Calculate the total cost
-        var totalCost = rate * cft;
-
-        // Update the Total Cost field with the calculated value
-        $("#ct_total_cost").val(totalCost.toFixed(2)); // You can adjust the number of decimal places as needed
-    }
-
-    // Attach an input event listener to the Rate and CFT fields
-    $("#ct_rate, #ct_cft").on("input", calculateTotalCost);
-
-    // Call the calculateTotalCost function initially to set the initial value
-    calculateTotalCost();
-});
-</script>
-
-<script>
    $("#ct_cost_type").change(function () {
       var url = $("#costing_add").attr("data-cost_description-url");
       var cost_type = $(this).val();
@@ -176,5 +159,189 @@ $(document).ready(function () {
       });
     });
   </script>
+
+<script>
+function change_charge_type() {
+	var jn=document.getElementById("ct_cost_type").value
+	if ( jn==1)
+	{
+		$('#ct_cost_description').removeClass('disable_a_href');
+		$('#ct_length').removeClass('disable_a_href');
+		$('#ct_width').removeClass('disable_a_href');
+		$('#ct_height').removeClass('disable_a_href');
+		$('#ct_type_of_wood').removeClass('disable_a_href');
+		$('#ct_uom').removeClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').removeClass('disable_a_href');
+		$('#ct_cft').addClass('disable_a_href');
+		$('#ct_rate').removeClass('disable_a_href');
+		$('#ct_days').addClass('disable_a_href');
+		$('#ct_total_cost').removeClass('disable_a_href');
+		var length = parseFloat(document.getElementById("ct_length").value) || 0;
+		var height = parseFloat(document.getElementById("ct_height").value) || 0;
+		var width = parseFloat(document.getElementById("ct_width").value) || 0;
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var cft = length*height*width/144;
+		document.getElementById("ct_cft").value=cft.toFixed(2)
+		var totalCost = rate * cft;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+	else if (jn==9)
+	{
+		$('#ct_cost_description').removeClass('disable_a_href');
+		$('#ct_length').addClass('disable_a_href');
+		$('#ct_width').addClass('disable_a_href');
+		$('#ct_height').addClass('disable_a_href');
+		$('#ct_type_of_wood').addClass('disable_a_href');
+		$('#ct_uom').removeClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').addClass('disable_a_href');
+		$('#ct_cft').addClass('disable_a_href');
+		$('#ct_rate').removeClass('disable_a_href');
+		$('#ct_days').addClass('disable_a_href');
+		$('#ct_total_cost').removeClass('disable_a_href');
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+		var totalCost = rate * quantity;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+	else if (jn==3)
+	{
+		$('#ct_cost_description').removeClass('disable_a_href');
+		$('#ct_length').addClass('disable_a_href');
+		$('#ct_width').addClass('disable_a_href');
+		$('#ct_height').addClass('disable_a_href');
+		$('#ct_type_of_wood').addClass('disable_a_href');
+		$('#ct_uom').removeClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').addClass('disable_a_href');
+		$('#ct_cft').addClass('disable_a_href');
+		$('#ct_rate').removeClass('disable_a_href');
+		$('#ct_days').removeClass('disable_a_href');
+		$('#ct_total_cost').removeClass('disable_a_href');
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+		var days = parseInt(document.getElementById("ct_days").value) || 0;
+		var totalCost = rate * days * quantity;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+	else if (jn==4)
+	{
+		$('#ct_cost_description').removeClass('disable_a_href');
+		$('#ct_length').addClass('disable_a_href');
+		$('#ct_width').addClass('disable_a_href');
+		$('#ct_height').addClass('disable_a_href');
+		$('#ct_type_of_wood').addClass('disable_a_href');
+		$('#ct_uom').removeClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').addClass('disable_a_href');
+		$('#ct_cft').addClass('disable_a_href');
+		$('#ct_rate').removeClass('disable_a_href');
+		$('#ct_days').addClass('disable_a_href');
+		$('#ct_total_cost').removeClass('disable_a_href');
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+		var totalCost = rate * quantity;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+	else if (jn==2)
+	{
+		$('#ct_cost_description').removeClass('disable_a_href');
+		$('#ct_length').addClass('disable_a_href');
+		$('#ct_width').addClass('disable_a_href');
+		$('#ct_height').addClass('disable_a_href');
+		$('#ct_type_of_wood').addClass('disable_a_href');
+		$('#ct_uom').removeClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').addClass('disable_a_href');
+		$('#ct_cft').addClass('disable_a_href');
+		$('#ct_rate').removeClass('disable_a_href');
+		$('#ct_days').removeClass('disable_a_href');
+		$('#ct_total_cost').removeClass('disable_a_href');
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+		var days = parseInt(document.getElementById("ct_days").value) || 0;
+		var totalCost = rate * days * quantity;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+	else if (jn==8)
+	{
+		$('#ct_cost_description').removeClass('disable_a_href');
+		$('#ct_length').addClass('disable_a_href');
+		$('#ct_width').addClass('disable_a_href');
+		$('#ct_height').addClass('disable_a_href');
+		$('#ct_type_of_wood').addClass('disable_a_href');
+		$('#ct_uom').removeClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').addClass('disable_a_href');
+		$('#ct_cft').addClass('disable_a_href');
+		$('#ct_rate').removeClass('disable_a_href');
+		$('#ct_days').removeClass('disable_a_href');
+		$('#ct_total_cost').removeClass('disable_a_href');
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+		var days = parseInt(document.getElementById("ct_days").value) || 0;
+		var totalCost = rate * days * quantity;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+	else if (jn==5)
+	{
+		$('#ct_cost_description').removeClass('disable_a_href');
+		$('#ct_length').addClass('disable_a_href');
+		$('#ct_width').addClass('disable_a_href');
+		$('#ct_height').addClass('disable_a_href');
+		$('#ct_type_of_wood').addClass('disable_a_href');
+		$('#ct_uom').removeClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').addClass('disable_a_href');
+		$('#ct_cft').addClass('disable_a_href');
+		$('#ct_rate').removeClass('disable_a_href');
+		$('#ct_days').addClass('disable_a_href');
+		$('#ct_total_cost').removeClass('disable_a_href');
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+		var totalCost = rate * quantity;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+	else if (jn==6)
+	{
+		$('#ct_cost_description').removeClass('disable_a_href');
+		$('#ct_length').addClass('disable_a_href');
+		$('#ct_width').addClass('disable_a_href');
+		$('#ct_height').addClass('disable_a_href');
+		$('#ct_type_of_wood').addClass('disable_a_href');
+		$('#ct_uom').removeClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').addClass('disable_a_href');
+		$('#ct_cft').addClass('disable_a_href');
+		$('#ct_rate').removeClass('disable_a_href');
+		$('#ct_days').addClass('disable_a_href');
+		$('#ct_total_cost').removeClass('disable_a_href');
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+		var totalCost = rate * quantity;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+	else if (jn==7)
+	{
+		$('#ct_cost_description').removeClass('disable_a_href');
+		$('#ct_length').addClass('disable_a_href');
+		$('#ct_width').addClass('disable_a_href');
+		$('#ct_height').addClass('disable_a_href');
+		$('#ct_type_of_wood').addClass('disable_a_href');
+		$('#ct_uom').removeClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').addClass('disable_a_href');
+		$('#ct_cft').addClass('disable_a_href');
+		$('#ct_rate').removeClass('disable_a_href');
+		$('#ct_days').addClass('disable_a_href');
+		$('#ct_total_cost').removeClass('disable_a_href');
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+		var totalCost = rate * quantity;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+}
+</script>
 
 {% endblock content %}

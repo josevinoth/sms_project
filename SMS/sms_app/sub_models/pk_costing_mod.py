@@ -18,6 +18,7 @@ class PkcostingInfo(models.Model):
     ct_size=models.FloatField(blank=True, null=True,default=0.0)
     ct_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='',blank=True, null=True)
     ct_assessment_num=models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='',blank=True, null=True)
+    ct_length = models.FloatField(blank=True, null=True, default=0.0)
 
     class Meta:
         ordering = ["ct_cost_type"]
