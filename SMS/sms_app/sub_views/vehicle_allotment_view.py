@@ -1,10 +1,11 @@
+import json
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 from ..forms import VehicleallotmentForm
-from ..models import VehiclemasterInfo,ConsignmentdetailInfo,EnquirynoteInfo,Vehicle_allotmentInfo
+from ..models import TripdetailInfo,OwnershipInfo,VehiclemasterInfo,ConsignmentdetailInfo,EnquirynoteInfo,Vehicle_allotmentInfo
 from django.shortcuts import render, redirect
-
+from django.http import HttpResponse
 @login_required(login_url='login_page')
 def vehicle_allotment_nav(request,vehicle_allotment_id=0):
     first_name = request.session.get('first_name')
@@ -15,6 +16,7 @@ def vehicle_allotment_nav(request,vehicle_allotment_id=0):
     enquiry_num = EnquirynoteInfo.objects.get(pk=vehicle_allotment_id).en_enquirynumber
     enquiry_num_id = EnquirynoteInfo.objects.get(pk=vehicle_allotment_id).id
     request.session['ses_enqiury_id'] = enquiry_num_id
+    vehicle_type_requested=EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_vehicletype.id
     consignment_list=ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
     vehicle_allotment_list=Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id)
     context = {
@@ -25,6 +27,7 @@ def vehicle_allotment_nav(request,vehicle_allotment_id=0):
         'enquiry_num_id': enquiry_num_id,
         'consignment_list': consignment_list,
         'vehicle_allotment_list': vehicle_allotment_list,
+        'vehicle_type_requested': vehicle_type_requested,
     }
     if vehicle_allotment_form.is_valid():
         vehicle_allotment_form.save()
@@ -59,6 +62,7 @@ def vehicle_allotment_add(request,vehicle_allotment_id=0):
             enquiry_num_id = request.session.get('ses_enqiury_id')
             vehicle_allotment_form = VehicleallotmentForm()
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+            vehicle_type_requested = EnquirynoteInfo.objects.get(id=enquiry_num_id).en_vehicletype.id
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
@@ -68,6 +72,7 @@ def vehicle_allotment_add(request,vehicle_allotment_id=0):
                 'consignment_id': consignment_id,
                 'consignment_number': consignment_number,
                 'consignment_list': consignment_list,
+                'vehicle_type_requested': vehicle_type_requested,
             }
         else:
             print("I am inside Get edit vehicle_allotments")
@@ -138,3 +143,65 @@ def vehicle_allotment_delete(request,vehicle_allotment_id):
 
     # return redirect('/SMS/vehicle_allotment_list')
     return redirect(request.META['HTTP_REFERER'])
+
+@login_required(login_url='login_page')
+def load_vehicle_source(request):
+    vehicletype_placed = request.GET.get('vehicletype_placed')
+    vehicle_source_name_list=[]
+    vehicle_source_id_list=[]
+
+    # Fetch vehicle alloted in a trip
+    vehicle_alloted_list=list(TripdetailInfo.objects.filter(tc_financestatus=1).values_list('tr_vehiclenumber',flat=True))
+    vehicle_master_list=list(VehiclemasterInfo.objects.all().values_list('id',flat=True))
+
+    # Fetch vehicle Source
+    vehicle_available_list = []
+    for element in vehicle_master_list:
+        if element not in vehicle_alloted_list:
+            vehicle_available_list.append(element)
+    for i in vehicle_available_list:
+        vehicle_type_available=VehiclemasterInfo.objects.get(pk=i).vm_vehicletype.id
+        if (vehicle_type_available==int(vehicletype_placed)):
+            vehicle_source = VehiclemasterInfo.objects.get(pk=i).vm_ownership.id
+            vehicle_source_id=OwnershipInfo.objects.get(pk=vehicle_source).id
+            vehicle_source_name=OwnershipInfo.objects.get(pk=vehicle_source).ow_ownership
+
+            if vehicle_source_id not in vehicle_source_id_list:
+                vehicle_source_id_list.append(vehicle_source_id)
+            if vehicle_source_name not in vehicle_source_name_list:
+                vehicle_source_name_list.append(vehicle_source_name)
+        else:
+            pass
+    data = {
+        'vehicle_source_name':vehicle_source_name_list,
+        'vehicle_source_id':vehicle_source_id_list,
+    }
+    return HttpResponse(json.dumps(data))
+@login_required(login_url='login_page')
+def load_vehicle_number(request):
+    vehicletype_placed = request.GET.get('vehicletype_placed')
+    vehicletype_source = request.GET.get('vehicletype_source')
+    vehicle_number_list=list(VehiclemasterInfo.objects.filter(vm_vehicletype=vehicletype_placed,vm_ownership=vehicletype_source).values_list('vm_registrationnumber',flat=True))
+    vehicle_number_list_id=[]
+    for i in vehicle_number_list:
+        vehicle_number_list_id.append(VehiclemasterInfo.objects.get(vm_registrationnumber=i).id)
+    data = {
+        'vehicle_number_list': vehicle_number_list,
+        'vehicle_number_list_id': vehicle_number_list_id,
+    }
+    return HttpResponse(json.dumps(data))
+
+@login_required(login_url='login_page')
+def load_driver_details(request):
+    vehicle_number = request.GET.get('vehicle_number')
+    driver_name=list(VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydrivername',flat=True))
+    driver_number=list(VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydrivermob',flat=True))
+    driver_license=list(VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license',flat=True))
+    driver_license_exp_date=list(VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license_exp_date',flat=True))
+    data = {
+        'driver_name': driver_name,
+        'driver_number': driver_number,
+        'driver_license': driver_license,
+        'driver_license_exp_date': driver_license_exp_date,
+    }
+    return HttpResponse(json.dumps(data))

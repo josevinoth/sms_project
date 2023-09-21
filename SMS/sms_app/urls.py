@@ -398,4 +398,8 @@ urlpatterns = [
     path('sales_comments_search/', views.sales_comments_search, name='sales_comments_search'),  # View pre Sales comments search
     path('dispatch_search/', views.dispatch_search, name='dispatch_search'),  # View dispatch search
     path('load_cost_description/', views.load_cost_description, name='load_cost_description'),  # Load cost description
+    path('load_vehicle_source/', views.load_vehicle_source, name='load_vehicle_source'),  # Load vehicle_source
+    path('load_vehicle_number/', views.load_vehicle_number, name='load_vehicle_number'),  # Load vehicle_details
+    path('load_driver_details/', views.load_driver_details, name='load_driver_details'),  # Load driver_details
+    path('load_vehicle_details/', views.load_vehicle_details, name='load_vehicle_details'),  # Load vehicle_details
 ]

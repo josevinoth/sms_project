@@ -80,9 +80,13 @@ class VehiclemasterInfo(models.Model):
     vm_fastagid = models.CharField(max_length=30,null=True,blank=True)
     vm_primarydrivername = models.CharField(max_length=30,null=True,blank=True)
     vm_primarydrivermob = models.IntegerField(default='',null=True,blank=True)
+    vm_primarydriver_license = models.CharField(max_length=100,null=True,blank=True)
+    vm_primarydriver_license_exp_date = models.CharField(max_length=100,null=True,blank=True)
     vm_potenialrevenue = models.CharField(max_length=30,null=True,blank=True)
     vm_secondarydrivername = models.CharField(max_length=30,null=True,blank=True)
     vm_secondarydrivermob = models.IntegerField(default='',null=True,blank=True)
+    vm_secondarydriver_license  = models.CharField(max_length=100,null=True,blank=True)
+    vm_secondarydriver_license_exp_date  = models.CharField(max_length=100,null=True,blank=True)
     vm_budgetexpense = models.CharField(max_length=30,null=True,blank=True)
 
     def __str__(self):

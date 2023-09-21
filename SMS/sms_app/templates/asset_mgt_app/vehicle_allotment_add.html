@@ -1,7 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" action="">
+<form method="POST" action="" id="vehicle_allotment" data-vehicle_source-url="{% url 'load_vehicle_source' %}">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-2"></div>
@@ -35,7 +35,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text">Vehicle Type Requested</span>
 											</div>
-											{% render_field vehicle_allotment_form.va_vehicletype id="va_vehicletype" class="form-control" %}
+											{% render_field vehicle_allotment_form.va_vehicletype id="va_vehicletype" class="form-control disable_a_href" %}
 										</div>
 									</div>
 									<div class="col-2">
@@ -61,7 +61,7 @@
 											<div class="input-group-prepend">
 												<!--										<span class="input-group-text">Vehicle Type Requested</span>-->
 											</div>
-											{% render_field vehicle_allotment_form.va_vehicletype_selection_placed id="va_vehicletype_selection_placed" class="form-control" %}
+											{% render_field vehicle_allotment_form.va_vehicletype_selection_placed id="va_vehicletype_selection_placed" class="form-control " %}
 										</div>
 									</div>
 								</div>
@@ -69,7 +69,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Source</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_vehiclesource id="va_vehiclesource" class="form-control" %}
+									{% render_field vehicle_allotment_form.va_vehiclesource id="va_vehiclesource" class="form-control disable_a_href" %}
 								</div>
 							</div>
 							<div class="col-6">
@@ -77,25 +77,31 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control" %}
+									{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Name</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control" %}
+									{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Number</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" class="form-control" %}
+									{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver License</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control" %}
+									{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">License Expiry</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_driver_lic_expiry id="va_driver_lic_expiry" type="Date" class="form-control disable_a_href" %}
 								</div>
 								{% render_field vehicle_allotment_form.va_updated_by id="va_updated_by" hidden="True" class="form-control" %}
 							</div>
@@ -134,7 +140,97 @@ $(document).ready(function() {
 	document.getElementById("va_updated_by").value ='{{user_id}}';
 	document.getElementById("va_enquirynumber").value ='{{enquiry_num_id}}';
 	document.getElementById("va_consignmentnumber").value ='{{consignment_selected}}';
+	var vehicle_type=document.getElementById("va_vehicletype").value;
+	if (vehicle_type=="")
+	{
+		document.getElementById("va_vehicletype").value ='{{vehicle_type_requested}}';
+	}
+	else
+	{
+		document.getElementById("va_vehicletype").value =vehicle_type;
+	}
 	load_consignment_num();
   });
 </script>
+
+<script>
+   $("#va_vehicletype_placed").change(function () {
+      var url = $("#vehicle_allotment").attr("data-load_vehicle_source-url");
+      var vehicletype_placed = $(this).val();
+      $.ajax({
+        url: '{% url 'load_vehicle_source' %}',
+        data: {
+          'vehicletype_placed': vehicletype_placed,
+        },
+		success: function (data) {
+			$('#va_vehiclesource').removeClass('disable_a_href');
+			var vehicle_source_name=JSON.parse(data)["vehicle_source_name"]
+			var vehicle_source_id=JSON.parse(data)["vehicle_source_id"]
+			var len1 = (vehicle_source_id).length;
+        	$("#va_vehiclesource").empty();
+        	$('#va_vehiclesource').empty().append("<option value='0'>--Select--</option>");
+        	for( var j = 0; j<len1; j++){
+        		$("#va_vehiclesource").append("<option value='"+vehicle_source_id[j]+"'>"+vehicle_source_name[j]+"</option>");
+			}
+        }
+      });
+    });
+ </script>
+
+<script>
+   $("#va_vehiclesource").change(function () {
+<!--      var url = $("#vehicle_allotment").attr("data-load_vehicle_source-url");-->
+      var vehicletype_placed = document.getElementById("va_vehicletype_placed").value;
+      var vehicletype_source = $(this).val();
+      $.ajax({
+        url: '{% url 'load_vehicle_number' %}',
+        data: {
+          'vehicletype_placed': vehicletype_placed,
+          'vehicletype_source': vehicletype_source,
+        },
+		success: function (data) {
+			$('#va_vehiclenumber').removeClass('disable_a_href');
+			var vehicle_number=JSON.parse(data)["vehicle_number_list"]
+			var vehicle_number_id=JSON.parse(data)["vehicle_number_list_id"]
+			var len1 = (vehicle_number).length;
+        	$("#va_vehiclenumber").empty();
+        	$('#va_vehiclenumber').empty().append("<option value='0'>--Select--</option>");
+        	for( var k = 0; k<len1; k++){
+        		$("#va_vehiclenumber").append("<option value='"+vehicle_number_id[k]+"'>"+vehicle_number[k]+"</option>");
+			}
+        }
+      });
+    });
+ </script>
+
+<script>
+   $("#va_vehiclenumber").change(function () {
+<!--      var url = $("#vehicle_allotment").attr("data-load_driver_details-url");-->
+      var vehicletype_placed = document.getElementById("va_vehicletype_placed").value;
+      var vehicletype_source = document.getElementById("va_vehiclesource").value;
+      var vehicle_number = $(this).val();
+      $.ajax({
+        url: '{% url 'load_driver_details' %}',
+        data: {
+          'vehicletype_placed': vehicletype_placed,
+          'vehicletype_source': vehicletype_source,
+          'vehicle_number': vehicle_number,
+        },
+		success: function (data) {
+			$('#va_drivername').removeClass('disable_a_href');
+			$('#va_drivernumber').removeClass('disable_a_href');
+			$('#va_driver_lic').removeClass('disable_a_href');
+			$('#va_driver_lic_expiry').removeClass('disable_a_href');
+			var driver_name=JSON.parse(data)["driver_name"]
+			var driver_number=JSON.parse(data)["driver_number"]
+			var driver_license=JSON.parse(data)["driver_license"]
+			var driver_license_exp_date=JSON.parse(data)["driver_license_exp_date"]
+			$("#va_drivername").val(driver_name);
+			$("#va_drivernumber").val(driver_number);
+			$("#va_driver_lic").val(driver_license);
+			$("#va_driver_lic_expiry").val(driver_license_exp_date);
+        }
+      });
+    });
+ </script>
 {% endblock content %}

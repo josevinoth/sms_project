@@ -24,6 +24,7 @@ def enquirynote_add(request,enquirynote_id=0):
             'user_id': user_id,
             'form': form,
             'first_name': first_name,
+            'enquirynote_list': EnquirynoteInfo.objects.all(),
         }
         return render(request, "asset_mgt_app/enquirynote_add.html",context)
     else:
@@ -33,8 +34,7 @@ def enquirynote_add(request,enquirynote_id=0):
             if form.is_valid():
                 try:
                     last_id = EnquirynoteInfo.objects.latest('id').id
-                    enquiry_num_next = str('EN_') + str(
-                        int(((EnquirynoteInfo.objects.get(id=last_id)).en_enquirynumber).replace('EN_', '')) + 1)
+                    enquiry_num_next = str('EN_') + str(int(((EnquirynoteInfo.objects.get(id=last_id)).en_enquirynumber).replace('EN_', '')) + 1)
                 except ObjectDoesNotExist:
                     enquiry_num_next = str('EN_') + str(1000000)
                 form.save()

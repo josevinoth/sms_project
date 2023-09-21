@@ -14,7 +14,6 @@
 					<div class="card-header text-center"><h3>Add/Update Vehicle Master</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-
 							<div class="col">
 								<div class="accordion" id="accordionExample">
 									<div class="card">
@@ -22,11 +21,9 @@
 											<h2 class="mb-0">
 												<button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
 													Vehicle Details
-
 												</button>
 											</h2>
 										</div>
-
 										<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
 											<div class="card-body">
 												<div class="row">
@@ -689,6 +686,20 @@
 															{% render_field form.vm_fastagid class="form-control" %}
 															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Budget Expense</span>
+															</div>
+															{% render_field form.vm_budgetexpense class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Potential Revenue</span>
+															</div>
+															{% render_field form.vm_potenialrevenue class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
 													</div>
 													<div class="col-4">
 														<div class="input-group input-group-sm mb-3">
@@ -707,9 +718,16 @@
 														</div>
 														<div class="input-group input-group-sm mb-3">
 															<div class="input-group-prepend">
-																<span class="input-group-text">Potential Revenue</span>
+																<span class="input-group-text">Primary Driver License#</span>
 															</div>
-															{% render_field form.vm_potenialrevenue class="form-control" %}
+															{% render_field form.vm_primarydriver_license id="vm_primarydriver_license" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Primary License Expiry</span>
+															</div>
+															{% render_field form.vm_primarydriver_license_exp_date id="vm_primarydriver_license_exp_date"  type="Date" class="form-control" %}
 															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 														</div>
 													</div>
@@ -730,9 +748,16 @@
 														</div>
 														<div class="input-group input-group-sm mb-3">
 															<div class="input-group-prepend">
-																<span class="input-group-text">Budget Expense</span>
+																<span class="input-group-text">Secondary Driver License#</span>
 															</div>
-															{% render_field form.vm_budgetexpense class="form-control" %}
+															{% render_field form.vm_secondarydriver_license id="vm_secondarydriver_license" class="form-control" %}
+															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Secondary License Expiry</span>
+															</div>
+															{% render_field form.vm_secondarydriver_license_exp_date id="vm_secondarydriver_license_exp_date"  type="Date" class="form-control" %}
 															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 														</div>
 													</div>
