@@ -207,7 +207,7 @@ function change_charge_type() {
 		document.getElementById("sp_value").value=value.toFixed(2)
 
 		var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-		var gst_amount=value*gst
+		var gst_amount=value*(gst/100)
 		document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
 
 		var total_bill_amount=value*gst_amount
@@ -229,7 +229,7 @@ function change_charge_type() {
 		document.getElementById("sp_value").value=value.toFixed(2)
 
 		var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-		var gst_amount=value*gst
+		var gst_amount=value*(gst/100)
 		document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
 
 		var total_bill_amount=value*gst_amount

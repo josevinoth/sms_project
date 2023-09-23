@@ -4,7 +4,7 @@ from ..models import MyUser,Category,Pkstocktype,Natypeofwood,Source,Vendor_info
 class PkstockpurchasesInfo(models.Model):
     sp_category = models.ForeignKey(Category, on_delete=models.CASCADE, default='')
     sp_stock_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE, default='')
-    sp_type_of_wood= models.ForeignKey(Natypeofwood, on_delete=models.CASCADE, default='')
+    sp_type_of_wood= models.ForeignKey(Natypeofwood, on_delete=models.CASCADE, default='',blank=True, null=True)
     sp_source = models.ForeignKey(Source, on_delete=models.CASCADE, default='')
     sp_vendor_name = models.ForeignKey(Vendor_info, on_delete=models.CASCADE, default='')
     sp_vendor_bill = models.CharField(max_length=30,default = '')

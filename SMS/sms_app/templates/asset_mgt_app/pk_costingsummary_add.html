@@ -39,7 +39,43 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Marginn</span>
+										<span class="input-group-text">Crane Cost</span>
+									</div>
+									{% render_field form.cs_crane_cost id="cs_crane_cost" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">HT Cost</span>
+									</div>
+									{% render_field form.cs_ht_cost id="cs_ht_cost" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Management Cost</span>
+									</div>
+									{% render_field form.cs_management_cost id="cs_management_cost" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Packing Material Cost</span>
+									</div>
+									{% render_field form.cs_material_cost id="cs_material_cost" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Transport Cost</span>
+									</div>
+									{% render_field form.cs_transport_cost id="cs_transport_cost" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Cost(Without Margin)</span>
+									</div>
+									{% render_field form.cs_total_cost_wom id="cs_total_cost_wom"  class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Margin (%)</span>
 									</div>
 									{% render_field form.cs_margin id="cs_margin"  onchange="change_charge_type()" class="form-control " %}
 								</div>
@@ -164,6 +200,7 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("cs_updated_by").value ='{{user_id}}';
+	change_charge_type()
 	$('#costing_list').DataTable({
         dom: 'lBfrtip',
         buttons: [
@@ -185,10 +222,19 @@ $(document).ready(function() {
 <script>
 function change_charge_type() {
 var wood_cost=parseFloat(document.getElementById("cs_wood_cost").value) || 0;
-var engineer_cost=parseFloat(document.getElementById("cs_wood_cost").value) || 0;
-var labour_cost=parseFloat(document.getElementById("cs_wood_cost").value) || 0;
+var engineer_cost=parseFloat(document.getElementById("cs_engineer_cost").value) || 0;
+var labour_cost=parseFloat(document.getElementById("cs_labour_cost").value) || 0;
+var crane_cost=parseFloat(document.getElementById("cs_crane_cost").value) || 0;
+var ht_cost=parseFloat(document.getElementById("cs_ht_cost").value) || 0;
+var management_cost=parseFloat(document.getElementById("cs_management_cost").value) || 0;
+var material_cost=parseFloat(document.getElementById("cs_material_cost").value) || 0;
+var transport_cost=parseFloat(document.getElementById("cs_transport_cost").value) || 0;
 var margin=parseFloat(document.getElementById("cs_margin").value) || 0;
-var total_cost= wood_cost+engineer_cost+labour_cost+margin
+var total_cost_wo_m= wood_cost+engineer_cost+labour_cost+crane_cost+ht_cost+management_cost+material_cost+transport_cost
+document.getElementById("cs_total_cost_wom").value=total_cost_wo_m.toFixed(2)
+var margin_value=total_cost_wo_m*(margin/100)
+var total_cost=margin_value+total_cost_wo_m
+
 document.getElementById("cs_total_cost_wm").value=total_cost.toFixed(2)
 
 var total_cft=parseFloat(document.getElementById("cs_total_cft").value) || 0;

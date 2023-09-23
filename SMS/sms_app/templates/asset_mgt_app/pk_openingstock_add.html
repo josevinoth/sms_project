@@ -163,7 +163,7 @@ var value=price*total_cft
 document.getElementById("os_value").value=value.toFixed(2)
 
 var gst = parseFloat(document.getElementById("os_gst").value) || 0;
-var gst_amount=value*gst
+var gst_amount=value*(gst/100)
 document.getElementById("os_gst_amount").value=gst_amount.toFixed(2)
 
 var total_bill_amount=value*gst_amount
