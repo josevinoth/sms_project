@@ -51,12 +51,18 @@ def costingsummary_add(request,costingsummary_id=0):
             # print(engineer_cost)
             PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_engineer_cost=engineer_cost)
 
-            labour_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=2).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']+PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
-            if labour_cost is not None:
-                labour_cost = round(labour_cost, 2)
+            making_labour_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=2).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            if making_labour_cost is not None:
+                making_labour_cost = round(making_labour_cost, 2)
             else:
-                labour_cost = 0.0
-            print(labour_cost)
+                making_labour_cost = 0.0
+            packing_labour_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            if packing_labour_cost is not None:
+                packing_labour_cost = round(packing_labour_cost, 2)
+            else:
+                packing_labour_cost = 0.0
+            labour_cost=making_labour_cost+packing_labour_cost
+            # print(labour_cost)
             PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_labour_cost=labour_cost)
 
             crane_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=6).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
