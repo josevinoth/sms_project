@@ -402,4 +402,8 @@ urlpatterns = [
     path('load_vehicle_number/', views.load_vehicle_number, name='load_vehicle_number'),  # Load vehicle_details
     path('load_driver_details/', views.load_driver_details, name='load_driver_details'),  # Load driver_details
     path('load_vehicle_details/', views.load_vehicle_details, name='load_vehicle_details'),  # Load vehicle_details
+    path('fuelfilling_list/', views.fuelfilling_list, name='fuelfilling_list'),  # List fuelfilling
+    path('fuelfilling_insert/', views.fuelfilling_add, name='fuelfilling_insert'),  # Add fuelfilling
+    path('fuelfilling_update/<int:fuelfilling_id>', views.fuelfilling_add, name='fuelfilling_update'),  # update fuelfilling
+    path('fuelfilling_delete/<int:fuelfilling_id>', views.fuelfilling_delete, name='fuelfilling_delete'),  # delete fuelfilling
 ]

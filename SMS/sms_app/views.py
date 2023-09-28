@@ -95,3 +95,4 @@ from .sub_views.pk_quotes_view import quotes_add,quotes_list,quotes_delete
 from .sub_views.pk_costing_view import costing_add,costing_list,costing_delete,load_cost_description
 from .sub_views.pk_costing_summary_view import costingsummary_add,costingsummary_list,costingsummary_delete
 from .sub_views.vehicle_allotment_view import vehicle_allotment_list,vehicle_allotment_add,vehicle_allotment_delete,vehicle_allotment_nav,load_vehicle_source,load_vehicle_number,load_driver_details
+from .sub_views.fuelfilling_view import fuelfilling_add,fuelfilling_list,fuelfilling_delete

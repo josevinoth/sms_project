@@ -145,3 +145,5 @@ from .sub_models.pk_costing_mod import PkcostingInfo
 from .sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
 from .sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 from .sub_models.test_info_mod import TestInfo
+from .sub_models.bunk_name_mod import Bunkname
+from .sub_models.fuelfilling_mod import Fuelfillinginfo
