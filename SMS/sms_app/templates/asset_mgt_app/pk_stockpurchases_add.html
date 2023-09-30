@@ -120,15 +120,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Price (INR)</span>
+										<span class="input-group-text">Rate (INR)</span>
 									</div>
-									{% render_field form.sp_price id="sp_price" onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.sp_rate id="sp_rate" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Value (INR)</span>
+										<span class="input-group-text">Price (INR)</span>
 									</div>
-									{% render_field form.sp_value id="sp_value" class="form-control " %}
+									{% render_field form.sp_price id="sp_price" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -202,15 +202,15 @@ function change_charge_type() {
 		var total_cft=cft*quantity
 		document.getElementById("sp_total_cft").value=total_cft.toFixed(2)
 
-		var price = parseFloat(document.getElementById("sp_price").value) || 0;
-		var value=price*total_cft
-		document.getElementById("sp_value").value=value.toFixed(2)
+		var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+		var price=rate*total_cft
+		document.getElementById("sp_price").value=price.toFixed(2)
 
 		var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-		var gst_amount=value*(gst/100)
+		var gst_amount=price*(gst/100)
 		document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
 
-		var total_bill_amount=value*gst_amount
+		var total_bill_amount=price+gst_amount
 		document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
 	}
 	else if ( jn==2)
@@ -224,15 +224,15 @@ function change_charge_type() {
 		$('#sp_uom').removeClass('disable_a_href');
 		$('#sp_size').removeClass('disable_a_href');
 		var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-		var price = parseFloat(document.getElementById("sp_price").value) || 0;
-		var value=price*quantity
-		document.getElementById("sp_value").value=value.toFixed(2)
+		var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+		var price=rate*quantity
+		document.getElementById("sp_price").value=price.toFixed(2)
 
 		var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-		var gst_amount=value*(gst/100)
+		var gst_amount=price*(gst/100)
 		document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
 
-		var total_bill_amount=value*gst_amount
+		var total_bill_amount=price+gst_amount
 		document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
 	}
 }

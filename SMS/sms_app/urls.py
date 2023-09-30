@@ -406,4 +406,12 @@ urlpatterns = [
     path('fuelfilling_insert/', views.fuelfilling_add, name='fuelfilling_insert'),  # Add fuelfilling
     path('fuelfilling_update/<int:fuelfilling_id>', views.fuelfilling_add, name='fuelfilling_update'),  # update fuelfilling
     path('fuelfilling_delete/<int:fuelfilling_id>', views.fuelfilling_delete, name='fuelfilling_delete'),  # delete fuelfilling
+    path('bunkname_list/', views.bunkname_list, name='bunkname_list'),  # List bunkname
+    path('bunkname_insert/', views.bunkname_add, name='bunkname_insert'),  # Add bunkname
+    path('bunkname_update/<int:bunkname_id>', views.bunkname_add, name='bunkname_update'),  # update bunkname
+    path('bunkname_delete/<int:bunkname_id>', views.bunkname_delete, name='bunkname_delete'),  # delete bunkname
+    path('places_list/', views.places_list, name='places_list'),  # List places
+    path('places_insert/', views.places_add, name='places_insert'),  # Add places
+    path('places_update/<int:places_id>', views.places_add, name='places_update'),  # update places
+    path('places_delete/<int:places_id>', views.places_delete, name='places_delete'),  # delete places
 ]

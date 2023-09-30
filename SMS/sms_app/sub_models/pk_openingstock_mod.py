@@ -10,10 +10,8 @@ class PkopeningstockInfo(models.Model):
     os_width = models.IntegerField(blank=True, null=True,default=0)
     os_length= models.IntegerField(blank=True, null=True,default=0)
     os_cft = models.FloatField(blank=True, null=True,default=0.0)
-    os_price = models.FloatField(blank=True, null=True,default=0.0)
     os_quantity= models.IntegerField(blank=True, null=True,default=0)
     os_total_cft = models.FloatField(blank=True, null=True,default=0.0)
-    os_value = models.FloatField(blank=True, null=True,default=0.0)
     os_gst =models.FloatField(blank=True, null=True,default=0.0)
     os_gst_amount = models.FloatField(blank=True, null=True,default=0.0)
     os_totalbill_amount = models.FloatField(blank=True, null=True,default=0.0)
@@ -21,6 +19,8 @@ class PkopeningstockInfo(models.Model):
     os_updated_at = models.DateField(null=True, auto_now=True)
     os_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='os_updated_by',db_column='os_updated_by', null=True)
     os_stock_number= models.CharField(max_length=50,null=True,blank=True)
+    os_rate = models.FloatField(blank=True, null=True, default=0.0)
+    os_price = models.FloatField(blank=True, null=True, default=0.0)
 
     class Meta:
         ordering = ["os_stock_number"]

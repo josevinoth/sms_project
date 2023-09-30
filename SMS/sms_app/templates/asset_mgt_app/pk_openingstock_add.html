@@ -84,15 +84,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Price (INR)</span>
+										<span class="input-group-text">Rate (INR)</span>
 									</div>
-									{% render_field form.os_price id="os_price" onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.os_rate id="os_rate" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Value (INR)</span>
+										<span class="input-group-text">Price (INR)</span>
 									</div>
-									{% render_field form.os_value id="os_value"  class="form-control disable_a_href" %}
+									{% render_field form.os_price id="os_price"  class="form-control disable_a_href" %}
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
@@ -158,15 +158,15 @@ var quantity = parseFloat(document.getElementById("os_quantity").value) || 0;
 var total_cft=cft*quantity
 document.getElementById("os_total_cft").value=total_cft.toFixed(2)
 
-var price = parseFloat(document.getElementById("os_price").value) || 0;
-var value=price*total_cft
-document.getElementById("os_value").value=value.toFixed(2)
+var rate = parseFloat(document.getElementById("os_rate").value) || 0;
+var price=rate*total_cft
+document.getElementById("os_price").value=price.toFixed(2)
 
 var gst = parseFloat(document.getElementById("os_gst").value) || 0;
-var gst_amount=value*(gst/100)
+var gst_amount=price*(gst/100)
 document.getElementById("os_gst_amount").value=gst_amount.toFixed(2)
 
-var total_bill_amount=value*gst_amount
+var total_bill_amount=price+gst_amount
 document.getElementById("os_totalbill_amount").value=total_bill_amount.toFixed(2)
 }
 </script>

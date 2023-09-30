@@ -14,3 +14,8 @@ class RtratemasteraddForm(forms.ModelForm):
         self.fields['ro_vehicletype'].empty_label = "--Select--"
         self.fields['ro_customer'].empty_label = "--Select--"
         self.fields['ro_customerdepartment'].empty_label = "--Select--"
+        self.fields['ro_vehiclecategory'].empty_label = "--Select--"
+        self.fields['ro_touchpoint'].empty_label = "--Select--"
+        self.fields['ro_touchpoint2'].empty_label = "--Select--"
+        self.fields['ro_touchpoint3'].empty_label = "--Select--"
+        self.fields['ro_touchpoint4'].empty_label = "--Select--"
