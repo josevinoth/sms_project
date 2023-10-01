@@ -86,3 +86,5 @@ from.sub_forms.pk_costingForm_form import PkcostingForm
 from.sub_forms.pk_costing_summaryForm_form import PkcostingsummaryForm
 from.sub_forms.vehicle_allotment_Form import VehicleallotmentForm
 from.sub_forms.FuelfillingForm_form import FuelfillingForm
+from.sub_forms.bunk_nameForm_Form import BunknameForm
+from.sub_forms.placesForm import PlacesForm

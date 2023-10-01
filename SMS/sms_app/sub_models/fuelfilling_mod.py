@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import MyUser,VehiclemasterInfo,Bunkname
+from ..models import MyUser,VehiclemasterInfo,Bunkname,City,Places
 
 class Fuelfillinginfo(models.Model):
     ff_vehicle_num = models.ForeignKey(VehiclemasterInfo, on_delete=models.CASCADE, default='')
@@ -13,6 +13,8 @@ class Fuelfillinginfo(models.Model):
     ff_created_at = models.DateField(null=True, auto_now_add=True)
     ff_updated_at = models.DateField(null=True, auto_now=True)
     ff_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='ff_updated_by',db_column='ff_updated_by', null=True)
+    ff_city = models.ForeignKey(City, on_delete=models.CASCADE, default='')
+    ff_loaction = models.ForeignKey(Places, on_delete=models.CASCADE, default='')
 
     class Meta:
         ordering = ["ff_vehicle_num"]

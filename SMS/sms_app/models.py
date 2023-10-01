@@ -30,6 +30,7 @@ from .sub_models.role_mod import RoleInfo
 from .sub_models.country_mod import Country
 from .sub_models.state_mod import State
 from .sub_models.city_mod import City
+from .sub_models.places_mod import Places
 from .sub_models.fumigation_action_mod import Fumigation_ActionInfo
 from .sub_models.status_list_mod import StatusList
 from .sub_models.location_info_mod import Location_info
@@ -145,5 +146,6 @@ from .sub_models.pk_costing_mod import PkcostingInfo
 from .sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
 from .sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 from .sub_models.test_info_mod import TestInfo
+from .sub_models.fuel_vendor_mod import Fuelvendor
 from .sub_models.bunk_name_mod import Bunkname
 from .sub_models.fuelfilling_mod import Fuelfillinginfo

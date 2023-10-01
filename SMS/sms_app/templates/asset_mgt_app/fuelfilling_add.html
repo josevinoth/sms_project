@@ -27,9 +27,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Filled ltr(s)</span>
+									</div>
+									{% render_field form.ff_filled_ltr id="ff_filled_ltr" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text"> Fuel Price (LKR)</span>
 									</div>
-									{% render_field form.ff_fuel_price id="ff_fuel_price" class="form-control " %}
+									{% render_field form.ff_fuel_price id="ff_fuel_price" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -43,11 +49,17 @@
 									</div>
 									{% render_field form.ff_bunk_name id="ff_bunk_name" class="form-control " %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+                                <div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Filled ltr(s)</span>
+										<span class="input-group-text"> City</span>
 									</div>
-									{% render_field form.ff_filled_ltr id="ff_filled_ltr" class="form-control " %}
+									{% render_field form.ff_city id="ff_city" class="form-control " %}
+								</div>
+                                <div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text"> Location</span>
+									</div>
+									{% render_field form.ff_loaction id="ff_loaction" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -92,4 +104,12 @@ $(document).ready(function() {
 	});
 </script>
 
+<script>
+function change_charge_type() {
+var rate_per_litre=parseFloat(document.getElementById("ff_fuel_rate").value) || 0;
+var filled_litre=parseInt(document.getElementById("ff_filled_ltr").value) || 0;
+var fuel_price=filled_litre*rate_per_litre
+document.getElementById("ff_fuel_price").value=fuel_price.toFixed(2)
+}
+</script>
 {% endblock content %}
