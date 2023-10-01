@@ -27,9 +27,21 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Cost Description</span>
+										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field form.ct_cost_description id="ct_cost_description" class="form-control " %}
+									{% render_field form.ct_stock_type id="ct_stock_type" onchange="change_charge_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Description</span>
+									</div>
+									{% render_field form.ct_stock_description id="ct_stock_description" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Type Of Wood</span>
+									</div>
+									{% render_field form.ct_type_of_wood id="ct_type_of_wood" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -48,12 +60,6 @@
 										<span class="input-group-text">Height(inch)</span>
 									</div>
 									{% render_field form.ct_height id="ct_height" onchange="change_charge_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Type Of Wood</span>
-									</div>
-									{% render_field form.ct_type_of_wood id="ct_type_of_wood" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">

@@ -200,21 +200,38 @@ def tripdetail_delete(request,tripdetail_id):
 def load_vehicle_details(request):
     enquiry_number = request.GET.get('enquiry_number')
     consignment_number = request.GET.get('consignment_number')
-    vehicle_type_requested=list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehicletype',flat=True))
-    vehicle_type_placed=list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehicletype_placed',flat=True))
-    vehicletype_source = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehiclesource', flat=True))
-    vehicletype_number = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehiclenumber', flat=True))
-    driver_name = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_drivername', flat=True))
-    driver_number = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_driver_lic', flat=True))
-    driver_license = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_drivernumber', flat=True))
+    print(enquiry_number)
+    print(consignment_number)
+    count=0
+    trip_number=list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_number,tr_consignmentnumber=consignment_number,tc_financestatus=1).values_list('tr_tripnumber',flat=True))
+    print('trip_number',trip_number)
+    print('Length',len(trip_number))
+    if len(trip_number)>0:
+        count=count+1
+    print(count)
+    if count<1:
+        vehicle_type_requested=list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehicletype',flat=True))
+        vehicle_type_placed=list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehicletype_placed',flat=True))
+        vehicletype_source = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehiclesource', flat=True))
+        vehicletype_number = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehiclenumber', flat=True))
+        driver_name = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_drivername', flat=True))
+        driver_number = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_driver_lic', flat=True))
+        driver_license = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_drivernumber', flat=True))
+        count_val = count
+        data = {
+            'vehicle_type_requested': vehicle_type_requested,
+            'vehicle_type_placed': vehicle_type_placed,
+            'vehicletype_source': vehicletype_source,
+            'vehicletype_number': vehicletype_number,
+            'driver_name': driver_name,
+            'driver_number': driver_number,
+            'driver_license': driver_license,
+            'count_val': count_val,
 
-    data = {
-        'vehicle_type_requested': vehicle_type_requested,
-        'vehicle_type_placed': vehicle_type_placed,
-        'vehicletype_source': vehicletype_source,
-        'vehicletype_number': vehicletype_number,
-        'driver_name': driver_name,
-        'driver_number': driver_number,
-        'driver_license': driver_license,
-    }
+        }
+    else:
+        count_val=count
+        data = {
+            'count_val':count_val,
+        }
     return HttpResponse(json.dumps(data))

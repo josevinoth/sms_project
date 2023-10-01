@@ -1,9 +1,9 @@
 from django.db import models
-from ..models import MyUser,Costtype,Costdescription,Natypeofwood,Unitofmeasure,PkneedassessmentInfo
+from ..models import Pkstocktype,MyUser,Costtype,Stockdescription,Natypeofwood,Unitofmeasure,PkneedassessmentInfo
 
 class PkcostingInfo(models.Model):
     ct_cost_type = models.ForeignKey(Costtype, on_delete=models.CASCADE, default='')
-    ct_cost_description = models.ForeignKey(Costdescription, on_delete=models.CASCADE, default='')
+    ct_stock_description = models.ForeignKey(Stockdescription, on_delete=models.CASCADE, blank=True,null=True)
     ct_width = models.FloatField(blank=True, null=True, default=0.0)
     ct_height = models.FloatField(blank=True, null=True,default=0.0)
     ct_cft = models.FloatField(blank=True, null=True,default=0.0)
@@ -19,6 +19,7 @@ class PkcostingInfo(models.Model):
     ct_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='',blank=True, null=True)
     ct_assessment_num=models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='',blank=True, null=True)
     ct_length = models.FloatField(blank=True, null=True, default=0.0)
+    ct_stock_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         ordering = ["ct_cost_type"]

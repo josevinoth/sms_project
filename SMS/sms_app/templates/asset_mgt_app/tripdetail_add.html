@@ -197,20 +197,30 @@ $(document).ready(function() {
           'consignment_number': consignment_number,
         },
        	success: function (data) {
-			var vehicle_type_requested=JSON.parse(data)["vehicle_type_requested"]
-			var vehicle_type_placed=JSON.parse(data)["vehicle_type_placed"]
-			var vehicletype_source=JSON.parse(data)["vehicletype_source"]
-			var vehicletype_number=JSON.parse(data)["vehicletype_number"]
-			var driver_name=JSON.parse(data)["driver_name"]
-			var driver_number=JSON.parse(data)["driver_number"]
-			var driver_license=JSON.parse(data)["driver_license"]
-			$("#tr_vehiclenumber").val(vehicletype_number);
-			$("#tr_vehiclesource").val(vehicletype_source);
-			$("#tr_vehicletype").val(vehicle_type_requested);
-			$("#tr_vehicletype_placed").val(vehicle_type_placed);
-			$("#tr_drivername").val(driver_name);
-			$("#tr_drivernumber").val(driver_number);
-			$("#tr_driver_lic").val(driver_license);
+       		var count_val=JSON.parse(data)["count_val"]
+       		if (count_val=='0')
+       			{
+       				var vehicle_type_requested=JSON.parse(data)["vehicle_type_requested"]
+					var vehicle_type_placed=JSON.parse(data)["vehicle_type_placed"]
+					var vehicletype_source=JSON.parse(data)["vehicletype_source"]
+					var vehicletype_number=JSON.parse(data)["vehicletype_number"]
+					var driver_name=JSON.parse(data)["driver_name"]
+					var driver_number=JSON.parse(data)["driver_number"]
+					var driver_license=JSON.parse(data)["driver_license"]
+					$("#tr_vehiclenumber").val(vehicletype_number);
+					$("#tr_vehiclesource").val(vehicletype_source);
+					$("#tr_vehicletype").val(vehicle_type_requested);
+					$("#tr_vehicletype_placed").val(vehicle_type_placed);
+					$("#tr_drivername").val(driver_name);
+					$("#tr_drivernumber").val(driver_number);
+					$("#tr_driver_lic").val(driver_license);
+       			}
+       		else
+       		{
+				document.getElementById("tr_consignmentnumber").value=""
+       			alert("Please close existing trip before starting a new trip")
+
+			}
         }
       });
     });
