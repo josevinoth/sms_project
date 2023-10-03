@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import MyUser,Category,Pkstocktype,Natypeofwood,Source,Vendor_info,Costdescription,Unitofmeasure
+from ..models import MyUser,Category,Pkstocktype,Natypeofwood,Source,Vendor_info,Stockdescription,Unitofmeasure
 
 class PkstockpurchasesInfo(models.Model):
     sp_category = models.ForeignKey(Category, on_delete=models.CASCADE, default='')
@@ -22,7 +22,7 @@ class PkstockpurchasesInfo(models.Model):
     sp_updated_at = models.DateField(null=True, auto_now=True)
     sp_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='sp_updated_by',db_column='sp_updated_by', null=True)
     sp_purchase_num=models.CharField(max_length=50,blank=True,null=True)
-    sp_consumable_type = models.ForeignKey(Costdescription, on_delete=models.CASCADE, default='',blank=True, null=True)
+    sp_stock_description = models.ForeignKey(Stockdescription, on_delete=models.CASCADE, default='',blank=True, null=True)
     sp_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='',blank=True, null=True)
     sp_size = models.FloatField(blank=True, null=True, default=0.0)
     sp_rate = models.FloatField(blank=True, null=True, default=0.0)

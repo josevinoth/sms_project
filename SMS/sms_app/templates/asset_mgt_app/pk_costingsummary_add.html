@@ -5,73 +5,75 @@
 <form method="POST" action="" id="costingsummary_add"   >
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
+		<div class="col-2"></div>
+		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Costing Summary</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-12">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
-									{% render_field form.cs_assessment_num id="cs_assessment_num"   class="form-control " %}
+									{% render_field form.cs_assessment_num id="cs_assessment_num" name="cs_assessment_num"   class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Cost</span>
 									</div>
-									{% render_field form.cs_wood_cost id="cs_wood_cost"  class="form-control" %}
+									{% render_field form.cs_wood_cost id="cs_wood_cost"  class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Engineer Cost</span>
 									</div>
-									{% render_field form.cs_engineer_cost id="cs_engineer_cost" class="form-control " %}
+									{% render_field form.cs_engineer_cost id="cs_engineer_cost" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Labour Cost</span>
 									</div>
-									{% render_field form.cs_labour_cost id="cs_labour_cost" class="form-control " %}
+									{% render_field form.cs_labour_cost id="cs_labour_cost" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Crane Cost</span>
 									</div>
-									{% render_field form.cs_crane_cost id="cs_crane_cost" class="form-control " %}
+									{% render_field form.cs_crane_cost id="cs_crane_cost" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">HT Cost</span>
 									</div>
-									{% render_field form.cs_ht_cost id="cs_ht_cost" class="form-control " %}
+									{% render_field form.cs_ht_cost id="cs_ht_cost" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Management Cost</span>
 									</div>
-									{% render_field form.cs_management_cost id="cs_management_cost" class="form-control " %}
+									{% render_field form.cs_management_cost id="cs_management_cost" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Packing Material Cost</span>
+										<span class="input-group-text">Consumables Cost</span>
 									</div>
-									{% render_field form.cs_material_cost id="cs_material_cost" class="form-control " %}
+									{% render_field form.cs_material_cost id="cs_material_cost" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Transport Cost</span>
 									</div>
-									{% render_field form.cs_transport_cost id="cs_transport_cost" class="form-control " %}
+									{% render_field form.cs_transport_cost id="cs_transport_cost" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Cost(Without Margin)</span>
 									</div>
-									{% render_field form.cs_total_cost_wom id="cs_total_cost_wom"  class="form-control " %}
+									{% render_field form.cs_total_cost_wom id="cs_total_cost_wom"  class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -83,19 +85,19 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Cost(With Margin)</span>
 									</div>
-									{% render_field form.cs_total_cost_wm id="cs_total_cost_wm"  class="form-control " %}
+									{% render_field form.cs_total_cost_wm id="cs_total_cost_wm"  class="form-control disable_a_href " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total CFT</span>
 									</div>
-									{% render_field form.cs_total_cft id="cs_total_cft"  onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.cs_total_cft id="cs_total_cft"  onchange="change_charge_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Rate Per CFT</span>
 									</div>
-									{% render_field form.cs_rate_per_cft id="cs_rate_per_cft"  class="form-control " %}
+									{% render_field form.cs_rate_per_cft id="cs_rate_per_cft"  class="form-control disable_a_href" %}
 								</div>
 								{% render_field form.cs_updated_by id="cs_updated_by" hidden="True" class="form-control" %}
 							</div>
@@ -107,6 +109,7 @@
 									{% for message in messages %}
 									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
 									{% endfor %}
+									<span id="unique_field_error" style="color: red;"></span>
 								</div>
 							</div>
 							<div class="col-1"></div>
@@ -142,11 +145,11 @@
             <th>Created On</th>
             <th>Assessment Number</th>
             <th>Cost Type</th>
-            <th>Cost Description</th>
+            <th>Stock Type</th>
+            <th>Stock Description</th>
             <th>Length</th>
             <th>Width(inch)</th>
             <th>Height(inch)</th>
-            <th>Type Of Wood</th>
             <th>Quantity</th>
             <th>Size</th>
 			<th>UOM</th>
@@ -165,11 +168,11 @@
             <td> {{costinginfo.ct_created_at}}</td>
             <td> {{costinginfo.ct_assessment_num}}</td>
             <td> {{costinginfo.ct_cost_type}}</td>
-            <td> {{costinginfo.ct_cost_description}}</td>
+            <td> {{costinginfo.ct_stock_type}}</td>
+            <td> {{costinginfo.ct_stock_description}}</td>
             <td> {{costinginfo.ct_length}}</td>
             <td> {{costinginfo.ct_width}}</td>
             <td> {{costinginfo.ct_height}}</td>
-            <td> {{costinginfo.ct_type_of_wood}}</td>
             <td> {{costinginfo.ct_quantity}}</td>
             <td> {{costinginfo.ct_size}}</td>
             <td> {{costinginfo.ct_uom}}</td>
@@ -242,5 +245,28 @@ var rate_per_cft=total_cost/total_cft
 document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
 }
 </script>
+<!--Unique Field validation-->
+<script>
+    $(document).ready(function() {
+        $('#cs_assessment_num').on('change', function() {
+            var cs_assessment_num = $(this).val();
 
+            // Send an AJAX request to check if the value exists in the database
+            $.ajax({
+                url: '{% url "costing_summary_check_unique_field" %}',
+                data: {
+                    'cs_assessment_num': cs_assessment_num
+                },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.exists) {
+                        $('#unique_field_error').text('This Record already exists.');
+                    } else {
+                        $('#unique_field_error').text('');
+                    }
+                }
+            });
+        });
+    });
+</script>
 {% endblock content %}

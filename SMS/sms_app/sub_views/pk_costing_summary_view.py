@@ -3,8 +3,9 @@ from django.contrib.auth.decorators import login_required
 from ..forms import PkcostingsummaryForm
 from ..models import PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
 from django.shortcuts import render, redirect
-from django.db.models.aggregates import Sum, Max
+from django.db.models.aggregates import Sum
 from django.contrib import messages
+from django.http import JsonResponse
 
 @login_required(login_url='login_page')
 def costingsummary_add(request,costingsummary_id=0):
@@ -24,10 +25,10 @@ def costingsummary_add(request,costingsummary_id=0):
             needassessment_num = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_assessment_num
             needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
             request.session['na_assessment_id'] = needassessment_id
+            print('needassessment_id',needassessment_id)
             form = PkcostingsummaryForm(instance=costingsummary)
             costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id)
-
-            wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_cost_type=1).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_cost_type=8,ct_stock_type=1).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
             if wood_cost is not None:
                 wood_cost = round(wood_cost, 2)
             else:
@@ -35,7 +36,7 @@ def costingsummary_add(request,costingsummary_id=0):
             # print(wood_cost)
             PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_wood_cost=wood_cost)
 
-            total_cft = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=1).aggregate(Sum('ct_cft'))['ct_cft__sum']
+            total_cft = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8,ct_stock_type=1).aggregate(Sum('ct_cft'))['ct_cft__sum']
             if total_cft is not None:
                 total_cft = round(total_cft, 2)
             else:
@@ -43,7 +44,7 @@ def costingsummary_add(request,costingsummary_id=0):
             # print(total_cft)
             PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_total_cft=total_cft)
 
-            engineer_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=3).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            engineer_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=2).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
             if engineer_cost is not None:
                 engineer_cost = round(engineer_cost, 2)
             else:
@@ -56,11 +57,13 @@ def costingsummary_add(request,costingsummary_id=0):
                 making_labour_cost = round(making_labour_cost, 2)
             else:
                 making_labour_cost = 0.0
+
             packing_labour_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
             if packing_labour_cost is not None:
                 packing_labour_cost = round(packing_labour_cost, 2)
             else:
                 packing_labour_cost = 0.0
+
             labour_cost=making_labour_cost+packing_labour_cost
             # print(labour_cost)
             PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_labour_cost=labour_cost)
@@ -89,7 +92,7 @@ def costingsummary_add(request,costingsummary_id=0):
             # print(management_cost)
             PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_management_cost=management_cost)
 
-            material_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=9).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            material_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8,ct_stock_type=2).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
             # Check if material_cost is not None before rounding it
             if material_cost is not None:
                 material_cost = round(material_cost, 2)
@@ -116,19 +119,10 @@ def costingsummary_add(request,costingsummary_id=0):
         if costingsummary_id == 0:
             form = PkcostingsummaryForm(request.POST)
             if form.is_valid():
-                # # Generate Random costingsummary number
-                # try:
-                #     last_id = PkcostingsummaryInfo.objects.latest('id').id
-                #     costingsummary_num_next = str('QT_') + str(
-                #         int(((PkcostingsummaryInfo.objects.get(id=last_id)).qt_costingsummary_num).replace('QT_','')) + 1)
-                # except ObjectDoesNotExist:
-                #     costingsummary_num_next = str('QT_') + str(randint(10000, 99999))
                 form.save()
                 print("PkcostingsummaryInfo Form is Valid")
                 last_id = (PkcostingsummaryInfo.objects.latest('id')).id
-                # PkcostingsummaryInfo.objects.filter(id=last_id).update(cs_costingsummary_num=costingsummary_num_next)
                 messages.success(request, 'Record Updated Successfully')
-                # return redirect(request.META['HTTP_REFERER'])
                 return redirect('/SMS/costingsummary_update/' + str(last_id))
             else:
                 print("PkcostingsummaryInfo Form is Not Valid")
@@ -160,3 +154,9 @@ def costingsummary_delete(request,costingsummary_id):
     costingsummary = PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
     costingsummary.delete()
     return redirect('/SMS/costingsummary_list')
+
+@login_required(login_url='login_page')
+def costing_summary_check_unique_field(request):
+    cs_assessment_num = request.GET.get('cs_assessment_num')
+    exists = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num).exists()
+    return JsonResponse({'exists': exists})

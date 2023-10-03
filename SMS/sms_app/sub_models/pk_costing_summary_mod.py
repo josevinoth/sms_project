@@ -2,7 +2,7 @@ from django.db import models
 from ..models import MyUser,PkneedassessmentInfo
 
 class PkcostingsummaryInfo(models.Model):
-    cs_assessment_num=models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='')
+    cs_assessment_num=models.OneToOneField(PkneedassessmentInfo, on_delete=models.CASCADE, default='',unique=True)
     cs_wood_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_engineer_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_labour_cost = models.FloatField(blank=True, null=True, default=0.0)
@@ -24,4 +24,4 @@ class PkcostingsummaryInfo(models.Model):
         ordering = ["cs_wood_cost"]
 
     def __str__(self):
-        return self.cs_wood_cost
+        return self.cs_assessment_num

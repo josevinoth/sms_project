@@ -135,6 +135,7 @@ from .sub_models.cost_type_mod import Costtype
 from .sub_models.cost_description_mod import Costdescription
 from .sub_models.unit_of_measure_mod import Unitofmeasure
 from .sub_models.pk_stock_type_mod import Pkstocktype
+from .sub_models.stock_description_mod import Stockdescription
 from .sub_models.pk_needassessment_mod import PkneedassessmentInfo
 from .sub_models.pk_openingstock_mod import PkopeningstockInfo
 from .sub_models.pk_stockpurchases_mod import PkstockpurchasesInfo

@@ -33,15 +33,9 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Consumable Type</span>
+										<span class="input-group-text">Stock Description</span>
 									</div>
-									{% render_field form.sp_consumable_type id="sp_consumable_type" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Type Of Wood</span>
-									</div>
-									{% render_field form.sp_type_of_wood id="sp_type_of_wood" class="form-control " %}
+									{% render_field form.sp_stock_description id="sp_stock_description" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -79,15 +73,14 @@
 									</div>
 									{% render_field form.sp_width id="sp_width" onchange="change_charge_type()" class="form-control " %}
 								</div>
-							</div>
-							<div class="col-6">
-
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Length (Ft)</span>
 									</div>
 									{% render_field form.sp_length id="sp_length" onchange="change_charge_type()" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">CFT</span>
@@ -128,7 +121,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Price (INR)</span>
 									</div>
-									{% render_field form.sp_price id="sp_price" class="form-control " %}
+									{% render_field form.sp_price id="sp_price" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -140,13 +133,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">GST Amount (INR)</span>
 									</div>
-									{% render_field form.sp_gst_amount id="sp_gst_amount"  class="form-control " %}
+									{% render_field form.sp_gst_amount id="sp_gst_amount"  class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Bill Amount (INR)</span>
 									</div>
-									{% render_field form.sp_totalbill_amount id="sp_totalbill_amount" class="form-control " %}
+									{% render_field form.sp_totalbill_amount id="sp_totalbill_amount" class="form-control disable_a_href" %}
 								</div>
 								{% render_field form.sp_updated_by id="sp_updated_by" hidden="True" class="form-control" %}
 							</div>
@@ -176,6 +169,7 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("sp_updated_by").value ='{{user_id}}';
+	change_charge_type();
 	});
 </script>
 
@@ -184,7 +178,6 @@ function change_charge_type() {
 	var jn=document.getElementById("sp_stock_type").value
 	if ( jn==1)
 	{
-		$('#sp_type_of_wood').removeClass('disable_a_href');
 		$('#sp_thick_height').removeClass('disable_a_href');
 		$('#sp_length').removeClass('disable_a_href');
 		$('#sp_width').removeClass('disable_a_href');
@@ -192,6 +185,8 @@ function change_charge_type() {
 		$('#sp_total_cft').removeClass('disable_a_href');
 		$('#sp_uom').addClass('disable_a_href');
 		$('#sp_size').addClass('disable_a_href');
+		document.getElementById("sp_uom").value=""
+		document.getElementById("sp_size").value=""
 		var length = parseFloat(document.getElementById("sp_length").value) || 0;
 		var height = parseFloat(document.getElementById("sp_thick_height").value) || 0;
 		var width = parseFloat(document.getElementById("sp_width").value) || 0;
@@ -213,9 +208,8 @@ function change_charge_type() {
 		var total_bill_amount=price+gst_amount
 		document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
 	}
-	else if ( jn==2)
+	else if (jn==2)
 	{
-		$('#sp_type_of_wood').addClass('disable_a_href');
 		$('#sp_thick_height').addClass('disable_a_href');
 		$('#sp_length').addClass('disable_a_href');
 		$('#sp_width').addClass('disable_a_href');
@@ -227,6 +221,11 @@ function change_charge_type() {
 		var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
 		var price=rate*quantity
 		document.getElementById("sp_price").value=price.toFixed(2)
+		document.getElementById("sp_width").value=0.0
+		document.getElementById("sp_length").value=0.0
+		document.getElementById("sp_thick_height").value=0.0
+		document.getElementById("sp_cft").value=0.0
+		document.getElementById("sp_total_cft").value=0.0
 
 		var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
 		var gst_amount=price*(gst/100)

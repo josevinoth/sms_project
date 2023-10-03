@@ -1,7 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required
 from ..forms import PkcostingForm
-from ..models import Costdescription,PkcostingInfo
+from ..models import PkcostingsummaryInfo,Stockdescription,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
@@ -74,17 +74,23 @@ def costing_delete(request,costing_id):
     return redirect('/SMS/costing_list')
 
 @login_required(login_url='login_page')
-def load_cost_description(request):
-    cost_description_id= []
-    cost_type = request.GET.get('cost_type')
+def load_stock_description(request):
+    stock_description_id= []
+    stock_type = request.GET.get('stock_type')
     # Fetch cost_description Details
-    cost_description = list(Costdescription.objects.filter(cost_type=cost_type).values_list('cost_description', flat=True).distinct())
-    cost_description.sort()
-    for j in cost_description:
-        cost_description_id.append(Costdescription.objects.get(cost_description=j).id)
+    stock_description = list(Stockdescription.objects.filter(stock_type=stock_type).values_list('stock_description', flat=True).distinct())
+    stock_description.sort()
+    for j in stock_description:
+        stock_description_id.append(Stockdescription.objects.get(stock_description=j).id)
     data = {
-        'cost_description':cost_description,
-        'cost_description_id': cost_description_id,
+        'stock_description':stock_description,
+        'stock_description_id': stock_description_id,
     }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))
+
+@login_required(login_url='login_page')
+def costing_cancel(request):
+    assessment_num_val = request.session.get('na_assessment_id')
+    costing_summary_id=PkcostingsummaryInfo.objects.get(cs_assessment_num=assessment_num_val).id
+    return redirect('/SMS/costingsummary_update/' + str(costing_summary_id))
