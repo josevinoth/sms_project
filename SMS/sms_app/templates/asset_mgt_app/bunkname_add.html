@@ -38,10 +38,17 @@
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
-							<div class="message">
-								{{form.errors}}
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
 							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
+							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'bunkname_list' %}" class="btn btn-danger float-right">
