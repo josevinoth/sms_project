@@ -28,19 +28,10 @@ def costing_add(request,costing_id=0):
         if costing_id == 0:
             form = PkcostingForm(request.POST)
             if form.is_valid():
-                # # Generate Random Opening Stock number
-                # try:
-                #     last_id = PkcostingInfo.objects.latest('id').id
-                #     costing_num_next = str('OS_') + str(
-                #         int(((PkcostingInfo.objects.get(id=last_id)).os_stock_number).replace('OS_','')) + 1)
-                # except ObjectDoesNotExist:
-                #     costing_num_next = str('OS_') + str(1000000)
                 form.save()
                 print("costing Form is Valid")
                 last_id = (PkcostingInfo.objects.latest('id')).id
-                # PkcostingInfo.objects.filter(id=last_id).update(os_stock_number=costing_num_next)
                 messages.success(request, 'Record Updated Successfully')
-                # return redirect(request.META['HTTP_REFERER'])
                 return redirect('/SMS/costing_update/'+str(last_id))
             else:
                 print("costing Form is Not Valid")
