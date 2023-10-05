@@ -15,7 +15,7 @@
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
-      <div class="col-md-1">
+    <div class="col-md-1">
         <a href="{% url 'sales_comments_list' %}" class="btn btn-warning btn-block btn-lg">
             <i class="fa fa-eye" aria-hidden="true"></i> Show All
         </a>
@@ -37,6 +37,9 @@
             <th>Added On</th>
             <th>Date of Call</th>
             <th>Sales Number</th>
+            <th>Customer Type</th>
+            <th>Existing Customer Name</th>
+            <th>New Customer Name</th>
             <th>Type of Call</th>
             <th>Nature of Call</th>
             <th>Purpose of Call</th>
@@ -50,6 +53,9 @@
             <td> {{commentsinfo.sc_created_at}}</td>
             <td> {{commentsinfo.sc_date_of_call}}</td>
             <td> {{commentsinfo.sc_sales_number}}</td>
+            <td> {{commentsinfo.sc_sales_number.s_customer_new}}</td>
+            <td> {{commentsinfo.sc_sales_number.s_customer_name}}</td>
+            <td> {{commentsinfo.sc_sales_number.s_customer_new_name}}</td>
             <td> {{commentsinfo.sc_call_type}}</td>
             <td> {{commentsinfo.sc_call_nature}}</td>
             <td> {{commentsinfo.sc_call_purpose}}</td>
