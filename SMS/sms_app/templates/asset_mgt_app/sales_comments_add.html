@@ -23,7 +23,8 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Date Of Call</span>
 									</div>
-									{% render_field sales_comments_form.sc_date_of_call id="sc_date_of_call"  type="Date" onclick="date_of_call_change()" class="form-control"%}
+									{% render_field sales_comments_form.sc_date_of_call id="sc_date_of_call"  type="Date" onclick="date_of_call_change()" value="" max="" min="" class="form-control"%}
+									<!--									<input type="datetime-local" class="form-control" id="sc_date_of_call" name="sc_date_of_call" placeholder="Call Date" aria-label="Call Date" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -111,5 +112,28 @@ $(document).ready(function() {
         document.getElementById("sc_date_of_call").max="07/30/2023"
     });
 </script>
+
+<script>
+        // Get today's date
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+
+         // Get yesterdays's date
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        const year_1 = yesterday.getFullYear();
+        const month_1 = String(yesterday.getMonth() + 1).padStart(2, '0');
+        const day_1 = String(yesterday.getDate()).padStart(2, '0');
+
+        // Set the default value for today's date in the input field
+        const todayInput = document.getElementById('sc_date_of_call');
+<!--        todayInput.value = `${year}-${month}-${day}`;-->
+
+        // Set the 'max' and 'min' attributes to restrict selection to today's date
+        todayInput.setAttribute('max', `${year}-${month}-${day}`);
+        todayInput.setAttribute('min', `${year_1}-${month_1}-${day_1}`);
+    </script>
 {% endblock content %}
 
