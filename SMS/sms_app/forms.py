@@ -88,3 +88,4 @@ from.sub_forms.vehicle_allotment_Form import VehicleallotmentForm
 from.sub_forms.FuelfillingForm_form import FuelfillingForm
 from.sub_forms.bunk_nameForm_Form import BunknameForm
 from.sub_forms.placesForm import PlacesForm
+from.sub_forms.enquirynote_vehicleForm_form import EnquirynotevehicleForm

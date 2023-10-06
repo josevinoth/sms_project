@@ -416,4 +416,9 @@ urlpatterns = [
     path('places_insert/', views.places_add, name='places_insert'),  # Add places
     path('places_update/<int:places_id>', views.places_add, name='places_update'),  # update places
     path('places_delete/<int:places_id>', views.places_delete, name='places_delete'),  # delete places
+    path('enquirynotevehicle_list/', views.enquirynotevehicle_list, name='enquirynotevehicle_list'),  # List enquirynotevehicle
+    path('enquirynotevehicle_insert/', views.enquirynotevehicle_add, name='enquirynotevehicle_insert'),  # Add enquirynotevehicle
+    path('enquirynotevehicle_update/<int:enquirynotevehicle_id>', views.enquirynotevehicle_add, name='enquirynotevehicle_update'),  # update enquirynotevehicle
+    path('enquirynotevehicle_delete/<int:enquirynotevehicle_id>', views.enquirynotevehicle_delete, name='enquirynotevehicle_delete'),  # delete enquirynotevehicle
+    path('enquirynotevehicle_cancel/', views.enquirynotevehicle_cancel, name='enquirynotevehicle_cancel'),  # Cancel enquirynotevehicle
 ]

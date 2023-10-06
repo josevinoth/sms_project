@@ -4,10 +4,7 @@ from ..models import Tr_triptype_Info,MovementtypeInfo,Tr_businesstype_Info,Cust
 class EnquirynoteInfo(models.Model):
     en_enquirynumber = models.CharField(max_length=100,null=True,blank=True)
     en_customername = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
-    en_customercode = models.CharField(max_length=100,default = '')
     en_customerdepartment = models.ForeignKey(CustomerdepartmentInfo, on_delete=models.CASCADE, default='')
-    en_customercontact = models.CharField(max_length=30)
-    en_customeremail = models.EmailField(max_length=100)
     en_vehiclecategory = models.ForeignKey(VehiclecategoryInfo,on_delete=models.CASCADE, default='')
     en_vehicletype = models.ForeignKey(VehicletypeInfo,on_delete=models.CASCADE, default='')
     en_assignedto = models.ForeignKey(MyUser,on_delete=models.CASCADE, default='')

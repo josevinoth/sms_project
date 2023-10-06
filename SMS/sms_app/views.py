@@ -98,3 +98,4 @@ from .sub_views.vehicle_allotment_view import vehicle_allotment_list,vehicle_all
 from .sub_views.fuelfilling_view import fuelfilling_add,fuelfilling_list,fuelfilling_delete
 from .sub_views.bunkname_view import bunkname_add,bunkname_list,bunkname_delete
 from .sub_views.places_view import places_add,places_list,places_delete
+from .sub_views.enquirynote_vehicle_view import enquirynotevehicle_add,enquirynotevehicle_list,enquirynotevehicle_delete,enquirynotevehicle_cancel
