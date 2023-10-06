@@ -79,29 +79,16 @@
         </tbody>
     </table>
 </div>
-<!--<script>-->
-<!--    $(document).ready(function() {-->
-<!--    $('#requirements_list').DataTable({-->
-<!--        order: [1, 'desc' ],-->
-<!--        dom: 'lBfrtip',-->
-<!--        buttons: [-->
-<!--            'copy', 'csv', 'excel', 'print'-->
-<!--        ],-->
-<!--    });-->
-<!--} );-->
-<!--</script>-->
-
 <script>
     $(document).ready(function() {
-        $('#requirements_list').DataTable({
-            "columnDefs": [
-                {
-                    "targets": 0, // Date column
-                    "type": "date", // Use the 'date' type for sorting
-                }
-            ]
-        });
+    $('#requirements_list').DataTable({
+        order: [1, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ],
     });
+} );
 </script>
 
 {% endblock content %}

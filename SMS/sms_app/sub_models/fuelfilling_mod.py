@@ -7,7 +7,7 @@ class Fuelfillinginfo(models.Model):
     ff_fuel_price = models.FloatField(blank=True, null=True, default=0.0)
     ff_date = models.DateField(blank=True, null=True)
     ff_bunk_name = models.ForeignKey(Bunkname, on_delete=models.CASCADE, default='')
-    ff_filled_ltr = models.IntegerField(blank=True, null=True, default=0)
+    ff_filled_ltr = models.FloatField(blank=True, null=True, default=0.0)
     ff_odometer_reading = models.IntegerField(blank=True, null=True, default=0)
     ff_remarks = models.TextField(max_length=500, default='', blank=True, null=True)
     ff_created_at = models.DateField(null=True, auto_now_add=True)

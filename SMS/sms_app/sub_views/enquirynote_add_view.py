@@ -22,13 +22,11 @@ def enquirynote_add(request,enquirynote_id=0):
             print("I am inside get edit Enuirynote")
             enquirynote=EnquirynoteInfo.objects.get(pk=enquirynote_id)
             enquiry_num_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).id
-            print(enquiry_num_id)
             request.session['enquiry_num_id'] = enquiry_num_id
             tr_enqiury_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
             request.session['ses_enqiury_id'] = tr_enqiury_id
             form = EnquirynoteaddForm(instance=enquirynote)
             enquirynotevehicle_list=Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_num_id)
-            print(enquirynotevehicle_list)
             context={
                 'user_id': user_id,
                 'form': form,
