@@ -327,7 +327,7 @@
 								<div class="col-1"></div>
 							</div>
 						<button  type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'sales_list' %}" class="btn btn-danger float-right">
+						<a href="{% url 'sales_search' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel </a>
 					</div>
 				</div>
@@ -355,24 +355,9 @@ $(document).ready(function() {
 	decmaker_enabler()
 	cusnewexist_enabler()
 	buss_days_calc()
-<!--	salenum()-->
 	});
 </script>
-<!--<script>-->
-<!--function salenum() {-->
-<!--&lt;!&ndash;  var ran=Math.floor((Math.random() * 1000000) + 1)&ndash;&gt;-->
-<!--  var ran='{{sales_num}}'-->
-<!--  var jn=document.getElementById("s_sale_number").value-->
-<!--  if (jn=="")-->
-<!--  {-->
-<!--  	document.getElementById("s_sale_number").value ="S_"+ ran;-->
-<!--  }-->
-<!--  else-->
-<!--  {-->
-<!--  	document.getElementById("s_sale_number").value =jn;-->
-<!--  }-->
-<!--}-->
-<!--</script>-->
+
 <script>
 function buss_days_calc() {
 	var bus_start_date=new Date(document.getElementById("s_yesdate_business").value)

@@ -119,7 +119,7 @@ def dispatch_list(request):
     first_name = request.session.get('first_name')
     dispatch_list= Dispatch_info.objects.all()
     page_number = request.GET.get('page')
-    paginator = Paginator(dispatch_list, 100000000)
+    paginator = Paginator(dispatch_list, 10000)
     page_obj = paginator.get_page(page_number)
     context = {
         'dispatch_list': dispatch_list,

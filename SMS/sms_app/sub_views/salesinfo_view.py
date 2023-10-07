@@ -58,7 +58,7 @@ def sales_add(request, sales_id=0):
             sale_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
             sale_num_id=SalesInfo.objects.get(s_sale_number=sale_num).id
             request.session['ses_sales_num_id'] = sale_num_id
-            comments_list_filterd = (Sales_Comments_Info.objects.filter(sc_sales_number=sale_num_id)).order_by('sc_sales_number')
+            comments_list_filterd = (Sales_Comments_Info.objects.filter(sc_sales_number=sale_num_id))
 
             context={
                 'form': form,
@@ -115,7 +115,7 @@ def sales_delete(request, sales_id):
     sales_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
     salesinfo.delete()
     print('sales_num',sales_num)
-    salescommentsinfo = (Sales_Comments_Info.objects.filter(sc_sales_number=sales_num)).order_by('sc_sales_number')
+    salescommentsinfo = (Sales_Comments_Info.objects.filter(sc_sales_number=sales_num))
     for k in salescommentsinfo:
         k.delete()
     return redirect('/SMS/sales_list')
@@ -163,13 +163,13 @@ def sales_comments_list(request):
     role_id = RoleInfo.objects.get(role_name=role).id
 
     if role_id == 3:
-        comments_list=(Sales_Comments_Info.objects.all()).order_by('sc_sales_number')
+        sales_comments_list=(Sales_Comments_Info.objects.all()).order_by('sc_sales_number')
     elif role_id == 1:
-        comments_list=(Sales_Comments_Info.objects.all()).order_by('sc_sales_number')
+        sales_comments_list=(Sales_Comments_Info.objects.all()).order_by('sc_sales_number')
     else:
-        comments_list = (Sales_Comments_Info.objects.all(sc_updated_by=user_id)).order_by('sc_sales_number')
+        sales_comments_list = (Sales_Comments_Info.objects.all(sc_updated_by=user_id)).order_by('sc_sales_number')
     page_number = request.GET.get('page')
-    paginator = Paginator(comments_list, 100000000)
+    paginator = Paginator(sales_comments_list, 10000)
     page_obj = paginator.get_page(page_number)
 
     context = {
@@ -226,14 +226,14 @@ def sales_comments_search(request):
         sales_number = ""
 
     if role_id == 3:
-        sales_list = (Sales_Comments_Info.objects.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('sc_sales_number')
+        sales_comments_list = (Sales_Comments_Info.objects.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('sc_sales_number')
     elif role_id == 1:
-        sales_list = (Sales_Comments_Info.objects.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('sc_sales_number')
+        sales_comments_list = (Sales_Comments_Info.objects.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('sc_sales_number')
     else:
-        sales_list = (Sales_Comments_Info.objects.filter(Q(sc_sales_number__s_sale_number__icontains =sales_number,sc_updated_by=user_id)|Q(sc_sales_number__s_sale_number__isnull=True,sc_updated_by=user_id))).order_by('sc_sales_number')
+        sales_comments_list = (Sales_Comments_Info.objects.filter(Q(sc_sales_number__s_sale_number__icontains =sales_number,sc_updated_by=user_id)|Q(sc_sales_number__s_sale_number__isnull=True,sc_updated_by=user_id))).order_by('sc_sales_number')
 
     page_number = request.GET.get('page')
-    paginator = Paginator(sales_list, 50)
+    paginator = Paginator(sales_comments_list, 50)
     page_obj = paginator.get_page(page_number)
     context = {
         # 'sales_list': sales_list,
