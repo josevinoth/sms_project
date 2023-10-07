@@ -2,6 +2,7 @@ from random import randint
 import time
 from datetime import datetime
 
+import requests
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -117,7 +118,7 @@ def dispatch_add(request, dispatch_id=0):
 @login_required(login_url='login_page')
 def dispatch_list(request):
     first_name = request.session.get('first_name')
-    dispatch_list= Dispatch_info.objects.all()
+    dispatch_list= (Dispatch_info.objects.all()).order_by('-dispatch_created_at')
     page_number = request.GET.get('page')
     paginator = Paginator(dispatch_list, 10000)
     page_obj = paginator.get_page(page_number)
@@ -168,8 +169,14 @@ def dispatch_remove_goods(request,dispatch_id):
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_id="")
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
-    dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice', flat=True).distinct())
-    Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
+    dispatch_num_list=list(Warehouse_goods_info.objects.all().values_list('wh_dispatch_num',flat=True))
+    for i in dispatch_num_list:
+        print('dispatch_num',i)
+        # dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=i).values_list('wh_goods_invoice',flat=True).distinct())
+        # dispatch_job_num_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=i).values_list('wh_job_no',flat=True).distinct())
+        # Dispatch_info.objects.filter(dispatch_num=i).update(dispatch_invoice_list=dispatch_invoice_list)
+        # Dispatch_info.objects.filter(dispatch_num=i).update(dispatch_job_num_list=dispatch_job_num_list)
+        dispatch_invoice_job_update(i)
     context = {
                'first_name': first_name,
                }
@@ -191,8 +198,7 @@ def dispatch_add_goods(request,dispatch_id):
     # storage_days = (check_out_date - check_in_date).days  # In days
     storage_days = float(round(storage_hours / 24,2))  # In days
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff_days)
-    dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice', flat=True).distinct())
-    Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
+    dispatch_invoice_job_update(dispatch_num_val)
     context = {
                 'first_name': first_name,
                 'dispatch_goods_list':dispatch_goods_list,
@@ -200,6 +206,16 @@ def dispatch_add_goods(request,dispatch_id):
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
 
+
+def dispatch_invoice_job_update(dispatch_num_val):
+    dispatch_invoice_list = (Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice',flat=True).distinct())
+    dispatch_job_num_list = (Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_job_no',flat=True).distinct())
+    print([s.replace("'", "") for s in dispatch_invoice_list])
+    print([s.replace("'", "") for s in dispatch_job_num_list])
+    Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
+    Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_job_num_list=dispatch_job_num_list)
+    return ()
+@login_required(login_url='login_page')
 def qr_dispatch_decoder(request,dispatch_id):
     # Scanning QR Code from Camera Feed
     cap = cv2.VideoCapture(0)
@@ -256,7 +272,7 @@ def dispatch_search(request):
     dispatch_number = request.GET.get('dispatch_number')
     if not dispatch_number:
         dispatch_number = ""
-    dispatch_list = Dispatch_info.objects.filter(Q(dispatch_num__icontains =dispatch_number)|Q(dispatch_num__isnull=True)).order_by('id')
+    dispatch_list = (Dispatch_info.objects.filter(Q(dispatch_num__icontains =dispatch_number)|Q(dispatch_num__isnull=True))).order_by('-dispatch_created_at')
     page_number = request.GET.get('page')
     paginator = Paginator(dispatch_list, 50)
     page_obj = paginator.get_page(page_number)
