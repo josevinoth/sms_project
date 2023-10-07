@@ -261,9 +261,12 @@ def qr_dispatch_decoder(request,dispatch_id):
 def dispatch_search(request):
     first_name = request.session.get('first_name')
     dispatch_number = request.GET.get('dispatch_number')
+    job_number = request.GET.get('job_number')
     if not dispatch_number:
         dispatch_number = ""
-    dispatch_list = (Dispatch_info.objects.filter(Q(dispatch_num__icontains =dispatch_number)|Q(dispatch_num__isnull=True))).order_by('-dispatch_created_at')
+    if not job_number:
+        job_number = ""
+    dispatch_list = (Dispatch_info.objects.filter((Q(dispatch_num__icontains =dispatch_number)|Q(dispatch_num__isnull=True)) & (Q(dispatch_job_num_list__icontains =job_number)|Q(dispatch_job_num_list__isnull=True)))).order_by('-dispatch_created_at')
     page_number = request.GET.get('page')
     paginator = Paginator(dispatch_list, 50)
     page_obj = paginator.get_page(page_number)

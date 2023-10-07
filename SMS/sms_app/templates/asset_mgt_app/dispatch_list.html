@@ -20,15 +20,16 @@
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
-         <div class="col-md-1">
+         <div class="col-md-2">
         <a href="{% url 'dispatch_list' %}" class="btn btn-warning btn-block btn-lg">
             <i class="fa fa-eye" aria-hidden="true"></i> Show All
         </a>
     </div>
-    <div class="col-md-1">
+    <div class="col-md-3">
         <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'dispatch_search' %}" method="get">
             <div class="form-group">
                 <input type="search" class="form-control" id="dispatch_number" placeholder="Dispatch Number" name="dispatch_number">
+                <input type="search" class="form-control" id="job_number" placeholder="Job Number" name="job_number">
                 <button class="btn btn-primary" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
             </div>
         </form>
