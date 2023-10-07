@@ -169,14 +169,7 @@ def dispatch_remove_goods(request,dispatch_id):
     Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_id="")
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
-    dispatch_num_list=list(Warehouse_goods_info.objects.all().values_list('wh_dispatch_num',flat=True))
-    for i in dispatch_num_list:
-        print('dispatch_num',i)
-        # dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=i).values_list('wh_goods_invoice',flat=True).distinct())
-        # dispatch_job_num_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=i).values_list('wh_job_no',flat=True).distinct())
-        # Dispatch_info.objects.filter(dispatch_num=i).update(dispatch_invoice_list=dispatch_invoice_list)
-        # Dispatch_info.objects.filter(dispatch_num=i).update(dispatch_job_num_list=dispatch_job_num_list)
-        dispatch_invoice_job_update(i)
+    dispatch_invoice_job_update(dispatch_num_val)
     context = {
                'first_name': first_name,
                }
