@@ -208,10 +208,8 @@ def dispatch_add_goods(request,dispatch_id):
 
 
 def dispatch_invoice_job_update(dispatch_num_val):
-    dispatch_invoice_list = (Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice',flat=True).distinct())
-    dispatch_job_num_list = (Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_job_no',flat=True).distinct())
-    print([s.replace("'", "") for s in dispatch_invoice_list])
-    print([s.replace("'", "") for s in dispatch_job_num_list])
+    dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice',flat=True).distinct())
+    dispatch_job_num_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_job_no',flat=True).distinct())
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_job_num_list=dispatch_job_num_list)
     return ()
