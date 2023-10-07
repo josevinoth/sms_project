@@ -16,11 +16,11 @@ def sales_list(request):
     role_id=RoleInfo.objects.get(role_name=role).id
 
     if role_id==3:
-        sales_list= (SalesInfo.objects.all()).order_by('s_sale_number')
+        sales_list= (SalesInfo.objects.all())
     elif role_id==1:
-        sales_list = (SalesInfo.objects.all()).order_by('s_sale_number')
+        sales_list = (SalesInfo.objects.all())
     else:
-        sales_list = (SalesInfo.objects.filter(s_created_by=user_id)).order_by('s_sale_number')
+        sales_list = (SalesInfo.objects.filter(s_created_by=user_id))
     page_number = request.GET.get('page')
     paginator = Paginator(sales_list, 100000000)
     page_obj = paginator.get_page(page_number)
@@ -198,11 +198,11 @@ def sales_search(request):
         sales_number = ""
 
     if role_id == 3:
-        sales_list = SalesInfo.objects.filter((Q(s_sale_number__icontains=sales_number)) | (Q(s_sale_number__isnull=True))).order_by('s_sale_number')
+        sales_list = SalesInfo.objects.filter((Q(s_sale_number__icontains=sales_number)) | (Q(s_sale_number__isnull=True)))
     elif role_id == 1:
-        sales_list = SalesInfo.objects.filter((Q(s_sale_number__icontains=sales_number)) | (Q(s_sale_number__isnull=True))).order_by('s_sale_number')
+        sales_list = SalesInfo.objects.filter((Q(s_sale_number__icontains=sales_number)) | (Q(s_sale_number__isnull=True)))
     else:
-        sales_list = SalesInfo.objects.filter((Q(s_sale_number__icontains =sales_number,s_created_by=user_id))|(Q(s_sale_number__isnull=True,s_created_by=user_id))).order_by('s_sale_number')
+        sales_list = SalesInfo.objects.filter((Q(s_sale_number__icontains =sales_number,s_created_by=user_id))|(Q(s_sale_number__isnull=True,s_created_by=user_id)))
 
     page_number = request.GET.get('page')
     paginator = Paginator(sales_list, 50)
