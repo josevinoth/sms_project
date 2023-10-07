@@ -216,6 +216,7 @@ def get_queryset(request):
         'page_obj': page_obj,
         }
     return render(request, "asset_mgt_app/gatein_list.html", context)
+
 #Delete WH Job
 @login_required(login_url='login_page')
 def gatein_delete(request,gatein_id):
