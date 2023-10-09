@@ -12,7 +12,7 @@
 					<div class="card-header text-center"><h3>Add/Update Consignment Details</h3></div>
 					<div class="card-body bg-light">
 						<div class="row">
-							<div class="col-4">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
@@ -60,50 +60,8 @@
 									</div>
 									{% render_field con_det_form.co_freight_amount id="co_freight_amount" class="form-control" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consigner</span>
-									</div>
-									{% render_field con_det_form.co_consigner class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consignee</span>
-									</div>
-									{% render_field con_det_form.co_consignee class="form-control" %}
-								</div>
 							</div>
-							<div class="col-4">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consigner Invoice</span>
-									</div>
-									{% render_field con_det_form.co_consignerinvoice class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Currency Type</span>
-									</div>
-									{% render_field con_det_form.co_currency_type id="co_currency_type" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consigner Value</span>
-									</div>
-									{% render_field con_det_form.co_consignervalue class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consigner Invoice Date</span>
-									</div>
-									{% render_field con_det_form.co_consignerinvoice_date id="co_consignerinvoice_date" type="Date" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Value in INR</span>
-									</div>
-									{% render_field con_det_form.co_valueininr class="form-control" %}
-								</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">GST Payable By</span>
@@ -122,38 +80,6 @@
 									</div>
 									{% render_field con_det_form.co_container_number id="co_container_number" class="form-control" %}
 								</div>
-							</div>
-							<div class="col-4">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">No. Of Pieces</span>
-									</div>
-									{% render_field con_det_form.co_noofpieces class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Weight</span>
-									</div>
-									{% render_field con_det_form.co_weight class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Eway bill No.</span>
-									</div>
-									{% render_field con_det_form.co_ebillno class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Date Of Issue</span>
-									</div>
-									{% render_field con_det_form.co_dateofissue type="Date" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Date Of Validity</span>
-									</div>
-									{% render_field con_det_form.co_dateofvalidity type="Date" class="form-control" %}
-								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Container Description</span>
@@ -162,17 +88,10 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Dimension</span>
-									</div>
-									{% render_field con_det_form.co_dimension class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
 									{% render_field con_det_form.co_status class="form-control" id="consignment_status" %}
 								</div>
-
 								{% render_field con_det_form.co_lastmodifiedby id="co_lastmodifiedby" hidden="True" class="form-control" %}
 							</div>
 						</div>

@@ -421,4 +421,9 @@ urlpatterns = [
     path('enquirynotevehicle_update/<int:enquirynotevehicle_id>', views.enquirynotevehicle_add, name='enquirynotevehicle_update'),  # update enquirynotevehicle
     path('enquirynotevehicle_delete/<int:enquirynotevehicle_id>', views.enquirynotevehicle_delete, name='enquirynotevehicle_delete'),  # delete enquirynotevehicle
     path('enquirynotevehicle_cancel/', views.enquirynotevehicle_cancel, name='enquirynotevehicle_cancel'),  # Cancel enquirynotevehicle
+    path('consignmentgoods_list/', views.consignmentgoods_list, name='consignmentgoods_list'),  # List consignmentgoods
+    path('consignmentgoods_insert/', views.consignmentgoods_add, name='consignmentgoods_insert'),  # Add consignmentgoods
+    path('consignmentgoods_update/<int:consignmentgoods_id>', views.consignmentgoods_add, name='consignmentgoods_update'),  # update consignmentgoods
+    path('consignmentgoods_delete/<int:consignmentgoods_id>', views.consignmentgoods_delete, name='consignmentgoods_delete'),  # delete consignmentgoods
+    path('consignmentgoods_nav/<int:consignmentdetails_id>', views.consignmentgoods_nav, name='consignmentgoods_nav'),  # nav consignmentgoods
 ]

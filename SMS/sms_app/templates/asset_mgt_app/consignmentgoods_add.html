@@ -1,0 +1,215 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="">
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Consignment Goods</h3></div>
+					<div class="card-body bg-light">
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consignment Number</span>
+									</div>
+									{% render_field form.cg_consignmentnumber id="cg_consignmentnumber" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consigner</span>
+									</div>
+									{% render_field form.cg_consigner class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consignee</span>
+									</div>
+									{% render_field form.cg_consignee class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Currency Type</span>
+									</div>
+									{% render_field form.cg_currency_type id="cg_currency_type" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consigner Value</span>
+									</div>
+									{% render_field form.cg_consignervalue class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consigner Invoice</span>
+									</div>
+									{% render_field form.cg_consignerinvoice class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consigner Invoice Date</span>
+									</div>
+									{% render_field form.cg_consignerinvoice_date id="cg_consignerinvoice_date" type="Date" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Value in INR</span>
+									</div>
+									{% render_field form.cg_valueininr class="form-control" %}
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weight</span>
+									</div>
+									{% render_field form.cg_weight class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Eway bill No.</span>
+									</div>
+									{% render_field form.cg_ebillno class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Date Of Issue</span>
+									</div>
+									{% render_field form.cg_dateofissue type="Date" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Date Of Validity</span>
+									</div>
+									{% render_field form.cg_dateofvalidity type="Date" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">No. of Pieces</span>
+									</div>
+									{% render_field form.cg_noofpieces class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height</span>
+									</div>
+									{% render_field form.cg_height class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width</span>
+									</div>
+									{% render_field form.cg_width class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length</span>
+									</div>
+									{% render_field form.cg_length class="form-control" %}
+								</div>
+								{% render_field form.cg_lastmodifiedby id="cg_lastmodifiedby" hidden="True" class="form-control" %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'consignmentgoods_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+	</div>
+	<div class="col-md-1">
+    <a href="{% url 'consignmentgoods_insert' %}"  id="modal" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i> Add
+    </a>
+</div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="consignmentgoods_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Created On</th>
+            <th>Consignment Number</th>
+            <th>Consigner</th>
+            <th>Consignee</th>
+            <th>Consigner Invoice</th>
+            <th>Value in INR</th>
+            <th>No. of Pieces</th>
+            <th>Weight</th>
+            <th>E-Bill No.</th>
+            <th>Date of Issue</th>
+            <th>Date of Validity</th>
+            <th>Updated On</th>
+            <th>Updated By</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+        {% for consignmentgoodsinfo in consignmentgoods_list %}
+        <tr>
+            <td> {{consignmentgoodsinfo.cg_created_at}}</td>
+            <td> {{consignmentgoodsinfo.cg_consignmentnumber}}</td>
+            <td> {{consignmentgoodsinfo.cg_consigner}}</td>
+            <td> {{consignmentgoodsinfo.cg_consignee}}</td>
+            <td> {{consignmentgoodsinfo.cg_consignerinvoice}}</td>
+            <td> {{consignmentgoodsinfo.cg_valueininr}}</td>
+            <td> {{consignmentgoodsinfo.cg_noofpieces}}</td>
+            <td> {{consignmentgoodsinfo.cg_weight}}</td>
+            <td> {{consignmentgoodsinfo.cg_ebillno}}</td>
+            <td> {{consignmentgoodsinfo.cg_dateofissue}}</td>
+            <td> {{consignmentgoodsinfo.cg_dateofvalidity}}</td>
+            <td> {{consignmentgoodsinfo.cg_updated_at}}</td>
+            <td> {{consignmentgoodsinfo.cg_lastmodifiedby}}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'consignmentgoods_update' consignmentgoodsinfo.id %}" >
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'consignmentgoods_delete' consignmentgoodsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#consignmentgoods_list').DataTable({
+        scrollX: true,
+    });
+} );
+</script>
+
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("cg_lastmodifiedby").value ='{{user_id}}';
+
+  });
+</script>
+{% endblock content %}

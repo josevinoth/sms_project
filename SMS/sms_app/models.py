@@ -151,3 +151,4 @@ from .sub_models.fuel_vendor_mod import Fuelvendor
 from .sub_models.bunk_name_mod import Bunkname
 from .sub_models.fuelfilling_mod import Fuelfillinginfo
 from .sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+from .sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
