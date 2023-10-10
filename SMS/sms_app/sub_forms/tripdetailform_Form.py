@@ -12,6 +12,7 @@ class TripdetailaddForm(forms.ModelForm):
     tc_unloadingcost = forms.FloatField(required=False)
     tc_weighmentcost = forms.FloatField(required=False)
     tc_handlingcost = forms.FloatField(required=False)
+    tc_pod = forms.FloatField(required=False)
     class Meta:
         model = TripdetailInfo
         # fields = '__all__'

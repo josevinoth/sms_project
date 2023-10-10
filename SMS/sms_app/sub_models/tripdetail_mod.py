@@ -43,6 +43,7 @@ class TripdetailInfo(models.Model):
     tc_unloadingcost = models.FloatField(default=0.0)
     tc_weighmentcost = models.FloatField(default=0.0)
     tc_handlingcost = models.FloatField(default=0.0)
+    tc_pod = models.FloatField(default=0.0)
     tc_financestatus = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE, default=1)
 
     class Meta:
@@ -61,3 +62,4 @@ class Trip_closure_files_Info(models.Model):
     tcf_unloading_cost = models.FileField(upload_to=trip_closure_directory_path, null=True,blank=True)
     tcf_weighment_cost = models.FileField(upload_to=trip_closure_directory_path, null=True,blank=True)
     tcf_handling_cost = models.FileField(upload_to=trip_closure_directory_path, null=True,blank=True)
+    tcf_pod = models.FileField(upload_to=trip_closure_directory_path, null=True,blank=True)
