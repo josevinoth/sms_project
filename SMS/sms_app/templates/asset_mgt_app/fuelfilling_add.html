@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="fuelfilling_add"   >
+<form method="POST" action="" id="fuelfilling_add" data-units-url="{% url 'load_whrate_model' %}" novalidate  >
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-3"></div>
@@ -23,7 +23,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text"> Fuel Rate/ltr</span>
 									</div>
-									{% render_field form.ff_fuel_rate id="ff_fuel_rate" class="form-control " %}
+									{% render_field form.ff_fuel_rate id="ff_fuel_rate" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -59,7 +59,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text"> Location</span>
 									</div>
-									{% render_field form.ff_loaction id="ff_loaction" class="form-control " %}
+									{% render_field form.ff_loaction id="ff_loaction" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -103,6 +103,32 @@ $(document).ready(function() {
 	document.getElementById("ff_updated_by").value ='{{user_id}}';
 	});
 </script>
+
+<script>
+   $("#ff_city").change(function () {
+      var cityId = $(this).val();
+      alert(cityId)
+      $.ajax({
+        url: '{% url 'load_location' %}',
+        data: {
+          'cityId_1': cityId,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#ff_loaction').removeClass('disable_a_href');
+			$('#ff_loaction').empty().append("<option value='0'>--Select--</option>");
+        	var location_name=JSON.parse(data)["location_list"];
+        	var location_id=JSON.parse(data)["location_list"];
+        	var len = (location_name).length;
+        	$('#ff_loaction').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#ff_loaction").append("<option value='"+location_id[i]+"'>"+location_name[i]+"</option>");
+			}
+        }
+      });
+    });
+</script>
+
 
 <script>
 function change_charge_type() {
