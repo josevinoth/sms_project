@@ -1,9 +1,11 @@
+import datetime
+
 from django.db import models
 from ..models import MyUser
 
 class PkpurchaseorderInfo(models.Model):
     po_num = models.CharField(max_length=100,null=True, blank=True)
-    po_date = models.DateField(blank=True, null=True)
+    po_date = models.DateTimeField(blank=True, null=True)
     po_value = models.FloatField(blank=True, null=True, default=0.0)
     po_tax = models.FloatField(blank=True, null=True, default=0.0)
     po_total_value = models.FloatField(blank=True, null=True, default=0.0)
@@ -19,3 +21,4 @@ class PkpurchaseorderInfo(models.Model):
 
     def __str__(self):
         return self.po_num
+
