@@ -2,13 +2,13 @@ from django.db import models
 from ..models import MyUser,VehiclemasterInfo,Bunkname,City,Places
 
 class Fuelfillinginfo(models.Model):
-    ff_vehicle_num = models.ForeignKey(VehiclemasterInfo, on_delete=models.CASCADE, default='')
-    ff_fuel_rate = models.FloatField(blank=True, null=True, default=0.0)
-    ff_fuel_price = models.FloatField(blank=True, null=True, default=0.0)
-    ff_date = models.DateField(blank=True, null=True)
-    ff_bunk_name = models.ForeignKey(Bunkname, on_delete=models.CASCADE, default='')
-    ff_filled_ltr = models.FloatField(blank=True, null=True, default=0.0)
-    ff_odometer_reading = models.IntegerField(blank=True, null=True, default=0)
+    ff_vehicle_num = models.ForeignKey(VehiclemasterInfo, on_delete=models.CASCADE)
+    ff_fuel_rate = models.FloatField(default=0.0)
+    ff_fuel_price = models.FloatField(default=0.0)
+    ff_date = models.DateField()
+    ff_bunk_name = models.ForeignKey(Bunkname, on_delete=models.CASCADE)
+    ff_filled_ltr = models.FloatField(default=0.0)
+    ff_odometer_reading = models.IntegerField(default=0)
     ff_remarks = models.TextField(max_length=500, default='', blank=True, null=True)
     ff_created_at = models.DateField(null=True, auto_now_add=True)
     ff_updated_at = models.DateField(null=True, auto_now=True)

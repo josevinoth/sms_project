@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="fuelfilling_add" data-units-url="{% url 'load_whrate_model' %}" novalidate  >
+<form method="POST" action="" id="fuelfilling_add">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-3"></div>
@@ -118,7 +118,7 @@ $(document).ready(function() {
 			$('#ff_loaction').removeClass('disable_a_href');
 			$('#ff_loaction').empty().append("<option value='0'>--Select--</option>");
         	var location_name=JSON.parse(data)["location_list"];
-        	var location_id=JSON.parse(data)["location_list"];
+        	var location_id=JSON.parse(data)["location_id_list"];
         	var len = (location_name).length;
         	$('#ff_loaction').empty().append("<option value='0'>--Select--</option>");
         	for( var i = 0; i<len; i++){
@@ -133,7 +133,7 @@ $(document).ready(function() {
 <script>
 function change_charge_type() {
 var rate_per_litre=parseFloat(document.getElementById("ff_fuel_rate").value) || 0;
-var filled_litre=parseInt(document.getElementById("ff_filled_ltr").value) || 0;
+var filled_litre=parseFloat(document.getElementById("ff_filled_ltr").value) || 0;
 var fuel_price=filled_litre*rate_per_litre
 document.getElementById("ff_fuel_price").value=fuel_price.toFixed(2)
 }
