@@ -74,7 +74,7 @@
     </tr>
     </thead>
     <tbody>
-    {% for stock_value in goods_list %}
+    {% for stock_value in page_obj %}
     <tr>
       <td> {{stock_value.wh_job_no}}</td>
       <td> {{stock_value.wh_qr_rand_num}}</td>
@@ -119,11 +119,27 @@
       <td> {{stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm}}</td>
       <td> {{stock_value.wh_dispatch_id.dispatch_mawb}}</td>
       <td> {{stock_value.wh_dispatch_id.dispatch_num}}</td>
-
     </tr>
     {% endfor %}
     </tbody>
   </table>
+  <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a class="btn btn-warning" href="?page=1">First</a>
+            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+        {% endif %}
+    </span>
+    </div>
 </div>
 
 <script>

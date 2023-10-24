@@ -1,8 +1,7 @@
 from itertools import chain
-
+from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-
 from django.template.loader import get_template
 from django.http import HttpResponse
 from xhtml2pdf import pisa
@@ -125,11 +124,15 @@ def stock_value_reports(request):
             pass
 
     goods_list=Warehouse_goods_info.objects.all()
+    page_number = request.GET.get('page')
+    paginator = Paginator(goods_list, 50)
+    page_obj = paginator.get_page(page_number)
     context = {
                 'stock_value_list': Loadingbay_Info.objects.all(),
                 'first_name': first_name,
                 'checkin_goods_list': checkin_goods_list,
-                'goods_list': goods_list,
+                'page_obj': page_obj,
+                # 'goods_list': goods_list,
                 # 'row': row,
                  }
     return render(request,"asset_mgt_app/stock_values_report.html",context)
