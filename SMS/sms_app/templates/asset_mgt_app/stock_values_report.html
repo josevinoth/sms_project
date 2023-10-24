@@ -28,14 +28,12 @@
   <table  id="stock_value_report" class="table "  >
     <thead class="thead-dark">
     <tr>
-      <th>Action</th>
       <th>Job Number</th>
       <th>Stock Number</th>
       <th>Customer</th>
       <th>Date Of Arrival</th>
       <th>Unloading Start Time</th>
       <th>Unloading End Time</th>
-      <th>FRD Time</th>
       <th>Transporter</th>
       <th>Truck Number</th>
       <th>Consigner</th>
@@ -45,85 +43,83 @@
       <th>Destination</th>
       <th>Invoice Number</th>
       <th>Case Number</th>
-      <th>Weight (kg)</th>
-      <th>Number of Pieces</th>
-      <th>Package Type</th>
-      <th>Invoice Weight(kg)</th>
+      <th>Invoice Qty</th>
+      <th>Invoice Weight (kg)</th>
+      <th>Checkin Weight (kg)</th>
       <th>UOM</th>
       <th>Length</th>
       <th>Width</th>
       <th>Height</th>
+      <th>Dims Qty</th>
+      <th>Package Type</th>
       <th>Volume Weight</th>
       <th>CBM</th>
       <th>Invoice Value</th>
       <th>Invoice Currency</th>
       <th>Invoice (INR)</th>
-      <th>S-Bill #</th>
-      <th>S-Bill Date</th>
       <th>E-Way Bill#</th>
+      <th>E-Way Bill Validity</th>
       <th>Fumigation Status</th>
       <th>Check In-Out?</th>
       <th>Branch</th>
       <th>Unit</th>
       <th>Bay</th>
       <th>Storage Days</th>
+      <th>Truck_Number(Out)</th>
+      <th>Truck_Type(Out)</th>
+      <th>Truck_Depature_Time(Out)</th>
+      <th>Labels_Pasted_By</th>
+      <th>MAWB</th>
+      <th>Dispatch_Number</th>
     </tr>
     </thead>
     <tbody>
-    {% for stock_value in row %}
+    {% for stock_value in goods_list %}
     <tr>
-      <td id="collapseButton" onclick="collapse(this)">
-        <table>
-          <tr>
-            <th>Length</th>
-            <th>Width</th>
-            <th>Height</th>
-          </tr>
-          <tr>
-            <td> {{stock_value.19}}</td>
-            <td> {{stock_value.20}}</td>
-            <td> {{stock_value.21}}</td>
-          </tr>
-        </table>
-      </td>
-      <td> {{stock_value.0}}</td>
-      <td> {{stock_value.1}}</td>
-      <td> {{stock_value.2}}</td>
-      <td> {{stock_value.3}}</td>
-      <td> {{stock_value.4}}</td>
-      <td> {{stock_value.5}}</td>
-      <td> {{""}}</td>
-      <td> {{stock_value.6}}</td>
-      <td> {{stock_value.7}}</td>
-      <td> {{stock_value.8}}</td>
-      <td> {{stock_value.9}}</td>
-      <td> {{stock_value.10}}</td>
-      <td> {{stock_value.11}}</td>
-      <td> {{stock_value.12}}</td>
-      <td> {{stock_value.13}}</td>
-      <td> {{""}}</td>
-      <td> {{stock_value.14}}</td>
-      <td> {{stock_value.15}}</td>
-      <td> {{stock_value.16}}</td>
-      <td> {{stock_value.17}}</td>
-      <td> {{stock_value.18}}</td>
-      <td> {{stock_value.19}}</td>
-      <td> {{stock_value.20}}</td>
-      <td> {{stock_value.21}}</td>
-      <td> {{stock_value.22}}</td>
-      <td> {{stock_value.23}}</td>
-      <td> {{stock_value.24}}</td>
-      <td> {{stock_value.25}}</td>
-      <td> {{stock_value.26}}</td>
-      <td> {{""}}</td>
-      <td> {{""}}</td>
-      <td> {{stock_value.27}}</td>
-      <td> {{stock_value.28}}</td>
-      <td> {{stock_value.29}}</td>
-      <td> {{stock_value.30}}</td>
-      <td> {{stock_value.31}}</td>
-      <td> {{stock_value.32}}</td>
-      <td> {{stock_value.33}}</td>
+      <td> {{stock_value.wh_job_no}}</td>
+      <td> {{stock_value.wh_qr_rand_num}}</td>
+      <td> {{stock_value.wh_customer_name}}</td>
+      <td> {{stock_value.wh_gate_injob_no_id.gatein_arrival_date}}</td>
+      <td> {{stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time}}</td>
+      <td> {{stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time}}</td>
+      <td> {{stock_value.wh_gate_injob_no_id.gatein_transporter}}</td>
+      <td> {{stock_value.wh_gate_injob_no_id.gatein_truck_number}}</td>
+      <td> {{stock_value.wh_consigner}}</td>
+      <td> {{stock_value.wh_consignee}}</td>
+      <td> {{stock_value.wh_lb_job_no_id.lb_packing_list}}</td>
+      <td> {{stock_value.wh_gate_injob_no_id.gatein_hawb}}</td>
+      <td> {{stock_value.wh_gate_injob_no_id.gatein_destination}}</td>
+      <td> {{stock_value.wh_gate_injob_no_id.gatein_invoice}}</td>
+      <td> {{stock_value.wh_po_num}}</td>
+      <td> {{stock_value.wh_total_qty}}</td>
+      <td> {{stock_value.wh_gross_weight}}</td>
+      <td> {{stock_value.wh_invoice_weight_unit}}</td>
+      <td> {{stock_value.wh_uom}}</td>
+      <td> {{stock_value.wh_goods_length}}</td>
+      <td> {{stock_value.wh_goods_width}}</td>
+      <td> {{stock_value.wh_goods_height}}</td>
+      <td> {{stock_value.wh_goods_pieces}}</td>
+      <td> {{stock_value.wh_goods_package_type}}</td>
+      <td> {{stock_value.wh_chargeable_weight}}</td>
+      <td> {{stock_value.wh_cbm}}</td>
+      <td> {{stock_value.wh_invoice_value}}</td>
+      <td> {{stock_value.wh_lb_job_no_id.lb_stock_invoice_currency}}</td>
+      <td> {{stock_value.wh_invoice_amount_inr}}</td>
+      <td> {{stock_value.wh_lb_job_no_id.lb_eway_bill}}</td>
+      <td> {{stock_value.wh_lb_job_no_id.lb_validity_date}}</td>
+      <td> {{stock_value.wh_fumigation_process}}</td>
+      <td> {{stock_value.wh_check_in_out}}</td>
+      <td> {{stock_value.wh_branch}}</td>
+      <td> {{stock_value.wh_unit}}</td>
+      <td> {{stock_value.wh_bay}}</td>
+      <td> {{stock_value.wh_storage_time }}</td>
+      <td> {{stock_value.wh_dispatch_id.dispatch_truck_number}}</td>
+      <td> {{stock_value.wh_dispatch_id.dispatch_truck_type}}</td>
+      <td> {{stock_value.wh_dispatch_id.dispatch_depature_date}}</td>
+      <td> {{stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm}}</td>
+      <td> {{stock_value.wh_dispatch_id.dispatch_mawb}}</td>
+      <td> {{stock_value.wh_dispatch_id.dispatch_num}}</td>
+
     </tr>
     {% endfor %}
     </tbody>
@@ -133,7 +129,7 @@
 <script>
     $(document).ready(function() {
         $('#stock_value_report').DataTable({
-<!--        scrollY: 800,-->
+        scrollY: 800,
         scrollX: true,
         dom: 'Bfrtip',
         buttons: [
