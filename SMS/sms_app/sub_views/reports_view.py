@@ -1,3 +1,4 @@
+import csv
 from itertools import chain
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
@@ -107,22 +108,18 @@ def stock_value_reports(request):
 
     # calculate storage days
     # stocks=list(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num',flat=True))
-    stocks = list(Warehouse_goods_info.objects.all().values_list('wh_qr_rand_num', flat=True))
+    print("Before Loop")
+    stocks = list(Warehouse_goods_info.objects.filter(wh_check_in_out=1).values_list('wh_qr_rand_num', flat=True))
     for i in stocks:
-        goods_status = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_check_in_out
-        goods_status_id = Check_in_out.objects.get(check_in_out_name=goods_status).id
-        if goods_status_id == 1:
-            try:
-                check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
-                current_date = date.today()
-                date_diff = (current_date - check_in_date)  # Differnce between dates
-                date_diff_days = date_diff.days
-                Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
-            except TypeError:
-                pass
-        else:
+        try:
+            check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
+            current_date = date.today()
+            date_diff = (current_date - check_in_date)  # Differnce between dates
+            date_diff_days = date_diff.days
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
+        except TypeError:
             pass
-
+    print("After Loop")
     goods_list=Warehouse_goods_info.objects.all()
     page_number = request.GET.get('page')
     paginator = Paginator(goods_list, 50)
@@ -136,7 +133,6 @@ def stock_value_reports(request):
                 # 'row': row,
                  }
     return render(request,"asset_mgt_app/stock_values_report.html",context)
-
 @login_required(login_url='login_page')
 def damage_reports_list(request):
     first_name = request.session.get('first_name')
@@ -180,4 +176,94 @@ def damage_report_pdf(request):
 
     if pisa_status.err:
         return HttpResponse('We has some error <pre>'+ html +'</pre>')
+    return response
+
+def export_stockreport_to_csv(request):
+    # Fetch your data from the model or any other data source
+    data = Warehouse_goods_info.objects.all()
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Stock_Report.csv"'
+
+    writer = csv.writer(response)
+
+    # Write the header row
+    writer.writerow(['Job Number', 'Stock Number', 'Customer','Date Of Arrival','Unloading Start Time','Unloading End Time','Transporter','Truck Number','Consigner','Consignee','Docs Received','HAWB','Destination','Invoice Number','Case Number','Invoice Qty','Invoice Weight (kg)','Checkin Weight (kg)','UOM','Length','Width','Height','Dims Qty','Package Type','Volume Weight','CBM','Invoice Value','Invoice Currency','Invoice (INR)','E-Way Bill#','E-Way Bill Validity','Fumigation Status','Check In-Out?','Branch','Unit','Bay','Storage Days','Truck_Number(Out)','Truck_Type(Out)','Truck_Depature_Time(Out)','Labels_Pasted_By','MAWB','Dispatch_Number'])  # Replace with actual column names
+
+    # Iterate through the data and apply modifications as needed
+    for stock_value in data:
+        # Check if the item or its attributes are None
+        if stock_value is not None:
+            Job_Number=stock_value.wh_job_no if stock_value.wh_job_no is not None else 'null',
+            Stock_Number=stock_value.wh_qr_rand_num if stock_value.wh_qr_rand_num is not None else 'null',
+            Customer=stock_value.wh_customer_name if stock_value.wh_customer_name is not None else 'null',
+            Date_Of_Arrival=stock_value.wh_gate_injob_no_id.gatein_arrival_date if stock_value.wh_gate_injob_no_id.gatein_arrival_date is not None else 'null',
+            Unloading_Start_Time=stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time if stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time is not None else 'null',
+            Unloading_End_Time=stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time if stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time is not None else 'null',
+            Transporter=stock_value.wh_gate_injob_no_id.gatein_transporter if stock_value.wh_gate_injob_no_id.gatein_transporter is not None else 'null',
+            Truck_Number=stock_value.wh_gate_injob_no_id.gatein_truck_number if stock_value.wh_gate_injob_no_id.gatein_truck_number is not None else 'null',
+            Consigner=stock_value.wh_consigner if stock_value.wh_consigner is not None else 'null',
+            Consignee=stock_value.wh_consignee if stock_value.wh_consignee is not None else 'null',
+            Docs_Received=stock_value.wh_lb_job_no_id.lb_packing_list if stock_value.wh_lb_job_no_id.lb_packing_list is not None else 'null',
+            HAWB= stock_value.wh_gate_injob_no_id.gatein_hawb if stock_value.wh_gate_injob_no_id.gatein_hawb is not None else 'null',
+            Destination=stock_value.wh_gate_injob_no_id.gatein_destination if stock_value.wh_gate_injob_no_id.gatein_destination is not None else 'null',
+            Invoice_Number=stock_value.wh_gate_injob_no_id.gatein_invoice if stock_value.wh_gate_injob_no_id.gatein_invoice is not None else 'null',
+            Case_Number=stock_value.wh_po_num if stock_value.wh_po_num is not None else 'null',
+            Invoice_Qty=stock_value.wh_total_qty if stock_value.wh_total_qty is not None else 'null',
+            Invoice_Weight_kg=stock_value.wh_gross_weight if stock_value.wh_gross_weight is not None else 'null',
+            Checkin_Weight_kg=stock_value.wh_invoice_weight_unit if stock_value.wh_invoice_weight_unit is not None else 'null',
+            UOM=stock_value.wh_uom if stock_value.wh_uom is not None else 'null',
+            Length=stock_value.wh_goods_length if stock_value.wh_goods_length is not None else 'null',
+            Width=stock_value.wh_goods_width if stock_value.wh_goods_width is not None else 'null',
+            Height=stock_value.wh_goods_height if stock_value.wh_goods_height is not None else 'null',
+            Dims_Qty=stock_value.wh_goods_pieces if stock_value.wh_goods_pieces is not None else 'null',
+            Package_Type=stock_value.wh_goods_package_type if stock_value.wh_goods_package_type is not None else 'null',
+            Volume_Weight=stock_value.wh_chargeable_weight if stock_value.wh_chargeable_weight is not None else 'null',
+            CBM=stock_value.wh_cbm if stock_value.wh_cbm is not None else 'null',
+            Invoice_Value=stock_value.wh_invoice_value if stock_value.wh_invoice_value is not None else 'null',
+            Invoice_Currency=stock_value.wh_lb_job_no_id.lb_stock_invoice_currency if stock_value.wh_lb_job_no_id.lb_stock_invoice_currency is not None else 'null',
+            Invoice_INR=stock_value.wh_invoice_amount_inr if stock_value.wh_invoice_amount_inr is not None else 'null',
+            E_Way_Bill=stock_value.wh_lb_job_no_id.lb_eway_bill if stock_value.wh_lb_job_no_id.lb_eway_bill is not None else 'null',
+            E_Way_Bill_Validity=stock_value.wh_lb_job_no_id.lb_validity_date if stock_value.wh_lb_job_no_id.lb_validity_date is not None else 'null',
+            Fumigation_Status=stock_value.wh_fumigation_process if stock_value.wh_fumigation_process is not None else 'null',
+            Check_In_Out=stock_value.wh_check_in_out if stock_value.wh_check_in_out is not None else 'null',
+            Branch=stock_value.wh_branch if stock_value.wh_branch is not None else 'null',
+            Unit=stock_value.wh_unit if stock_value.wh_unit is not None else 'null',
+            Bay=stock_value.wh_bay if stock_value.wh_bay is not None else 'null',
+            Storage_Days=stock_value.wh_storage_time if stock_value.wh_storage_time is not None else 'null',
+            try:
+                # Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number if stock_value.wh_dispatch_id.dispatch_truck_number is not None else 'null',
+                Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number
+            except AttributeError:
+                Truck_Number_out='null'
+            try:
+                # Truck_Type_out=stock_value.wh_dispatch_id.dispatch_truck_type if stock_value.wh_dispatch_id.dispatch_truck_type is not None else 'null',
+                Truck_Type_out=stock_value.wh_dispatch_id.dispatch_truck_type
+            except AttributeError:
+                Truck_Type_out='null'
+            try:
+                # Truck_Depature_Time_out=stock_value.wh_dispatch_id.dispatch_depature_date if stock_value.wh_dispatch_id.dispatch_depature_date is not None else 'null',
+                Truck_Depature_Time_out=stock_value.wh_dispatch_id.dispatch_depature_date
+            except AttributeError:
+                Truck_Depature_Time_out='null'
+            try:
+                # Labels_Pasted_By=stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm if stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm is not None else 'null',
+                Labels_Pasted_By=stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm
+            except AttributeError:
+                Labels_Pasted_By='null'
+            try:
+                # MAWB=stock_value.wh_dispatch_id.dispatch_mawb if stock_value.wh_dispatch_id.dispatch_mawb is not None else 'null',
+                MAWB=stock_value.wh_dispatch_id.dispatch_mawb
+            except AttributeError:
+                MAWB='null'
+            try:
+                # Dispatch_Number=stock_value.wh_dispatch_id.dispatch_num if stock_value.wh_dispatch_id.dispatch_num is not None else 'null',
+                Dispatch_Number=stock_value.wh_dispatch_id.dispatch_num
+            except AttributeError:
+                Dispatch_Number='null'
+
+            writer.writerow([Job_Number[0],Stock_Number[0],Customer[0],Date_Of_Arrival[0],Unloading_Start_Time[0],Unloading_End_Time[0],Transporter[0],Truck_Number[0],Consigner[0],Consignee[0],Docs_Received[0],HAWB[0],Destination[0],Invoice_Number[0],Case_Number[0],Invoice_Qty[0],Invoice_Weight_kg[0],Checkin_Weight_kg[0],UOM[0],Length[0],Width[0],Height[0],Dims_Qty[0],Package_Type[0],Volume_Weight[0],CBM[0],Invoice_Value[0],Invoice_Currency[0],Invoice_INR[0],E_Way_Bill[0],E_Way_Bill_Validity[0],Fumigation_Status[0],Check_In_Out[0],Branch[0],Unit[0],Bay[0],Storage_Days[0],Truck_Number_out,Truck_Type_out,Truck_Depature_Time_out,Labels_Pasted_By,MAWB,Dispatch_Number])
+        else:
+            # Handle the case where the item is None (e.g., the object doesn't exist)
+            writer.writerow(['NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA'])
     return response

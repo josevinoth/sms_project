@@ -17,11 +17,11 @@
       <i class="fas fa-arrow-left"></i> Back
     </a>
   </div>
-  <!--    <div class="col-md-1">-->
-  <!--        <a href="{% url 'locationmaster_insert' %}" class="btn btn-success btn-block btn-lg">-->
-  <!--            <i class="fas fa-plus"></i>-->
-  <!--        </a>-->
-  <!--    </div>-->
+  <div class="col-md-1">
+    <a href="{% url 'export_stockreport' %}" class="btn btn-success btn-block btn-lg">
+      <i class="fas fa-plus"></i>
+    </a>
+  </div>
 </div>
 <hr>
 <div class="container-fluid">
@@ -139,33 +139,20 @@
             <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
         {% endif %}
     </span>
-    </div>
+  </div>
 </div>
 
 <script>
     $(document).ready(function() {
-        $('#stock_value_report').DataTable({
-        scrollY: 800,
+    $('#stock_value_report').DataTable( {
+        order: [1, 'desc' ],
+<!--        scrollY: 800,-->
         scrollX: true,
-        dom: 'Bfrtip',
+        dom: 'lBfrtip',
         buttons: [
-            'copy', 'csv', 'excel', 'print'
+            'copy', 'csv', 'excel','print'
         ]
     });
-});
-</script>
-
-<script>
-function collapse(cell){
-  var row = cell.parentElement;
-  var target_row = row.parentElement.children[row.rowIndex + 1];
-  if (target_row.style.display == 'table-row') {
-    cell.innerHTML = '+';
-    target_row.style.display = 'none';
-  } else {
-    cell.innerHTML = '-';
-    target_row.style.display = 'table-row';
-  }
-}
+} );
 </script>
 {% endblock content %}
