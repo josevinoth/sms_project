@@ -194,43 +194,191 @@ def export_stockreport_to_csv(request):
     for stock_value in data:
         # Check if the item or its attributes are None
         if stock_value is not None:
-            Job_Number=stock_value.wh_job_no if stock_value.wh_job_no is not None else 'null',
-            Stock_Number=stock_value.wh_qr_rand_num if stock_value.wh_qr_rand_num is not None else 'null',
-            Customer=stock_value.wh_customer_name if stock_value.wh_customer_name is not None else 'null',
-            Date_Of_Arrival=stock_value.wh_gate_injob_no_id.gatein_arrival_date if stock_value.wh_gate_injob_no_id.gatein_arrival_date is not None else 'null',
-            Unloading_Start_Time=stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time if stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time is not None else 'null',
-            Unloading_End_Time=stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time if stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time is not None else 'null',
-            Transporter=stock_value.wh_gate_injob_no_id.gatein_transporter if stock_value.wh_gate_injob_no_id.gatein_transporter is not None else 'null',
-            Truck_Number=stock_value.wh_gate_injob_no_id.gatein_truck_number if stock_value.wh_gate_injob_no_id.gatein_truck_number is not None else 'null',
-            Consigner=stock_value.wh_consigner if stock_value.wh_consigner is not None else 'null',
-            Consignee=stock_value.wh_consignee if stock_value.wh_consignee is not None else 'null',
-            Docs_Received=stock_value.wh_lb_job_no_id.lb_packing_list if stock_value.wh_lb_job_no_id.lb_packing_list is not None else 'null',
-            HAWB= stock_value.wh_gate_injob_no_id.gatein_hawb if stock_value.wh_gate_injob_no_id.gatein_hawb is not None else 'null',
-            Destination=stock_value.wh_gate_injob_no_id.gatein_destination if stock_value.wh_gate_injob_no_id.gatein_destination is not None else 'null',
-            Invoice_Number=stock_value.wh_gate_injob_no_id.gatein_invoice if stock_value.wh_gate_injob_no_id.gatein_invoice is not None else 'null',
-            Case_Number=stock_value.wh_po_num if stock_value.wh_po_num is not None else 'null',
-            Invoice_Qty=stock_value.wh_total_qty if stock_value.wh_total_qty is not None else 'null',
-            Invoice_Weight_kg=stock_value.wh_gross_weight if stock_value.wh_gross_weight is not None else 'null',
-            Checkin_Weight_kg=stock_value.wh_invoice_weight_unit if stock_value.wh_invoice_weight_unit is not None else 'null',
-            UOM=stock_value.wh_uom if stock_value.wh_uom is not None else 'null',
-            Length=stock_value.wh_goods_length if stock_value.wh_goods_length is not None else 'null',
-            Width=stock_value.wh_goods_width if stock_value.wh_goods_width is not None else 'null',
-            Height=stock_value.wh_goods_height if stock_value.wh_goods_height is not None else 'null',
-            Dims_Qty=stock_value.wh_goods_pieces if stock_value.wh_goods_pieces is not None else 'null',
-            Package_Type=stock_value.wh_goods_package_type if stock_value.wh_goods_package_type is not None else 'null',
-            Volume_Weight=stock_value.wh_chargeable_weight if stock_value.wh_chargeable_weight is not None else 'null',
-            CBM=stock_value.wh_cbm if stock_value.wh_cbm is not None else 'null',
-            Invoice_Value=stock_value.wh_invoice_value if stock_value.wh_invoice_value is not None else 'null',
-            Invoice_Currency=stock_value.wh_lb_job_no_id.lb_stock_invoice_currency if stock_value.wh_lb_job_no_id.lb_stock_invoice_currency is not None else 'null',
-            Invoice_INR=stock_value.wh_invoice_amount_inr if stock_value.wh_invoice_amount_inr is not None else 'null',
-            E_Way_Bill=stock_value.wh_lb_job_no_id.lb_eway_bill if stock_value.wh_lb_job_no_id.lb_eway_bill is not None else 'null',
-            E_Way_Bill_Validity=stock_value.wh_lb_job_no_id.lb_validity_date if stock_value.wh_lb_job_no_id.lb_validity_date is not None else 'null',
-            Fumigation_Status=stock_value.wh_fumigation_process if stock_value.wh_fumigation_process is not None else 'null',
-            Check_In_Out=stock_value.wh_check_in_out if stock_value.wh_check_in_out is not None else 'null',
-            Branch=stock_value.wh_branch if stock_value.wh_branch is not None else 'null',
-            Unit=stock_value.wh_unit if stock_value.wh_unit is not None else 'null',
-            Bay=stock_value.wh_bay if stock_value.wh_bay is not None else 'null',
-            Storage_Days=stock_value.wh_storage_time if stock_value.wh_storage_time is not None else 'null',
+            try:
+                Job_Number=stock_value.wh_job_no
+            except AttributeError:
+                Job_Number='null'
+
+            try:
+                Stock_Number=stock_value.wh_qr_rand_num
+            except AttributeError:
+                stock_value='null'
+
+            try:
+                Customer=stock_value.wh_customer_name
+            except AttributeError:
+                Customer='null'
+
+            try:
+                Date_Of_Arrival=stock_value.wh_gate_injob_no_id.gatein_arrival_date
+            except AttributeError:
+                Date_Of_Arrival='null'
+
+            try:
+                Unloading_Start_Time=stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time
+            except:
+                Unloading_Start_Time='null'
+
+            try:
+                Unloading_End_Time=stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time
+            except:
+                Unloading_End_Time='null'
+
+            try:
+                Transporter=stock_value.wh_gate_injob_no_id.gatein_transporter
+            except:
+                Transporter='null'
+
+            try:
+                Truck_Number=stock_value.wh_gate_injob_no_id.gatein_truck_number
+            except:
+                Truck_Number='null'
+
+            try:
+                Consigner=stock_value.wh_consigner
+            except:
+                Consigner='null'
+
+            try:
+                Consignee=stock_value.wh_consignee
+            except:
+                Consignee='null'
+
+            try:
+                Docs_Received=stock_value.wh_lb_job_no_id.lb_packing_list
+            except:
+                Docs_Received='null'
+
+            try:
+                HAWB= stock_value.wh_gate_injob_no_id.gatein_hawb
+            except:
+                HAWB='null'
+
+            try:
+                Destination=stock_value.wh_gate_injob_no_id.gatein_destination
+            except:
+                Destination='null'
+
+            try:
+                Invoice_Number=stock_value.wh_gate_injob_no_id.gatein_invoice
+            except:
+                Invoice_Number='null'
+
+            try:
+                Case_Number=stock_value.wh_po_num
+            except:
+                Case_Number='null'
+
+            try:
+                Invoice_Qty=stock_value.wh_total_qty
+            except:
+                Invoice_Qty='null'
+
+            try:
+                Invoice_Weight_kg=stock_value.wh_gross_weight
+            except:
+                Invoice_Weight_kg='null'
+
+            try:
+                Checkin_Weight_kg=stock_value.wh_invoice_weight_unit
+            except:
+                Checkin_Weight_kg='null'
+
+            try:
+                UOM=stock_value.wh_uom
+            except:
+                UOM='null'
+
+            try:
+                Length=stock_value.wh_goods_length
+            except:
+                Length='null'
+
+            try:
+                Width=stock_value.wh_goods_width
+            except:
+                Width='null'
+
+            try:
+                Height=stock_value.wh_goods_height
+            except:
+                Height='null'
+
+            try:
+                Dims_Qty=stock_value.wh_goods_pieces
+            except:
+                Dims_Qty='null'
+
+            try:
+                Package_Type=stock_value.wh_goods_package_type
+            except:
+                Package_Type='null'
+
+            try:
+                Volume_Weight=stock_value.wh_chargeable_weight
+            except:
+                Volume_Weight='null'
+
+            try:
+                CBM=stock_value.wh_cbm
+            except:
+                CBM='null'
+
+            try:
+                Invoice_Value=stock_value.wh_invoice_value
+            except:
+                Invoice_Value='null'
+
+            try:
+                Invoice_Currency=stock_value.wh_lb_job_no_id.lb_stock_invoice_currency
+            except:
+                Invoice_Currency='null'
+
+            try:
+                Invoice_INR=stock_value.wh_invoice_amount_inr
+            except:
+                Invoice_INR='null'
+
+            try:
+                E_Way_Bill=stock_value.wh_lb_job_no_id.lb_eway_bill
+            except:
+                E_Way_Bill='null'
+
+            try:
+                E_Way_Bill_Validity=stock_value.wh_lb_job_no_id.lb_validity_date
+            except:
+                E_Way_Bill_Validity='null'
+
+            try:
+                Fumigation_Status=stock_value.wh_fumigation_process
+            except:
+                Fumigation_Status='null'
+
+            try:
+                Check_In_Out=stock_value.wh_check_in_out
+            except:
+                Check_In_Out='null'
+
+            try:
+                Branch=stock_value.wh_branch
+            except:
+                Branch='null'
+
+            try:
+                Unit=stock_value.wh_unit
+            except:
+                Unit='null'
+
+            try:
+                Bay=stock_value.wh_bay
+            except:
+                Bay='null'
+
+            try:
+                Storage_Days=stock_value.wh_storage_time
+            except:
+                Storage_Days='null'
+
             try:
                 # Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number if stock_value.wh_dispatch_id.dispatch_truck_number is not None else 'null',
                 Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number
