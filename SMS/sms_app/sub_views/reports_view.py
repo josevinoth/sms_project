@@ -192,19 +192,19 @@ def stock_value_reports(request):
         hyd_total_cud_val = 0
 
     # Pondichery Warehouse
-    pny_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2, wh_check_in_out=1,wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    pny_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_check_in_out=1,wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if pny_in_stock_value_cud is not None:
         pny_in_stock_value_cud_val = pny_in_stock_value_cud
     else:
         pny_in_stock_value_cud_val = 0
 
-    pny_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_check_in_out=2,wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    pny_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_check_in_out=2,wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if pny_out_stock_value_cud is not None:
         pny_out_stock_value_cud_val = pny_out_stock_value_cud
     else:
         pny_out_stock_value_cud_val = 0
 
-    pny_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    pny_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if pny_total_cud is not None:
         pny_total_cud_val = pny_total_cud
     else:
