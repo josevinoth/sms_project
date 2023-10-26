@@ -176,6 +176,30 @@ def stock_value_reports(request):
         out_stock_value_cum_val=out_stock_value_cum
     else:
         out_stock_value_cum_val=0
+
+    # Calculate Check - In & Check - Out stock value - Current Day
+    # Get the current date
+    current_date = datetime.now()
+    # Calculate the first day of the current month
+    first_day_of_current_month = datetime(current_date.year, current_date.month, 1)
+
+    maa_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=1,wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    if maa_in_stock_value_cud is not None:
+        maa_in_stock_value_cud_val = maa_in_stock_value_cud
+    else:
+        maa_in_stock_value_cud_val = 0
+
+    maa_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=2,wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    if maa_out_stock_value_cud is not None:
+        maa_out_stock_value_cud_val = maa_out_stock_value_cud
+    else:
+        maa_out_stock_value_cud_val = 0
+
+    maa_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=2, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    if maa_total_cud is not None:
+        maa_total_cud_val = maa_total_cud
+    else:
+        maa_total_cud_val = 0
     context = {
                 'stock_value_list': Loadingbay_Info.objects.all(),
                 'first_name': first_name,
@@ -187,6 +211,9 @@ def stock_value_reports(request):
                 'out_stock_value_3m': round(out_stock_value_3m_val,0),
                 'in_stock_value_cum': round(in_stock_value_cum_val,0),
                 'out_stock_value_cum': round(out_stock_value_cum_val,0),
+                'maa_in_stock_value_cud': round(maa_in_stock_value_cud_val,0),
+                'maa_out_stock_value_cud': round(maa_out_stock_value_cud_val,0),
+                'maa_total_cud': round(maa_total_cud_val,0),
                 'first_day_of_month': first_day_of_month,
                 # 'goods_list': goods_list,
                 # 'row': row,
