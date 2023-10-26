@@ -121,7 +121,7 @@ def stock_value_reports(request):
         except TypeError:
             pass
     print("After Loop")
-    goods_list=Warehouse_goods_info.objects.all()
+    goods_list=(Warehouse_goods_info.objects.all()).order_by('id')
     page_number = request.GET.get('page')
     paginator = Paginator(goods_list, 50)
     page_obj = paginator.get_page(page_number)
@@ -181,7 +181,7 @@ def damage_report_pdf(request):
 
 def export_stockreport_to_csv(request):
     # Fetch your data from the model or any other data source
-    data = Warehouse_goods_info.objects.all()
+    data = (Warehouse_goods_info.objects.all()).order_by('id')
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="Stock_Report.csv"'
