@@ -122,7 +122,7 @@ def stock_value_reports(request):
     print("After Loop")
     goods_list=Warehouse_goods_info.objects.all()
     page_number = request.GET.get('page')
-    paginator = Paginator(goods_list, 50)
+    paginator = Paginator(goods_list, 5)
     page_obj = paginator.get_page(page_number)
     context = {
                 'stock_value_list': Loadingbay_Info.objects.all(),
@@ -196,22 +196,22 @@ def export_stockreport_to_csv(request):
         if stock_value is not None:
             try:
                 Job_Number=stock_value.wh_job_no
-            except AttributeError:
+            except:
                 Job_Number='null'
 
             try:
                 Stock_Number=stock_value.wh_qr_rand_num
-            except AttributeError:
-                stock_value='null'
+            except:
+                Stock_Number='null'
 
             try:
                 Customer=stock_value.wh_customer_name
-            except AttributeError:
+            except:
                 Customer='null'
 
             try:
                 Date_Of_Arrival=stock_value.wh_gate_injob_no_id.gatein_arrival_date
-            except AttributeError:
+            except:
                 Date_Of_Arrival='null'
 
             try:
@@ -382,35 +382,36 @@ def export_stockreport_to_csv(request):
             try:
                 # Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number if stock_value.wh_dispatch_id.dispatch_truck_number is not None else 'null',
                 Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number
-            except AttributeError:
+            except:
                 Truck_Number_out='null'
+
             try:
                 # Truck_Type_out=stock_value.wh_dispatch_id.dispatch_truck_type if stock_value.wh_dispatch_id.dispatch_truck_type is not None else 'null',
                 Truck_Type_out=stock_value.wh_dispatch_id.dispatch_truck_type
-            except AttributeError:
+            except:
                 Truck_Type_out='null'
             try:
                 # Truck_Depature_Time_out=stock_value.wh_dispatch_id.dispatch_depature_date if stock_value.wh_dispatch_id.dispatch_depature_date is not None else 'null',
                 Truck_Depature_Time_out=stock_value.wh_dispatch_id.dispatch_depature_date
-            except AttributeError:
+            except:
                 Truck_Depature_Time_out='null'
             try:
                 # Labels_Pasted_By=stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm if stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm is not None else 'null',
                 Labels_Pasted_By=stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm
-            except AttributeError:
+            except:
                 Labels_Pasted_By='null'
             try:
                 # MAWB=stock_value.wh_dispatch_id.dispatch_mawb if stock_value.wh_dispatch_id.dispatch_mawb is not None else 'null',
                 MAWB=stock_value.wh_dispatch_id.dispatch_mawb
-            except AttributeError:
+            except:
                 MAWB='null'
             try:
                 # Dispatch_Number=stock_value.wh_dispatch_id.dispatch_num if stock_value.wh_dispatch_id.dispatch_num is not None else 'null',
                 Dispatch_Number=stock_value.wh_dispatch_id.dispatch_num
-            except AttributeError:
+            except:
                 Dispatch_Number='null'
 
-            writer.writerow([Job_Number[0],Stock_Number[0],Customer[0],Date_Of_Arrival[0],Unloading_Start_Time[0],Unloading_End_Time[0],Transporter[0],Truck_Number[0],Consigner[0],Consignee[0],Docs_Received[0],HAWB[0],Destination[0],Invoice_Number[0],Case_Number[0],Invoice_Qty[0],Invoice_Weight_kg[0],Checkin_Weight_kg[0],UOM[0],Length[0],Width[0],Height[0],Dims_Qty[0],Package_Type[0],Volume_Weight[0],CBM[0],Invoice_Value[0],Invoice_Currency[0],Invoice_INR[0],E_Way_Bill[0],E_Way_Bill_Validity[0],Fumigation_Status[0],Check_In_Out[0],Branch[0],Unit[0],Bay[0],Storage_Days[0],Truck_Number_out,Truck_Type_out,Truck_Depature_Time_out,Labels_Pasted_By,MAWB,Dispatch_Number])
+            writer.writerow([Job_Number,Stock_Number,Customer,Date_Of_Arrival,Unloading_Start_Time,Unloading_End_Time,Transporter,Truck_Number,Consigner,Consignee,Docs_Received,HAWB,Destination,Invoice_Number,Case_Number,Invoice_Qty,Invoice_Weight_kg,Checkin_Weight_kg,UOM,Length,Width,Height,Dims_Qty,Package_Type,Volume_Weight,CBM,Invoice_Value,Invoice_Currency,Invoice_INR,E_Way_Bill,E_Way_Bill_Validity,Fumigation_Status,Check_In_Out,Branch,Unit,Bay,Storage_Days,Truck_Number_out,Truck_Type_out,Truck_Depature_Time_out,Labels_Pasted_By,MAWB,Dispatch_Number])
         else:
             # Handle the case where the item is None (e.g., the object doesn't exist)
             writer.writerow(['NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA'])
