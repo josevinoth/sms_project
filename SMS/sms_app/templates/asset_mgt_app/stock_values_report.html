@@ -6,122 +6,140 @@
     <div class="col-2 rounded text-center bg-info">
       <h3>Stock Value Report</h3>
     </div>
-    <div class="col-5"></div>
+    <div class="col-1"></div>
+    <div class="col-4"></div>
   </div>
-</div>
-<div class="container-fluid row">
-  <div class="col-md-1">
-    <a href="{% url 'warehouse_reports' %}" class="btn btn-primary btn-block btn-lg">
-      <i class="fas fa-arrow-left"></i> Back
-    </a>
+  <br>
+  <div class="btn-group" role="group" aria-label="Basic example">
+    <button type="button" class="btn btn-danger">All</button>
+    <button type="button" class="btn btn-success"> Check-In: <i class="fas fa-rupee-sign"></i> <b>{{in_stock_value_all}}</b></button>
+    <button type="button" class="btn btn-success"> Check-Out: <i class="fas fa-rupee-sign"></i> <b>{{out_stock_value_all}}</b></button>
   </div>
-  <div class="col-md-1.5">
-    <a href="{% url 'export_stockreport' %}" class="btn btn-warning btn-block btn-lg">
-      <i class="fas fa-file-csv"></i> Stock Report
-    </a>
+  <div class="btn-group">
+    <button type="button" class="btn btn-danger">Last 3 Months (Since {{first_day_of_month}})</button>
+    <button type="button" class="btn btn-success"> Check-In: <i class="fas fa-rupee-sign"></i> <b>{{in_stock_value_3m}}</b></button>
+    <button type="button" class="btn btn-success"> Check-Out: <i class="fas fa-rupee-sign"></i> <b>{{out_stock_value_3m}}</b></button>
   </div>
-</div>
-<hr>
-<div class="container-fluid">
-  <table  id="stock_value_report" class="table "  >
-    <thead class="thead-dark">
-    <tr>
-      <th>Job Number</th>
-      <th>Stock Number</th>
-      <th>Customer</th>
-      <th>Date Of Arrival</th>
-      <th>Unloading Start Time</th>
-      <th>Unloading End Time</th>
-      <th>Transporter</th>
-      <th>Truck Number</th>
-      <th>Consigner</th>
-      <th>Consignee</th>
-      <th>Docs Received</th>
-      <th>HAWB</th>
-      <th>Destination</th>
-      <th>Invoice Number</th>
-      <th>Case Number</th>
-      <th>Invoice Qty</th>
-      <th>Invoice Weight (kg)</th>
-      <th>Checkin Weight (kg)</th>
-      <th>UOM</th>
-      <th>Length</th>
-      <th>Width</th>
-      <th>Height</th>
-      <th>Dims Qty</th>
-      <th>Package Type</th>
-      <th>Volume Weight</th>
-      <th>CBM</th>
-      <th>Invoice Value</th>
-      <th>Invoice Currency</th>
-      <th>Invoice (INR)</th>
-      <th>E-Way Bill#</th>
-      <th>E-Way Bill Validity</th>
-      <th>Fumigation Status</th>
-      <th>Check In-Out?</th>
-      <th>Branch</th>
-      <th>Unit</th>
-      <th>Bay</th>
-      <th>Storage Days</th>
-      <th>Truck_Number(Out)</th>
-      <th>Truck_Type(Out)</th>
-      <th>Truck_Depature_Time(Out)</th>
-      <th>Labels_Pasted_By</th>
-      <th>MAWB</th>
-      <th>Dispatch_Number</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for stock_value in page_obj %}
-    <tr>
-      <td> {{stock_value.wh_job_no}}</td>
-      <td> {{stock_value.wh_qr_rand_num}}</td>
-      <td> {{stock_value.wh_customer_name}}</td>
-      <td> {{stock_value.wh_gate_injob_no_id.gatein_arrival_date}}</td>
-      <td> {{stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time}}</td>
-      <td> {{stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time}}</td>
-      <td> {{stock_value.wh_gate_injob_no_id.gatein_transporter}}</td>
-      <td> {{stock_value.wh_gate_injob_no_id.gatein_truck_number}}</td>
-      <td> {{stock_value.wh_consigner}}</td>
-      <td> {{stock_value.wh_consignee}}</td>
-      <td> {{stock_value.wh_lb_job_no_id.lb_packing_list}}</td>
-      <td> {{stock_value.wh_gate_injob_no_id.gatein_hawb}}</td>
-      <td> {{stock_value.wh_gate_injob_no_id.gatein_destination}}</td>
-      <td> {{stock_value.wh_gate_injob_no_id.gatein_invoice}}</td>
-      <td> {{stock_value.wh_po_num}}</td>
-      <td> {{stock_value.wh_total_qty}}</td>
-      <td> {{stock_value.wh_gross_weight}}</td>
-      <td> {{stock_value.wh_invoice_weight_unit}}</td>
-      <td> {{stock_value.wh_uom}}</td>
-      <td> {{stock_value.wh_goods_length}}</td>
-      <td> {{stock_value.wh_goods_width}}</td>
-      <td> {{stock_value.wh_goods_height}}</td>
-      <td> {{stock_value.wh_goods_pieces}}</td>
-      <td> {{stock_value.wh_goods_package_type}}</td>
-      <td> {{stock_value.wh_chargeable_weight}}</td>
-      <td> {{stock_value.wh_cbm}}</td>
-      <td> {{stock_value.wh_invoice_value}}</td>
-      <td> {{stock_value.wh_lb_job_no_id.lb_stock_invoice_currency}}</td>
-      <td> {{stock_value.wh_invoice_amount_inr}}</td>
-      <td> {{stock_value.wh_lb_job_no_id.lb_eway_bill}}</td>
-      <td> {{stock_value.wh_lb_job_no_id.lb_validity_date}}</td>
-      <td> {{stock_value.wh_fumigation_process}}</td>
-      <td> {{stock_value.wh_check_in_out}}</td>
-      <td> {{stock_value.wh_branch}}</td>
-      <td> {{stock_value.wh_unit}}</td>
-      <td> {{stock_value.wh_bay}}</td>
-      <td> {{stock_value.wh_storage_time }}</td>
-      <td> {{stock_value.wh_dispatch_id.dispatch_truck_number}}</td>
-      <td> {{stock_value.wh_dispatch_id.dispatch_truck_type}}</td>
-      <td> {{stock_value.wh_dispatch_id.dispatch_depature_date}}</td>
-      <td> {{stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm}}</td>
-      <td> {{stock_value.wh_dispatch_id.dispatch_mawb}}</td>
-      <td> {{stock_value.wh_dispatch_id.dispatch_num}}</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  <div class="pagination">
+  <div class="btn-group">
+    <button type="button" class="btn btn-danger">Current Month</button>
+    <button type="button" class="btn btn-success"> Check-In: <i class="fas fa-rupee-sign"></i> <b>{{in_stock_value_cum}}</b></button>
+    <button type="button" class="btn btn-success"> Check-Out: <i class="fas fa-rupee-sign"></i> <b>{{out_stock_value_cum}}</b></button>
+  </div>
+  <br>
+  <br>
+  <div class="row">
+    <div class="col-1">
+      <a href="{% url 'warehouse_reports' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+    <div class="col-2">
+      <a href="{% url 'export_stockreport' %}" class="btn btn-warning btn-block btn-lg">
+        <i class="fas fa-file-csv"></i> Stock Report
+      </a>
+    </div>
+  </div>
+  <hr>
+  <div class="container-fluid">
+    <table  id="stock_value_report" class="table "  >
+      <thead class="thead-dark">
+      <tr>
+        <th>Job Number</th>
+        <th>Stock Number</th>
+        <th>Customer</th>
+        <th>Date Of Arrival</th>
+        <th>Unloading Start Time</th>
+        <th>Unloading End Time</th>
+        <th>Transporter</th>
+        <th>Truck Number</th>
+        <th>Consigner</th>
+        <th>Consignee</th>
+        <th>Docs Received</th>
+        <th>HAWB</th>
+        <th>Destination</th>
+        <th>Invoice Number</th>
+        <th>Case Number</th>
+        <th>Invoice Qty</th>
+        <th>Invoice Weight (kg)</th>
+        <th>Checkin Weight (kg)</th>
+        <th>UOM</th>
+        <th>Length</th>
+        <th>Width</th>
+        <th>Height</th>
+        <th>Dims Qty</th>
+        <th>Package Type</th>
+        <th>Volume Weight</th>
+        <th>CBM</th>
+        <th>Invoice Value</th>
+        <th>Invoice Currency</th>
+        <th>Invoice (INR)</th>
+        <th>E-Way Bill#</th>
+        <th>E-Way Bill Validity</th>
+        <th>Fumigation Status</th>
+        <th>Check In-Out?</th>
+        <th>Branch</th>
+        <th>Unit</th>
+        <th>Bay</th>
+        <th>Storage Days</th>
+        <th>Truck_Number(Out)</th>
+        <th>Truck_Type(Out)</th>
+        <th>Truck_Depature_Time(Out)</th>
+        <th>Labels_Pasted_By</th>
+        <th>MAWB</th>
+        <th>Dispatch_Number</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for stock_value in page_obj %}
+      <tr>
+        <td> {{stock_value.wh_job_no}}</td>
+        <td> {{stock_value.wh_qr_rand_num}}</td>
+        <td> {{stock_value.wh_customer_name}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_arrival_date}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_transporter}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_truck_number}}</td>
+        <td> {{stock_value.wh_consigner}}</td>
+        <td> {{stock_value.wh_consignee}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_packing_list}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_hawb}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_destination}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_invoice}}</td>
+        <td> {{stock_value.wh_po_num}}</td>
+        <td> {{stock_value.wh_total_qty}}</td>
+        <td> {{stock_value.wh_gross_weight}}</td>
+        <td> {{stock_value.wh_invoice_weight_unit}}</td>
+        <td> {{stock_value.wh_uom}}</td>
+        <td> {{stock_value.wh_goods_length}}</td>
+        <td> {{stock_value.wh_goods_width}}</td>
+        <td> {{stock_value.wh_goods_height}}</td>
+        <td> {{stock_value.wh_goods_pieces}}</td>
+        <td> {{stock_value.wh_goods_package_type}}</td>
+        <td> {{stock_value.wh_chargeable_weight}}</td>
+        <td> {{stock_value.wh_cbm}}</td>
+        <td> {{stock_value.wh_invoice_value}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_stock_invoice_currency}}</td>
+        <td> {{stock_value.wh_invoice_amount_inr}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_eway_bill}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_validity_date}}</td>
+        <td> {{stock_value.wh_fumigation_process}}</td>
+        <td> {{stock_value.wh_check_in_out}}</td>
+        <td> {{stock_value.wh_branch}}</td>
+        <td> {{stock_value.wh_unit}}</td>
+        <td> {{stock_value.wh_bay}}</td>
+        <td> {{stock_value.wh_storage_time }}</td>
+        <td> {{stock_value.wh_dispatch_id.dispatch_truck_number}}</td>
+        <td> {{stock_value.wh_dispatch_id.dispatch_truck_type}}</td>
+        <td> {{stock_value.wh_dispatch_id.dispatch_depature_date}}</td>
+        <td> {{stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm}}</td>
+        <td> {{stock_value.wh_dispatch_id.dispatch_mawb}}</td>
+        <td> {{stock_value.wh_dispatch_id.dispatch_num}}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
             <a class="btn btn-warning" href="?page=1">First</a>
@@ -137,10 +155,10 @@
             <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
         {% endif %}
     </span>
+    </div>
   </div>
-</div>
 
-<script>
+  <script>
     $(document).ready(function() {
     $('#stock_value_report').DataTable( {
         order: [3, 'desc' ],
@@ -153,4 +171,4 @@
     });
 } );
 </script>
-{% endblock content %}
+  {% endblock content %}

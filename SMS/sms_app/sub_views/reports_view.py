@@ -7,9 +7,9 @@ from django.template.loader import get_template
 from django.http import HttpResponse
 from django.utils import timezone
 from xhtml2pdf import pisa
-from ..models import Check_in_out,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
-from django.db import connection
-from datetime import date, datetime
+from ..models import Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
+from django.db.models.aggregates import Sum
+from datetime import date, datetime,timedelta
 
 @login_required(login_url='login_page')
 def reports(request):
@@ -125,11 +125,43 @@ def stock_value_reports(request):
     page_number = request.GET.get('page')
     paginator = Paginator(goods_list, 50)
     page_obj = paginator.get_page(page_number)
+
+    ########### Calculate Check-In & Check-Out stock value####################
+    # Calculate the date 90 days before today
+    ninety_days_ago = datetime.now() - timedelta(days=90)
+
+    # Calculate the first day of the month for the calculated date
+    first_day_of_month = datetime(ninety_days_ago.year, ninety_days_ago.month, 1)
+    print('first_day_of_month',first_day_of_month)
+
+    # Calculate Check - In & Check - Out stock value - All
+    in_stock_value_all=(Warehouse_goods_info.objects.filter(wh_check_in_out=1)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    out_stock_value_all=(Warehouse_goods_info.objects.filter(wh_check_in_out=2)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+
+    # Calculate Check - In & Check - Out stock value - last 3 Months
+    in_stock_value_3m = (Warehouse_goods_info.objects.filter(wh_check_in_out=1,wh_checkin_time__gte=first_day_of_month)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    out_stock_value_3m = (Warehouse_goods_info.objects.filter(wh_check_in_out=2,wh_checkin_time__gte=first_day_of_month)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+
+    # Calculate Check - In & Check - Out stock value - Current Month
+    # Get the current date
+    current_date = datetime.now()
+    # Calculate the first day of the current month
+    first_day_of_current_month = datetime(current_date.year, current_date.month, 1)
+    in_stock_value_cum = (Warehouse_goods_info.objects.filter(wh_check_in_out=1, wh_checkin_time__gte=first_day_of_current_month)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    out_stock_value_cum =(Warehouse_goods_info.objects.filter(wh_check_in_out=2, wh_checkin_time__gte=first_day_of_current_month)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+
     context = {
                 'stock_value_list': Loadingbay_Info.objects.all(),
                 'first_name': first_name,
                 'checkin_goods_list': checkin_goods_list,
                 'page_obj': page_obj,
+                'in_stock_value_all': in_stock_value_all,
+                'out_stock_value_all': out_stock_value_all,
+                'in_stock_value_3m': in_stock_value_3m,
+                'out_stock_value_3m': out_stock_value_3m,
+                'in_stock_value_cum': in_stock_value_cum,
+                'out_stock_value_cum': out_stock_value_cum,
+                'first_day_of_month': first_day_of_month,
                 # 'goods_list': goods_list,
                 # 'row': row,
                  }
