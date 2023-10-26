@@ -346,7 +346,7 @@ def export_stockreport_to_csv(request):
                 E_Way_Bill='null'
 
             try:
-                E_Way_Bill_Validity=stock_value.wh_lb_job_no_id.lb_validity_date
+                E_Way_Bill_Validity=((stock_value.wh_lb_job_no_id.lb_validity_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
             except:
                 E_Way_Bill_Validity='null'
 
@@ -393,7 +393,7 @@ def export_stockreport_to_csv(request):
                 Truck_Type_out='null'
             try:
                 # Truck_Depature_Time_out=stock_value.wh_dispatch_id.dispatch_depature_date if stock_value.wh_dispatch_id.dispatch_depature_date is not None else 'null',
-                Truck_Depature_Time_out=stock_value.wh_dispatch_id.dispatch_depature_date
+                Truck_Depature_Time_out=((stock_value.wh_dispatch_id.dispatch_depature_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
             except:
                 Truck_Depature_Time_out='null'
             try:
