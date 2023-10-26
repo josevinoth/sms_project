@@ -1,6 +1,4 @@
 {% extends "asset_mgt_app/base.html" %}
-
-
 {% block content %}
 <div class="container-fluid" style="padding:15px;">
   <div class="row">
@@ -17,9 +15,9 @@
       <i class="fas fa-arrow-left"></i> Back
     </a>
   </div>
-  <div class="col-md-1">
-    <a href="{% url 'export_stockreport' %}" class="btn btn-success btn-block btn-lg">
-      <i class="fas fa-plus"></i>
+  <div class="col-md-1.5">
+    <a href="{% url 'export_stockreport' %}" class="btn btn-warning btn-block btn-lg">
+      <i class="fas fa-file-csv"></i> Stock Report
     </a>
   </div>
 </div>

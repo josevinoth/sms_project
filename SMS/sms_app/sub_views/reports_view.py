@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.template.loader import get_template
 from django.http import HttpResponse
+from django.utils import timezone
 from xhtml2pdf import pisa
 from ..models import Check_in_out,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
 from django.db import connection
@@ -122,7 +123,7 @@ def stock_value_reports(request):
     print("After Loop")
     goods_list=Warehouse_goods_info.objects.all()
     page_number = request.GET.get('page')
-    paginator = Paginator(goods_list, 5)
+    paginator = Paginator(goods_list, 50)
     page_obj = paginator.get_page(page_number)
     context = {
                 'stock_value_list': Loadingbay_Info.objects.all(),
@@ -210,17 +211,17 @@ def export_stockreport_to_csv(request):
                 Customer='null'
 
             try:
-                Date_Of_Arrival=stock_value.wh_gate_injob_no_id.gatein_arrival_date
+                Date_Of_Arrival=((stock_value.wh_gate_injob_no_id.gatein_arrival_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
             except:
                 Date_Of_Arrival='null'
 
             try:
-                Unloading_Start_Time=stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time
+                Unloading_Start_Time=((stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
             except:
                 Unloading_Start_Time='null'
 
             try:
-                Unloading_End_Time=stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time
+                Unloading_End_Time=((stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
             except:
                 Unloading_End_Time='null'
 
