@@ -132,35 +132,61 @@ def stock_value_reports(request):
 
     # Calculate the first day of the month for the calculated date
     first_day_of_month = datetime(ninety_days_ago.year, ninety_days_ago.month, 1)
-    print('first_day_of_month',first_day_of_month)
 
     # Calculate Check - In & Check - Out stock value - All
     in_stock_value_all=(Warehouse_goods_info.objects.filter(wh_check_in_out=1)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    if in_stock_value_all is not None:
+        in_stock_value_all_val=in_stock_value_all
+    else:
+        in_stock_value_all_val=0
+
     out_stock_value_all=(Warehouse_goods_info.objects.filter(wh_check_in_out=2)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    if out_stock_value_all is not None:
+        out_stock_value_all_val = out_stock_value_all
+    else:
+        out_stock_value_all_val = 0
 
     # Calculate Check - In & Check - Out stock value - last 3 Months
     in_stock_value_3m = (Warehouse_goods_info.objects.filter(wh_check_in_out=1,wh_checkin_time__gte=first_day_of_month)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    if in_stock_value_3m is not None:
+        in_stock_value_3m_val = in_stock_value_3m
+    else:
+        in_stock_value_3m_val = 0
+
     out_stock_value_3m = (Warehouse_goods_info.objects.filter(wh_check_in_out=2,wh_checkin_time__gte=first_day_of_month)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    if out_stock_value_3m is not None:
+        out_stock_value_3m_val=out_stock_value_3m
+    else:
+        out_stock_value_3m_val = 0
 
     # Calculate Check - In & Check - Out stock value - Current Month
     # Get the current date
     current_date = datetime.now()
     # Calculate the first day of the current month
     first_day_of_current_month = datetime(current_date.year, current_date.month, 1)
-    in_stock_value_cum = (Warehouse_goods_info.objects.filter(wh_check_in_out=1, wh_checkin_time__gte=first_day_of_current_month)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    out_stock_value_cum =(Warehouse_goods_info.objects.filter(wh_check_in_out=2, wh_checkin_time__gte=first_day_of_current_month)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
 
+    in_stock_value_cum = (Warehouse_goods_info.objects.filter(wh_check_in_out=1, wh_checkin_time__gte=first_day_of_current_month)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    if in_stock_value_cum is not None:
+        in_stock_value_cum_val=in_stock_value_cum
+    else:
+        in_stock_value_cum_val = 0
+
+    out_stock_value_cum =(Warehouse_goods_info.objects.filter(wh_check_in_out=2, wh_checkin_time__gte=first_day_of_current_month)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    if out_stock_value_cum is not None:
+        out_stock_value_cum_val=out_stock_value_cum
+    else:
+        out_stock_value_cum_val=0
     context = {
                 'stock_value_list': Loadingbay_Info.objects.all(),
                 'first_name': first_name,
                 'checkin_goods_list': checkin_goods_list,
                 'page_obj': page_obj,
-                'in_stock_value_all': in_stock_value_all,
-                'out_stock_value_all': out_stock_value_all,
-                'in_stock_value_3m': in_stock_value_3m,
-                'out_stock_value_3m': out_stock_value_3m,
-                'in_stock_value_cum': in_stock_value_cum,
-                'out_stock_value_cum': out_stock_value_cum,
+                'in_stock_value_all': round(in_stock_value_all_val,0),
+                'out_stock_value_all': round(out_stock_value_all_val,0),
+                'in_stock_value_3m': round(in_stock_value_3m_val,0),
+                'out_stock_value_3m': round(out_stock_value_3m_val,0),
+                'in_stock_value_cum': round(in_stock_value_cum_val,0),
+                'out_stock_value_cum': round(out_stock_value_cum_val,0),
                 'first_day_of_month': first_day_of_month,
                 # 'goods_list': goods_list,
                 # 'row': row,
