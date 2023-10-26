@@ -152,19 +152,19 @@ def stock_value_reports(request):
         maa_total_cud_val = 0
 
     # Bengaluru Warehouse
-    blr_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2, wh_check_in_out=1, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    blr_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_check_in_out=1, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if blr_in_stock_value_cud is not None:
         blr_in_stock_value_cud_val = blr_in_stock_value_cud
     else:
         blr_in_stock_value_cud_val = 0
 
-    blr_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2, wh_check_in_out=2, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    blr_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_check_in_out=2, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if blr_out_stock_value_cud is not None:
         blr_out_stock_value_cud_val = blr_out_stock_value_cud
     else:
         blr_out_stock_value_cud_val = 0
 
-    blr_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=2, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    blr_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if blr_total_cud is not None:
         blr_total_cud_val = blr_total_cud
     else:
