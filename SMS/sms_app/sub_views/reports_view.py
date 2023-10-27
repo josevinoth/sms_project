@@ -130,81 +130,82 @@ def stock_value_reports(request):
     # Calculate Check - In & Check - Out stock value - Current Day
     # Get the current date
     current_date = datetime.now()
+    print(current_date)
     # Calculate the first day of the current month
     first_day_of_current_month = datetime(current_date.year, current_date.month, 1)
     # Chennai Warehouse
-    maa_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=1,wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    maa_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=1,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if maa_in_stock_value_cud is not None:
         maa_in_stock_value_cud_val = maa_in_stock_value_cud
     else:
         maa_in_stock_value_cud_val = 0
 
-    maa_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=2,wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    maa_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=2,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if maa_out_stock_value_cud is not None:
         maa_out_stock_value_cud_val = maa_out_stock_value_cud
     else:
         maa_out_stock_value_cud_val = 0
 
-    maa_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=2, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    maa_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=2, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if maa_total_cud is not None:
         maa_total_cud_val = maa_total_cud
     else:
         maa_total_cud_val = 0
 
     # Bengaluru Warehouse
-    blr_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_check_in_out=1, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    blr_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_check_in_out=1, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if blr_in_stock_value_cud is not None:
         blr_in_stock_value_cud_val = blr_in_stock_value_cud
     else:
         blr_in_stock_value_cud_val = 0
 
-    blr_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_check_in_out=2, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    blr_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_check_in_out=2, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if blr_out_stock_value_cud is not None:
         blr_out_stock_value_cud_val = blr_out_stock_value_cud
     else:
         blr_out_stock_value_cud_val = 0
 
-    blr_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    blr_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if blr_total_cud is not None:
         blr_total_cud_val = blr_total_cud
     else:
         blr_total_cud_val = 0
 
     # Hyderabad Warehouse
-    hyd_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_check_in_out=1,wh_checkin_time__gte=current_date)).aggregate(
+    hyd_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_check_in_out=1,wh_checkin_time__lte=current_date)).aggregate(
         Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if hyd_in_stock_value_cud is not None:
         hyd_in_stock_value_cud_val = hyd_in_stock_value_cud
     else:
         hyd_in_stock_value_cud_val = 0
 
-    hyd_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_check_in_out=2,wh_checkin_time__gte=current_date)).aggregate(
+    hyd_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_check_in_out=2,wh_checkin_time__lte=current_date)).aggregate(
         Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if hyd_out_stock_value_cud is not None:
         hyd_out_stock_value_cud_val = hyd_out_stock_value_cud
     else:
         hyd_out_stock_value_cud_val = 0
 
-    hyd_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    hyd_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if hyd_total_cud is not None:
         hyd_total_cud_val = hyd_total_cud
     else:
         hyd_total_cud_val = 0
 
     # Pondichery Warehouse
-    pny_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_check_in_out=1,wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    pny_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_check_in_out=1,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if pny_in_stock_value_cud is not None:
         pny_in_stock_value_cud_val = pny_in_stock_value_cud
     else:
         pny_in_stock_value_cud_val = 0
 
-    pny_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_check_in_out=2,wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    pny_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_check_in_out=2,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if pny_out_stock_value_cud is not None:
         pny_out_stock_value_cud_val = pny_out_stock_value_cud
     else:
         pny_out_stock_value_cud_val = 0
 
-    pny_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_checkin_time__gte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    pny_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if pny_total_cud is not None:
         pny_total_cud_val = pny_total_cud
     else:
