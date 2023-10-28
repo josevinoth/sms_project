@@ -17,7 +17,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									{% render_field form.cg_consignmentnumber id="cg_consignmentnumber" class="form-control" %}
+									{% render_field form.cg_consignmentnumber id="cg_consignmentnumber" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -126,7 +126,7 @@
 							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'consignmentgoods_list' %}" class="btn btn-danger float-right">
+						<a href="{% url 'consignmentgoods_cancel' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</div>
@@ -135,81 +135,12 @@
 		</div>
 		<div class="col-2"></div>
 	</div>
-	</div>
-	<div class="col-md-1">
-    <a href="{% url 'consignmentgoods_insert' %}"  id="modal" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i> Add
-    </a>
-</div>
-</div>
-<hr>
-<div class="container-fluid">
-    <table  id="consignmentgoods_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr>
-            <th>Created On</th>
-            <th>Consignment Number</th>
-            <th>Consigner</th>
-            <th>Consignee</th>
-            <th>Consigner Invoice</th>
-            <th>Value in INR</th>
-            <th>No. of Pieces</th>
-            <th>Weight</th>
-            <th>E-Bill No.</th>
-            <th>Date of Issue</th>
-            <th>Date of Validity</th>
-            <th>Updated On</th>
-            <th>Updated By</th>
-            <th>Edit</th>
-            <th>Delete</th>
-        </thead>
-        <tbody>
-        {% for consignmentgoodsinfo in consignmentgoods_list %}
-        <tr>
-            <td> {{consignmentgoodsinfo.cg_created_at}}</td>
-            <td> {{consignmentgoodsinfo.cg_consignmentnumber}}</td>
-            <td> {{consignmentgoodsinfo.cg_consigner}}</td>
-            <td> {{consignmentgoodsinfo.cg_consignee}}</td>
-            <td> {{consignmentgoodsinfo.cg_consignerinvoice}}</td>
-            <td> {{consignmentgoodsinfo.cg_valueininr}}</td>
-            <td> {{consignmentgoodsinfo.cg_noofpieces}}</td>
-            <td> {{consignmentgoodsinfo.cg_weight}}</td>
-            <td> {{consignmentgoodsinfo.cg_ebillno}}</td>
-            <td> {{consignmentgoodsinfo.cg_dateofissue}}</td>
-            <td> {{consignmentgoodsinfo.cg_dateofvalidity}}</td>
-            <td> {{consignmentgoodsinfo.cg_updated_at}}</td>
-            <td> {{consignmentgoodsinfo.cg_lastmodifiedby}}</td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'consignmentgoods_update' consignmentgoodsinfo.id %}" >
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
-            <td>
-                <form action="{% url 'consignmentgoods_delete' consignmentgoodsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-<script>
-    $(document).ready(function() {
-    $('#consignmentgoods_list').DataTable({
-        scrollX: true,
-    });
-} );
-</script>
-
 </form>
+	{% include "asset_mgt_app/consignmentgoods_list_WOH.html" %}
 <script>
 $(document).ready(function() {
 	document.getElementById("cg_lastmodifiedby").value ='{{user_id}}';
-
+	document.getElementById("cg_consignmentnumber").value ='{{consignmentgoods_id_val}}';
   });
 </script>
 {% endblock content %}

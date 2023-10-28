@@ -426,6 +426,7 @@ urlpatterns = [
     path('consignmentgoods_update/<int:consignmentgoods_id>', views.consignmentgoods_add, name='consignmentgoods_update'),  # update consignmentgoods
     path('consignmentgoods_delete/<int:consignmentgoods_id>', views.consignmentgoods_delete, name='consignmentgoods_delete'),  # delete consignmentgoods
     path('consignmentgoods_nav/<int:consignmentdetails_id>', views.consignmentgoods_nav, name='consignmentgoods_nav'),  # nav consignmentgoods
+    path('consignmentgoods_cancel/', views.consignmentgoods_cancel, name='consignmentgoods_cancel'),  # Cancel consignmentgoods
     path('load_location/', views.load_location, name='load_location'),
     path('export_stockreport/', views.export_stockreport_to_csv, name='export_stockreport'),# export stock value report
 ]

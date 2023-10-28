@@ -16,5 +16,6 @@ class ConsignmentdetailaddForm(forms.ModelForm):
         self.fields['co_customer'].empty_label = "--Select--"
         self.fields['co_status'].empty_label = "--Select--"
         self.fields['co_cusrefnum'].empty_label = "--Select--"
+        self.fields['co_gst_payable_by'].empty_label = "--Select--"
 
 

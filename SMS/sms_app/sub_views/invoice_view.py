@@ -42,6 +42,7 @@ def invoice_add(request,invoice_id=0):
             for k in wh_job_num:
                 try:
                     if customer_type_id== 2:
+                        print(customer_type_id)
                         warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1).whrm_rate
                         warehouse_charge_1 = warehouse_charge / wh_job_num_count
                         storage_cost_total = round((warehouse_charge_1), 2)
