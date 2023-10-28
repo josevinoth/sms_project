@@ -1,9 +1,15 @@
 {% block content %}
-<div class="col-md-1">
-    <a href="{% url 'consignmentdetail_insert' %}"  id="modal" class="btn btn-success btn-block btn-lg">
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'enquirynote_list' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+    <div class="col-md-1">
+     <a href="{% url 'consignmentdetail_insert' %}"  id="modal" class="btn btn-success btn-block btn-lg">
         <i class="fas fa-plus"></i> Add
     </a>
-</div>
+    </div>
 </div>
 <hr>
 <div class="container-fluid">

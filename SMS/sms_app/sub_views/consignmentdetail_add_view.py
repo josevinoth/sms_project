@@ -10,43 +10,18 @@ def consignmentdetail_nav(request,consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     print("I am inside Get add consignmentdetails")
-    # con_det_form = ConsignmentdetailaddForm()
-    con_det_form = ConsignmentdetailaddForm(request.POST)
     enquiry_num = EnquirynoteInfo.objects.get(pk=consignmentdetail_id).en_enquirynumber
     enquiry_num_id = EnquirynoteInfo.objects.get(pk=consignmentdetail_id).id
     request.session['ses_enqiury_num'] = enquiry_num
     consignmentdetail_list=ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
-    customer=EnquirynoteInfo.objects.get(pk=consignmentdetail_id).en_customername
-    customer_id=CustomerInfo.objects.get(cu_name=customer).id
     context = {
         'first_name': first_name,
         'user_id': user_id,
-        'con_det_form': con_det_form,
         'enquiry_num': enquiry_num,
         'enquiry_num_id': enquiry_num_id,
         'consignmentdetail_list': consignmentdetail_list,
-        'customer_id': customer_id,
     }
-    if con_det_form.is_valid():
-        try:
-            last_id = ConsignmentdetailInfo.objects.latest('id').id
-            cons_num_next = str('CON_') + str(int(((ConsignmentdetailInfo.objects.get(id=last_id)).co_consignmentnumber).replace('CON_', '')) + 1)
-        except ObjectDoesNotExist:
-            cons_num_next = str('CON_') + str(1000000)
-        con_det_form.save()
-        print("Main Form is Valid")
-        last_id = ConsignmentdetailInfo.objects.latest('id').id
-        ConsignmentdetailInfo.objects.filter(id=last_id).update(co_consignmentnumber=cons_num_next)
-
-        consignmentdetail_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id).values_list('co_consignmentnumber', flat=True)
-        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_consignmentdetails=list(consignmentdetail_list))
-        messages.success(request, 'Record Updated Successfully')
-        cons_id = ConsignmentdetailInfo.objects.get(co_consignmentnumber=cons_num_next).id
-        return redirect('/SMS/consignmentdetail_update/' + str(cons_id))
-    else:
-        print("Main Form is not Valid")
-        messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-    return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
+    return render(request, "asset_mgt_app/consignmentdetail_nav.html", context)
 @login_required(login_url='login_page')
 def consignmentdetail_add(request,consignmentdetail_id=0):
     first_name = request.session.get('first_name')
