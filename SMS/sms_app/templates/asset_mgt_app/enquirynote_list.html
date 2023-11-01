@@ -46,7 +46,7 @@
             <th>Delete</th>
         </thead>
         <tbody>
-        {% for enquirynoteinfo in enquirynote_list %}
+        {% for enquirynoteinfo in page_obj %}
         <tr>
             <td> {{enquirynoteinfo.en_created_at}}</td>
             <td> {{enquirynoteinfo.en_enquirynumber}}</td>
@@ -109,10 +109,33 @@
         {% endfor %}
         </tbody>
     </table>
+    <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a class="btn btn-warning" href="?page=1">First</a>
+            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+        {% endif %}
+    </span>
+    </div>
 </div>
 <script>
     $(document).ready(function() {
-    $('#enquirynote_list').DataTable();
+    $('#enquirynote_list').DataTable({
+        order: [1, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
 } );
 </script>
 

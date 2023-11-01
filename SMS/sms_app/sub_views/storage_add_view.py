@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from datetime import date, datetime
-
+from django.contrib import messages
+from django.utils import timezone
+from django.shortcuts import redirect
 from ..forms import WarehoseinaddForm
 from ..models import Check_in_out,Dispatch_info,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo
 from django.shortcuts import render
@@ -9,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 # Add goods
 @login_required(login_url='login_page')
 def storage_list(request):
+    global arrival_date, unloading_start_time, unloading_end_time
     first_name = request.session.get('first_name')
     print("I am inside Get add warehousein")
     warehousein_form = WarehoseinaddForm()
@@ -85,6 +88,25 @@ def storage_list(request):
             date_diff = (check_out_date - check_in_date)  # Differnce between dates
             date_diff_days = date_diff.days
             Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
+
+    goods_list= Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
+    for i in goods_list:
+        try:
+            arrival_date = ((i.wh_gate_injob_no_id.gatein_arrival_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M')
+        except AttributeError:
+            messages.error(request, 'Enter Arrival Date in Gate-In tab')
+            return redirect(request.META['HTTP_REFERER'])
+        try:
+            unloading_start_time = ((i.wh_lb_job_no_id.lb_stock_unloading_start_time).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M')
+        except AttributeError:
+            messages.error(request, 'Enter Unloading Start Date in Goods Receipt tab')
+            return redirect(request.META['HTTP_REFERER'])
+        try:
+            unloading_end_time = ((i.wh_lb_job_no_id.lb_stock_unloading_end_time).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M')
+        except AttributeError:
+            messages.error(request, 'Enter Unloading End Date in Goods Receipt tab')
+            return redirect(request.META['HTTP_REFERER'])
+
     context = {
         'first_name': first_name,
         'warehousein_form': warehousein_form,
@@ -92,7 +114,7 @@ def storage_list(request):
         'gatein_list': Gatein_info.objects.filter(gatein_job_no=wh_job_id),
         'damagereport_list': DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id),
         'loadingbay_list': Loadingbay_Info.objects.filter(lb_job_no=wh_job_id),
-        'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
+        'goods_list': goods_list,
         'dispatch_list': Dispatch_info.objects.all(),
         'gatein_status': gatein_status,
         'loadingbay_status': loadingbay_status,
@@ -100,5 +122,8 @@ def storage_list(request):
         'damage_after_status': damage_after_status,
         'warehousein_status': warehousein_status,
         'locationmaster_list': LocationmasterInfo.objects.all(),
+        'arrival_date': arrival_date,
+        'unloading_start_time': unloading_start_time,
+        'unloading_end_time': unloading_end_time,
         }
     return render(request, "asset_mgt_app/storage_add.html", context)

@@ -41,9 +41,9 @@
             <tbody>
             {% for storageinfo in goods_list %}
             <tr>
-                <td> {{storageinfo.wh_gate_injob_no_id.gatein_arrival_date}}</td>
-                <td> {{storageinfo.wh_lb_job_no_id.lb_stock_unloading_start_time}}</td>
-                <td> {{storageinfo.wh_lb_job_no_id.lb_stock_unloading_end_time}}</td>
+                <td> {{arrival_date}}</td>
+                <td> {{unloading_start_time}}</td>
+                <td> {{unloading_end_time}}</td>
                 <td> {{storageinfo.wh_gate_injob_no_id.gatein_transporter}}</td>
                 <td> {{storageinfo.wh_gate_injob_no_id.gatein_truck_number}}</td>
                 <td> {{storageinfo.wh_consigner}}</td>

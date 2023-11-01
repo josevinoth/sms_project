@@ -11,7 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from ..models import User_extInfo
 import json
-from django.views.generic import ListView
+
 
 # Add WH Job
 @transaction.atomic

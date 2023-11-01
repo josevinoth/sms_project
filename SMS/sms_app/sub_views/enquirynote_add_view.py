@@ -4,6 +4,7 @@ from django.contrib import messages
 from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm
 from ..models import StatusList,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo,Enquirynotevehicle
 from django.shortcuts import render, redirect
+from django.core.paginator import Paginator
 @login_required(login_url='login_page')
 def enquirynote_add(request,enquirynote_id=0):
     first_name = request.session.get('first_name')
@@ -110,12 +111,16 @@ def enquirynote_list(request):
             EnquirynoteInfo.objects.filter(en_enquirynumber=m).update(en_status=5)
         else:
             EnquirynoteInfo.objects.filter(en_enquirynumber=m).update(en_status=6)
-
+    enquirynote_list= (EnquirynoteInfo.objects.all()).order_by('id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(enquirynote_list, 50)
+    page_obj = paginator.get_page(page_number)
     context = {
-                'enquirynote_list' : EnquirynoteInfo.objects.all(),
+                'enquirynote_list' : enquirynote_list,
                 'consignmentdetail_list': ConsignmentdetailInfo.objects.all(),
                 'tripdetails_list': TripdetailInfo.objects.all(),
-                'first_name': first_name
+                'page_obj': page_obj,
+                'first_name': first_name,
                 }
     return render(request,"asset_mgt_app/enquirynote_list.html",context)
 
