@@ -1,8 +1,8 @@
 from random import randint
 import time
 from datetime import datetime
-
-import requests
+from django.http import JsonResponse
+from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -160,13 +160,16 @@ def dispatch_goods_list(request,dispatch_id):
     return render(request,"asset_mgt_app/dispatch_goods_list_woh.html",context)
 
 @login_required(login_url='login_page')
-def dispatch_remove_goods(request,dispatch_id):
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num="None")
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_id="")
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=1)
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=0)
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=None)
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_id="")
+def dispatch_remove_goods(request):
+    selected_stocks = request.GET.getlist('myList[]')
+    print('selected_stocks',selected_stocks)
+    for i in selected_stocks:
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=None)
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_id="")
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=1)
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=0)
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_checkout_time=None)
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_id="")
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
     dispatch_invoice_job_update(dispatch_num_val)
@@ -176,22 +179,27 @@ def dispatch_remove_goods(request,dispatch_id):
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
 @login_required(login_url='login_page')
-def dispatch_add_goods(request,dispatch_id):
+def dispatch_add_goods(request):
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=2)
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num=dispatch_num_val)
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=datetime.now())
+    selected_stocks = request.GET.getlist('myList[]')
+    print('selected_stocks',selected_stocks)
     first_name = request.session.get('first_name')
-    check_in_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkin_time
-    check_out_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkout_time
-    date_diff = (check_out_date - check_in_date)  # Differnce between dates
-    date_diff_days=date_diff.days
-    duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
-    storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
-    # storage_days = (check_out_date - check_in_date).days  # In days
-    storage_days = float(round(storage_hours / 24,2))  # In days
-    Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff_days)
-    dispatch_invoice_job_update(dispatch_num_val)
+    current_date=(timezone.now()).astimezone(timezone.get_current_timezone())
+    print('current_date',current_date)
+    for i in selected_stocks:
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=2)
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=dispatch_num_val)
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_checkout_time=current_date)
+        check_in_date = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time
+        check_out_date =Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkout_time
+        date_diff = (check_out_date - check_in_date)  # Differnce between dates
+        date_diff_days=date_diff.days
+        duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
+        storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
+        # storage_days = (check_out_date - check_in_date).days  # In days
+        storage_days = float(round(storage_hours / 24,2))  # In days
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
+        dispatch_invoice_job_update(dispatch_num_val)
     context = {
                 'first_name': first_name,
                 'dispatch_goods_list':dispatch_goods_list,
@@ -199,7 +207,15 @@ def dispatch_add_goods(request,dispatch_id):
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
 
-
+def dispatch_stock_list(request):
+    myList = request.GET.getlist('myList[]')
+    print(myList)
+    # Return a response, for example, a JSON response
+    response_data = {
+        'result': 'success',
+        'data': myList,
+    }
+    return JsonResponse(response_data)
 def dispatch_invoice_job_update(dispatch_num_val):
     dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice',flat=True).distinct())
     dispatch_job_num_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_job_no',flat=True).distinct())

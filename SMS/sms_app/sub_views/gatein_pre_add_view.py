@@ -74,7 +74,7 @@ def gatein_pre_add(request, gatein_pre_id=0):
 @login_required(login_url='login_page')
 def gatein_pre_list(request):
     first_name = request.session.get('first_name')
-    Gatein_pre_list= Gatein_pre_info.objects.all()
+    Gatein_pre_list= (Gatein_pre_info.objects.all()).order_by('id')
     page_number = request.GET.get('page')
     paginator = Paginator(Gatein_pre_list, 100000000)
     page_obj = paginator.get_page(page_number)
@@ -91,7 +91,7 @@ def gatein_pre_delete(request,gatein_pre_id):
     gatein_pre_del = Gatein_pre_info.objects.get(pk=gatein_pre_id)
     gatein_pre_number_sess = Gatein_pre_info.objects.get(pk=gatein_pre_id).gatein_pre_number
     gatein_pre_del.delete()
-    return redirect('/SMS/gatein_pre_list')
+    return redirect('/SMS/pre_gatein_search')
 @login_required(login_url='login_page')
 def pre_gatein_search(request):
     first_name = request.session.get('first_name')

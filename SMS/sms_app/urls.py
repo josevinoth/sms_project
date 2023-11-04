@@ -287,8 +287,8 @@ urlpatterns = [
     path('dispatch_update/<int:dispatch_id>/', views.dispatch_add, name='dispatch_update'),# Update dispatch
     path('dispatch_delete/<int:dispatch_id>/', views.dispatch_delete, name='dispatch_delete'),# Delete dispatch
     path('dispatch_goods_list/<int:dispatch_id>/', views.dispatch_goods_list, name='dispatch_goods_list'),# Dispatch Goods List
-    path('dispatch_remove_goods/<int:dispatch_id>/', views.dispatch_remove_goods, name='dispatch_remove_goods'),# Remove Dispatch Goods
-    path('dispatch_add_goods/<int:dispatch_id>/', views.dispatch_add_goods, name='dispatch_add_goods'),# Add Dispatch Goods
+    path('dispatch_remove_goods/', views.dispatch_remove_goods, name='dispatch_remove_goods'),# Remove Dispatch Goods
+    path('dispatch_add_goods/', views.dispatch_add_goods, name='dispatch_add_goods'),# Add Dispatch Goods
     path('qr_dispatch_decoder/<int:dispatch_id>', views.qr_dispatch_decoder, name='qr_dispatch_decoder'), # qr_dispatch_decoder
     path('message_test/',views.message_test,name='message_test'),
     path('load_area_volume/',views.load_area_volume,name='load_area_volume'),
@@ -429,4 +429,5 @@ urlpatterns = [
     path('consignmentgoods_cancel/', views.consignmentgoods_cancel, name='consignmentgoods_cancel'),  # Cancel consignmentgoods
     path('load_location/', views.load_location, name='load_location'),
     path('export_stockreport/', views.export_stockreport_to_csv, name='export_stockreport'),# export stock value report
+    path('dispatch_stock_list/', views.dispatch_stock_list, name='dispatch_stock_list'),# dispatch_stock_list
 ]
