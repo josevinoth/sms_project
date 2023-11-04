@@ -15,6 +15,7 @@ from django.contrib import messages
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
+from ..views import warehousevolme_area_calc
 
 # Add Dispatch Job
 @transaction.atomic
@@ -173,6 +174,7 @@ def dispatch_remove_goods(request):
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
     dispatch_invoice_job_update(dispatch_num_val)
+    warehousevolme_area_calc(request)
     context = {
                'first_name': first_name,
                }
@@ -200,6 +202,7 @@ def dispatch_add_goods(request):
         storage_days = float(round(storage_hours / 24,2))  # In days
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
         dispatch_invoice_job_update(dispatch_num_val)
+        warehousevolme_area_calc(request)
     context = {
                 'first_name': first_name,
                 'dispatch_goods_list':dispatch_goods_list,

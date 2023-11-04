@@ -2,12 +2,12 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.aggregates import Sum
 from django.http import HttpResponse
-
 from ..forms import LocationmasteraddForm
-from ..models import WhratemasterInfo,LocationmasterInfo,CustomerInfo,TrbusinesstypeInfo,Warehouse_goods_info
+from ..models import LocationmasterInfo,CustomerInfo,TrbusinesstypeInfo,Warehouse_goods_info
 from django.shortcuts import render, redirect
-
 @login_required(login_url='login_page')
 def locationmaster_add(request,locationmaster_id=0):
     first_name = request.session.get('first_name')
@@ -109,9 +109,51 @@ def locationmaster_add(request,locationmaster_id=0):
 @login_required(login_url='login_page')
 def locationmaster_list(request):
     first_name = request.session.get('first_name')
-    context = {'locationmaster_list' : LocationmasterInfo.objects.all(),'first_name': first_name}
+    warehousevolme_area_calc(request)
+    context =   {
+                    'locationmaster_list' : LocationmasterInfo.objects.all(),
+                    'first_name': first_name
+                }
     return render(request,"asset_mgt_app/locationmaster_list.html",context)
 
+#Calculate warehouse area and volume
+@login_required(login_url='login_page')
+def warehousevolme_area_calc(request):
+    warehouse_list = LocationmasterInfo.objects.all().values_list('id', flat=True)
+    for i in warehouse_list:
+        branch = LocationmasterInfo.objects.get(pk=i).lm_wh_location
+        unit = LocationmasterInfo.objects.get(pk=i).lm_wh_unit
+        bay = LocationmasterInfo.objects.get(pk=i).lm_areaside
+        volume_occupied = Warehouse_goods_info.objects.filter(wh_branch=branch, wh_unit=unit, wh_bay=bay,wh_check_in_out=1).aggregate(Sum('wh_goods_volume_weight'))['wh_goods_volume_weight__sum']
+        area_occupied = Warehouse_goods_info.objects.filter(wh_branch=branch, wh_unit=unit, wh_bay=bay, wh_check_in_out=1,wh_stack_layer=1).aggregate(Sum('wh_goods_area'))['wh_goods_area__sum']
+
+        if volume_occupied==None:
+            volume_occupied_val=0
+        else:
+            volume_occupied_val=volume_occupied
+
+        if area_occupied == None:
+            area_occupied_val = 0
+        else:
+            area_occupied_val = area_occupied
+
+        # Get Total Volume
+        total_volume = LocationmasterInfo.objects.get(lm_wh_location=branch, lm_wh_unit=unit,lm_areaside=bay).lm_total_volume
+
+        # Get Total Area
+        total_area = LocationmasterInfo.objects.get(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).lm_size
+
+        # Calculate_Available Volume
+        available_volume = total_volume - volume_occupied_val
+
+        # Calculate_Available Ara
+        available_area = total_area - area_occupied_val
+
+        # Update Volume and Area
+        LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_available_area=round(available_area, 2))
+        LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_available_volume=round(available_volume, 2))
+        LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_volume_occupied=round(volume_occupied_val, 2))
+        LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_area_occupied=round(area_occupied_val, 2))
 #Delete locationmaster
 @login_required(login_url='login_page')
 def locationmaster_delete(request,locationmaster_id):

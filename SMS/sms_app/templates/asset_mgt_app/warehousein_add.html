@@ -279,7 +279,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Check-In Time</span>
 									</div>
-									{% render_field warehousein_form.wh_checkin_time id="wh_checkin_time" type="Datetime-local" class="form-control"%}
+									{% render_field warehousein_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" max="" min="" onclick="check_in_date_change()" class="form-control"%}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3" >
@@ -569,6 +569,22 @@ $(document).ready(function() {
 		$('#wh_checkin_time').removeClass('disable_a_href');
 		$('#wh_branch').removeClass('disable_a_href');
 	}
+	check_in_date_change()
   });
+</script>
+
+<script>
+	// Get today's date in the format YYYY-MM-DDTHH:MM
+    const today = new Date().toISOString().slice(0, 16);
+
+    // Set the 'min' and 'max' attributes of the input element
+    const datePicker = document.getElementById('wh_checkin_time');
+    datePicker.min = today;
+    datePicker.max = today;
+
+    // Optionally, you can disable the input field to prevent manual input
+    datePicker.addEventListener('input', () => {
+    datePicker.value = today;
+    });
 </script>
 {% endblock content %}
