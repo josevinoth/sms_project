@@ -119,6 +119,7 @@ def locationmaster_list(request):
 #Calculate warehouse area and volume
 @login_required(login_url='login_page')
 def warehousevolme_area_calc(request):
+    print("Inside warehousevolme_area_calc")
     warehouse_list = LocationmasterInfo.objects.all().values_list('id', flat=True)
     for i in warehouse_list:
         branch = LocationmasterInfo.objects.get(pk=i).lm_wh_location
