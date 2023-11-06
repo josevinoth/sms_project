@@ -187,12 +187,10 @@ def dispatch_add_goods(request):
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     # selected_stocks = request.GET.getlist('myList[]')
     # Get dispatch number greater than Nov 3
-    dispatch_num_list=list(Dispatch_info.objects.filter(dispatch_depature_date__gt='2023-10-01').values_list('dispatch_num',flat=True))
-    print('dispatch_num_list',dispatch_num_list)
+    dispatch_num_list=list(Dispatch_info.objects.filter(dispatch_depature_date__gt='2023-11-01').values_list('dispatch_num',flat=True))
 
     first_name = request.session.get('first_name')
     current_date=(timezone.now()).astimezone(timezone.get_current_timezone())
-    print('current_date',current_date)
     for k in dispatch_num_list:
         try:
             selected_stocks = Warehouse_goods_info.objects.filter(wh_dispatch_num=k).values_list('wh_qr_rand_num', flat=True)
