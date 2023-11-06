@@ -193,7 +193,6 @@ def dispatch_add_goods(request):
     first_name = request.session.get('first_name')
     current_date=(timezone.now()).astimezone(timezone.get_current_timezone())
     print('current_date',current_date)
-    vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).dispatch_truck_type
     for k in dispatch_num_list:
         try:
             selected_stocks = Warehouse_goods_info.objects.filter(wh_dispatch_num=k).values_list('wh_qr_rand_num', flat=True)
@@ -206,6 +205,7 @@ def dispatch_add_goods(request):
                     return redirect(request.META['HTTP_REFERER'])
                 else:
                     check_out_time = Warehouse_goods_info.objects.get(wh_dispatch_num=k).wh_checkout_time
+                    vehicle_type = Dispatch_info.objects.get(dispatch_num=k).dispatch_truck_type
                     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=2)
                     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=dispatch_num_val)
                     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_checkout_time=check_out_time)
