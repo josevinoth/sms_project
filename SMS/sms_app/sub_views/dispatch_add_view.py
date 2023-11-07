@@ -297,17 +297,6 @@ def dispatch_invoice_job_update(dispatch_num_val):
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_job_num_list=dispatch_job_num_list)
     return ()
-
-def update_dipsatch_id(dispatch_num_val):
-    print("Inside dispatch_invoice_job_update")
-    dispatch_num_list = list(Warehouse_goods_info.objects.filter(wh_check_in_out=2).values_list('wh_dispatch_num',flat=True).distinct())
-    print('dispatch_num_list',dispatch_num_list)
-    for i in dispatch_num_list:
-        dispatch_id=Dispatch_info.objects.get(dispatch_num=i).id
-        truck_id   =Dispatch_info.objects.get(dispatch_num=i).dispatch_truck_type
-        Warehouse_goods_info.objects.filter(wh_check_in_out=2,wh_dispatch_num=i).update(wh_dispatch_id=dispatch_id)
-        Warehouse_goods_info.objects.filter(wh_check_in_out=2,wh_dispatch_num=i).update(wh_truck_type=truck_id)
-    return ()
 @login_required(login_url='login_page')
 def qr_dispatch_decoder(request,dispatch_id):
     # Scanning QR Code from Camera Feed
