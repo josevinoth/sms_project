@@ -182,6 +182,7 @@ def dispatch_remove_goods(request):
                }
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
+
 # @login_required(login_url='login_page')
 # def dispatch_add_goods(request):
 #     dispatch_num_val=request.session.get('ses_dispatch_num_val')
