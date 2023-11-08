@@ -219,16 +219,6 @@ def get_queryset(request):
         }
     return render(request, "asset_mgt_app/gatein_list.html", context)
 
-@login_required(login_url='login_page')
-def update_check_in_date(request):
-    wh_job_num=list(Loadingbay_Info.objects.filter(lb_stock_unloading_end_time__gte='2023-01-01',lb_stock_unloading_end_time__lte='2023-01-31').values_list('lb_job_no',flat=True))
-    print('wh_job_num',wh_job_num)
-    for i in wh_job_num:
-        check_in_time=(Loadingbay_Info.objects.get(lb_job_no=i).lb_stock_unloading_end_time).astimezone(timezone.get_current_timezone()).strftime('%Y-%m-%d %H:%M:%S')
-        print('Job Num',i)
-        print('check_in_time',check_in_time)
-        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_checkin_time=check_in_time)
-    return ()
 #Delete WH Job
 @login_required(login_url='login_page')
 def gatein_delete(request,gatein_id):

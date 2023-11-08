@@ -430,5 +430,4 @@ urlpatterns = [
     path('load_location/', views.load_location, name='load_location'),
     path('export_stockreport/', views.export_stockreport_to_csv, name='export_stockreport'),# export stock value report
     path('dispatch_stock_list/', views.dispatch_stock_list, name='dispatch_stock_list'),# dispatch_stock_list
-    path('update_check_in_date/', views.update_check_in_date, name='update_check_in_date'),# update_check_in_date
 ]
