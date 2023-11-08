@@ -46,7 +46,6 @@
             <th>Job Number</th>
             <th>Shipper Inovice Number</th>
             <th>Customer Name</th>
-            <th>Dispatch Status</th>
             <th>Edit</th>
             <th>Delete</th>
         </thead>
@@ -58,7 +57,6 @@
             <td> {{gateininfo.gatein_job_no}}</td>
             <td> {{gateininfo.gatein_invoice}}</td>
             <td> {{gateininfo.gatein_customer}}</td>
-            <td> {{gateininfo.gatein_job_status}}</td>
             <td>
                 <a class="btn btn-primary" href="{% url 'gatein_update' gateininfo.id %}" >
                     <i class="far fa-edit"></i>

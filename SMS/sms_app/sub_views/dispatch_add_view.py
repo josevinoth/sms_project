@@ -27,12 +27,6 @@ def dispatch_add(request, dispatch_id=0):
     wh_job_id = ses_gatein_id_nam
     user_id = request.session.get('ses_userID')
     dispatch_list = Dispatch_info.objects.all()
-    # Generate Random Dispatch number
-    last_id = (Dispatch_info.objects.values_list('id', flat=True)).last()
-    if last_id == None:
-        last_id = 0
-    ran=randint(10000, 99999)
-    dispatch_num =  ran + last_id + 1
     if request.method == "GET":
         if dispatch_id == 0:
             print("I am inside Get add dispatch")
@@ -44,7 +38,6 @@ def dispatch_add(request, dispatch_id=0):
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
                 'dispatch_list':dispatch_list,
                 'user_id': user_id,
-                'dispatch_num': dispatch_num,
             }
         else:
             print("I am inside get edit Dispatch")
@@ -75,7 +68,7 @@ def dispatch_add(request, dispatch_id=0):
                         (int((Dispatch_info.objects.get(id=last_id).dispatch_num).replace('Dispatch_', '')) + 1))
                     print(dispatch_num_next)
                 except ObjectDoesNotExist:
-                    dispatch_num_next = str('Dispatch_') + str(randint(10000, 999999))
+                    dispatch_num_next = str('Dispatch_') + str(1000000)
                 dispatch_form.save()
                 print("Form Saved")
                 last_id = (Dispatch_info.objects.latest('id')).id
@@ -83,36 +76,26 @@ def dispatch_add(request, dispatch_id=0):
                 messages.success(request, 'Record Updated Successfully')
                 # sales_num = request.POST.get('s_sale_number')
                 dipstach_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_next).id
-
                 return redirect('/SMS/dispatch_update/' + str(dipstach_id))
                 # return redirect(request.META['HTTP_REFERER'])
+            else:
+                print("Form Not Saved")
+                messages.error(request, 'Record Not Updated Successfully')
+                return redirect(request.META['HTTP_REFERER'])
         else:
             print("I am inside post edit dispatch")
             dispatch_info = Dispatch_info.objects.get(pk=dispatch_id)
             dispatch_form = DispatchaddForm(request.POST, instance=dispatch_info)
 
-            # Update Dispatch status is Gate-In Datatabse
-            dispatch_status = Dispatch_info.objects.get(pk=dispatch_id).dispatch_status
-            dispatch_status_id = StatusList.objects.get(status_title=dispatch_status).id
-            dispatch_num = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-            wh_job_no_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_job_no',flat=True).distinct())
-            if dispatch_status_id == 5:
-                for wh_job in wh_job_no_list:
-                    Gatein_info.objects.filter(gatein_job_no=wh_job).update(gatein_job_status=1)
+            if dispatch_form.is_valid():
+                dispatch_form.save()
+                print("Form Saved")
+                messages.success(request, 'Record Updated Successfully')
+                return redirect(request.META['HTTP_REFERER'])
             else:
-                print("Not Completed")
-                for wh_job in wh_job_no_list:
-                    Gatein_info.objects.filter(gatein_job_no=wh_job).update(gatein_job_status=2)
-
-        if dispatch_form.is_valid():
-            dispatch_form.save()
-            print("Form Saved")
-            messages.success(request, 'Record Updated Successfully')
-            return redirect(request.META['HTTP_REFERER'])
-        else:
-            print("Form Not Saved")
-            messages.error(request, 'Record Not Updated Successfully')
-            return redirect(request.META['HTTP_REFERER'])
+                print("Form Not Saved")
+                messages.error(request, 'Record Not Updated Successfully')
+                return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_list')
 
 # List Dispatch Job
@@ -172,7 +155,6 @@ def dispatch_remove_goods(request):
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_checkout_time=None)
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_id="")
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_truck_type=None)
-
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
     dispatch_invoice_job_update(dispatch_num_val)
