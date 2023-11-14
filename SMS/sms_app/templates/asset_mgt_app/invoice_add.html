@@ -260,7 +260,6 @@
 $(document).ready(function() {
 	document.getElementById("bill_updated_by").value ='{{user_id}}';
 	document.getElementById("bill_weight").value ='{{weight_sum}}';
-	document.getElementById("bill_no_of_days").value ='{{no_of_days}}';
 	document.getElementById("bill_no_of_pallets").value ='{{no_of_pieces}}';
 	document.getElementById("bill_tot_crane_time").value ='{{crane_time}}';
 	document.getElementById("bill_tot_forklift_time").value ='{{forklift_time}}';
@@ -269,9 +268,24 @@ $(document).ready(function() {
 	document.getElementById("bill_wh_storage_charges").value ='{{wh_storage_cost_sum}}';
 	document.getElementById("bill_tot_crane_charges").value ='{{crane_cost_sum}}';
 	document.getElementById("bill_tot_forklift_charges").value ='{{forklift_cost_sum}}';
-	document.getElementById("bill_start_date").value='{{min_check_in_time}}';
-	document.getElementById("bill_end_date").value='{{max_check_out_time}}';
 	bvm_invoice=document.getElementById("bill_customer_name").value
+	bill_start_date_val=document.getElementById("bill_start_date").value
+	bill_end_date_val=document.getElementById("bill_end_date").value
+	bill_no_of_days_val=document.getElementById("bill_no_of_days").value
+	if (bill_start_date_val=="")
+		document.getElementById("bill_start_date").value='{{min_check_in_time}}';
+	else
+		document.getElementById("bill_start_date").value=bill_start_date_val;
+
+	if (bill_end_date_val=="")
+		document.getElementById("bill_end_date").value='{{max_check_out_time}}';
+	else
+		document.getElementById("bill_end_date").value=bill_end_date_val;
+
+	if (bill_no_of_days_val==0)
+		document.getElementById("bill_no_of_days").value='{{no_of_days}}';
+	else
+		document.getElementById("bill_no_of_days").value=bill_no_of_days_val;
 
 	if (bvm_invoice=="")
 	{
@@ -307,6 +321,9 @@ $(document).ready(function() {
 			var customer_person=JSON.parse(data)["customer_person_val"];
 			var customer_contact=JSON.parse(data)["customer_contact_val"];
 			var customer_address=JSON.parse(data)["customer_address_val"];
+			var min_check_in_time=JSON.parse(data)["min_check_in_time"];
+			var max_check_out_time=JSON.parse(data)["max_check_out_time"];
+			var max_storage_days=JSON.parse(data)["max_storage_days"];
 			document.getElementById("bill_customer_type").value =customer_model;
 			document.getElementById("bill_customer_short_name").value =customer_short_name;
 			document.getElementById("bill_customer_code").value =customer_code;
@@ -314,6 +331,24 @@ $(document).ready(function() {
 			document.getElementById("bill_customer_person").value =customer_person;
 			document.getElementById("bill_customer_contact").value =customer_contact;
 			document.getElementById("bill_customer_address").value =customer_address;
+			bill_start_date_val=document.getElementById("bill_start_date").value
+			bill_end_date_val=document.getElementById("bill_end_date").value
+			bill_no_of_days_val=document.getElementById("bill_no_of_days").value
+			if (bill_start_date_val=="")
+				document.getElementById("bill_start_date").value=min_check_in_time;
+			else
+				document.getElementById("bill_start_date").value=bill_start_date_val;
+
+			if (bill_end_date_val=="")
+				document.getElementById("bill_end_date").value=max_check_out_time;
+			else
+				document.getElementById("bill_end_date").value=bill_end_date_val;
+
+			if (bill_no_of_days_val=="")
+				document.getElementById("bill_no_of_days").value=max_storage_days;
+			else
+				document.getElementById("bill_no_of_days").value=bill_no_of_days_val;
+
        		fumigation_charge_change_fn()
        }
       });

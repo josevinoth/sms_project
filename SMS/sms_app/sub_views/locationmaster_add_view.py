@@ -1,8 +1,7 @@
 import json
-
+from datetime import timedelta, date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.aggregates import Sum
 from django.http import HttpResponse
 from ..forms import LocationmasteraddForm
@@ -170,12 +169,7 @@ def update_location_master(request):
 #Get Customer Model
 @login_required(login_url='login_page')
 def load_customer_model(request):
-    unit_list=[]
-    unit_name=[]
-    unit_name_list = []
     lm_customer_name_id = request.GET.get('lm_customer_name_id')
-    total_weight = request.GET.get('total_weight')
-    customer_id=CustomerInfo.objects.get(cu_name=lm_customer_name_id).id
     customer_businessmodel = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_businessmodel')
     customer_short_name = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_nameshort')
     customer_code = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customercode')
