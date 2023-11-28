@@ -430,4 +430,6 @@ urlpatterns = [
     path('load_location/', views.load_location, name='load_location'),
     path('export_stockreport/', views.export_stockreport_to_csv, name='export_stockreport'),# export stock value report
     path('dispatch_stock_list/', views.dispatch_stock_list, name='dispatch_stock_list'),# dispatch_stock_list
+    path('wh_e_way_bill_list/', views.wh_e_way_bill_list, name='wh_e_way_bill_list'),# wh_e_way_bill_list
+    path('edit_wh_e_way_bill_list/<int:wh_job_id>', views.edit_wh_e_way_bill_list, name='edit_wh_e_way_bill_list'),# edit_wh_e_way_bill_list
 ]

@@ -6,6 +6,10 @@
         <h1>Welcome !</h1>
     </div>
     <br>
+    <button type="button" class="collapsible"><i class="fas fa-bell"></i> Notifications</button>
+    <div class="content">
+        <a href="{% url 'wh_e_way_bill_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> WH e-Way Bill expires 4 hours <span class="badge badge-danger">{{wh_job_count}}</span></a>
+    </div>
     <button type="button" class="collapsible"><i class="fas fa-users-cog"></i> Administration</button>
     <div class="content">
         <a href="{% url 'department_list' %}"><i class="far fa-building"></i> Departments</a>
@@ -78,13 +82,13 @@
         <a href="{% url 'needassessment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Need Assessment</a>
         <a href="{% url 'costingsummary_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Costing Summary</a>
         <a href="{% url 'quotes_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Quotes</a>
-<!--        <a href="{% url 'openingstock_list' %}"><i class="fa fa-arrow-right " aria-hidden="true"></i> Opening Stock</a>-->
+        <!--        <a href="{% url 'openingstock_list' %}"><i class="fa fa-arrow-right " aria-hidden="true"></i> Opening Stock</a>-->
         <a href="{% url 'stockpurchases_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Purchases</a>
         <a href="{% url 'purchaseorder_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Purchase Order</a>
         <a href="{% url 'costing_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Costing</a>
-<!--        <a href="{% url 'ininspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Inward Inspection Report</a>-->
-<!--        <a href="{% url 'ouinspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Outward Inspection Report</a>-->
-<!--        <a href="{% url 'materialstock_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Stock</a>-->
+        <!--        <a href="{% url 'ininspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Inward Inspection Report</a>-->
+        <!--        <a href="{% url 'ouinspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Outward Inspection Report</a>-->
+        <!--        <a href="{% url 'materialstock_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Stock</a>-->
         <a href="{% url 'packingjobs_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Packing Jobs</a>
     </div>
     <hr class="hr_style">
@@ -159,8 +163,8 @@
         <a href="#"><i class="fas fa-book"></i> User Guide</a>
         <a href="#"><i class="fas fa-question"></i> FAQs</a>
     </div>
-    <hr class="hr_style">
-    <a href="#"><i class="fas fa-bell"></i> Notifications</a>
+    <!--    <hr class="hr_style">-->
+    <!--    <a href="#"><i class="fas fa-bell"></i> Notifications</a>-->
 </div>
 </div>
 
@@ -277,7 +281,7 @@
         <br>
     </div>
 </div>
-    <script>
+<script>
     var coll = document.getElementsByClassName("collapsible");
 var i;
 for (i = 0; i < coll.length; i++) {

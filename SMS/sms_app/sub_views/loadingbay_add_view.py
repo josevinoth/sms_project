@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from ..forms import LoadingbayddForm,LoadingbayImagesForm
 from django.contrib.auth.decorators import login_required
-from ..models import TestInfo,WhratemasterInfo,CustomerInfo,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,Loadingbayimages_Info,Currency_type
+from ..models import WhratemasterInfo,CustomerInfo,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,Loadingbayimages_Info,Currency_type
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 import json

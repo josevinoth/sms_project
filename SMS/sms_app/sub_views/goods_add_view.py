@@ -1,11 +1,9 @@
-import json
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models.aggregates import Sum
-from django.http import HttpResponse
 from django.contrib import messages
 from ..forms import GoodsaddForm
-from ..models import CustomerInfo,WhratemasterInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo
+from ..models import Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from random import randint
