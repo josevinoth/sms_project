@@ -50,8 +50,6 @@ def invoice_add(request,invoice_id=0):
             else:
                 total_area=0
                 messages.error(request, 'Unable to Calculate Total Area!')
-            print('total_weight',total_weight)
-            print('total_area',total_area)
             if customer_type_id== 2:
                 print("Inside Exclusive Case")
                 try:

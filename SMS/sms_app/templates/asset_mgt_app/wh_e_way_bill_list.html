@@ -31,9 +31,9 @@
 
         </thead>
         <tbody>
-        {% for jobs in wh_job_list %}
+        {% for jobs in wh_check_in_jobs_2 %}
         <tr>
-            <td> {{jobs}}</td>
+            <td> {{jobs.lb_job_no}}</td>
         </tr>
         {% endfor %}
         </tbody>

@@ -3,7 +3,9 @@ from django.utils import timezone
 from ..models import Gatein_info,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
 from django.shortcuts import render, redirect
 from django.db.models import Sum
-from datetime import datetime
+from datetime import datetime, timedelta
+
+
 @login_required(login_url='login_page')
 def home_page(request):
     first_name=request.session.get('first_name')
@@ -17,9 +19,9 @@ def home_page(request):
     case_to_case_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type=case_to_case).values_list('wh_job_no',flat=True).distinct())
     dedicated_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type=dedicated).values_list('wh_job_no',flat=True).distinct())
     exclusive_list=list(Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1,wh_customer_type=exlcusive).values_list('wh_job_no',flat=True).distinct())
-    a=wh_e_way_bill_validity(request)
-    wh_job_count=a[0]
-    wh_job_list=a[1]
+    wh_check_in_jobs_1 = (Warehouse_goods_info.objects.filter(wh_check_in_out=1).values('wh_job_no')).distinct()
+    wh_check_in_jobs_2 = (Loadingbay_Info.objects.filter(lb_validity_date__lte=(timezone.now())+timedelta(days=1),lb_job_no__in=wh_check_in_jobs_1)).distinct()
+    wh_job_count=len(wh_check_in_jobs_2)
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
@@ -35,38 +37,18 @@ def home_page(request):
                'dedicated_list': len(dedicated_list),
                'exclusive_list': len(exclusive_list),
                'role': role,
-               'wh_job_list': wh_job_list,
                'wh_job_count': wh_job_count,
+               'wh_check_in_jobs_2': wh_check_in_jobs_2,
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
-@login_required(login_url='login_page')
-def wh_e_way_bill_validity(request):
-    # Get warehouse e-way bill
-    wh_check_in_jobs = list((Warehouse_goods_info.objects.filter(wh_check_in_out=1).values_list('wh_job_no', flat=True)).distinct())
-    wh_job_list = []
-    for i in wh_check_in_jobs:
-        wh_e_way_bill_date = (Loadingbay_Info.objects.get(lb_job_no=i).lb_validity_date)
-        if wh_e_way_bill_date is not None:
-            time_now = ((timezone.now()).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
-            time_now_new = datetime.strptime(time_now, '%Y-%m-%d %H:%M:%S')
-            validity_hours = round((((wh_e_way_bill_date - time_now_new).total_seconds()) / 3600), 1)
-            if validity_hours<4:
-                wh_job_list.append(i)
-            else:
-                pass
-        else:
-            pass
-    wh_job_count=len(wh_job_list)
-    wh_job_list=wh_job_list
-    return (wh_job_count,wh_job_list)
 
 @login_required(login_url='login_page')
 def wh_e_way_bill_list(request):
-    a = wh_e_way_bill_validity(request)
-    wh_job_list = a[1]
+    wh_check_in_jobs_1 = (Warehouse_goods_info.objects.filter(wh_check_in_out=1).values('wh_job_no')).distinct()
+    wh_check_in_jobs_2 = (Loadingbay_Info.objects.filter(lb_validity_date__lte=(timezone.now())+timedelta(days=1),lb_job_no__in=wh_check_in_jobs_1)).distinct()
     first_name = request.session.get('first_name')
     context = {
-                'wh_job_list' : wh_job_list,
+                'wh_check_in_jobs_2' : wh_check_in_jobs_2,
                 'first_name': first_name
             }
     return render(request,"asset_mgt_app/wh_e_way_bill_list.html",context)
