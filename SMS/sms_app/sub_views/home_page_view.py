@@ -45,7 +45,7 @@ def home_page(request):
 @login_required(login_url='login_page')
 def wh_e_way_bill_list(request):
     wh_check_in_jobs_1 = (Warehouse_goods_info.objects.filter(wh_check_in_out=1).values('wh_job_no')).distinct()
-    wh_check_in_jobs_2 = (Loadingbay_Info.objects.filter(lb_validity_date__lte=(timezone.now())+timedelta(days=1),lb_job_no__in=wh_check_in_jobs_1)).distinct()
+    wh_check_in_jobs_2 = (Loadingbay_Info.objects.filter(lb_validity_date__lte=(timezone.now())+timedelta(days=1),lb_job_no__in=wh_check_in_jobs_1).values('lb_job_no')).distinct()
     first_name = request.session.get('first_name')
     context = {
                 'wh_check_in_jobs_2' : wh_check_in_jobs_2,
