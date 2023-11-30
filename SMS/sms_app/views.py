@@ -100,3 +100,4 @@ from .sub_views.bunkname_view import bunkname_add,bunkname_list,bunkname_delete
 from .sub_views.places_view import places_add,places_list,places_delete
 from .sub_views.enquirynote_vehicle_view import enquirynotevehicle_add,enquirynotevehicle_list,enquirynotevehicle_delete,enquirynotevehicle_cancel
 from .sub_views.consignmentgoods_view import consignmentgoods_add,consignmentgoods_list,consignmentgoods_delete,consignmentgoods_nav,consignmentgoods_cancel
+from .sub_views.pregateintruck_view import pregateintruck_add,pregateintruck_list,pregateintruck_delete

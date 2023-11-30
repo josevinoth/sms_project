@@ -22,14 +22,24 @@ def gatein_pre_add(request, gatein_pre_id=0):
         if gatein_pre_id == 0:
             print("I am inside Get add Pre Gatein")
             gatein_pre_form = Gatein_preaddForm()
+            context = {
+                'first_name': first_name,
+                'gatein_pre_form': gatein_pre_form,
+                'user_branch_id': user_branch_id,
+                'user_id': user_id,
+            }
         else:
             gatein_pre_info = Gatein_pre_info.objects.get(pk=gatein_pre_id)
+            gatein_num_id = Gatein_pre_info.objects.get(pk=gatein_pre_id).id
+            request.session['gatein_num_id'] = gatein_num_id
             gatein_pre_form = Gatein_preaddForm(instance=gatein_pre_info)
-        context = {
+            pregateintruck_list = Pregateintruckinfo.objects.filter(pregatein_number=gatein_num_id)
+            context = {
             'first_name': first_name,
             'gatein_pre_form': gatein_pre_form,
             'user_branch_id': user_branch_id,
             'user_id': user_id,
+            'pregateintruck_list': pregateintruck_list,
         }
         return render(request, "asset_mgt_app/gatein_pre_add.html", context)
     else:

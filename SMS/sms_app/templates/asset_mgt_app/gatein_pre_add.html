@@ -26,51 +26,9 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Transporter</span>
+										<span class="input-group-text">Type Of OTL</span>
 									</div>
-									{% render_field gatein_pre_form.gatein_pre_transporter class="form-control" id="gatein_pre_transporter" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Truck Number</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_truck_number class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Truck Type</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_truck_type id="gatein_pre_truck_type" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver Name</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_driver id="gatein_pre_driver" class="form-control"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver Number</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_contact_number class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver DL Number</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_DL_number class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Arrival Date & Time</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_arrival_date_time type="datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">OTL</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_otl class="form-control" %}
+									{% render_field gatein_pre_form.gatein_pre_otl class="form-control " id="gatein_pre_branch" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -116,12 +74,87 @@
 	<div class="col-3"></div>
 	</div>
 </form>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table id="pregateintruck_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Created On</th>
+            <th>Pre-Gate-In #</th>
+            <th>Transporter</th>
+            <th>Truck Number</th>
+            <th>Truck Type</th>
+            <th>Driver Name</th>
+            <th>Driver Number</th>
+            <th>Driver DL Number</th>
+            <th>OTL</th>
+            <th>Updated On</th>
+            <th>Updated By</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+        {% for pregateintruckinfo in pregateintruck_list %}
+        <tr>
+            <td> {{pregateintruckinfo.pregatein_created_at}}</td>
+            <td> {{pregateintruckinfo.pregatein_number}}</td>
+            <td> {{pregateintruckinfo.pregatein_transporter}}</td>
+            <td> {{pregateintruckinfo.pregatein_truck_number}}</td>
+            <td> {{pregateintruckinfo.pregatein_truck_type}}</td>
+            <td> {{pregateintruckinfo.pregatein_driver}}</td>
+            <td> {{pregateintruckinfo.pregatein_contact_number}}</td>
+            <td> {{pregateintruckinfo.pregatein_DL_number}}</td>
+            <td> {{pregateintruckinfo.pregatein_otl}}</td>
+            <td> {{pregateintruckinfo.pregatein_updated_at}}</td>
+            <td> {{pregateintruckinfo.pregatein_updated_by}}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'pregateintruck_update' pregateintruckinfo.id %}" >
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'pregateintruck_delete' pregateintruckinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
 <script>
-$(document).ready(function() {
+    $(document).ready(function() {
+    $('#gatein_list').DataTable({
+        order: [1, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
+    var gateinpre_num = document.getElementById("gatein_pre_number").value
+    if (gateinpre_num =="")
+	{
+		$('#add_gateinpre').addClass('disable_a_href');
+	}
+	else
+	{
+		$('#add_gateinpre').removeClass('disable_a_href');
+	}
 	document.getElementById("gatein_pre_updated_by").value ='{{user_id}}';
 
 	document.getElementById("gatein_pre_branch").value ='{{user_branch_id}}';
-  });
+} );
 </script>
+
 
 {% endblock content %}

@@ -11,8 +11,7 @@ class Loadingbay_Info(models.Model):
     lb_packing_list = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list')
     lb_eway_bill= models.CharField(blank=True, null=True, max_length=20,default='')
     lb_validity_date= models.DateTimeField(blank=True, null=True)
-    lb_otl_check = models.ForeignKey(GstexcemptionInfo,on_delete=models.CASCADE,related_name='lb_otl_check', db_column='lb_otl_check',default=1)
-    lb_offload_acceptance = models.ForeignKey(GstexcemptionInfo,on_delete=models.CASCADE,related_name='lb_offload_acceptance', db_column='lb_offload_acceptance',default=1)
+
     lb_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6, null=True)
     lb_stock_unloading_start_time = models.DateTimeField(blank=True, null=True)
     lb_stock_unloading_end_time = models.DateTimeField(blank=True, null=True)

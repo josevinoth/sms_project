@@ -432,4 +432,9 @@ urlpatterns = [
     path('dispatch_stock_list/', views.dispatch_stock_list, name='dispatch_stock_list'),# dispatch_stock_list
     path('wh_e_way_bill_list/', views.wh_e_way_bill_list, name='wh_e_way_bill_list'),# wh_e_way_bill_list
     path('edit_wh_e_way_bill_list/<int:wh_job_id>', views.edit_wh_e_way_bill_list, name='edit_wh_e_way_bill_list'),# edit_wh_e_way_bill_list
+    path('pregateintruck_list/', views.pregateintruck_list, name='pregateintruck_list'),  # List pregateintruck
+    path('pregateintruck_insert/', views.pregateintruck_add, name='pregateintruck_insert'),  # Add pregateintruck
+    path('pregateintruck_update/<int:pregateintruck_id>', views.pregateintruck_add, name='pregateintruck_update'),  # update pregateintruck
+    path('pregateintruck_delete/<int:pregateintruck_id>', views.pregateintruck_delete, name='pregateintruck_delete'),  # delete pregateintruck
 ]
+

@@ -11,7 +11,6 @@ class Gatein_preaddForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(Gatein_preaddForm, self).__init__(*args, **kwargs)
-        self.fields['gatein_pre_truck_type'].empty_label = "--Select--"
         self.fields['gatein_pre_status'].empty_label = "--Select--"
         self.fields['gatein_pre_branch'].empty_label = "--Select--"
 
