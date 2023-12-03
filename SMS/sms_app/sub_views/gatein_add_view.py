@@ -271,7 +271,7 @@ def load_pre_gate_in(request):
     # Driver_Contact=pre_gatein_val_final[0]['gatein_pre_contact_number']
     Driver_Contact=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_contact_number',flat=True)
     # Driver_License=pre_gatein_val_final[0]['gatein_pre_DL_number']
-    Driver_License=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_DL_number',flat=True)
+    Driver_License=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_dl_number',flat=True)
     # OTL=pre_gatein_val_final[0]['gatein_pre_otl']
     OTL=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_otl',flat=True)
     # Truck_Number=pre_gatein_val_final[0]['gatein_pre_truck_number']
