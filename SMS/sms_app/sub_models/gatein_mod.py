@@ -16,7 +16,7 @@ class Gatein_info(models.Model):
     gatein_actual_count = models.IntegerField(blank=True, null=True,default=0)
     gatein_driver = models.CharField(blank=True, null=True, max_length=2000)
     gatein_contact_number = models.CharField(blank=True, null=True, max_length=2000)
-    gatein_DL_number = models.CharField(blank=True, null=True, max_length=2000)
+    gatein_dl_number = models.CharField(blank=True, null=True, max_length=2000)
     gatein_otl = models.CharField(blank=True, null=True, max_length=2000)
     gatein_transporter = models.CharField(blank=True, null=True, max_length=2000)
     gatein_truck_number = models.CharField(blank=True, null=True, max_length=2000)

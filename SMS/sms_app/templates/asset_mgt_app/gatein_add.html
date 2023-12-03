@@ -179,7 +179,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver License</span>
 									</div>
-									{% render_field gatein_form.gatein_DL_number id="gatein_DL_number" class="form-control disable_a_href" %}
+									{% render_field gatein_form.gatein_dl_number id="gatein_dl_number" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -366,6 +366,7 @@ $(document).ready(function() {
 			var OTL=JSON.parse(data)["OTL"];
 			var Truck_Number=JSON.parse(data)["Truck_Number"];
 			var Truck_Type=JSON.parse(data)["Truck_Type"];
+			alert(Driver_Name)
 			document.getElementById("gatein_transporter").value =Transporter;
 			document.getElementById("gatein_truck_number").value =Truck_Number;
 			document.getElementById("gatein_truck_type").value =Truck_Type;

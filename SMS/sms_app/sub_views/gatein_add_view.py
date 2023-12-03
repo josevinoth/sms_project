@@ -258,14 +258,11 @@ def gatein_delete(request,gatein_id):
 def load_pre_gate_in(request):
     # Fetch pre_gate_in details
     pre_gatein_val = request.GET.get('pre_gatein_val')
-    print('pre_gatein_val',pre_gatein_val)
     pre_gatein_id=Gatein_pre_info.objects.get(gatein_pre_number=pre_gatein_val).id
     # Fetch Bay details
     pre_gatein_val_final = Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values()
-    print('pre_gatein_val_final',pre_gatein_val_final)
     # Transporter=pre_gatein_val_final[0]['pregatein_transporter']
     Transporter=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_transporter',flat=True)
-    print('Transporter',Transporter)
     # Driver_Name=pre_gatein_val_final[0]['gatein_pre_driver']
     Driver_Name=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_driver',flat=True)
     # Driver_Contact=pre_gatein_val_final[0]['gatein_pre_contact_number']
@@ -281,6 +278,10 @@ def load_pre_gate_in(request):
     Truck_Name=[]
     for i in Truck_Type:
         Truck_Name.append(VehicletypeInfo.objects.get(id=i).vt_vehicletype)
+
+    print('Driver_Name',Driver_Name)
+    print('Driver_Contact',Driver_Contact)
+    print('Driver_License',Driver_License)
     data = {
             'Transporter': list(Transporter),
             'Driver_Name': list(Driver_Name),
