@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import VehicletypeInfo,MyUser,GstexcemptionInfo,Gatein_pre_info,SealedoropenedInfo
+from ..models import TypeofotlInfo,Location_info,VehicletypeInfo,MyUser,GstexcemptionInfo,Gatein_pre_info,SealedoropenedInfo
 
 class Pregateintruckinfo(models.Model):
     pregatein_number = models.ForeignKey(Gatein_pre_info, null=True,on_delete=models.CASCADE, default='')
@@ -15,11 +15,11 @@ class Pregateintruckinfo(models.Model):
     pregatein_created_at = models.DateTimeField(null=True,auto_now_add=True)
     pregatein_updated_at = models.DateTimeField(null=True,auto_now=True)
     pregatein_updated_by = models.ForeignKey(MyUser,on_delete=models.CASCADE, default='')
+    pregatein_otl_type = models.ForeignKey(TypeofotlInfo, on_delete=models.CASCADE, related_name='pregatein_otl_type',db_column='pregatein_otl_type', default=1)
     pregatein_otl_check = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, related_name='pregatein_otl_check',db_column='pregatein_otl_check', default=1)
     pregatein_offload_acceptance = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,related_name='pregatein_offload_acceptance', db_column='pregatein_offload_acceptance',default=1)
-    pregatein_pouch = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,related_name='pregatein_poch', db_column='pregatein_poch',default=1)
-    pregatein_pouch_yes = models.ForeignKey(SealedoropenedInfo, null=True,on_delete=models.CASCADE, default='')
-
+    pregatein_pouch = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,related_name='pregatein_poch', db_column='pregatein_poch',default=2)
+    pregatein_pouch_yes = models.ForeignKey(SealedoropenedInfo, null=True,on_delete=models.CASCADE, default="")
 
     class Meta:
         ordering = ["pregatein_number"]

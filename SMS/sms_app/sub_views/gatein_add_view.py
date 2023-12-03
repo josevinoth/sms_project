@@ -4,11 +4,9 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
-from django.utils import timezone
-
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Location_info,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
+from ..models import VehicletypeInfo,Pregateintruckinfo,Location_info,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from ..models import User_extInfo
@@ -260,23 +258,37 @@ def gatein_delete(request,gatein_id):
 def load_pre_gate_in(request):
     # Fetch pre_gate_in details
     pre_gatein_val = request.GET.get('pre_gatein_val')
+    print('pre_gatein_val',pre_gatein_val)
+    pre_gatein_id=Gatein_pre_info.objects.get(gatein_pre_number=pre_gatein_val).id
     # Fetch Bay details
-    pre_gatein_val_final = Gatein_pre_info.objects.filter(gatein_pre_number=pre_gatein_val).values()
-    Transporter=pre_gatein_val_final[0]['gatein_pre_transporter']
-    Driver_Name=pre_gatein_val_final[0]['gatein_pre_driver']
-    Driver_Contact=pre_gatein_val_final[0]['gatein_pre_contact_number']
-    Driver_License=pre_gatein_val_final[0]['gatein_pre_DL_number']
-    OTL=pre_gatein_val_final[0]['gatein_pre_otl']
-    Truck_Number=pre_gatein_val_final[0]['gatein_pre_truck_number']
-    Truck_Type=pre_gatein_val_final[0]['gatein_pre_truck_type_id']
+    pre_gatein_val_final = Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values()
+    print('pre_gatein_val_final',pre_gatein_val_final)
+    # Transporter=pre_gatein_val_final[0]['pregatein_transporter']
+    Transporter=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_transporter',flat=True)
+    print('Transporter',Transporter)
+    # Driver_Name=pre_gatein_val_final[0]['gatein_pre_driver']
+    Driver_Name=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_driver',flat=True)
+    # Driver_Contact=pre_gatein_val_final[0]['gatein_pre_contact_number']
+    Driver_Contact=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_contact_number',flat=True)
+    # Driver_License=pre_gatein_val_final[0]['gatein_pre_DL_number']
+    Driver_License=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_DL_number',flat=True)
+    # OTL=pre_gatein_val_final[0]['gatein_pre_otl']
+    OTL=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_otl',flat=True)
+    # Truck_Number=pre_gatein_val_final[0]['gatein_pre_truck_number']
+    Truck_Number=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_truck_number',flat=True)
+    # Truck_Type=pre_gatein_val_final[0]['gatein_pre_truck_type_id']
+    Truck_Type=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id).values_list('pregatein_truck_type',flat=True)
+    Truck_Name=[]
+    for i in Truck_Type:
+        Truck_Name.append(VehicletypeInfo.objects.get(id=i).vt_vehicletype)
     data = {
-            'Transporter': Transporter,
-            'Driver_Name': Driver_Name,
-            'Driver_Contact': Driver_Contact,
-            'Driver_License': Driver_License,
-            'OTL': OTL,
-            'Truck_Number':Truck_Number,
-            'Truck_Type': Truck_Type,
+            'Transporter': list(Transporter),
+            'Driver_Name': list(Driver_Name),
+            'Driver_Contact': list(Driver_Contact),
+            'Driver_License': list(Driver_License),
+            'OTL': list(OTL),
+            'Truck_Number':list(Truck_Number),
+            'Truck_Type': list(Truck_Name),
         }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))

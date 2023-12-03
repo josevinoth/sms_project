@@ -13,10 +13,10 @@ class Gatein_pre_info(models.Model):
     gatein_pre_updated_by = models.ForeignKey(MyUser,on_delete=models.CASCADE, default='')
     gatein_pre_shipment_att = models.FileField(upload_to=pre_checkin_directory_path, blank=True, null=True)
     gatein_pre_cust_appr_att = models.FileField(upload_to=pre_checkin_directory_path, blank=True, null=True)
-    gatein_pre_otl = models.ForeignKey(TypeofotlInfo, on_delete=models.CASCADE,blank=True,null=True)
-
+    gatein_pre_truck_number = models.CharField(blank=True, null=True, max_length=10000)
+    gatein_pre_driver_name = models.CharField(blank=True, null=True, max_length=10000)
     class Meta:
-        ordering = ["gatein_pre_number"]
+        ordering = ["-gatein_pre_number"]
 
     def __str__(self):
         return self.gatein_pre_number

@@ -8,10 +8,10 @@
 		<div class="col-6">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Pre-Gatein</h3></div>
+					<div class="card-header text-center"><h3>Add/Update Truck Details</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Pre Gate-In ID</span>
@@ -60,11 +60,13 @@
 									</div>
 									{% render_field form.pregatein_DL_exp_date type="date" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Pouch</span>
 									</div>
-									{% render_field form.pregatein_pouch id="pregatein_pouch" onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.pregatein_pouch id="pregatein_pouch" onchange="change_pouch()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -80,7 +82,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">OTL</span>
+										<span class="input-group-text">OTL Type</span>
+									</div>
+									{% render_field form.pregatein_otl_type id="pregatein_otl_type" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">OTL Number</span>
 									</div>
 									{% render_field form.pregatein_otl class="form-control" %}
 								</div>
@@ -134,15 +142,21 @@ $(document).ready(function() {
 	{
 		document.getElementById("pregatein_number").value = pregateintruck_num_id_val;
 	}
+	change_pouch()
   });
 </script>
 
 <script>
-function change_charge_type() {
+function change_pouch() {
 	var jn=document.getElementById("pregatein_pouch").value
-	if ( jn==2)
+	if ( jn==1)
 	{
 		$('#pregatein_pouch_yes').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#pregatein_pouch_yes').addClass('disable_a_href');
+		document.getElementById("pregatein_pouch_yes").value=3
 	}
 }
 </script>

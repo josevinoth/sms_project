@@ -15,3 +15,4 @@ class PregateintruckForm(forms.ModelForm):
         self.fields['pregatein_offload_acceptance'].empty_label = "--Select--"
         self.fields['pregatein_pouch'].empty_label = "--Select--"
         self.fields['pregatein_pouch_yes'].empty_label = "--Select--"
+        self.fields['pregatein_otl_type'].empty_label = "--Select--"
