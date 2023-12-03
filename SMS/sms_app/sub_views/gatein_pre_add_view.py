@@ -9,7 +9,6 @@ from ..models import Pregateintruckinfo,Gatein_pre_info
 from ..models import User_extInfo,Location_info
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
-
 # Add WH Job
 @transaction.atomic
 @login_required(login_url='login_page')
@@ -84,7 +83,7 @@ def gatein_pre_add(request, gatein_pre_id=0):
 @login_required(login_url='login_page')
 def gatein_pre_list(request):
     first_name = request.session.get('first_name')
-    Gatein_pre_list= (Gatein_pre_info.objects.all()).order_by('id')
+    Gatein_pre_list= (Gatein_pre_info.objects.all()).order_by('-id')
     page_number = request.GET.get('page')
     paginator = Paginator(Gatein_pre_list, 1000)
     page_obj = paginator.get_page(page_number)
@@ -100,7 +99,9 @@ def gatein_pre_list(request):
 def gatein_pre_delete(request,gatein_pre_id):
     gatein_pre_del = Gatein_pre_info.objects.get(pk=gatein_pre_id)
     gatein_pre_number_sess = Gatein_pre_info.objects.get(pk=gatein_pre_id).gatein_pre_number
+    gatein_truck_del=Pregateintruckinfo.objects.filter(pregatein_number=gatein_pre_id)
     gatein_pre_del.delete()
+    gatein_truck_del.delete()
     return redirect('/SMS/pre_gatein_search')
 @login_required(login_url='login_page')
 def pre_gatein_search(request):
@@ -115,7 +116,7 @@ def pre_gatein_search(request):
     if not driver_name:
         driver_name = ""
     # Gatein_pre_list = Gatein_pre_info.objects.filter(Q(gatein_pre_number__icontains =pre_gate_in)|Q(gatein_pre_number__isnull=True)).order_by('id')
-    Gatein_pre_list = Gatein_pre_info.objects.filter((Q(gatein_pre_number__icontains =pre_gate_in)|Q(gatein_pre_number__isnull=True)) & (Q(gatein_pre_truck_number__icontains =truck_number)|Q(gatein_pre_truck_number__isnull=True)) & (Q(gatein_pre_driver_name__icontains =driver_name)|Q(gatein_pre_driver_name__isnull=True))).order_by('id')
+    Gatein_pre_list = Gatein_pre_info.objects.filter((Q(gatein_pre_number__icontains =pre_gate_in)|Q(gatein_pre_number__isnull=True)) & (Q(gatein_pre_truck_number__icontains =truck_number)|Q(gatein_pre_truck_number__isnull=True)) & (Q(gatein_pre_driver_name__icontains =driver_name)|Q(gatein_pre_driver_name__isnull=True))).order_by('-id')
     page_number = request.GET.get('page')
     paginator = Paginator(Gatein_pre_list, 50)
     page_obj = paginator.get_page(page_number)

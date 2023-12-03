@@ -278,10 +278,6 @@ def load_pre_gate_in(request):
     Truck_Name=[]
     for i in Truck_Type:
         Truck_Name.append(VehicletypeInfo.objects.get(id=i).vt_vehicletype)
-
-    print('Driver_Name',Driver_Name)
-    print('Driver_Contact',Driver_Contact)
-    print('Driver_License',Driver_License)
     data = {
             'Transporter': list(Transporter),
             'Driver_Name': list(Driver_Name),

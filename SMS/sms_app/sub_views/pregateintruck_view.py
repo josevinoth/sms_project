@@ -33,7 +33,6 @@ def pregateintruck_add(request,pregateintruck_id=0):
                 messages.success(request, 'Record Updated Successfully')
                 # return redirect(request.META['HTTP_REFERER'])
                 a=pregateintruckdetails_list(request,gatein_num_id)
-                print(a[0])
                 return redirect('/SMS/pregateintruck_update/' + str(last_id))
             else:
                 print("Pregateintruckinfo Form is Not Valid")
@@ -47,7 +46,6 @@ def pregateintruck_add(request,pregateintruck_id=0):
                 print("pregateintruckForm Form is Valid")
                 messages.success(request, 'Record Updated Successfully')
                 a = pregateintruckdetails_list(request, gatein_num_id)
-                print(a[0])
             else:
                 print("pregateintruckForm Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
@@ -55,9 +53,7 @@ def pregateintruck_add(request,pregateintruck_id=0):
 def pregateintruckdetails_list(request,gatein_num_id):
     turck_numbers=list(Pregateintruckinfo.objects.filter(pregatein_number=gatein_num_id).values_list('pregatein_truck_number',flat=True))
     driver_names=list(Pregateintruckinfo.objects.filter(pregatein_number=gatein_num_id).values_list('pregatein_driver',flat=True))
-    print('gatein_num_id',gatein_num_id)
     pre_gatein_num=Gatein_pre_info.objects.get(id=gatein_num_id).gatein_pre_number
-    print('pre_gatein_num',pre_gatein_num)
     Gatein_pre_info.objects.filter(gatein_pre_number=pre_gatein_num).update(gatein_pre_truck_number=turck_numbers)
     Gatein_pre_info.objects.filter(gatein_pre_number=pre_gatein_num).update(gatein_pre_driver_name=driver_names)
     return (turck_numbers,driver_names)
@@ -81,5 +77,7 @@ def pregateintruck_list(request):
 def pregateintruck_delete(request,pregateintruck_id):
     pregateintruck = Pregateintruckinfo.objects.get(pk=pregateintruck_id)
     pregateintruck.delete()
+    gatein_num_id = request.session['gatein_num_id']
+    pregateintruckdetails_list(request,gatein_num_id)
     return redirect(request.META['HTTP_REFERER'])
 
