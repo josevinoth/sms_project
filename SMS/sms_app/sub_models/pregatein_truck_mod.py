@@ -20,6 +20,7 @@ class Pregateintruckinfo(models.Model):
     pregatein_offload_acceptance = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,related_name='pregatein_offload_acceptance', db_column='pregatein_offload_acceptance',default=1)
     pregatein_pouch = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,related_name='pregatein_poch', db_column='pregatein_poch',default=2)
     pregatein_pouch_yes = models.ForeignKey(SealedoropenedInfo, null=True,on_delete=models.CASCADE, default="")
+    pregatein_qty = models.IntegerField(default=0)
 
     class Meta:
         ordering = ["pregatein_number"]
