@@ -53,6 +53,7 @@
             <th>Updated By</th>
             <th>Updated On</th>
             <th>Dipatch List</th>
+            <th>Gate Pass</th>
             <th>Edit</th>
             <th>Delete</th>
         </thead>
@@ -74,6 +75,12 @@
             <td>
                 <a class="btn btn-primary" href="{% url 'dispatch_goods_list' dispatchinfo.id  %}" >
                     <i class="fa fa-truck" aria-hidden="true"></i>
+                </a>
+            </td>
+
+            <td>
+                <a class="btn btn-warning" href="{% url 'dispatch_gatepass_pdf' dispatchinfo.id %}" >
+                    <i class="fas fa-luggage-cart"></i>
                 </a>
             </td>
 

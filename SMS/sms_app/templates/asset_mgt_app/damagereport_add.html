@@ -59,12 +59,12 @@
 								<h3>Add/Update Damage Check/Before</h3>
 							</div>
 							<div class="col-2">
-								<a href="#" class="btn btn-warning btn-block disable_a_href" id="delivery_chalan_btn">
+								<a href="#" class="btn btn-warning btn-block " id="delivery_chalan_btn">
 									Delivery Chelan          <i class="fa fa-download " aria-hidden="true"></i>
 								</a>
 							</div>
 							<div class="col-2">
-								<a href="{% url 'damage_report' %}" class="btn btn-warning btn-block disable_a_href" id="damage_report_btn">
+								<a href="{% url 'damage_report' %}" class="btn btn-warning btn-block " id="damage_report_btn">
 									Damage Report          <i class="fa fa-download" aria-hidden="true"></i>
 								</a>
 							</div>
@@ -187,54 +187,17 @@
 		<div class="col-2"></div>
 	</div>
 </form>
-<!--<script>-->
-<!--function grnnum() {-->
-<!--  var jn=document.getElementById("grn_num").value-->
-<!--  var user_branch='{{user_branch}}';-->
-<!--  var wh_grn_num_val= '{{wh_grn_num}}';-->
-<!--  if (jn=="")-->
-<!--	{-->
-<!--		if (user_branch=="BVM Chennai")-->
-<!--			{-->
-<!--		 		document.getElementById("grn_num").value ="MAA_"+"GRN_"+ wh_grn_num_val;-->
-<!--		 	}-->
-<!--		else if (user_branch=="BVM Benguluru")-->
-<!--			{-->
-<!--		 		document.getElementById("grn_num").value ="BLR_"+"GRN_"+ wh_grn_num_val;-->
-<!--		 	}-->
-<!--		else if (user_branch=="BVM Hyderabad")-->
-<!--			{-->
-<!--				document.getElementById("grn_num").value ="HYD_"+"GRN_"+ wh_grn_num_val;-->
-<!--			}-->
-<!--		else-->
-<!--			{-->
-<!--				document.getElementById("grn_num").value ="PNY_"+"GRN_"+ wh_grn_num_val;-->
-<!--			}-->
-<!--	}-->
-<!--	else-->
-<!--	{-->
-<!--  		document.getElementById("grn_num").value=jn;-->
-<!--  	}-->
-<!--}-->
-<!--</script>-->
 <script>
 function challan_damage_btn_active() {
 	var damage_type_val =document.getElementById("dam_damage_type").value;
 	var marks_numbers_val =document.getElementById("dam_marks_numbers").value;
+	var damage_status_val =document.getElementById("dam_status").value;
 	if ((damage_type_val!=6)||(marks_numbers_val==1))
 	 {
-	 	document.getElementById("dam_status").value=6
-	 	$('#dam_status').addClass('disable_a_href');
-	 	$('#delivery_chalan_btn').removeClass('disable_a_href');
-	 	$('#damage_report_btn').removeClass('disable_a_href');
 	 	$('#dam_customer_approval').removeClass('disable_a_href');
-
 	 }
 	 else
 	 {
-	 	$('#dam_status').removeClass('disable_a_href');
-	 	$('#delivery_chalan_btn').addClass('disable_a_href');
-	 	$('#damage_report_btn').addClass('disable_a_href');
 	 	$('#dam_customer_approval').addClass('disable_a_href');
 	 }
 }
@@ -325,6 +288,7 @@ $(document).ready(function() {
 		$('#warehousein_btn').addClass('btn-warning');
 	}
 <!--	grnnum()-->
+challan_damage_btn_active()
   });
 </script>
 {% endblock content %}

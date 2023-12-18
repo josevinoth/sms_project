@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+   <!-- Fontawesome cdn -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <!--    <style>-->
+            .report_body{
+                font-weight:200;
+                font-size:14px;
+            }
+            .report_header{
+                font-weight:100;
+                font-size:20px;
+                text-align:center;
+                color:#007cae;
+            }
+            .report_title{
+                font-weight:100;
+                font-size:22px;
+                padding:10px 20px 0px 20px;
+            }
+            .report_title span{
+                color: #007cae;
+            }
+            .report_details{
+                padding:10px 20px 0px 20px;
+                text-align:left !important;
+            }
+            .report_hrItem{
+                border: none;
+                height: 1px;
+                color: #333;
+                background-color:#fff;
+            }
+            .report_footer{
+                font-size:8px;
+                text-align:center;
+                color:#007cae;
+                display: block;
+            }
+            .report_logo{
+                width:50px;
+                height:75px;
+            }
+    <!--    </style>-->
+</head>
+<div class="row">
+    <div class="col-2">
+        <img src="media/Company_Logo.png" alt="home" />
+    </div>
+    <div class="col-8 ">
+        <p class="align-self-center">Damage Report</p>
+<!--        <span>Damage Report</span>-->
+    </div>
+    <div class="col-2 "></div>
+</div>
+<hr class="report_hrItem"/>
+<body>
+{% block content %}
+
+{% endblock content %}
+<!-- Option 1: Bootstrap Bundle with Popper -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+</body>
+<hr class="report_hrItem"/>
+<footer class="report_footer">
+    <p>Address 70, Adam Nagar Road Nagalkeni, Chrompet Chennai 600 044</p>
+</footer>
+</html>

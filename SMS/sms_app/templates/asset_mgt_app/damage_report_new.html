@@ -1,88 +1,44 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-
-    <title>Damage Report {{damageinformation.gatein_invoice}}</title>
-    <style>
-        .report_body{
-            font-weight:200;
-            font-size:14px;
-        }
-        .report_header{
-            font-weight:100;
-            font-size:20px;
-            text-align:center;
-            color:#007cae;
-        }
-        .report_title{
-            font-weight:100;
-            font-size:22px;
-            padding:10px 20px 0px 20px;
-        }
-        .report_title span{
-            color: #007cae;
-        }
-        .report_details{
-            padding:10px 20px 0px 20px;
-            text-align:left !important;
-        }
-        .report_hrItem{
-            border: none;
-            height: 1px;
-            color: #333;
-            background-color:#fff;
-        }
-        .report_footer{
-            font-size:8px;
-            text-align:center;
-            color:#007cae;
-            display: block;
-        }
-        .report_logo{
-            width:100px;
-            height:150px;
-        }
-    </style>
-    {% load static %}
-  </head>
-  <body class="report_body">
-    {% for damageinformation in damage_list %}
+{% extends "asset_mgt_app/report_header_new.html" %}
+{% block content %}
+{% for damageinformation in damage_list %}
 <div class="row">
-    <div class="col-2 report_logo border border-dark">
-        <img src="media/Company_Logo.png" alt="home" />
+    <div>
+        <p class="report_title" ><img src="media/Company_Logo.png" alt="home" style="float:left;vertical-align:middle;"><span>Damage Report ({{damageinformation.dam_wh_job_num}})</span></p>
     </div>
-    <div class="col-8 ">
-        <div class='wrapper'>
-            <div class='report_header'>
-                <p class="report_title">Damage Report</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-2 "></div>
 </div>
 <hr class="report_hrItem"/>
 <div class='report_details'>
-    Job Number:{{damageinformation.gatein_job_no}}</br>
-    Invoice:{{damageinformation.gatein_invoice}}</br>
-    Customer:{{damageinformation.gatein_customer}}</br>
+    <table>
+        <tr>
+            <th>Job Number</th>
+            <td>{{damageinformation.dam_wh_job_num}}</td>
+        </tr>
+        <tr>
+            <th>GRN Number</th>
+            <td>{{damageinformation.dam_GRN_num}}</td>
+        </tr>
+        <tr>
+            <th>Damage Type</th>
+            <td>{{damageinformation.dam_damage_type}}</td>
+        </tr>
+        <tr>
+            <th>No. of Units Deviating</th>
+            <td>{{damageinformation.dam_no_of_units_deviation}}</td>
+        </tr>
+        <tr>
+            <th>Ratification Process</th>
+            <td>{{damageinformation.dam_ratification_process}}</td>
+        </tr>
+        <tr>
+            <th>Marks & Number Deviation?</th>
+            <td>{{damageinformation.dam_marks_numbers}}</td>
+        </tr>
+        <tr>
+            <th>Comments</th>
+            <td>{{damageinformation.dam_comments}}</td>
+        </tr>
+    </table>
 </div>
 
 {% endfor %}
-
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-  </body>
-<hr class="report_hrItem"/>
-<footer class="report_footer">
-    <p>Address 70, Adam Nagar Road Nagalkeni, Chrompet Chennai 600 044</p>
-</footer>
-</html>
+{% endblock content %}

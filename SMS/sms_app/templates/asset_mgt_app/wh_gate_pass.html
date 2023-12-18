@@ -1,0 +1,70 @@
+{% extends "asset_mgt_app/report_header_new.html" %}
+{% block content %}
+{% for dispatch_detail in dispatch_details %}
+<div class="row">
+    <div>
+        <p class="report_title" ><img src="media/Company_Logo.png" alt="home" style="float:left;vertical-align:middle;">Gate Pass ({{dispatch_detail.dispatch_num}})</p>
+    </div>
+</div>
+<hr class="report_hrItem"/>
+<div>
+<table class='report_details'>
+    <tr>
+        <th>Dispatch Date</th>
+        <td>{{dispatch_detail.dispatch_depature_date}}</td>
+    </tr>
+    <tr>
+        <th>Transporter</th>
+        <td>{{dispatch_detail.dispatch_transporter}}</td>
+    </tr>
+    <tr>
+        <th>Driver Name</th>
+        <td>{{dispatch_detail.dispatch_driver}}</td>
+    </tr>
+    <tr>
+        <th>Driver Contact</th>
+        <td>{{dispatch_detail.dispatch_contact_number}}</td>
+    </tr>
+    <tr>
+        <th>Driving License Number</th>
+        <td>{{dispatch_detail.dispatch_DL_number}}</td>
+    </tr>
+    <tr>
+        <th>OTL Number</th>
+        <td>{{dispatch_detail.dispatch_otl}}</td>
+    </tr>
+</table>
+
+{% endfor %}
+<table class='report_details'>
+    <tr>
+        <th>Shipper Name</th>
+        <th>Invoice Number</th>
+        <th>No. Of Pieces</th>
+        <th>Weight</th>
+        <th>Total Pieces</th>
+        <th>Total Weight</th>
+    </tr>
+    {% for wh_dispatch_detail in wh_dispatch_details %}
+    <tr>
+        <td>{{wh_dispatch_detail.wh_consignee}}</td>
+        <td>{{wh_dispatch_detail.wh_goods_invoice}}</td>
+        <td>{{wh_dispatch_detail.wh_goods_pieces}}</td>
+        <td>{{wh_dispatch_detail.wh_goods_weight}}</td>
+        <td>{{wh_dispatch_detail.wh_total_qty}}</td>
+        <td>{{wh_dispatch_detail.wh_invoice_weight_unit}}</td>
+    </tr>
+    {% endfor %}
+</table>
+    </div>
+<script>
+    $(document).ready(function() {
+    $('#wh_dispatch_detail').DataTable({
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
+});
+</script>
+{% endblock content %}

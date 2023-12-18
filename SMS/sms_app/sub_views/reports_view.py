@@ -257,8 +257,7 @@ def deviation_report(request):
 @login_required(login_url='login_page')
 def damage_report_pdf(request):
     wh_job_id = request.session.get('ses_gatein_id_nam')
-    print('wh_job_id',wh_job_id)
-    damage_list=Gatein_info.objects.filter(gatein_job_no=wh_job_id)
+    damage_list=DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id)
     context={
         'damage_list':damage_list,
     }

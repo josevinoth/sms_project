@@ -1,21 +1,30 @@
-from random import randint
 import time
 from datetime import datetime
 from django.http import JsonResponse
+from django.template.loader import get_template
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
+from django.views import View
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Frame, PageTemplate, BaseDocTemplate
+from xhtml2pdf import pisa
+
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import StatusList,Gatein_info,Warehouse_goods_info,Dispatch_info
+from ..models import Warehouse_goods_info,Dispatch_info
 from django.contrib import messages
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
 from ..views import warehousevolme_area_calc
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
 
 # Add Dispatch Job
 @transaction.atomic
@@ -349,5 +358,30 @@ def dispatch_search(request):
         'page_obj': page_obj,
         }
     return render(request, "asset_mgt_app/dispatch_list.html", context)
+@login_required(login_url='login_page')
+def dispatch_gatepass_pdf(request,dispatch_id=0):
+    wh_job_id = request.session.get('ses_gatein_id_nam')
+    dispatch_num=Dispatch_info.objects.get(id=dispatch_id).dispatch_num
+    wh_dispatch_details = (Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num)).order_by('id')
+    # dispatch_details = Warehouse_goods_info.objects.select_related('wh_dispatch_id').all()
+    # dispatch_details = Dispatch_info.objects.select_related('id').all()
+    dispatch_details = (Dispatch_info.objects.filter(dispatch_num=dispatch_num)).order_by('-id')
+    print('dispatch_details',dispatch_details)
+    context = {
+        'dispatch_details': dispatch_details,
+        'wh_dispatch_details': wh_dispatch_details,
+    }
+    template_path = 'asset_mgt_app/wh_gate_pass.html'
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="WH_Gate_Pass.pdf"'
 
+    template = get_template(template_path)
+    html = template.render(context)
+
+    # Create PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse('We has some error <pre>' + html + '</pre>')
+    return response
 
