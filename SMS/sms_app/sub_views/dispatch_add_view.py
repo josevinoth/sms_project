@@ -1,5 +1,7 @@
 import time
 from datetime import datetime
+
+from django.db.models.aggregates import Sum
 from django.http import JsonResponse
 from django.template.loader import get_template
 from django.utils import timezone
@@ -287,6 +289,10 @@ def dispatch_invoice_job_update(dispatch_num_val):
     dispatch_job_num_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_job_no',flat=True).distinct())
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_job_num_list=dispatch_job_num_list)
+    total_weight=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
+    total_goods=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
+    Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_total_weight=total_weight)
+    Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_total_goods=total_goods)
     return ()
 @login_required(login_url='login_page')
 def qr_dispatch_decoder(request,dispatch_id):
@@ -360,13 +366,9 @@ def dispatch_search(request):
     return render(request, "asset_mgt_app/dispatch_list.html", context)
 @login_required(login_url='login_page')
 def dispatch_gatepass_pdf(request,dispatch_id=0):
-    wh_job_id = request.session.get('ses_gatein_id_nam')
     dispatch_num=Dispatch_info.objects.get(id=dispatch_id).dispatch_num
     wh_dispatch_details = (Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num)).order_by('id')
-    # dispatch_details = Warehouse_goods_info.objects.select_related('wh_dispatch_id').all()
-    # dispatch_details = Dispatch_info.objects.select_related('id').all()
     dispatch_details = (Dispatch_info.objects.filter(dispatch_num=dispatch_num)).order_by('-id')
-    print('dispatch_details',dispatch_details)
     context = {
         'dispatch_details': dispatch_details,
         'wh_dispatch_details': wh_dispatch_details,

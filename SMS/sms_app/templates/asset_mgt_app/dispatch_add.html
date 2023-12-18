@@ -107,6 +107,18 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Total Weight</span>
+									</div>
+									{% render_field dispatch_form.dispatch_total_weight class="form-control disable_a_href"  id="dispatch_total_weight" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Goods</span>
+									</div>
+									{% render_field dispatch_form.dispatch_total_goods class="form-control disable_a_href"  id="dispatch_total_goods" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
 									{% render_field dispatch_form.dispatch_status class="form-control"  %}

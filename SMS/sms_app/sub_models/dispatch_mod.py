@@ -23,3 +23,5 @@ class Dispatch_info(models.Model):
     dispatch_mawb = models.CharField(null=True,blank=True, max_length=100)
     dispatch_invoice_list = models.CharField(null=True,blank=True, max_length=100000)
     dispatch_job_num_list = models.CharField(null=True,blank=True, max_length=100000)
+    dispatch_total_weight = models.FloatField(null=True,blank=True,default=0.0)
+    dispatch_total_goods = models.IntegerField(null=True,blank=True,default=0)
