@@ -1,12 +1,9 @@
 {% extends "asset_mgt_app/report_header_new.html" %}
 {% block content %}
 {% for damageinformation in damage_list %}
-<div class="row">
-    <div>
-        <p class="report_title" ><img src="media/Company_Logo.png" alt="home" style="float:left;vertical-align:middle;"><span>Damage Report ({{damageinformation.dam_wh_job_num}})</span></p>
-    </div>
+<div class="report_title">
+  Damage Report ({{damageinformation.dam_wh_job_num}})
 </div>
-<hr class="report_hrItem"/>
 <div class='report_details'>
     <table>
         <tr>

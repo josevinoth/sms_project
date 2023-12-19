@@ -1,12 +1,9 @@
 {% extends "asset_mgt_app/report_header_new.html" %}
 {% block content %}
 {% for dispatch_detail in dispatch_details %}
-<div class="row">
-    <div>
-        <p class="report_title" ><img src="media/Company_Logo.png" alt="home" style="float:left;vertical-align:middle;">Gate Pass ({{dispatch_detail.dispatch_num}})</p>
-    </div>
+<div class="report_title">
+  Dispatch Number ({{dispatch_detail.dispatch_num}})
 </div>
-<hr class="report_hrItem"/>
 <div>
     <table class='report_details'>
         <tr>
@@ -59,6 +56,7 @@
             <th>No. Of Pieces</th>
             <th>Weight</th>
             <th>Destination</th>
+            <th>HAWB</th>
         </tr>
         {% for wh_dispatch_detail in wh_dispatch_details %}
         <tr>
@@ -67,6 +65,7 @@
             <td>{{wh_dispatch_detail.wh_goods_pieces}}</td>
             <td>{{wh_dispatch_detail.wh_goods_weight}}</td>
             <td>{{wh_dispatch_detail.wh_gate_injob_no_id.gatein_destination}}</td>
+            <td>{{wh_dispatch_detail.wh_gate_injob_no_id.gatein_hawb}}</td>
         </tr>
         {% endfor %}
     </table>
