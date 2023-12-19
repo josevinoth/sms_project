@@ -373,8 +373,8 @@ def dispatch_gatepass_pdf(request,dispatch_id=0):
         'dispatch_details': dispatch_details,
         'wh_dispatch_details': wh_dispatch_details,
     }
+    dispatch_invoice_job_update(dispatch_num)
     file_name=str("WH_Gate_Pass_")+str(dispatch_num)+str(".pdf")
-    print(file_name)
     template_path = 'asset_mgt_app/wh_gate_pass.html'
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename={file_name}'
