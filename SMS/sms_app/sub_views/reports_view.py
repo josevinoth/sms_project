@@ -261,9 +261,10 @@ def damage_report_pdf(request):
     context={
         'damage_list':damage_list,
     }
+    file_name=str("Damage_Report_")+str(wh_job_id)+str(".pdf")
     template_path='asset_mgt_app/damage_report_new.html'
     response=HttpResponse(content_type='application/pdf')
-    response['Content-Disposition']='attachment; filename="Damage_Report.pdf"'
+    response['Content-Disposition']=f'attachment; filename={file_name}'
 
     template=get_template(template_path)
     html=template.render(context)

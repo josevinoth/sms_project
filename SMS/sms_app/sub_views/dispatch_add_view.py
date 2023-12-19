@@ -373,9 +373,11 @@ def dispatch_gatepass_pdf(request,dispatch_id=0):
         'dispatch_details': dispatch_details,
         'wh_dispatch_details': wh_dispatch_details,
     }
+    file_name=str("WH_Gate_Pass_")+str(dispatch_num)+str(".pdf")
+    print(file_name)
     template_path = 'asset_mgt_app/wh_gate_pass.html'
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="WH_Gate_Pass.pdf"'
+    response['Content-Disposition'] = f'attachment; filename={file_name}'
 
     template = get_template(template_path)
     html = template.render(context)
