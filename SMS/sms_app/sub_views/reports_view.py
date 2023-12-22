@@ -278,7 +278,16 @@ def damage_report_pdf(request):
 
 def export_stockreport_to_csv(request):
     # Fetch your data from the model or any other data source
-    data = (Warehouse_goods_info.objects.all()).order_by('-id')
+
+    # Assuming your model is imported and you have access to the queryset
+
+    four_months_ago = timezone.now() - timedelta(days=120)  # Assuming 30 days in a month
+    checked_in_records = Warehouse_goods_info.objects.filter(wh_check_in_out=1)
+    checked_out_last_four_months = Warehouse_goods_info.objects.filter(wh_check_in_out=2, wh_checkout_time__gte=four_months_ago)
+    # Combine the two querysets
+    data = checked_in_records.union(checked_out_last_four_months)
+
+    # data = (Warehouse_goods_info.objects.all()).order_by('-id')
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="Stock_Report.csv"'
