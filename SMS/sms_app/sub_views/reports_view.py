@@ -10,7 +10,7 @@ from xhtml2pdf import pisa
 from ..models import Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
 from django.db.models.aggregates import Sum
 from datetime import date, datetime,timedelta
-
+import pandas as pd
 @login_required(login_url='login_page')
 def reports(request):
     first_name = request.session.get('first_name')
@@ -277,249 +277,518 @@ def damage_report_pdf(request):
     return response
 
 def export_stockreport_to_csv(request):
-    # Fetch your data from the model or any other data source
+    # response = HttpResponse(content_type='text/csv')
+    # response['Content-Disposition'] = 'attachment; filename="Stock_Report.csv"'
+    #
+    # writer = csv.writer(response)
+    #
+    # # Write the header row
+    # writer.writerow(['Job Number', 'Stock Number', 'Customer','Date Of Arrival','Unloading Start Time','Unloading End Time','Transporter','Truck Number','Consigner','Consignee','Docs Received','HAWB','Destination','Invoice Number','Case Number','Invoice Qty','Invoice Weight (kg)','Checkin Weight (kg)','UOM','Length','Width','Height','Dims Qty','Package Type','Volume Weight','CBM','Invoice Value','Invoice Currency','Invoice (INR)','E-Way Bill#','E-Way Bill Validity','Fumigation Status','Check In-Out?','Branch','Unit','Bay','Storage Days','Truck_Number(Out)','Truck_Type(Out)','Truck_Depature_Time(Out)','Labels_Pasted_By','MAWB','Dispatch_Number'])  # Replace with actual column names
+    #
+    # # Iterate through the data and apply modifications as needed
+    # for stock_value in data:
+    #     # Check if the item or its attributes are None
+    #     if stock_value is not None:
+    #         try:
+    #             Job_Number=stock_value.wh_job_no
+    #         except:
+    #             Job_Number='null'
+    #
+    #         try:
+    #             Stock_Number=stock_value.wh_qr_rand_num
+    #         except:
+    #             Stock_Number='null'
+    #
+    #         try:
+    #             Customer=stock_value.wh_customer_name
+    #         except:
+    #             Customer='null'
+    #
+    #         try:
+    #             Date_Of_Arrival=((stock_value.wh_gate_injob_no_id.gatein_arrival_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
+    #         except:
+    #             Date_Of_Arrival='null'
+    #
+    #         try:
+    #             Unloading_Start_Time=((stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
+    #         except:
+    #             Unloading_Start_Time='null'
+    #
+    #         try:
+    #             Unloading_End_Time=((stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
+    #         except:
+    #             Unloading_End_Time='null'
+    #
+    #         try:
+    #             Transporter=stock_value.wh_gate_injob_no_id.gatein_transporter
+    #         except:
+    #             Transporter='null'
+    #
+    #         try:
+    #             Truck_Number=stock_value.wh_gate_injob_no_id.gatein_truck_number
+    #         except:
+    #             Truck_Number='null'
+    #
+    #         try:
+    #             Consigner=stock_value.wh_consigner
+    #         except:
+    #             Consigner='null'
+    #
+    #         try:
+    #             Consignee=stock_value.wh_consignee
+    #         except:
+    #             Consignee='null'
+    #
+    #         try:
+    #             Docs_Received=stock_value.wh_lb_job_no_id.lb_packing_list
+    #         except:
+    #             Docs_Received='null'
+    #
+    #         try:
+    #             HAWB= stock_value.wh_gate_injob_no_id.gatein_hawb
+    #         except:
+    #             HAWB='null'
+    #
+    #         try:
+    #             Destination=stock_value.wh_gate_injob_no_id.gatein_destination
+    #         except:
+    #             Destination='null'
+    #
+    #         try:
+    #             Invoice_Number=stock_value.wh_gate_injob_no_id.gatein_invoice
+    #         except:
+    #             Invoice_Number='null'
+    #
+    #         try:
+    #             Case_Number=stock_value.wh_po_num
+    #         except:
+    #             Case_Number='null'
+    #
+    #         try:
+    #             Invoice_Qty=stock_value.wh_total_qty
+    #         except:
+    #             Invoice_Qty='null'
+    #
+    #         try:
+    #             Invoice_Weight_kg=stock_value.wh_gross_weight
+    #         except:
+    #             Invoice_Weight_kg='null'
+    #
+    #         try:
+    #             Checkin_Weight_kg=stock_value.wh_invoice_weight_unit
+    #         except:
+    #             Checkin_Weight_kg='null'
+    #
+    #         try:
+    #             UOM=stock_value.wh_uom
+    #         except:
+    #             UOM='null'
+    #
+    #         try:
+    #             Length=stock_value.wh_goods_length
+    #         except:
+    #             Length='null'
+    #
+    #         try:
+    #             Width=stock_value.wh_goods_width
+    #         except:
+    #             Width='null'
+    #
+    #         try:
+    #             Height=stock_value.wh_goods_height
+    #         except:
+    #             Height='null'
+    #
+    #         try:
+    #             Dims_Qty=stock_value.wh_goods_pieces
+    #         except:
+    #             Dims_Qty='null'
+    #
+    #         try:
+    #             Package_Type=stock_value.wh_goods_package_type
+    #         except:
+    #             Package_Type='null'
+    #
+    #         try:
+    #             Volume_Weight=stock_value.wh_chargeable_weight
+    #         except:
+    #             Volume_Weight='null'
+    #
+    #         try:
+    #             CBM=stock_value.wh_cbm
+    #         except:
+    #             CBM='null'
+    #
+    #         try:
+    #             Invoice_Value=stock_value.wh_invoice_value
+    #         except:
+    #             Invoice_Value='null'
+    #
+    #         try:
+    #             Invoice_Currency=stock_value.wh_lb_job_no_id.lb_stock_invoice_currency
+    #         except:
+    #             Invoice_Currency='null'
+    #
+    #         try:
+    #             Invoice_INR=stock_value.wh_invoice_amount_inr
+    #         except:
+    #             Invoice_INR='null'
+    #
+    #         try:
+    #             E_Way_Bill=stock_value.wh_lb_job_no_id.lb_eway_bill
+    #         except:
+    #             E_Way_Bill='null'
+    #
+    #         try:
+    #             E_Way_Bill_Validity=((stock_value.wh_lb_job_no_id.lb_validity_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
+    #         except:
+    #             E_Way_Bill_Validity='null'
+    #
+    #         try:
+    #             Fumigation_Status=stock_value.wh_fumigation_process
+    #         except:
+    #             Fumigation_Status='null'
+    #
+    #         try:
+    #             Check_In_Out=stock_value.wh_check_in_out
+    #         except:
+    #             Check_In_Out='null'
+    #
+    #         try:
+    #             Branch=stock_value.wh_branch
+    #         except:
+    #             Branch='null'
+    #
+    #         try:
+    #             Unit=stock_value.wh_unit
+    #         except:
+    #             Unit='null'
+    #
+    #         try:
+    #             Bay=stock_value.wh_bay
+    #         except:
+    #             Bay='null'
+    #
+    #         try:
+    #             Storage_Days=stock_value.wh_storage_time
+    #         except:
+    #             Storage_Days='null'
+    #
+    #         try:
+    #             # Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number if stock_value.wh_dispatch_id.dispatch_truck_number is not None else 'null',
+    #             Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number
+    #         except:
+    #             Truck_Number_out='null'
+    #
+    #         try:
+    #             # Truck_Type_out=stock_value.wh_dispatch_id.dispatch_truck_type if stock_value.wh_dispatch_id.dispatch_truck_type is not None else 'null',
+    #             Truck_Type_out=stock_value.wh_dispatch_id.dispatch_truck_type
+    #         except:
+    #             Truck_Type_out='null'
+    #         try:
+    #             # Truck_Depature_Time_out=stock_value.wh_dispatch_id.dispatch_depature_date if stock_value.wh_dispatch_id.dispatch_depature_date is not None else 'null',
+    #             Truck_Depature_Time_out=((stock_value.wh_dispatch_id.dispatch_depature_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
+    #         except:
+    #             Truck_Depature_Time_out='null'
+    #         try:
+    #             # Labels_Pasted_By=stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm if stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm is not None else 'null',
+    #             Labels_Pasted_By=stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm
+    #         except:
+    #             Labels_Pasted_By='null'
+    #         try:
+    #             # MAWB=stock_value.wh_dispatch_id.dispatch_mawb if stock_value.wh_dispatch_id.dispatch_mawb is not None else 'null',
+    #             MAWB=stock_value.wh_dispatch_id.dispatch_mawb
+    #         except:
+    #             MAWB='null'
+    #         try:
+    #             # Dispatch_Number=stock_value.wh_dispatch_id.dispatch_num if stock_value.wh_dispatch_id.dispatch_num is not None else 'null',
+    #             Dispatch_Number=stock_value.wh_dispatch_id.dispatch_num
+    #         except:
+    #             Dispatch_Number='null'
+    #
+    #         writer.writerow([Job_Number,Stock_Number,Customer,Date_Of_Arrival,Unloading_Start_Time,Unloading_End_Time,Transporter,Truck_Number,Consigner,Consignee,Docs_Received,HAWB,Destination,Invoice_Number,Case_Number,Invoice_Qty,Invoice_Weight_kg,Checkin_Weight_kg,UOM,Length,Width,Height,Dims_Qty,Package_Type,Volume_Weight,CBM,Invoice_Value,Invoice_Currency,Invoice_INR,E_Way_Bill,E_Way_Bill_Validity,Fumigation_Status,Check_In_Out,Branch,Unit,Bay,Storage_Days,Truck_Number_out,Truck_Type_out,Truck_Depature_Time_out,Labels_Pasted_By,MAWB,Dispatch_Number])
+    #     else:
+    #         # Handle the case where the item is None (e.g., the object doesn't exist)
+    #         writer.writerow(['NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA'])
 
     # Assuming your model is imported and you have access to the queryset
-
     four_months_ago = timezone.now() - timedelta(days=120)  # Assuming 30 days in a month
     checked_in_records = Warehouse_goods_info.objects.filter(wh_check_in_out=1)
-    checked_out_last_four_months = Warehouse_goods_info.objects.filter(wh_check_in_out=2, wh_checkout_time__gte=four_months_ago)
+    checked_out_last_four_months = Warehouse_goods_info.objects.filter(wh_check_in_out=2,
+                                                                       wh_checkout_time__gte=four_months_ago)
     # Combine the two querysets
     data = checked_in_records.union(checked_out_last_four_months)
-
+    print('data', data)
     # data = (Warehouse_goods_info.objects.all()).order_by('-id')
-
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="Stock_Report.csv"'
-
-    writer = csv.writer(response)
-
-    # Write the header row
-    writer.writerow(['Job Number', 'Stock Number', 'Customer','Date Of Arrival','Unloading Start Time','Unloading End Time','Transporter','Truck Number','Consigner','Consignee','Docs Received','HAWB','Destination','Invoice Number','Case Number','Invoice Qty','Invoice Weight (kg)','Checkin Weight (kg)','UOM','Length','Width','Height','Dims Qty','Package Type','Volume Weight','CBM','Invoice Value','Invoice Currency','Invoice (INR)','E-Way Bill#','E-Way Bill Validity','Fumigation Status','Check In-Out?','Branch','Unit','Bay','Storage Days','Truck_Number(Out)','Truck_Type(Out)','Truck_Depature_Time(Out)','Labels_Pasted_By','MAWB','Dispatch_Number'])  # Replace with actual column names
-
-    # Iterate through the data and apply modifications as needed
+    # Create an empty list to store details for each record
+    details_list = []
     for stock_value in data:
-        # Check if the item or its attributes are None
-        if stock_value is not None:
-            try:
-                Job_Number=stock_value.wh_job_no
-            except:
-                Job_Number='null'
+        try:
+            Job_Number=stock_value.wh_job_no
+        except:
+            Job_Number='null'
+        try:
+            Stock_Number=stock_value.wh_qr_rand_num
+        except:
+            Stock_Number='null'
 
-            try:
-                Stock_Number=stock_value.wh_qr_rand_num
-            except:
-                Stock_Number='null'
+        try:
+            Customer=stock_value.wh_customer_name
+        except:
+            Customer='null'
 
-            try:
-                Customer=stock_value.wh_customer_name
-            except:
-                Customer='null'
+        try:
+            Date_Of_Arrival=((stock_value.wh_gate_injob_no_id.gatein_arrival_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            Date_Of_Arrival='null'
 
-            try:
-                Date_Of_Arrival=((stock_value.wh_gate_injob_no_id.gatein_arrival_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
-            except:
-                Date_Of_Arrival='null'
+        try:
+            Unloading_Start_Time=((stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            Unloading_Start_Time='null'
 
-            try:
-                Unloading_Start_Time=((stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
-            except:
-                Unloading_Start_Time='null'
+        try:
+            Unloading_End_Time=((stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            Unloading_End_Time='null'
 
-            try:
-                Unloading_End_Time=((stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
-            except:
-                Unloading_End_Time='null'
+        try:
+            Transporter=stock_value.wh_gate_injob_no_id.gatein_transporter
+        except:
+            Transporter='null'
 
-            try:
-                Transporter=stock_value.wh_gate_injob_no_id.gatein_transporter
-            except:
-                Transporter='null'
+        try:
+            Truck_Number=stock_value.wh_gate_injob_no_id.gatein_truck_number
+        except:
+            Truck_Number='null'
 
-            try:
-                Truck_Number=stock_value.wh_gate_injob_no_id.gatein_truck_number
-            except:
-                Truck_Number='null'
+        try:
+            Consigner=stock_value.wh_consigner
+        except:
+            Consigner='null'
 
-            try:
-                Consigner=stock_value.wh_consigner
-            except:
-                Consigner='null'
+        try:
+            Consignee=stock_value.wh_consignee
+        except:
+            Consignee='null'
 
-            try:
-                Consignee=stock_value.wh_consignee
-            except:
-                Consignee='null'
+        try:
+            Docs_Received=stock_value.wh_lb_job_no_id.lb_packing_list
+        except:
+            Docs_Received='null'
 
-            try:
-                Docs_Received=stock_value.wh_lb_job_no_id.lb_packing_list
-            except:
-                Docs_Received='null'
+        try:
+            HAWB= stock_value.wh_gate_injob_no_id.gatein_hawb
+        except:
+            HAWB='null'
 
-            try:
-                HAWB= stock_value.wh_gate_injob_no_id.gatein_hawb
-            except:
-                HAWB='null'
+        try:
+            Destination=stock_value.wh_gate_injob_no_id.gatein_destination
+        except:
+            Destination='null'
 
-            try:
-                Destination=stock_value.wh_gate_injob_no_id.gatein_destination
-            except:
-                Destination='null'
+        try:
+            Invoice_Number=stock_value.wh_gate_injob_no_id.gatein_invoice
+        except:
+            Invoice_Number='null'
 
-            try:
-                Invoice_Number=stock_value.wh_gate_injob_no_id.gatein_invoice
-            except:
-                Invoice_Number='null'
+        try:
+            Case_Number=stock_value.wh_po_num
+        except:
+            Case_Number='null'
 
-            try:
-                Case_Number=stock_value.wh_po_num
-            except:
-                Case_Number='null'
+        try:
+            Invoice_Qty=stock_value.wh_total_qty
+        except:
+            Invoice_Qty='null'
 
-            try:
-                Invoice_Qty=stock_value.wh_total_qty
-            except:
-                Invoice_Qty='null'
+        try:
+            Invoice_Weight_kg=stock_value.wh_gross_weight
+        except:
+            Invoice_Weight_kg='null'
 
-            try:
-                Invoice_Weight_kg=stock_value.wh_gross_weight
-            except:
-                Invoice_Weight_kg='null'
+        try:
+            Checkin_Weight_kg=stock_value.wh_invoice_weight_unit
+        except:
+            Checkin_Weight_kg='null'
 
-            try:
-                Checkin_Weight_kg=stock_value.wh_invoice_weight_unit
-            except:
-                Checkin_Weight_kg='null'
+        try:
+            UOM=stock_value.wh_uom
+        except:
+            UOM='null'
 
-            try:
-                UOM=stock_value.wh_uom
-            except:
-                UOM='null'
+        try:
+            Length=stock_value.wh_goods_length
+        except:
+            Length='null'
 
-            try:
-                Length=stock_value.wh_goods_length
-            except:
-                Length='null'
+        try:
+            Width=stock_value.wh_goods_width
+        except:
+            Width='null'
 
-            try:
-                Width=stock_value.wh_goods_width
-            except:
-                Width='null'
+        try:
+            Height=stock_value.wh_goods_height
+        except:
+            Height='null'
 
-            try:
-                Height=stock_value.wh_goods_height
-            except:
-                Height='null'
+        try:
+            Dims_Qty=stock_value.wh_goods_pieces
+        except:
+            Dims_Qty='null'
 
-            try:
-                Dims_Qty=stock_value.wh_goods_pieces
-            except:
-                Dims_Qty='null'
+        try:
+            Package_Type=stock_value.wh_goods_package_type
+        except:
+            Package_Type='null'
 
-            try:
-                Package_Type=stock_value.wh_goods_package_type
-            except:
-                Package_Type='null'
+        try:
+            Volume_Weight=stock_value.wh_chargeable_weight
+        except:
+            Volume_Weight='null'
 
-            try:
-                Volume_Weight=stock_value.wh_chargeable_weight
-            except:
-                Volume_Weight='null'
+        try:
+            CBM=stock_value.wh_cbm
+        except:
+            CBM='null'
 
-            try:
-                CBM=stock_value.wh_cbm
-            except:
-                CBM='null'
+        try:
+            Invoice_Value=stock_value.wh_invoice_value
+        except:
+            Invoice_Value='null'
 
-            try:
-                Invoice_Value=stock_value.wh_invoice_value
-            except:
-                Invoice_Value='null'
+        try:
+            Invoice_Currency=stock_value.wh_lb_job_no_id.lb_stock_invoice_currency
+        except:
+            Invoice_Currency='null'
 
-            try:
-                Invoice_Currency=stock_value.wh_lb_job_no_id.lb_stock_invoice_currency
-            except:
-                Invoice_Currency='null'
+        try:
+            Invoice_INR=stock_value.wh_invoice_amount_inr
+        except:
+            Invoice_INR='null'
 
-            try:
-                Invoice_INR=stock_value.wh_invoice_amount_inr
-            except:
-                Invoice_INR='null'
+        try:
+            E_Way_Bill=stock_value.wh_lb_job_no_id.lb_eway_bill
+        except:
+            E_Way_Bill='null'
 
-            try:
-                E_Way_Bill=stock_value.wh_lb_job_no_id.lb_eway_bill
-            except:
-                E_Way_Bill='null'
+        try:
+            E_Way_Bill_Validity=((stock_value.wh_lb_job_no_id.lb_validity_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            E_Way_Bill_Validity='null'
 
-            try:
-                E_Way_Bill_Validity=((stock_value.wh_lb_job_no_id.lb_validity_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
-            except:
-                E_Way_Bill_Validity='null'
+        try:
+            Fumigation_Status=stock_value.wh_fumigation_process
+        except:
+            Fumigation_Status='null'
 
-            try:
-                Fumigation_Status=stock_value.wh_fumigation_process
-            except:
-                Fumigation_Status='null'
+        try:
+            Check_In_Out=stock_value.wh_check_in_out
+        except:
+            Check_In_Out='null'
 
-            try:
-                Check_In_Out=stock_value.wh_check_in_out
-            except:
-                Check_In_Out='null'
+        try:
+            Branch=stock_value.wh_branch
+        except:
+            Branch='null'
 
-            try:
-                Branch=stock_value.wh_branch
-            except:
-                Branch='null'
+        try:
+            Unit=stock_value.wh_unit
+        except:
+            Unit='null'
 
-            try:
-                Unit=stock_value.wh_unit
-            except:
-                Unit='null'
+        try:
+            Bay=stock_value.wh_bay
+        except:
+            Bay='null'
 
-            try:
-                Bay=stock_value.wh_bay
-            except:
-                Bay='null'
+        try:
+            Storage_Days=stock_value.wh_storage_time
+        except:
+            Storage_Days='null'
 
-            try:
-                Storage_Days=stock_value.wh_storage_time
-            except:
-                Storage_Days='null'
+        try:
+            # Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number if stock_value.wh_dispatch_id.dispatch_truck_number is not None else 'null',
+            Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number
+        except:
+            Truck_Number_out='null'
 
-            try:
-                # Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number if stock_value.wh_dispatch_id.dispatch_truck_number is not None else 'null',
-                Truck_Number_out=stock_value.wh_dispatch_id.dispatch_truck_number
-            except:
-                Truck_Number_out='null'
+        try:
+            # Truck_Type_out=stock_value.wh_dispatch_id.dispatch_truck_type if stock_value.wh_dispatch_id.dispatch_truck_type is not None else 'null',
+            Truck_Type_out=stock_value.wh_dispatch_id.dispatch_truck_type
+        except:
+            Truck_Type_out='null'
+        try:
+            # Truck_Depature_Time_out=stock_value.wh_dispatch_id.dispatch_depature_date if stock_value.wh_dispatch_id.dispatch_depature_date is not None else 'null',
+            Truck_Depature_Time_out=((stock_value.wh_dispatch_id.dispatch_depature_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            Truck_Depature_Time_out='null'
+        try:
+            # Labels_Pasted_By=stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm if stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm is not None else 'null',
+            Labels_Pasted_By=stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm
+        except:
+            Labels_Pasted_By='null'
+        try:
+            # MAWB=stock_value.wh_dispatch_id.dispatch_mawb if stock_value.wh_dispatch_id.dispatch_mawb is not None else 'null',
+            MAWB=stock_value.wh_dispatch_id.dispatch_mawb
+        except:
+            MAWB='null'
+        try:
+            # Dispatch_Number=stock_value.wh_dispatch_id.dispatch_num if stock_value.wh_dispatch_id.dispatch_num is not None else 'null',
+            Dispatch_Number=stock_value.wh_dispatch_id.dispatch_num
+        except:
+            Dispatch_Number='null'
+        details = {
+            'Job_Number': Job_Number,
+            'Stock_Number': Stock_Number,
+            'Customer': Customer,
+            'Date_Of_Arrival': Date_Of_Arrival,
+            'Unloading_Start_Time': Unloading_Start_Time,
+            'Unloading_End_Time': Unloading_End_Time,
+            'Transporter': Transporter,
+            'Truck_Number': Truck_Number,
+            'Consigner': Consigner,
+            'Consignee': Consignee,
+            'Docs_Received': Docs_Received,
+            'HAWB': HAWB,
+            'Destination': Destination,
+            'Invoice_Number': Invoice_Number,
+            'Case_Number': Case_Number,
+            'Invoice_Qty': Invoice_Qty,
+            'Invoice_Weight_kg': Invoice_Weight_kg,
+            'Checkin_Weight_kg': Checkin_Weight_kg,
+            'UOM': UOM,
+            'Length': Length,
+            'Width': Width,
+            'Height': Height,
+            'Dims_Qty': Dims_Qty,
+            'Package_Type': Package_Type,
+            'Volume_Weight': Volume_Weight,
+            'CBM': CBM,
+            'Invoice_Value': Invoice_Value,
+            'Invoice_Currency': Invoice_Currency,
+            'Invoice_INR': Invoice_INR,
+            'E_Way_Bill': E_Way_Bill,
+            'E_Way_Bill_Validity': E_Way_Bill_Validity,
+            'Fumigation_Status': Fumigation_Status,
+            'Check_In_Out': Check_In_Out,
+            'Branch': Branch,
+            'Unit': Unit,
+            'Bay': Bay,
+            'Storage_Days': Storage_Days,
+            'Truck_Number_out': Truck_Number_out,
+            'Truck_Type_out': Truck_Type_out,
+            'Truck_Depature_Time_out': Truck_Depature_Time_out,
+            'Labels_Pasted_By': Labels_Pasted_By,
+            'MAWB': MAWB,
+            'Dispatch_Number': Dispatch_Number,
+        }
+        details_list.append(details)
+    df = pd.DataFrame(details_list)
 
-            try:
-                # Truck_Type_out=stock_value.wh_dispatch_id.dispatch_truck_type if stock_value.wh_dispatch_id.dispatch_truck_type is not None else 'null',
-                Truck_Type_out=stock_value.wh_dispatch_id.dispatch_truck_type
-            except:
-                Truck_Type_out='null'
-            try:
-                # Truck_Depature_Time_out=stock_value.wh_dispatch_id.dispatch_depature_date if stock_value.wh_dispatch_id.dispatch_depature_date is not None else 'null',
-                Truck_Depature_Time_out=((stock_value.wh_dispatch_id.dispatch_depature_date).astimezone(timezone.get_current_timezone())).strftime('%Y-%m-%d %H:%M:%S')
-            except:
-                Truck_Depature_Time_out='null'
-            try:
-                # Labels_Pasted_By=stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm if stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm is not None else 'null',
-                Labels_Pasted_By=stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm
-            except:
-                Labels_Pasted_By='null'
-            try:
-                # MAWB=stock_value.wh_dispatch_id.dispatch_mawb if stock_value.wh_dispatch_id.dispatch_mawb is not None else 'null',
-                MAWB=stock_value.wh_dispatch_id.dispatch_mawb
-            except:
-                MAWB='null'
-            try:
-                # Dispatch_Number=stock_value.wh_dispatch_id.dispatch_num if stock_value.wh_dispatch_id.dispatch_num is not None else 'null',
-                Dispatch_Number=stock_value.wh_dispatch_id.dispatch_num
-            except:
-                Dispatch_Number='null'
+    # Create a response with the Excel file
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=excel_report.xlsx'
+    df.to_excel(response, index=False, engine='openpyxl')
 
-            writer.writerow([Job_Number,Stock_Number,Customer,Date_Of_Arrival,Unloading_Start_Time,Unloading_End_Time,Transporter,Truck_Number,Consigner,Consignee,Docs_Received,HAWB,Destination,Invoice_Number,Case_Number,Invoice_Qty,Invoice_Weight_kg,Checkin_Weight_kg,UOM,Length,Width,Height,Dims_Qty,Package_Type,Volume_Weight,CBM,Invoice_Value,Invoice_Currency,Invoice_INR,E_Way_Bill,E_Way_Bill_Validity,Fumigation_Status,Check_In_Out,Branch,Unit,Bay,Storage_Days,Truck_Number_out,Truck_Type_out,Truck_Depature_Time_out,Labels_Pasted_By,MAWB,Dispatch_Number])
-        else:
-            # Handle the case where the item is None (e.g., the object doesn't exist)
-            writer.writerow(['NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA'])
     return response
