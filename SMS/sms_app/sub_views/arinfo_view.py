@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from ..forms import ArinfoaddForm
-from ..models import Ar_comments_Info,User_extInfo,Ar_Info
+from ..models import BilingInfo,Ar_comments_Info,User_extInfo,Ar_Info
 from django.shortcuts import render, redirect
 import qrcode
 from io import BytesIO
@@ -38,6 +38,16 @@ def ar_add(request, ar_id=0):
             arcomments_list= Ar_comments_Info.objects.filter(arc_invoice_num=invoice_number)
             arinfo = Ar_Info.objects.get(pk=ar_id)
             form = ArinfoaddForm(instance=arinfo)
+            invoice_list_ar=list((Ar_Info.objects.values_list('ar_invoice_num',flat=True)).distinct())
+            print('invoice_list_ar',invoice_list_ar)
+            for i in invoice_list_ar:
+                print(i)
+                try:
+                    billing_id=BilingInfo.objects.get(bill_invoice_ref=i).id
+                    print(billing_id.bill_invoice_ref)
+                except:
+                    pass
+                print('billing_id',billing_id)
             context={
                 'form': form,
                 'role': role,
