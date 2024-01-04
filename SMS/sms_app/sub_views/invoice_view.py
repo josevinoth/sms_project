@@ -123,7 +123,7 @@ def invoice_add(request,invoice_id=0):
                     messages.error(request, 'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
                     return redirect(request.META['HTTP_REFERER'])
                 # max_storage_days = max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_goods_invoice=k).values_list('wh_storage_time', flat=True))
-
+                print('max_storage_days',max_storage_days)
                 warehouse_charge_1 = warehouse_charge / wh_job_num_count
                 storage_cost_total = round((warehouse_charge_1 * max_storage_days), 2)
 
@@ -264,7 +264,7 @@ def invoice_add(request,invoice_id=0):
                 'min_check_in_time':str(min_check_in_time),
                 'max_check_out_time':str(max_check_out_time),
                 'total_loading_cost':total_loading_cost,
-                'wh_storage_cost_sum':wh_storage_cost_sum,
+                'wh_storage_cost_sum':round(wh_storage_cost_sum,2),
                 'crane_cost_sum':crane_cost_sum,
                 'forklift_cost_sum':forklift_cost_sum,
                 }

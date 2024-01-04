@@ -264,6 +264,7 @@ $(document).ready(function() {
 	bvm_invoice=document.getElementById("bill_customer_name").value
 	bill_start_date_val=document.getElementById("bill_start_date").value
 	bill_end_date_val=document.getElementById("bill_end_date").value
+	document.getElementById("bill_no_of_days").value='{{no_of_days}}';
 	bill_no_of_days_val=document.getElementById("bill_no_of_days").value
 	if (bill_start_date_val=="")
 		document.getElementById("bill_start_date").value='{{min_check_in_time}}';
@@ -275,10 +276,10 @@ $(document).ready(function() {
 	else
 		document.getElementById("bill_end_date").value=bill_end_date_val;
 
-	if (bill_no_of_days_val==0)
-		document.getElementById("bill_no_of_days").value='{{no_of_days}}';
-	else
-		document.getElementById("bill_no_of_days").value=bill_no_of_days_val;
+<!--	if (bill_no_of_days_val==0)-->
+<!--		document.getElementById("bill_no_of_days").value='{{no_of_days}}';-->
+<!--	else-->
+<!--		document.getElementById("bill_no_of_days").value=bill_no_of_days_val;-->
 
 	if (bvm_invoice=="")
 	{
@@ -337,10 +338,10 @@ $(document).ready(function() {
 			else
 				document.getElementById("bill_end_date").value=bill_end_date_val;
 
-			if (bill_no_of_days_val=="")
-				document.getElementById("bill_no_of_days").value=max_storage_days;
-			else
-				document.getElementById("bill_no_of_days").value=bill_no_of_days_val;
+<!--			if (bill_no_of_days_val=="")-->
+<!--				document.getElementById("bill_no_of_days").value=max_storage_days;-->
+<!--			else-->
+<!--				document.getElementById("bill_no_of_days").value=bill_no_of_days_val;-->
 
        		fumigation_charge_change_fn()
        }
