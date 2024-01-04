@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
 from django.db.models.aggregates import Sum, Max
 from django.http import HttpResponse
 import json
@@ -314,9 +315,13 @@ def invoice_report(request):
 @login_required(login_url='login_page')
 def invoice_list(request):
     first_name = request.session.get('first_name')
-    invoice_list_val = BilingInfo.objects.all()
+    invoice_list_val = (BilingInfo.objects.all()).order_by('-id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(invoice_list_val, 50)
+    page_obj = paginator.get_page(page_number)
     context =   {
                 'invoice_list_val' : invoice_list_val,
+                'page_obj' : page_obj,
                 'first_name': first_name,
                 }
     return render(request,"asset_mgt_app/invoice_list.html",context)
