@@ -113,6 +113,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Sale Order Number</span>
+									</div>
+									{% render_field invoice_form.bill_sale_order id="bill_sale_order" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Shipment Weight (kg)</span>
 									</div>
 									{% render_field invoice_form.bill_weight id="bill_weight" class="form-control disable_a_href" %}
