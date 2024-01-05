@@ -157,6 +157,11 @@ $(document).ready(function() {
    $("#va_vehicletype_placed").change(function () {
       var url = $("#vehicle_allotment").attr("data-load_vehicle_source-url");
       var vehicletype_placed = $(this).val();
+      document.getElementById("va_vehiclenumber").value=""
+      document.getElementById("va_drivername").value=""
+      document.getElementById("va_drivernumber").value=""
+      document.getElementById("va_driver_lic").value=""
+      document.getElementById("va_driver_lic_expiry").value=""
       $.ajax({
         url: '{% url 'load_vehicle_source' %}',
         data: {
