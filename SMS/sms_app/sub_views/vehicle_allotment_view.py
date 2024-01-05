@@ -32,10 +32,12 @@ def vehicle_allotment_nav(request,vehicle_allotment_id=0):
     if vehicle_allotment_form.is_valid():
         vehicle_allotment_form.save()
         print("Main Form is Valid")
-        enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
-        vehicle_allotment_list = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id).values_list('va_vehiclenumber', flat=True))
+        print("enquiry_num_id",enquiry_num_id)
+        # enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
+        vehicle_allotment_list = list((Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id).values_list('va_vehiclenumber', flat=True)).distinct())
+        filterd_vehicle_allotment_list=[i for i in vehicle_allotment_list if i is not None]
         vehicle_numbers = []
-        for i in vehicle_allotment_list:
+        for i in filterd_vehicle_allotment_list:
             print(i)
             vehicle_numbers.append(str(VehiclemasterInfo.objects.get(id=i).vm_registrationnumber))
         try:
