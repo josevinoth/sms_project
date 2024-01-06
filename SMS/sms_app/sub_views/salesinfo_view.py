@@ -115,7 +115,7 @@ def sales_delete(request, sales_id):
     sales_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
     salesinfo.delete()
     print('sales_num',sales_num)
-    salescommentsinfo = (Sales_Comments_Info.objects.filter(sc_sales_number=sales_num)).order_by('-sc_created_at')
+    salescommentsinfo = (Sales_Comments_Info.objects.filter(sc_sales_number=sales_id)).order_by('-sc_created_at')
     for k in salescommentsinfo:
         k.delete()
     return redirect('/SMS/sales_list')
