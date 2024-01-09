@@ -1,5 +1,14 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center text-light bg-info">
+            <h3>Consignment List</h3>
+        </div>
+        <div class="col-2"></div>
+    </div>
+</div>
 	{% include "asset_mgt_app/consignmentdetail_list_woh.html" %}
 {% endblock content %}

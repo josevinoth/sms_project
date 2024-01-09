@@ -11,5 +11,6 @@ class ConsignmentgoodsaddForm(forms.ModelForm):
         self.fields['cg_consignmentnumber'].empty_label = "--Select--"
         self.fields['cg_currency_type'].empty_label = "--Select--"
         self.fields['cg_lastmodifiedby'].empty_label = "--Select--"
+        self.fields['cg_description'].empty_label = "--Select--"
 
 

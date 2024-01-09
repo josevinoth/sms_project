@@ -96,4 +96,13 @@ def consignmentgoods_cancel(request):
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
     enquirynote_num=ConsignmentdetailInfo.objects.get(id=consignmentgoods_id_val).co_enquirynumber
     enquirynote_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquirynote_num).id
+    # return redirect('/SMS/consignmentdetail_nav/' + str(enquirynote_id))
+    return redirect('/SMS/consignmentgoods_nav/' + str(consignmentgoods_id_val))
+
+@login_required(login_url='login_page')
+def consignmentgoods_back(request):
+    consignmentgoods_id_val = request.session.get('ses_consignment_id')
+    enquirynote_num=ConsignmentdetailInfo.objects.get(id=consignmentgoods_id_val).co_enquirynumber
+    enquirynote_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquirynote_num).id
     return redirect('/SMS/consignmentdetail_nav/' + str(enquirynote_id))
+    # return redirect('/SMS/consignmentgoods_nav/' + str(consignmentgoods_id_val))

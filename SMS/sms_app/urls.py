@@ -427,6 +427,7 @@ urlpatterns = [
     path('consignmentgoods_delete/<int:consignmentgoods_id>', views.consignmentgoods_delete, name='consignmentgoods_delete'),  # delete consignmentgoods
     path('consignmentgoods_nav/<int:consignmentdetails_id>', views.consignmentgoods_nav, name='consignmentgoods_nav'),  # nav consignmentgoods
     path('consignmentgoods_cancel/', views.consignmentgoods_cancel, name='consignmentgoods_cancel'),  # Cancel consignmentgoods
+    path('consignmentgoods_back/', views.consignmentgoods_back, name='consignmentgoods_back'),  # Cancel consignmentgoods
     path('load_location/', views.load_location, name='load_location'),
     path('export_stockreport/', views.export_stockreport_to_csv, name='export_stockreport'),# export stock value report
     path('dispatch_stock_list/', views.dispatch_stock_list, name='dispatch_stock_list'),# dispatch_stock_list
@@ -439,5 +440,6 @@ urlpatterns = [
     path('dispatch_gatepass_pdf/<int:dispatch_id>', views.dispatch_gatepass_pdf, name='dispatch_gatepass_pdf'),  # dispatch_gatepass_pdf
     path('revenue_report/', views.revenue_report, name='revenue_report'), #Revenue Report
     path('expense_report/', views.expense_report, name='expense_report'), #Expense Report
+    path('consignment_note_pdf/<int:consignment_note_id>', views.consignment_note_pdf, name='consignment_note_pdf'),# consignement_note_pdf
 ]
 

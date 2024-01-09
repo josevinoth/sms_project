@@ -21,6 +21,18 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Consigner Invoice</span>
+									</div>
+									{% render_field form.cg_consignerinvoice class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consigner Invoice Date</span>
+									</div>
+									{% render_field form.cg_consignerinvoice_date id="cg_consignerinvoice_date" type="Date" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner</span>
 									</div>
 									{% render_field form.cg_consigner class="form-control" %}
@@ -45,29 +57,29 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Consigner Invoice</span>
-									</div>
-									{% render_field form.cg_consignerinvoice class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consigner Invoice Date</span>
-									</div>
-									{% render_field form.cg_consignerinvoice_date id="cg_consignerinvoice_date" type="Date" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Value in INR</span>
 									</div>
 									{% render_field form.cg_valueininr class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Arrival Date & Time</span>
+									</div>
+									{% render_field form.cg_arrival_date type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Unloading Date & Time</span>
+									</div>
+									{% render_field form.cg_unloading_date type="Datetime-local" class="form-control" %}
 								</div>
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Weight</span>
+										<span class="input-group-text">Description</span>
 									</div>
-									{% render_field form.cg_weight class="form-control" %}
+									{% render_field form.cg_description id="cg_description" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -92,6 +104,12 @@
 										<span class="input-group-text">No. of Pieces</span>
 									</div>
 									{% render_field form.cg_noofpieces class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weight</span>
+									</div>
+									{% render_field form.cg_weight class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -136,7 +154,6 @@
 		<div class="col-2"></div>
 	</div>
 </form>
-	{% include "asset_mgt_app/consignmentgoods_list_WOH.html" %}
 <script>
 $(document).ready(function() {
 	document.getElementById("cg_lastmodifiedby").value ='{{user_id}}';

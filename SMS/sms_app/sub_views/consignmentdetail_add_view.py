@@ -1,8 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+
 from ..forms import ConsignmentdetailaddForm
-from ..models import ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
+from ..models import Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
@@ -114,3 +118,29 @@ def consignmentdetail_delete(request,consignmentdetail_id):
         EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_consignmentdetails=list(consignmentdetail_list))
     # return redirect('/SMS/consignmentdetail_list')
     return redirect(request.META['HTTP_REFERER'])
+
+@login_required(login_url='login_page')
+def consignment_note_pdf(request,consignment_note_id=0):
+    consignment_num=ConsignmentdetailInfo.objects.get(pk=consignment_note_id).co_consignmentnumber
+    consignment_details = (ConsignmentdetailInfo.objects.filter(pk=consignment_note_id)).order_by('id')
+    consignment_goods_list=(ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignment_note_id)).order_by('id')
+    vehicle_allotment_list=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id)).order_by('id')
+    context = {
+        'consignment_details': consignment_details,
+        'consignment_goods_list': consignment_goods_list,
+        'vehicle_allotment_list': vehicle_allotment_list,
+    }
+    file_name = str("Consignement Note_") + str(consignment_num) + str(".pdf")
+    template_path = 'asset_mgt_app/consignement_note_pdf.html'
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename={file_name}'
+
+    template = get_template(template_path)
+    html = template.render(context)
+
+    # Create PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse('We has some error <pre>' + html + '</pre>')
+    return response

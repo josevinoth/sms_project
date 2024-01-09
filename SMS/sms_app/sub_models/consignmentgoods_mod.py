@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import ConsignmentdetailInfo,Currency_type,MyUser
+from ..models import Stock_type,ConsignmentdetailInfo,Currency_type,MyUser
 
 class ConsignmentgoodsInfo(models.Model):
     cg_currency_type = models.ForeignKey(Currency_type, on_delete=models.CASCADE,blank=True,null=True)
@@ -20,8 +20,10 @@ class ConsignmentgoodsInfo(models.Model):
     cg_lastmodifiedby = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,blank=True)
     cg_created_at = models.DateTimeField(null=True,blank=True, auto_now_add=True)
     cg_updated_at = models.DateTimeField(null=True,blank=True, auto_now=True)
-    cg_consignmentnumber = models.ForeignKey(ConsignmentdetailInfo, on_delete=models.CASCADE,blank=True,null=True)
-
+    cg_consignmentnumber = models.ForeignKey(ConsignmentdetailInfo, on_delete=models.CASCADE,blank=True,null=True,related_name='cg_consignmentnumber',db_column='cg_consignmentnumber')
+    cg_description = models.ForeignKey(Stock_type, on_delete=models.CASCADE,blank=True,null=True,related_name='cg_description',db_column='cg_description')
+    cg_arrival_date = models.DateTimeField(null=True,blank=True)
+    cg_unloading_date = models.DateTimeField(null=True,blank=True)
 
 
     def __str__(self):
