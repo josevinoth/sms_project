@@ -6,7 +6,7 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 
 from ..forms import ConsignmentdetailaddForm
-from ..models import Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
+from ..models import VehiclemasterInfo,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
@@ -122,13 +122,23 @@ def consignmentdetail_delete(request,consignmentdetail_id):
 @login_required(login_url='login_page')
 def consignment_note_pdf(request,consignment_note_id=0):
     consignment_num=ConsignmentdetailInfo.objects.get(pk=consignment_note_id).co_consignmentnumber
-    consignment_details = (ConsignmentdetailInfo.objects.filter(pk=consignment_note_id)).order_by('id')
+    consignment_details = (ConsignmentdetailInfo.objects.filter(pk=consignment_note_id))
     consignment_goods_list=(ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignment_note_id)).order_by('id')
-    vehicle_allotment_list=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id)).order_by('id')
+    vehicle_number=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_vehiclenumber',flat=True))
+    Driver_name=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_drivername',flat=True))
+    Driver_lic=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_driver_lic',flat=True))
+    Driver_number=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_drivernumber',flat=True))
+    vehicle_number_val=[]
+    for i in vehicle_number:
+        reg_number=VehiclemasterInfo.objects.get(pk=i).vm_registrationnumber
+        vehicle_number_val.append(reg_number)
     context = {
         'consignment_details': consignment_details,
         'consignment_goods_list': consignment_goods_list,
-        'vehicle_allotment_list': vehicle_allotment_list,
+        'vehicle_number': list(vehicle_number_val),
+        'Driver_name': list(Driver_name),
+        'Driver_lic': list(Driver_lic),
+        'Driver_number': list(Driver_number),
     }
     file_name = str("Consignement Note_") + str(consignment_num) + str(".pdf")
     template_path = 'asset_mgt_app/consignement_note_pdf.html'
