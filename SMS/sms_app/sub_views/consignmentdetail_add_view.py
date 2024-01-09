@@ -132,6 +132,7 @@ def consignment_note_pdf(request,consignment_note_id=0):
     for i in vehicle_number:
         reg_number=VehiclemasterInfo.objects.get(pk=i).vm_registrationnumber
         vehicle_number_val.append(reg_number)
+
     context = {
         'consignment_details': consignment_details,
         'consignment_goods_list': consignment_goods_list,

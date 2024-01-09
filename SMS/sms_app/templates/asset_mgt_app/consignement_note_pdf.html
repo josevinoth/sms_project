@@ -13,38 +13,30 @@
             <td colspan="3"><h3>CONSIGNMENT NOTE</h3></td>
         </tr>
         <tr>
-            <td colspan="2"><a>www.thebvmgroup.com</a></td>
+            <td ><a>www.thebvmgroup.com</a></td>
             <td><a>E-mail: transport@bvmtranssolutions.com</a></td>
-        </tr>
-        <tr>
-            <td colspan="2"> </td>
             <td>GST No:33AAKCB7123L1ZL</td>
-            <td>We hereby declare that:</td>
         </tr>
         <tr>
             {% for consignment_detail in consignment_details %}
-            <td>Consignment No:{{consignment_detail.co_consignmentnumber}}</td>
+            <td><b>Consignment No:</b>{{consignment_detail.co_consignmentnumber}}</td>
             {% endfor %}
-            <td>CO/CHN/23-24/18673</td>
-            <td>CARGO'S AT OWNER'S RISK</td>
-            <td rowspan="5">"1.We hereby declare that we have selected the
-                option of Reverse charge mechanism where recipient
-                will be liable to pay tax at appropriate rates as per
-                notification no. 13/2017 - Central Tax (Rate).
-                2.We herewith affirm that we have not taken any
-                input tax credit satisfying the conditions prescribed
-                as per Explanation No. iv of the notification no.
-                11/2017 - Central Tax (Rate).
-                3.In Case of recipient being covered under Entry No.
-                1 of notification no. 13/2017 - Central Tax (Rate)
-                then such recipients are liable to pay tax under
-                reverse charge mechanism."</td>
+            <td><b>CARGO'S AT OWNER'S RISK</b></td>
+            <td colspan="2" rowspan="5">
+                <p>We hereby declare that:</p>
+                <p>
+                <ol>
+                    <li>We hereby declare that we have selected the option of Reverse charge mechanism where recipient will be liable to pay tax at appropriate rates as per notification no. 13/2017 - Central Tax (Rate).</li>
+                    <li>We herewith affirm that we have not taken any input tax credit satisfying the conditions prescribed as per Explanation No. iv of the notification no. 11/2017 - Central Tax (Rate).</li>
+                    <li>In Case of recipient being covered under Entry No.1 of notification no. 13/2017 - Central Tax (Rate) then such recipients are liable to pay tax under reverse charge mechanism.</li>
+                </ol>
+                </p>
+            </td>
         </tr>
         <tr>
             {% for consignment_detail in consignment_details %}
-            <td>Date: {{consignment_detail.co_consignmentdate}}</td>
+            <td><b>Date:</b> {{consignment_detail.co_consignmentdate}}</td>
             {% endfor %}
-            <td>04-01-2024</td>
             <td> INSURANCE
                 Please refer over leaf for
                 terms and conditions
@@ -52,50 +44,44 @@
         </tr>
         <tr>
             {% for consignment_detail in consignment_details %}
-            <td>From: {{consignment_detail.co_enquirynumber.en_fromlocaion}}</td>
+            <td><b>From:</b> {{consignment_detail.co_enquirynumber.en_fromlocaion}}</td>
             {% endfor %}
-            <td>SUNGUVARCHATRAM</td>
-            <td>Driver Name: {{Driver_name}}</td>
+            <td><b>Driver Name:</b> {{Driver_name}}</td>
         </tr>
         <tr>
             {% for consignment_detail in consignment_details %}
-            <td>Touch Points: {{consignment_detail.co_enquirynumber.en_touchpoint}},{{consignment_detail.co_enquirynumber.en_touchpoint2}},{{consignment_detail.co_enquirynumber.en_touchpoint3}},{{consignment_detail.co_enquirynumber.en_touchpoint4}}</td>
+            <td><b>Touch Points:</b> {{consignment_detail.co_enquirynumber.en_touchpoint}},{{consignment_detail.co_enquirynumber.en_touchpoint2}},{{consignment_detail.co_enquirynumber.en_touchpoint3}},{{consignment_detail.co_enquirynumber.en_touchpoint4}}</td>
             {% endfor %}
-            <td>XYZ</td>
-            <td>Driver Mob: {{Driver_number}}</td>
+            <td><b>Driver Mob:</b> {{Driver_number}}</td>
         </tr>
         <tr>
             {% for consignment_detail in consignment_details %}
-            <td>To: {{consignment_detail.co_enquirynumber.en_tolocation}}</td>
+            <td><b>To:</b> {{consignment_detail.co_enquirynumber.en_tolocation}}</td>
             {% endfor %}
-            <td>ORAGADAM</td>
-            <td>Truck No: {{vehicle_number}}</td>
-        </tr>
-        <tr>
-            <td>Special Instruction</td>
-            {% for consignment_detail in consignment_details %}
-            <td>Seal No/Smart Lock No.: {{consignment_detail.co_seal_number}}</td>
-            {% endfor %}
-            <td>DL No: {{Driver_lic}}</td>
-            {% for consignment_detail in consignment_details %}
-            <td>GST Tax Payable By: {{consignment_detail.co_gst_payable_by}}</td>
-            {% endfor %}
+            <td><b>Truck No:</b> {{vehicle_number}}</td>
         </tr>
         <tr>
             {% for consignment_detail in consignment_details %}
-            <td>Container No: {{consignment_detail.co_container_number}}</td>
-            <td>Movement Type:  {{consignment_detail.co_enquirynumber.en_movement_type}}</td>
-            <td>Bill To Party Name And Address:  EIPL-MAA
-                7TH FLOOR, SHYAMALA
-                TOWERS,136, ARCOT ROAD,
-                SALIGRAMAM</td>
-            <td>Freight Charges: {{consignment_detail.co_freight_amount}}</td>
+            <td><b>Special Instruction:</b> {{consignment_detail.co_remarks}}</td>
+            {% endfor %}
+            <td><b>DL No:</b> {{Driver_lic}}</td>
+            {% for consignment_detail in consignment_details %}
+            <td><b>Movement Type:</b>  {{consignment_detail.co_enquirynumber.en_movement_type}}</td>
+            <td><b>GST Tax Payable By:</b> {{consignment_detail.co_gst_payable_by}}</td>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for consignment_detail in consignment_details %}
+            <td><b>Container No:</b> {{consignment_detail.co_container_number}}</td>
+            <td><b>Seal No/Smart Lock No.:</b> {{consignment_detail.co_seal_number}}</td>
+            <td><p><b>Bill To Party Name And Address:</b>  {{consignment_detail.co_enquirynumber.en_customername}}</p>
+                <p>{{consignment_detail.co_enquirynumber.en_customername.cu_address}}</p></td>
+            <td><b>Freight Charges:</b> {{consignment_detail.co_freight_amount}}</td>
             {% endfor %}
         </tr>
     </table>
     <h3>Invoice Details</h3>
     <hr class="report_hrItem"/>
-
     <table class='report_details'>
         <tr>
             <th>Invoice Number</th>

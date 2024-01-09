@@ -17,6 +17,7 @@ class ConsignmentdetailInfo(models.Model):
     co_updated_at = models.DateTimeField(null=True,blank=True, auto_now=True)
     co_cusrefnum = models.CharField(max_length=80,null=True,blank=True)
     co_cusrefnum_check = models.BooleanField(blank=True,null=True)
+    co_remarks = models.TextField(max_length=500, null=True, blank=True)
 
     def __str__(self):
         return self.co_consignmentnumber
