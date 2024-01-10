@@ -124,6 +124,7 @@ def consignment_note_pdf(request,consignment_note_id=0):
     consignment_num=ConsignmentdetailInfo.objects.get(pk=consignment_note_id).co_consignmentnumber
     consignment_details = (ConsignmentdetailInfo.objects.filter(pk=consignment_note_id))
     consignment_goods_list=(ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignment_note_id)).order_by('id')
+    vehicle_details=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id))
     vehicle_number=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_vehiclenumber',flat=True))
     Driver_name=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_drivername',flat=True))
     Driver_lic=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_driver_lic',flat=True))
@@ -136,6 +137,7 @@ def consignment_note_pdf(request,consignment_note_id=0):
     context = {
         'consignment_details': consignment_details,
         'consignment_goods_list': consignment_goods_list,
+        'vehicle_details': vehicle_details,
         'vehicle_number': list(vehicle_number_val),
         'Driver_name': list(Driver_name),
         'Driver_lic': list(Driver_lic),

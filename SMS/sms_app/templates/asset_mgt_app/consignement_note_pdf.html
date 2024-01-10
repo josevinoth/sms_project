@@ -18,9 +18,7 @@
             <td>GST No:33AAKCB7123L1ZL</td>
         </tr>
         <tr>
-            {% for consignment_detail in consignment_details %}
-            <td><b>Consignment No:</b>{{consignment_detail.co_consignmentnumber}}</td>
-            {% endfor %}
+            <td><b>Consignment No:</b> {%  for consignment_detail in consignment_details %} {{consignment_detail.co_consignmentnumber}} {% endfor %}</td>
             <td><b>CARGO'S AT OWNER'S RISK</b></td>
             <td colspan="2" rowspan="5">
                 <p>We hereby declare that:</p>
@@ -34,50 +32,37 @@
             </td>
         </tr>
         <tr>
-            {% for consignment_detail in consignment_details %}
-            <td><b>Date:</b> {{consignment_detail.co_consignmentdate}}</td>
-            {% endfor %}
-            <td> INSURANCE
+            <td><b>Date:</b> {%  for consignment_detail in consignment_details %} {{consignment_detail.co_consignmentdate}} {% endfor %}</td>
+            <td> <b>Insurance:</b>
                 Please refer over leaf for
                 terms and conditions
                 regarding insurance</td>
         </tr>
         <tr>
-            {% for consignment_detail in consignment_details %}
-            <td><b>From:</b> {{consignment_detail.co_enquirynumber.en_fromlocaion}}</td>
-            {% endfor %}
-            <td><b>Driver Name:</b> {{Driver_name}}</td>
+            <td><b>From:</b> {% for consignment_detail in consignment_details %}  {{consignment_detail.co_enquirynumber.en_fromlocaion}} {% endfor %}</td>
+            <td><b>Driver Name:</b> {% for vehicle_detail in vehicle_details %} {{vehicle_detail.va_drivername}} {% endfor %}</td>
         </tr>
         <tr>
             {% for consignment_detail in consignment_details %}
             <td><b>Touch Points:</b> {{consignment_detail.co_enquirynumber.en_touchpoint}},{{consignment_detail.co_enquirynumber.en_touchpoint2}},{{consignment_detail.co_enquirynumber.en_touchpoint3}},{{consignment_detail.co_enquirynumber.en_touchpoint4}}</td>
             {% endfor %}
-            <td><b>Driver Mob:</b> {{Driver_number}}</td>
+            <td><b>Driver Number:</b> {% for vehicle_detail in vehicle_details %} {{vehicle_detail.va_drivernumber}} {% endfor %}</td>
         </tr>
         <tr>
-            {% for consignment_detail in consignment_details %}
-            <td><b>To:</b> {{consignment_detail.co_enquirynumber.en_tolocation}}</td>
-            {% endfor %}
-            <td><b>Truck No:</b> {{vehicle_number}}</td>
+            <td><b>To:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_enquirynumber.en_tolocation}} {% endfor %}</td>
+            <td><b>Truck Number:</b> {% for vehicle_detail in vehicle_details %} {{vehicle_detail.va_vehiclenumber}} {% endfor %}</td>
         </tr>
         <tr>
-            {% for consignment_detail in consignment_details %}
-            <td><b>Special Instruction:</b> {{consignment_detail.co_remarks}}</td>
-            {% endfor %}
-            <td><b>DL No:</b> {{Driver_lic}}</td>
-            {% for consignment_detail in consignment_details %}
-            <td><b>Movement Type:</b>  {{consignment_detail.co_enquirynumber.en_movement_type}}</td>
-            <td><b>GST Tax Payable By:</b> {{consignment_detail.co_gst_payable_by}}</td>
-            {% endfor %}
+            <td><b>Special Instruction:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_remarks}} {% endfor %}</td>
+            <td><b>Driver License:</b> {% for vehicle_detail in vehicle_details %} {{vehicle_detail.va_driver_lic}} {% endfor %}</td>
+            <td><b>Movement Type:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_enquirynumber.en_movement_type}} {% endfor %}</td>
+            <td><b>GST Tax Payable By:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_gst_payable_by}} {% endfor %}</td>
         </tr>
         <tr>
-            {% for consignment_detail in consignment_details %}
-            <td><b>Container No:</b> {{consignment_detail.co_container_number}}</td>
-            <td><b>Seal No/Smart Lock No.:</b> {{consignment_detail.co_seal_number}}</td>
-            <td><p><b>Bill To Party Name And Address:</b>  {{consignment_detail.co_enquirynumber.en_customername}}</p>
-                <p>{{consignment_detail.co_enquirynumber.en_customername.cu_address}}</p></td>
-            <td><b>Freight Charges:</b> {{consignment_detail.co_freight_amount}}</td>
-            {% endfor %}
+            <td><b>Container No:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_container_number}} {% endfor %}</td>
+            <td><b>Seal No/Smart Lock No.:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_seal_number}} {% endfor %}</td>
+            <td><b>Bill To Party Name And Address:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_enquirynumber.en_customername}} <p>{{consignment_detail.co_enquirynumber.en_customername.cu_address}}</p>{% endfor %} </td>
+            <td><b>Freight Charges:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_freight_amount}}{% endfor %} </td>
         </tr>
     </table>
     <h3>Invoice Details</h3>
