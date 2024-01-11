@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Gatein_info,StatusList,Currency_type,GstexcemptionInfo
+from ..models import SealedoropenedInfo,Gatein_info,StatusList,Currency_type,GstexcemptionInfo
 
 def loadingbay_directory_path(instance, filename):
     return 'Loadingbayfiles/{0}/{1}'.format(instance.lbimg_job_no, filename)
@@ -11,7 +11,6 @@ class Loadingbay_Info(models.Model):
     lb_packing_list = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list')
     lb_eway_bill= models.CharField(blank=True, null=True, max_length=20,default='')
     lb_validity_date= models.DateTimeField(blank=True, null=True)
-
     lb_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6, null=True)
     lb_stock_unloading_start_time = models.DateTimeField(blank=True, null=True)
     lb_stock_unloading_end_time = models.DateTimeField(blank=True, null=True)
@@ -35,6 +34,7 @@ class Loadingbay_Info(models.Model):
     lb_crane_charges_mod_g2hr = models.FloatField(blank=False, null=False, default=0.0)
     lb_no_of_crane= models.IntegerField(blank=False, null=False, default=0)
     lb_no_of_forklift= models.IntegerField(blank=False, null=False, default=0)
+    lb_pouch_yes = models.ForeignKey(SealedoropenedInfo, null=True,on_delete=models.CASCADE, default="")
 
 class Loadingbayimages_Info(models.Model):
     lbimg_job_no = models.CharField(max_length=300, null=True, default='')

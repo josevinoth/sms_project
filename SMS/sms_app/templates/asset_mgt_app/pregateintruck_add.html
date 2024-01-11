@@ -70,18 +70,6 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Pouch</span>
-									</div>
-									{% render_field form.pregatein_pouch id="pregatein_pouch" onchange="change_pouch()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">If Pouch Yes</span>
-									</div>
-									{% render_field form.pregatein_pouch_yes id="pregatein_pouch_yes" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Arrival Date & Time</span>
 									</div>
 									{% render_field form.pregatein_arrival_date_time type="datetime-local" class="form-control" %}
@@ -148,22 +136,6 @@ $(document).ready(function() {
 	{
 		document.getElementById("pregatein_number").value = pregateintruck_num_id_val;
 	}
-	change_pouch()
   });
-</script>
-
-<script>
-function change_pouch() {
-	var jn=document.getElementById("pregatein_pouch").value
-	if ( jn==1)
-	{
-		$('#pregatein_pouch_yes').removeClass('disable_a_href');
-	}
-	else
-	{
-		$('#pregatein_pouch_yes').addClass('disable_a_href');
-		document.getElementById("pregatein_pouch_yes").value=3
-	}
-}
 </script>
 {% endblock content %}

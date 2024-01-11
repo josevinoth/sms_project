@@ -118,7 +118,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Original Documents Pouch</span>
 									</div>
-									{% render_field loadingbay_form.lb_packing_list class="form-control" %}
+									{% render_field loadingbay_form.lb_packing_list id="lb_packing_list" onchange="change_pouch()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">If Pouch Yes</span>
+									</div>
+									{% render_field loadingbay_form.lb_pouch_yes id="lb_pouch_yes" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -383,7 +389,7 @@ $(document).ready(function() {
 	inv_curr_change();
 	challan_damage_btn_active();
 	lb_crane_forklift_change();
-
+	change_pouch();
   });
 </script>
 <script>
@@ -503,6 +509,21 @@ function lb_crane_forklift_change() {
 		$('#lb_no_of_crane').addClass('disable_a_href');
 		document.getElementById("lb_crane_charges_mod").value=0.0;
 		document.getElementById("lb_no_of_crane").value=0.0;
+	}
+}
+</script>
+
+<script>
+function change_pouch() {
+	var jn=document.getElementById("lb_packing_list").value
+	if ( jn==1)
+	{
+		$('#lb_pouch_yes').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#lb_pouch_yes').addClass('disable_a_href');
+		document.getElementById("lb_pouch_yes").value=3
 	}
 }
 </script>

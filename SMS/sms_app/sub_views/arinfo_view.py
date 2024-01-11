@@ -47,7 +47,6 @@ def ar_add(request, ar_id=0):
                     print(billing_id.bill_invoice_ref)
                 except:
                     pass
-                print('billing_id',billing_id)
             context={
                 'form': form,
                 'role': role,

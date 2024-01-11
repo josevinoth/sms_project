@@ -1,12 +1,13 @@
 from django.db import models
-from ..models import MyUser,StatusList,BilingInfo,Bvmproduct,CustomerdepartmentInfo,Business_Sol_info,Location_info,CustomerInfo
+from ..models import BilingInfo,MyUser,StatusList,UnitInfo,Bvmproduct,CustomerdepartmentInfo,Business_Sol_info,Location_info,CustomerInfo
 
 class Ar_Info(models.Model):
     ar_company = models.ForeignKey(Business_Sol_info,on_delete=models.CASCADE,default='')
     ar_product = models.ForeignKey(Bvmproduct,on_delete=models.CASCADE,default='')
     ar_branch = models.ForeignKey(Location_info, on_delete=models.CASCADE, default='')
+    ar_unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE, default='', blank=True, null=True)
     ar_operation_date = models.DateField(blank=True,null=True)
-    ar_invoice_num = models.CharField(max_length=30, blank=True, null=True)
+    ar_invoice_num = models.ForeignKey(BilingInfo, on_delete=models.CASCADE, default='')
     ar_invoice_date = models.DateField(blank=True, null=True)
     ar_customer_name = models.ForeignKey(CustomerInfo,on_delete=models.CASCADE,default='')
     ar_service_value = models.FloatField(blank=True,null=True,default=0.0)

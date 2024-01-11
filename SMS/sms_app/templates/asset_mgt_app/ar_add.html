@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
-<form method="POST" action="">
+<form method="POST" action="" id="ar_add" data-branches-url="{% url 'load_units' %}">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-2"></div>
@@ -24,56 +24,54 @@
 										<span class="input-group-text" >Product</span>
 									</div>
 									{% render_field form.ar_product class="form-control" id="ar_product" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Branch</span>
 									</div>
 									{% render_field form.ar_branch class="form-control" id="ar_branch"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Unit</span>
+									</div>
+									{% render_field form.ar_unit class="form-control disable_a_href" id="ar_unit"%}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Sales Executive</span>
 									</div>
 									{% render_field form.ar_sales_person class="form-control" id="ar_branch"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Operation Date</span>
 									</div>
 									{% render_field form.ar_operation_date type="Date" onchange="Amt_cal()" class="form-control" id="ar_operation_date" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Invoice Number</span>
 									</div>
 									{% render_field form.ar_invoice_num class="form-control" id="ar_invoice_num"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Invoice Date</span>
 									</div>
 									{% render_field form.ar_invoice_date type="date" onchange="Amt_cal()" class="form-control" id="ar_invoice_date"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Name</span>
 									</div>
 									{% render_field form.ar_customer_name class="form-control" id="ar_customer_name"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Customer Department</span>
 									</div>
 									{% render_field form.ar_customer_dept class="form-control" id="ar_customer_dept"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -86,29 +84,24 @@
 										<span class="input-group-text">Service Value</span>
 									</div>
 									{% render_field form.ar_service_value class="form-control" id="ar_service_value" onchange="Amt_cal()" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">CGST</span>
 									</div>
 									{% render_field form.ar_cgst class="form-control" id="ar_cgst" onchange="Amt_cal()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >SGST</span>
 									</div>
 									{% render_field form.ar_sgst class="form-control" id="ar_sgst" onchange="Amt_cal()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">IGST</span>
 									</div>
-									<!--<input type="date" value="2021-09-09" min="2021-09-09">-->
 									{% render_field form.ar_igst  class="form-control" id="ar_igst" onchange="Amt_cal()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
 							<div class="col-6">
@@ -117,14 +110,12 @@
 										<span class="input-group-text" >Invoice Sent To</span>
 									</div>
 									{% render_field form.ar_invoice_sent_to class="form-control" id="ar_invoice_sent_to"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Invoice Amount</span>
 									</div>
 									{% render_field form.ar_amount class="form-control disable_a_href" id="ar_amount" onchange="Amt_cal()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
@@ -132,84 +123,72 @@
 										<span class="input-group-text" >Due From Operation Dt</span>
 									</div>
 									{% render_field form.ar_due_from_operation_date class="form-control disable_a_href" id="ar_due_from_operation_date"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Due From Invoice Dt</span>
 									</div>
 									{% render_field form.ar_due_from_invoice_date class="form-control disable_a_href" id="ar_due_from_invoice_date"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Due From Submission Dt</span>
 									</div>
 									{% render_field form.ar_due_from_submission_date class="form-control disable_a_href" id="ar_due_from_submission_date"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Payment Received Date</span>
 									</div>
 									{% render_field form.ar_payment_received_date type="Date" onchange="Amt_cal()" class="form-control" id="ar_payment_received_date"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Payment Received Amt</span>
 									</div>
 									{% render_field form.ar_payment_received_amount class="form-control" id="ar_payment_received_amount" onchange="Amt_cal()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >TDS</span>
 									</div>
 									{% render_field form.ar_tds class="form-control" id="ar_tds" onchange="Amt_cal()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Total Payment Received</span>
 									</div>
 									{% render_field form.ar_total_payment_received_amount id="ar_total_payment_received_amount" class="form-control disable_a_href" id="ar_tds"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Balance Payment</span>
 									</div>
 									{% render_field form.ar_balance_payment id="ar_balance_payment" class="form-control disable_a_href" id="ar_tds"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Rec From Operation Dt</span>
 									</div>
 									{% render_field form.ar_rec_from_operation_date class="form-control disable_a_href" id="ar_rec_from_operation_date"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Rec From Invoice Dt</span>
 									</div>
 									{% render_field form.ar_rec_from_invoice_date class="form-control disable_a_href" id="ar_rec_from_invoice_date"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Rec From Submission Dt</span>
 									</div>
 									{% render_field form.ar_rec_from_submission_date class="form-control disable_a_href" id="ar_rec_from_submission_date"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Status</span>
 									</div>
 									{% render_field form.ar_status class="form-control" onchange="status_update()" id="ar_status" onchange="status_update()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field form.ar_updated_by class="form-control" hidden="True" id="ar_updated_by"%}
 							</div>
@@ -310,6 +289,31 @@ function Amt_cal() {
   document.getElementById("ar_total_payment_received_amount").value =total_payment
   document.getElementById("ar_balance_payment").value =balance_payment
 }
+</script>
+
+<script>
+   $("#ar_branch").change(function () {
+      var url = $("#ar_add").attr("data-branches-url");
+      var branchId = $(this).val();
+      $.ajax({
+        url: url,
+        data: {
+          'branchId': branchId,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#ar_unit').removeClass('disable_a_href');
+			$("#ar_unit").empty();
+        	var unit_name=JSON.parse(data)["unit_name_list"];
+        	var unit_id=JSON.parse(data)["unit_id"];
+        	var len = (unit_name).length;
+        	$('#ar_unit').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#ar_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+			}
+        }
+      });
+    });
 </script>
 
 {% endblock content %}

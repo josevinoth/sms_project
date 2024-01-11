@@ -18,8 +18,6 @@ class Pregateintruckinfo(models.Model):
     pregatein_otl_type = models.ForeignKey(TypeofotlInfo, on_delete=models.CASCADE, related_name='pregatein_otl_type',db_column='pregatein_otl_type', default=1)
     pregatein_otl_check = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, related_name='pregatein_otl_check',db_column='pregatein_otl_check', default=1)
     pregatein_offload_acceptance = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,related_name='pregatein_offload_acceptance', db_column='pregatein_offload_acceptance',default=1)
-    pregatein_pouch = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,related_name='pregatein_poch', db_column='pregatein_poch',default=2)
-    pregatein_pouch_yes = models.ForeignKey(SealedoropenedInfo, null=True,on_delete=models.CASCADE, default="")
     pregatein_qty = models.IntegerField(default=0)
 
     class Meta:

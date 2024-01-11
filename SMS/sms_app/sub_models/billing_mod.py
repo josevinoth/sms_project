@@ -44,7 +44,7 @@ class BilingInfo(models.Model):
     bill_sale_order = models.ForeignKey(SalesInfo, on_delete=models.CASCADE, null=True,blank=True)
 
     class Meta:
-        ordering = ["bill_invoice_ref"]
+        ordering = ["-bill_invoice_ref"]
 
     def __str__(self):
         return self.bill_invoice_ref
