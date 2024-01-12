@@ -33,6 +33,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Customer</span>
+									</div>
+									{% render_field dispatch_form.dispatch_customer class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Truck Number</span>
 									</div>
 									{% render_field dispatch_form.dispatch_truck_number class="form-control" %}
@@ -43,6 +50,13 @@
 										<span class="input-group-text">Truck Type</span>
 									</div>
 									{% render_field dispatch_form.dispatch_truck_type class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Truck Type Billing</span>
+									</div>
+									{% render_field dispatch_form.dispatch_truck_type_billing class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">

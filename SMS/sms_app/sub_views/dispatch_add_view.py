@@ -143,9 +143,11 @@ def dispatch_goods_list(request,dispatch_id):
     # wh_job_id = request.session.get('ses_gatein_id_nam')
     first_name = request.session.get('first_name')
     dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
+    dispatch_customer = Dispatch_info.objects.get(pk=dispatch_id).dispatch_customer
+    print('dispatch_customer',dispatch_customer)
     request.session['ses_dispatch_num_val'] = dispatch_num_val
     # # dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-    dispatch_master_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1)
+    dispatch_master_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1,wh_customer_name=dispatch_customer)
     goods_list=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
     context = {'goods_list' : goods_list,
                'first_name': first_name,

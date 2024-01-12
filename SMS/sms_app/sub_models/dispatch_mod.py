@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Labels_pasted_Info,StatusList,VehicletypeInfo,GstexcemptionInfo,MyUser
+from ..models import CustomerInfo,Labels_pasted_Info,StatusList,VehicletypeInfo,GstexcemptionInfo,MyUser
 
 class Dispatch_info(models.Model):
     dispatch_depature_date = models.DateTimeField(null=True,blank=True)
@@ -9,7 +9,8 @@ class Dispatch_info(models.Model):
     dispatch_otl = models.CharField(null=False, max_length=20)
     dispatch_transporter = models.CharField(null=False, max_length=100)
     dispatch_truck_number = models.CharField(null=False, max_length=20)
-    dispatch_truck_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='')
+    dispatch_truck_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='dispatch_truck_type',db_column='dispatch_truck_type')
+    dispatch_truck_type_billing = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='dispatch_truck_type_billing',db_column='dispatch_truck_type_billing',null=True,blank=True)
     dispatch_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,null=False)
     dispatch_sticker_pasted_bvm= models.ForeignKey(Labels_pasted_Info, on_delete=models.CASCADE,null=True,blank=True,related_name='dispatch_sticker_pasted_bvm', db_column='dispatch_sticker_pasted_bvm')
     # dispatch_destination = models.CharField(null=False, max_length=20)
@@ -25,3 +26,4 @@ class Dispatch_info(models.Model):
     dispatch_job_num_list = models.CharField(null=True,blank=True, max_length=100000)
     dispatch_total_weight = models.FloatField(null=True,blank=True,default=0.0)
     dispatch_total_goods = models.IntegerField(null=True,blank=True,default=0)
+    dispatch_customer = models.ForeignKey(CustomerInfo,on_delete=models.CASCADE, default='',blank=True, null=True)

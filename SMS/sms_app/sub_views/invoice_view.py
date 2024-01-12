@@ -109,11 +109,13 @@ def invoice_add(request,invoice_id=0):
                 else:
                     print("Inside Case to Case")
                     try:
-                        vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num[0]).dispatch_truck_type
+                        vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num[0]).dispatch_truck_type_billing
+                        vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
                     except:
-                        messages.error(request,'Goods Not Dispatched!')
+                        messages.error(request,'Check Vehicle Type Billing in '+str(dispatch_num[0]))
                         return redirect(request.META['HTTP_REFERER'])
-                    vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
+                    print('vehicle_type',vehicle_type)
+
                     try:
                         min_check_in_time = datetime.date((min(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_checkin_time')))[0])
                         max_check_out_time = datetime.date((max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_checkout_time')))[0])
