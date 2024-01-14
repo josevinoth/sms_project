@@ -127,13 +127,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Customer Name</span>
 									</div>
-									{% render_field goods_form.wh_customer_name value=request.session.ses_customer_name class="form-control disable_a_href" %}
+									{% render_field goods_form.wh_customer_name id="wh_customer_name" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" id="">Customer Type</span>
 									</div>
-									{% render_field goods_form.wh_customer_type value=request.session.ses_customer_type class="form-control disable_a_href" %}
+									{% render_field goods_form.wh_customer_type id="wh_customer_type" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -375,7 +375,26 @@ $(document).ready(function() {
 	var damage_before_status_id='{{damage_before_status}}';
 	var damage_after_status_id='{{damage_after_status}}';
 	var warehousein_status_id='{{warehousein_status}}';
-	document.getElementById("wh_goods_invoice").value ='{{shipper_invoice}}';
+	var wh_customer_name_val= document.getElementById("wh_customer_name").value;
+	var wh_customer_type_val= document.getElementById("wh_customer_type").value;
+
+	if (wh_customer_name_val=="")
+	{
+		document.getElementById("wh_customer_name").value='{{customer_name_id}}';
+	}
+	else
+	{
+		document.getElementById("wh_customer_name").value=wh_customer_name_val;
+	}
+	if (wh_customer_type_val=="")
+	{
+		document.getElementById("wh_customer_type").value='{{customer_type_id}}';
+	}
+	else
+	{
+		document.getElementById("wh_customer_type").value=wh_customer_type_val;
+	}
+
 	if (gatein_status_id =="Completed")
 	{
 		$('#gatein_btn').removeClass('disable_a_href');
@@ -456,7 +475,6 @@ $(document).ready(function() {
 	challan_damage_btn_active()
 	package_type_chng()
 	fumigation_process_chng()
-<!--	stocknum()-->
 	fumigation_action_chng()
   });
 </script>
@@ -529,18 +547,4 @@ function fumigation_action_chng() {
 	 	}
 }
 </script>
-<!--<script>-->
-<!--function stocknum() {-->
-<!-- 	var jn1=document.getElementById("wh_qr_rand_num").value;-->
-<!--  	var wh_stock_num_val= '{{wh_stock_num}}';-->
-<!--  if (jn1=="")-->
-<!--	{-->
-<!--	  document.getElementById("wh_qr_rand_num").value ="Stock_"+ wh_stock_num_val;-->
-<!--	}-->
-<!--  else-->
-<!--	{-->
-<!--	   document.getElementById("wh_qr_rand_num").value =jn1;-->
-<!--	}-->
-<!--}-->
-<!--</script>-->
 {% endblock content %}

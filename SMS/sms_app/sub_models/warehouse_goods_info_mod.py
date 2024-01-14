@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import DamagereportInfo,Loadingbay_Info,Gatein_info,Dispatch_info,VehicletypeInfo,Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
+from ..models import TrbusinesstypeInfo,CustomerInfo,DamagereportInfo,Loadingbay_Info,Gatein_info,Dispatch_info,VehicletypeInfo,Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
 
 class Warehouse_goods_info(models.Model):
     wh_job_no = models.CharField(blank=False, null=False, max_length=200, default='')
@@ -33,8 +33,8 @@ class Warehouse_goods_info(models.Model):
     wh_available_volume = models.FloatField(null=True,default=0.0)
     wh_goods_area = models.FloatField(null=True,default=0.0)
     wh_check_in_out= models.ForeignKey(Check_in_out, on_delete=models.CASCADE, null=True, default=1,related_name='wh_check_in_out',db_column='wh_check_in_out')
-    wh_customer_name = models.CharField(blank=True, null=True, max_length=200)
-    wh_customer_type = models.CharField(blank=True, null=True, max_length=20)
+    wh_customer_name = models.ForeignKey(CustomerInfo,on_delete=models.CASCADE, blank=False, null=False,default='')
+    wh_customer_type = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, blank=False, null=False,default='')
     wh_stack_layer = models.ForeignKey(StackingInfo, null=True, on_delete=models.CASCADE, default='')
     wh_checkin_time = models.DateTimeField(null=True)
     wh_checkout_time = models.DateTimeField(null=True)

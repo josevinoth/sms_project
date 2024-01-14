@@ -20,6 +20,8 @@ class GoodsaddForm(forms.ModelForm):
         self.fields['wh_fumigation_process'].empty_label = "--Select--"
         self.fields['wh_fumigation_action'].empty_label = "--Select--"
         self.fields['wh_uom'].empty_label = "--Select--"
+        self.fields['wh_customer_name'].empty_label = "--Select--"
+        self.fields['wh_customer_type'].empty_label = "--Select--"
 
 
 
