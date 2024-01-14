@@ -43,7 +43,9 @@ def gatein_add(request, gatein_id=0):
             print("I am inside get edit Gatein")
             wh_job_id = Gatein_info.objects.get(pk=gatein_id).gatein_job_no
             wh_customer_name = Gatein_info.objects.get(pk=gatein_id).gatein_customer
+            wh_customer_name_id = Gatein_info.objects.get(pk=gatein_id).gatein_customer.id
             wh_customer_type = Gatein_info.objects.get(pk=gatein_id).gatein_customer_type
+            wh_customer_type_id = Gatein_info.objects.get(pk=gatein_id).gatein_customer_type.id
             wh_invoice = Gatein_info.objects.get(pk=gatein_id).gatein_invoice
             wh_total_packages = Gatein_info.objects.get(pk=gatein_id).gatein_no_of_pkg
             wh_invoice_weight = Gatein_info.objects.get(pk=gatein_id).gatein_weight
@@ -51,6 +53,8 @@ def gatein_add(request, gatein_id=0):
             request.session['ses_gatein_id_nam'] = wh_job_id
             request.session['ses_customer_name'] = str(wh_customer_name)
             request.session['ses_customer_type'] = str(wh_customer_type)
+            request.session['ses_customer_name_id'] = wh_customer_name_id
+            request.session['ses_customer_type_id'] = wh_customer_type_id
             request.session['ses_wh_invoice'] = wh_invoice
             request.session['ses_gatein_no_of_pkg'] = wh_total_packages
             request.session['ses_gatein_weight'] = wh_invoice_weight
@@ -58,7 +62,6 @@ def gatein_add(request, gatein_id=0):
             request.session['ses_consignee'] = Gatein_info.objects.get(pk=gatein_id).gatein_consignee
             request.session['ses_po_num'] = wh_po_num
             request.session['ses_wh_gatein_id'] = gatein_id
-
             # Gate In Status Check
             try:
                 gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -251,7 +254,7 @@ def gatein_delete(request,gatein_id):
         print("Damage/Check After Object does not exist")
         pass
 
-    return redirect('/SMS/gatein_list')
+    return redirect('/SMS/search')
 
 #Delete WH Job
 @login_required(login_url='login_page')

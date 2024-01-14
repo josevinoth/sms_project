@@ -3,7 +3,7 @@ from django.db import transaction
 from django.db.models.aggregates import Sum
 from django.contrib import messages
 from ..forms import GoodsaddForm
-from ..models import Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info
+from ..models import TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from random import randint
@@ -106,6 +106,8 @@ def goods_add(request, goods_id=0):
     if request.method == "GET":
         if goods_id == 0:
             print("I am inside Get add Goods")
+            customer_name_id = request.session.get('ses_customer_name_id')
+            customer_type_id = request.session.get('ses_customer_type_id')
             goods_form = GoodsaddForm()
             context = {
                 'first_name': first_name,
@@ -126,9 +128,24 @@ def goods_add(request, goods_id=0):
                 'goods_checkin_count': goods_checkin_count_val,
                 'gatein_wh_job_id': gatein_wh_job_id,
                 'shipper_invoice': shipper_invoice,
+                'customer_name_id': customer_name_id,
+                'customer_type_id': customer_type_id,
             }
         else:
             print("I am inside get edit Goods")
+            # goods_list_1 = Warehouse_goods_info.objects.all()
+            # for i in goods_list_1:
+            #     customer_name = i.wh_customer_name
+            #     customer_type = i.wh_customer_type
+            #     try:
+            #         customer_name_id=CustomerInfo.objects.get(cu_name=customer_name).id
+            #         print('customer_name_id',customer_name_id)
+            #         Warehouse_goods_info.objects.filter(wh_customer_name=customer_name).update(wh_customer_name=customer_name_id)
+            #         customer_type_id = TrbusinesstypeInfo.objects.get(tb_trbusinesstype=customer_type).id
+            #         print('customer_type_id', customer_type_id)
+            #         Warehouse_goods_info.objects.filter(wh_customer_type=customer_type).update(wh_customer_type=customer_type_id)
+            #     except ObjectDoesNotExist:
+            #         pass
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(instance=goodsinfo)
             context = {
