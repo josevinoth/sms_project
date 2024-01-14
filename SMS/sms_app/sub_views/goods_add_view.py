@@ -133,19 +133,19 @@ def goods_add(request, goods_id=0):
             }
         else:
             print("I am inside get edit Goods")
-            # goods_list_1 = Warehouse_goods_info.objects.all()
-            # for i in goods_list_1:
-            #     customer_name = i.wh_customer_name
-            #     customer_type = i.wh_customer_type
-            #     try:
-            #         customer_name_id=CustomerInfo.objects.get(cu_name=customer_name).id
-            #         print('customer_name_id',customer_name_id)
-            #         Warehouse_goods_info.objects.filter(wh_customer_name=customer_name).update(wh_customer_name=customer_name_id)
-            #         customer_type_id = TrbusinesstypeInfo.objects.get(tb_trbusinesstype=customer_type).id
-            #         print('customer_type_id', customer_type_id)
-            #         Warehouse_goods_info.objects.filter(wh_customer_type=customer_type).update(wh_customer_type=customer_type_id)
-            #     except ObjectDoesNotExist:
-            #         pass
+            goods_list_1 = Warehouse_goods_info.objects.all()
+            for i in goods_list_1:
+                customer_name = i.wh_customer_name
+                customer_type = i.wh_customer_type
+                try:
+                    customer_name_id=CustomerInfo.objects.get(cu_name=customer_name).id
+                    print('customer_name_id',customer_name_id)
+                    Warehouse_goods_info.objects.filter(wh_customer_name=customer_name).update(wh_customer_name=customer_name_id)
+                    customer_type_id = TrbusinesstypeInfo.objects.get(tb_trbusinesstype=customer_type).id
+                    print('customer_type_id', customer_type_id)
+                    Warehouse_goods_info.objects.filter(wh_customer_type=customer_type).update(wh_customer_type=customer_type_id)
+                except ObjectDoesNotExist:
+                    pass
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(instance=goodsinfo)
             context = {
