@@ -1,4 +1,6 @@
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+
 from ..forms import WhratemasteraddForm
 from ..models import WhratemasterInfo
 from django.shortcuts import render, redirect
@@ -8,8 +10,13 @@ from django.shortcuts import render, redirect
 def whratemaster_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    whratemaster_list= (WhratemasterInfo.objects.all()).order_by('-id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(whratemaster_list, 50)
+    page_obj = paginator.get_page(page_number)
     context = {
-                'whratemaster_list': WhratemasterInfo.objects.all(),
+                'whratemaster_list':whratemaster_list,
+                'page_obj':page_obj,
                 'first_name': first_name,
                 'user_id':user_id,
             }

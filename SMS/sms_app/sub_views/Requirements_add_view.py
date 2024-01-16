@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
 
 from ..forms import RequirementForm
 from ..models import RequirementsInfo
@@ -61,7 +62,15 @@ def requirements_add(request,requirements_id=0):
 @login_required(login_url='login_page')
 def requirements_list(request):
     first_name = request.session.get('first_name')
-    context = {'requirements_list' : RequirementsInfo.objects.all(),'first_name': first_name}
+    requirements_list= (RequirementsInfo.objects.all()).order_by('-id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(requirements_list, 50)
+    page_obj = paginator.get_page(page_number)
+    context = {
+                'requirements_list' : requirements_list,
+                'first_name': first_name,
+                'page_obj': page_obj,
+                }
     return render(request,"asset_mgt_app/requirements_list.html",context)
 
 #Delete requirements

@@ -15,6 +15,14 @@
             <td>{{dispatch_detail.dispatch_transporter}}</td>
         </tr>
         <tr>
+            <th>Truck Number</th>
+            <td>{{dispatch_detail.dispatch_truck_number}}</td>
+        </tr>
+        <tr>
+            <th>Truck Type</th>
+            <td>{{dispatch_detail.dispatch_truck_type}}</td>
+        </tr>
+        <tr>
             <th>Driver Name</th>
             <td>{{dispatch_detail.dispatch_driver}}</td>
         </tr>
@@ -60,7 +68,7 @@
         </tr>
         {% for wh_dispatch_detail in wh_dispatch_details %}
         <tr>
-            <td>{{wh_dispatch_detail.wh_consignee}}</td>
+            <td>{{wh_dispatch_detail.wh_consigner}}</td>
             <td>{{wh_dispatch_detail.wh_goods_invoice}}</td>
             <td>{{wh_dispatch_detail.wh_goods_pieces}}</td>
             <td>{{wh_dispatch_detail.wh_goods_weight}}</td>
@@ -73,7 +81,10 @@
         <div>Driver ----------------------------------------------</div>
         <div>BVM Supervisor ----------------------------------------------</div>
     </div>
-    <div class="center-group">
+    <div class="right-group">
+        <p>Super Verification</p>
+    </div>
+     <div class="center-group">
         <p>THANK YOU FOR YOUR BUSINESS!</p>
     </div>
 
