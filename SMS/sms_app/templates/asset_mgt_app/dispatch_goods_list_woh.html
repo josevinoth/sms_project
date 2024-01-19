@@ -39,6 +39,9 @@
             <th>WH Job Number</th>
             <th>WH Stock Number</th>
             <th>Number Of Pieces</th>
+            <th>Dispatch Qty</th>
+            <th>Remaining Qty</th>
+            <th>Truck Type Billing</th>
             <th>Dispatch Number</th>
             <th>Shipper Invoice</th>
             <th>Customer Name</th>
@@ -59,6 +62,9 @@
             <td> {{goodsinfo.wh_job_no}}</td>
             <td> {{goodsinfo.wh_qr_rand_num}}</td>
             <td> {{goodsinfo.wh_goods_pieces}}</td>
+            <td> {{goodsinfo.wh_dispatch_qty}}</td>
+            <td> {{goodsinfo.wh_remaining_qty}}</td>
+            <td> {{goodsinfo.wh_truck_type_billing}}</td>
             <td> {{goodsinfo.wh_dispatch_num}}</td>
             <td> {{goodsinfo.wh_goods_invoice}}</td>
             <td> {{goodsinfo.wh_customer_name}}</td>
@@ -94,7 +100,10 @@ $(document).ready(function (){
             style: 'os',
             selector: 'td:first-child'
       },
-        order: [[1, 'asc']]
+        order: [[1, 'asc']],
+        dom: 'lBfrtip',
+        scrollY: "300px",
+        scrollX: true,
 });
 
    // Handle form submission event
@@ -126,5 +135,23 @@ $(document).ready(function (){
 
    });
 });
+</script>
+<script>
+  function editRow(button) {
+    // Get the row of the clicked button
+    var row = button.parentNode.parentNode;
+
+    // Get the name and age cells
+    var nameCell = row.cells[5];
+    var ageCell = row.cells[6];
+
+    // Get the new values from the user (you can use prompt, input fields, etc.)
+    var newName = prompt("Enter new name", nameCell.innerText);
+    var newAge = prompt("Enter new age", ageCell.innerText);
+
+    // Update the cell values
+    nameCell.innerText = newName;
+    ageCell.innerText = newAge;
+  }
 </script>
 {% endblock content %}
