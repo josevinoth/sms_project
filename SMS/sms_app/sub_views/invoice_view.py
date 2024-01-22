@@ -64,7 +64,6 @@ def invoice_add(request,invoice_id=0):
                         return redirect(request.META['HTTP_REFERER'])
                     try:
                         max_wt = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1).whrm_max_wt
-                        print('max_wt', max_wt)
                         if total_weight<=max_wt:
                             messages.success(request,'Total weight within customer limit!')
                         else:
@@ -227,9 +226,7 @@ def invoice_add(request,invoice_id=0):
                     # get billing truck type from dispatch
                     # dispatch_num_1 = list((Warehouse_goods_info.objects.filter(wh_job_no=k).values_list('wh_dispatch_num',flat=True)).distinct())
                     dispatch_num_1 = Warehouse_goods_info.objects.get(wh_job_no=k).wh_dispatch_num
-                    print('dispatch_num_1', dispatch_num_1)
                     billing_truck_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_1).dispatch_billing_truck_type
-                    print('billing_truck_type',billing_truck_type)
                     if billing_truck_type is None:
                         messages.error(request,'Check Billing Truck Type In Dispatch ' + str(dispatch_num_1))
                         return redirect(request.META['HTTP_REFERER'])
@@ -240,7 +237,6 @@ def invoice_add(request,invoice_id=0):
                         try:
                             gatein_truck_type = Gatein_info.objects.get(gatein_job_no=k).gatein_truck_type
                             vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=gatein_truck_type).id
-                            print('vehicle_type_id',vehicle_type_id)
                             try:
                                 warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
                             except ObjectDoesNotExist:
@@ -263,7 +259,6 @@ def invoice_add(request,invoice_id=0):
                         except:
                             messages.error(request, 'Check Vehicle Type Gate-In ' + str(k))
                             return redirect(request.META['HTTP_REFERER'])
-                    print('warehouse_charge',warehouse_charge)
                     try:
                         min_check_in_time = datetime.date((min(Warehouse_goods_info.objects.filter(wh_job_no=k).values_list('wh_checkin_time')))[0])
                         max_check_out_time = datetime.date((max(Warehouse_goods_info.objects.filter(wh_job_no=k).values_list('wh_checkout_time')))[0])
@@ -272,7 +267,6 @@ def invoice_add(request,invoice_id=0):
                         min_check_in_time = 0
                         max_check_out_time = 0
                         max_storage_days = ((max_check_out_time - min_check_in_time))
-                    print('max_storage_days',max_storage_days)
                     warehouse_charge_1 = warehouse_charge
                     storage_cost_total = round((warehouse_charge_1 * max_storage_days), 2)
 
