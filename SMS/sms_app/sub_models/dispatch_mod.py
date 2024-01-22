@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import CustomerInfo,Labels_pasted_Info,StatusList,VehicletypeInfo,GstexcemptionInfo,MyUser
+from ..models import Check_in_out,CustomerInfo,Labels_pasted_Info,StatusList,VehicletypeInfo,GstexcemptionInfo,MyUser
 
 class Dispatch_info(models.Model):
     dispatch_depature_date = models.DateTimeField(null=True,blank=True)
@@ -27,3 +27,6 @@ class Dispatch_info(models.Model):
     dispatch_total_weight = models.FloatField(null=True,blank=True,default=0.0)
     dispatch_total_goods = models.IntegerField(null=True,blank=True,default=0)
     dispatch_customer = models.ForeignKey(CustomerInfo,on_delete=models.CASCADE, default='',blank=True, null=True)
+    dispatch_billing_truck_type = models.ForeignKey(Check_in_out, on_delete=models.CASCADE, default='',
+                                                    related_name='dispatch_billing_truck_type',
+                                                    db_column='dispatch_billing_truck_type', null=True, blank=True)

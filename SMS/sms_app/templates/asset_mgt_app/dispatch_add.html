@@ -47,16 +47,16 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Truck Type Requested</span>
+										<span class="input-group-text">Truck Type (Check-Out)</span>
 									</div>
 									{% render_field dispatch_form.dispatch_truck_type class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Truck Type Billing</span>
+										<span class="input-group-text">Truck Type for Billing </span>
 									</div>
-									{% render_field dispatch_form.dispatch_truck_type_billing class="form-control" %}
+									{% render_field dispatch_form.dispatch_billing_truck_type id="dispatch_billing_truck_type" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">

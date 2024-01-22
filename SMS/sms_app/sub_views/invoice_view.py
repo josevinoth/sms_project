@@ -6,7 +6,7 @@ from django.http import HttpResponse
 import json
 from django.contrib import messages
 from ..forms import InvoiceaddForm
-from ..models import VehicletypeInfo,Dispatch_info,Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
+from ..models import Gatein_info,VehicletypeInfo,Dispatch_info,Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
 from django.shortcuts import render, redirect
 from datetime import timedelta, date, datetime
 
@@ -14,7 +14,7 @@ from datetime import timedelta, date, datetime
 # Invoicecity
 @login_required(login_url='login_page')
 def invoice_add(request,invoice_id=0):
-    global min_check_in_time, max_check_out_time, max_storage_days
+    global min_check_in_time, max_check_out_time, max_storage_days, warehouse_charge
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     if request.method == "GET":
@@ -106,33 +106,43 @@ def invoice_add(request,invoice_id=0):
                     min_check_in_time = BilingInfo.objects.get(pk=invoice_id).bill_start_date
                     max_check_out_time = BilingInfo.objects.get(pk=invoice_id).bill_end_date
                     max_storage_days = ((max_check_out_time - min_check_in_time).days) + 1
-                else:
-                    print("Inside Case to Case")
-                    try:
-                        vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num[0]).dispatch_truck_type_billing
-                        vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
-                    except:
-                        messages.error(request,'Check Vehicle Type Billing in '+str(dispatch_num[0]))
-                        return redirect(request.META['HTTP_REFERER'])
-                    print('vehicle_type',vehicle_type)
-
-                    try:
-                        min_check_in_time = datetime.date((min(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_checkin_time')))[0])
-                        max_check_out_time = datetime.date((max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_checkout_time')))[0])
-                        max_storage_days = ((max_check_out_time - min_check_in_time).days)
-                    except:
-                        min_check_in_time = 0
-                        max_check_out_time = 0
-                        max_storage_days = ((max_check_out_time - min_check_in_time))
-                    try:
-                        warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
-                    except ObjectDoesNotExist:
-                        messages.error(request, 'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
-                        return redirect(request.META['HTTP_REFERER'])
-                    # max_storage_days = max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_goods_invoice=k).values_list('wh_storage_time', flat=True))
-                    print('max_storage_days',max_storage_days)
-                    warehouse_charge_1 = warehouse_charge / wh_job_num_count
-                    storage_cost_total = round((warehouse_charge_1 * max_storage_days), 2)
+                # else:
+                #     print("Inside Case to Case")
+                #     # get billing truck type from dispatch
+                #     billing_truck_type=Dispatch_info.objects.get(dispatch_num=dispatch_num[0]).dispatch_billing_truck_type
+                #     if billing_truck_type==1:
+                #         try:
+                #             wh_job_num_1=
+                #             vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num[0]).dispatch_truck_type_billing
+                #             vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
+                #         except:
+                #             messages.error(request, 'Check Vehicle Type Billing in ' + str(dispatch_num[0]))
+                #             return redirect(request.META['HTTP_REFERER'])
+                #     try:
+                #         vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num[0]).dispatch_truck_type_billing
+                #         vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
+                #     except:
+                #         messages.error(request,'Check Vehicle Type Billing in '+str(dispatch_num[0]))
+                #         return redirect(request.META['HTTP_REFERER'])
+                #     print('vehicle_type',vehicle_type)
+                #
+                #     try:
+                #         min_check_in_time = datetime.date((min(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_checkin_time')))[0])
+                #         max_check_out_time = datetime.date((max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_checkout_time')))[0])
+                #         max_storage_days = ((max_check_out_time - min_check_in_time).days)
+                #     except:
+                #         min_check_in_time = 0
+                #         max_check_out_time = 0
+                #         max_storage_days = ((max_check_out_time - min_check_in_time))
+                #     try:
+                #         warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
+                #     except ObjectDoesNotExist:
+                #         messages.error(request, 'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
+                #         return redirect(request.META['HTTP_REFERER'])
+                #     # max_storage_days = max(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_goods_invoice=k).values_list('wh_storage_time', flat=True))
+                #     print('max_storage_days',max_storage_days)
+                #     warehouse_charge_1 = warehouse_charge / wh_job_num_count
+                #     storage_cost_total = round((warehouse_charge_1 * max_storage_days), 2)
 
                 # Calculate Loading & Unloading Charge
                 for k in wh_job_num:
@@ -152,7 +162,7 @@ def invoice_add(request,invoice_id=0):
                             piece_rate_val = piece_rate.whrm_rate
                             total_loading_cost = piece_rate_val * no_of_pieces
                         except ObjectDoesNotExist:
-                            messages.error(request,'Loading/Unloading Charges not available in master for selected Customer!')
+                            messages.error(request,'Loading/Unloading Charges not available in master for selected Customer for weight! '+str(total_weight)+str(' kg'))
                             return redirect(request.META['HTTP_REFERER'])
 
                     # Calculate Crane and Forklift cost
@@ -213,6 +223,58 @@ def invoice_add(request,invoice_id=0):
 
                         crane_cost = crane_cost_l2hr + crane_cost_g2hr
                         forklift_cost = forklift_cost_l2hr + forklift_cost_g2hr
+
+                    # get billing truck type from dispatch
+                    # dispatch_num_1 = list((Warehouse_goods_info.objects.filter(wh_job_no=k).values_list('wh_dispatch_num',flat=True)).distinct())
+                    dispatch_num_1 = Warehouse_goods_info.objects.get(wh_job_no=k).wh_dispatch_num
+                    print('dispatch_num_1', dispatch_num_1)
+                    billing_truck_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_1).dispatch_billing_truck_type
+                    print('billing_truck_type',billing_truck_type)
+                    if billing_truck_type is None:
+                        messages.error(request,'Check Billing Truck Type In Dispatch ' + str(dispatch_num_1))
+                        return redirect(request.META['HTTP_REFERER'])
+                    else:
+                        billing_truck_type_id=billing_truck_type.id
+
+                    if billing_truck_type_id == 1:
+                        try:
+                            gatein_truck_type = Gatein_info.objects.get(gatein_job_no=k).gatein_truck_type
+                            vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=gatein_truck_type).id
+                            print('vehicle_type_id',vehicle_type_id)
+                            try:
+                                warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
+                            except ObjectDoesNotExist:
+                                warehouse_charge=0
+                                messages.error(request,'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
+                                return redirect(request.META['HTTP_REFERER'])
+                        except:
+                            messages.error(request, 'Check Vehicle Type Gate-In ' + str(k))
+                            return redirect(request.META['HTTP_REFERER'])
+                    elif billing_truck_type_id == 2:
+                        try:
+                            dispatch_truck_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_1).dispatch_truck_type
+                            vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=dispatch_truck_type).id
+                            try:
+                                warehouse_charge = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1,whrm_vehicle_type=vehicle_type_id).whrm_rate
+                            except ObjectDoesNotExist:
+                                warehouse_charge=0
+                                messages.error(request,'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
+                                return redirect(request.META['HTTP_REFERER'])
+                        except:
+                            messages.error(request, 'Check Vehicle Type Gate-In ' + str(k))
+                            return redirect(request.META['HTTP_REFERER'])
+                    print('warehouse_charge',warehouse_charge)
+                    try:
+                        min_check_in_time = datetime.date((min(Warehouse_goods_info.objects.filter(wh_job_no=k).values_list('wh_checkin_time')))[0])
+                        max_check_out_time = datetime.date((max(Warehouse_goods_info.objects.filter(wh_job_no=k).values_list('wh_checkout_time')))[0])
+                        max_storage_days = ((max_check_out_time - min_check_in_time).days)
+                    except:
+                        min_check_in_time = 0
+                        max_check_out_time = 0
+                        max_storage_days = ((max_check_out_time - min_check_in_time))
+                    print('max_storage_days',max_storage_days)
+                    warehouse_charge_1 = warehouse_charge
+                    storage_cost_total = round((warehouse_charge_1 * max_storage_days), 2)
 
                     invoice_id = list(Warehouse_goods_info.objects.filter(wh_job_no=k).values_list('id',flat=True))
                     invoice_id.sort()
@@ -452,32 +514,35 @@ def load_whrate_model(request):
 def case_to_case_invoice_list_open(request):
     first_name = request.session.get('first_name')
     case_to_case = str(TrbusinesstypeInfo.objects.get(id=1))
-    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type=case_to_case)
+    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type=1)
     context={
         'open_invoice_list':open_invoice_list,
         'first_name': first_name,
+        'invoice_type': str('Cast-To-Case Customer Open Invoice List'),
     }
-    return render(request, "asset_mgt_app/invoice_list_open.html", context)\
+    return render(request, "asset_mgt_app/invoice_list_open.html", context)
 
 @login_required(login_url='login_page')
 def dedicated_invoice_list_open(request):
     first_name = request.session.get('first_name')
     dedicated = str(TrbusinesstypeInfo.objects.get(id=3))
-    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type=dedicated)
+    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=2,wh_customer_type=3)
     context={
         'open_invoice_list':open_invoice_list,
         'first_name': first_name,
+        'invoice_type': str('Dedicated Customer  Open Invoice List'),
     }
-    return render(request, "asset_mgt_app/invoice_list_open.html", context)\
+    return render(request, "asset_mgt_app/invoice_list_open.html", context)
 
 @login_required(login_url='login_page')
 def exclusive_invoice_list_open(request):
     first_name = request.session.get('first_name')
     exlcusive = str(TrbusinesstypeInfo.objects.get(id=2))
-    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1,wh_customer_type=exlcusive)
+    open_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=None,wh_check_in_out=1,wh_customer_type=2)
     context={
         'open_invoice_list':open_invoice_list,
         'first_name': first_name,
+        'invoice_type': str('Exclusive Customer Open Invoice List'),
     }
     return render(request, "asset_mgt_app/invoice_list_open.html", context)
 @login_required(login_url='login_page')

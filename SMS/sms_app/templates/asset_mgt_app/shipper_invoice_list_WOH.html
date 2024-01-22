@@ -37,7 +37,9 @@
             <th>Stock Number</th>
             <th>Customer Name</th>
             <th>Customer Type</th>
-            <th>Vehicle Type</th>
+            <th>Check In Vehicle Type</th>
+            <th>Check Out Vehicle Type</th>
+            <th>Vehicle Type for Billing</th>
             <th>No of Pieces</th>
             <th>Loading Cost/Piece (INR)</th>
             <th>Total Loading Cost (INR)</th>
@@ -66,7 +68,9 @@
             <td> {{shipperinvoiceinfo.wh_qr_rand_num}}</td>
             <td> {{shipperinvoiceinfo.wh_customer_name}}</td>
             <td> {{shipperinvoiceinfo.wh_customer_type}}</td>
-            <td> {{shipperinvoiceinfo.wh_truck_type}}</td>
+            <td> {{shipperinvoiceinfo.wh_gate_injob_no_id.gatein_truck_type}}</td>
+            <td> {{shipperinvoiceinfo.wh_dispatch_id.dispatch_truck_type}}</td>
+            <td> {{shipperinvoiceinfo.wh_dispatch_id.dispatch_billing_truck_type}}</td>
             <td> {{shipperinvoiceinfo.wh_goods_pieces}}</td>
             <td> {{shipperinvoiceinfo.wh_loading_charge_unit}}</td>
             <td> {{shipperinvoiceinfo.wh_total_loading_cost}}</td>

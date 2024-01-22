@@ -11,7 +11,6 @@ from xhtml2pdf import pisa
 from ..models import ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
 from django.db.models.aggregates import Sum
 from datetime import date, datetime,timedelta
-import pandas as pd
 @login_required(login_url='login_page')
 def reports(request):
     first_name = request.session.get('first_name')

@@ -16,3 +16,4 @@ class DispatchaddForm(forms.ModelForm):
         self.fields['dispatch_sticker_pasted_bvm'].empty_label = "--Select--"
         self.fields['dispatch_cargo_picked'].empty_label = "--Select--"
         self.fields['dispatch_customer'].empty_label = "--Select--"
+        self.fields['dispatch_billing_truck_type'].empty_label = "--Select--"
