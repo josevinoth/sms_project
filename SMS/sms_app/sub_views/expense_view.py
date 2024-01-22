@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from ..models import ExpenseInfo
 from django.shortcuts import render, redirect
@@ -35,14 +36,17 @@ def expense_add(request,expense_id=0):
         if expense_form.is_valid():
             expense_form.save()
             print("Main Form Saved")
+            messages.success(request, 'Record Updated Successfully')
         else:
             print("Main Form Not Saved")
-        return redirect('/SMS/expense_list')
+            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+        return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/expense_list')
 
 @login_required(login_url='login_page')
 def expense_list(request):
     first_name = request.session.get('first_name')
-    expense_list_val = ExpenseInfo.objects.all()
+    expense_list_val = (ExpenseInfo.objects.all()).order_by('-id')
     context =   {
                 'expense_list_val' : expense_list_val,
                 'first_name': first_name,
