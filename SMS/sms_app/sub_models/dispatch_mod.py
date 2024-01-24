@@ -27,6 +27,6 @@ class Dispatch_info(models.Model):
     dispatch_total_weight = models.FloatField(null=True,blank=True,default=0.0)
     dispatch_total_goods = models.IntegerField(null=True,blank=True,default=0)
     dispatch_customer = models.ForeignKey(CustomerInfo,on_delete=models.CASCADE, default='',blank=True, null=True)
-    dispatch_billing_truck_type = models.ForeignKey(Check_in_out, on_delete=models.CASCADE, default='',
+    dispatch_billing_truck_type = models.ForeignKey(Check_in_out, on_delete=models.CASCADE, default=3,
                                                     related_name='dispatch_billing_truck_type',
                                                     db_column='dispatch_billing_truck_type', null=True, blank=True)
