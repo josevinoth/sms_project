@@ -63,6 +63,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Stock In Date</span>
+									</div>
+									{% render_field form.sp_stock_in_date id="sp_stock_in_date" type="Date" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Thick/Height (In)</span>
 									</div>
 									{% render_field form.sp_thick_height id="sp_thick_height" onchange="change_charge_type()" class="form-control " %}
@@ -73,14 +79,14 @@
 									</div>
 									{% render_field form.sp_width id="sp_width" onchange="change_charge_type()" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Length (Ft)</span>
 									</div>
 									{% render_field form.sp_length id="sp_length" onchange="change_charge_type()" class="form-control " %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">CFT</span>

@@ -30,7 +30,7 @@
             <th>Stock Purchases Number</th>
             <th>Category</th>
             <th>Stock Type</th>
-            <th>Consumable Type</th>
+            <th>Stock Description</th>
             <th>Type Of Wood</th>
             <th>Source</th>
             <th>Vendor Name</th>
@@ -56,7 +56,7 @@
             <td> {{stockpurchasesinfo.sp_purchase_num}}</td>
             <td> {{stockpurchasesinfo.sp_category}}</td>
             <td> {{stockpurchasesinfo.sp_stock_type}}</td>
-            <td> {{stockpurchasesinfo.sp_consumable_type}}</td>
+            <td> {{stockpurchasesinfo.sp_stock_description}}</td>
             <td> {{stockpurchasesinfo.sp_type_of_wood}}</td>
             <td> {{stockpurchasesinfo.sp_source}}</td>
             <td> {{stockpurchasesinfo.sp_vendor_name}}</td>
@@ -93,7 +93,8 @@
 <script>
     $(document).ready(function() {
     $('#stockpurchases_list').DataTable({
-         order: [0, 'asc' ],
+        order: [0, 'asc' ],
+        scrollX: true,
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'

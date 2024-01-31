@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Prespectivec_customer_NoInfo,MyUser,Business_won_NoInfo,faciltiyrequirementinfo,Busnotwon,YesNoInfo,CustomertypeInfo,Salestatus,Calltype,Callnature,Callpurpose,Cusnewexist,Industrytype,Packreuqirementinfo,Supplyinfo,Transrequirementinfo,Whrequirementinfo,Location_info,CustomerInfo
+from ..models import Business_Sol_info,Prespectivec_customer_NoInfo,MyUser,Business_won_NoInfo,faciltiyrequirementinfo,Busnotwon,YesNoInfo,CustomertypeInfo,Salestatus,Calltype,Callnature,Callpurpose,Cusnewexist,Industrytype,Packreuqirementinfo,Supplyinfo,Transrequirementinfo,Whrequirementinfo,Location_info,CustomerInfo
 
 def sales_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
@@ -51,6 +51,7 @@ class SalesInfo(models.Model):
     s_business_start_days=models.IntegerField(null = True,blank=True,default=0)
     s_sale_number = models.CharField(blank=True, null=True,max_length=30)
     s_attachment = models.FileField(upload_to=sales_directory_path, null=True, blank=True)
+    s_company = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, null=True,blank=True)
     class Meta:
         ordering = ["s_sale_number"]
     def __str__(self):

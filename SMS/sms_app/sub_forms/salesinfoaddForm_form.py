@@ -28,3 +28,4 @@ class SalesinfoaddForm(forms.ModelForm):
         self.fields['s_status'].empty_label = "--Select--"
         self.fields['s_noreason_cp'].empty_label = "--Select--"
         self.fields['s_not_reason'].empty_label = "--Select--"
+        self.fields['s_company'].empty_label = "--Select--"

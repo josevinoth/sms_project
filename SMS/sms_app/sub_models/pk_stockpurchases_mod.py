@@ -27,6 +27,7 @@ class PkstockpurchasesInfo(models.Model):
     sp_size = models.FloatField(blank=True, null=True, default=0.0)
     sp_rate = models.FloatField(blank=True, null=True, default=0.0)
     sp_price = models.FloatField(blank=True, null=True, default=0)
+    sp_stock_in_date = models.DateField(blank=True, null=True)
 
     class Meta:
         ordering = ["sp_purchase_num"]

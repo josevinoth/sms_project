@@ -19,6 +19,7 @@ class PkcostingsummaryInfo(models.Model):
     cs_material_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_transport_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_total_cost_wom = models.FloatField(blank=True, null=True, default=0.0)
+    cs_remarks = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ["cs_wood_cost"]

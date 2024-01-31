@@ -31,11 +31,9 @@ def stockpurchases_add(request,stockpurchases_id=0):
                 # Generate Random stockpurchases number
                 try:
                     last_id = PkstockpurchasesInfo.objects.latest('id').id
-                    stockpurchases_num_next = str('SP_') + str(
-                        int(((PkstockpurchasesInfo.objects.get(id=last_id)).sp_purchase_num).replace('SP_',
-                                                                                                       '')) + 1)
+                    stockpurchases_num_next = str('GRN/PK/') + str(int(((PkstockpurchasesInfo.objects.get(id=last_id)).sp_purchase_num).replace('GRN/PK/','')) + 1)
                 except ObjectDoesNotExist:
-                    stockpurchases_num_next = str('SP_') + str(1000000)
+                    stockpurchases_num_next = str('GRN/PK/') + str('1')
                 form.save()
                 print("stockpurchases Form is Valid")
                 last_id = (PkstockpurchasesInfo.objects.latest('id')).id

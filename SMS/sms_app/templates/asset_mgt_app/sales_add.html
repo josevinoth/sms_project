@@ -99,6 +99,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Handling Company</span>
+									</div>
+									{% render_field form.s_company class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Handling Branch</span>
 									</div>
 									{% render_field form.s_location class="form-control" %}
@@ -199,8 +206,6 @@
 									{% render_field form.s_customer_prospective class="form-control" id="s_customer_prospective" onchange="pc_enabler()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" > If no, Reason?</span>
@@ -208,6 +213,8 @@
 									{% render_field form.s_noreason_cp class="form-control disable_a_href" id="s_noreason_cp"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" > If Yes, Date of Quote</span>
