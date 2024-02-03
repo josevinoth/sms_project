@@ -354,6 +354,7 @@ urlpatterns = [
     path('requirements_insert/', views.requirements_add, name='requirements_insert'),  # Add requirements
     path('requirements_update/<int:requirements_id>', views.requirements_add, name='requirements_update'),# update requirements
     path('requirements_delete/<int:requirements_id>', views.requirements_delete, name='requirements_delete'),# delete requirements
+    path('requirements_search/', views.requirements_search, name='requirements_search'),# search requirements
     path('needassessment_list/', views.needassessment_list, name='needassessment_list'),  # List needassessment
     path('needassessment_insert/', views.needassessment_add, name='needassessment_insert'),  # Add needassessment
     path('needassessment_update/<int:needassessment_id>', views.needassessment_add, name='needassessment_update'),# update needassessment
