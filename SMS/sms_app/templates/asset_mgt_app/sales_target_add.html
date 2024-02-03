@@ -4,9 +4,6 @@
 
 <form method="POST" action="">
 	{% csrf_token %}
-
-	<!--{{form.as_p}}-->
-
 	<div class="row">
 		<div class="col-3"></div>
 		<div class="col-6">
@@ -47,6 +44,13 @@
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Target Customer</span>
+									</div>
+									{% render_field sales_target_form.st_target_customer class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Target Customer Calls</span>
 									</div>
 									{% render_field sales_target_form.st_target_customer_calls class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->

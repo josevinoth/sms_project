@@ -67,7 +67,7 @@ def sales_add(request, sales_id=0):
                 'user_id': user_id,
                 'comments_list_filterd': comments_list_filterd,
             }
-            return render(request, "asset_mgt_app/sales_edit.html", context)
+            return render(request, "asset_mgt_app/sales_add.html", context)
     else:
         if sales_id == 0:
             form = SalesinfoaddForm(request.POST, request.FILES)

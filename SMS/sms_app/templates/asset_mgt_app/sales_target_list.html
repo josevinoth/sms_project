@@ -25,6 +25,7 @@
             <th>Target End Date</th>
             <th>Target Revenue (INR)</th>
             <th>Target Customer Calls</th>
+            <th>Target Customers</th>
             <th>Updated On</th>
             <th>Updated By</th>
             <th>Edit</th>
@@ -39,10 +40,10 @@
                 <td> {{salestargetinfo.st_end_date}}</td>
                 <td> {{salestargetinfo.st_target_revenue}}</td>
                 <td> {{salestargetinfo.st_target_customer_calls}}</td>
+                <td> {{salestargetinfo.st_target_customer}}</td>
                 <td> {{salestargetinfo.st_updated_at}}</td>
                 <td> {{salestargetinfo.st_updated_by}}</td>
                 <td>
-
                     <a class="btn btn-primary" href="{% url 'sales_target_update' salestargetinfo.id %}" >
                         <i class="far fa-edit"></i>
                     </a>

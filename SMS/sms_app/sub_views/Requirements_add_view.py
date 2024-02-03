@@ -64,7 +64,7 @@ def requirements_list(request):
     first_name = request.session.get('first_name')
     requirements_list= (RequirementsInfo.objects.all()).order_by('-id')
     page_number = request.GET.get('page')
-    paginator = Paginator(requirements_list, 50)
+    paginator = Paginator(requirements_list, 10000)
     page_obj = paginator.get_page(page_number)
     context = {
                 'requirements_list' : requirements_list,
