@@ -39,9 +39,9 @@ class BilingInfo(models.Model):
     bill_total_post_gst= models.FloatField(default=0.0,null=True,blank=True)
     bill_created_on = models.DateTimeField(null=True, auto_now_add=True)
     bill_updated_at = models.DateTimeField(null=True, auto_now=True)
-    bill_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+    bill_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,related_name='bill_updated_by',db_column='bill_updated_by')
     bill_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, null=True,default=6)
-    bill_sale_order = models.ForeignKey(SalesInfo, on_delete=models.CASCADE, null=True,blank=True)
+    bill_sale_person = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,blank=True,related_name='bill_sale_person',db_column='bill_sale_person')
 
     class Meta:
         ordering = ["-bill_invoice_ref"]
