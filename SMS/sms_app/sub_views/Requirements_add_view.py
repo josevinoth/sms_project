@@ -98,4 +98,4 @@ def requirements_search(request):
 def requirements_delete(request,requirements_id):
     requirements = RequirementsInfo.objects.get(pk=requirements_id)
     requirements.delete()
-    return redirect('/SMS/requirements_list')
+    return redirect('/SMS/requirements_search')
