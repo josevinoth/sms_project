@@ -90,7 +90,7 @@ def expense_list(request):
 def expense_delete(request,expense_id):
     expense_del = ExpenseInfo.objects.get(pk=expense_id)
     expense_del.delete()
-    return redirect('/asset_mgt_app/expense_list')
+    return redirect('/SMS/expense_list')
 
 @login_required(login_url='login_page')
 def expense_search(request):
