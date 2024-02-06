@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import MyUser,Location_info,UnitInfo,Vendor_info,ExpenseTypeInfo,ExpenseUOMInfo
+from ..models import Business_Sol_info,ExpenseCategoryInfo,MyUser,Location_info,UnitInfo,Vendor_info,ExpenseTypeInfo,ExpenseUOMInfo
 
 
 class ExpenseInfo(models.Model):
@@ -27,6 +27,9 @@ class ExpenseInfo(models.Model):
     exp_created_on = models.DateTimeField(null=True, auto_now_add=True)
     exp_updated_at = models.DateTimeField(null=True, auto_now=True)
     exp_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+    exp_category= models.ForeignKey(ExpenseCategoryInfo, on_delete=models.CASCADE, null=True)
+    exp_number= models.CharField(blank=True,null=True,max_length=20)
+    exp_business = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, null=True)
 
     class Meta:
         ordering = ["exp_amount_payable"]

@@ -14,6 +14,27 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Business</span>
+									</div>
+									{% render_field expense_form.exp_business id="exp_business" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Expense Category</span>
+									</div>
+									{% render_field expense_form.exp_category id="exp_category" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Expense Number</span>
+									</div>
+									{% render_field expense_form.exp_number id="exp_number" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Branch</span>
 									</div>
 									{% render_field expense_form.exp_branch type="datetime-local" id="exp_branch" class="form-control" %}
@@ -75,6 +96,8 @@
 									{% render_field expense_form.exp_uom id="exp_uom" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Expense Rate (INR)</span>
@@ -82,8 +105,6 @@
 									{% render_field expense_form.exp_rate id="exp_rate" onchange="update_rates_fn()" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quantity</span>
@@ -159,7 +180,7 @@
 								{% render_field expense_form.exp_updated_at id="exp_updated_at" hidden="True" class="form-control" %}
 								{% render_field expense_form.exp_created_on id="exp_created_on" hidden="True" class="form-control" %}
 							</div>
-							<div class="input-group input-group-sm mb-3">
+							<div class="container-fluid input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Remarks</span>
 								</div>
@@ -179,7 +200,7 @@
 							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success" onclick="myjobnum()"><i class="fas fa-check"></i> Save</button>
-						<a href="{% url 'expense_list' %}" class="btn btn-danger float-right">
+						<a href="{% url 'expense_search' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel </a>
 					</div>
 				</div>
@@ -195,6 +216,15 @@ $(document).ready(function() {
 <!--	document.getElementById("bill_weight").value ='{{weight_sum}}';-->
 <!--	document.getElementById("bill_no_of_days").value ='{{no_of_days}}';-->
 <!--	document.getElementById("bill_no_of_pallets").value ='{{no_of_pieces}}';-->
+	var expense_category_val=document.getElementById("exp_category").value
+	if (expense_category_val=="")
+	{
+		$('#exp_category').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#exp_category').addClass('disable_a_href');
+	}
 	update_rates_fn()
   });
 </script>

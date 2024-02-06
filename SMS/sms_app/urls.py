@@ -311,6 +311,7 @@ urlpatterns = [
     path('expense_insert/',views.expense_add,name='expense_insert'), # Add expense
     path('expense_update/<int:expense_id>',views.expense_add,name='expense_update'), # update expense
     path('expense_delete/<int:expense_id>',views.expense_delete,name='expense_delete'), # delete expense
+    path('expense_search/',views.expense_search,name='expense_search'), # search expense
     path('case_to_case_open_invoice/',views.case_to_case_invoice_list_open,name='case_to_case_open_invoice'), # case to case Open invoice list
     path('exclusive_open_invoice/',views.exclusive_invoice_list_open,name='exclusive_open_invoice'), # exclusive Open invoice list
     path('dedicated_open_invoice/',views.dedicated_invoice_list_open,name='dedicated_open_invoice'), # dedicated Open invoice list

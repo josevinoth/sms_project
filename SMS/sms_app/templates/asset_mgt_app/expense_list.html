@@ -20,6 +20,19 @@
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
+    <div class="col-md-2">
+        <a href="{% url 'expense_list' %}" class="btn btn-warning btn-block btn-lg">
+            <i class="fas fa-plus"></i> Select All
+        </a>
+    </div>
+    <div class="col-md-1">
+        <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'expense_search' %}" method="get">
+            <div class="form-group">
+                <input type="search" class="form-control" id="expense_number" placeholder="Expense Number" name="expense_number">
+                <button class="btn btn-primary" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
+            </div>
+        </form>
+    </div>
 </div>
 <hr>
 <div class="container-fluid">
@@ -27,6 +40,9 @@
         <thead class="thead-dark">
         <tr>
             <th>ID</th>
+            <th>Business</th>
+            <th>Expense Category</th>
+            <th>Expense Number</th>
             <th>Created On</th>
             <th>Branch</th>
             <th>Unit</th>
@@ -44,9 +60,12 @@
         </tr>
         </thead>
         <tbody>
-        {% for expenseinfo in expense_list_val %}
+        {% for expenseinfo in page_obj %}
         <tr>
             <td> {{expenseinfo.id}}</td>
+            <td> {{expenseinfo.exp_business}}</td>
+            <td> {{expenseinfo.exp_category}}</td>
+            <td> {{expenseinfo.exp_number}}</td>
             <td> {{expenseinfo.exp_created_on}}</td>
             <td> {{expenseinfo.exp_branch}}</td>
             <td> {{expenseinfo.exp_unit}}</td>
@@ -77,13 +96,30 @@
         {% endfor %}
         </tbody>
     </table>
+    <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a class="btn btn-warning" href="?page=1">First</a>
+            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+        {% endif %}
+    </span>
+    </div>
 </div>
 <script>
     $(document).ready(function() {
     $('#expense_list').DataTable(
         {
         scrollY: "600px",
-<!--        scrollX: true,-->
+        scrollX: true,
         scrollCollapse: true,
         dom: 'lBfrtip',
         order: [0, 'desc' ],

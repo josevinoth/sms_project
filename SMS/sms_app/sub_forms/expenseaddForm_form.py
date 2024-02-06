@@ -13,4 +13,6 @@ class ExpenseaddForm(forms.ModelForm):
         self.fields['exp_vendor'].empty_label = "--Select--"
         self.fields['exp_expense_type'].empty_label = "--Select--"
         self.fields['exp_uom'].empty_label = "--Select--"
+        self.fields['exp_category'].empty_label = "--Select--"
+        self.fields['exp_business'].empty_label = "--Select--"
 
