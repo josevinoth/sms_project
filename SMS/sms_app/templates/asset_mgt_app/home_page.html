@@ -83,6 +83,7 @@
     <div class="content">
         <a href="{% url 'ar_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Accounts Receivable</a>
         <a href="{% url 'ar_comments_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Accounts Receivable Comments</a>
+        <a href="{% url 'expense_search' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Expenses</a>
     </div>
     <hr class="hr_style">
     <button type="button" class="collapsible"><i class="fa fa-suitcase" aria-hidden="true"></i>  Packaging Management System (PMS)</button>
@@ -149,7 +150,6 @@
             <a href="{% url 'exclusive_open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Exclusive <span class="badge badge-light">{{exclusive_list}}</span></a>
             <a href="{% url 'invoice_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice List</a>
         </div>
-        <a href="{% url 'expense_search' %}"><i class="fa fa-microchip" aria-hidden="true"></i> Expense</a>
         <a href="{% url 'warehouse_reports' %}"><i class="fa fa-book" aria-hidden="true"></i> Reports</a>
         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> WMS Misc</button>
         <div class="content">
