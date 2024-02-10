@@ -30,12 +30,15 @@ def requirements_add(request,requirements_id=0):
             form = RequirementForm(request.POST,request.FILES)
             if form.is_valid():
                 # Generate Random requirement number
+                form.save()
                 try:
                     last_id = (RequirementsInfo.objects.values_list('id', flat=True)).last()
-                    req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
+                    reg_number=100000+last_id
+                    # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
                 except ObjectDoesNotExist:
-                    req_num_next = str('Req_') + str(randint(10000, 99999))
-                form.save()
+                    reg_number=100000
+                    # req_num_next = str('Req_') + str(randint(10000, 99999))
+                req_num_next=str('Req_') + str(reg_number)
                 print("Requirement Form is Valid")
                 last_id = (RequirementsInfo.objects.values_list('id', flat=True)).last()
                 RequirementsInfo.objects.filter(id=last_id).update(req_number=req_num_next)
