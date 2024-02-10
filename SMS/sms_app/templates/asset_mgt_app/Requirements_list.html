@@ -40,6 +40,7 @@
     <table  id="requirements_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>ID</th>
             <th>Created On</th>
             <th>Requirement Number</th>
             <th>Backlogs</th>
@@ -60,6 +61,7 @@
         <tbody>
         {% for requirementsinfo in page_obj %}
         <tr>
+            <td> {{requirementsinfo.id}}</td>
             <td> {{requirementsinfo.req_created_at}}</td>
             <td> {{requirementsinfo.req_number}}</td>
             <td> {{requirementsinfo.req_backlogs}}</td>
@@ -112,7 +114,7 @@
 <script>
     $(document).ready(function() {
     $('#requirements_list').DataTable({
-        order: [1, 'desc' ],
+        order: [0, 'desc' ],
         dom: 'lBfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'
