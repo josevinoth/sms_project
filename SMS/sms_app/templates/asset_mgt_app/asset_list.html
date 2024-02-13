@@ -83,7 +83,12 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#asset_list').DataTable();
+    $('#asset_list').DataTable({
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
 } );
 </script>
 {% endblock content %}
