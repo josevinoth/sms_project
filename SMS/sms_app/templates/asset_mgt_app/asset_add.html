@@ -17,7 +17,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Location</span>
 									</div>
-									{% render_field form.asset_location class="form-control" id="myLocation" onchange="myAssetnum()" %}
+									{% render_field form.asset_location class="form-control" id="myLocation" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -195,34 +195,34 @@ $(document).ready(function() {
       });
     });
   </script>
-<script>
-function myAssetnum() {
-  selectElement = document.querySelector('#myLocation');
-  output = selectElement.options[selectElement.selectedIndex].value;
-	if (output==1)
-	{
-		nam="BLR"
-	}
-	else if(output==2)
-	{
-		nam="MAA"
-	}
-	else if(output==3)
-	{
-		nam="PNY"
-	}
-	else if(output==4)
-	{
-		nam="HYD"
-	}
-	else
-	{
-		nam="TCR"
-	}
-<!--  var ran=Math.floor((Math.random() * 1000000) + 1)-->
-  var ran='{{asset_num}}';
-  document.getElementById("asset_number").value =nam+"_"+ ran;
-}
-</script>
+<!--<script>-->
+<!--function myAssetnum() {-->
+<!--  selectElement = document.querySelector('#myLocation');-->
+<!--  output = selectElement.options[selectElement.selectedIndex].value;-->
+<!--	if (output==1)-->
+<!--	{-->
+<!--		nam="BLR"-->
+<!--	}-->
+<!--	else if(output==2)-->
+<!--	{-->
+<!--		nam="MAA"-->
+<!--	}-->
+<!--	else if(output==3)-->
+<!--	{-->
+<!--		nam="PNY"-->
+<!--	}-->
+<!--	else if(output==4)-->
+<!--	{-->
+<!--		nam="HYD"-->
+<!--	}-->
+<!--	else-->
+<!--	{-->
+<!--		nam="TCR"-->
+<!--	}-->
+<!--&lt;!&ndash;  var ran=Math.floor((Math.random() * 1000000) + 1)&ndash;&gt;-->
+<!--  var ran='{{asset_num}}';-->
+<!--  document.getElementById("asset_number").value =nam+"_"+ ran;-->
+<!--}-->
+<!--</script>-->
 {% endblock content %}
 
