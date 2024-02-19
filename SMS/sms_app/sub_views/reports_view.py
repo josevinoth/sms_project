@@ -491,6 +491,8 @@ def goods_in_out_reports_list(request):
     in_statistics = Warehouse_goods_info.objects.filter(wh_check_in_out=1).values(
         'wh_branch__loc_name',  # Replace with the actual field name for branch name
         'wh_unit__unit_name',  # Replace with the actual field name for unit name
+        'wh_gate_injob_no_id__gatein_created_at',  # Replace with the actual field name for unit name
+        'id',  # Replace with the actual field name for unit name
     ).annotate(
         total_invoices=Count('wh_goods_invoice', distinct=True),
         # total_trucks=Count('wh_truck_type', distinct=True),
@@ -501,6 +503,8 @@ def goods_in_out_reports_list(request):
     out_statistics = Warehouse_goods_info.objects.filter(wh_check_in_out=2).values(
         'wh_branch__loc_name',  # Replace with the actual field name for branch name
         'wh_unit__unit_name',  # Replace with the actual field name for unit name
+        'wh_dispatch_id__dispatch_depature_date',  # Replace with the actual field name for unit name
+        'id',  # Replace with the actual field name for unit name
     ).annotate(
         total_invoices=Count('wh_goods_invoice', distinct=True),
         # total_trucks=Count('wh_truck_type', distinct=True),
@@ -509,7 +513,7 @@ def goods_in_out_reports_list(request):
     )
     context = {
                'first_name': first_name,
-                'in_statistics': in_statistics,
-                'out_statistics': out_statistics,
+                'in_statistics': in_statistics.order_by('id'),
+                'out_statistics': out_statistics.order_by('id'),
                }
     return render(request,"asset_mgt_app/goods_in_out_reports_list.html",context)
