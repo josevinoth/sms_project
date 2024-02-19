@@ -443,5 +443,6 @@ urlpatterns = [
     path('revenue_report/', views.revenue_report, name='revenue_report'), #Revenue Report
     path('expense_report/', views.expense_report, name='expense_report'), #Expense Report
     path('consignment_note_pdf/<int:consignment_note_id>', views.consignment_note_pdf, name='consignment_note_pdf'),# consignement_note_pdf
+    path('goods_in_out_reports_list/', views.goods_in_out_reports_list, name='goods_in_out_reports_list'),  # List pregateintruck
 ]
 

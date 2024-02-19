@@ -8,8 +8,8 @@ from django.template.loader import get_template
 from django.http import HttpResponse
 from django.utils import timezone
 from xhtml2pdf import pisa
-from ..models import ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
-from django.db.models.aggregates import Sum
+from ..models import Location_info,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
+from django.db.models.aggregates import Sum, Count
 from datetime import date, datetime,timedelta
 @login_required(login_url='login_page')
 def reports(request):
@@ -483,3 +483,33 @@ def export_stockreport_to_csv(request):
             # Handle the case where the item is None (e.g., the object doesn't exist)
             writer.writerow(['NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA'])
     return response
+
+@login_required(login_url='login_page')
+def goods_in_out_reports_list(request):
+    first_name = request.session.get('first_name')
+    # Grouping by branch and unit and calculating counts and sums
+    in_statistics = Warehouse_goods_info.objects.filter(wh_check_in_out=1).values(
+        'wh_branch__loc_name',  # Replace with the actual field name for branch name
+        'wh_unit__unit_name',  # Replace with the actual field name for unit name
+    ).annotate(
+        total_invoices=Count('wh_goods_invoice', distinct=True),
+        # total_trucks=Count('wh_truck_type', distinct=True),
+        total_trucks=Count('wh_gate_injob_no_id__gatein_pre_id', distinct=True),
+        total_weights=(Sum('wh_goods_weight')/1000)
+    )
+
+    out_statistics = Warehouse_goods_info.objects.filter(wh_check_in_out=2).values(
+        'wh_branch__loc_name',  # Replace with the actual field name for branch name
+        'wh_unit__unit_name',  # Replace with the actual field name for unit name
+    ).annotate(
+        total_invoices=Count('wh_goods_invoice', distinct=True),
+        # total_trucks=Count('wh_truck_type', distinct=True),
+        total_trucks=Count('wh_dispatch_num', distinct=True),
+        total_weights=(Sum('wh_goods_weight') / 1000)
+    )
+    context = {
+               'first_name': first_name,
+                'in_statistics': in_statistics,
+                'out_statistics': out_statistics,
+               }
+    return render(request,"asset_mgt_app/goods_in_out_reports_list.html",context)
