@@ -2,7 +2,7 @@ from django.db import models
 from ..models import SealedoropenedInfo,Gatein_info,StatusList,Currency_type,GstexcemptionInfo
 
 def loadingbay_directory_path(instance, filename):
-    return 'Loadingbayfiles/{0}/{1}'.format(instance.lbimg_job_no, filename)
+    return 'Loadingbayfiles/{f0}/{1}'.format(instance.lbimg_job_no, filename)
 
 class Loadingbay_Info(models.Model):
     lb_job_no = models.CharField(blank=False, null=False, max_length=50,default='')
