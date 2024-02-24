@@ -3,9 +3,9 @@
 {% load currency_format %}
 {% load static %}
 <!-- Loader container -->
-    <div id="loader">
-        <img src="{% static 'loaders_gifs/Earth_animated.gif' %}" alt="Loading...">
-    </div>
+<!--    <div id="loader">-->
+<!--        <img src="{% static 'loaders_gifs/Earth_animated.gif' %}" alt="Loading...">-->
+<!--    </div>-->
 
 <div class="container-fluid" style="padding:15px;" >
   <div class="row">
@@ -200,20 +200,20 @@
     });
 } );
 </script>
-<script>
-        document.getElementById("stockReportButton").addEventListener("click", function() {
-            document.getElementById("loader").style.display = "flex";
+<!--<script>-->
+<!--        document.getElementById("stockReportButton").addEventListener("click", function() {-->
+<!--            document.getElementById("loader").style.display = "flex";-->
 
-            // Add logic here to trigger the stock report generation
-            // For demonstration purposes, we'll simulate a delay with setTimeout
-            setTimeout(function() {
-                // Simulate the completion of stock report generation
-                document.getElementById("loader").style.display = "none";
-            }, 250000); // Adjust the timeout as needed
-        });
+<!--            // Add logic here to trigger the stock report generation-->
+<!--            // For demonstration purposes, we'll simulate a delay with setTimeout-->
+<!--            setTimeout(function() {-->
+<!--                // Simulate the completion of stock report generation-->
+<!--                document.getElementById("loader").style.display = "none";-->
+<!--            }, 250000); // Adjust the timeout as needed-->
+<!--        });-->
 
-        window.onload = function() {
-            document.getElementById("loader").style.display = "none";
-        };
-    </script>
+<!--        window.onload = function() {-->
+<!--            document.getElementById("loader").style.display = "none";-->
+<!--        };-->
+<!--    </script>-->
 {% endblock content %}
