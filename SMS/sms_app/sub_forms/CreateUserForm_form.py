@@ -16,11 +16,11 @@ class UserextForm(forms.ModelForm):
     emp_contact = forms.CharField(required=False)
     class Meta:
         model = User_extInfo
-        fields = ['department','emp_contact','emp_designation','emp_branch','emp_role']
+        fields = ['emp_contact']
         # fields = '__all__'
     def __init__(self, *args, **kwargs):
         super(UserextForm,self).__init__(*args, **kwargs)
-        self.fields['emp_designation'].empty_label = "--Select--"
-        self.fields['emp_branch'].empty_label = "--Select--"
-        self.fields['emp_role'].empty_label = "--Select--"
-        self.fields['department'].empty_label = "--Select--"
+        # self.fields['emp_designation'].empty_label = "--Select--"
+        # self.fields['emp_branch'].empty_label = "--Select--"
+        # self.fields['emp_role'].empty_label = "--Select--"
+        # self.fields['department'].empty_label = "--Select--"
