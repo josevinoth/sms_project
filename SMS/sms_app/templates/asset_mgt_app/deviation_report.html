@@ -1,0 +1,73 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Deviation Report</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'warehouse_reports' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'locationmaster_insert' %}" class="btn btn-success btn-block btn-lg">-->
+<!--            <i class="fas fa-plus"></i>-->
+<!--        </a>-->
+<!--    </div>-->
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="deviation_report" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>WH Job Number</th>
+            <th>Customer Invoice</th>
+            <th>No of Pieces</th>
+            <th>Package Type</th>
+            <th>Weight Deviation</th>
+            <th>Dimenstion Deviation</th>
+            <th>No Of Units Deviation</th>
+            <th>Damages</th>
+            <th>Mismatches</th>
+        </thead>
+        <tbody>
+        {% for deviation in deviation_list %}
+        <tr>
+            <td> {{deviation.wh_job_no}}</td>
+            <td> {{deviation.wh_goods_invoice}}</td>
+            <td> {{deviation.wh_goods_pieces}}</td>
+            <td> {{deviation.wh_goods_package_type}}</td>
+            <td> {{deviation.wh_weights_deviation}}</td>
+            <td> {{deviation.wh_dimension_deviation}}</td>
+            <td> {{deviation.wh_no_of_units_deviation}}</td>
+            <td> {{deviation.wh_damages}}</td>
+            <td> {{deviation.wh_mismatches}}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function() {
+    $('#deviation_report').DataTable({
+        scrollY: "600px",
+<!--        scrollX: true,-->
+        scrollCollapse: true,
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+    });
+} );
+</script>
+
+{% endblock content %}

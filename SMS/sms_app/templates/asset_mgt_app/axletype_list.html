@@ -1,0 +1,62 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Axle Type List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'axletype_insert' %}" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i> Add
+      </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+<table  id="axletype_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Axle Type</th>
+            <th>Edit</th>
+            <th>Delete</th>
+    </thead>
+    <tbody>
+        {% for axletypeinfo in axletype_list %}
+            <tr>
+                <td> {{axletypeinfo.at_axletype}}</td>
+                <td>
+
+                    <a class="btn btn-primary" href="{% url 'axletype_update' axletypeinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'axletype_delete' axletypeinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#axletype_list').DataTable();
+} );
+</script>
+
+{% endblock content %}

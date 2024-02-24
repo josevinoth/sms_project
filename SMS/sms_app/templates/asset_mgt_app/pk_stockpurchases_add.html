@@ -1,0 +1,246 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="" id="stockpurchases_add"  >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Stock Purchases</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Purchases Number</span>
+									</div>
+									{% render_field form.sp_purchase_num id="sp_purchase_num" readonly="True"  class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Category</span>
+									</div>
+									{% render_field form.sp_category id="sp_category" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Type</span>
+									</div>
+									{% render_field form.sp_stock_type id="sp_stock_type" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Description</span>
+									</div>
+									{% render_field form.sp_stock_description id="sp_stock_description" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Source</span>
+									</div>
+									{% render_field form.sp_source id="sp_source" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor Name</span>
+									</div>
+									{% render_field form.sp_vendor_name id="sp_vendor_bill" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor Bill</span>
+									</div>
+									{% render_field form.sp_vendor_bill id="sp_vendor_bill" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor Bill Date</span>
+									</div>
+									{% render_field form.sp_vendor_bill_date id="sp_vendor_bill_date" type="Date" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock In Date</span>
+									</div>
+									{% render_field form.sp_stock_in_date id="sp_stock_in_date" type="Date" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Thick/Height (In)</span>
+									</div>
+									{% render_field form.sp_thick_height id="sp_thick_height" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width (In)</span>
+									</div>
+									{% render_field form.sp_width id="sp_width" onchange="change_charge_type()" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length (Ft)</span>
+									</div>
+									{% render_field form.sp_length id="sp_length" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">CFT</span>
+									</div>
+									{% render_field form.sp_cft id="sp_cft" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quantity</span>
+									</div>
+									{% render_field form.sp_quantity id="sp_quantity" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">UOM</span>
+									</div>
+									{% render_field form.sp_uom id="sp_uom" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Size</span>
+									</div>
+									{% render_field form.sp_size id="sp_size" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total CFT</span>
+									</div>
+									{% render_field form.sp_total_cft  id="sp_total_cft" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Rate (INR)</span>
+									</div>
+									{% render_field form.sp_rate id="sp_rate" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Price (INR)</span>
+									</div>
+									{% render_field form.sp_price id="sp_price" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST (%)</span>
+									</div>
+									{% render_field form.sp_gst id="sp_gst" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST Amount (INR)</span>
+									</div>
+									{% render_field form.sp_gst_amount id="sp_gst_amount"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Bill Amount (INR)</span>
+									</div>
+									{% render_field form.sp_totalbill_amount id="sp_totalbill_amount" class="form-control disable_a_href" %}
+								</div>
+								{% render_field form.sp_updated_by id="sp_updated_by" hidden="True" class="form-control" %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'stockpurchases_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("sp_updated_by").value ='{{user_id}}';
+	change_charge_type();
+	});
+</script>
+
+<script>
+function change_charge_type() {
+	var jn=document.getElementById("sp_stock_type").value
+	if ( jn==1)
+	{
+		$('#sp_thick_height').removeClass('disable_a_href');
+		$('#sp_length').removeClass('disable_a_href');
+		$('#sp_width').removeClass('disable_a_href');
+		$('#sp_cft').removeClass('disable_a_href');
+		$('#sp_total_cft').removeClass('disable_a_href');
+		$('#sp_uom').addClass('disable_a_href');
+		$('#sp_size').addClass('disable_a_href');
+		document.getElementById("sp_uom").value=""
+		document.getElementById("sp_size").value=""
+		var length = parseFloat(document.getElementById("sp_length").value) || 0;
+		var height = parseFloat(document.getElementById("sp_thick_height").value) || 0;
+		var width = parseFloat(document.getElementById("sp_width").value) || 0;
+		var cft = length*height*width/144;
+		document.getElementById("sp_cft").value=cft.toFixed(2)
+
+		var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
+		var total_cft=cft*quantity
+		document.getElementById("sp_total_cft").value=total_cft.toFixed(2)
+
+		var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+		var price=rate*total_cft
+		document.getElementById("sp_price").value=price.toFixed(2)
+
+		var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+		var gst_amount=price*(gst/100)
+		document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
+
+		var total_bill_amount=price+gst_amount
+		document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
+	}
+	else if (jn==2)
+	{
+		$('#sp_thick_height').addClass('disable_a_href');
+		$('#sp_length').addClass('disable_a_href');
+		$('#sp_width').addClass('disable_a_href');
+		$('#sp_cft').addClass('disable_a_href');
+		$('#sp_total_cft').addClass('disable_a_href');
+		$('#sp_uom').removeClass('disable_a_href');
+		$('#sp_size').removeClass('disable_a_href');
+		var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
+		var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+		var price=rate*quantity
+		document.getElementById("sp_price").value=price.toFixed(2)
+		document.getElementById("sp_width").value=0.0
+		document.getElementById("sp_length").value=0.0
+		document.getElementById("sp_thick_height").value=0.0
+		document.getElementById("sp_cft").value=0.0
+		document.getElementById("sp_total_cft").value=0.0
+
+		var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+		var gst_amount=price*(gst/100)
+		document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
+
+		var total_bill_amount=price+gst_amount
+		document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
+	}
+}
+</script>
+
+{% endblock content %}

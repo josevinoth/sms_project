@@ -1,0 +1,80 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Revenue Report</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'warehouse_reports' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'locationmaster_insert' %}" class="btn btn-success btn-block btn-lg">-->
+<!--            <i class="fas fa-plus"></i>-->
+<!--        </a>-->
+<!--    </div>-->
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="revenue_report" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>WH Job Number</th>
+            <th>Customer Name</th>
+            <th>BVM Invoice Number</th>
+            <th>Shipment In-Date</th>
+            <th>Shipment Out-Date</th>
+            <th>Branch</th>
+            <th>Unit</th>
+            <th>Storage Charges</th>
+            <th>Loading Charges</th>
+            <th>unloading Charges</th>
+            <th>Forklift Charges</th>
+            <th>Crane Charges</th>
+            <th>Total Charges</th>
+        </thead>
+        <tbody>
+        {% for revenue in revenue_list %}
+        <tr>
+            <td> {{revenue.wh_job_no}}</td>
+            <td> {{revenue.wh_customer_name}}</td>
+            <td> {{revenue.wh_voucher_num}}</td>
+            <td> {{revenue.wh_checkin_time}}</td>
+            <td> {{revenue.wh_checkout_time}}</td>
+            <td> {{revenue.wh_branch}}</td>
+            <td> {{revenue.wh_unit}}</td>
+            <td> {{revenue.wh_storage_cost_total}}</td>
+            <td> {{revenue.wh_total_loading_cost}}</td>
+            <td> {{revenue.wh_total_loading_cost}}</td>
+            <td> {{revenue.wh_forklift_cost}}</td>
+            <td> {{revenue.wh_crane_cost}}</td>
+            <td> {{revenue.wh_total_invoice_cost}}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function() {
+    $('#revenue_report').DataTable({
+        scrollY: "600px",
+<!--        scrollX: true,-->
+        scrollCollapse: true,
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+    });
+} );
+</script>
+
+{% endblock content %}

@@ -1,0 +1,276 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" action="" id="goods_out" >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3 " style="max-width: 100%;">
+					<div class="card-header text-center">
+						<div class="row">
+							<div class="col-3"></div>
+							<div class="col-6">
+								<h3>Add/Update Warehouse-Out</h3>
+							</div>
+							<div class="col-3"></div>
+						</div>
+					</div>
+					<div class="card-body bg-light " >
+						<div class="row">
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3 ">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >WH Job Number</span>
+									</div>
+									{% render_field warehouseout_form.wh_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3 ">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Stock Number</span>
+									</div>
+									{% render_field warehouseout_form.wh_qr_rand_num id="wh_qr_rand_num" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Shipper Invoice Number</span>
+									</div>
+									{% render_field warehouseout_form.wh_goods_invoice value=request.session.ses_wh_invoice class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >PO Number</span>
+									</div>
+									{% render_field warehouseout_form.wh_po_num value=request.session.ses_po_num class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Customer Name</span>
+									</div>
+									{% render_field warehouseout_form.wh_customer_name value=request.session.ses_customer_name class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Customer Type</span>
+									</div>
+									{% render_field warehouseout_form.wh_customer_type value=request.session.ses_customer_type class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Consigner</span>
+									</div>
+									{% render_field warehouseout_form.wh_consigner value=request.session.ses_consigner class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Consignee</span>
+									</div>
+									{% render_field warehouseout_form.wh_consignee value=request.session.ses_consignee class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Unit Of Measure</span>
+									</div>
+									{% render_field warehouseout_form.wh_uom id="uom" class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Number of Pieces</span>
+									</div>
+									{% render_field warehouseout_form.wh_goods_pieces id="no_of_piece" class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length</span>
+									</div>
+									{% render_field warehouseout_form.wh_goods_length id="length" class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Width</span>
+									</div>
+									{% render_field warehouseout_form.wh_goods_width id="width"  class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Height</span>
+									</div>
+									{% render_field warehouseout_form.wh_goods_height id="height" class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Package Type</span>
+									</div>
+									{% render_field warehouseout_form.wh_goods_package_type class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Weight (Physical)</span>
+									</div>
+									{% render_field warehouseout_form.wh_goods_weight id="weight" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Required Area(Sq.ft)</span>
+									</div>
+									{% render_field warehouseout_form.wh_goods_area id="req_area" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Required Volume(Cu.ft)</span>
+									</div>
+									{% render_field warehouseout_form.wh_goods_volume_weight id="volume_weight" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Chargeable Weight</span>
+									</div>
+									{% render_field warehouseout_form.wh_chargeable_weight id="chargeable_weight" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >CBM</span>
+									</div>
+									{% render_field warehouseout_form.wh_cbm class="form-control disable_a_href" id="cbm" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Weight Deviation</span>
+									</div>
+									{% render_field warehouseout_form.wh_weights_deviation class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Dimension Deviation</span>
+									</div>
+									{% render_field warehouseout_form.wh_dimension_deviation class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >No of Units Deviation</span>
+									</div>
+									{% render_field warehouseout_form.wh_no_of_units_deviation class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Damages</span>
+									</div>
+									{% render_field warehouseout_form.wh_damages class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Mismatches</span>
+									</div>
+									{% render_field warehouseout_form.wh_mismatches class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text " >Warehouse Branch</span>
+									</div>
+									{% render_field warehouseout_form.wh_branch id="wh_branch" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Warehouse Unit</span>
+									</div>
+									{% render_field warehouseout_form.wh_unit id="wh_unit" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Warehouse Bay</span>
+									</div>
+									{% render_field warehouseout_form.wh_bay id="wh_bay" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Stacking Layer</span>
+									</div>
+									{% render_field warehouseout_form.wh_stack_layer id="wh_stack_layer" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Available Area (Sq.ft)</span>
+									</div>
+									{% render_field warehouseout_form.wh_available_area id="wh_available_area" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Available Volume (Cu.ft)</span>
+									</div>
+									{% render_field warehouseout_form.wh_available_volume id="wh_available_volume" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3" >
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Check-In Time</span>
+									</div>
+									{% render_field warehouseout_form.wh_checkin_time type="Datetime-local" class="form-control disable_a_href"%}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3" >
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Check-Out Time</span>
+									</div>
+									{% render_field warehouseout_form.wh_checkout_time type="Datetime-local" class="form-control"%}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3" >
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Goods Status</span>
+									</div>
+									{% render_field warehouseout_form.wh_check_in_out class="form-control disable_a_href"%}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+									{{form.error_messages}}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<!--<input class="btn btn-success" type="submit" name="Create User">-->
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
+						<a href="{% url 'warehouseout_cancel' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+</form>
+{% endblock content %}

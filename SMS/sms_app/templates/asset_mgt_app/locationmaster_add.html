@@ -1,0 +1,247 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" id="location_master" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" >
+	{% csrf_token %}
+
+	<!--{{form.as_p}}-->
+
+	<div class="row">
+		<div class="col-3"></div>
+		<div class="col-6">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Warehouse Master</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="">Warehouse Branch</span>
+									</div>
+									{% render_field form.lm_wh_location id="lm_branch" name="lm_branch" class="form-control" %}
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Warehouse Unit</span>
+									</div>
+									{% render_field form.lm_wh_unit id="lm_unit" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Bay</span>
+									</div>
+									{% render_field form.lm_areaside id="lm_bay" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field form.lm_customer_name id="lm_customer_name" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Model</span>
+									</div>
+									{% render_field form.lm_customer_model id="lm_customer_model" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length (ft)</span>
+									</div>
+									{% render_field form.lm_length id="lm_length" onchange="area_volume_fn()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width (ft)</span>
+									</div>
+									{% render_field form.lm_width id="lm_width" onchange="area_volume_fn()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Heigth (ft)</span>
+									</div>
+									{% render_field form.lm_height id="lm_height" onchange="area_volume_fn()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Total Area (Sq.ft)</span>
+									</div>
+									{% render_field form.lm_size id="lm_size" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Area Occupied (Sq.ft)</span>
+									</div>
+									{% render_field form.lm_area_occupied id="lm_area_occupied"  onchange="area_volume_fn()" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Available Area (Sq.ft)</span>
+									</div>
+									{% render_field form.lm_available_area id="lm_available_area" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Volume (Cu.ft)</span>
+									</div>
+									{% render_field form.lm_total_volume id="lm_total_volume" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Volume Occupied (Cu.ft)</span>
+									</div>
+									{% render_field form.lm_volume_occupied id="lm_volume_occupied" onchange="area_volume_fn()" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Available Volume (Cu.ft)</span>
+									</div>
+									{% render_field form.lm_available_volume id="lm_available_volume" class="form-control disable_a_href" %}
+								</div>
+								{% render_field form.lm_concatenate  type="hidden" id="lm_concatenate" class="form-control" %}
+								<div class="row">
+									<div class="col-1"></div>
+									<div class="col-10">
+										<div class="message text-center">
+											{% for message in messages %}
+											<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+											{% endfor %}
+										</div>
+									</div>
+									<div class="col-1"></div>
+								</div>
+							</div>
+						</div>
+						<!--<input class="btn btn-success" type="submit" name="Create User">-->
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'locationmaster_list' %}" class="btn btn-danger float-right" >
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-3"></div>
+	</div>
+</form>
+<script>
+	$(document).ready(function() {
+	 	area_volume_fn()
+	 });
+</script>
+<script>
+function area_volume_fn() {
+  var branch_val=document.getElementById("lm_branch").value;
+  var unit_val=document.getElementById("lm_unit").value;
+  var bay_val=document.getElementById("lm_bay").value;
+  var width_val=document.getElementById("lm_width").value;
+  var length_val=document.getElementById("lm_length").value;
+  var height_val=document.getElementById("lm_height").value;
+  var lm_size_val=document.getElementById("lm_size").value;
+  var lm_total_volume_val=document.getElementById("lm_total_volume").value;
+  var lm_area_occupied_val=document.getElementById("lm_area_occupied").value;
+  var lm_volume_occupied_val=document.getElementById("lm_volume_occupied").value;
+  var area_val=(width_val*length_val).toFixed(3);
+  var volume_val=(width_val*length_val*height_val).toFixed(3);
+  if (lm_area_occupied_val==0)
+  {
+  	lm_area_occupied_val=0
+  	lm_volume_occupied_val=0
+  	var lm_available_area_val=(area_val-lm_area_occupied_val).toFixed(3);
+  	var lm_available_volume_val=(volume_val-lm_volume_occupied_val).toFixed(3);
+  }
+  else
+  {
+  	lm_area_occupied_val=lm_area_occupied_val
+  	lm_volume_occupied_val=lm_volume_occupied_val
+  	var lm_available_area_val=(area_val-lm_area_occupied_val).toFixed(3);
+  	var lm_available_volume_val=(volume_val-lm_volume_occupied_val).toFixed(3);
+  }
+
+  document.getElementById("lm_total_volume").value =volume_val;
+  document.getElementById("lm_size").value =area_val;
+  document.getElementById("lm_available_area").value =lm_available_area_val;
+  document.getElementById("lm_available_volume").value =lm_available_volume_val;
+  document.getElementById("lm_concatenate").value =branch_val+unit_val+bay_val;
+}
+</script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script>
+    $("#lm_customer_name").change(function () {
+      var url = $("#location_master").attr("data-load_customer_model-url");
+
+      var lm_customer_name_id = $(this).find(":selected").text();
+      $.ajax({
+        url: url,
+        data: {
+          'lm_customer_name_id': lm_customer_name_id
+        },
+		success: function (data) {
+			var customer_model=JSON.parse(data)["customer_businessmodel_val"];
+        	document.getElementById("lm_customer_model").value =customer_model;
+        }
+      });
+
+    });
+</script>
+<!--to Fetch Unists-->
+<script>
+   $("#lm_branch").change(function () {
+      var url = $("#location_master").attr("data-units-url");
+      var branchId = $(this).val();
+      $.ajax({
+        url: '{% url 'load_units_origin' %}',
+        data: {
+          'branchId': branchId,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#lm_unit').removeClass('disable_a_href');
+			$('#lm_unit').empty().append("<option value='0'>--Select--</option>");
+        	var unit_name=JSON.parse(data)["unit_name_list"];
+        	var unit_id=JSON.parse(data)["unit_id"];
+        	var len = (unit_name).length;
+        	$('#lm_unit').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#lm_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+			}
+        }
+      });
+    });
+</script>
+<!--To Fetch bays-->
+<script>
+   $("#lm_unit").change(function () {
+      var url = $("#location_master").attr("data-bays-url");
+      var branchId = document.getElementById("lm_branch").value
+      var unitId = $(this).val();
+      $.ajax({
+        url: '{% url 'load_bays_origin' %}',
+        data: {
+          'branchId':branchId,
+          'unitId': unitId,
+        },
+		success: function (data) {
+			$('#lm_bay').removeClass('disable_a_href');
+			$("#lm_bay").empty();
+        	var bay=JSON.parse(data)["bay_name_list"];
+        	var bay_id=JSON.parse(data)["bay_id"];
+			var len1 = (bay).length;
+        	$("#lm_bay").empty();
+        	$('#lm_bay').empty().append("<option value='0'>--Select--</option>");
+        	for( var j = 0; j<len1; j++){
+        		$("#lm_bay").append("<option value='"+bay_id[j]+"'>"+bay[j]+"</option>");
+			}
+        }
+      });
+    });
+</script>
+{% endblock content %}

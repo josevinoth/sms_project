@@ -1,0 +1,64 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Insurance Type List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'insurancetype_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i>
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="insurancetype_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <!--            <th>Product Category</th>-->
+            <th>Insurance Type</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+        {% for insurancetypeinfo in insurancetype_list %}
+        <tr>
+            <td> {{insurancetypeinfo.insurance_name}}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'insurancetype_update' insurancetypeinfo.id %}" >
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'insurancetype_delete' insurancetypeinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#insurancetype_list').DataTable();
+} );
+</script>
+
+{% endblock content %}

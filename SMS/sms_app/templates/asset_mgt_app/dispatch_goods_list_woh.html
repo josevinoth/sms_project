@@ -1,0 +1,153 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'dispatch_search' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <!--    <div class="col-md-1">-->
+    <!--        <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">-->
+    <!--            <i class="fas fa-plus"></i>-->
+    <!--        </a>-->
+    <!--    </div>-->
+</div>
+<br>
+<div class="row">
+    <div class="col-4">
+        <h3><span class="badge bg-info ">Dispatch Stock List</span></h3>
+    </div>
+    <div class="col-4 message text-center">
+        {% for message in messages %}
+        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+        {% endfor %}
+    </div>
+    <div class="col-4"></div>
+</div>
+<hr>
+<div class="col-md-1.5">
+    <a href="" id='remove_btn' class="btn btn-success" onclick="return confirm('Are you sure to Re-Check-In this stock?');">
+        <i class="fas fa-plus"></i> Re-Check-In
+    </a>
+</div>
+<br>
+<div class="container-fluid">
+    <table  id="dispatch_goods_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Select Stock</th>
+            <th>WH Job Number</th>
+            <th>WH Stock Number</th>
+            <th>Number Of Pieces</th>
+            <th>Dispatch Number</th>
+             <th>Truck Type Billing</th>
+            <th>Shipper Invoice</th>
+            <th>Customer Name</th>
+            <th>Consigner</th>
+            <th>Consignee</th>
+            <th>Customer Type</th>
+            <th>Branch</th>
+            <th>Unit</th>
+            <th>Bay</th>
+            <th>Stack</th>
+            <th>Check-Out Time</th>
+            <th>Goods Status</th>
+        </thead>
+        <tbody>
+        {% for goodsinfo in goods_list %}
+        <tr>
+            <td></td>
+            <td> {{goodsinfo.wh_job_no}}</td>
+            <td> {{goodsinfo.wh_qr_rand_num}}</td>
+            <td> {{goodsinfo.wh_goods_pieces}}</td>
+            <td> {{goodsinfo.wh_dispatch_num}}</td>
+             <td> {{goodsinfo.wh_dispatch_id.dispatch_billing_truck_type}}</td>
+            <td> {{goodsinfo.wh_goods_invoice}}</td>
+            <td> {{goodsinfo.wh_customer_name}}</td>
+            <td> {{goodsinfo.wh_consigner}}</td>
+            <td> {{goodsinfo.wh_consignee}}</td>
+            <td> {{goodsinfo.wh_customer_type}}</td>
+            <td> {{goodsinfo.wh_branch}}</td>
+            <td> {{goodsinfo.wh_unit}}</td>
+            <td> {{goodsinfo.wh_bay}}</td>
+            <td> {{goodsinfo.wh_stack_layer}}</td>
+            <td> {{goodsinfo.wh_checkout_time}}</td>
+            <td> {{goodsinfo.wh_check_in_out}}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="container-fluid">
+    <h3><span class="badge bg-info light">Master Stock List</span></h3>
+    {% include "asset_mgt_app/dispatch_list_master_WOH.html" %}
+</div>
+<script>
+$(document).ready(function (){
+      var table=new DataTable('#dispatch_goods_list', {
+        columnDefs: [
+            {
+                orderable: false,
+                className: 'select-checkbox',
+                targets: 0
+            }
+        ],
+        select: {
+            style: 'os',
+            selector: 'td:first-child'
+      },
+        order: [[1, 'asc']],
+        dom: 'lBfrtip',
+<!--        scrollY: "300px",-->
+        scrollX: true,
+});
+
+   // Handle form submission event
+   $('#remove_btn').on('click', function(){
+      	var rows_selected = table.column(0).selected();
+      	let selectedValues = table.rows( { selected: true } ).data();
+      	var len1=( selectedValues ).length;
+      	console.log( len1 );
+      	var len=( selectedValues[0] ).length;
+      	console.log( selectedValues );
+      	console.log( selectedValues[0] );
+      	console.log( len );
+      	var elements = [];
+      	for (var i = 0; i < len1; i++) {
+				console.log(selectedValues[i][2]);
+				elements.push(selectedValues[i][2]);
+			}
+		var elements_list=elements;
+   $.ajax({
+        url: '{% url 'dispatch_remove_goods' %}',
+        type: 'GET',
+        data: {
+            'myList[]': elements_list,  // This will encode the list as URL parameters
+        },
+        success: function(response) {
+            // Handle the response from the Django view
+        },
+   });
+
+   });
+});
+</script>
+<script>
+  function editRow(button) {
+    // Get the row of the clicked button
+    var row = button.parentNode.parentNode;
+
+    // Get the name and age cells
+    var nameCell = row.cells[5];
+    var ageCell = row.cells[6];
+
+    // Get the new values from the user (you can use prompt, input fields, etc.)
+    var newName = prompt("Enter new name", nameCell.innerText);
+    var newAge = prompt("Enter new age", ageCell.innerText);
+
+    // Update the cell values
+    nameCell.innerText = newName;
+    ageCell.innerText = newAge;
+  }
+</script>
+{% endblock content %}

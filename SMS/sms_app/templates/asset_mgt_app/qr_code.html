@@ -1,0 +1,53 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'asset_list' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+<!--  <div class="col-md-1">-->
+<!--      <a href="{% url 'print_pdf' %}" class="btn btn-warning btn-block btn-lg">-->
+<!--        <i class="fas fa-file-pdf"></i>-->
+<!--      </a>-->
+<!--    </div>-->
+</div>
+<hr>
+<a onclick="printDiv('printableArea')" id="printableArea" >
+  <div class="container shadow btn btn-warning btn-block" style="width: 470px; margin-top: 2em; padding: 1em">
+
+    <form method="post">
+      {% csrf_token %}
+    </form>
+
+      <div class="row">
+        <div class="col-5">
+          {{ svg|safe }}
+        </div>
+        <div class="col-7" style="text-align: left">
+          <br>
+          <span>Asset Number: {{Asset_Number}}</span>
+          <br>
+          <span>Assigned To: {{Asset_Assigned_To}}</span>
+          <br>
+          <span>Location: {{Asset_Location}}</span>
+          <br>
+          <span>Product: {{Asset_Product}}</span>
+          <br>
+          <span>Asset ID: {{Asset_ID}}</span>
+        </div>
+      </div>
+  </div>
+  </a>
+<script>
+function printDiv(divName) {
+     var printContents = document.getElementById(divName).innerHTML;
+     var originalContents = document.body.innerHTML;
+     document.body.innerHTML = printContents;
+     window.print();
+     document.body.innerHTML = originalContents;
+}
+</script>
+{% endblock content %}

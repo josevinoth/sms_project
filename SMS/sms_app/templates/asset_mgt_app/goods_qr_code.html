@@ -1,0 +1,45 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'warehousein_insert' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="" class="btn btn-warning btn-block btn-lg" onclick="printDiv()">
+            <i class="fas fa-file-pdf"></i>
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid shadow" style="width: 500px; padding: 1px;background-color:white">
+    <div class="row">
+        <div class="col-4" id="print_div" >
+            {{ svg|safe }}
+        </div>
+        <div class="col-8">
+            <h6>Shipper Invoice Number: {{Invoice_Number}}</h6>
+            <h6>Stock Number: {{Stock_Number}}</h6>
+            <h6>Package_Type: {{Package_Type}}</h6>
+            <h6>Area(Sq.Ft): {{Area}}</h6>
+            <h6>Volume(Cu.Ft): {{Volume}}</h6>
+            <h6>UOM: {{UOM}}</h6>
+            <h6><span>Length: {{L}}</span><span>Width: {{W}}</span><span>Height: {{H}}</span></h6>
+        </div>
+    </div>
+</div>
+<script>
+        function printDiv() {
+            var divContents = document.getElementById("print_div").innerHTML;
+            var a = window.open('', '', 'height=800, width=800');
+            a.document.write('<html>');
+            a.document.write(divContents);
+            a.document.write('</body></html>');
+            a.document.close();
+            a.print();
+        }
+</script>
+{% endblock content %}

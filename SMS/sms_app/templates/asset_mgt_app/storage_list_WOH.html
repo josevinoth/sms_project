@@ -1,0 +1,96 @@
+{% block content %}
+<div class="container-fluid row">
+    <div class="container-fluid">
+        <table  id="storage_list_new" class="table table-striped table-bordered" >
+            <thead class="thead-dark">
+            <tr>
+                <th>Date Of Arrival</th>
+                <th>Un-Loading Start Time</th>
+                <th>Un-Loading End Time</th>
+                <th>Transporter</th>
+                <th>Truck Number</th>
+                <th>Consigner</th>
+                <th>Consignee</th>
+                <th>Doc Received?</th>
+                <th>HAWB</th>
+                <th>Destination</th>
+                <th>Invoice Number</th>
+                <th>PO Number</th>
+                <th>Total Qty</th>
+                <th>Total Wt (kg)</th>
+                <th>Invoice Wt (kg)</th>
+                <th>UOM</th>
+                <th>Length</th>
+                <th>Width</th>
+                <th>Height</th>
+                <th>Cartons in Dim</th>
+                <th>Volume Weight</th>
+                <th>CBM</th>
+                <th>Invoice Value</th>
+                <th>Currency Type</th>
+                <th>Invoice Value (INR)</th>
+                <th>E-Way Bill</th>
+                <th>E-Way Bill Validity</th>
+                <th>Fumigation Status</th>
+                <th>Location</th>
+                <th>Storage Days</th>
+                <th>Job Number</th>
+                <th>Stock Number</th>
+                <th>Remarks</th>
+            </thead>
+            <tbody>
+            {% for storageinfo in goods_list %}
+            <tr>
+                <td> {{arrival_date}}</td>
+                <td> {{unloading_start_time}}</td>
+                <td> {{unloading_end_time}}</td>
+                <td> {{storageinfo.wh_gate_injob_no_id.gatein_transporter}}</td>
+                <td> {{storageinfo.wh_gate_injob_no_id.gatein_truck_number}}</td>
+                <td> {{storageinfo.wh_consigner}}</td>
+                <td> {{storageinfo.wh_consignee}}</td>
+                <td> {{storageinfo.wh_lb_job_no_id.lb_packing_list}}</td>
+                <td> {{storageinfo.wh_gate_injob_no_id.gatein_hawb}}</td>
+                <td> {{storageinfo.wh_gate_injob_no_id.gatein_destination}}</td>
+                <td> {{storageinfo.wh_gate_injob_no_id.gatein_invoice}}</td>
+                <td> {{storageinfo.wh_po_num}}</td>
+                <td> {{storageinfo.wh_total_qty}}</td>
+                <td> {{storageinfo.wh_gross_weight}}</td>
+                <td> {{storageinfo.wh_invoice_weight_unit}}</td>
+                <td> {{storageinfo.wh_uom}}</td>
+                <td> {{storageinfo.wh_goods_length}}</td>
+                <td> {{storageinfo.wh_goods_width}}</td>
+                <td> {{storageinfo.wh_goods_height}}</td>
+                <td> {{storageinfo.wh_goods_pieces}}</td>
+                <td> {{storageinfo.wh_chargeable_weight}}</td>
+                <td> {{storageinfo.wh_cbm}}</td>
+                <td> {{storageinfo.wh_invoice_value}}</td>
+                <td> {{storageinfo.wh_lb_job_no_id.lb_stock_invoice_currency}}</td>
+                <td> {{storageinfo.wh_invoice_amount_inr}}</td>
+                <td> {{storageinfo.wh_lb_job_no_id.lb_eway_bill}}</td>
+                <td> {{storageinfo.wh_lb_job_no_id.lb_validity_date}}</td>
+                <td> {{storageinfo.wh_fumigation_process}}</td>
+                <td> {{storageinfo.wh_bay}}</td>
+                <td> {{storageinfo.wh_storage_time}}</td>
+                <td> {{storageinfo.wh_job_no}}</td>
+                <td> {{storageinfo.wh_qr_rand_num}}</td>
+                <td> {{storageinfo.wh_comments}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#storage_list_new').DataTable({
+        scrollY: "300px",
+        scrollX: true,
+        scrollCollapse: true,
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    } );
+} );
+</script>
+{% endblock content %}

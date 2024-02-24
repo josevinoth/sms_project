@@ -2,25 +2,291 @@
 {% block content %}
 {% load crispy_forms_tags %}
 <div class="sidenav">
-    <!--    <div class="nav_header_style">-->
-    <!--        <h1>Welcome !</h1>-->
-    <!--    </div>-->
-    <br>
-    <hr class="nav_header_style">
-    <br>
-    <button type="button" class="collapsible"><i class="fas fa-drafting-compass"></i> Discussion Forum</button>
-    <div class="content">
-        <a href="{% url 'query_list' %}"><i class="fa fa-book" aria-hidden="true"></i> Discussions</a>
+    <div class="nav_header_style">
+        <h1>Welcome !</h1>
     </div>
-    <button type="button" class="collapsible"><i class="fa fa-users" aria-hidden="true"></i> Users</button>
-    <div class="content">
-        <a href="{% url 'user_list' %}"><i class="fa fa-life-ring" aria-hidden="true"></i> Users</a>
-    </div>
-
-    <div class="main">
-        <div class="container-fluid" style="padding:15px;">
-
+    <br>
+    <div class="row container-fluid">
+        <div class="col-4" >
+            <a href="{% url 'wh_e_way_bill_list' %}" class="btn btn-info "><i class="fas fa-bullhorn"></i> <span class="badge badge-danger">{{wh_job_count}}</span></a>
         </div>
+        <div class="col-4" >
+            <a href="" class="btn btn-info "><i class="fas fa-bell"></i> <span class="badge badge-danger">0</span></a>
+        </div>
+        <div class="col-4" >
+            <a href="" class="btn btn-info "><i class="fas fa-satellite-dish"></i> <span class="badge badge-danger">0</span></a>
+        </div>
+    </div>
+     <hr class="hr_style">
+    <button type="button" class="collapsible"><i class="fas fa-users-cog"></i> Administration</button>
+    <div class="content">
+        <a href="{% url 'department_list' %}"><i class="far fa-building"></i> Departments</a>
+        <button type="button" class="collapsible"><i class="fas fa-book-medical"></i> Insurance</button>
+        <div class="content">
+            <a href="{% url 'insurance_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Insurance List</a>
+            <a href="{% url 'insurancetype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Insurance Type</a>
+        </div>
+        <button type="button" class="collapsible"><i class="fas fa-map-marker-alt"></i> Locations</button>
+        <div class="content">
+            <a href="{% url 'location_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Branch List</a>
+            <a href="{% url 'country_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Country List</a>
+            <a href="{% url 'state_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> State List</a>
+            <a href="{% url 'city_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> City List</a>
+            <a href="{% url 'places_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Location List</a>
+        </div>
+        <a href="{% url 'requirements_search' %}"><i class="fas fa-wrench"></i> Requirements List</a>
+        <a href="{% url 'service_list' %}"><i class="fas fa-tools"></i> Service</a>
+        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> Misc</button>
+        <div class="content">
+            <a href="{% url 'status_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Status</a>
+        </div>
+    </div>
+    <hr class="hr_style">
+    <button type="button" class="collapsible"><i class="fas fa-drafting-compass"></i> Asset Management System (AMS)</button>
+    <div class="content">
+        <a href="{% url 'asset_list' %}"><i class="fas fa-arrows-alt"></i> Assets</a>
+        <a href="{% url 'reports' %}"><i class="fa fa-book" aria-hidden="true"></i> Reports</a>
+        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> AMS Misc</button>
+        <div class="content">
+            <a href="{% url 'product_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Product List</a>
+            <a href="{% url 'producttype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Product Type</a>
+        </div>
+    </div>
+    <hr class="hr_style">
+    <button type="button" class="collapsible"><i class="fa fa-life-ring" aria-hidden="true"></i> Customer Management System (CMS)</button>
+    <div class="content">
+        <a href="{% url 'customer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer List </a>
+        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> CMS Misc</button>
+        <div class="content">
+            <a href="{% url 'crcountfrom_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Credit Count Type</a>
+            <a href="{% url 'customertype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Type</a>
+            <a href="{% url 'customername_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Name</a>
+            <a href="{% url 'customerdepartment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Department</a>
+            <a href="{% url 'gstexcepmtion_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GST Excepmtion</a>
+            <a href="{% url 'gstmodel_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GST Model</a>
+            <a href="{% url 'paymenttype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Payment Type</a>
+            <a href="{% url 'trbusinesstype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Transport Business Type</a>
+        </div>
+    </div>
+    <hr class="hr_style">
+    <button type="button" class="collapsible"><i class="fa fa-users" aria-hidden="true"></i> Employee Management System (EMS)</button>
+    <div class="content">
+        <a href="{% url 'user_list' %}"><i class="fas fa-user-friends"></i> Employees</a>
+        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> EMS Misc</button>
+        <div class="content">
+            <a href="{% url 'designation_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Designation</a>
+            <a href="{% url 'role_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Role</a>
+        </div>
+    </div>
+    <hr class="hr_style">
+    <button type="button" class="collapsible"><i class="fa fa-key" aria-hidden="true"></i> Finance Management System (FMS)</button>
+    <div class="content">
+        <a href="{% url 'ar_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Accounts Receivable</a>
+        <a href="{% url 'ar_comments_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Accounts Receivable Comments</a>
+        <a href="{% url 'expense_search' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Expenses</a>
+    </div>
+    <hr class="hr_style">
+    <button type="button" class="collapsible"><i class="fa fa-suitcase" aria-hidden="true"></i>  Packaging Management System (PMS)</button>
+    <div class="content">
+        <a href="{% url 'needassessment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Need Assessment</a>
+        <a href="{% url 'costingsummary_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Costing Summary</a>
+        <a href="{% url 'quotes_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Quotes</a>
+        <!--        <a href="{% url 'openingstock_list' %}"><i class="fa fa-arrow-right " aria-hidden="true"></i> Opening Stock</a>-->
+        <a href="{% url 'stockpurchases_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Purchases</a>
+        <a href="{% url 'purchaseorder_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Purchase Order</a>
+        <a href="{% url 'costing_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Costing</a>
+        <!--        <a href="{% url 'ininspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Inward Inspection Report</a>-->
+        <!--        <a href="{% url 'ouinspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Outward Inspection Report</a>-->
+        <!--        <a href="{% url 'materialstock_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Stock</a>-->
+        <a href="{% url 'packingjobs_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Packing Jobs</a>
+    </div>
+    <hr class="hr_style">
+    <button type="button" class="collapsible"><i class="fa fa-chart-line"></i> Sales Management System (SMS)</button>
+    <div class="content">
+        <a href="{% url 'sales_search' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Sales List</a>
+        <a href="{% url 'sales_target_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Sales Target</a>
+        <a href=""><i class="fa fa-arrow-right" aria-hidden="true"></i> Reports</a>
+    </div>
+    <hr class="hr_style">
+    <a href="{% url 'vendor_list' %}"><i class="fas fa-user-secret"></i> Vendor Management System (VMS)</a>
+    <hr class="hr_style">
+    <button type="button" class="collapsible"><i class="fa fa-truck" aria-hidden="true"></i> Transport Management System (TMS)</button>
+    <div class="content">
+        <a href="{% url 'enquirynote_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Enquiry Note </a>
+        <a href="{% url 'consignmentdetail_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Consignment Detail </a>
+        <a href="{% url 'vehicle_allotment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Allotment </a>
+        <a href="{% url 'tripdetail_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip Detail </a>
+        <a href="{% url 'tripclosure_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip Closure </a>
+        <a href="{% url 'fuelfilling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fuel Filling </a>
+        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> TMS Misc</button>
+        <div class="content">
+            <a href="{% url 'bunkname_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Bunk Master </a>
+            <a href="{% url 'vehiclemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Master </a>
+            <a href="{% url 'vehiclecategory_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Category</a>
+            <a href="{% url 'vehicletype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Type</a>
+            <a href="{% url 'movementtype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Movement Type</a>
+            <a href="{% url 'vhmanufacturer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Manufacturer</a>
+            <a href="{% url 'vehiclemodel_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Model</a>
+            <a href="{% url 'ownership_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Ownership</a>
+            <a href="{% url 'body_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Body</a>
+            <a href="{% url 'axletype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Axle Type</a>
+            <a href="{% url 'fueltype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fuel Type</a>
+            <a href="{% url 'vehiclecolour_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Colour</a>
+            <a href="{% url 'permittype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Permit Type</a>
+            <a href="{% url 'rtratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Route Rate Master</a>
+        </div>
+    </div>
+    <hr class="hr_style">
+    <button type="button" class="collapsible"><i class="fas fa-industry"></i> Ware-House Management System (WMS)</button>
+    <div class="content">
+        <a href="{% url 'pre_gatein_search' %}"><i class="fa fa-space-shuttle" aria-hidden="true"></i> Pre-Gate-In</a>
+        <a href="{% url 'search' %}"><i class="fa fa-taxi" aria-hidden="true"></i> Warehouse Jobs</a>
+        <a href="{% url 'goods_list' %}"><i class="fas fa-arrows-alt"></i> Goods Report</a>
+        <a href="{% url 'dispatch_search' %}"><i class="fas fa-shopping-cart"></i> Dispatch</a>
+        <button type="button" class="collapsible"><i class="fa fa-credit-card" aria-hidden="true"></i> Invoice</button>
+        <div class="content">
+            <a href="{% url 'case_to_case_open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Case To Case <span class="badge badge-light">{{case_to_case_list}}</span></a>
+            <a href="{% url 'dedicated_open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Dedicated <span class="badge badge-light">{{dedicated_list}}</span></a>
+            <a href="{% url 'exclusive_open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Exclusive <span class="badge badge-light">{{exclusive_list}}</span></a>
+            <a href="{% url 'invoice_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice List</a>
+        </div>
+        <a href="{% url 'warehouse_reports' %}"><i class="fa fa-book" aria-hidden="true"></i> Reports</a>
+        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> WMS Misc</button>
+        <div class="content">
+            <a href="{% url 'bay_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Bays</a>
+            <a href="{% url 'locationmaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Warehouse Master</a>
+            <a href="{% url 'damagereport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Damage Report</a>
+            <a href="{% url 'damage_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Damage Type</a>
+            <a href="{% url 'unit_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Units</a>
+            <a href="{% url 'whratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Warehouse Rate Mater</a>
+            <a href="{% url 'materialhandling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Handling</a>
+            <a href="{% url 'packagetype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Package Type</a>
+            <a href="{% url 'currencytype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Currency Type</a>
+            <a href="{% url 'stocktype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Type</a>
+        </div>
+    </div>
+    <hr class="hr_style">
+    <button type="button" class="collapsible"><i class="fas fa-phone-alt"></i> Supports</button>
+    <div class="content">
+        <a href="#"><i class="fas fa-book"></i> User Guide</a>
+        <a href="#"><i class="fas fa-question"></i> FAQs</a>
+    </div>
+    <!--    <hr class="hr_style">-->
+    <!--    <a href="#"><i class="fas fa-bell"></i> Notifications</a>-->
+</div>
+</div>
+
+<div class="main">
+    <div class="container-fluid" style="padding:15px;">
+        <div class="row">
+            <!--   <div class="col-1"></div>-->
+            <div class="col-3">
+                <div class="card text-white mb-3 text-center bg-primary">
+                    <div class="card-header">Products</div>
+                    <div class="card-body text-center">
+                        <h2><i class="fas fa-shopping-cart"></i></h2>
+                        <button type="button" class="btn btn-primary">
+                            <span class="badge badge-light"><a href="{% url 'product_list' %}">{{count_product}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card text-white bg-secondary mb-3 text-center" >
+                    <div class="card-header">Vendors</div>
+                    <div class="card-body text-center">
+                        <h2><i class="fas fa-user-secret"></i></h2>
+                        <button type="button" class="btn btn-secondary">
+                            <span class="badge badge-light"><a href="{% url 'vendor_list' %}">{{count_vendors}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card text-white bg-success mb-3 text-center" >
+                    <div class="card-header">Assigned Assets</div>
+                    <div class="card-body text-center">
+                        <h2><i class="fas fa-tags"></i></h2>
+                        <button type="button" class="btn btn-success">
+                            <span class="badge badge-light"><a href="{% url 'asset_list' %}">{{count_ass_asset}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-3">
+                <div class="card text-white bg-warning mb-3 text-center" >
+                    <div class="card-header">Unassigned Asset</div>
+                    <div class="card-body text-center">
+                        <h2><i class="fas fa-hashtag"></i></h2>
+                        <button type="button" class="btn btn-warning">
+                            <span class="badge badge-light"><a href="{% url 'asset_list' %}">{{count_unass_asset}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!--<div class="col-1"></div>-->
+        </div>
+        <br>
+        <div class="row">
+            <!-- <div class="col-1"></div>-->
+            <div class="col-3">
+                <div class="card text-white bg-danger mb-3 text-center" >
+                    <div class="card-header">Branches</div>
+                    <div class="card-body text-center">
+                        <h2><i class="fas fa-map-marker-alt"></i></h2>
+                        <button type="button" class="btn btn-danger">
+                            <span class="badge badge-light"><a href="{% url 'location_list' %}">{{count_location}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card text-white mb-3 text-center bg-info">
+                    <div class="card-header">Employees</div>
+                    <div class="card-body text-center">
+                        <h2><i class="fas fa-user-friends"></i></h2>
+                        <button type="button" class="btn btn-info">
+                            <span class="badge badge-light"><a href="{% url 'user_list' %}">{{count_employee}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-3">
+                <div class="card text-white bg-dark mb-3 text-center" >
+                    <div class="card-header">Total Asset Cost</div>
+                    <div class="card-body text-center">
+                        <h2><i class="fas fa-rupee-sign"></i></h2>
+                        <button type="button" class="btn btn-dark">
+                            <span class="badge badge-dark"><a>{{sum_ass_cost}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-3">
+                <div class="card text-white bg-primary mb-3 text-center" >
+                    <div class="card-header">Total Service Cost</div>
+                    <div class="card-body text-center">
+                        <h2><i class="fas fa-rupee-sign"></i></h2>
+                        <button type="button" class="btn btn-primary">
+                            <span class="badge badge-primary"><a>{{sum_service_cost}}</a></span>
+                            <span class="sr-only">unread messages</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-1"></div>
+        </div>
+        <br>
     </div>
 </div>
 <script>

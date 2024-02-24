@@ -1,0 +1,99 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Warehouse Report</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<hr>
+<div class="row">
+    <div class="col-1"></div>
+    <div class="col-2">
+        <div class="card text-white bg-primary mb-3 text-center">
+            <div class="card-header">Space Utilization Report</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'space_utilization_reports' %}" class="badge badge-primary">
+                    <i class="fas fa-arrows-alt"></i></a></h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-2">
+        <div class="card text-white bg-secondary mb-3 text-center" >
+            <div class="card-header">Stock Report</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'stock_value_report' %}" class="badge badge-secondary">
+                    <i class="fas fa-user-secret"></i></a></h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-2">
+        <div class="card text-white bg-success mb-3 text-center" >
+            <div class="card-header">Damage Report</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'damage_report_list' %}" class="badge badge-success">
+                    <i class="fas fa-tags"></i></a></h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-2">
+        <div class="card text-white bg-danger mb-3 text-center" >
+            <div class="card-header">Deviation Report</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'deviation_report' %}" class="badge badge-danger">
+                    <i class="fas fa-map-marker-alt"></i></a></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-1"></div>
+</div>
+<div class="row">
+    <div class="col-1"></div>
+    <div class="col-2">
+        <div class="card text-white bg-success mb-3 text-center" >
+            <div class="card-header">Revenue Report</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'revenue_report' %}" class="badge badge-success">
+                    <i class="fas fa-rupee-sign"></i></a></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card text-white bg-info mb-3 text-center" >
+            <div class="card-header">Expense Report</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'expense_report' %}" class="badge badge-info">
+                    <i class="fas fa-wallet"></i></a></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card text-white bg-primary mb-3 text-center" >
+            <div class="card-header">P & L Report</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'deviation_report' %}" class="badge badge-primary">
+                    <i class="fas fa-hand-holding-usd"></i></a></h2>
+            </div>
+        </div>
+    </div>
+     <div class="col-2">
+        <div class="card text-white bg-secondary mb-3 text-center" >
+            <div class="card-header">Goods In-Out Report</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'goods_in_out_reports_list' %}" class="badge badge-secondary">
+                    <i class="fas fa-wrench"></i></a></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-2"></div>
+    <div class="col-2"></div>
+    <div class="col-1"></div>
+</div>
+{% endblock content %}

@@ -1,0 +1,123 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Accounts Receivable List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+    <div class="col-md-1">
+      <a href="{% url 'ar_insert' %}" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i> Add
+      </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+<table id="ar_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Created On</th>
+            <th>Company</th>
+            <th>Product</th>
+            <th>Branch</th>
+            <th>Operation Date</th>
+            <th>Invoice Number</th>
+            <th>Invoice Date</th>
+            <th>Customer Name</th>
+            <th>Customer Department</th>
+            <th>Service Value</th>
+            <th>CGST</th>
+            <th>SGST</th>
+            <th>IGST</th>
+            <th>Amount (INR)</th>
+            <th>Submission Date</th>
+            <th>Invoice Sent To</th>
+            <th>Due From Operation Date</th>
+            <th>Due From Submission Date</th>
+            <th>Due Payment Received Date</th>
+            <th>Payment Received Amount</th>
+            <th>TDS</th>
+            <th>Receipt From Operation Date</th>
+            <th>Receipt From Invoice Date</th>
+            <th>Receipt From Submission Date</th>
+            <th>Sales Executive</th>
+            <th>Status</th>
+            <th>Updated On</th>
+            <th>Updated By</th>
+            <th>Edit</th>
+            <th>Delete</th>
+    </thead>
+    <tbody>
+        {% for arinfo in ar_list %}
+            <tr>
+                <td> {{arinfo.ar_created_at}}</td>
+                <td> {{arinfo.ar_company}}</td>
+                <td> {{arinfo.ar_product}}</td>
+                <td> {{arinfo.ar_branch}}</td>
+                <td> {{arinfo.ar_operation_date}}</td>
+                <td> {{arinfo.ar_invoice_num}}</td>
+                <td> {{arinfo.ar_invoice_date}}</td>
+                <td> {{arinfo.ar_customer_name}}</td>
+                <td> {{arinfo.ar_customer_dept}}</td>
+                <td> {{arinfo.ar_service_value}}</td>
+                <td> {{arinfo.ar_cgst}}</td>
+                <td> {{arinfo.ar_sgst}}</td>
+                <td> {{arinfo.ar_igst}}</td>
+                <td> {{arinfo.ar_amount}}</td>
+                <td> {{arinfo.ar_submission_date}}</td>
+                <td> {{arinfo.ar_invoice_sent_to}}</td>
+                <td> {{arinfo.ar_due_from_operation_date}}</td>
+                <td> {{arinfo.ar_due_from_invoice_date}}</td>
+                <td> {{arinfo.ar_due_from_submission_date}}</td>
+                <td> {{arinfo.ar_payment_received_amount}}</td>
+                <td> {{arinfo.ar_tds}}</td>
+                <td> {{arinfo.ar_rec_from_operation_date}}</td>
+                <td> {{arinfo.ar_rec_from_invoice_date}}</td>
+                <td> {{arinfo.ar_rec_from_submission_date}}</td>
+                <td> {{arinfo.ar_sales_person}}</td>
+                <td> {{arinfo.ar_status}}</td>
+                <td> {{arinfo.ar_updated_at}}</td>
+                <td> {{arinfo.ar_updated_by}}</td>
+
+                <td>
+                    <a class= "btn btn-primary" href="{% url 'ar_update' arinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'ar_delete' arinfo.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt" onclick="return confirm('Are you sure?');"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#ar_list').DataTable({
+<!--        scrollY: "600px",-->
+        scrollX: true,
+        scrollCollapse: true,
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
+});
+</script>
+{% endblock content %}

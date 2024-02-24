@@ -1,0 +1,107 @@
+{% block content %}
+<div class="container-fluid row">
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'invoice_list' %}" class="btn btn-primary btn-block btn-lg">-->
+<!--            <i class="fas fa-arrow-left"></i>-->
+<!--        </a>-->
+<!--    </div>-->
+    <!--    <div class="col-md-1">-->
+    <!--        <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">-->
+    <!--            <i class="fas fa-plus"></i>-->
+    <!--        </a>-->
+    <!--    </div>-->
+</div>
+
+<br>
+<!--<div class="row">-->
+<!--    <div class="col-4">-->
+<!--        <h3><span class="badge bg-info ">Shipper Invoice List</span></h3>-->
+<!--    </div>-->
+<!--    <div class="col-4 message text-center">-->
+<!--        {% for message in messages %}-->
+<!--        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>-->
+<!--        {% endfor %}-->
+<!--    </div>-->
+<!--    <div class="col-4"></div>-->
+<!--</div>-->
+
+<hr>
+<div class="container-fluid">
+    <table  id="shipper_invoice_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>WH Job Number</th>
+            <th>Shipper Invoice</th>
+            <th>Shipper Name</th>
+            <th>Voucher Number</th>
+            <th>Stock Number</th>
+            <th>Customer Name</th>
+            <th>Customer Type</th>
+            <th>Check In Vehicle Type</th>
+            <th>Check Out Vehicle Type</th>
+            <th>Vehicle Type for Billing</th>
+            <th>No of Pieces</th>
+            <th>Loading Cost/Piece (INR)</th>
+            <th>Total Loading Cost (INR)</th>
+            <th>Total Un-Loading Cost (INR)</th>
+            <th>Storage Cost/Day (INR)</th>
+            <th>Total Storage Cost (INR)</th>
+            <th>Crane Cost upto 2hr (INR)</th>
+            <th>Crane Cost after 2hr (INR)</th>
+            <th>Crane Cost (INR)</th>
+            <th>Forklift Cost upto 2hr (INR)</th>
+            <th>Forklift Cost after 2hr (INR)</th>
+            <th>Forklift Cost (INR)</th>
+            <th>Weight</th>
+            <th>In Time</th>
+            <th>Out Time</th>
+            <th>No of Days</th>
+            <th>Goods Status</th>
+        </thead>
+        <tbody>
+        {% for shipperinvoiceinfo in shipper_invoice_list %}
+        <tr>
+            <td> {{shipperinvoiceinfo.wh_job_no}}</td>
+            <td> {{shipperinvoiceinfo.wh_goods_invoice}}</td>
+            <td> {{shipperinvoiceinfo.wh_consigner}}</td>
+            <td> {{shipperinvoiceinfo.wh_voucher_num}}</td>
+            <td> {{shipperinvoiceinfo.wh_qr_rand_num}}</td>
+            <td> {{shipperinvoiceinfo.wh_customer_name}}</td>
+            <td> {{shipperinvoiceinfo.wh_customer_type}}</td>
+            <td> {{shipperinvoiceinfo.wh_gate_injob_no_id.gatein_truck_type}}</td>
+            <td> {{shipperinvoiceinfo.wh_dispatch_id.dispatch_truck_type}}</td>
+            <td> {{shipperinvoiceinfo.wh_dispatch_id.dispatch_billing_truck_type}}</td>
+            <td> {{shipperinvoiceinfo.wh_goods_pieces}}</td>
+            <td> {{shipperinvoiceinfo.wh_loading_charge_unit}}</td>
+            <td> {{shipperinvoiceinfo.wh_total_loading_cost}}</td>
+            <td> {{shipperinvoiceinfo.wh_total_loading_cost}}</td>
+            <td> {{shipperinvoiceinfo.wh_storage_cost_per_day}}</td>
+            <td> {{shipperinvoiceinfo.wh_storage_cost_total}}</td>
+            <td> {{shipperinvoiceinfo.wh_crane_cost_l2h}}</td>
+            <td> {{shipperinvoiceinfo.wh_crane_cost_g2h}}</td>
+            <td> {{shipperinvoiceinfo.wh_crane_cost}}</td>
+            <td> {{shipperinvoiceinfo.wh_forklift_cost_l2hr}}</td>
+            <td> {{shipperinvoiceinfo.wh_forklift_cost_g2hr}}</td>
+            <td> {{shipperinvoiceinfo.wh_forklift_cost}}</td>
+            <td> {{shipperinvoiceinfo.wh_goods_weight}}</td>
+            <td> {{shipperinvoiceinfo.wh_checkin_time}}</td>
+            <td> {{shipperinvoiceinfo.wh_checkout_time}}</td>
+            <td> {{shipperinvoiceinfo.wh_storage_time}}</td>
+            <td> {{shipperinvoiceinfo.wh_check_in_out}}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#shipper_invoice_list').DataTable({
+        scrollX: true,
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
+} );
+</script>
+{% endblock content %}

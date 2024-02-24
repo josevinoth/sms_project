@@ -1,0 +1,73 @@
+
+{% block content %}
+<!--<div class="container-fluid row">-->
+<!--    <div class="col-md-1">-->
+<!--      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
+<!--        <i class="fas fa-arrow-left"></i>-->
+<!--      </a>-->
+<!--    </div>-->
+<!--    <div class="col-md-1">-->
+<!--      <a href="{% url 'tripclosure_insert' %}" class="btn btn-success btn-block btn-lg">-->
+<!--        <i class="fas fa-plus"></i>-->
+<!--      </a>-->
+<!--    </div>-->
+<!--</div>-->
+<hr>
+<div class="container-fluid">
+<table  id="tripclosure_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Enquiry Number</th>
+            <th>Consignment Number</th>
+            <th>Trip Number</th>
+            <th>Trip Cost</th>
+            <th>Parking Cost</th>
+            <th>Toll Cost</th>
+            <th>Loading Cost</th>
+            <th>Un-Loading Cost</th>
+            <th>Weighment Cost</th>
+            <th>Handling Cost</th>
+            <th>Status</th>
+            <th>Edit</th>
+            <th>Delete</th>
+    </thead>
+    <tbody>
+        {% for tripclosureinfo in tripclosure_list %}
+            <tr>
+                <td> {{tripclosureinfo.tr_enquirynumber}}</td>
+                <td> {{tripclosureinfo.tr_consignmentnumber}}</td>
+                <td> {{tripclosureinfo.tr_tripnumber}}</td>
+                <td> {{tripclosureinfo.tc_tripcost}}</td>
+                <td> {{tripclosureinfo.tc_parkingcost}}</td>
+                <td> {{tripclosureinfo.tc_tollcost}}</td>
+                <td> {{tripclosureinfo.tc_loadingcost}}</td>
+                <td> {{tripclosureinfo.tc_unloadingcost}}</td>
+                <td> {{tripclosureinfo.tc_weighmentcost}}</td>
+                <td> {{tripclosureinfo.tc_handlingcost}}</td>
+                <td> {{tripclosureinfo.tc_financestatus}}</td>
+                <td>
+
+                    <a class="btn btn-primary" href="{% url 'tripclosure_update' tripclosureinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'tripclosure_delete' tripclosureinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#tripclosure_list').DataTable();
+} );
+</script>
+
+{% endblock content %}

@@ -1,0 +1,173 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="" id="openingstock_add"   >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Opening Stock</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Opening Stock Number</span>
+									</div>
+									{% render_field form.os_stock_number id="os_stock_number" readonly="True"  class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Category</span>
+									</div>
+									{% render_field form.os_category id="os_category" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Type</span>
+									</div>
+									{% render_field form.os_stock_type id="os_stock_type" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Type Of Wood</span>
+									</div>
+									{% render_field form.os_type_of_wood id="os_type_of_wood" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Source</span>
+									</div>
+									{% render_field form.os_source id="os_source" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Thick/Height (In)</span>
+									</div>
+									{% render_field form.os_thick_height id="os_thick_height" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width (In)</span>
+									</div>
+									{% render_field form.os_width id="os_width" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length (Ft)</span>
+									</div>
+									{% render_field form.os_length id="os_length" onchange="change_charge_type()" class="form-control " %}
+								</div>
+
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">CFT</span>
+									</div>
+									{% render_field form.os_cft id="os_cft" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quantity</span>
+									</div>
+									{% render_field form.os_quantity id="os_quantity" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total CFT</span>
+									</div>
+									{% render_field form.os_total_cft  id="os_total_cft" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Rate (INR)</span>
+									</div>
+									{% render_field form.os_rate id="os_rate" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Price (INR)</span>
+									</div>
+									{% render_field form.os_price id="os_price"  class="form-control disable_a_href" %}
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST (%)</span>
+									</div>
+									{% render_field form.os_gst id="os_gst" onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST Amount (INR)</span>
+									</div>
+									{% render_field form.os_gst_amount id="os_gst_amount"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Bill Amount (INR)</span>
+									</div>
+									{% render_field form.os_totalbill_amount id="os_totalbill_amount" class="form-control disable_a_href" %}
+								</div>
+								{% render_field form.os_updated_by id="os_updated_by" hidden="True" class="form-control" %}
+
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'openingstock_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("os_updated_by").value ='{{user_id}}';
+	});
+</script>
+
+<script>
+function change_charge_type() {
+var length = parseFloat(document.getElementById("os_length").value) || 0;
+var height = parseFloat(document.getElementById("os_thick_height").value) || 0;
+var width = parseFloat(document.getElementById("os_width").value) || 0;
+var cft = length*height*width/144;
+document.getElementById("os_cft").value=cft.toFixed(2)
+
+var quantity = parseFloat(document.getElementById("os_quantity").value) || 0;
+var total_cft=cft*quantity
+document.getElementById("os_total_cft").value=total_cft.toFixed(2)
+
+var rate = parseFloat(document.getElementById("os_rate").value) || 0;
+var price=rate*total_cft
+document.getElementById("os_price").value=price.toFixed(2)
+
+var gst = parseFloat(document.getElementById("os_gst").value) || 0;
+var gst_amount=price*(gst/100)
+document.getElementById("os_gst_amount").value=gst_amount.toFixed(2)
+
+var total_bill_amount=price+gst_amount
+document.getElementById("os_totalbill_amount").value=total_bill_amount.toFixed(2)
+}
+</script>
+{% endblock content %}

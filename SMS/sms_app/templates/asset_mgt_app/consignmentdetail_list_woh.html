@@ -1,0 +1,73 @@
+{% block content %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+      <a href="{% url 'enquirynote_list' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+    <div class="col-md-1">
+     <a href="{% url 'consignmentdetail_insert' %}"  id="modal" class="btn btn-success btn-block btn-lg">
+        <i class="fas fa-plus"></i> Add
+    </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="consignmentdetail_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Created On</th>
+            <th>Enquiry Number</th>
+            <th>Consignment Number</th>
+            <th>Status</th>
+            <th>Updated On</th>
+            <th>Updated By</th>
+            <th>Consignment Note</th>
+            <th>Consignment Goods</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+        {% for consignmentdetailinfo in consignmentdetail_list %}
+        <tr>
+            <td> {{consignmentdetailinfo.co_created_at}}</td>
+            <td> {{consignmentdetailinfo.co_enquirynumber}}</td>
+            <td> {{consignmentdetailinfo.co_consignmentnumber}}</td>
+            <td> {{consignmentdetailinfo.co_status}}</td>
+            <td> {{consignmentdetailinfo.co_updated_at}}</td>
+            <td> {{consignmentdetailinfo.co_lastmodifiedby}}</td>
+            <td>
+                <a href="{% url 'consignment_note_pdf' consignmentdetailinfo.id %}" class="btn btn-warning ">
+                    <i class="fa fa-download " aria-hidden="true"></i>
+                </a>
+            </td>
+            <td>
+                <a href="{% url 'consignmentgoods_nav' consignmentdetailinfo.id %}" class="btn btn-success ">
+                    <i class="fas fa-plus"></i>
+                </a>
+            </td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'consignmentdetail_update' consignmentdetailinfo.id %}" >
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'consignmentdetail_delete' consignmentdetailinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#consignmentdetail_list').DataTable();
+});
+</script>
+
+{% endblock content %}

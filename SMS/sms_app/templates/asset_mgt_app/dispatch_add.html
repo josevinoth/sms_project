@@ -1,0 +1,196 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}">
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center">
+						<div class="row">
+							<div class="col-4"></div>
+							<div class="col-4">
+								<h3>Add/Update Dispatch</h3>
+							</div>
+							<div class="col-4">
+								<!--								<a href="#" class="btn btn-warning btn-block" id="delivery_chalan_btn">-->
+								<!--									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>-->
+								<!--								</a>-->
+							</div>
+						</div>
+					</div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dispatch Number</span>
+									</div>
+									{% render_field dispatch_form.dispatch_num class="form-control" id="dispatch_num" readonly=True %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer</span>
+									</div>
+									{% render_field dispatch_form.dispatch_customer class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Truck Number</span>
+									</div>
+									{% render_field dispatch_form.dispatch_truck_number class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Truck Type (Check-Out)</span>
+									</div>
+									{% render_field dispatch_form.dispatch_truck_type class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Truck Type for Billing </span>
+									</div>
+									{% render_field dispatch_form.dispatch_billing_truck_type id="dispatch_billing_truck_type" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Driver Name</span>
+									</div>
+									{% render_field dispatch_form.dispatch_driver class="form-control"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Driver Contact</span>
+									</div>
+									{% render_field dispatch_form.dispatch_contact_number class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Driver License</span>
+									</div>
+									{% render_field dispatch_form.dispatch_DL_number class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">OTL</span>
+									</div>
+									{% render_field dispatch_form.dispatch_otl class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Transporter</span>
+									</div>
+									{% render_field dispatch_form.dispatch_transporter class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Depature Date & Time</span>
+									</div>
+									{% render_field dispatch_form.dispatch_depature_date type="datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Cargo Picked?</span>
+									</div>
+									{% render_field dispatch_form.dispatch_cargo_picked class="form-control"  %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Sticker Fixed?</span>
+									</div>
+									{% render_field dispatch_form.dispatch_sticker_pasted_bvm class="form-control" id="dispatch_sticker_pasted_BVM"%}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">MAWB</span>
+									</div>
+									{% render_field dispatch_form.dispatch_mawb class="form-control"  id="dispatch_MAWB" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Weight</span>
+									</div>
+									{% render_field dispatch_form.dispatch_total_weight class="form-control disable_a_href"  id="dispatch_total_weight" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Packages</span>
+									</div>
+									{% render_field dispatch_form.dispatch_total_goods class="form-control disable_a_href"  id="dispatch_total_goods" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Status</span>
+									</div>
+									{% render_field dispatch_form.dispatch_status class="form-control"  %}
+								</div>
+								{% render_field dispatch_form.dispatch_updated_by hidden="True" id="dispatch_updated_by" class="form-control"  %}
+								{% render_field dispatch_form.dispatch_invoice_list hidden="True" id="dispatch_invoice_list" class="form-control"  %}
+								{% render_field dispatch_form.dispatch_job_num_list hidden="True" id="dispatch_job_num_list" class="form-control"  %}
+							</div>
+							<div class="input-group input-group-sm mb-3 container-fluid">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Comments</span>
+								</div>
+								{% render_field dispatch_form.dispatch_comments class="form-control"  %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-2"></div>
+							<div class="col-8 message text-center">
+								{% for message in messages %}
+								<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+								{% endfor %}
+							</div>
+							<div class="col-2"></div>
+						</div>
+						<button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Save</button>
+						<a href="{% url 'dispatch_search' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel </a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+</form>
+{% include "asset_mgt_app/dispatch_goods_list.html" %}
+
+<script>
+$(document).ready(function() {
+	document.getElementById("dispatch_updated_by").value='{{user_id}}';
+  });
+</script>
+<script>
+    $("#dispatch_customer").change(function () {
+      var url = $("#gate_in").attr("data-load_customer_model-url");
+
+      var gatein_customer_id = $(this).find(":selected").text();
+
+      $.ajax({
+        url: url,
+        data: {
+          'lm_customer_name_id': gatein_customer_id
+        },
+		success: function (data) {
+			$("#dispatch_customer_type").val(data);
+
+        }
+      });
+
+    });
+  </script>
+{% endblock content %}

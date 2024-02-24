@@ -1,0 +1,253 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" id="whratemaster" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-3"></div>
+		<div class="col-6">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Warehouse Rate Master</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="">Customer Name</span>
+									</div>
+									{% render_field form.whrm_customer_name id="whrm_customer_name" onchange="change_charge_type()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Business</span>
+									</div>
+									{% render_field form.whrm_businessmodel id="whrm_businessmodel" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Charge Type</span>
+									</div>
+									{% render_field form.whrm_charge_type id="whrm_charge_type" onchange="change_charge_type()" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Vehicle Type</span>
+									</div>
+									{% render_field form.whrm_vehicle_type id="whrm_vehicle_type" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="row">
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text" >Min Weight (kg)</span>
+											</div>
+											{% render_field form.whrm_min_wt id="whrm_min_wt" class="form-control" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text" >Max Weight (kg)</span>
+											</div>
+											{% render_field form.whrm_max_wt id="whrm_max_wt" class="form-control" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text" >Min Area (Sqft)</span>
+											</div>
+											{% render_field form.whrm_min_area id="whrm_min_area" class="form-control" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text" >Max Area (Sqft)</span>
+											</div>
+											{% render_field form.whrm_max_area id="whrm_max_area" class="form-control" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Rate (INR)</span>
+									</div>
+									{% render_field form.whrm_rate id="whrm_rate" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Description</span>
+									</div>
+									{% render_field form.whrm_description id="whrm_description" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								{% render_field form.whrm_updated_by id="whrm_updated_by" hidden="True" class="form-control" %}
+								<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+								<a href="{% url 'whratemaster_list' %}" class="btn btn-danger float-right">
+									<i class="fas fa-times"></i> Cancel
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-3"></div>
+	</div>
+</form>
+<script>
+    $("#whrm_customer_name").change(function () {
+      var url = $("#whratemaster").attr("data-load_customer_model-url");
+
+      var gatein_customer_id = $(this).find(":selected").text();
+      $.ajax({
+        url: url,
+        data: {
+          'lm_customer_name_id': gatein_customer_id
+        },
+		success: function (data) {
+<!--			$("#whrm_businessmodel").val(data);-->
+			var customer_model=JSON.parse(data)["customer_businessmodel_val"];
+			document.getElementById("whrm_businessmodel").value =customer_model;
+        }
+      });
+
+    });
+ </script>
+<script>
+function change_charge_type() {
+	var jn=document.getElementById("whrm_charge_type").value
+	var cust_bus=document.getElementById("whrm_businessmodel").value
+<!--	alert('Customer Business')-->
+<!--	alert(cust_bus)-->
+<!--	alert('Charge Type')-->
+<!--	alert(jn)-->
+	if (cust_bus==1 && jn==1)
+	{
+		$('#whrm_vehicle_type').removeClass('disable_a_href');
+		$('#whrm_min_wt').addClass('disable_a_href');
+		$('#whrm_max_wt').addClass('disable_a_href');
+		$('#whrm_min_area').addClass('disable_a_href');
+		$('#whrm_max_area').addClass('disable_a_href');
+		$('#whrm_rate').removeClass('disable_a_href');
+		$('#whrm_description').removeClass('disable_a_href');
+		document.getElementById("whrm_min_wt").value=0.0;
+		document.getElementById("whrm_max_wt").value=0.0;
+		document.getElementById("whrm_min_area").value=0.0;
+		document.getElementById("whrm_max_area").value=0.0;
+	}
+	else if (cust_bus==3 && jn==1)
+	{
+		$('#whrm_vehicle_type').addClass('disable_a_href');
+		$('#whrm_min_wt').addClass('disable_a_href');
+		$('#whrm_max_wt').addClass('disable_a_href');
+		$('#whrm_min_area').removeClass('disable_a_href');
+		$('#whrm_max_area').removeClass('disable_a_href');
+		$('#whrm_rate').removeClass('disable_a_href');
+		$('#whrm_description').removeClass('disable_a_href');
+		document.getElementById("whrm_vehicle_type").value="";
+		document.getElementById("whrm_min_wt").value=0.0;
+		document.getElementById("whrm_max_wt").value=0.0;
+	}
+	else if (cust_bus==2 && jn==1)
+	{
+		$('#whrm_vehicle_type').addClass('disable_a_href');
+		$('#whrm_min_wt').removeClass('disable_a_href');
+		$('#whrm_max_wt').removeClass('disable_a_href');
+		$('#whrm_min_area').addClass('disable_a_href');
+		$('#whrm_max_area').addClass('disable_a_href');
+		$('#whrm_rate').removeClass('disable_a_href');
+		$('#whrm_description').removeClass('disable_a_href');
+		document.getElementById("whrm_vehicle_type").value="";
+		document.getElementById("whrm_min_wt").value=0.0;
+		document.getElementById("whrm_max_wt").value=0.0;
+	}
+	else if (cust_bus==3 && jn==3)
+	{
+		$('#whrm_vehicle_type').addClass('disable_a_href');
+		$('#whrm_min_wt').removeClass('disable_a_href');
+		$('#whrm_max_wt').removeClass('disable_a_href');
+		$('#whrm_min_area').addClass('disable_a_href');
+		$('#whrm_max_area').addClass('disable_a_href');
+		$('#whrm_rate').removeClass('disable_a_href');
+		$('#whrm_description').removeClass('disable_a_href');
+		document.getElementById("whrm_vehicle_type").value="";
+		document.getElementById("whrm_min_area").value=0.0;
+		document.getElementById("whrm_max_area").value=0.0;
+	}
+	else if (cust_bus==1 && jn==3)
+	{
+		$('#whrm_vehicle_type').addClass('disable_a_href');
+		$('#whrm_min_wt').removeClass('disable_a_href');
+		$('#whrm_max_wt').removeClass('disable_a_href');
+		$('#whrm_min_area').addClass('disable_a_href');
+		$('#whrm_max_area').addClass('disable_a_href');
+		$('#whrm_rate').removeClass('disable_a_href');
+		$('#whrm_description').removeClass('disable_a_href');
+		document.getElementById("whrm_vehicle_type").value="";
+		document.getElementById("whrm_min_area").value=0.0;
+		document.getElementById("whrm_max_area").value=0.0;
+	}
+	else if (cust_bus==2 && jn==3)
+	{
+		$('#whrm_vehicle_type').addClass('disable_a_href');
+		$('#whrm_min_wt').addClass('disable_a_href');
+		$('#whrm_max_wt').addClass('disable_a_href');
+		$('#whrm_min_area').addClass('disable_a_href');
+		$('#whrm_max_area').addClass('disable_a_href');
+		$('#whrm_rate').addClass('disable_a_href');
+		$('#whrm_description').addClass('disable_a_href');
+		alert('Loading and Unloading Charges not applicable to Exclusive customers');
+		document.getElementById("whrm_vehicle_type").value="";
+		document.getElementById("whrm_min_wt").value=0.0;
+		document.getElementById("whrm_max_wt").value=0.0;
+		document.getElementById("whrm_min_area").value=0.0;
+		document.getElementById("whrm_max_area").value=0.0;
+		document.getElementById("whrm_rate").value=0.0;
+		document.getElementById("whrm_description").value="";
+	}
+	else
+	{
+		$('#whrm_vehicle_type').addClass('disable_a_href');
+		$('#whrm_min_wt').addClass('disable_a_href');
+		$('#whrm_max_wt').addClass('disable_a_href');
+		$('#whrm_min_area').addClass('disable_a_href');
+		$('#whrm_max_area').addClass('disable_a_href');
+		$('#whrm_rate').removeClass('disable_a_href');
+		$('#whrm_description').removeClass('disable_a_href');
+		document.getElementById("whrm_min_wt").value=0.0;
+		document.getElementById("whrm_max_wt").value=0.0;
+		document.getElementById("whrm_min_area").value=0.0;
+		document.getElementById("whrm_max_area").value=0.0;
+	}
+}
+ </script>
+<script>
+$(document).ready(function() {
+<!--	calculate_total()-->
+	document.getElementById("whrm_updated_by").value ='{{user_id}}';
+	change_charge_type()
+  });
+</script>
+
+<!--<script>-->
+<!--function calculate_total() {-->
+<!--	var rate_val=document.getElementById("whrm_rate").value-->
+<!--	var item_val=document.getElementById("whrm_item").value-->
+<!--	var total_val=(rate_val*item_val).toFixed(3)-->
+<!--	document.getElementById("whrm_total").value =total_val;-->
+<!--}-->
+<!--</script>-->
+{% endblock content %}

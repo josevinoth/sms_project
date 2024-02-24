@@ -1,0 +1,55 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'packagetype_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i>
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="packagetype_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <!--            <th>Product Category</th>-->
+            <th> Type</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+        {% for packagetype_info in packagetype_list %}
+        <tr>
+            <td> {{packagetype_info.package_type}}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'packagetype_update' packagetype_info.id %}" >
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'packagetype_delete' packagetype_info.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#packagetype_list').DataTable();
+} );
+</script>
+
+{% endblock content %}

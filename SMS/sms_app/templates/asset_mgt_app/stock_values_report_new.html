@@ -1,0 +1,154 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+  <div class="row">
+    <div class="col-5"></div>
+    <div class="col-2 rounded text-center bg-info">
+      <h3>Stock Value Report</h3>
+    </div>
+    <div class="col-5"></div>
+  </div>
+</div>
+<div class="container-fluid row">
+  <div class="col-md-1">
+    <a href="{% url 'warehouse_reports' %}" class="btn btn-primary btn-block btn-lg">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+  </div>
+  <!--    <div class="col-md-1">-->
+  <!--        <a href="{% url 'locationmaster_insert' %}" class="btn btn-success btn-block btn-lg">-->
+  <!--            <i class="fas fa-plus"></i>-->
+  <!--        </a>-->
+  <!--    </div>-->
+</div>
+<hr>
+<div class="container-fluid">
+  <table  id="stock_value_report" class="table "  >
+    <thead class="thead-dark">
+    <tr>
+      <th>Job Number</th>
+      <th>Stock Number</th>
+      <th>Customer</th>
+      <th>Date Of Arrival</th>
+      <th>Unloading Start Time</th>
+      <th>Unloading End Time</th>
+      <th>Transporter</th>
+      <th>Truck Number</th>
+      <th>Consigner</th>
+      <th>Consignee</th>
+      <th>Docs Received</th>
+      <th>HAWB</th>
+      <th>Destination</th>
+      <th>Invoice Number</th>
+      <th>Case Number</th>
+      <th>Invoice Qty</th>
+      <th>Invoice Weight (kg)</th>
+      <th>Checkin Weight (kg)</th>
+      <th>UOM</th>
+      <th>Length</th>
+      <th>Width</th>
+      <th>Height</th>
+      <th>Dims Qty</th>
+      <th>Package Type</th>
+      <th>Volume Weight</th>
+      <th>CBM</th>
+      <th>Invoice Value</th>
+      <th>Invoice Currency</th>
+      <th>Invoice (INR)</th>
+      <th>E-Way Bill#</th>
+      <th>E-Way Bill Validity</th>
+      <th>Fumigation Status</th>
+      <th>Check In-Out?</th>
+      <th>Branch</th>
+      <th>Unit</th>
+      <th>Bay</th>
+      <th>Storage Days</th>
+      <th>Truck_Number(Out)</th>
+      <th>Truck_Type(Out)</th>
+      <th>Truck_Depature_Time(Out)</th>
+      <th>Labels_Pasted_By</th>
+      <th>MAWB</th>
+      <th>Dispatch_Number</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for stock_value in row %}
+    <tr>
+      <td> {{stock_value.0}}</td>
+      <td> {{stock_value.1}}</td>
+      <td> {{stock_value.2}}</td>
+      <td> {{stock_value.3}}</td>
+      <td> {{stock_value.4}}</td>
+      <td> {{stock_value.5}}</td>
+      <td> {{stock_value.6}}</td>
+      <td> {{stock_value.7}}</td>
+      <td> {{stock_value.8}}</td>
+      <td> {{stock_value.9}}</td>
+      <td> {{stock_value.10}}</td>
+      <td> {{stock_value.11}}</td>
+      <td> {{stock_value.12}}</td>
+      <td> {{stock_value.13}}</td>
+      <td> {{stock_value.14}}</td>
+      <td> {{stock_value.15}}</td>
+      <td> {{stock_value.16}}</td>
+      <td> {{stock_value.17}}</td>
+      <td> {{stock_value.18}}</td>
+      <td> {{stock_value.19}}</td>
+      <td> {{stock_value.20}}</td>
+      <td> {{stock_value.21}}</td>
+      <td> {{stock_value.22}}</td>
+      <td> {{stock_value.23}}</td>
+      <td> {{stock_value.24}}</td>
+      <td> {{stock_value.25}}</td>
+      <td> {{stock_value.26}}</td>
+      <td> {{stock_value.27}}</td>
+      <td> {{stock_value.28}}</td>
+      <td> {{stock_value.29}}</td>
+      <td> {{stock_value.30}}</td>
+      <td> {{stock_value.31}}</td>
+      <td> {{stock_value.32}}</td>
+      <td> {{stock_value.33}}</td>
+      <td> {{stock_value.34}}</td>
+      <td> {{stock_value.35}}</td>
+      <td> {{stock_value.36}}</td>
+      <td> {{stock_value.37}}</td>
+      <td> {{stock_value.38}}</td>
+      <td> {{stock_value.39}}</td>
+      <td> {{stock_value.40}}</td>
+      <td> {{stock_value.41}}</td>
+      <td> {{stock_value.42}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#stock_value_report').DataTable({
+<!--        scrollY: 800,-->
+        scrollX: true,
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    });
+});
+</script>
+
+<script>
+function collapse(cell){
+  var row = cell.parentElement;
+  var target_row = row.parentElement.children[row.rowIndex + 1];
+  if (target_row.style.display == 'table-row') {
+    cell.innerHTML = '+';
+    target_row.style.display = 'none';
+  } else {
+    cell.innerHTML = '-';
+    target_row.style.display = 'table-row';
+  }
+}
+</script>
+{% endblock content %}

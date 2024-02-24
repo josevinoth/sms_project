@@ -1,0 +1,550 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="col-md-1">
+	<a href="{% url 'search' %}" class="btn btn-primary btn-block btn-lg">
+		<i class="fas fa-arrow-left"></i> Back
+	</a>
+</div>
+<div class="row">
+	<div class="col-2"></div>
+	<div class="col-8 btn-group mx-auto text-center">
+		{% if gatein_list %}
+		{% for gateininfo in gatein_list %}
+		<a class="btn  border border-dark disable_a_href" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn  border border-dark disable_a_href" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
+		{% endif %}
+
+		{% if loadingbay_list %}
+		{% for loadingbayinfo in loadingbay_list %}
+		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
+		{% endif %}
+		{% if damagereport_list %}
+		{% for damagecheckinfo in damagereport_list %}
+		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check/Before Offloading</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before Offloading</a>
+		{% endif %}
+		<a class="btn  border focus border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
+		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>
+		<a class="btn  border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
+		<!--		<a class="btn  border border-dark disable_a_href" id="dispatch_btn" href="{% url 'dispatch_insert' %}">Dispatch</a>-->
+		<!--		<a class="btn  border border-dark disable_a_href" id="billing_btn">Billing</a>-->
+		<!--		<a class="btn  border border-dark disable_a_href" id="expense_btn">Expenses</a>-->
+		<!--		<a class="btn  border border-dark disable_a_href" id="reports_btn">Reports</a>-->
+	</div>
+	<div class="col-2"></div>
+</div>
+
+<hr>
+<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" >
+	{% csrf_token %}
+
+	<!--{{form.as_p}}-->
+
+	<div class="row">
+
+		<div class="col-2">
+			<button type="button" class="btn-lg btn-info" style="width:270px">
+				Goods Qty (Invoice) <h2><span class="badge badge-light">{{gatein_no_of_pkg_val}}</span></h2>
+				<span class="sr-only">unread messages</span>
+			</button>
+			<br>
+			<br>
+			<button type="button" class="btn-lg btn-info" style="width:270px">
+				Goods Qty (Check-In) <h2><span class="badge badge-light">{{goods_checkin_count}}</span></h2>
+				<span class="sr-only">unread messages</span>
+			</button>
+			<br>
+			<br>
+			<button type="button" class="btn-lg btn-info" style="width:270px">
+				Goods Weight (Invoice) <h2><span class="badge badge-light">{{gatein_weight_val}}</span></h2>
+				<span class="sr-only">unread messages</span>
+			</button>
+			<br>
+			<br>
+			<button type="button" class="btn-lg btn-info" style="width:270px">
+				Goods Weight (Check-In) <h2><span class="badge badge-light">{{goods_checkin_weight}}</span></h2>
+				<span class="sr-only">unread messages</span>
+			</button>
+		</div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center">
+						<div class="row">
+							<div class="col-3"></div>
+							<div class="col-5">
+								<h3>Add/Update Damage Check/After</h3>
+							</div>
+							<div class="col-2">
+								<a href="#" class="btn btn-warning btn-block" id="delivery_chalan_btn">
+									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>
+								</a>
+							</div>
+							<div class="col-2">
+								<a href="#" class="btn btn-warning btn-block" id="damage_report_btn">
+									Inspection Report          <i class="fa fa-download" aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</div>
+					<!--					<p>Invoice Number is  {{ request.session.invoice_num_stock }}</p>-->
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >WH Job Number</span>
+									</div>
+									{% render_field goods_form.wh_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3 ">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Stock Number</span>
+									</div>
+									{% render_field goods_form.wh_qr_rand_num id="wh_qr_rand_num" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Shipper Invoice Number</span>
+									</div>
+									{% render_field goods_form.wh_goods_invoice id="wh_goods_invoice" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >PO Number</span>
+									</div>
+									{% render_field goods_form.wh_po_num value=request.session.ses_po_num class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Customer Name</span>
+									</div>
+									{% render_field goods_form.wh_customer_name id="wh_customer_name" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" id="">Customer Type</span>
+									</div>
+									{% render_field goods_form.wh_customer_type id="wh_customer_type" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Consigner</span>
+									</div>
+									{% render_field goods_form.wh_consigner value=request.session.ses_consigner class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Consignee</span>
+									</div>
+									{% render_field goods_form.wh_consignee value=request.session.ses_consignee class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Unit Of Measure</span>
+									</div>
+									{% render_field goods_form.wh_uom id="uom" class="form-control" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Number of Pieces</span>
+									</div>
+									{% render_field goods_form.wh_goods_pieces id="no_of_piece" class="form-control" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length</span>
+									</div>
+									{% render_field goods_form.wh_goods_length id="length" class="form-control" onchange="chargeable_weight_fn()" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Width</span>
+									</div>
+									{% render_field goods_form.wh_goods_width id="width"  class="form-control" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Height</span>
+									</div>
+									{% render_field goods_form.wh_goods_height id="height" class="form-control" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Weight (Physical)</span>
+									</div>
+									{% render_field goods_form.wh_goods_weight id="weight" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Package Type</span>
+									</div>
+									{% render_field goods_form.wh_goods_package_type id="wh_goods_package_type" onchange="package_type_chng()" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Required Area (Sq.Ft)</span>
+									</div>
+									{% render_field goods_form.wh_goods_area id="req_area"  class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Required Volume (Cu.Ft)</span>
+									</div>
+									{% render_field goods_form.wh_goods_volume_weight id="volume_weight" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Volume Weight</span>
+									</div>
+									{% render_field goods_form.wh_chargeable_weight id="chargeable_weight" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >CBM</span>
+									</div>
+									{% render_field goods_form.wh_cbm class="form-control disable_a_href" id="cbm"  %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Weight Deviation?</span>
+									</div>
+									{% render_field goods_form.wh_weights_deviation class="form-control" id="wh_weights_deviation" onchange="challan_damage_btn_active()"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Dimension Deviation?</span>
+									</div>
+									{% render_field goods_form.wh_dimension_deviation id="wh_dimension_deviation" class="form-control" onchange="challan_damage_btn_active()"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Quantity Deviation?</span>
+									</div>
+									{% render_field goods_form.wh_no_of_units_deviation id="wh_no_of_units_deviation" class="form-control" onchange="challan_damage_btn_active()"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Damages?</span>
+									</div>
+									{% render_field goods_form.wh_damages id="wh_damages" class="form-control" onchange="challan_damage_btn_active()"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Mismatches?</span>
+									</div>
+									{% render_field goods_form.wh_mismatches id="wh_mismatches" class="form-control" onchange="challan_damage_btn_active()"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Fumigation Done?</span>
+									</div>
+									{% render_field goods_form.wh_fumigation_process id="wh_fumigation_process" class="form-control disable_a_href" onchange="fumigation_process_chng()"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Fumigation Action?</span>
+									</div>
+									{% render_field goods_form.wh_fumigation_action id="wh_fumigation_action" class="form-control disable_a_href" onchange="fumigation_action_chng()"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Fumigation Date</span>
+									</div>
+									{% render_field goods_form.wh_fumigation_date type="datetime-local" id="wh_fumigation_date" class="form-control disable_a_href"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Status</span>
+									</div>
+									{% render_field goods_form.wh_goods_status id="wh_goods_status" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="container-fluid">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Comments</span>
+									</div>
+									{% render_field goods_form.wh_comments id="wh_comments" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<!--<input class="btn btn-success" type="submit" name="Create User">-->
+						<button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Save</button>
+						<!--						<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">-->
+						<!--							<i class="fas fa-times"></i> Cancel</a>-->
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+</form>
+
+{% include "asset_mgt_app/goods_list_woh.html" %}
+<script>
+function chargeable_weight_fn() {
+  var width_val=document.getElementById("width").value;
+  var length_val=document.getElementById("length").value;
+  var height_val=document.getElementById("height").value;
+  var no_of_piece=document.getElementById("no_of_piece").value
+  selectElement = document.querySelector('#uom');
+  uom_val = selectElement.options[selectElement.selectedIndex].value;
+  if (uom_val==1)
+	{
+		var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/6000).toFixed(3)
+		document.getElementById("chargeable_weight").value =chargeable_weight_val;
+		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
+		var volume_val=((width_val*length_val*height_val*no_of_piece)*0.0000353147).toFixed(3);
+		document.getElementById("volume_weight").value =volume_val;
+		var req_area_val=((length_val*width_val*no_of_piece)*0.00107639).toFixed(3)
+		document.getElementById("req_area").value =req_area_val;
+	}
+  else
+	{
+		var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/366).toFixed(3)
+  		document.getElementById("chargeable_weight").value =chargeable_weight_val;
+  		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
+  		var volume_val=((width_val*length_val*height_val*no_of_piece)*0.000578704).toFixed(3);
+		document.getElementById("volume_weight").value =volume_val;
+		var req_area_val=((length_val*width_val*no_of_piece)*0.00694444).toFixed(3)
+		document.getElementById("req_area").value =req_area_val;
+  	}
+  endif
+
+}
+</script>
+<script>
+$(document).ready(function() {
+	var gatein_status_id = '{{gatein_status}}';
+	var loadingbay_status_id='{{loadingbay_status}}';
+	var damage_before_status_id='{{damage_before_status}}';
+	var damage_after_status_id='{{damage_after_status}}';
+	var warehousein_status_id='{{warehousein_status}}';
+	var wh_customer_name_val= document.getElementById("wh_customer_name").value;
+	var wh_customer_type_val= document.getElementById("wh_customer_type").value;
+
+	if (wh_customer_name_val=="")
+	{
+		document.getElementById("wh_customer_name").value='{{customer_name_id}}';
+	}
+	else
+	{
+		document.getElementById("wh_customer_name").value=wh_customer_name_val;
+	}
+	if (wh_customer_type_val=="")
+	{
+		document.getElementById("wh_customer_type").value='{{customer_type_id}}';
+	}
+	else
+	{
+		document.getElementById("wh_customer_type").value=wh_customer_type_val;
+	}
+
+	if (gatein_status_id =="Completed")
+	{
+		$('#gatein_btn').removeClass('disable_a_href');
+		$('#gatein_btn1').removeClass('disable_a_href');
+		$('#gatein_btn').addClass('btn-success');
+		$('#gatein_btn1').addClass('btn-success');
+		$('#loadingbay_btn').removeClass('disable_a_href');
+		$('#loadingbay_btn1').removeClass('disable_a_href');
+	}
+	else if (gatein_status_id =="Work In Progress")
+	{
+		$('#gatein_btn').removeClass('disable_a_href');
+		$('#gatein_btn1').removeClass('disable_a_href');
+		$('#gatein_btn').addClass('btn-warning');
+		$('#gatein_btn1').addClass('btn-warning');
+	}
+
+	if (loadingbay_status_id =="Completed")
+	{
+		$('#loadingbay_btn').removeClass('disable_a_href');
+		$('#loadingbay_btn1').removeClass('disable_a_href');
+		$('#loadingbay_btn').addClass('btn-success');
+		$('#loadingbay_btn1').addClass('btn-success');
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+	}
+	else if (loadingbay_status_id =="Work In Progress")
+	{
+		$('#loadingbay_btn').removeClass('disable_a_href');
+		$('#loadingbay_btn1').removeClass('disable_a_href');
+		$('#loadingbay_btn').addClass('btn-warning');
+		$('#loadingbay_btn1').addClass('btn-warning');
+	}
+
+	if (damage_before_status_id =="Completed")
+	{
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+		$('#damagecheck_before_btn').addClass('btn-success');
+		$('#damagecheck_before_btn1').addClass('btn-success');
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+	}
+	else if (damage_before_status_id =="Work In Progress")
+	{
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+		$('#damagecheck_before_btn').addClass('btn-warning');
+		$('#damagecheck_before_btn1').addClass('btn-warning');
+	}
+	if (damage_after_status_id =="Completed")
+	{
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+		$('#damagecheck_after_btn').addClass('btn-success');
+		$('#warehousein_btn').removeClass('disable_a_href');
+	}
+	else if (damage_after_status_id =="No Status")
+	{
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+		$('#damagecheck_after_btn').addClass('btn-warning');
+	}
+
+	if (warehousein_status_id =="Completed")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
+		$('#warehousein_btn').addClass('btn-success');
+		$('#storage_btn').removeClass('disable_a_href');
+		$('#storage_btn').addClass('btn-success');
+	}
+	else if (warehousein_status_id =="None")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
+	}
+	else if (warehousein_status_id =="No Status")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
+		$('#warehousein_btn').addClass('btn-warning');
+	}
+	challan_damage_btn_active()
+	package_type_chng()
+	fumigation_process_chng()
+	fumigation_action_chng()
+  });
+</script>
+
+<script>
+function package_type_chng() {
+	var wh_goods_package_type_val=document.getElementById("wh_goods_package_type").value;
+
+	if (wh_goods_package_type_val ==3)
+	{
+		$('#wh_fumigation_process').removeClass('disable_a_href');
+	}
+	else if (wh_goods_package_type_val ==9)
+	{
+		$('#wh_fumigation_process').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#wh_fumigation_process').addClass('disable_a_href');
+		document.getElementById("wh_fumigation_process").value=3
+	}
+	fumigation_process_chng()
+}
+</script>
+
+
+<script>
+function challan_damage_btn_active() {
+	var weight_deviation_val =document.getElementById("wh_weights_deviation").value;
+	var dimension_deviation_val=document.getElementById("wh_dimension_deviation").value;
+	var no_of_units_deviation_val=document.getElementById("wh_no_of_units_deviation").value;
+	var damages_val=document.getElementById("wh_damages").value;
+	var mismatches_val=document.getElementById("wh_mismatches").value;
+	if ((weight_deviation_val==1)||(dimension_deviation_val==1)||(no_of_units_deviation_val==1)||(damages_val!=6)||(mismatches_val==1))
+	 {
+	 	document.getElementById("wh_goods_status").value=6
+	 	$('#wh_goods_status').addClass('disable_a_href');
+	 }
+	 else
+	 {
+	 	$('#wh_goods_status').removeClass('disable_a_href');
+	 }
+}
+</script>
+
+<script>
+function fumigation_process_chng() {
+	var fumigation_process=document.getElementById("wh_fumigation_process").value;
+	if (fumigation_process==2)
+	 	{
+	 		$('#wh_fumigation_action').removeClass('disable_a_href');
+	 	}
+	else
+	 	{
+	 		$('#wh_fumigation_action').addClass('disable_a_href');
+	 		document.getElementById("wh_fumigation_action").value=3
+	 	}
+}
+</script>
+<script>
+function fumigation_action_chng() {
+	var fumigation_action=document.getElementById("wh_fumigation_action").value;
+	if (fumigation_action==1)
+	 	{
+	 		$('#wh_fumigation_date').removeClass('disable_a_href');
+	 	}
+	else
+	 	{
+	 		$('#wh_fumigation_date').addClass('disable_a_href');
+	 	}
+}
+</script>
+{% endblock content %}

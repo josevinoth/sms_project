@@ -1,0 +1,193 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="" enctype="multipart/form-data" >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Customer</h3></div>
+					<div class="card-body bg-light">
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field form.cu_nameshort id="cu_nameshort" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Name (Short)</span>
+									</div>
+									{% render_field form.cu_name class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Code</span>
+									</div>
+									{% render_field form.cu_customercode class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Type</span>
+									</div>
+									{% render_field form.cu_type class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Pan</span>
+									</div>
+									{% render_field form.cu_pan class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST</span>
+									</div>
+									{% render_field form.cu_gst class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Person</span>
+									</div>
+									{% render_field form.cu_customerperson class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Designation</span>
+									</div>
+									{% render_field form.cu_designation class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Contact No.</span>
+									</div>
+									{% render_field form.cu_contactno class="form-control" maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits with no space or special characters" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Email</span>
+									</div>
+									{% render_field form.cu_email class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Address</span>
+									</div>
+									{% render_field form.cu_address class="form-control" %}
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST Excepmtion</span>
+									</div>
+									{% render_field form.cu_gstexcepmtion class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST Model</span>
+									</div>
+									{% render_field form.cu_gstmodel class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST Percentage %</span>
+									</div>
+									{% render_field form.cu_gstpercentage class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Payment Type</span>
+									</div>
+									{% render_field form.cu_paymenttype class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Credit Days</span>
+									</div>
+									{% render_field form.cu_creditdays class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Billing Cycle</span>
+									</div>
+									{% render_field form.cu_paymentcycle class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Credit Count From</span>
+									</div>
+									{% render_field form.cu_creditcountfrom class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Tally ID</span>
+									</div>
+									{% render_field form.cu_tallyid class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Model</span>
+									</div>
+									{% render_field form.cu_businessmodel class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Solutions</span>
+									</div>
+									{% render_field form.cu_business_sol class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Contract Valid From</span>
+									</div>
+									{% render_field form.cu_contract_validity_from type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Contract Valid To</span>
+									</div>
+									{% render_field form.cu_contract_validity_to type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Contract Attachment</span>
+									</div>
+									{% render_field form.cu_contract  class="form-control" %}
+								</div>
+								{% render_field form.cu_lastmodifiedby id="cu_lastmodifiedby" hidden="True" class="form-control disable_a_href" %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'customer_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+	</div>
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("cu_lastmodifiedby").value ='{{user_id}}';
+});
+</script>
+{% endblock content %}

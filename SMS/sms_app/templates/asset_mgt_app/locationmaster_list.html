@@ -1,0 +1,94 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Location Master List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'locationmaster_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="locationmaster_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Warehouse Branch</th>
+            <th>Warehouse Unit</th>
+            <th>Bay</th>
+            <th>Customer Name</th>
+            <th>Customer Model</th>
+            <th>Total Area (Sq.ft)</th>
+            <th>Occupied Area (Sq.ft)</th>
+            <th>Available Area (Sq.ft)</th>
+            <th>Total Volume (Cu.ft)</th>
+            <th>Occupied Volume (Cu.ft)</th>
+            <th>Available Volume (Cu.ft)</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+        {% for locationmasterinfo in locationmaster_list %}
+        <tr>
+            <td> {{locationmasterinfo.lm_wh_location}}</td>
+            <td> {{locationmasterinfo.lm_wh_unit}}</td>
+            <td> {{locationmasterinfo.lm_areaside}}</td>
+            <td> {{locationmasterinfo.lm_customer_name}}</td>
+            <td> {{locationmasterinfo.lm_customer_model}}</td>
+            <td> {{locationmasterinfo.lm_size}}</td>
+            <td> {{locationmasterinfo.lm_area_occupied}}</td>
+            <td> {{locationmasterinfo.lm_available_area}}</td>
+            <td> {{locationmasterinfo.lm_total_volume}}</td>
+            <td> {{locationmasterinfo.lm_volume_occupied}}</td>
+            <td> {{locationmasterinfo.lm_available_volume}}</td>
+            <td>
+
+                <a class="btn btn-primary" href="{% url 'locationmaster_update' locationmasterinfo.id %}" >
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'locationmaster_delete' locationmasterinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function() {
+    $('#locationmaster_list').DataTable({
+        scrollY: "600px",
+<!--        scrollX: true,-->
+        scrollCollapse: true,
+        order: [1, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    } );
+} );
+</script>
+
+{% endblock content %}
