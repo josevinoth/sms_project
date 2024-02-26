@@ -7,7 +7,7 @@ class AssetInfo(models.Model):
     asset_unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE, default='')
     asset_model = models.CharField(max_length=50)
     asset_make = models.CharField(max_length=50)
-    asset_assignedto = models.ForeignKey(MyUser,on_delete=models.CASCADE, related_name='asset_assignedto',db_column='asset_assignedto',default='')
+    asset_assignedto = models.ForeignKey(MyUser,on_delete=models.CASCADE, related_name='asset_assignedto',db_column='asset_assignedto',null=True,blank=True)
     asset_serial_num1 = models.CharField(max_length=50,default='')
     asset_assignedon = models.CharField(blank=True, null=True,max_length=50)
     asset_cost = models.DecimalField(max_digits=50, decimal_places=2,default=0.0)

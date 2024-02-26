@@ -137,3 +137,20 @@ def asset_delete(request, asset_id):
     assetinfo = AssetInfo.objects.get(pk=asset_id)
     assetinfo.delete()
     return redirect('/SMS/asset_list')
+
+@login_required(login_url='login_page')
+def un_assigned_asset_list(request):
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    role = User_extInfo.objects.get(user=user_id).emp_role
+    unassigned_asset_list= AssetInfo.objects.filter(asset_assignedto__isnull=True).order_by('-id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(unassigned_asset_list, 100000)
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'unassigned_asset_list': unassigned_asset_list,
+        'first_name': first_name,
+        'role': role,
+        'page_obj': page_obj,
+    }
+    return render(request, "asset_mgt_app/unassigned_asset_list.html", context)
