@@ -21,5 +21,6 @@ class AssetInfo(models.Model):
     asset_updated_at = models.DateTimeField(null=True, auto_now=True)
     asset_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,related_name='asset_updated_by',db_column='asset_updated_by')
     asset_remarks = models.TextField(max_length=300,null=True,blank=True)
+    asset_audit_date = models.DateTimeField(null=True, blank=True)
     def __str__(self):
         return self.asset_number

@@ -120,7 +120,14 @@
 									{% render_field form.asset_cost class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								{% render_field form.asset_updated_by id="asset_updated_by" hidden="True" class="form-control" %}
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Audit Date</span>
+									</div>
+									{% render_field form.asset_audit_date type='Datetime-local' class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								{% render_field form.asset_updated_by id="asset_updated_by"  hidden="True" class="form-control" %}
 							</div>
 							<div class="container-fluid">
 								<div class="input-group input-group-sm mb-3">
