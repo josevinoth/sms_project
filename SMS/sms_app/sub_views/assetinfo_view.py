@@ -1,25 +1,48 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.core.paginator import Paginator
+from django.db.models import Q
 from ..forms import AssetinfoaddForm
 from ..models import User_extInfo,AssetInfo
 from django.shortcuts import render, redirect
 import qrcode
 from io import BytesIO
 import qrcode.image.svg
-from random import randint
 from django.contrib import messages
 
+@login_required(login_url='login_page')
+def asset_search(request):
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    # asset_number = request.GET.get('asset_number')
+    # asset_ID = request.GET.get('asset_id')
+    role = User_extInfo.objects.get(user=user_id).emp_role
+    asset_list= AssetInfo.objects.all().order_by('-id')
+    # asset_list = AssetInfo.objects.filter(Q(asset_number__icontains=asset_number) | Q(asset_number='') | Q(asset_number__in=[None, ''])).order_by('-id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(asset_list, 50)
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'asset_list': asset_list,
+        'first_name': first_name,
+        'role': role,
+        'page_obj': page_obj,
+    }
+    return render(request, "asset_mgt_app/asset_list.html", context)
 @login_required(login_url='login_page')
 def asset_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
     asset_list= AssetInfo.objects.all().order_by('-id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(asset_list, 100000)
+    page_obj = paginator.get_page(page_number)
     context = {
         'asset_list': asset_list,
         'first_name': first_name,
         'role': role,
+        'page_obj': page_obj,
     }
     return render(request, "asset_mgt_app/asset_list.html", context)
 

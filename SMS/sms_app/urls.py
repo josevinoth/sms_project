@@ -67,6 +67,7 @@ urlpatterns = [
     path('goods_delete/<int:goods_id>/', views.goods_delete, name='goods_delete'),  # Delete goods
     path('assign_asset_list/<int:user_id>/', views.assign_asset_list_new, name='assign_asset_list'),  # List assign_asset,
     path('assign_asset_insert', views.assign_asset_add, name='assign_asset_insert'),  # Add assign_asset
+    path('assign_asset_search', views.asset_search, name='assign_asset_search'),  # search assign_asset
     path('assign_asset_update/<int:assign_asset_id>/', views.assign_asset_add, name='assign_asset_update'),  # Update assign_asset
     path('assign_asset_delete/<int:assign_asset_id>/', views.assign_asset_delete, name='assign_asset_delete'),  # Delete assign_asset
     path('stock_list/', views.stock_list, name='stock_list'),  # List stock,
