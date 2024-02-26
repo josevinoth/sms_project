@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from ..forms import RtratemasteraddForm
 from ..models import RtratemasterInfo
@@ -16,12 +17,32 @@ def rtratemaster_add(request,rtratemaster_id=0):
     else:
         if rtratemaster_id == 0:
             form = RtratemasteraddForm(request.POST)
+            if form.is_valid():
+                form.save()
+                print("Transport route rate master Form saved")
+                messages.success(request, 'Record Updated Successfully')
+                last_id = (RtratemasterInfo.objects.values_list('id', flat=True)).last()
+                print('last_id', last_id)
+                url = '/SMS/rtratemaster_update/' + str(last_id)
+                print('url', url)
+                return redirect(url)
+            else:
+                print("Transport route rate master not saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+                return redirect(request.META['HTTP_REFERER'])
         else:
             rtratemaster = RtratemasterInfo.objects.get(pk=rtratemaster_id)
             form = RtratemasteraddForm(request.POST,instance=rtratemaster)
-        if form.is_valid():
-            form.save()
-        return redirect('/SMS/rtratemaster_list')
+            if form.is_valid():
+                form.save()
+                print("Location Form saved")
+                messages.success(request, 'Record Updated Successfully')
+                return redirect(request.META['HTTP_REFERER'])
+            else:
+                print("Location Form not saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+                return redirect(request.META['HTTP_REFERER'])
+                # return redirect('/SMS/rtratemaster_list')
 
 # List rtratemaster
 @login_required(login_url='login_page')

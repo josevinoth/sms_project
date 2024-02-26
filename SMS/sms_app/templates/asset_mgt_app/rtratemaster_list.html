@@ -1,25 +1,24 @@
 {% extends "asset_mgt_app/base.html" %}
 
-
 {% block content %}
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
         <div class="col-4"></div>
-        <div class="col-4 rounded text-center bg-info">
+        <div class="col-3 rounded text-center bg-info">
             <h3>Warehouse Rate Master List</h3>
         </div>
-        <div class="col-4"></div>
+        <div class="col-5"></div>
     </div>
 </div>
 <div class="container-fluid row">
     <div class="col-md-1">
       <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i>
+        <i class="fas fa-arrow-left"></i> Back
       </a>
     </div>
     <div class="col-md-1">
       <a href="{% url 'rtratemaster_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i>
+        <i class="fas fa-plus"></i> Add
       </a>
     </div>
 </div>
@@ -57,14 +56,14 @@
                 <td> {{rtratemasterinfo.ro_rate}}</td>
                 <td>
 
-                    <a href="{% url 'rtratemaster_update' rtratemasterinfo.id %}" >
+                    <a class="btn btn-primary" href="{% url 'rtratemaster_update' rtratemasterinfo.id %}" >
                         <i class="far fa-edit"></i>
                     </a>
                 </td>
                 <td>
                     <form action="{% url 'rtratemaster_delete' rtratemasterinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn">
+                        <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </form>

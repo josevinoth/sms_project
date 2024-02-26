@@ -1,5 +1,6 @@
 from django.db import models
 from ..models import City
+from django.urls import reverse
 
 class Places(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE, default='')
@@ -10,3 +11,6 @@ class Places(models.Model):
 
     def __str__(self):
         return self.place_name
+
+    def get_absolute_url(self):
+        return reverse('places_update', args=[str(self.id)])
