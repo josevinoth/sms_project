@@ -496,11 +496,9 @@ def export_stockreport_to_csv(request):
     # return response
 
     four_months_ago = timezone.now() - timedelta(days=120)
-
     # Get relevant data using values_list
     data = Warehouse_goods_info.objects.filter(
-        wh_check_in_out__in=[1, 2],
-        wh_checkout_time__gte=four_months_ago
+        Q(wh_check_in_out=1) | (Q(wh_check_in_out=2, wh_checkout_time__gte=four_months_ago))
     ).annotate(
         arrival_date=ExpressionWrapper(F('wh_gate_injob_no_id__gatein_arrival_date'),
                                        output_field=fields.DateTimeField()),
