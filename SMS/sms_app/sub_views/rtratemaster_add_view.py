@@ -25,7 +25,8 @@ def rtratemaster_add(request,rtratemaster_id=0):
                 print('last_id', last_id)
                 url = '/SMS/rtratemaster_update/' + str(last_id)
                 print('url', url)
-                return redirect(url)
+                # return redirect(url)
+                return redirect('/SMS/rtratemaster_list')
             else:
                 print("Transport route rate master not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
@@ -37,12 +38,13 @@ def rtratemaster_add(request,rtratemaster_id=0):
                 form.save()
                 print("Location Form saved")
                 messages.success(request, 'Record Updated Successfully')
-                return redirect(request.META['HTTP_REFERER'])
+                # return redirect(request.META['HTTP_REFERER'])
+                return redirect('/SMS/rtratemaster_list')
             else:
                 print("Location Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
                 return redirect(request.META['HTTP_REFERER'])
-                # return redirect('/SMS/rtratemaster_list')
+
 
 # List rtratemaster
 @login_required(login_url='login_page')
