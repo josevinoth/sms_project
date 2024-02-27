@@ -367,6 +367,7 @@ urlpatterns = [
     path('openingstock_update/<int:openingstock_id>', views.openingstock_add, name='openingstock_update'),  # update openingstock
     path('openingstock_delete/<int:openingstock_id>', views.openingstock_delete, name='openingstock_delete'),  # delete openingstock
     path('stockpurchases_list/', views.stockpurchases_list, name='stockpurchases_list'),  # List stockpurchases
+    path('stockpurchases_cancel/', views.stockpurchases_cancel, name='stockpurchases_cancel'),  # Cancel stockpurchases
     path('stockpurchases_insert/', views.stockpurchases_add, name='stockpurchases_insert'),  # Add stockpurchases
     path('stockpurchases_update/<int:stockpurchases_id>', views.stockpurchases_add, name='stockpurchases_update'),  # update stockpurchases
     path('stockpurchases_delete/<int:stockpurchases_id>', views.stockpurchases_delete, name='stockpurchases_delete'),  # delete stockpurchases
@@ -446,5 +447,19 @@ urlpatterns = [
     path('expense_report/', views.expense_report, name='expense_report'), #Expense Report
     path('consignment_note_pdf/<int:consignment_note_id>', views.consignment_note_pdf, name='consignment_note_pdf'),# consignement_note_pdf
     path('goods_in_out_reports_list/', views.goods_in_out_reports_list, name='goods_in_out_reports_list'),  # List pregateintruck
+    path('pk_stock_vendor_list/', views.pk_stock_vendor_list, name='pk_stock_vendor_list'),  # List pk_stock_vendor
+    path('pk_stock_vendor_insert/', views.pk_stock_vendor_add, name='pk_stock_vendor_insert'),  # Add pk_stock_vendor
+    path('pk_stock_vendor_update/<int:stock_vendor_id>', views.pk_stock_vendor_add, name='pk_stock_vendor_update'),  # update pk_stock_vendor
+    path('pk_stock_vendor_delete/<int:stock_vendor_id>', views.pk_stock_vendor_delete, name='pk_stock_vendor_delete'),  # delete pk_stock_vendor
+    path('pk_quotation_list/', views.pk_quotation_list, name='pk_quotation_list'),  # List quotation
+    path('pk_quotation_insert/', views.pk_quotation_add, name='pk_quotation_insert'),  # Add quotation
+    path('pk_quotation_update/<int:quotation_id>', views.pk_quotation_add, name='pk_quotation_update'),  # update quotation
+    path('pk_quotation_delete/<int:quotation_id>', views.pk_quotation_delete, name='pk_quotation_delete'),  # delete quotation
+    path('pk_quotation_cancel/', views.pK_quotation_cancel, name='pk_quotation_cancel'),  # cancel costing
+    path('pk_quotationsummary_list/', views.pk_quotationsummary_list, name='pk_quotationsummary_list'),  # List pk_quotationsummary
+    path('pk_quotationsummary_insert/', views.pk_quotationsummary_add, name='pk_quotationsummary_insert'),  # Add pk_quotationsummary
+    path('pk_quotationsummary_update/<int:pk_quotationsummary_id>', views.pk_quotationsummary_add, name='pk_quotationsummary_update'),  # update pk_quotationsummary
+    path('pk_quotationsummary_delete/<int:pk_quotationsummary_id>', views.pk_quotationsummary_delete, name='pk_quotationsummary_delete'),  # delete pk_quotationsummary
+    path('pk_quotation_summary_check_unique_field/', views.pk_quotation_summary_check_unique_field, name='pk_quotation_summary_check_unique_field'),  # pk_quotation_summary_check_unique_field
 ]
 

@@ -1,4 +1,6 @@
 from django.db import models
+from django.urls import reverse
+
 from ..models import MyUser,Category,Pkstocktype,Natypeofwood,Source,Vendor_info,Stockdescription,Unitofmeasure
 
 class PkstockpurchasesInfo(models.Model):
@@ -6,9 +8,6 @@ class PkstockpurchasesInfo(models.Model):
     sp_stock_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE, default='')
     sp_type_of_wood= models.ForeignKey(Natypeofwood, on_delete=models.CASCADE, default='',blank=True, null=True)
     sp_source = models.ForeignKey(Source, on_delete=models.CASCADE, default='')
-    sp_vendor_name = models.ForeignKey(Vendor_info, on_delete=models.CASCADE, default='')
-    sp_vendor_bill = models.CharField(max_length=30,default = '')
-    sp_vendor_bill_date = models.DateField(blank=True,null=True)
     sp_thick_height = models.FloatField(blank=True, null=True,default=0.0)
     sp_width = models.FloatField(blank=True, null=True,default=0.0)
     sp_length= models.FloatField(blank=True, null=True,default=0.0)
@@ -28,9 +27,14 @@ class PkstockpurchasesInfo(models.Model):
     sp_rate = models.FloatField(blank=True, null=True, default=0.0)
     sp_price = models.FloatField(blank=True, null=True, default=0)
     sp_stock_in_date = models.DateField(blank=True, null=True)
+    sp_remarks = models.TextField(blank=True, null=True)
+    sp_vendor_bill = models.CharField(max_length=100,blank=True, null=True)
 
     class Meta:
         ordering = ["sp_purchase_num"]
 
     def __str__(self):
         return self.sp_purchase_num
+
+    def get_absolute_url_pk_stock_purchases(self):
+        return reverse('stockpurchases_update', args=[str(self.id)])

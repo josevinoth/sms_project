@@ -1,0 +1,375 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="" id="quotation_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Quotation</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Assessment Number</span>
+									</div>
+									{% render_field form.pkqt_assessment_num id="pkqt_assessment_num"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Costing Type</span>
+									</div>
+									{% render_field form.pkqt_cost_type id="pkqt_cost_type" onchange="change_cost_type()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Type</span>
+									</div>
+									{% render_field form.pkqt_stock_type id="pkqt_stock_type" onchange="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Description</span>
+									</div>
+									{% render_field form.pkqt_stock_description id="pkqt_stock_description" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width(inch)</span>
+									</div>
+									{% render_field form.pkqt_width id="pkqt_width" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height(inch)</span>
+									</div>
+									{% render_field form.pkqt_height id="pkqt_height" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length(Ft)</span>
+									</div>
+									{% render_field form.pkqt_length id="pkqt_length" onchange="change_cost_type()" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">UOM</span>
+									</div>
+									{% render_field form.pkqt_uom id="pkqt_uom" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Size</span>
+									</div>
+									{% render_field form.pkqt_size id="pkqt_size" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quantity</span>
+									</div>
+									{% render_field form.pkqt_quantity id="pkqt_quantity" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">CFT</span>
+									</div>
+									{% render_field form.pkqt_cft id="pkqt_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Rate</span>
+									</div>
+									{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Days</span>
+									</div>
+									{% render_field form.pkqt_days id="pkqt_days" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Cost</span>
+									</div>
+									{% render_field form.pkqt_total_cost id="pkqt_total_cost" readonly="True" class="form-control disable_a_href" %}
+								</div>
+								{% render_field form.pkqt_updated_by id="pkqt_updated_by" hidden="True" class="form-control" %}
+
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'pk_quotation_cancel' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("pkqt_updated_by").value ='{{user_id}}';
+	document.getElementById("pkqt_assessment_num").value ='{{na_assessment_num_id}}';
+	change_cost_type();
+	});
+</script>
+
+<script>
+   $("#pkqt_stock_type").change(function () {
+      var url = $("#quotation_add").attr("data-stock_description-url");
+      var stock_type = $(this).val();
+      $.ajax({
+        url: url,
+        data: {
+          'stock_type': stock_type,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#pkqt_stock_description').removeClass('disable_a_href');
+			$("#pkqt_stock_description").empty();
+			$('#pkqt_stock_description').empty().append("<option value='0'>--Select--</option>");
+        	var pkqt_stock_description_name=JSON.parse(data)["stock_description"];
+        	var pkqt_stock_description_id=JSON.parse(data)["stock_description_id"];
+        	var len = (pkqt_stock_description_id).length;
+        	$('#pkqt_stock_description').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#pkqt_stock_description").append("<option value='"+pkqt_stock_description_id[i]+"'>"+pkqt_stock_description_name[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
+<script>
+function change_cost_type() {
+		var jn=document.getElementById("pkqt_cost_type").value
+		if ( jn==8)
+		{
+			$('#pkqt_stock_type').removeClass('disable_a_href');
+			var jn1=document.getElementById("pkqt_stock_type").value
+			if ( jn1==1)
+			{
+				$('#pkqt_stock_description').removeClass('disable_a_href');
+				$('#pkqt_length').removeClass('disable_a_href');
+				$('#pkqt_width').removeClass('disable_a_href');
+				$('#pkqt_height').removeClass('disable_a_href');
+				$('#pkqt_uom').addClass('disable_a_href');
+				$('#pkqt_quantity').removeClass('disable_a_href');
+				$('#pkqt_size').addClass('disable_a_href');
+				document.getElementById("pkqt_size").value=parseFloat(0.0)
+				$('#pkqt_days').addClass('disable_a_href');
+				document.getElementById("pkqt_days").value=0;
+
+				var length = parseFloat(document.getElementById("pkqt_length").value) || 0;
+				var height = parseFloat(document.getElementById("pkqt_height").value) || 0;
+				var width = parseFloat(document.getElementById("pkqt_width").value) || 0;
+				var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+				var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+				var cft = length*height*width/144;
+				document.getElementById("pkqt_cft").value=cft.toFixed(2)
+				var totalCost = rate * cft*quantity;
+				document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+			}
+
+			else if (jn1==2)
+			{
+				$('#pkqt_stock_description').removeClass('disable_a_href');
+				$('#pkqt_length').addClass('disable_a_href');
+				$('#pkqt_width').addClass('disable_a_href');
+				$('#pkqt_height').addClass('disable_a_href');
+				$('#pkqt_uom').removeClass('disable_a_href');
+				$('#pkqt_quantity').removeClass('disable_a_href');
+				$('#pkqt_size').removeClass('disable_a_href');
+				$('#pkqt_cft').addClass('disable_a_href');
+				document.getElementById("pkqt_cft").value=0;
+				document.getElementById("pkqt_length").value=0;
+				document.getElementById("pkqt_width").value=0;
+				document.getElementById("pkqt_height").value=0;
+				$('#pkqt_rate').removeClass('disable_a_href');
+				$('#pkqt_days').addClass('disable_a_href');
+				var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+				var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+				var totalCost = rate  * quantity;
+				document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+			}
+		}
+		else if (jn==4)
+		{
+			$('#pkqt_stock_type').addClass('disable_a_href');
+			$('#pkqt_stock_description').addClass('disable_a_href');
+			document.getElementById("pkqt_stock_type").value=""
+			document.getElementById("pkqt_stock_description").value=""
+			$('#pkqt_length').addClass('disable_a_href');
+			$('#pkqt_width').addClass('disable_a_href');
+			$('#pkqt_height').addClass('disable_a_href');
+			$('#pkqt_days').removeClass('disable_a_href');
+			$('#pkqt_uom').addClass('disable_a_href');
+			$('#pkqt_size').addClass('disable_a_href');
+			document.getElementById("pkqt_uom").value="";
+			document.getElementById("pkqt_size").value=0;
+			var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+			var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+			var days = parseInt(document.getElementById("pkqt_days").value) || 0;
+			var totalCost = rate  * days * quantity;
+        	document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+		}
+		else if (jn==5)
+		{
+			$('#pkqt_stock_type').addClass('disable_a_href');
+			$('#pkqt_stock_description').addClass('disable_a_href');
+			document.getElementById("pkqt_stock_type").value=""
+			document.getElementById("pkqt_stock_description").value=""
+			$('#pkqt_length').addClass('disable_a_href');
+			$('#pkqt_width').addClass('disable_a_href');
+			$('#pkqt_height').addClass('disable_a_href');
+			$('#pkqt_days').addClass('disable_a_href');
+			$('#pkqt_uom').addClass('disable_a_href');
+			$('#pkqt_size').addClass('disable_a_href');
+			document.getElementById("pkqt_days").value=0;
+			document.getElementById("pkqt_uom").value="";
+			document.getElementById("pkqt_size").value=0;
+			var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+			var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+			var totalCost = rate * quantity;
+        	document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+		}
+		else if (jn==6)
+		{
+			$('#pkqt_stock_type').addClass('disable_a_href');
+			$('#pkqt_stock_description').addClass('disable_a_href');
+			document.getElementById("pkqt_stock_type").value=""
+			document.getElementById("pkqt_stock_description").value=""
+			$('#pkqt_length').addClass('disable_a_href');
+			$('#pkqt_width').addClass('disable_a_href');
+			$('#pkqt_height').addClass('disable_a_href');
+			$('#pkqt_days').addClass('disable_a_href');
+			$('#pkqt_uom').addClass('disable_a_href');
+			$('#pkqt_size').addClass('disable_a_href');
+			document.getElementById("pkqt_uom").value="";
+			document.getElementById("pkqt_size").value=0;
+			document.getElementById("pkqt_days").value=0;
+			var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+			var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+			var totalCost = rate * quantity;
+        	document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+		}
+		else if (jn==7)
+		{
+			$('#pkqt_stock_type').addClass('disable_a_href');
+			$('#pkqt_stock_description').addClass('disable_a_href');
+			document.getElementById("pkqt_stock_type").value=""
+			document.getElementById("pkqt_stock_description").value=""
+			$('#pkqt_length').addClass('disable_a_href');
+			$('#pkqt_width').addClass('disable_a_href');
+			$('#pkqt_height').addClass('disable_a_href');
+			$('#pkqt_days').addClass('disable_a_href');
+			$('#pkqt_quantity').addClass('disable_a_href');
+			$('#pkqt_cft').addClass('disable_a_href');
+			$('#pkqt_uom').addClass('disable_a_href');
+			$('#pkqt_size').addClass('disable_a_href');
+			document.getElementById("pkqt_days").value=0;
+			document.getElementById("pkqt_quantity").value=0;
+			document.getElementById("pkqt_cft").value=0;
+			document.getElementById("pkqt_uom").value="";
+			document.getElementById("pkqt_size").value=0;
+			var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+			var totalCost = rate;
+        	document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+		}
+		else
+		{
+			$('#pkqt_stock_type').addClass('disable_a_href');
+			$('#pkqt_stock_description').addClass('disable_a_href');
+			document.getElementById("pkqt_stock_type").value=""
+			document.getElementById("pkqt_stock_description").value=""
+			$('#pkqt_length').addClass('disable_a_href');
+			$('#pkqt_width').addClass('disable_a_href');
+			$('#pkqt_height').addClass('disable_a_href');
+			$('#pkqt_days').removeClass('disable_a_href');
+			$('#pkqt_cft').addClass('disable_a_href');
+			$('#pkqt_uom').addClass('disable_a_href');
+			$('#pkqt_size').addClass('disable_a_href');
+			document.getElementById("pkqt_uom").value="";
+			document.getElementById("pkqt_size").value=0;
+			document.getElementById("pkqt_cft").value=0;
+			var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+			var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+			var days = parseInt(document.getElementById("pkqt_days").value) || 0;
+			var totalCost = rate  * days * quantity;
+			document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+
+		}
+	}
+</script>>
+
+<script>
+function change_charge_type() {
+	var jn=document.getElementById("pkqt_stock_type").value
+	if ( jn==1)
+	{
+		$('#pkqt_stock_description').removeClass('disable_a_href');
+		$('#pkqt_length').removeClass('disable_a_href');
+		$('#pkqt_width').removeClass('disable_a_href');
+		$('#pkqt_height').removeClass('disable_a_href');
+		$('#pkqt_uom').addClass('disable_a_href');
+		$('#pkqt_quantity').removeClass('disable_a_href');
+		$('#pkqt_size').addClass('disable_a_href');
+		document.getElementById("pkqt_size").value=parseFloat(0.0)
+		$('#pkqt_days').addClass('disable_a_href');
+		document.getElementById("pkqt_days").value=0;
+
+		var length = parseFloat(document.getElementById("pkqt_length").value) || 0;
+		var height = parseFloat(document.getElementById("pkqt_height").value) || 0;
+		var width = parseFloat(document.getElementById("pkqt_width").value) || 0;
+		var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+		var cft = length*height*width/144;
+		document.getElementById("pkqt_cft").value=cft.toFixed(2)
+		var totalCost = rate * cft*quantity;
+        document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+	}
+
+	else if (jn==2)
+	{
+		$('#pkqt_stock_description').removeClass('disable_a_href');
+		$('#pkqt_length').addClass('disable_a_href');
+		$('#pkqt_width').addClass('disable_a_href');
+		$('#pkqt_height').addClass('disable_a_href');
+		$('#pkqt_uom').removeClass('disable_a_href');
+		$('#pkqt_quantity').removeClass('disable_a_href');
+		$('#pkqt_size').removeClass('disable_a_href');
+		$('#pkqt_cft').addClass('disable_a_href');
+		document.getElementById("pkqt_cft").value=0;
+		document.getElementById("pkqt_length").value=0;
+		document.getElementById("pkqt_width").value=0;
+		document.getElementById("pkqt_height").value=0;
+		$('#pkqt_rate').removeClass('disable_a_href');
+		$('#pkqt_days').addClass('disable_a_href');
+		var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+		var totalCost = rate  * quantity;
+        document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+	}
+}
+</script>
+
+{% endblock content %}

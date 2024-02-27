@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="stockpurchases_add"  >
+<form method="POST" action="" id="stockpurchases_add" data-stock_description-url="{% url 'load_stock_description' %}" >
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-2"></div>
@@ -13,6 +13,12 @@
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor Bill</span>
+									</div>
+									{% render_field form.sp_vendor_bill id="sp_vendor_bill" class="form-control disable_a_href" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Purchases Number</span>
@@ -35,31 +41,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Description</span>
 									</div>
-									{% render_field form.sp_stock_description id="sp_stock_description" class="form-control" %}
+									{% render_field form.sp_stock_description id="sp_stock_description" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Source</span>
 									</div>
 									{% render_field form.sp_source id="sp_source" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor Name</span>
-									</div>
-									{% render_field form.sp_vendor_name id="sp_vendor_bill" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor Bill</span>
-									</div>
-									{% render_field form.sp_vendor_bill id="sp_vendor_bill" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor Bill Date</span>
-									</div>
-									{% render_field form.sp_vendor_bill_date id="sp_vendor_bill_date" type="Date" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -79,14 +67,14 @@
 									</div>
 									{% render_field form.sp_width id="sp_width" onchange="change_charge_type()" class="form-control " %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Length (Ft)</span>
 									</div>
 									{% render_field form.sp_length id="sp_length" onchange="change_charge_type()" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">CFT</span>
@@ -150,6 +138,12 @@
 								{% render_field form.sp_updated_by id="sp_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Remarks</span>
+							</div>
+							{% render_field form.sp_remarks id="sp_remarks" class="form-control" %}
+						</div>
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
@@ -162,7 +156,7 @@
 							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'stockpurchases_list' %}" class="btn btn-danger float-right">
+						<a href="{% url 'stockpurchases_cancel' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</div>
@@ -175,10 +169,44 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("sp_updated_by").value ='{{user_id}}';
+	var pk_vendor_bill='{{pk_vendor_bill}}'
+	var sp_vendor_bill_val=document.getElementById("sp_vendor_bill").value
+	if (sp_vendor_bill_val=="")
+	{
+		document.getElementById("sp_vendor_bill").value = '{{pk_vendor_bill}}'
+	}
+	else
+	{
+		document.getElementById("sp_vendor_bill").value = sp_vendor_bill_val
+	}
 	change_charge_type();
 	});
 </script>
-
+<script>
+   $("#sp_stock_type").change(function () {
+      var url = $("#stockpurchases_add").attr("data-stock_description-url");
+      var stock_type = $(this).val();
+      $.ajax({
+        url: url,
+        data: {
+          'stock_type': stock_type,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#sp_stock_description').removeClass('disable_a_href');
+			$("#sp_stock_description").empty();
+			$('#sp_stock_description').empty().append("<option value='0'>--Select--</option>");
+        	var sp_stock_description_name=JSON.parse(data)["stock_description"];
+        	var sp_stock_description_id=JSON.parse(data)["stock_description_id"];
+        	var len = (sp_stock_description_id).length;
+        	$('#sp_stock_description').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#sp_stock_description").append("<option value='"+sp_stock_description_id[i]+"'>"+sp_stock_description_name[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
 <script>
 function change_charge_type() {
 	var jn=document.getElementById("sp_stock_type").value
@@ -187,8 +215,8 @@ function change_charge_type() {
 		$('#sp_thick_height').removeClass('disable_a_href');
 		$('#sp_length').removeClass('disable_a_href');
 		$('#sp_width').removeClass('disable_a_href');
-		$('#sp_cft').removeClass('disable_a_href');
-		$('#sp_total_cft').removeClass('disable_a_href');
+		$('#sp_cft').addClass('disable_a_href');
+		$('#sp_total_cft').addClass('disable_a_href');
 		$('#sp_uom').addClass('disable_a_href');
 		$('#sp_size').addClass('disable_a_href');
 		document.getElementById("sp_uom").value=""

@@ -12,7 +12,6 @@ class PkstockpurchasesForm(forms.ModelForm):
         self.fields['sp_category'].empty_label = "--Select--"
         self.fields['sp_type_of_wood'].empty_label = "--Select--"
         self.fields['sp_source'].empty_label = "--Select--"
-        self.fields['sp_vendor_name'].empty_label = "--Select--"
         self.fields['sp_updated_by'].empty_label = "--Select--"
         self.fields['sp_stock_description'].empty_label = "--Select--"
         self.fields['sp_uom'].empty_label = "--Select--"

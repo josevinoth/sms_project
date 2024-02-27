@@ -1,0 +1,100 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Quotation Summary List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'pk_quotationsummary_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="pk_quotationsummary_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Created On</th>
+            <th>Assessment Number</th>
+            <th>Wood Cost</th>
+            <th>Engineer Cost</th>
+            <th>Labour Cost</th>
+            <th>Crane Cost</th>
+            <th>HT Cost</th>
+            <th>Management Cost</th>
+            <th>Packing Material Cost</th>
+            <th>Transport Cost</th>
+            <th>Total Cost(Without Margin)</th>
+            <th>Margin</th>
+            <th>Total Cost(With Margin)</th>
+            <th>Total CFT</th>
+            <th>Rate Per CFT</th>
+            <th>Updated at</th>
+            <th>Updated By</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for quotationsummaryinfo in pk_quotationsummary_list %}
+        <tr>
+            <td> {{quotationsummaryinfo.qs_created_at}}</td>
+            <td> {{quotationsummaryinfo.qs_assessment_num}}</td>
+            <td> {{quotationsummaryinfo.qs_wood_cost}}</td>
+            <td> {{quotationsummaryinfo.qs_engineer_cost}}</td>
+            <td> {{quotationsummaryinfo.qs_labour_cost}}</td>
+            <td> {{quotationsummaryinfo.qs_crane_cost}}</td>
+            <td> {{quotationsummaryinfo.qs_ht_cost}}</td>
+            <td> {{quotationsummaryinfo.qs_management_cost}}</td>
+            <td> {{quotationsummaryinfo.qs_material_cost}}</td>
+            <td> {{quotationsummaryinfo.qs_transport_cost}}</td>
+            <td> {{quotationsummaryinfo.qs_total_cost_wom}}</td>
+            <td> {{quotationsummaryinfo.qs_margin}}</td>
+            <td> {{quotationsummaryinfo.qs_total_cost_wm}}</td>
+            <td> {{quotationsummaryinfo.qs_total_cft}}</td>
+            <td> {{quotationsummaryinfo.qs_rate_per_cft}}</td>
+            <td> {{quotationsummaryinfo.qs_updated_at}}</td>
+            <td> {{quotationsummaryinfo.qs_updated_by}}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'pk_quotationsummary_update' quotationsummaryinfo.id %}">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'pk_quotationsummary_delete' quotationsummaryinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#pk_quotationsummary_list').DataTable({
+         order: [0, 'asc' ],
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ],
+    });
+} );
+</script>
+
+{% endblock content %}

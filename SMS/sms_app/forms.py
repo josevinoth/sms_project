@@ -91,3 +91,6 @@ from.sub_forms.placesForm import PlacesForm
 from.sub_forms.enquirynote_vehicleForm_form import EnquirynotevehicleForm
 from.sub_forms.consignmentgoodsform_Form import ConsignmentgoodsaddForm
 from.sub_forms.pregatein_truckform_Form import PregateintruckForm
+from.sub_forms.pk_stock_vendorform import PkstockvendorForm
+from.sub_forms.pk_quotationForm_form import PkquotationForm
+from.sub_forms.pk_quotation_summaryForm_form import PkquotationsummaryForm

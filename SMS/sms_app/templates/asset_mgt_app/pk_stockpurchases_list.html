@@ -15,11 +15,11 @@
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
-    <div class="col-md-1">
-        <a href="{% url 'stockpurchases_insert' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'stockpurchases_insert' %}" class="btn btn-success btn-block btn-lg">-->
+<!--            <i class="fas fa-plus"></i> Add-->
+<!--        </a>-->
+<!--    </div>-->
 </div>
 <hr>
 <div class="container-fluid">
@@ -27,15 +27,13 @@
         <thead class="thead-dark">
         <tr>
             <th>Created On</th>
+            <th>Vendor Bill</th>
             <th>Stock Purchases Number</th>
             <th>Category</th>
             <th>Stock Type</th>
             <th>Stock Description</th>
             <th>Type Of Wood</th>
             <th>Source</th>
-            <th>Vendor Name</th>
-            <th>Vendor Bill</th>
-            <th>Vendor Bill Date</th>
             <th>Thick/Height</th>
             <th>Width</th>
             <th>Length</th>
@@ -44,24 +42,22 @@
             <th>Quantity</th>
             <th>UOM</th>
             <th>Size</th>
-            <th>Updated at</th>
+            <th>Updated On</th>
             <th>Updated By</th>
-            <th>Edit</th>
-            <th>Delete</th>
+<!--            <th>Edit</th>-->
+<!--            <th>Delete</th>-->
         </thead>
         <tbody>
         {% for stockpurchasesinfo in stockpurchases_list %}
         <tr>
             <td> {{stockpurchasesinfo.sp_created_at}}</td>
+            <td> {{stockpurchasesinfo.sp_vendor_bill}}</td>
             <td> {{stockpurchasesinfo.sp_purchase_num}}</td>
             <td> {{stockpurchasesinfo.sp_category}}</td>
             <td> {{stockpurchasesinfo.sp_stock_type}}</td>
             <td> {{stockpurchasesinfo.sp_stock_description}}</td>
             <td> {{stockpurchasesinfo.sp_type_of_wood}}</td>
             <td> {{stockpurchasesinfo.sp_source}}</td>
-            <td> {{stockpurchasesinfo.sp_vendor_name}}</td>
-            <td> {{stockpurchasesinfo.sp_vendor_bill}}</td>
-            <td> {{stockpurchasesinfo.sp_vendor_bill_date}}</td>
             <td> {{stockpurchasesinfo.sp_thick_height}}</td>
             <td> {{stockpurchasesinfo.sp_width}}</td>
             <td> {{stockpurchasesinfo.sp_length}}</td>
@@ -72,19 +68,19 @@
             <td> {{stockpurchasesinfo.sp_size}}</td>
             <td> {{stockpurchasesinfo.sp_updated_at}}</td>
             <td> {{stockpurchasesinfo.sp_updated_by}}</td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'stockpurchases_update' stockpurchasesinfo.id %}" class="btn btn-primary">
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
-            <td>
-                <form action="{% url 'stockpurchases_delete' stockpurchasesinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
+<!--            <td>-->
+<!--                <a class="btn btn-primary" href="{% url 'stockpurchases_update' stockpurchasesinfo.id %}" class="btn btn-primary">-->
+<!--                    <i class="far fa-edit"></i>-->
+<!--                </a>-->
+<!--            </td>-->
+<!--            <td>-->
+<!--                <form action="{% url 'stockpurchases_delete' stockpurchasesinfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
+<!--                    {% csrf_token %}-->
+<!--                    <button type="submit" class="btn btn-danger">-->
+<!--                        <i class="fas fa-trash-alt"></i>-->
+<!--                    </button>-->
+<!--                </form>-->
+<!--            </td>-->
         </tr>
         {% endfor %}
         </tbody>
@@ -94,7 +90,7 @@
     $(document).ready(function() {
     $('#stockpurchases_list').DataTable({
         order: [0, 'asc' ],
-        scrollX: true,
+<!--        scrollX: true,-->
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'
