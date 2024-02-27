@@ -78,6 +78,7 @@
 								</div>
 								{% render_field form.ro_rate class="form-control" %}
 							</div>
+							{% render_field form.ro_updated_by id="ro_updated_by" hidden="True" class="form-control" %}
 						</div>
 						<div class="row">
 							<div class="col-1"></div>
@@ -102,5 +103,9 @@
 	<div class="col-3"></div>
 	</div>
 </form>
-
+<script>
+$(document).ready(function() {
+	document.getElementById("ro_updated_by").value ='{{user_id}}';
+	});
+</script>
 {% endblock content %}
