@@ -1,5 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+
 from ..forms import RtratemasteraddForm
 from ..models import RtratemasterInfo
 from django.shortcuts import render, redirect
@@ -19,15 +21,19 @@ def rtratemaster_add(request,rtratemaster_id=0):
         if rtratemaster_id == 0:
             form = RtratemasteraddForm(request.POST)
             if form.is_valid():
-                form.save()
-                print("Transport route rate master Form saved")
-                messages.success(request, 'Record Updated Successfully')
-                last_id = (RtratemasterInfo.objects.values_list('id', flat=True)).last()
-                print('last_id', last_id)
-                url = '/SMS/rtratemaster_update/' + str(last_id)
-                print('url', url)
-                # return redirect(url)
-                return redirect('/SMS/rtratemaster_list')
+                try:
+                    form.save()
+                    print("Transport route rate master Form saved")
+                    messages.success(request, 'Record Updated Successfully')
+                    last_id = (RtratemasterInfo.objects.values_list('id', flat=True)).last()
+                    print('last_id', last_id)
+                    url = '/SMS/rtratemaster_update/' + str(last_id)
+                    print('url', url)
+                    # return redirect(url)
+                    return redirect('/SMS/rtratemaster_list')
+                except ValidationError as e:
+                    form.add_error(None, e.message)
+                    return redirect(request.META['HTTP_REFERER'])
             else:
                 print("Transport route rate master not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
@@ -45,7 +51,6 @@ def rtratemaster_add(request,rtratemaster_id=0):
                 print("Location Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
                 return redirect(request.META['HTTP_REFERER'])
-
 
 # List rtratemaster
 @login_required(login_url='login_page')

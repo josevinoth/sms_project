@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from ..models import MyUser,CustomerInfo,CustomerdepartmentInfo,VehicletypeInfo,VehiclecategoryInfo,Places
 
@@ -18,3 +19,29 @@ class RtratemasterInfo(models.Model):
     ro_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     def __str__(self):
         return self.ro_rate
+
+    def clean(self):
+        # Check for duplicates based on the combination of fields
+        duplicates = RtratemasterInfo.objects.filter(
+            ro_fromlocation=self.ro_fromlocation,
+            ro_tolocation=self.ro_tolocation,
+            ro_vehicletype=self.ro_vehicletype,
+            ro_customer=self.ro_customer,
+            ro_customerdepartment=self.ro_customerdepartment,
+            ro_vehiclecategory=self.ro_vehiclecategory,
+            ro_touchpoint=self.ro_touchpoint,
+            ro_touchpoint2=self.ro_touchpoint2,
+            ro_touchpoint3=self.ro_touchpoint3,
+            ro_touchpoint4=self.ro_touchpoint4,
+        )
+
+        if self.pk:
+            duplicates = duplicates.exclude(pk=self.pk)
+
+        if duplicates.exists():
+            raise ValidationError('Duplicate entry found.')
+
+    def save(self, *args, **kwargs):
+        # Clean method will be called before saving
+        self.full_clean()
+        super(RtratemasterInfo, self).save(*args, **kwargs)
