@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo,City,Tripstatusinfo
+from ..models import EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo,Places,Tripstatusinfo
 class Trip_category_info(models.Model):
     category = models.CharField(max_length=100, default='')
 
@@ -21,10 +21,10 @@ class TripdetailInfo(models.Model):
     tr_drivername = models.CharField(max_length=30,null=True,blank=True)
     tr_driver_lic = models.CharField(max_length=100,null=True,blank=True)
     tr_drivernumber = models.CharField(max_length=30,null=True,blank=True)
-    tr_departedlocation = models.ForeignKey(City,on_delete=models.CASCADE,related_name='tr_departedlocation', db_column='tr_departedlocation',null=True, blank=True)
+    tr_departedlocation = models.ForeignKey(Places,on_delete=models.CASCADE,related_name='tr_departedlocation', db_column='tr_departedlocation',null=True, blank=True)
     tr_departedkm = models.IntegerField(default=0,null=True, blank=True)
     tr_departeddate = models.DateTimeField(null=True, blank=True)
-    tr_reportedlocation = models.ForeignKey(City,on_delete=models.CASCADE,related_name='tr_reportedlocation', db_column='tr_reportedlocation',null=True, blank=True)
+    tr_reportedlocation = models.ForeignKey(Places,on_delete=models.CASCADE,related_name='tr_reportedlocation', db_column='tr_reportedlocation',null=True, blank=True)
     tr_reportedkm = models.IntegerField(default =0,null=True, blank=True)
     tr_reporteddate = models.DateTimeField(null=True, blank=True)
     # tr_status = models.ForeignKey(Tripstatusinfo,on_delete=models.CASCADE, related_name='tr_status', db_column='tr_status',default=1)
