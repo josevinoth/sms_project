@@ -86,6 +86,7 @@ def warehousein_add(request, warehousein_id=0):
                 'damage_after_status': damage_after_status,
                 'warehousein_status':warehousein_status,
                 'user_role':user_role,
+                'role':user_role,
                 'user_branch_id':user_branch_id,
                 'user_branch':user_branch,
             }

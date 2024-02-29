@@ -2,14 +2,13 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm
-from ..models import StatusList,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo,Enquirynotevehicle
+from ..models import User_extInfo,StatusList,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo,Enquirynotevehicle
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 @login_required(login_url='login_page')
 def enquirynote_add(request,enquirynote_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    print(user_id)
     if request.method == "GET":
         if enquirynote_id == 0:
             print("I am inside Get add Enquirynote")
@@ -78,6 +77,9 @@ def enquirynote_list(request):
     print("Inside Enquiry List")
     first_name = request.session.get('first_name')
     enquiry_num_list=EnquirynoteInfo.objects.all()
+    user_id = request.session.get('ses_userID')
+    user_role = User_extInfo.objects.get(user_id=user_id).emp_role
+    print('user_role',user_role)
     for m in enquiry_num_list:
         try:
             consignment_status_id_list=[]
@@ -121,6 +123,7 @@ def enquirynote_list(request):
                 'tripdetails_list': TripdetailInfo.objects.all(),
                 'page_obj': page_obj,
                 'first_name': first_name,
+                 'role': user_role,
                 }
     return render(request,"asset_mgt_app/enquirynote_list.html",context)
 

@@ -165,20 +165,11 @@ def transport_calculate_trip_charges(request):
 
     enquiry_number_id = request.GET.get('enquirynumber')
     trip_category_id = request.GET.get('trip_category')
-    print('from_location_id',from_location_id)
-    print('to_location_id',to_location_id)
-    print('vehicle_type_id',vehicle_type_id)
-    print('enquiry_number_id',enquiry_number_id)
-    print('trip_category_id',trip_category_id)
 
     enquiry_number = EnquirynoteInfo.objects.get(pk=enquiry_number_id).en_enquirynumber
     customer_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_customername
     customer_department_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_customerdepartment
     vehicle_category_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_vehiclecategory
-    print('enquiry_number',enquiry_number)
-    print('customer_id',customer_id)
-    print('customer_department_id',customer_department_id)
-    print('vehicle_category_id',vehicle_category_id)
 
     if trip_category_id == '1':
         # Retrieve RoRateInfo based on the selected values
