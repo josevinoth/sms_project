@@ -4,7 +4,7 @@ from django.urls import reverse
 
 class iou_info(models.Model):
     staff_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='staff_id', to_field='username',db_column='staff_id')
-    staff_name = models.CharField(max_length=255,null=True,blank=True)
+    staff_name = models.CharField(max_length=255)
     transaction_type = models.ForeignKey(ExpenseCategoryInfo, on_delete=models.CASCADE)
     transaction_date = models.DateField()
     business_type = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE)
