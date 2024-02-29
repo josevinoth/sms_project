@@ -82,5 +82,4 @@ def get_full_name_iou(request):
         user = User.objects.get(username=username)
         full_name = user.get_full_name()
         return JsonResponse({'full_name': full_name})
-
     return JsonResponse({'error': 'Username not provided'}, status=400)
