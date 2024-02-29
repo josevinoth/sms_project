@@ -88,8 +88,8 @@ from .sub_models.vehiclecategory_mod import VehiclecategoryInfo
 from .sub_models.dispatch_mod import Dispatch_info
 from .sub_models.warehouse_goods_info_mod import Warehouse_goods_info
 from .sub_models.expense_category_mod import ExpenseCategoryInfo
-from .sub_models.iou_mod import iou_info
 from .sub_models.enquirynote_mod import EnquirynoteInfo
+from .sub_models.iou_mod import iou_info
 from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from .sub_models.ownership_mod import OwnershipInfo
 from .sub_models.vhmanufacturer_mod import VhmanufacturerInfo
