@@ -35,7 +35,7 @@ class TripdetailInfo(models.Model):
     tr_remarks=models.TextField(max_length=500,blank=True, null=True)
     tr_loading_time = models.DateTimeField(null=True, blank=True)
     tr_unloading_time = models.DateTimeField(null=True, blank=True)
-    tr_iou = models.ForeignKey(iou_info, related_name='tr_iou', db_column='tr_iou', on_delete=models.CASCADE, null=True)
+    tr_iou = models.ForeignKey(iou_info, related_name='tr_iou', db_column='tr_iou', on_delete=models.CASCADE, null=True,blank=True)
 
     tc_tripcost = models.FloatField(default=0.0)
     tc_parkingcost = models.FloatField(default=0.0)
