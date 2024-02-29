@@ -6,6 +6,7 @@ class IouForm(forms.ModelForm):
         model = iou_info
         fields = '__all__'
 
+
     def __init__(self, *args, **kwargs):
         super(IouForm,self).__init__(*args, **kwargs)
         self.fields['staff_id'].empty_label = "--Select--"
