@@ -1,5 +1,5 @@
 from django import forms
-from ..models import iou_info
+from ..models import  iou_info
 
 class IouForm(forms.ModelForm):
     class Meta:
