@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 
 from ..forms import IouForm
-from ..models import User,iou_info
+from ..models import  User,iou_info
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
