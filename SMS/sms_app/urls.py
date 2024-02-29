@@ -462,5 +462,9 @@ urlpatterns = [
     path('pk_quotationsummary_update/<int:pk_quotationsummary_id>', views.pk_quotationsummary_add, name='pk_quotationsummary_update'),  # update pk_quotationsummary
     path('pk_quotationsummary_delete/<int:pk_quotationsummary_id>', views.pk_quotationsummary_delete, name='pk_quotationsummary_delete'),  # delete pk_quotationsummary
     path('pk_quotation_summary_check_unique_field/', views.pk_quotation_summary_check_unique_field, name='pk_quotation_summary_check_unique_field'),  # pk_quotation_summary_check_unique_field
+    path('iou_list/', views.iou_list, name='iou_list'),  # List IOU
+    path('iou_insert/', views.iou_add, name='iou_insert'),  # Add IOU
+    path('iou_update/<int:iou_id>', views.iou_add, name='iou_update'),  # update IOU
+    path('iou_delete/<int:iou_id>', views.iou_delete, name='iou_delete'),  # delete IOU
 ]
 

@@ -1,0 +1,76 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="">
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-4"></div>
+		<div class="col-4">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update IOU</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Business Type</span>
+									</div>
+									{% render_field form.business_type id="business_type" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Staff Name</span>
+									</div>
+									{% render_field form.staff_name id="staff_name" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Transaction Date</span>
+									</div>
+									{% render_field form.transaction_date id="transaction_date" type="Date" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Transaction Type</span>
+									</div>
+									{% render_field form.transaction_type id="transaction_type" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Amount</span>
+									</div>
+									{% render_field form.amount id="amount" class="form-control" %}
+								</div>
+								{% render_field form.iou_updated_by id="iou_updated_by" hidden="True" class="form-control" %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'iou_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-4"></div>
+	</div>
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("iou_updated_by").value ='{{user_id}}';
+  });
+</script>
+{% endblock content %}

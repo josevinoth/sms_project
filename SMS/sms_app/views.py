@@ -104,3 +104,4 @@ from .sub_views.consignmentgoods_view import consignmentgoods_add,consignmentgoo
 from .sub_views.pk_stock_vendor_view import pk_stock_vendor_add,pk_stock_vendor_list,pk_stock_vendor_delete
 from .sub_views.pk_quotation_view import pk_quotation_add,pk_quotation_list,pk_quotation_delete,pK_quotation_cancel
 from .sub_views.pk_quotation_summary_view import pk_quotationsummary_add,pk_quotationsummary_list,pk_quotationsummary_delete,pk_quotation_summary_check_unique_field
+from .sub_views.iou_view import iou_add,iou_list,iou_delete

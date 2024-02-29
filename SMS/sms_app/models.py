@@ -159,3 +159,4 @@ from .sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
 from .sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from .sub_models.pregatein_truck_mod import Pregateintruckinfo
 from .sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
+from .sub_models.iou_mod import iuo_info
