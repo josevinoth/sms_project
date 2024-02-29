@@ -1,8 +1,8 @@
-import html
-
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
 from ..forms import TripclosurefilesForm,TripclosureaddForm
-from ..models import User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,Tripstatusinfo
+from ..models import RtratemasterInfo,User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,Tripstatusinfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
@@ -156,3 +156,43 @@ def tripclosure_delete(request,tripclosure_id):
     tripclosure.delete()
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/tripclosure_list')
+@login_required(login_url='login_page')
+def transport_calculate_trip_charges(request):
+    # Retrieve parameters from the AJAX request
+    from_location_id = request.GET.get('from_location')
+    to_location_id = request.GET.get('to_location')
+    vehicle_type_id = request.GET.get('vehicle_type')
+
+    enquiry_number_id = request.GET.get('enquirynumber')
+    trip_category_id = request.GET.get('trip_category')
+    print('from_location_id',from_location_id)
+    print('to_location_id',to_location_id)
+    print('vehicle_type_id',vehicle_type_id)
+    print('enquiry_number_id',enquiry_number_id)
+    print('trip_category_id',trip_category_id)
+
+    enquiry_number = EnquirynoteInfo.objects.get(pk=enquiry_number_id).en_enquirynumber
+    customer_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_customername
+    customer_department_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_customerdepartment
+    vehicle_category_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_vehiclecategory
+    print('enquiry_number',enquiry_number)
+    print('customer_id',customer_id)
+    print('customer_department_id',customer_department_id)
+    print('vehicle_category_id',vehicle_category_id)
+    # Retrieve RoRateInfo based on the selected values
+    try:
+        ro_rate = RtratemasterInfo.objects.get(
+            ro_fromlocation=from_location_id,
+            ro_tolocation=to_location_id,
+            ro_vehicletype=vehicle_type_id,
+            ro_customer=customer_id,
+            ro_customerdepartment=customer_department_id,
+            ro_vehiclecategory_id=vehicle_category_id
+        ).ro_rate
+        print('ro_rate',ro_rate)
+        return JsonResponse({'ro_rate': ro_rate})
+
+    except RtratemasterInfo.DoesNotExist:
+        print("Doest not exist")
+        # Handle the case where the RoRateInfo does not exist
+        return JsonResponse({'ro_rate': 0})

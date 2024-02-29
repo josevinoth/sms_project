@@ -77,7 +77,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Charges</span>
 									</div>
-									{% render_field tripclosure_form.tc_tripcost class="form-control disable_a_href" %}
+									{% render_field tripclosure_form.tc_tripcost id="tc_tripcost" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -222,6 +222,52 @@ $(document).ready(function() {
 	{
 		document.getElementById("tr_enquirynumber").value =tr_enquirynumber_val;
 	}
+	getRoRate();
+
  });
 </script>
+<script>
+    function getRoRate() {
+        var selectedFromLocation = $("#tr_departedlocation").val();
+        var selectedToLocation = $("#tr_reportedlocation").val();
+        var selectedVehicleType = $("#tr_vehicletype_placed").val();
+        var selectedTripCategory = $("#tr_category").val();
+        var selectedEnquiryNumber= $("#tr_enquirynumber").val();
+
+        $.ajax({
+            url: '{% url 'transport_calculate_trip_charges' %}',
+            method: "GET",
+            data: {
+                'from_location': selectedFromLocation,
+                'to_location': selectedToLocation,
+                'vehicle_type': selectedVehicleType,
+                'trip_category': selectedTripCategory,
+                'enquirynumber': selectedEnquiryNumber,
+            },
+            success: function(data) {
+            	if (data.ro_rate === 0) {
+                    $("#tc_tripcost").val('0');
+                    alert("Trip Charges not available in master. It is set to '0'");
+                } else {
+                    // Update the ro_rate field with the retrieved value
+                    $("#tc_tripcost").val(data.ro_rate);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', error);
+            }
+        });
+    }
+
+    function attachEventListeners() {
+        $("#tr_departedlocation, #tr_reportedlocation, #tr_vehicletype_placed, #tr_category","#tr_enquirynumber").change(function() {
+            getRoRate();
+        });
+    }
+
+    $(document).ready(function() {
+        attachEventListeners();
+    });
+</script>
+
 {% endblock content %}
