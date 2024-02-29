@@ -247,8 +247,15 @@ $(document).ready(function() {
             success: function(data) {
             	if (data.ro_rate === 0) {
                     $("#tc_tripcost").val('0');
-                    alert("Trip Charges not available in master. It is set to '0'");
-                } else {
+                    alert("Trip Charges not available in master. In this case it is set to '0'");
+                }
+                else if (data.ro_rate === 100)
+                {
+                    $("#tc_tripcost").val('0');
+                    alert("Trip Charges calculated only for business trips. In this case it is set to '0'");
+                }
+                else
+                {
                     // Update the ro_rate field with the retrieved value
                     $("#tc_tripcost").val(data.ro_rate);
                 }

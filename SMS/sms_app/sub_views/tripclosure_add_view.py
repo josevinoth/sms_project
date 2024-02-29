@@ -179,20 +179,25 @@ def transport_calculate_trip_charges(request):
     print('customer_id',customer_id)
     print('customer_department_id',customer_department_id)
     print('vehicle_category_id',vehicle_category_id)
-    # Retrieve RoRateInfo based on the selected values
-    try:
-        ro_rate = RtratemasterInfo.objects.get(
-            ro_fromlocation=from_location_id,
-            ro_tolocation=to_location_id,
-            ro_vehicletype=vehicle_type_id,
-            ro_customer=customer_id,
-            ro_customerdepartment=customer_department_id,
-            ro_vehiclecategory_id=vehicle_category_id
-        ).ro_rate
-        print('ro_rate',ro_rate)
-        return JsonResponse({'ro_rate': ro_rate})
 
-    except RtratemasterInfo.DoesNotExist:
-        print("Doest not exist")
-        # Handle the case where the RoRateInfo does not exist
-        return JsonResponse({'ro_rate': 0})
+    if trip_category_id == '1':
+        # Retrieve RoRateInfo based on the selected values
+        try:
+            ro_rate = RtratemasterInfo.objects.get(
+                ro_fromlocation=from_location_id,
+                ro_tolocation=to_location_id,
+                ro_vehicletype=vehicle_type_id,
+                ro_customer=customer_id,
+                ro_customerdepartment=customer_department_id,
+                ro_vehiclecategory_id=vehicle_category_id
+            ).ro_rate
+            print('ro_rate',ro_rate)
+            return JsonResponse({'ro_rate': ro_rate})
+
+        except RtratemasterInfo.DoesNotExist:
+            print("Doest not exist")
+            # Handle the case where the RoRateInfo does not exist
+            return JsonResponse({'ro_rate': 0})
+    else:
+        # Return 100 if trip_category is not 1
+        return JsonResponse({'ro_rate': 100})
