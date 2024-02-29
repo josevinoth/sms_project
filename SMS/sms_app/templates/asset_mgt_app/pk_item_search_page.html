@@ -1,0 +1,375 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Costing</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Assessment Number</span>
+									</div>
+									{% render_field form.ct_assessment_num id="ct_assessment_num"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Costing Type</span>
+									</div>
+									{% render_field form.ct_cost_type id="ct_cost_type" onchange="change_cost_type()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Type</span>
+									</div>
+									{% render_field form.ct_stock_type id="ct_stock_type" onchange="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Description</span>
+									</div>
+									{% render_field form.ct_stock_description id="ct_stock_description" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width(inch)</span>
+									</div>
+									{% render_field form.ct_width id="ct_width" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height(inch)</span>
+									</div>
+									{% render_field form.ct_height id="ct_height" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length(Ft)</span>
+									</div>
+									{% render_field form.ct_length id="ct_length" onchange="change_cost_type()" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">UOM</span>
+									</div>
+									{% render_field form.ct_uom id="ct_uom" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Size</span>
+									</div>
+									{% render_field form.ct_size id="ct_size" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quantity</span>
+									</div>
+									{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">CFT</span>
+									</div>
+									{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Rate</span>
+									</div>
+									{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Days</span>
+									</div>
+									{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Cost</span>
+									</div>
+									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
+								</div>
+								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
+
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'costing_cancel' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("ct_updated_by").value ='{{user_id}}';
+	document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
+	change_cost_type();
+	});
+</script>
+
+<script>
+   $("#ct_stock_type").change(function () {
+      var url = $("#costing_add").attr("data-stock_description-url");
+      var stock_type = $(this).val();
+      $.ajax({
+        url: url,
+        data: {
+          'stock_type': stock_type,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#ct_stock_description').removeClass('disable_a_href');
+			$("#ct_stock_description").empty();
+			$('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
+        	var ct_stock_description_name=JSON.parse(data)["stock_description"];
+        	var ct_stock_description_id=JSON.parse(data)["stock_description_id"];
+        	var len = (ct_stock_description_id).length;
+        	$('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#ct_stock_description").append("<option value='"+ct_stock_description_id[i]+"'>"+ct_stock_description_name[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
+<script>
+function change_cost_type() {
+		var jn=document.getElementById("ct_cost_type").value
+		if ( jn==8)
+		{
+			$('#ct_stock_type').removeClass('disable_a_href');
+			var jn1=document.getElementById("ct_stock_type").value
+			if ( jn1==1)
+			{
+				$('#ct_stock_description').removeClass('disable_a_href');
+				$('#ct_length').removeClass('disable_a_href');
+				$('#ct_width').removeClass('disable_a_href');
+				$('#ct_height').removeClass('disable_a_href');
+				$('#ct_uom').addClass('disable_a_href');
+				$('#ct_quantity').removeClass('disable_a_href');
+				$('#ct_size').addClass('disable_a_href');
+				document.getElementById("ct_size").value=parseFloat(0.0)
+				$('#ct_days').addClass('disable_a_href');
+				document.getElementById("ct_days").value=0;
+
+				var length = parseFloat(document.getElementById("ct_length").value) || 0;
+				var height = parseFloat(document.getElementById("ct_height").value) || 0;
+				var width = parseFloat(document.getElementById("ct_width").value) || 0;
+				var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+				var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+				var cft = length*height*width/144;
+				document.getElementById("ct_cft").value=cft.toFixed(2)
+				var totalCost = rate * cft*quantity;
+				document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+			}
+
+			else if (jn1==2)
+			{
+				$('#ct_stock_description').removeClass('disable_a_href');
+				$('#ct_length').addClass('disable_a_href');
+				$('#ct_width').addClass('disable_a_href');
+				$('#ct_height').addClass('disable_a_href');
+				$('#ct_uom').removeClass('disable_a_href');
+				$('#ct_quantity').removeClass('disable_a_href');
+				$('#ct_size').removeClass('disable_a_href');
+				$('#ct_cft').addClass('disable_a_href');
+				document.getElementById("ct_cft").value=0;
+				document.getElementById("ct_length").value=0;
+				document.getElementById("ct_width").value=0;
+				document.getElementById("ct_height").value=0;
+				$('#ct_rate').removeClass('disable_a_href');
+				$('#ct_days').addClass('disable_a_href');
+				var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+				var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+				var totalCost = rate  * quantity;
+				document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+			}
+		}
+		else if (jn==4)
+		{
+			$('#ct_stock_type').addClass('disable_a_href');
+			$('#ct_stock_description').addClass('disable_a_href');
+			document.getElementById("ct_stock_type").value=""
+			document.getElementById("ct_stock_description").value=""
+			$('#ct_length').addClass('disable_a_href');
+			$('#ct_width').addClass('disable_a_href');
+			$('#ct_height').addClass('disable_a_href');
+			$('#ct_days').removeClass('disable_a_href');
+			$('#ct_uom').addClass('disable_a_href');
+			$('#ct_size').addClass('disable_a_href');
+			document.getElementById("ct_uom").value="";
+			document.getElementById("ct_size").value=0;
+			var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+			var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+			var days = parseInt(document.getElementById("ct_days").value) || 0;
+			var totalCost = rate  * days * quantity;
+        	document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+		}
+		else if (jn==5)
+		{
+			$('#ct_stock_type').addClass('disable_a_href');
+			$('#ct_stock_description').addClass('disable_a_href');
+			document.getElementById("ct_stock_type").value=""
+			document.getElementById("ct_stock_description").value=""
+			$('#ct_length').addClass('disable_a_href');
+			$('#ct_width').addClass('disable_a_href');
+			$('#ct_height').addClass('disable_a_href');
+			$('#ct_days').addClass('disable_a_href');
+			$('#ct_uom').addClass('disable_a_href');
+			$('#ct_size').addClass('disable_a_href');
+			document.getElementById("ct_days").value=0;
+			document.getElementById("ct_uom").value="";
+			document.getElementById("ct_size").value=0;
+			var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+			var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+			var totalCost = rate * quantity;
+        	document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+		}
+		else if (jn==6)
+		{
+			$('#ct_stock_type').addClass('disable_a_href');
+			$('#ct_stock_description').addClass('disable_a_href');
+			document.getElementById("ct_stock_type").value=""
+			document.getElementById("ct_stock_description").value=""
+			$('#ct_length').addClass('disable_a_href');
+			$('#ct_width').addClass('disable_a_href');
+			$('#ct_height').addClass('disable_a_href');
+			$('#ct_days').addClass('disable_a_href');
+			$('#ct_uom').addClass('disable_a_href');
+			$('#ct_size').addClass('disable_a_href');
+			document.getElementById("ct_uom").value="";
+			document.getElementById("ct_size").value=0;
+			document.getElementById("ct_days").value=0;
+			var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+			var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+			var totalCost = rate * quantity;
+        	document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+		}
+		else if (jn==7)
+		{
+			$('#ct_stock_type').addClass('disable_a_href');
+			$('#ct_stock_description').addClass('disable_a_href');
+			document.getElementById("ct_stock_type").value=""
+			document.getElementById("ct_stock_description").value=""
+			$('#ct_length').addClass('disable_a_href');
+			$('#ct_width').addClass('disable_a_href');
+			$('#ct_height').addClass('disable_a_href');
+			$('#ct_days').addClass('disable_a_href');
+			$('#ct_quantity').addClass('disable_a_href');
+			$('#ct_cft').addClass('disable_a_href');
+			$('#ct_uom').addClass('disable_a_href');
+			$('#ct_size').addClass('disable_a_href');
+			document.getElementById("ct_days").value=0;
+			document.getElementById("ct_quantity").value=0;
+			document.getElementById("ct_cft").value=0;
+			document.getElementById("ct_uom").value="";
+			document.getElementById("ct_size").value=0;
+			var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+			var totalCost = rate;
+        	document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+		}
+		else
+		{
+			$('#ct_stock_type').addClass('disable_a_href');
+			$('#ct_stock_description').addClass('disable_a_href');
+			document.getElementById("ct_stock_type").value=""
+			document.getElementById("ct_stock_description").value=""
+			$('#ct_length').addClass('disable_a_href');
+			$('#ct_width').addClass('disable_a_href');
+			$('#ct_height').addClass('disable_a_href');
+			$('#ct_days').removeClass('disable_a_href');
+			$('#ct_cft').addClass('disable_a_href');
+			$('#ct_uom').addClass('disable_a_href');
+			$('#ct_size').addClass('disable_a_href');
+			document.getElementById("ct_uom").value="";
+			document.getElementById("ct_size").value=0;
+			document.getElementById("ct_cft").value=0;
+			var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+			var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+			var days = parseInt(document.getElementById("ct_days").value) || 0;
+			var totalCost = rate  * days * quantity;
+			document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+
+		}
+	}
+</script>>
+
+<script>
+function change_charge_type() {
+	var jn=document.getElementById("ct_stock_type").value
+	if ( jn==1)
+	{
+		$('#ct_stock_description').removeClass('disable_a_href');
+		$('#ct_length').removeClass('disable_a_href');
+		$('#ct_width').removeClass('disable_a_href');
+		$('#ct_height').removeClass('disable_a_href');
+		$('#ct_uom').addClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').addClass('disable_a_href');
+		document.getElementById("ct_size").value=parseFloat(0.0)
+		$('#ct_days').addClass('disable_a_href');
+		document.getElementById("ct_days").value=0;
+
+		var length = parseFloat(document.getElementById("ct_length").value) || 0;
+		var height = parseFloat(document.getElementById("ct_height").value) || 0;
+		var width = parseFloat(document.getElementById("ct_width").value) || 0;
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+		var cft = length*height*width/144;
+		document.getElementById("ct_cft").value=cft.toFixed(2)
+		var totalCost = rate * cft*quantity;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+
+	else if (jn==2)
+	{
+		$('#ct_stock_description').removeClass('disable_a_href');
+		$('#ct_length').addClass('disable_a_href');
+		$('#ct_width').addClass('disable_a_href');
+		$('#ct_height').addClass('disable_a_href');
+		$('#ct_uom').removeClass('disable_a_href');
+		$('#ct_quantity').removeClass('disable_a_href');
+		$('#ct_size').removeClass('disable_a_href');
+		$('#ct_cft').addClass('disable_a_href');
+		document.getElementById("ct_cft").value=0;
+		document.getElementById("ct_length").value=0;
+		document.getElementById("ct_width").value=0;
+		document.getElementById("ct_height").value=0;
+		$('#ct_rate').removeClass('disable_a_href');
+		$('#ct_days').addClass('disable_a_href');
+		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+		var totalCost = rate  * quantity;
+        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+	}
+}
+</script>
+
+{% endblock content %}

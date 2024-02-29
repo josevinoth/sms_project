@@ -85,3 +85,22 @@ def costing_cancel(request):
     assessment_num_val = request.session.get('na_assessment_id')
     costing_summary_id=PkcostingsummaryInfo.objects.get(cs_assessment_num=assessment_num_val).id
     return redirect('/SMS/costingsummary_update/' + str(costing_summary_id))
+
+@login_required(login_url='login_page')
+def pk_item_search_page(request):
+    if request.method == 'GET':
+        cost_type = request.GET.get('ct_cost_type', '')
+        stock_type = request.GET.get('ct_stock_type', '')
+        stock_description = request.GET.get('ct_stock_description', '')
+
+        # Filter the queryset based on the search parameters
+        queryset = PkcostingInfo.objects.filter(
+            ct_cost_type__cost_type__icontains=cost_type,
+            ct_stock_type__pk_stocktype__icontains=stock_type,
+            ct_stock_description__stock_description__icontains=stock_description,
+        )
+
+        # You may want to add more conditions to filter based on other fields
+
+        context = {'queryset': queryset}
+        return render(request, "asset_mgt_app/pk_item_search_page.html", context)

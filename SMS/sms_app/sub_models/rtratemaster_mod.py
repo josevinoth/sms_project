@@ -1,5 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.urls import reverse
+
 from ..models import MyUser,CustomerInfo,CustomerdepartmentInfo,VehicletypeInfo,VehiclecategoryInfo,Places
 
 class RtratemasterInfo(models.Model):
@@ -19,3 +21,6 @@ class RtratemasterInfo(models.Model):
     ro_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     def __str__(self):
         return self.ro_rate
+
+    def get_absolute_url_trans_route_ratemaster(self):
+        return reverse('rtratemaster_update', args=[str(self.id)])
