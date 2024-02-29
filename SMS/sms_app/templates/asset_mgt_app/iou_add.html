@@ -15,15 +15,27 @@
 							<div class="col">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">IOU Number</span>
+									</div>
+									{% render_field form.iou_number id="iou_number" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Business Type</span>
 									</div>
 									{% render_field form.business_type id="business_type" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Staff ID</span>
+									</div>
+									{% render_field form.staff_id class="form-control" id="staff_id" onchange="getFullName()" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Staff Name</span>
 									</div>
-									{% render_field form.staff_name id="staff_name" class="form-control" %}
+									{% render_field form.staff_name id="staff_name" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -72,5 +84,28 @@
 $(document).ready(function() {
 	document.getElementById("iou_updated_by").value ='{{user_id}}';
   });
+</script>
+
+<script>
+    function getFullName() {
+        var selectedUsername = $("#staff_id").val();
+        // Use AJAX to fetch the full name based on the selected username
+        $.ajax({
+            url: '{% url 'iou_get_full_name' %}',  // Update this URL based on your project structure
+            data: {'username': selectedUsername},
+            dataType: 'json',
+            success: function(data) {
+                if ('full_name' in data) {
+                    // Update the staff_name field in the form with the retrieved full name
+                    $("#staff_name").val(data.full_name);
+                } else {
+                    console.error('Error fetching full name:', data.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', error);
+            }
+        });
+    }
 </script>
 {% endblock content %}

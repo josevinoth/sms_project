@@ -27,7 +27,9 @@
     <thead class="thead-dark">
         <tr>
             <th>Created On</th>
+            <th>IOU Number</th>
             <th>Business Type</th>
+            <th>Staff ID</th>
             <th>Staff Name</th>
             <th>Transaction Date</th>
             <th>Transaction Type</th>
@@ -41,7 +43,9 @@
         {% for iouinfo in iou_list %}
             <tr>
                 <td> {{iouinfo.iou_created_at}}</td>
+                <td> {{iouinfo.iou_number}}</td>
                 <td> {{iouinfo.business_type}}</td>
+                <td> {{iouinfo.staff_id}}</td>
                 <td> {{iouinfo.staff_name}}</td>
                 <td> {{iouinfo.transaction_date}}</td>
                 <td> {{iouinfo.transaction_type}}</td>
