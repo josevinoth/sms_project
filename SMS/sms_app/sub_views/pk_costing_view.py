@@ -1,9 +1,9 @@
 import json
 from django.contrib.auth.decorators import login_required
-from ..forms import PkcostingForm
-from ..models import PkcostingsummaryInfo,Stockdescription,PkcostingInfo
+from ..forms import ModifyDimensionsForm,CostingSearchForm,PkcostingForm
+from ..models import PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 
 @login_required(login_url='login_page')
@@ -22,22 +22,26 @@ def costing_add(request,costing_id=0):
                 'first_name': first_name,
                 'user_id': user_id,
                 'na_assessment_num_id': na_assessment_num_id,
+                'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id),
                 }
         return render(request, "asset_mgt_app/pk_costing_add.html", context)
     else:
         if costing_id == 0:
+            print("Inside PK Costing post add")
             form = PkcostingForm(request.POST)
             if form.is_valid():
                 form.save()
                 print("costing Form is Valid")
                 last_id = (PkcostingInfo.objects.latest('id')).id
                 messages.success(request, 'Record Updated Successfully')
-                return redirect('/SMS/costing_update/'+str(last_id))
+                # return redirect('/SMS/costing_update/'+str(last_id))
+                return redirect('/SMS/costing_insert/')
             else:
                 print("costing Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
         else:
+            print("Inside PK Costing post Edit")
             costing = PkcostingInfo.objects.get(pk=costing_id)
             form = PkcostingForm(request.POST,instance=costing)
             if form.is_valid():
@@ -87,20 +91,76 @@ def costing_cancel(request):
     return redirect('/SMS/costingsummary_update/' + str(costing_summary_id))
 
 @login_required(login_url='login_page')
+def pk_item_search_page_costing(request):
+    stock_type = request.GET.get('stock_type')
+    stock_description = request.GET.get('stock_description')
+    queryset = PkstockpurchasesInfo.objects.all()
+    if stock_description:
+        queryset = queryset.filter(sp_stock_description=stock_description)
+    if stock_type:
+        queryset = queryset.filter(sp_stock_type=stock_type)
+        # Serialize the queryset to JSON
+        results = list(queryset.values(
+            'sp_vendor_bill',
+            'sp_purchase_num',
+            'sp_category__category',
+            'sp_stock_type__pk_stocktype',  # Replace 'name' with the actual field in the related model
+            'sp_stock_description__stock_description',
+            'sp_source__source',  # Replace 'name' with the actual field in the related model
+            'sp_thick_height',
+            'sp_width',
+            'sp_length',
+            'sp_cft',
+            'sp_rate',
+            'sp_quantity',
+            'sp_uom__unit_of_measure',
+            'sp_size',
+        ))
+    # Serialize the queryset to JSON and return it
+    # results = list(queryset.values())
+    print('results', results)
+    return JsonResponse(results, safe=False)
+
+@login_required(login_url='login_page')
 def pk_item_search_page(request):
-    if request.method == 'GET':
-        cost_type = request.GET.get('ct_cost_type', '')
-        stock_type = request.GET.get('ct_stock_type', '')
-        stock_description = request.GET.get('ct_stock_description', '')
+    form = CostingSearchForm(request.GET)
+    results = []
+    if form.is_valid():
+        stock_description = form.cleaned_data.get('stock_description')
+        stock_type = form.cleaned_data.get('stock_type')
+        queryset = PkstockpurchasesInfo.objects.all()
+        if stock_description:
+            queryset = queryset.filter(sp_stock_description=stock_description)
+        if stock_type:
+            queryset = queryset.filter(sp_stock_type=stock_type)
+        results = queryset
+    return render(request, 'asset_mgt_app/pk_item_search_page.html', {'form': form, 'results': results})
 
-        # Filter the queryset based on the search parameters
-        queryset = PkcostingInfo.objects.filter(
-            ct_cost_type__cost_type__icontains=cost_type,
-            ct_stock_type__pk_stocktype__icontains=stock_type,
-            ct_stock_description__stock_description__icontains=stock_description,
-        )
+@login_required(login_url='login_page')
+def modify_dimensions_view(request):
+    results = PkstockpurchasesInfo.objects.all()
+    if request.method == 'POST':
+        form = ModifyDimensionsForm(request.POST)
+        if form.is_valid():
+            selected_row_id = request.POST.get('selected_row')
+            modified_thick_height = form.cleaned_data['modified_thick_height']
+            modified_width = form.cleaned_data['modified_width']
+            modified_length = form.cleaned_data['modified_length']
 
-        # You may want to add more conditions to filter based on other fields
+            # Get the selected row
+            selected_row = PkstockpurchasesInfo.objects.get(id=selected_row_id)
 
-        context = {'queryset': queryset}
-        return render(request, "asset_mgt_app/pk_item_search_page.html", context)
+            # Modify dimensions
+            selected_row.sp_thick_height -= modified_thick_height
+            selected_row.sp_width -= modified_width
+            selected_row.sp_length -= modified_length
+
+            # Save the modified row
+            selected_row.save()
+
+            # return redirect('your_redirect_view_name')
+            return redirect(request.META['HTTP_REFERER'])
+    else:
+        form = ModifyDimensionsForm()
+
+    return render(request, 'asset_mgt_app/pk_item_search_page_select.html', {'form': form, 'results': results})

@@ -12,19 +12,26 @@ def pk_stock_vendor_add(request,stock_vendor_id=0):
     if request.method == "GET":
         if stock_vendor_id == 0:
             psv_form = PkstockvendorForm()
+            pk_vendor_bill = ''
+            stockpurchases_list = PkstockpurchasesInfo.objects.filter(sp_vendor_bill=pk_vendor_bill)
+            context = {
+                'psv_form': psv_form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'stockpurchases_list': stockpurchases_list, }
         else:
             pk_vendor_bill = PkstockvebdorInfo.objects.get(pk=stock_vendor_id).spv_vendor_bill
             print('vendor_bill', pk_vendor_bill)
             request.session['ses_pk_vendor_bill'] = pk_vendor_bill
             pk_stock_vendor = PkstockvebdorInfo.objects.get(pk=stock_vendor_id)
             psv_form = PkstockvendorForm(instance=pk_stock_vendor)
-        pk_vendor_bill = request.session.get('ses_pk_vendor_bill')
-        stockpurchases_list = PkstockpurchasesInfo.objects.filter(sp_vendor_bill=pk_vendor_bill)
-        context={
-                'psv_form': psv_form,
-                'first_name': first_name,
-                'user_id': user_id,
-                'stockpurchases_list':stockpurchases_list,}
+            pk_vendor_bill = request.session.get('ses_pk_vendor_bill')
+            stockpurchases_list = PkstockpurchasesInfo.objects.filter(sp_vendor_bill=pk_vendor_bill)
+            context={
+                    'psv_form': psv_form,
+                    'first_name': first_name,
+                    'user_id': user_id,
+                    'stockpurchases_list':stockpurchases_list,}
         return render(request, "asset_mgt_app/pk_stock_vendor_add.html", context)
     else:
         psv_form = PkstockvendorForm(request.POST)

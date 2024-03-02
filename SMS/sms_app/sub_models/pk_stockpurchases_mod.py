@@ -1,12 +1,11 @@
 from django.db import models
 from django.urls import reverse
 
-from ..models import MyUser,Category,Pkstocktype,Natypeofwood,Source,Vendor_info,Stockdescription,Unitofmeasure
+from ..models import MyUser,Category,Pkstocktype,Source,Stockdescription,Unitofmeasure
 
 class PkstockpurchasesInfo(models.Model):
     sp_category = models.ForeignKey(Category, on_delete=models.CASCADE, default='')
     sp_stock_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE, default='')
-    sp_type_of_wood= models.ForeignKey(Natypeofwood, on_delete=models.CASCADE, default='',blank=True, null=True)
     sp_source = models.ForeignKey(Source, on_delete=models.CASCADE, default='')
     sp_thick_height = models.FloatField(blank=True, null=True,default=0.0)
     sp_width = models.FloatField(blank=True, null=True,default=0.0)

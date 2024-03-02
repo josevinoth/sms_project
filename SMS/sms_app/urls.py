@@ -390,6 +390,7 @@ urlpatterns = [
     path('costing_delete/<int:costing_id>', views.costing_delete, name='costing_delete'),  # delete costing
     path('costing_cancel/', views.costing_cancel, name='costing_cancel'),  # cancel costing
     path('pk_item_search_page/', views.pk_item_search_page, name='pk_item_search_page'),  # pk_item_search_page
+    path('pk_item_search_page_costing/', views.pk_item_search_page_costing, name='pk_item_search_page_costing'),  # pk_item_search_page_costing
     path('costingsummary_list/', views.costingsummary_list, name='costingsummary_list'),  # List costingsummary
     path('costingsummary_insert/', views.costingsummary_add, name='costingsummary_insert'),  # Add costingsummary
     path('costingsummary_update/<int:costingsummary_id>', views.costingsummary_add, name='costingsummary_update'),  # update costingsummary
@@ -468,5 +469,12 @@ urlpatterns = [
     path('iou_insert/', views.iou_add, name='iou_insert'),  # Add IOU
     path('iou_update/<int:iou_id>', views.iou_add, name='iou_update'),  # update IOU
     path('iou_delete/<int:iou_id>', views.iou_delete, name='iou_delete'),  # delete IOU
+    path('modify_dimensions_view/', views.modify_dimensions_view, name='modify_dimensions_view'),  # modify_dimensions_view
+    path('pk_retrival_list/', views.pk_retrival_list, name='pk_retrival_list'),  # List retrival
+    path('pk_retrival_insert/', views.pk_retrival_add, name='pk_retrival_insert'),  # Add retrival
+    path('pk_retrival_update/<int:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),# update retrival
+    path('pk_retrival_delete/<int:retrival_id>', views.pk_retrival_delete, name='pk_retrival_delete'),# delete retrival
+    path('pk_retrival_cancel/', views.pK_retrival_cancel, name='pk_retrival_cancel'),  # cancel retrival
+
 ]
 

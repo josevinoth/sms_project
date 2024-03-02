@@ -4,7 +4,7 @@
     <div class="row">
         <div class="col-5"></div>
         <div class="col-2 rounded text-center bg-info">
-            <h3>Quotation List</h3>
+            <h3>Item Retrival List</h3>
         </div>
         <div class="col-5"></div>
     </div>
@@ -16,14 +16,14 @@
         </a>
     </div>
     <div class="col-md-1">
-        <a href="{% url 'pk_quotation_insert' %}" class="btn btn-success btn-block btn-lg">
+        <a href="{% url 'pk_retrival_insert' %}" class="btn btn-success btn-block btn-lg">
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
 </div>
 <hr>
 <div class="container-fluid">
-    <table  id="quotation_list" class="table table-striped table-bordered">
+    <table  id="pk_retrival_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
             <th>Created On</th>
@@ -46,31 +46,31 @@
             <th>Delete</th>
         </thead>
         <tbody>
-        {% for quotationinfo in pk_quotaiton_list %}
+        {% for pk_retrivalinfo in pk_retrival_list %}
         <tr>
-            <td> {{quotationinfo.pkqt_created_at}}</td>
-            <td> {{quotationinfo.pkqt_assessment_num}}</td>
-            <td> {{quotationinfo.pkqt_cost_type}}</td>
-            <td> {{quotationinfo.pkqt_cost_description}}</td>
-            <td> {{quotationinfo.pkqt_length}}</td>
-            <td> {{quotationinfo.pkqt_width}}</td>
-            <td> {{quotationinfo.pkqt_height}}</td>
-            <td> {{quotationinfo.pkqt_quantity}}</td>
-            <td> {{quotationinfo.pkqt_size}}</td>
-            <td> {{quotationinfo.pkqt_uom}}</td>
-            <td> {{quotationinfo.pkqt_cft}}</td>
-            <td> {{quotationinfo.pkqt_rate}}</td>
-            <td> {{quotationinfo.pkqt_days}}</td>
-            <td> {{quotationinfo.pkqt_total_cost}}</td>
-            <td> {{quotationinfo.pkqt_updated_at}}</td>
-            <td> {{quotationinfo.pkqt_updated_by}}</td>
+            <td> {{pk_retrivalinfo.pret_created_at}}</td>
+            <td> {{pk_retrivalinfo.pret_assessment_num}}</td>
+            <td> {{pk_retrivalinfo.pret_cost_type}}</td>
+            <td> {{pk_retrivalinfo.pret_cost_description}}</td>
+            <td> {{pk_retrivalinfo.pret_length}}</td>
+            <td> {{pk_retrivalinfo.pret_width}}</td>
+            <td> {{pk_retrivalinfo.pret_height}}</td>
+            <td> {{pk_retrivalinfo.pret_quantity}}</td>
+            <td> {{pk_retrivalinfo.pret_size}}</td>
+            <td> {{pk_retrivalinfo.pret_uom}}</td>
+            <td> {{pk_retrivalinfo.pret_cft}}</td>
+            <td> {{pk_retrivalinfo.pret_rate}}</td>
+            <td> {{pk_retrivalinfo.pret_days}}</td>
+            <td> {{pk_retrivalinfo.pret_total_cost}}</td>
+            <td> {{pk_retrivalinfo.pret_updated_at}}</td>
+            <td> {{pk_retrivalinfo.pret_updated_by}}</td>
             <td>
-                <a class="btn btn-primary" href="{% url 'pk_quotation_update' quotationinfo.id %}" class="btn btn-primary">
+                <a class="btn btn-primary" href="{% url 'pk_retrival_update' pk_retrivalinfo.id %}" class="btn btn-primary">
                     <i class="far fa-edit"></i>
                 </a>
             </td>
             <td>
-                <form action="{% url 'pk_quotation_delete' quotationinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                <form action="{% url 'pk_retrival_delete' pk_retrivalinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash-alt"></i>
@@ -84,7 +84,7 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#quotation_list').DataTable({
+    $('#pk_retrival_list').DataTable({
          order: [0, 'asc' ],
         dom: 'Bfrtip',
         buttons: [
