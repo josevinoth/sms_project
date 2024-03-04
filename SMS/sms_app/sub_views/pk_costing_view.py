@@ -101,6 +101,7 @@ def pk_item_search_page_costing(request):
         queryset = queryset.filter(sp_stock_type=stock_type)
         # Serialize the queryset to JSON
         results = list(queryset.values(
+            'id',
             'sp_vendor_bill',
             'sp_purchase_num',
             'sp_category__category',
@@ -114,6 +115,7 @@ def pk_item_search_page_costing(request):
             'sp_rate',
             'sp_quantity',
             'sp_uom__unit_of_measure',
+            'sp_uom',
             'sp_size',
         ))
     # Serialize the queryset to JSON and return it

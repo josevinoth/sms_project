@@ -13,21 +13,27 @@
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col">
+                                <div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Purchase Type</span>
+									</div>
+									{% render_field psv_form.spv_stock_Purchasetype id="spv_stock_Purchasetype" onchange="spv_stock_Purchasetype_change()" class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vendor Name</span>
 									</div>
-									{% render_field psv_form.spv_vendor_name class="form-control" %}
+									{% render_field psv_form.spv_vendor_name id="spv_vendor_name" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor Bill</span>
+										<span class="input-group-text">Bill/Return/New Order</span>
 									</div>
-									{% render_field psv_form.spv_vendor_bill id="spv_vendor_bill" class="form-control" %}
+									{% render_field psv_form.spv_vendor_bill id="spv_vendor_bill" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor Bill Date</span>
+										<span class="input-group-text">Bill/Return/New Order Date</span>
 									</div>
 									{% render_field psv_form.spv_vendor_bill_date type="Date" class="form-control" %}
 								</div>
@@ -65,7 +71,7 @@
 <!--    </div>-->
     <div class="col-md-1">
         <a href="{% url 'stockpurchases_insert' %}" id="stock_purchase_item_add" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
+            <i class="fas fa-plus"></i> Add Stocks
         </a>
     </div>
 </div>
@@ -75,7 +81,7 @@
         <thead class="thead-dark">
         <tr>
             <th>Created On</th>
-            <th>Vendor Bill</th>
+            <th>Bill/Return/New Order Number</th>
             <th>Stock Purchases Number</th>
             <th>Category</th>
             <th>Stock Type</th>
@@ -145,6 +151,7 @@ $(document).ready(function() {
 	{
 		$('#stock_purchase_item_add').removeClass('disable_a_href');
 	}
+	spv_stock_Purchasetype_change();
 	});
 </script>
 <script>
@@ -158,6 +165,50 @@ $(document).ready(function() {
         ],
     });
 } );
+</script>
+
+<script>
+   $("#ct_stock_type").change(function () {
+      var url = $("#costing_add").attr("data-stock_description-url");
+      var stock_type = $(this).val();
+      $.ajax({
+        url: url,
+        data: {
+          'stock_type': stock_type,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#ct_stock_description').removeClass('disable_a_href');
+			$("#ct_stock_description").empty();
+			$('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
+        	var ct_stock_description_name=JSON.parse(data)["stock_description"];
+        	var ct_stock_description_id=JSON.parse(data)["stock_description_id"];
+        	var len = (ct_stock_description_id).length;
+        	$('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#ct_stock_description").append("<option value='"+ct_stock_description_id[i]+"'>"+ct_stock_description_name[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
+
+<script>
+function spv_stock_Purchasetype_change() {
+		var jn=document.getElementById("spv_stock_Purchasetype").value
+		if ( jn==1)
+		{
+			$('#spv_vendor_name').removeClass('disable_a_href');
+			$('#spv_vendor_bill').removeClass('disable_a_href');
+			document.getElementById("spv_vendor_name").value=""
+			document.getElementById("spv_vendor_bill").value=""
+		}
+		else
+		{
+		    $('#spv_vendor_name').addClass('disable_a_href');
+		    $('#spv_vendor_bill').addClass('disable_a_href');
+		}
+	}
 </script>
 
 {% endblock content %}

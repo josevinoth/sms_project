@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 
 from ..forms import PkstockvendorForm
 from ..models import PkstockvebdorInfo,PkstockpurchasesInfo
@@ -43,6 +44,21 @@ def pk_stock_vendor_add(request,stock_vendor_id=0):
                 if stock_vendor_id == 0:
                     new_place = psv_form.save()
                     print("psv_form saved")
+                    try:
+                        last_id = (PkstockvebdorInfo.objects.latest('id')).id
+                        rand_number=int(1000000+last_id)
+                    except ObjectDoesNotExist:
+                        rand_number=1000000
+                    print('last_id',last_id)
+                    print('rand_number',rand_number)
+                    purchase_type=(PkstockvebdorInfo.objects.get(id=last_id).spv_stock_Purchasetype).id
+                    print('purchase_type',purchase_type)
+                    if purchase_type==2:
+                        vendor_bill_num=str('Prod_Ret')+str(rand_number)
+                        PkstockvebdorInfo.objects.filter(id=last_id).update(spv_vendor_bill=vendor_bill_num)
+                    elif purchase_type==3:
+                        vendor_bill_num = str('New_Order') + str(rand_number)
+                        PkstockvebdorInfo.objects.filter(id=last_id).update(spv_vendor_bill=vendor_bill_num)
                     messages.success(request, 'Record Updated Successfully')
                     url = new_place.get_absolute_url_pk_stock_vendor()
                     return redirect(url)
@@ -73,5 +89,5 @@ def pk_stock_vendor_list(request):
 @login_required(login_url='login_page')
 def pk_stock_vendor_delete(request,stock_vendor_id):
     pk_stock_vendor = PkstockvebdorInfo.objects.get(pk=stock_vendor_id)
-    PkstockvebdorInfo.delete()
+    pk_stock_vendor.delete()
     return redirect('/SMS/pk_stock_vendor_list')

@@ -1,11 +1,12 @@
 from django.db import models
 from django.urls import reverse
 
-from ..models import MyUser,Vendor_info
+from ..models import Pkstockpurchasetype,MyUser,Vendor_info
 
 class PkstockvebdorInfo(models.Model):
-    spv_vendor_name = models.ForeignKey(Vendor_info, on_delete=models.CASCADE, default='')
-    spv_vendor_bill = models.CharField(max_length=30,default = '')
+    spv_stock_Purchasetype = models.ForeignKey(Pkstockpurchasetype, on_delete=models.CASCADE)
+    spv_vendor_name = models.ForeignKey(Vendor_info, on_delete=models.CASCADE,null=True,blank=True)
+    spv_vendor_bill = models.CharField(max_length=30,default = '-')
     spv_vendor_bill_date = models.DateField()
     spv_created_at = models.DateTimeField(null=True, auto_now_add=True)
     spv_updated_at = models.DateTimeField(null=True, auto_now=True)

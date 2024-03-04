@@ -8,4 +8,5 @@ class PkstockvendorForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(PkstockvendorForm,self).__init__(*args, **kwargs)
+        self.fields['spv_stock_Purchasetype'].empty_label = "--Select--"
         self.fields['spv_vendor_name'].empty_label = "--Select--"
