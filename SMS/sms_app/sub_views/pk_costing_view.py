@@ -33,6 +33,8 @@ def costing_add(request,costing_id=0):
                 form.save()
                 print("costing Form is Valid")
                 last_id = (PkcostingInfo.objects.latest('id')).id
+                stock_purchase_num=PkcostingInfo.objects.get(pk=last_id).ct_stock_purchase_number
+                update_reduced_dimensions(stock_purchase_num,last_id)
                 messages.success(request, 'Record Updated Successfully')
                 # return redirect('/SMS/costing_update/'+str(last_id))
                 return redirect('/SMS/costing_insert/')
@@ -47,12 +49,65 @@ def costing_add(request,costing_id=0):
             if form.is_valid():
                 form.save()
                 print("costing Form is Valid")
+                stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
+                last_id=costing_id
+                update_reduced_dimensions(stock_purchase_num,last_id)
                 messages.success(request, 'Record Updated Successfully')
             else:
                 print("costing Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
             return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/requirements_list')
+
+def update_reduced_dimensions(stock_purchase_num,last_id):
+    length = PkcostingInfo.objects.get(pk=last_id).ct_length
+    qty = PkcostingInfo.objects.get(pk=last_id).ct_quantity
+    cft = PkcostingInfo.objects.get(pk=last_id).ct_cft
+
+    prev_length = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_length_reduced
+    prev_qty = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_quantity_reduced
+    prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft_reduced
+
+    if prev_length>=length:
+        current_length = prev_length - length
+        current_cft= prev_cft - cft
+    else:
+        current_length = prev_length
+        current_cft= prev_cft
+
+    if prev_qty >= qty:
+        current_qty=prev_qty-qty
+    else:
+        current_qty = prev_qty
+
+    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
+    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
+    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=current_cft)
+
+def append_reduced_dimensions(stock_purchase_num,costing_id):
+    length = PkcostingInfo.objects.get(pk=costing_id).ct_length
+    qty = PkcostingInfo.objects.get(pk=costing_id).ct_quantity
+    cft = PkcostingInfo.objects.get(pk=costing_id).ct_cft
+
+    prev_length = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_length_reduced
+    prev_qty = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_quantity_reduced
+    prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft_reduced
+
+    if prev_length>=length:
+        current_length = prev_length + length
+        current_cft= prev_cft + cft
+    else:
+        current_length = prev_length
+        current_cft= prev_cft
+
+    if prev_qty >= qty:
+        current_qty=prev_qty+qty
+    else:
+        current_qty = prev_qty
+
+    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
+    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
+    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=current_cft)
 
 # List costing
 @login_required(login_url='login_page')
@@ -65,8 +120,12 @@ def costing_list(request):
 @login_required(login_url='login_page')
 def costing_delete(request,costing_id):
     costing = PkcostingInfo.objects.get(pk=costing_id)
+    stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
+    append_reduced_dimensions(stock_purchase_num, costing_id)
     costing.delete()
-    return redirect('/SMS/costing_list')
+    print("Successfully Deleted")
+    # return redirect('/SMS/costing_list')
+    return redirect(request.META['HTTP_REFERER'])
 
 @login_required(login_url='login_page')
 def load_stock_description(request):
@@ -108,12 +167,12 @@ def pk_item_search_page_costing(request):
             'sp_stock_type__pk_stocktype',  # Replace 'name' with the actual field in the related model
             'sp_stock_description__stock_description',
             'sp_source__source',  # Replace 'name' with the actual field in the related model
-            'sp_thick_height',
-            'sp_width',
-            'sp_length',
-            'sp_cft',
+            'sp_thick_height_reduced',
+            'sp_width_reduced',
+            'sp_length_reduced',
+            'sp_cft_reduced',
             'sp_rate',
-            'sp_quantity',
+            'sp_quantity_reduced',
             'sp_uom__unit_of_measure',
             'sp_uom',
             'sp_size',

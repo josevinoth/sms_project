@@ -28,7 +28,11 @@ class PkstockpurchasesInfo(models.Model):
     sp_stock_in_date = models.DateField(blank=True, null=True)
     sp_remarks = models.TextField(blank=True, null=True)
     sp_vendor_bill = models.CharField(max_length=100,blank=True, null=True)
-
+    sp_thick_height_reduced = models.FloatField(blank=True, null=True, default=0.0)
+    sp_width_reduced = models.FloatField(blank=True, null=True, default=0.0)
+    sp_length_reduced = models.FloatField(blank=True, null=True, default=0.0)
+    sp_quantity_reduced = models.IntegerField(blank=True, null=True, default=0)
+    sp_cft_reduced = models.IntegerField(blank=True, null=True, default=0)
     class Meta:
         ordering = ["sp_purchase_num"]
 

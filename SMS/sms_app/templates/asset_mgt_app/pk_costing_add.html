@@ -76,7 +76,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">CFT</span>
+										<span class="input-group-text">Total CFT</span>
 									</div>
 									{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
@@ -172,9 +172,9 @@ function change_cost_type() {
 			if ( jn1==1)
 			{
 				$('#ct_stock_description').removeClass('disable_a_href');
-				$('#ct_length').removeClass('disable_a_href');
-				$('#ct_width').removeClass('disable_a_href');
-				$('#ct_height').removeClass('disable_a_href');
+<!--				$('#ct_length').removeClass('disable_a_href');-->
+<!--				$('#ct_width').removeClass('disable_a_href');-->
+<!--				$('#ct_height').removeClass('disable_a_href');-->
 				$('#ct_uom').addClass('disable_a_href');
 				$('#ct_quantity').removeClass('disable_a_href');
 <!--				$('#ct_size').addClass('disable_a_href');-->
@@ -187,9 +187,9 @@ function change_cost_type() {
 				var width = parseFloat(document.getElementById("ct_width").value) || 0;
 				var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
 				var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-				var cft = length*height*width/144;
+				var cft = (length*height*width/144)*quantity;
 				document.getElementById("ct_cft").value=cft.toFixed(2)
-				var totalCost = rate * cft*quantity;
+				var totalCost = rate * cft;
 				document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
 			}
 
@@ -199,7 +199,7 @@ function change_cost_type() {
 				$('#ct_length').addClass('disable_a_href');
 				$('#ct_width').addClass('disable_a_href');
 				$('#ct_height').addClass('disable_a_href');
-				$('#ct_uom').removeClass('disable_a_href');
+<!--				$('#ct_uom').removeClass('disable_a_href');-->
 				$('#ct_quantity').removeClass('disable_a_href');
 <!--				$('#ct_size').removeClass('disable_a_href');-->
 				$('#ct_cft').addClass('disable_a_href');
@@ -330,9 +330,9 @@ function change_charge_type() {
 	if ( jn==1)
 	{
 		$('#ct_stock_description').removeClass('disable_a_href');
-		$('#ct_length').removeClass('disable_a_href');
-		$('#ct_width').removeClass('disable_a_href');
-		$('#ct_height').removeClass('disable_a_href');
+<!--		$('#ct_length').removeClass('disable_a_href');-->
+<!--		$('#ct_width').removeClass('disable_a_href');-->
+<!--		$('#ct_height').removeClass('disable_a_href');-->
 		$('#ct_uom').addClass('disable_a_href');
 		$('#ct_quantity').removeClass('disable_a_href');
 <!--		$('#ct_size').addClass('disable_a_href');-->
@@ -345,9 +345,9 @@ function change_charge_type() {
 		var width = parseFloat(document.getElementById("ct_width").value) || 0;
 		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
 		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-		var cft = length*height*width/144;
+		var cft = (length*height*width/144)*quantity;
 		document.getElementById("ct_cft").value=cft.toFixed(2)
-		var totalCost = rate * cft*quantity;
+		var totalCost = rate * cft;
         document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
 	}
 
@@ -357,7 +357,7 @@ function change_charge_type() {
 		$('#ct_length').addClass('disable_a_href');
 		$('#ct_width').addClass('disable_a_href');
 		$('#ct_height').addClass('disable_a_href');
-		$('#ct_uom').removeClass('disable_a_href');
+<!--		$('#ct_uom').removeClass('disable_a_href');-->
 		$('#ct_quantity').removeClass('disable_a_href');
 <!--		$('#ct_size').removeClass('disable_a_href');-->
 		$('#ct_cft').addClass('disable_a_href');
@@ -403,11 +403,11 @@ function change_charge_type() {
 					tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
 					tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
 					tableHtml += '<td>' + results[i].sp_source__source + '</td>';
-					tableHtml += '<td>' + results[i].sp_thick_height + '</td>';
-					tableHtml += '<td>' + results[i].sp_width + '</td>';
-					tableHtml += '<td>' + results[i].sp_length + '</td>';
-					tableHtml += '<td>' + results[i].sp_cft + '</td>';
-					tableHtml += '<td>' + results[i].sp_quantity + '</td>';
+					tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
 					tableHtml += '<td>' + results[i].sp_rate + '</td>';
 					tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
 					tableHtml += '<td class="hidden-column" style="display:none;">' + results[i].sp_uom + '</td>';
@@ -455,16 +455,6 @@ function change_charge_type() {
 			var uom_id = selectedRow.find('.hidden-column').text();
 
 			// Log the extracted values (you can do further processing here)
-			console.log("Stock Number: " + stock_purchase_num);
-			console.log("Length: " + length);
-			console.log("Width: " + width);
-			console.log("Height: " + height);
-			console.log("CFT: " + cft);
-			console.log("Quantity: " + quantity);
-			console.log("Rate/CFT: " + rateCFT);
-			console.log("UOM: " + uom);
-			console.log("Size: " + size);
-			alert(uom_id)
 			document.getElementById("ct_stock_purchase_number").value=stockId;
 			document.getElementById("ct_length").value=length;
 			document.getElementById("ct_width").value=width;

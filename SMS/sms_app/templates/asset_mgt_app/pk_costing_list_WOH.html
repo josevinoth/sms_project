@@ -15,7 +15,7 @@
 <!--            <i class="fas fa-arrow-left"></i> Back-->
 <!--        </a>-->
 <!--    </div>-->
-    <div class="col-md-1">
+    <div class="col-md-1.5">
         <a href="{% url 'costing_insert' %}" class="btn btn-success btn-block btn-lg">
             <i class="fas fa-plus"></i> Add Items
         </a>
@@ -38,7 +38,7 @@
             <th>Quantity</th>
             <th>Size</th>
             <th>UOM</th>
-            <th>CFT</th>
+            <th>Total CFT</th>
             <th>Rate/QTY (CFT)</th>
             <th>Days</th>
             <th>Total Cost</th>
@@ -89,7 +89,9 @@
 <script>
     $(document).ready(function() {
     $('#costing_list').DataTable({
-         order: [0, 'asc' ],
+<!--        scrollY: "400px",-->
+        scrollX: true,
+        order: [0, 'asc' ],
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'
