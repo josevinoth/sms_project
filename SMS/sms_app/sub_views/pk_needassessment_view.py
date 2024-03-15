@@ -1,8 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-
 from ..forms import PkneedassessmentForm,NadimensionForm
-from ..models import PkneedassessmentInfo,Nadimension
+from ..models import commentsInfo,User_extInfo,PkneedassessmentInfo,Nadimension
 from django.shortcuts import render, redirect
 from random import randint
 from django.contrib import messages
@@ -11,6 +10,7 @@ from django.contrib import messages
 def needassessment_add(request,needassessment_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    role = User_extInfo.objects.get(user=user_id).emp_role
     if request.method == "GET":
         if needassessment_id == 0:
             form = PkneedassessmentForm()
@@ -18,6 +18,7 @@ def needassessment_add(request,needassessment_id=0):
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
+                'role': role,
             }
         else:
             needassessment=PkneedassessmentInfo.objects.get(pk=needassessment_id)
@@ -25,11 +26,14 @@ def needassessment_add(request,needassessment_id=0):
             needassessment_id=PkneedassessmentInfo.objects.get(pk=needassessment_id).id
             request.session['na_assessment_id'] = needassessment_id
             na_dimension_list=Nadimension.objects.filter(nad_assess_num=needassessment_id)
+            comments_list= commentsInfo.objects.filter(comments_ref=needassessment_id)
             context={
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
+                'role': role,
                 'na_dimension_list': na_dimension_list,
+                'comments_list': comments_list,
                 }
         return render(request, "asset_mgt_app/pk_needassessment_add.html", context)
     else:

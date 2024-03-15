@@ -475,6 +475,10 @@ urlpatterns = [
     path('pk_retrival_update/<int:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),# update retrival
     path('pk_retrival_delete/<int:retrival_id>', views.pk_retrival_delete, name='pk_retrival_delete'),# delete retrival
     path('pk_retrival_cancel/', views.pK_retrival_cancel, name='pk_retrival_cancel'),  # cancel retrival
-
+    path('comments_list/', views.comments_list, name='comments_list'),  # List comments
+    path('comments_insert/', views.comments_add, name='comments_insert'),  # Add comments
+    path('comments_update/<int:comments_id>', views.comments_add, name='comments_update'),  # update comments
+    path('comments_delete/<int:comments_id>', views.comments_delete, name='comments_delete'),# delete comments
+    path('comments_cancel/', views.comments_cancel, name='comments_cancel'),# cancel comments
 ]
 

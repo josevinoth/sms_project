@@ -106,3 +106,4 @@ from .sub_views.pk_quotation_view import pk_quotation_add,pk_quotation_list,pk_q
 from .sub_views.iou_view import iou_add,iou_list,iou_delete,get_full_name_iou
 from .sub_views.pk_quotation_summary_view import pk_quotationsummary_add,pk_quotationsummary_list,pk_quotationsummary_delete,pk_quotation_summary_check_unique_field
 from .sub_views.pk_retrival_view import pk_retrival_add,pk_retrival_list,pk_retrival_delete,pK_retrival_cancel
+from .sub_views.comments_add_view import comments_list,comments_delete,comments_add,comments_cancel

@@ -8,7 +8,7 @@
 		<div class="col-6">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update NA Dimension</h3></div>
+					<div class="card-header text-center"><h3>Add/Update Need Assessment Dimension</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col">
@@ -20,9 +20,27 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Item Name</span>
+										<span class="input-group-text">Requirement Type</span>
 									</div>
-									{% render_field form.nad_item_name id="nad_item_name" class="form-control" %}
+									{% render_field form.nad_type_of_req id="nad_type_of_req" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Wood Type</span>
+									</div>
+									{% render_field form.nad_wood_type id="nad_wood_type" onchange="plywood_thickness()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Wood Description</span>
+									</div>
+									{% render_field form.nad_wood_description id="nad_wood_description" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">UOM</span>
+									</div>
+									{% render_field form.nad_uom id="nad_uom" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -41,6 +59,18 @@
 										<span class="input-group-text">Height</span>
 									</div>
 									{% render_field form.nad_height id="nad_height" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Plywood Thickness</span>
+									</div>
+									{% render_field form.nad_plywood_thickness id="nad_plywood_thickness" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Job Weight (kg)</span>
+									</div>
+									{% render_field form.nad_job_weight id="nad_job_weight" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -77,6 +107,46 @@
 $(document).ready(function() {
 	document.getElementById("nad_updated_by").value ='{{user_id}}';
 	document.getElementById("nad_assess_num").value ='{{na_assessment_num_id}}';
+	plywood_thickness()
 	});
+</script>
+<script>
+   $("#nad_wood_type").change(function () {
+      var wood_type = $(this).val();
+      $('#nad_wood_description').removeClass('disable_a_href');
+           $.ajax({
+        url: '{% url 'load_stock_description' %}',
+        data: {
+          'stock_type': wood_type,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#nad_wood_description').removeClass('disable_a_href');
+			$("#nad_wood_description").empty();
+			$('#nad_wood_description').empty().append("<option value='0'>--Select--</option>");
+        	var nad_wood_description_name=JSON.parse(data)["stock_description"];
+        	var nad_wood_description_id=JSON.parse(data)["stock_description_id"];
+        	var len = (nad_wood_description_id).length;
+        	$('#nad_wood_description').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#nad_wood_description").append("<option value='"+nad_wood_description_id[i]+"'>"+nad_wood_description_name[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
+<script>
+function plywood_thickness() {
+  var wood_type=document.getElementById("nad_wood_type").value
+  if (wood_type==4)
+	{
+		$('#nad_plywood_thickness').removeClass('disable_a_href');
+	}
+  else
+	{
+		$('#nad_plywood_thickness').addClass('disable_a_href');
+  	}
+  endif
+}
 </script>
 {% endblock content %}

@@ -1,9 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from ..models import Gatein_info,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
+from ..models import Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
 from django.shortcuts import render, redirect
 from django.db.models import Sum
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 
 @login_required(login_url='login_page')
@@ -11,6 +11,8 @@ def home_page(request):
     first_name=request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role=User_extInfo.objects.get(user=user_id).emp_role
+    department=User_extInfo.objects.get(user=user_id).department
+    bussiness_solution=User_extInfo.objects.get(user=user_id).emp_organisation
     ses_username = request.session.get('ses_username', request.POST.get('username'))
     case_to_case=str(TrbusinesstypeInfo.objects.get(id=1))
     exlcusive=str(TrbusinesstypeInfo.objects.get(id=2))
@@ -37,6 +39,8 @@ def home_page(request):
                'dedicated_list': len(dedicated_list),
                'exclusive_list': len(exclusive_list),
                'role': role,
+               'department': department,
+               'bussiness_solution': bussiness_solution,
                'wh_job_count': wh_job_count,
                'wh_check_in_jobs_2': wh_check_in_jobs_2,
                }

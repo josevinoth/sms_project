@@ -17,8 +17,8 @@
             <a href="" class="btn btn-info "><i class="fas fa-satellite-dish"></i> <span class="badge badge-danger">0</span></a>
         </div>
     </div>
-     <hr class="hr_style">
-    <button type="button" class="collapsible"><i class="fas fa-users-cog"></i> Administration</button>
+    <hr class="hr_style">
+    <button type="button" id='administration' class="collapsible"><i class="fas fa-users-cog"></i> Administration</button>
     <div class="content">
         <a href="{% url 'department_list' %}"><i class="far fa-building"></i> Departments</a>
         <button type="button" class="collapsible"><i class="fas fa-book-medical"></i> Insurance</button>
@@ -42,7 +42,7 @@
         </div>
     </div>
     <hr class="hr_style">
-    <button type="button" class="collapsible"><i class="fas fa-drafting-compass"></i> Asset Management System (AMS)</button>
+    <button id="asset" type="button" class="collapsible"><i class="fas fa-drafting-compass"></i> Asset Management System (AMS)</button>
     <div class="content">
         <a href="{% url 'assign_asset_search' %}"><i class="fas fa-arrows-alt"></i> Assets</a>
         <a href="{% url 'reports' %}"><i class="fa fa-book" aria-hidden="true"></i> Reports</a>
@@ -53,7 +53,7 @@
         </div>
     </div>
     <hr class="hr_style">
-    <button type="button" class="collapsible"><i class="fa fa-life-ring" aria-hidden="true"></i> Customer Management System (CMS)</button>
+    <button id="customer"  type="button" class="collapsible"><i class="fa fa-life-ring" aria-hidden="true"></i> Customer Management System (CMS)</button>
     <div class="content">
         <a href="{% url 'customer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer List </a>
         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> CMS Misc</button>
@@ -69,7 +69,7 @@
         </div>
     </div>
     <hr class="hr_style">
-    <button type="button" class="collapsible"><i class="fa fa-users" aria-hidden="true"></i> Employee Management System (EMS)</button>
+    <button type="button" id="employee_management_system" class="collapsible"><i class="fa fa-users" aria-hidden="true"></i> Employee Management System (EMS)</button>
     <div class="content">
         <a href="{% url 'user_list' %}"><i class="fas fa-user-friends"></i> Employees</a>
         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> EMS Misc</button>
@@ -79,7 +79,7 @@
         </div>
     </div>
     <hr class="hr_style">
-    <button type="button" class="collapsible"><i class="fa fa-key" aria-hidden="true"></i> Finance Management System (FMS)</button>
+    <button id="finance" type="button" class="collapsible "><i class="fa fa-key" aria-hidden="true"></i> Finance Management System (FMS)</button>
     <div class="content">
         <a href="{% url 'ar_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Accounts Receivable</a>
         <a href="{% url 'ar_comments_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Accounts Receivable Comments</a>
@@ -87,12 +87,12 @@
         <a href="{% url 'iou_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> IOU</a>
     </div>
     <hr class="hr_style">
-    <button type="button" class="collapsible"><i class="fa fa-suitcase" aria-hidden="true"></i>  Packaging Management System (PMS)</button>
+    <button id="packing" type="button" class="collapsible "><i class="fa fa-suitcase" aria-hidden="true"></i>  Packaging Management System (PMS)</button>
     <div class="content">
         <a href="{% url 'needassessment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Need Assessment</a>
         <a href="{% url 'pk_quotationsummary_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Quotation Summary</a>
-<!--        <a href="{% url 'pk_quotation_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Quotation</a>-->
-<!--        <a href="{% url 'quotes_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Quotes</a>-->
+        <!--        <a href="{% url 'pk_quotation_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Quotation</a>-->
+        <!--        <a href="{% url 'quotes_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Quotes</a>-->
         <a href="{% url 'purchaseorder_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Purchase Order</a>
         <a href="{% url 'costingsummary_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Costing Summary</a>
         <a href="{% url 'pk_item_search_page' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Item Search</a>
@@ -101,23 +101,23 @@
         <!--        <a href="{% url 'openingstock_list' %}"><i class="fa fa-arrow-right " aria-hidden="true"></i> Opening Stock</a>-->
         <a href="{% url 'stockpurchases_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock List</a>
         <a href="{% url 'pk_stock_vendor_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Purchase</a>
-<!--        <a href="{% url 'costing_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Costing</a>-->
+        <!--        <a href="{% url 'costing_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Costing</a>-->
         <!--        <a href="{% url 'ininspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Inward Inspection Report</a>-->
         <!--        <a href="{% url 'ouinspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Outward Inspection Report</a>-->
         <!--        <a href="{% url 'materialstock_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Stock</a>-->
         <a href="{% url 'packingjobs_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Packing Jobs</a>
     </div>
     <hr class="hr_style">
-    <button type="button" class="collapsible"><i class="fa fa-chart-line"></i> Sales Management System (SMS)</button>
+    <button id="sales" type="button" class="collapsible "><i class="fa fa-chart-line"></i> Sales Management System (SMS)</button>
     <div class="content">
         <a href="{% url 'sales_search' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Sales List</a>
         <a href="{% url 'sales_target_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Sales Target</a>
         <a href=""><i class="fa fa-arrow-right" aria-hidden="true"></i> Reports</a>
     </div>
     <hr class="hr_style">
-    <a href="{% url 'vendor_list' %}"><i class="fas fa-user-secret"></i> Vendor Management System (VMS)</a>
+    <a id="vendor"  href="{% url 'vendor_list' %}"><i class="fas fa-user-secret"></i> Vendor Management System (VMS)</a>
     <hr class="hr_style">
-    <button type="button" class="collapsible"><i class="fa fa-truck" aria-hidden="true"></i> Transport Management System (TMS)</button>
+    <button id="transport" type="button" class="collapsible "><i class="fa fa-truck" aria-hidden="true"></i> Transport Management System (TMS)</button>
     <div class="content">
         <a href="{% url 'enquirynote_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Enquiry Note </a>
         <a href="{% url 'consignmentdetail_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Consignment Detail </a>
@@ -144,7 +144,7 @@
         </div>
     </div>
     <hr class="hr_style">
-    <button type="button" class="collapsible"><i class="fas fa-industry"></i> Ware-House Management System (WMS)</button>
+    <button id="warehouse" type="button" class="collapsible "><i class="fas fa-industry"></i> Ware-House Management System (WMS)</button>
     <div class="content">
         <a href="{% url 'pre_gatein_search' %}"><i class="fa fa-space-shuttle" aria-hidden="true"></i> Pre-Gate-In</a>
         <a href="{% url 'search' %}"><i class="fa fa-taxi" aria-hidden="true"></i> Warehouse Jobs</a>
@@ -310,5 +310,82 @@ for (i = 0; i < coll.length; i++) {
     }
   });
 }
+</script>
+
+<script>
+$(document).ready(function() {
+    console.log("JavaScript code is running!"); // Check if JavaScript is executing
+    var user_role = '{{ role }}';
+    var department = '{{ department }}';
+    var bussiness_solution = '{{ bussiness_solution }}';
+    // Function to remove disable_a_href class
+    function enableElement(elementId) {
+        $('#' + elementId).removeClass('disable_a_href');
+    }
+
+    // Function to add disable_a_href class
+    function disableElement(elementId) {
+        $('#' + elementId).addClass('disable_a_href');
+    }
+
+    // Admin can view all elements
+    if (user_role !== 'User') {
+        enableElement('finance');
+        enableElement('sales');
+        enableElement('warehouse');
+        enableElement('transport');
+        enableElement('packing');
+    } else { // User view based on role, business solution, and department
+        disableElement('employee_management_system');
+        disableElement('administration');
+        disableElement('sales'); // Disable sales by default
+        disableElement('customer');
+        disableElement('asset');
+        disableElement('vendor');
+        disableElement('finance');
+        disableElement('packing'); // Disable packing for BVM Storage Solutions
+        disableElement('transport'); // Disable transport for BVM Storage Solutions
+        disableElement('warehouse');
+
+        if (department === 'Corporate')
+        {
+            enableElement('customer');
+            enableElement('asset');
+            enableElement('vendor'); // Enable the vendor element for the Corporate department
+        }
+        else if (department === 'Human Resource')
+        {
+            enableElement('employee_management_system');
+        }
+        else if (department === 'Human Resource')
+        {
+            enableElement('employee_management_system');
+        }
+        else if (department === 'Finance')
+        {
+            enableElement('finance'); // Enable finance for the Finance department
+            disableElement('sales');
+        }
+
+        else if (department === 'Sales')
+        {
+            enableElement('sales'); // Enable sales for Sales department
+            disableElement('finance');
+        }
+
+        if (bussiness_solution === 'BVM Storage Solutions')
+        {
+            enableElement('warehouse'); // Enable warehouse for BVM Storage Solutions
+        }
+        else if (bussiness_solution === 'BVM Pack Solutions')
+        {
+            enableElement('packing'); // Enable packing for BVM Pack Solutions
+        }
+        else if (bussiness_solution === 'BVM Trans Solutions')
+        {
+            enableElement('transport'); // Enable transport for BVM Trans Solutions
+        }
+    }
+});
 </script>
 {% endblock content %}

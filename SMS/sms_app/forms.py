@@ -97,3 +97,4 @@ from.sub_forms.pk_retrivalForm_form import PkretrivalForm
 from.sub_forms.pk_quotation_summaryForm_form import PkquotationsummaryForm
 from.sub_forms.iouForm import IouForm
 from.sub_forms.CostingSearchForm import CostingSearchForm,ModifyDimensionsForm
+from.sub_forms.commentsForm_Form import commentsaddForm
