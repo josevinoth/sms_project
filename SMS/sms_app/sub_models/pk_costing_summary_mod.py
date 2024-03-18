@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import MyUser,PkneedassessmentInfo
+from ..models import pk_itemdescriptionInfo,pk_itemInfo,MyUser,PkneedassessmentInfo
 
 class PkcostingsummaryInfo(models.Model):
     cs_assessment_num=models.OneToOneField(PkneedassessmentInfo, on_delete=models.CASCADE, default='',unique=True)
@@ -22,7 +22,7 @@ class PkcostingsummaryInfo(models.Model):
     cs_remarks = models.TextField(blank=True, null=True)
 
     class Meta:
-        ordering = ["cs_wood_cost"]
+        ordering = ["id"]
 
     def __str__(self):
-        return self.cs_assessment_num
+        return self.cs_total_cost_wm

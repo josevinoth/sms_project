@@ -480,5 +480,6 @@ urlpatterns = [
     path('comments_update/<int:comments_id>', views.comments_add, name='comments_update'),  # update comments
     path('comments_delete/<int:comments_id>', views.comments_delete, name='comments_delete'),# delete comments
     path('comments_cancel/', views.comments_cancel, name='comments_cancel'),# cancel comments
+    path('pk_get_item_description/', views.pk_get_item_description, name='pk_get_item_description'),# get item_description
 ]
 

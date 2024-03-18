@@ -28,13 +28,25 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field form.ct_stock_type id="ct_stock_type" onchange="change_cost_type()" class="form-control disable_a_href" %}
+									{% render_field form.ct_stock_type id="ct_stock_type" onchange="changeItemDescription()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Description</span>
 									</div>
 									{% render_field form.ct_stock_description id="ct_stock_description" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Item</span>
+									</div>
+									{% render_field form.ct_item id="ct_item" onchange="changeItemDescription()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Item Description</span>
+									</div>
+									{% render_field form.ct_itemdescription id="ct_itemdescription" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -124,6 +136,7 @@
 		<div class="col-2"></div>
 	</div>
 </form>
+
 <div id="pk_item_search_page_costing">
 	{% include "asset_mgt_app/pk_item_search_page_costing.html" %}
 </div>
@@ -141,6 +154,15 @@ $(document).ready(function() {
    $("#ct_stock_type").change(function () {
       var url = $("#costing_add").attr("data-stock_description-url");
       var stock_type = $(this).val();
+      alert(stock_type)
+      if (stock_type == 1 || stock_type == 4)
+      {
+    	$('#ct_item').removeClass('disable_a_href');
+	  }
+	  else
+	  {
+	  	$('#ct_item').addClass('disable_a_href');
+	  }
       $.ajax({
         url: url,
         data: {
@@ -469,4 +491,28 @@ function change_charge_type() {
     });
 </script>
 
+<script>
+	function changeItemDescription() {
+    var item_id = $('#ct_item').val();
+    $.ajax({
+        url: '{% url 'pk_get_item_description' %}',
+        type: 'GET',
+        data: {'item_id': item_id},
+        dataType: 'json',
+        success: function(data) {
+            console.log("Data",data);
+			$('#ct_itemdescription').removeClass('disable_a_href');
+			$('#ct_itemdescription').empty();
+			$('#ct_itemdescription').empty().append("<option value='0'>--Select--</option>");
+        	var ct_itemdescription_name=data.item_description_val;
+        	var ct_itemdescription_id=data.item_description_id;
+        	var len = (ct_itemdescription_id).length;
+        	$('#ct_itemdescription').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#ct_itemdescription").append("<option value='"+ct_itemdescription_id[i]+"'>"+ct_itemdescription_name[i]+"</option>");
+			}
+        }
+    });
+}
+</script>
 {% endblock content %}

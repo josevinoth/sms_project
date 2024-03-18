@@ -1,75 +1,65 @@
-{% block content %}
+<!--<div class="container-fluid" style="padding:15px;">-->
+<!--    <div class="row">-->
+<!--        <div class="col-4"></div>-->
+<!--        <div class="col-4 rounded text-center bg-info">-->
+<!--            <h3>Need Assessment Dimension List</h3>-->
+<!--        </div>-->
+<!--        <div class="col-4"></div>-->
+<!--    </div>-->
+<!--</div>-->
 <div class="container-fluid row">
-    <!--    <div class="col-md-1">-->
-    <!--      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-    <!--        <i class="fas fa-arrow-left"></i> Back-->
-    <!--      </a>-->
-    <!--    </div>-->
-    <div class="col-md-1">
-          <a href="{% url 'na_dimension_insert' %}" id="dim_add" class="btn btn-success btn-block btn-lg disable_a_href">
-            <i class="fas fa-plus"></i> Insert
-          </a>
-        </div>
+	<div class="col-md-1.5">
+		<a href="{% url 'na_dimension_insert' %}" id = "add_dim_btn" class="btn btn-success btn-block btn-lg disable_a_href">
+			<i class="fas fa-plus"></i> Insert
+		</a>
+	</div>
 </div>
 <hr>
 <div class="container-fluid">
-    <table  id="na_dimension_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr>
-            <th>Created On</th>
-            <th>Assessment Number</th>
-            <th>Item Name</th>
-            <th>Length</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>Quantity</th>
-            <th>Updated On</th>
-            <th>Updated By</th>
-        </thead>
-        <tbody>
-        {% for na_dimensioninfo in na_dimension_list %}
-        <tr>
-            <td> {{na_dimensioninfo.nad_created_at}}</td>
-            <td> {{na_dimensioninfo.nad_assess_num}}</td>
-            <td> {{na_dimensioninfo.nad_item_name}}</td>
-            <td> {{na_dimensioninfo.nad_length}}</td>
-            <td> {{na_dimensioninfo.nad_width}}</td>
-            <td> {{na_dimensioninfo.nad_height}}</td>
-            <td> {{na_dimensioninfo.nad_quantity}}</td>
-            <td> {{na_dimensioninfo.nad_updated_at}}</td>
-            <td> {{na_dimensioninfo.nad_updated_by}}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+	<table  id="na_dimension_list" class="table table-striped table-bordered">
+		<thead class="thead-dark">
+		<tr>
+			<th>Created On</th>
+			<th>Assessment Number</th>
+			<th>Requirement Type</th>
+			<th>UOM</th>
+			<th>Length</th>
+			<th>Width</th>
+			<th>Height</th>
+			<th>Quantity</th>
+			<th>Updated On</th>
+			<th>Updated By</th>
+			<th>Edit</th>
+			<th>Delete</th>
+		</thead>
+		<tbody>
+		{% for na_dimensioninfo in na_dimension_list %}
+		<tr>
+			<td> {{na_dimensioninfo.nad_created_at}}</td>
+			<td> {{na_dimensioninfo.nad_assess_num}}</td>
+			<td> {{na_dimensioninfo.nad_type_of_req}}</td>
+			<td> {{na_dimensioninfo.nad_uom}}</td>
+			<td> {{na_dimensioninfo.nad_length}}</td>
+			<td> {{na_dimensioninfo.nad_width}}</td>
+			<td> {{na_dimensioninfo.nad_height}}</td>
+			<td> {{na_dimensioninfo.nad_quantity}}</td>
+			<td> {{na_dimensioninfo.nad_updated_at}}</td>
+			<td> {{na_dimensioninfo.nad_updated_by}}</td>
+			<td>
+				<a class="btn btn-primary" href="{% url 'na_dimension_update' na_dimensioninfo.id %}" class="btn btn-primary">
+					<i class="far fa-edit"></i>
+				</a>
+			</td>
+			<td>
+				<form action="{% url 'na_dimension_delete' na_dimensioninfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+					{% csrf_token %}
+					<button type="submit" id='delete_btn_dim' class="btn btn-danger">
+						<i class="fas fa-trash-alt"></i>
+					</button>
+				</form>
+			</td>
+		</tr>
+		{% endfor %}
+		</tbody>
+	</table>
 </div>
-<script>
-    $(document).ready(function() {
-    $('#na_dimension_list').DataTable({
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
-    });
-    var assessment_num = document.getElementById("gatein_updated_by").value
-    if (warehousein_status_id =="Completed")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-success');
-		$('#storage_btn').removeClass('disable_a_href');
-		$('#storage_btn').addClass('btn-success');
-	}
-	else if (warehousein_status_id =="None")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (warehousein_status_id =="No Status")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-warning');
-	}
-
-} );
-</script>
-
-{% endblock content %}

@@ -24,9 +24,11 @@ def needassessment_add(request,needassessment_id=0):
             needassessment=PkneedassessmentInfo.objects.get(pk=needassessment_id)
             form = PkneedassessmentForm(instance=needassessment)
             needassessment_id=PkneedassessmentInfo.objects.get(pk=needassessment_id).id
+            needassessment_num=PkneedassessmentInfo.objects.get(pk=needassessment_id).na_assessment_num
             request.session['na_assessment_id'] = needassessment_id
+            request.session['na_assessment_num'] = needassessment_num
             na_dimension_list=Nadimension.objects.filter(nad_assess_num=needassessment_id)
-            comments_list= commentsInfo.objects.filter(comments_ref=needassessment_id)
+            comments_list= commentsInfo.objects.filter(comments_ref=needassessment_num)
             context={
                 'form': form,
                 'first_name': first_name,
@@ -38,7 +40,7 @@ def needassessment_add(request,needassessment_id=0):
         return render(request, "asset_mgt_app/pk_needassessment_add.html", context)
     else:
         if needassessment_id == 0:
-            form = PkneedassessmentForm(request.POST)
+            form = PkneedassessmentForm(request.POST,request.FILES)
             if form.is_valid():
                 # Generate Random Assessment number
                 try:
@@ -58,7 +60,7 @@ def needassessment_add(request,needassessment_id=0):
                 return redirect(request.META['HTTP_REFERER'])
         else:
             needassessment = PkneedassessmentInfo.objects.get(pk=needassessment_id)
-            form = PkneedassessmentForm(request.POST,instance=needassessment)
+            form = PkneedassessmentForm(request.POST,request.FILES,instance=needassessment)
             if form.is_valid():
                 form.save()
                 print("needassessment Form is Valid")
@@ -73,7 +75,13 @@ def needassessment_add(request,needassessment_id=0):
 @login_required(login_url='login_page')
 def needassessment_list(request):
     first_name = request.session.get('first_name')
-    context = {'needassessment_list' : PkneedassessmentInfo.objects.all(),'first_name': first_name}
+    user_id = request.session.get('ses_userID')
+    role = User_extInfo.objects.get(user=user_id).emp_role
+    context = {
+            'needassessment_list' : PkneedassessmentInfo.objects.all(),
+            'first_name': first_name,
+            'role': role,
+        }
     return render(request,"asset_mgt_app/pk_needassessment_list.html",context)
 
 #Delete needassessment

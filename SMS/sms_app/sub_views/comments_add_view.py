@@ -23,9 +23,9 @@ def comments_add(request,comments_id=0):
             form = commentsaddForm(request.POST,instance=comments)
         if form.is_valid():
             form.save()
-            na_assessment_num_id = request.session.get('na_assessment_id')
+            na_assessment_num = request.session.get('na_assessment_num')
             last_id = commentsInfo.objects.latest('id').id
-            commentsInfo.objects.filter(pk=last_id).update(comments_ref=na_assessment_num_id)
+            commentsInfo.objects.filter(pk=last_id).update(comments_ref=na_assessment_num)
         return redirect('/SMS/comments_cancel')
 
 # List comments
@@ -46,5 +46,4 @@ def comments_delete(request,comments_id):
 @login_required(login_url='login_page')
 def comments_cancel(request):
     na_assessment_num_id = request.session.get('na_assessment_id')
-    print(na_assessment_num_id)
     return redirect('/SMS/needassessment_update/'+ str(na_assessment_num_id))

@@ -1,6 +1,8 @@
 from django.db import models
 from ..models import StatusList,MyUser,Natypeofwork,Natypeofpack,Naplywoodthickness,CustomerInfo,Nawoodtreatmentreq,Nabvmcustomer,Nawoodnorms,VehicletypeInfo,Natypeofaccess,Naconsumables
 
+def Pkneedassessment_directory_path(instance, filename):
+    return 'Pkneedassessmentfiles/{0}/{1}'.format(instance.na_assessment_num, filename)
 class PkneedassessmentInfo(models.Model):
     na_assessment_num = models.CharField(max_length=100,null=True,blank=True, default='')
     na_date = models.DateField(blank=True, null=True)
@@ -18,6 +20,8 @@ class PkneedassessmentInfo(models.Model):
     na_updated_at = models.DateTimeField(null=True, auto_now=True)
     na_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='na_updated_by',db_column='na_updated_by', null=True)
     na_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,blank=True,null=True)
+    na_attach = models.FileField(upload_to=Pkneedassessment_directory_path, null=True,blank=True)
+
     class Meta:
         ordering = ["na_assessment_num"]
 

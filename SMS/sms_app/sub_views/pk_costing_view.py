@@ -1,7 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required
 from ..forms import ModifyDimensionsForm,CostingSearchForm,PkcostingForm
-from ..models import PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo
+from ..models import pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
@@ -136,6 +136,8 @@ def load_stock_description(request):
     stock_description.sort()
     for j in stock_description:
         stock_description_id.append(Stockdescription.objects.get(stock_description=j).id)
+    print('stock_description',stock_description)
+    print('stock_description_id',stock_description_id)
     data = {
         'stock_description':stock_description,
         'stock_description_id': stock_description_id,
@@ -225,3 +227,29 @@ def modify_dimensions_view(request):
         form = ModifyDimensionsForm()
 
     return render(request, 'asset_mgt_app/pk_item_search_page_select.html', {'form': form, 'results': results})
+
+@login_required(login_url='login_page')
+def pk_get_item_description(request):
+    item_description_id = []
+    item_description_val = []
+    item_id = request.GET.get('item_id')
+    # Fetch item_description Details
+    item_descriptions = pk_itemdescriptionInfo.objects.filter(id_item_name=item_id).order_by('id_item_description')
+
+    # Extract id and id_item_description attributes from queryset
+    for item in item_descriptions:
+        item_description_id.append(item.id)
+        item_description_val.append(item.id_item_description)
+
+    print('item_description_val',item_description_val)
+    print('item_description_id',item_description_id)
+    # Create JSON response data
+    data = {
+        'item_description_val': item_description_val,
+        'item_description_id': item_description_id,
+    }
+
+    # Return JSON response
+    return JsonResponse(data)
+
+
