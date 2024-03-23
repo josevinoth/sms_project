@@ -154,7 +154,6 @@ $(document).ready(function() {
    $("#ct_stock_type").change(function () {
       var url = $("#costing_add").attr("data-stock_description-url");
       var stock_type = $(this).val();
-      alert(stock_type)
       if (stock_type == 1 || stock_type == 4)
       {
     	$('#ct_item').removeClass('disable_a_href');

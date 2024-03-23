@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="purchaseorder_add"   >
+<form method="POST" action="" id="purchaseorder_add" enctype="multipart/form-data" >
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-3"></div>
@@ -15,6 +15,18 @@
 							<div class="col-12">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Assessment Number</span>
+									</div>
+									{% render_field form.po_assessment_num id="po_assessment_num" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field form.po_customer_name id="po_customer_name" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">PO Number</span>
 									</div>
 									{% render_field form.po_num id="po_num" readonly="True"  class="form-control " %}
@@ -23,7 +35,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Date</span>
 									</div>
-									{% render_field form.po_date id="po_date" type="Date" class="form-control" %}
+									{% render_field form.po_date id="po_date" type="Datetime-local" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -64,6 +76,12 @@
 								{% render_field form.po_updated_by id="po_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>
+						<div class="input-group input-group-sm mb-3 bg-dark block">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Attachment</span>
+							</div>
+							{% render_field form.po_attach id="po_attach"  class="form-control " %}
+						</div>
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
@@ -90,6 +108,22 @@
 $(document).ready(function() {
 	document.getElementById("po_updated_by").value ='{{user_id}}';
 	});
+</script>
+
+<script>
+   $("#po_assessment_num").change(function () {
+      var assessment_num = $(this).val();
+      $.ajax({
+        url: '{% url 'pk_get_customer' %}',
+        data: {
+          'assessment_num': assessment_num,
+        },
+		success: function (data) {
+			console.log(data);
+			document.getElementById("po_customer_name").value =data.customer_id
+        }
+      });
+   });
 </script>
 
 {% endblock content %}

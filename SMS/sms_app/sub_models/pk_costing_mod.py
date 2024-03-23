@@ -10,8 +10,8 @@ class PkcostingInfo(models.Model):
     ct_rate = models.FloatField(blank=True, null=True,default=0.0)
     ct_days= models.IntegerField(blank=True, null=True,default=0)
     ct_total_cost = models.FloatField(blank=True, null=True,default=0.0)
-    ct_created_at = models.DateField(null=True, auto_now_add=True)
-    ct_updated_at = models.DateField(null=True, auto_now=True)
+    ct_created_at = models.DateTimeField(null=True, auto_now_add=True)
+    ct_updated_at = models.DateTimeField(null=True, auto_now=True)
     ct_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='ct_updated_by',db_column='ct_updated_by', null=True)
     ct_quantity= models.IntegerField(blank=True, null=True,default=0)
     ct_size=models.FloatField(blank=True, null=True,default=0.0)
@@ -20,9 +20,9 @@ class PkcostingInfo(models.Model):
     ct_length = models.FloatField(blank=True, null=True, default=0.0)
     ct_stock_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE, blank=True, null=True)
     ct_stock_purchase_number = models.ForeignKey(PkstockpurchasesInfo, on_delete=models.CASCADE, blank=True, null=True)
-    ct_item = models.ForeignKey(pk_itemInfo, on_delete=models.CASCADE, related_name='ct_item', db_column='ct_item')
+    ct_item = models.ForeignKey(pk_itemInfo, on_delete=models.CASCADE, related_name='ct_item', db_column='ct_item',blank=True, null=True)
     ct_itemdescription = models.ForeignKey(pk_itemdescriptionInfo, on_delete=models.CASCADE,
-                                           related_name='ct_itemdescription', db_column='ct_itemdescription')
+                                           related_name='ct_itemdescription', db_column='ct_itemdescription',blank=True, null=True)
 
     class Meta:
         ordering = ["ct_cost_type"]

@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import JsonResponse
 
 from ..forms import PkpurchaseorderForm
-from ..models import PkpurchaseorderInfo
+from ..models import PkneedassessmentInfo,PkpurchaseorderInfo
 from django.shortcuts import render, redirect
 from random import randint
 from django.contrib import messages
@@ -26,7 +27,7 @@ def purchaseorder_add(request,purchaseorder_id=0):
         return render(request, "asset_mgt_app/pk_purchaseorder_add.html", context)
     else:
         if purchaseorder_id == 0:
-            form = PkpurchaseorderForm(request.POST)
+            form = PkpurchaseorderForm(request.POST,request.FILES)
             if form.is_valid():
                 # Generate Random purchaseorder number
                 try:
@@ -48,7 +49,7 @@ def purchaseorder_add(request,purchaseorder_id=0):
                 return redirect(request.META['HTTP_REFERER'])
         else:
             purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
-            form = PkpurchaseorderForm(request.POST,instance=purchaseorder)
+            form = PkpurchaseorderForm(request.POST,request.FILES,instance=purchaseorder)
             if form.is_valid():
                 form.save()
                 print("PkpurchaseorderForm Form is Valid")
@@ -72,3 +73,22 @@ def purchaseorder_delete(request,purchaseorder_id):
     purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
     purchaseorder.delete()
     return redirect('/SMS/purchaseorder_list')
+
+@login_required(login_url='login_page')
+def pk_get_customer(request):
+    customer_id = []
+    customer_name = []
+    assessment_id = request.GET.get('assessment_num')
+    # Fetch item_description Details
+    customer_id = PkneedassessmentInfo.objects.get(pk=assessment_id).na_customer_name.id
+    customer_name = PkneedassessmentInfo.objects.get(pk=assessment_id).na_customer_name.cu_name
+    print('customer_name',customer_name)
+    print('customer_id',customer_id)
+    # Create JSON response data
+    data = {
+        'customer_name': customer_name,
+        'customer_id': customer_id,
+    }
+
+    # Return JSON response
+    return JsonResponse(data)

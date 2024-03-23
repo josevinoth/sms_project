@@ -34,7 +34,11 @@ def costing_add(request,costing_id=0):
                 print("costing Form is Valid")
                 last_id = (PkcostingInfo.objects.latest('id')).id
                 stock_purchase_num=PkcostingInfo.objects.get(pk=last_id).ct_stock_purchase_number
-                update_reduced_dimensions(stock_purchase_num,last_id)
+                cost_type_id = PkcostingInfo.objects.get(pk=last_id).ct_cost_type.id
+                if cost_type_id==8:
+                    update_reduced_dimensions(stock_purchase_num,last_id)
+                else:
+                    pass
                 messages.success(request, 'Record Updated Successfully')
                 # return redirect('/SMS/costing_update/'+str(last_id))
                 return redirect('/SMS/costing_insert/')
@@ -51,7 +55,11 @@ def costing_add(request,costing_id=0):
                 print("costing Form is Valid")
                 stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
                 last_id=costing_id
-                update_reduced_dimensions(stock_purchase_num,last_id)
+                cost_type_id=PkcostingInfo.objects.get(pk=costing_id).ct_cost_type.id
+                if cost_type_id==8:
+                    update_reduced_dimensions(stock_purchase_num,last_id)
+                else:
+                    pass
                 messages.success(request, 'Record Updated Successfully')
             else:
                 print("costing Form is Not Valid")
@@ -121,7 +129,11 @@ def costing_list(request):
 def costing_delete(request,costing_id):
     costing = PkcostingInfo.objects.get(pk=costing_id)
     stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
-    append_reduced_dimensions(stock_purchase_num, costing_id)
+    cost_type_id = PkcostingInfo.objects.get(pk=costing_id).ct_cost_type.id
+    if cost_type_id == 8:
+        append_reduced_dimensions(stock_purchase_num, costing_id)
+    else:
+        pass
     costing.delete()
     print("Successfully Deleted")
     # return redirect('/SMS/costing_list')
@@ -155,7 +167,8 @@ def costing_cancel(request):
 def pk_item_search_page_costing(request):
     stock_type = request.GET.get('stock_type')
     stock_description = request.GET.get('stock_description')
-    queryset = PkstockpurchasesInfo.objects.all()
+    # queryset = PkstockpurchasesInfo.objects.all()
+    queryset = PkstockpurchasesInfo.objects.filter(sp_quantity_reduced__gt=0)
     if stock_description:
         queryset = queryset.filter(sp_stock_description=stock_description)
     if stock_type:
@@ -241,8 +254,6 @@ def pk_get_item_description(request):
         item_description_id.append(item.id)
         item_description_val.append(item.id_item_description)
 
-    print('item_description_val',item_description_val)
-    print('item_description_id',item_description_id)
     # Create JSON response data
     data = {
         'item_description_val': item_description_val,
