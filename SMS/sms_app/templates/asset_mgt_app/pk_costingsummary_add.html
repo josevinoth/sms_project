@@ -209,6 +209,14 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("cs_updated_by").value ='{{user_id}}';
+	document.getElementById("cs_wood_cost").value ='{{wood_cost}}';
+	document.getElementById("cs_engineer_cost").value ='{{engineer_cost}}';
+	document.getElementById("cs_labour_cost").value ='{{labour_cost}}';
+	document.getElementById("cs_crane_cost").value ='{{crane_cost}}';
+	document.getElementById("cs_ht_cost").value ='{{ht_cost}}';
+	document.getElementById("cs_management_cost").value ='{{management_cost}}';
+	document.getElementById("cs_material_cost").value ='{{material_cost}}';
+	document.getElementById("cs_transport_cost").value ='{{transport_cost}}';
 	change_charge_type()
 	$('#costing_list').DataTable({
         dom: 'lBfrtip',

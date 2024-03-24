@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 
 from ..forms import PkcostingsummaryForm
 from ..models import PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
@@ -28,7 +29,8 @@ def costingsummary_add(request,costingsummary_id=0):
             print('needassessment_id',needassessment_id)
             form = PkcostingsummaryForm(instance=costingsummary)
             costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id)
-            wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_cost_type=8,ct_stock_type=1).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            # wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_cost_type=8,ct_stock_type=1,ct_stock_type=4).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_stock_type__in=[1, 4],ct_cost_type=8).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
             if wood_cost is not None:
                 wood_cost = round(wood_cost, 2)
             else:
@@ -52,19 +54,21 @@ def costingsummary_add(request,costingsummary_id=0):
             # print(engineer_cost)
             PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_engineer_cost=engineer_cost)
 
-            making_labour_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=2).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
-            if making_labour_cost is not None:
-                making_labour_cost = round(making_labour_cost, 2)
-            else:
-                making_labour_cost = 0.0
+            # making_labour_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=2).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            # if making_labour_cost is not None:
+            #     making_labour_cost = round(making_labour_cost, 2)
+            # else:
+            #     making_labour_cost = 0.0
 
-            packing_labour_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            packing_labour_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=3).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
+            print('packing_labour_cost',packing_labour_cost)
             if packing_labour_cost is not None:
                 packing_labour_cost = round(packing_labour_cost, 2)
             else:
                 packing_labour_cost = 0.0
 
-            labour_cost=making_labour_cost+packing_labour_cost
+            # labour_cost=making_labour_cost+packing_labour_cost
+            labour_cost=packing_labour_cost
             # print(labour_cost)
             PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_labour_cost=labour_cost)
 
@@ -113,6 +117,14 @@ def costingsummary_add(request,costingsummary_id=0):
                     'first_name': first_name,
                     'user_id': user_id,
                     'costing_list': costing_list,
+                    'wood_cost': wood_cost,
+                    'engineer_cost': engineer_cost,
+                    'labour_cost': labour_cost,
+                    'crane_cost': crane_cost,
+                    'ht_cost': ht_cost,
+                    'management_cost': management_cost,
+                    'material_cost': material_cost,
+                    'transport_cost': transport_cost,
                     }
         return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
     else:
