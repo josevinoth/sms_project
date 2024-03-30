@@ -1,12 +1,8 @@
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError
 from django.http import JsonResponse
-
 from ..forms import PkpurchaseorderForm
 from ..models import PkneedassessmentInfo,PkpurchaseorderInfo
 from django.shortcuts import render, redirect
-from random import randint
 from django.contrib import messages
 
 @login_required(login_url='login_page')
