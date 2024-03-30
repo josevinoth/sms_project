@@ -50,18 +50,9 @@ def rtratemaster_add(request,rtratemaster_id=0):
                 messages.error(request, 'Duplicate Record Found. Please enter a Unique Values.')
                 return redirect(request.META['HTTP_REFERER'])
         else:
-            rtratemaster = RtratemasterInfo.objects.get(pk=rtratemaster_id)
-            form = RtratemasteraddForm(request.POST,instance=rtratemaster)
-            if form.is_valid():
-                form.save()
-                print("Transport Route Rate master Form saved")
-                messages.success(request, 'Record Updated Successfully')
-                # return redirect(request.META['HTTP_REFERER'])
-                return redirect('/SMS/rtratemaster_list')
-            else:
-                print("Transport Route Rate Form not saved")
-                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-                return redirect(request.META['HTTP_REFERER'])
+            print("Transport Route Rate Form not saved")
+            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            return redirect(request.META['HTTP_REFERER'])
 
 # List rtratemaster
 @login_required(login_url='login_page')

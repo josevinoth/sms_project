@@ -27,7 +27,8 @@
         <thead class="thead-dark">
         <tr>
             <th>Created On</th>
-            <th>PO Number</th>
+            <th>Assessment Number</th>
+            <th>Customer    PO Number</th>
             <th>Date</th>
             <th>Value</th>
             <th>Tax</th>
@@ -44,6 +45,7 @@
         {% for purchaseorderinfo in purchaseorder_list %}
         <tr>
             <td> {{purchaseorderinfo.po_created_at}}</td>
+            <td> {{purchaseorderinfo.po_assessment_num}}</td>
             <td> {{purchaseorderinfo.po_num}}</td>
             <td> {{purchaseorderinfo.po_date}}</td>
             <td> {{purchaseorderinfo.po_value}}</td>
