@@ -9,7 +9,18 @@
 		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Costing Summary</h3></div>
+					<div class="card-header text-center">
+						<div class="row">
+							<div class="col-3"></div>
+							<div class="col-6">
+								<h3>Add/Update Costing Summary</h3>
+							</div>
+							<div class="col-3">
+								<a href="{% url 'bvm_quotation_pdf' %}" class="btn btn-warning btn-block" id="damage_report_btn"><i class="fa fa-download" aria-hidden="true"> Quotation</i>
+								</a>
+							</div>
+						</div>
+					</div>
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col-6">
@@ -55,6 +66,50 @@
 									</div>
 									{% render_field form.cs_management_cost id="cs_management_cost" class="form-control disable_a_href" %}
 								</div>
+								<div id="accordion" class="container-fluid">
+									<div class="card">
+										<div class="card-header bg-info" id="headingOne">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+													Address
+												</a>
+											</h5>
+										</div>
+										<div id="collapseOne" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.cs_address id="cs_address"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-header bg-info" id="headingTwo">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+													Cost Includes
+												</a>
+											</h5>
+										</div>
+										<div id="collapseTwo" class="collapse " aria-labelledby="headingTwo" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.cs_cost_includes id="cs_cost_includes"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-header bg-info" id="headingThree">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+													Notes
+												</a>
+											</h5>
+										</div>
+										<div id="collapseThree" class="collapse " aria-labelledby="headingThree" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.cs_notes id="cs_notes"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+								</div>
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
@@ -99,8 +154,53 @@
 									</div>
 									{% render_field form.cs_rate_per_cft id="cs_rate_per_cft"  class="form-control disable_a_href" %}
 								</div>
-								{% render_field form.cs_updated_by id="cs_updated_by" hidden="True" class="form-control" %}
+								<div id="accordion_1" class="container-fluid">
+									<div class="card">
+										<div class="card-header bg-info" id="headingFour">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
+													Terms & Conditions
+												</a>
+											</h5>
+										</div>
+										<div id="collapseFour" class="collapse " aria-labelledby="headingFour" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.cs_terms_condition id="cs_terms_condition"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-header bg-info" id="headingFive">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
+													Client Scope
+												</a>
+											</h5>
+										</div>
+										<div id="collapseFive" class="collapse " aria-labelledby="headingFive" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.cs_client_scope id="cs_client_scope"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-header bg-info" id="headingSix">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix">
+													BVM Scope
+												</a>
+											</h5>
+										</div>
+										<div id="collapseSix" class="collapse " aria-labelledby="headingSix" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.cs_bvm_scope id="cs_bvm_scope"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+								</div>
 							</div>
+							{% render_field form.cs_updated_by id="cs_updated_by" hidden="True" class="form-control" %}
+
 							<div class="container-fluid input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Remarks</span>
@@ -166,8 +266,8 @@
 			<th>Total Cost</th>
 			<th>Updated at</th>
 			<th>Updated By</th>
-<!--			<th>Edit</th>-->
-<!--			<th>Delete</th>-->
+			<!--			<th>Edit</th>-->
+			<!--			<th>Delete</th>-->
 		</thead>
 		<tbody>
 		{% for costinginfo in costing_list %}
@@ -190,19 +290,19 @@
 			<td> {{costinginfo.ct_total_cost}}</td>
 			<td> {{costinginfo.ct_updated_at}}</td>
 			<td> {{costinginfo.ct_updated_by}}</td>
-<!--			<td>-->
-<!--				<a class="btn btn-primary" href="{% url 'costing_update' costinginfo.id %}" class="btn btn-primary">-->
-<!--					<i class="far fa-edit"></i>-->
-<!--				</a>-->
-<!--			</td>-->
-<!--			<td>-->
-<!--				<form action="{% url 'costing_delete' costinginfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
-<!--					{% csrf_token %}-->
-<!--					<button type="submit" class="btn btn-danger">-->
-<!--						<i class="fas fa-trash-alt"></i>-->
-<!--					</button>-->
-<!--				</form>-->
-<!--			</td>-->
+			<!--			<td>-->
+			<!--				<a class="btn btn-primary" href="{% url 'costing_update' costinginfo.id %}" class="btn btn-primary">-->
+			<!--					<i class="far fa-edit"></i>-->
+			<!--				</a>-->
+			<!--			</td>-->
+			<!--			<td>-->
+			<!--				<form action="{% url 'costing_delete' costinginfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
+			<!--					{% csrf_token %}-->
+			<!--					<button type="submit" class="btn btn-danger">-->
+			<!--						<i class="fas fa-trash-alt"></i>-->
+			<!--					</button>-->
+			<!--				</form>-->
+			<!--			</td>-->
 		</tr>
 		{% endfor %}
 		</tbody>

@@ -1,0 +1,118 @@
+{% extends "asset_mgt_app/report_header_landscape.html" %}
+{% block content %}
+<div>
+    <table class='report_details'>
+        <tr>
+            <td colspan="3">
+                <h3>BVM PACK SOLUTIONS PVT LTD</h3>
+                <h5>Address 70, Adam Nagar Road Nagalkeni, Chrompet Chennai 600 044</h5>
+            </td>
+            <td colspan="1">
+                <img src="media/Company_Logo.png" alt="home" class="centered-image">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h3>QUOTATION FOR PACKING SERVICE</h3>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="1">
+                <b>Address</b> '{{address}}'
+            </td>
+        </tr>
+    </table>
+    <br>
+    <table class='report_details'>
+        <tr>
+            <th colspan="4" style="text-align: left;"><b>Cost Includes</b></th>
+        </tr>
+        <tr>
+            <td colspan="4" style="text-align: left;">
+                 '{{cost_includes}}'
+            </td>
+        </tr>
+    </table>
+    <br>
+    <table class='report_details'>
+        <tr>
+            <th colspan="4" style="text-align: left;"><b>Notes</b></th>
+        </tr>
+        <tr>
+            <td colspan="4" style="text-align: left;">
+                 '{{notes}}'
+            </td>
+        </tr>
+    </table>
+     <br>
+    <table class='report_details'>
+        <tr>
+            <th colspan="4" style="text-align: left;"><b>Terms & Conditions</b></th>
+        </tr>
+        <tr>
+            <td colspan="4" style="text-align: left;">
+                 '{{terms_condition}}'
+            </td>
+        </tr>
+    </table>
+    <br>
+    <table class='report_details'>
+        <tr>
+            <th colspan="4" style="text-align: left;"><b>Client Scope</b></th>
+        </tr>
+        <tr>
+            <td colspan="4" style="text-align: left;">
+                 '{{client_scope}}'
+            </td>
+        </tr>
+    </table>
+    <br>
+    <table class='report_details'>
+        <tr>
+            <th colspan="4" style="text-align: left;"><b>BVM Scope</b></th>
+        </tr>
+        <tr>
+            <td colspan="4" style="text-align: left;">
+                 '{{bvm_scope}}'
+            </td>
+        </tr>
+    </table>
+    <br>
+    <small> Refer to our discussion, please find our offer for packing service at your premises</small>
+    <hr class="report_hrItem"/>
+    <table class='report_details'>
+        <tr>
+            <th>SL No</th>
+            <th>Item</th>
+            <th>Description</th>
+            <th>UOM</th>
+            <th>Length</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Doc Ref</th>
+            <th>Unit Cost (INR)</th>
+            <th>Qty</th>
+            <th>Total Cost (INR)</th>
+        </tr>
+        {% for quote in quotation %}
+        <tr>
+            <td>{{consignment_goods.cg_consignerinvoice}}</td>
+            <td>{{consignment_goods.cg_consignerinvoice_date}}</td>
+            <td>{{consignment_goods.cg_consigner}}</td>
+            <td>{{consignment_goods.cg_consignee}}</td>
+            <td>{{consignment_goods.cg_currency_type}}</td>
+            <td>{{consignment_goods.cg_consignervalue}}</td>
+            <td>{{consignment_goods.cg_valueininr}}</td>
+            <td>{{consignment_goods.cg_ebillno}}</td>
+            <td>{{consignment_goods.cg_dateofissue}}</td>
+            <td>{{consignment_goods.cg_dateofvalidity}}</td>
+            <td>{{consignment_goods.cg_description}}</td>
+            <td>{{consignment_goods.cg_noofpieces}}</td>
+            <td>{{consignment_goods.cg_weight}}</td>
+            <td>{{consignment_goods.cg_arrival_date}}</td>
+            <td>{{consignment_goods.cg_unloading_date}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock content %}

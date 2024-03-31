@@ -294,4 +294,3 @@ def pk_get_pk_requirement_type(request):
     # Return JSON response
     return JsonResponse(data)
 
-

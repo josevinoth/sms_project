@@ -1,12 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 
 from ..forms import PkcostingsummaryForm
 from ..models import PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+
 
 @login_required(login_url='login_page')
 def costingsummary_add(request,costingsummary_id=0):
@@ -172,3 +175,36 @@ def costing_summary_check_unique_field(request):
     cs_assessment_num = request.GET.get('cs_assessment_num')
     exists = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num).exists()
     return JsonResponse({'exists': exists})
+
+@login_required(login_url='login_page')
+def bvm_quotation_pdf(request,quotation_id=0):
+    needassessment_id = request.session.get('na_assessment_id')
+    address=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_address
+    cost_includes=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_cost_includes
+    notes=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_notes
+    terms_condition=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_terms_condition
+    client_scope=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_client_scope
+    bvm_scope=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_bvm_scope
+    needassessment_num=PkneedassessmentInfo.objects.get(pk=needassessment_id).na_assessment_num
+    context = {
+        'address': address,
+        'cost_includes': cost_includes,
+        'notes': notes,
+        'terms_condition': terms_condition,
+        'client_scope': client_scope,
+        'bvm_scope': bvm_scope,
+    }
+    file_name = str("Quotation_") + str(needassessment_num) + str(".pdf")
+    template_path = 'asset_mgt_app/bvm_quotation_pdf.html'
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename={file_name}'
+
+    template = get_template(template_path)
+    html = template.render(context)
+
+    # Create PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse('We has some error <pre>' + html + '</pre>')
+    return response
