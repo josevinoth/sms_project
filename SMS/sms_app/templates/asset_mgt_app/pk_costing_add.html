@@ -20,6 +20,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Requirement Type</span>
+									</div>
+									{% render_field form.ct_requirement id="ct_requirement" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Cost Type</span>
 									</div>
 									{% render_field form.ct_cost_type id="ct_cost_type" onchange="change_cost_type()" class="form-control" %}
@@ -147,6 +153,7 @@ $(document).ready(function() {
 	document.getElementById("ct_updated_by").value ='{{user_id}}';
 	document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
 	change_cost_type();
+	load_pk_requirement_type();
 	});
 </script>
 
@@ -514,4 +521,28 @@ function change_charge_type() {
     });
 }
 </script>
+
+<script>
+	function load_pk_requirement_type() {
+    var ct_assessment_num_id = $('#ct_assessment_num').val();
+    $.ajax({
+        url: '{% url 'pk_get_pk_requirement_type' %}',
+        type: 'GET',
+        data: {'ct_assessment_num_id': ct_assessment_num_id},
+        dataType: 'json',
+        success: function(data) {
+        	$('#ct_requirement').empty();
+			$('#ct_requirement').empty().append("<option value='0'>--Select--</option>");
+        	var ct_requirement_name=data.requirement_type_val;
+        	var ct_requirement_id=data.requirement_type_id;
+        	var len = (ct_requirement_id).length;
+        	$('#ct_requirement').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#ct_requirement").append("<option value='"+ct_requirement_id[i]+"'>"+ct_requirement_name[i]+"</option>");
+			}
+        }
+    });
+}
+</script>
+
 {% endblock content %}

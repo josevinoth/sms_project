@@ -17,3 +17,4 @@ class PkcostingForm(forms.ModelForm):
         self.fields['ct_assessment_num'].empty_label = "--Select--"
         self.fields['ct_item'].empty_label = "--Select--"
         self.fields['ct_itemdescription'].empty_label = "--Select--"
+        self.fields['ct_requirement'].empty_label = "--Select--"

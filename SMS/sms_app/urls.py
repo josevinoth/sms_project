@@ -482,5 +482,6 @@ urlpatterns = [
     path('comments_cancel/', views.comments_cancel, name='comments_cancel'),# cancel comments
     path('pk_get_item_description/', views.pk_get_item_description, name='pk_get_item_description'),# get item_description
     path('pk_get_customer/', views.pk_get_customer, name='pk_get_customer'),# pk_get_customer
+    path('pk_get_pk_requirement_type/', views.pk_get_pk_requirement_type, name='pk_get_pk_requirement_type'),# pk_get_pk_requirement_type
 ]
 

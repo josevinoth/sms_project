@@ -1,7 +1,9 @@
 import json
+from html import unescape
+
 from django.contrib.auth.decorators import login_required
 from ..forms import ModifyDimensionsForm,CostingSearchForm,PkcostingForm
-from ..models import pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo
+from ..models import Natypeofreq,Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
@@ -11,19 +13,27 @@ def costing_add(request,costing_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
+
     if request.method == "GET":
         if costing_id == 0:
             form = PkcostingForm()
-        else:
-            costing=PkcostingInfo.objects.get(pk=costing_id)
-            form = PkcostingForm(instance=costing)
-        context={
+            context = {
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
                 'na_assessment_num_id': na_assessment_num_id,
                 'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id),
-                }
+            }
+        else:
+            costing=PkcostingInfo.objects.get(pk=costing_id)
+            form = PkcostingForm(instance=costing)
+            context={
+                    'form': form,
+                    'first_name': first_name,
+                    'user_id': user_id,
+                    'na_assessment_num_id': na_assessment_num_id,
+                    'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id),
+                    }
         return render(request, "asset_mgt_app/pk_costing_add.html", context)
     else:
         if costing_id == 0:
@@ -258,6 +268,27 @@ def pk_get_item_description(request):
     data = {
         'item_description_val': item_description_val,
         'item_description_id': item_description_id,
+    }
+
+    # Return JSON response
+    return JsonResponse(data)
+
+@login_required(login_url='login_page')
+def pk_get_pk_requirement_type(request):
+    requirement_type_id = []
+    requirement_type_val = []
+    ct_assessment_num_id = request.GET.get('ct_assessment_num_id')
+    print('ct_assessment_num_id',ct_assessment_num_id)
+    # Fetch requirement type
+    requirement_type = Nadimension.objects.filter(nad_assess_num=ct_assessment_num_id).values_list('nad_type_of_req',flat=True)
+    # Extract id and id_item_description attributes from queryset
+    for type in requirement_type:
+        requirement_type_id.append(Natypeofreq.objects.get(id=type).id)
+        requirement_type_val.append(Natypeofreq.objects.get(id=type).type_of_req)
+    # Create JSON response data
+    data = {
+        'requirement_type_val': requirement_type_val,
+        'requirement_type_id': requirement_type_id,
     }
 
     # Return JSON response

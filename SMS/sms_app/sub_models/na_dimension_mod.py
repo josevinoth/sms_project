@@ -20,4 +20,4 @@ class Nadimension(models.Model):
         ordering = ["nad_assess_num"]
 
     def __str__(self):
-        return self.nad_assess_num
+        return str(self.nad_assess_num)
