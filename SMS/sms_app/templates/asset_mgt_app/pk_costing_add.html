@@ -20,15 +20,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Requirement Type</span>
+										<span class="input-group-text">Cost Type</span>
 									</div>
-									{% render_field form.ct_requirement id="ct_requirement" class="form-control" %}
+									{% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Cost Type</span>
+										<span class="input-group-text">Requirement Type</span>
 									</div>
-									{% render_field form.ct_cost_type id="ct_cost_type" onchange="change_cost_type()" class="form-control" %}
+									{% render_field form.ct_requirement id="ct_requirement" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -117,7 +117,7 @@
 									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
 								</div>
 								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
-								{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" hidden="True"  class="form-control" %}
+								{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
 							</div>
 						</div>
 						<div class="row">
@@ -153,7 +153,6 @@ $(document).ready(function() {
 	document.getElementById("ct_updated_by").value ='{{user_id}}';
 	document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
 	change_cost_type();
-	load_pk_requirement_type();
 	});
 </script>
 
@@ -531,6 +530,7 @@ function change_charge_type() {
         data: {'ct_assessment_num_id': ct_assessment_num_id},
         dataType: 'json',
         success: function(data) {
+        	$('#ct_requirement').removeClass('disable_a_href');
         	$('#ct_requirement').empty();
 			$('#ct_requirement').empty().append("<option value='0'>--Select--</option>");
         	var ct_requirement_name=data.requirement_type_val;
@@ -545,4 +545,10 @@ function change_charge_type() {
 }
 </script>
 
+<script>
+    function onChangeHandler() {
+        change_cost_type();
+        load_pk_requirement_type();
+    }
+</script>
 {% endblock content %}
