@@ -16,6 +16,8 @@ class Nadimension(models.Model):
     nad_type_of_req = models.ForeignKey(Natypeofreq, on_delete=models.CASCADE)
     nad_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='', limit_choices_to={'id__in': [1,2,3,4]},blank=True,null=True)
     nad_plywood_thickness = models.FloatField(default=0.0)
+    nad_cost_unit=models.FloatField(default=0.0,null=True,blank=True)
+    nad_cost_total=models.FloatField(default=0.0,null=True,blank=True)
     class Meta:
         ordering = ["nad_assess_num"]
 

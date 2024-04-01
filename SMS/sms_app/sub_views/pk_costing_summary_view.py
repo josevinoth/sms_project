@@ -1,10 +1,11 @@
+from datetime import datetime
+
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 
 from ..forms import PkcostingsummaryForm
-from ..models import PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
+from ..models import Nadimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
@@ -186,6 +187,26 @@ def bvm_quotation_pdf(request,quotation_id=0):
     client_scope=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_client_scope
     bvm_scope=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_bvm_scope
     needassessment_num=PkneedassessmentInfo.objects.get(pk=needassessment_id).na_assessment_num
+    quotation=Nadimension.objects.filter(nad_assess_num=needassessment_id)
+    # get requirement type from need assessment dimension model
+    na_req=Nadimension.objects.filter(nad_assess_num=needassessment_id)
+    quotation_number = PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_quotation_number
+    total_sum=0
+    for i in na_req:
+        j=i.nad_type_of_req
+        k=i.id
+        qty=i.nad_quantity
+        total_cost=PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_requirement=j).aggregate(total_cost=Sum('ct_total_cost'))['total_cost'] or 0
+        Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost,2))
+        try:
+            Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost/qty,2))
+        except:
+            Nadimension.objects.filter(pk=k).update(nad_cost_unit=0)
+        total_sum=total_sum+total_cost
+    gst=round(total_sum*18/100,2)
+    final_cost=round((total_sum+gst),2)
+    today = datetime.now()
+    formatted_date = today.strftime("%d-%b-%Y")
     context = {
         'address': address,
         'cost_includes': cost_includes,
@@ -193,6 +214,12 @@ def bvm_quotation_pdf(request,quotation_id=0):
         'terms_condition': terms_condition,
         'client_scope': client_scope,
         'bvm_scope': bvm_scope,
+        'quotation': quotation,
+        'total_sum': total_sum,
+        'gst': gst,
+        'final_cost': final_cost,
+        'quotation_number': quotation_number,
+        'today_date': formatted_date,
     }
     file_name = str("Quotation_") + str(needassessment_num) + str(".pdf")
     template_path = 'asset_mgt_app/bvm_quotation_pdf.html'

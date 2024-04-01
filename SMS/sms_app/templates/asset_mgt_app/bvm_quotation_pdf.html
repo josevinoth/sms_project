@@ -18,7 +18,65 @@
         </tr>
         <tr>
             <td colspan="1">
-                <b>Address</b> '{{address}}'
+                <b>Address:</b> {{address}}
+            </td>
+            <td colspan="1">
+                <b>Quotation Date:</b> {{today_date}}
+            </td>
+            <td colspan="1">
+                <b>Quotation Number:</b> {{quotation_number}}
+            </td>
+        </tr>
+    </table>
+    <br>
+    <small> Refer to our discussion, please find our offer for packing service at your premises</small>
+    <hr class="report_hrItem"/>
+    <table class='report_details'>
+        <tr>
+            <th>Item</th>
+            <th>Description</th>
+            <th>UOM</th>
+            <th>Length</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Unit Cost (INR)</th>
+            <th>Qty</th>
+            <th>Total Cost (INR)</th>
+        </tr>
+        {% for quote in quotation %}
+        <tr>
+            <td>{{quote.nad_type_of_req}}</td>
+            <td>{{quote.nad_type_of_req}}</td>
+            <td>{{quote.nad_uom}}</td>
+            <td>{{quote.nad_length}}</td>
+            <td>{{quote.nad_width}}</td>
+            <td>{{quote.nad_height}}</td>
+            <td>{{quote.nad_cost_unit}}</td>
+            <td>{{quote.nad_quantity}}</td>
+            <td>{{quote.nad_cost_total}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <table class='report_details'>
+        <tr>
+            <td colspan="7"></td>
+            <td colspan="1"><b>Total Cost</b></td>
+            <td colspan="1">
+                <b>{{total_sum}}</b>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="7"></td>
+            <td colspan="1"><b>TAXES AT ACTUAL 18%</b></td>
+            <td colspan="1">
+                <b>{{gst}}</b>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="7"></td>
+            <td colspan="1"><b>Final Cost</b></td>
+            <td colspan="1">
+                <b>{{final_cost}}</b>
             </td>
         </tr>
     </table>
@@ -29,7 +87,7 @@
         </tr>
         <tr>
             <td colspan="4" style="text-align: left;">
-                 '{{cost_includes}}'
+                {{cost_includes}}
             </td>
         </tr>
     </table>
@@ -40,18 +98,18 @@
         </tr>
         <tr>
             <td colspan="4" style="text-align: left;">
-                 '{{notes}}'
+                {{notes}}
             </td>
         </tr>
     </table>
-     <br>
+    <br>
     <table class='report_details'>
         <tr>
             <th colspan="4" style="text-align: left;"><b>Terms & Conditions</b></th>
         </tr>
         <tr>
             <td colspan="4" style="text-align: left;">
-                 '{{terms_condition}}'
+                {{terms_condition}}
             </td>
         </tr>
     </table>
@@ -62,7 +120,7 @@
         </tr>
         <tr>
             <td colspan="4" style="text-align: left;">
-                 '{{client_scope}}'
+                {{client_scope}}
             </td>
         </tr>
     </table>
@@ -73,46 +131,9 @@
         </tr>
         <tr>
             <td colspan="4" style="text-align: left;">
-                 '{{bvm_scope}}'
+                {{bvm_scope}}
             </td>
         </tr>
-    </table>
-    <br>
-    <small> Refer to our discussion, please find our offer for packing service at your premises</small>
-    <hr class="report_hrItem"/>
-    <table class='report_details'>
-        <tr>
-            <th>SL No</th>
-            <th>Item</th>
-            <th>Description</th>
-            <th>UOM</th>
-            <th>Length</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>Doc Ref</th>
-            <th>Unit Cost (INR)</th>
-            <th>Qty</th>
-            <th>Total Cost (INR)</th>
-        </tr>
-        {% for quote in quotation %}
-        <tr>
-            <td>{{consignment_goods.cg_consignerinvoice}}</td>
-            <td>{{consignment_goods.cg_consignerinvoice_date}}</td>
-            <td>{{consignment_goods.cg_consigner}}</td>
-            <td>{{consignment_goods.cg_consignee}}</td>
-            <td>{{consignment_goods.cg_currency_type}}</td>
-            <td>{{consignment_goods.cg_consignervalue}}</td>
-            <td>{{consignment_goods.cg_valueininr}}</td>
-            <td>{{consignment_goods.cg_ebillno}}</td>
-            <td>{{consignment_goods.cg_dateofissue}}</td>
-            <td>{{consignment_goods.cg_dateofvalidity}}</td>
-            <td>{{consignment_goods.cg_description}}</td>
-            <td>{{consignment_goods.cg_noofpieces}}</td>
-            <td>{{consignment_goods.cg_weight}}</td>
-            <td>{{consignment_goods.cg_arrival_date}}</td>
-            <td>{{consignment_goods.cg_unloading_date}}</td>
-        </tr>
-        {% endfor %}
     </table>
 </div>
 {% endblock content %}

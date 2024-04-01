@@ -126,7 +126,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost(Without Margin)</span>
+										<span class="input-group-text">Total Cost (W/O Margin)</span>
 									</div>
 									{% render_field form.cs_total_cost_wom id="cs_total_cost_wom"  class="form-control disable_a_href" %}
 								</div>
@@ -138,7 +138,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost(With Margin)</span>
+										<span class="input-group-text">Total Cost (With Margin)</span>
 									</div>
 									{% render_field form.cs_total_cost_wm id="cs_total_cost_wm"  class="form-control disable_a_href " %}
 								</div>
@@ -154,7 +154,7 @@
 									</div>
 									{% render_field form.cs_rate_per_cft id="cs_rate_per_cft"  class="form-control disable_a_href" %}
 								</div>
-								<div id="accordion_1" class="container-fluid">
+								<div id="accordion_1" class="container-fluid mb-3">
 									<div class="card">
 										<div class="card-header bg-info" id="headingFour">
 											<h5 class="mb-0">
@@ -199,14 +199,13 @@
 									</div>
 								</div>
 							</div>
-							{% render_field form.cs_updated_by id="cs_updated_by" hidden="True" class="form-control" %}
-
 							<div class="container-fluid input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Remarks</span>
+									<span class="input-group-text">Quotation Number</span>
 								</div>
-								{% render_field form.cs_remarks id="cs_remarks"  class="form-control" %}
+								{% render_field form.cs_quotation_number id="cs_quotation_number"  class="form-control" %}
 							</div>
+							{% render_field form.cs_updated_by id="cs_updated_by" hidden="True" class="form-control" %}
 						</div>
 						<div class="row">
 							<div class="col-1"></div>

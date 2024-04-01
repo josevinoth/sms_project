@@ -19,14 +19,13 @@ class PkcostingsummaryInfo(models.Model):
     cs_material_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_transport_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_total_cost_wom = models.FloatField(blank=True, null=True, default=0.0)
-    cs_remarks = models.TextField(blank=True, null=True)
     cs_address = models.TextField(blank=True, null=True)
     cs_cost_includes = models.TextField(blank=True, null=True)
     cs_notes = models.TextField(blank=True, null=True)
     cs_terms_condition = models.TextField(blank=True, null=True)
     cs_client_scope = models.TextField(blank=True, null=True)
     cs_bvm_scope = models.TextField(blank=True, null=True)
-
+    cs_quotation_number=models.CharField(max_length=100,blank=True,null=True)
     class Meta:
         ordering = ["id"]
 
