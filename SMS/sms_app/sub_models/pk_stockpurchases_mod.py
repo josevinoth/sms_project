@@ -11,7 +11,7 @@ class PkstockpurchasesInfo(models.Model):
     sp_width = models.FloatField(blank=True, null=True,default=0.0)
     sp_length= models.FloatField(blank=True, null=True,default=0.0)
     sp_cft = models.FloatField(blank=True, null=True,default=0.0)
-    sp_quantity= models.IntegerField(blank=True, null=True,default=0)
+    sp_quantity= models.FloatField(blank=True, null=True,default=0.0)
     sp_total_cft = models.FloatField(blank=True, null=True,default=0.0)
     sp_gst = models.FloatField(blank=True, null=True,default=0.0)
     sp_gst_amount = models.FloatField(blank=True, null=True,default=0.0)
@@ -31,7 +31,7 @@ class PkstockpurchasesInfo(models.Model):
     sp_thick_height_reduced = models.FloatField(blank=True, null=True, default=0.0)
     sp_width_reduced = models.FloatField(blank=True, null=True, default=0.0)
     sp_length_reduced = models.FloatField(blank=True, null=True, default=0.0)
-    sp_quantity_reduced = models.IntegerField(blank=True, null=True, default=0)
+    sp_quantity_reduced = models.FloatField(blank=True, null=True, default=0.0)
     sp_cft_reduced = models.IntegerField(blank=True, null=True, default=0)
     class Meta:
         ordering = ["sp_purchase_num"]
