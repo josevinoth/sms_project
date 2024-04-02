@@ -18,8 +18,9 @@ class Nadimension(models.Model):
     nad_plywood_thickness = models.FloatField(default=0.0)
     nad_cost_unit=models.FloatField(default=0.0,null=True,blank=True)
     nad_cost_total=models.FloatField(default=0.0,null=True,blank=True)
+    nad_item=models.CharField(max_length=100,null=True,blank=True)
     class Meta:
         ordering = ["nad_assess_num"]
 
     def __str__(self):
-        return str(self.nad_assess_num)
+        return str(self.nad_item)

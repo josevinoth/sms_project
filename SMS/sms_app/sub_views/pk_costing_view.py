@@ -278,14 +278,18 @@ def pk_get_pk_requirement_type(request):
     requirement_type_id = []
     requirement_type_val = []
     ct_assessment_num_id = request.GET.get('ct_assessment_num_id')
-    print('ct_assessment_num_id',ct_assessment_num_id)
     # Fetch requirement type
-    requirement_type = Nadimension.objects.filter(nad_assess_num=ct_assessment_num_id).values_list('nad_type_of_req',flat=True)
+    na_dimension_id = Nadimension.objects.filter(nad_assess_num=ct_assessment_num_id)
+    for a in na_dimension_id:
+        requirement_type_id.append(a.id)
+        requirement_type_val.append(str(a.nad_item)+str(' (')+str(a.nad_type_of_req)+str(' ')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
     # Extract id and id_item_description attributes from queryset
-    for type in requirement_type:
-        requirement_type_id.append(Natypeofreq.objects.get(id=type).id)
-        requirement_type_val.append(Natypeofreq.objects.get(id=type).type_of_req)
+    # for type in requirement_type:
+    #     requirement_type_id.append(Natypeofreq.objects.get(id=type).id)
+    #     requirement_type_val.append(Natypeofreq.objects.get(id=type).type_of_req)
+    # print('na_dimension_id',na_dimension_id)
     # Create JSON response data
+    print('requirement_type_id',requirement_type_id)
     data = {
         'requirement_type_val': requirement_type_val,
         'requirement_type_id': requirement_type_id,
@@ -293,4 +297,27 @@ def pk_get_pk_requirement_type(request):
 
     # Return JSON response
     return JsonResponse(data)
+
+@login_required(login_url='login_page')
+def pk_store_na_dimension_id(request):
+    na_dimension_box_val = []
+    ct_requirement_id= request.GET.get('ct_requirement_id')
+    print('ct_requirement_id',ct_requirement_id)
+    # Fetch requirement type
+    a = Nadimension.objects.get(pk=ct_requirement_id)
+    na_dimension_box_val.append(str(a.nad_type_of_req)+str(' (')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
+    print('na_dimension_box_val',na_dimension_box_val)
+    # Extract id and id_item_description attributes from queryset
+    # for type in requirement_type:
+    #     requirement_type_id.append(Natypeofreq.objects.get(id=type).id)
+    #     requirement_type_val.append(Natypeofreq.objects.get(id=type).type_of_req)
+    # print('na_dimension_id',na_dimension_id)
+    # Create JSON response data
+    data = {
+        'na_dimension_box_val': na_dimension_box_val,
+    }
+
+    # Return JSON response
+    return JsonResponse(data)
+
 

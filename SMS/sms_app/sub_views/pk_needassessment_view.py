@@ -118,16 +118,30 @@ def na_dimension_add(request, na_dimension_id=0):
     else:
         if na_dimension_id == 0:
             form = NadimensionForm(request.POST)
+            if form.is_valid():
+                form.save()
+                try:
+                    last_id = Nadimension.objects.latest('id').id
+                    na_item_num_next = str('Item_') + str(int(1000000 + last_id))
+                except ObjectDoesNotExist:
+                    na_item_num_next = str('Item_') + str(1000000)
+                last_id = Nadimension.objects.latest('id').id
+                Nadimension.objects.filter(id=last_id).update(nad_item=na_item_num_next)
+                print("Main Form Saved")
+                messages.success(request, "Record Updated Successfully")
+            else:
+                print("Main form not saved")
+                messages.error(request, "Record Not Updated Successfully")
         else:
             na_dimensioninfo = Nadimension.objects.get(pk=na_dimension_id)
             form = NadimensionForm(request.POST, instance=na_dimensioninfo)
-        if form.is_valid():
-            form.save()
-            print("Main Form Saved")
-            messages.success(request,"Record Updated Successfully")
-        else:
-            print("Main form not saved")
-            messages.error(request,"Record Not Updated Successfully")
+            if form.is_valid():
+                form.save()
+                print("Main Form Saved")
+                messages.success(request,"Record Updated Successfully")
+            else:
+                print("Main form not saved")
+                messages.error(request,"Record Not Updated Successfully")
         # return redirect('/SMS/needassessment_list')
         return redirect(request.META['HTTP_REFERER'])
 @login_required(login_url='login_page')

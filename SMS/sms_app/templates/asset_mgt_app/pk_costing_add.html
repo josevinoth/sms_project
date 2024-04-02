@@ -26,9 +26,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Requirement Type</span>
+										<span class="input-group-text">Item Name</span>
 									</div>
-									{% render_field form.ct_requirement id="ct_requirement" class="form-control disable_a_href" %}
+									{% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_na_dimension_id()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Requirement Name & 	Size</span>
+									</div>
+									{% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -540,6 +546,22 @@ function change_charge_type() {
         	for( var i = 0; i<len; i++){
         		$("#ct_requirement").append("<option value='"+ct_requirement_id[i]+"'>"+ct_requirement_name[i]+"</option>");
 			}
+        }
+    });
+}
+</script>
+
+<script>
+	function pk_store_na_dimension_id() {
+    var ct_requirement_id = $('#ct_requirement').val();
+    $.ajax({
+        url: '{% url 'pk_store_na_dimension_id' %}',
+        type: 'GET',
+        data: {'ct_requirement_id': ct_requirement_id},
+        dataType: 'json',
+        success: function(data) {
+        	var na_dimension_box_val=data.na_dimension_box_val;
+        	document.getElementById("ct_requirement_size").value=na_dimension_box_val;
         }
     });
 }

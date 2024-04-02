@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Natypeofreq,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
+from ..models import Nadimension,Natypeofreq,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
 
 class PkcostingInfo(models.Model):
     ct_cost_type = models.ForeignKey(Costtype, on_delete=models.CASCADE, default='')
@@ -23,8 +23,8 @@ class PkcostingInfo(models.Model):
     ct_item = models.ForeignKey(pk_itemInfo, on_delete=models.CASCADE, related_name='ct_item', db_column='ct_item',blank=True, null=True)
     ct_itemdescription = models.ForeignKey(pk_itemdescriptionInfo, on_delete=models.CASCADE,
                                            related_name='ct_itemdescription', db_column='ct_itemdescription',blank=True, null=True)
-    ct_requirement=models.ForeignKey(Natypeofreq, on_delete=models.CASCADE,blank=True,null=True,related_name='ct_requirement', db_column='ct_requirement',)
-
+    ct_requirement=models.ForeignKey(Nadimension, on_delete=models.CASCADE,blank=True,null=True,related_name='ct_requirement', db_column='ct_requirement',)
+    ct_requirement_size=models.CharField(max_length=100,null=True,blank=True)
     class Meta:
         ordering = ["ct_cost_type"]
 

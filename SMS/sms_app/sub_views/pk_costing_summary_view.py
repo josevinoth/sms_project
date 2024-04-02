@@ -193,10 +193,10 @@ def bvm_quotation_pdf(request,quotation_id=0):
     quotation_number = PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_quotation_number
     total_sum=0
     for i in na_req:
-        j=i.nad_type_of_req
+        j=i.nad_item
         k=i.id
         qty=i.nad_quantity
-        total_cost=PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_requirement=j).aggregate(total_cost=Sum('ct_total_cost'))['total_cost'] or 0
+        total_cost=PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_requirement=i).aggregate(total_cost=Sum('ct_total_cost'))['total_cost'] or 0
         Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost,2))
         try:
             Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost/qty,2))

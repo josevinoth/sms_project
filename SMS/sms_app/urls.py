@@ -484,5 +484,6 @@ urlpatterns = [
     path('pk_get_customer/', views.pk_get_customer, name='pk_get_customer'),# pk_get_customer
     path('pk_get_pk_requirement_type/', views.pk_get_pk_requirement_type, name='pk_get_pk_requirement_type'),# pk_get_pk_requirement_type
     path('bvm_quotation_pdf/', views.bvm_quotation_pdf, name='bvm_quotation_pdf'),# bvm_quotation_pdf
+    path('pk_store_na_dimension_id/', views.pk_store_na_dimension_id, name='pk_store_na_dimension_id'),# pk_store_na_dimension_id
 ]
 

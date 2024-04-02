@@ -14,6 +14,12 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Item Number</span>
+									</div>
+									{% render_field form.nad_item id="nad_item_id" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
 									{% render_field form.nad_assess_num id="nad_assess_num" class="form-control disable_a_href" %}
