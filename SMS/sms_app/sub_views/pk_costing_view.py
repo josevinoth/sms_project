@@ -63,13 +63,13 @@ def costing_add(request,costing_id=0):
             if form.is_valid():
                 form.save()
                 print("costing Form is Valid")
-                # stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
-                # last_id=costing_id
-                # cost_type_id=PkcostingInfo.objects.get(pk=costing_id).ct_cost_type.id
-                # if cost_type_id==8:
-                #     update_reduced_dimensions(stock_purchase_num,last_id)
-                # else:
-                #     pass
+                stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
+                last_id=costing_id
+                cost_type_id=PkcostingInfo.objects.get(pk=costing_id).ct_cost_type.id
+                if cost_type_id==8:
+                    update_reduced_dimensions(stock_purchase_num,last_id)
+                else:
+                    pass
                 messages.success(request, 'Record Updated Successfully')
             else:
                 print("costing Form is Not Valid")
@@ -138,12 +138,12 @@ def costing_list(request):
 @login_required(login_url='login_page')
 def costing_delete(request,costing_id):
     costing = PkcostingInfo.objects.get(pk=costing_id)
-    # stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
-    # cost_type_id = PkcostingInfo.objects.get(pk=costing_id).ct_cost_type.id
-    # if cost_type_id == 8:
-    #     append_reduced_dimensions(stock_purchase_num, costing_id)
-    # else:
-    #     pass
+    stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
+    cost_type_id = PkcostingInfo.objects.get(pk=costing_id).ct_cost_type.id
+    if cost_type_id == 8:
+        append_reduced_dimensions(stock_purchase_num, costing_id)
+    else:
+        pass
     costing.delete()
     print("Successfully Deleted")
     # return redirect('/SMS/costing_list')
