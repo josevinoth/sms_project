@@ -98,7 +98,7 @@ def update_reduced_dimensions(stock_purchase_num,last_id):
     else:
         current_qty = prev_qty
 
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
+    # PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=current_cft)
 
@@ -112,10 +112,10 @@ def append_reduced_dimensions(stock_purchase_num,costing_id):
     prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft_reduced
 
     if prev_length>=length:
-        current_length = prev_length + length
+        # current_length = prev_length + length
         current_cft= prev_cft + cft
     else:
-        current_length = prev_length
+        # current_length = prev_length
         current_cft= prev_cft
 
     if prev_qty >= qty:
@@ -123,7 +123,7 @@ def append_reduced_dimensions(stock_purchase_num,costing_id):
     else:
         current_qty = prev_qty
 
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
+    # PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=current_cft)
 
