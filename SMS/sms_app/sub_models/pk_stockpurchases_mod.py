@@ -37,7 +37,10 @@ class PkstockpurchasesInfo(models.Model):
         ordering = ["sp_purchase_num"]
 
     def __str__(self):
-        return self.sp_purchase_num
+        if self.sp_purchase_num is None:
+            return "None"  # Or any other default representation
+        else:
+            return str(self.sp_purchase_num)  # Convert the value to a string
 
     def get_absolute_url_pk_stock_purchases(self):
         return reverse('stockpurchases_update', args=[str(self.id)])
