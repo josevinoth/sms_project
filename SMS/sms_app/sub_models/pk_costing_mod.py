@@ -25,6 +25,9 @@ class PkcostingInfo(models.Model):
                                            related_name='ct_itemdescription', db_column='ct_itemdescription',blank=True, null=True)
     ct_requirement=models.ForeignKey(Nadimension, on_delete=models.CASCADE,blank=True,null=True,related_name='ct_requirement', db_column='ct_requirement',)
     ct_requirement_size=models.CharField(max_length=100,null=True,blank=True)
+    ct_width_req = models.FloatField(blank=True, null=True, default=0.0)
+    ct_height_req = models.FloatField(blank=True, null=True, default=0.0)
+    ct_length_req = models.FloatField(blank=True, null=True, default=0.0)
     class Meta:
         ordering = ["ct_cost_type"]
 

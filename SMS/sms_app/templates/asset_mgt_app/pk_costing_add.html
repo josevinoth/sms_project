@@ -62,24 +62,42 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Width (inch)</span>
+										<span class="input-group-text">Width_requested (inch)</span>
+									</div>
+									{% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height_requested (inch)</span>
+									</div>
+									{% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length_requested (Ft)</span>
+									</div>
+									{% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width_available (inch)</span>
 									</div>
 									{% render_field form.ct_width id="ct_width" onchange="change_cost_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Height (inch)</span>
+										<span class="input-group-text">Height_available (inch)</span>
 									</div>
 									{% render_field form.ct_height id="ct_height" onchange="change_cost_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Length (Ft)</span>
+										<span class="input-group-text">Length_available (Ft)</span>
 									</div>
 									{% render_field form.ct_length id="ct_length" onchange="change_cost_type()" class="form-control " %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">UOM</span>
@@ -169,10 +187,16 @@ $(document).ready(function() {
       if (stock_type == 1 || stock_type == 4)
       {
     	$('#ct_item').removeClass('disable_a_href');
+    	$('#ct_width_req').removeClass('disable_a_href');
+    	$('#ct_height_req').removeClass('disable_a_href');
+    	$('#ct_length_req').removeClass('disable_a_href');
 	  }
 	  else
 	  {
 	  	$('#ct_item').addClass('disable_a_href');
+	  	$('#ct_width_req').addClass('disable_a_href');
+    	$('#ct_height_req').addClass('disable_a_href');
+    	$('#ct_length_req').addClass('disable_a_href');
 	  }
       $.ajax({
         url: url,
