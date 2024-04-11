@@ -20,18 +20,17 @@
             <th>WH Stock Number</th>
             <th>Shipper Invoice</th>
             <th>Customer Name</th>
-            <th>Customer Type</th>
             <th>Number of Pieces</th>
-            <th>Package Type</th>
-            <th>Unit Of Measure</th>
-            <th>Length</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>Weight (physical)</th>
-            <th>Volume Weight</th>
-            <th>CBM</th>
-            <!--            <th>QR Code</th>-->
-            <th>Status</th>
+            <th>Weight</th>
+            <th>Branch</th>
+            <th>Unit</th>
+            <th>Bay</th>
+            <th>Stack</th>
+            <th>Check-In Date/Time</th>
+            <th>Goods Status</th>
+            <th>Check-Out Date/Time</th>
+            <th>QR Code</th>
+            <th>Goods Status</th>
             <th>Edit</th>
             <th>Delete</th>
         </thead>
@@ -42,26 +41,24 @@
             <td> {{goodsinfo.wh_qr_rand_num}}</td>
             <td> {{goodsinfo.wh_goods_invoice}}</td>
             <td> {{goodsinfo.wh_customer_name}}</td>
-            <td> {{goodsinfo.wh_customer_type}}</td>
             <td> {{goodsinfo.wh_goods_pieces}}</td>
-            <td> {{goodsinfo.wh_goods_package_type}}</td>
-            <td> {{goodsinfo.wh_uom}}</td>
-            <td> {{goodsinfo.wh_goods_length}}</td>
-            <td> {{goodsinfo.wh_goods_width}}</td>
-            <td> {{goodsinfo.wh_goods_height}}</td>
             <td> {{goodsinfo.wh_goods_weight}}</td>
-            <td> {{goodsinfo.wh_chargeable_weight}}</td>
-            <td> {{goodsinfo.wh_cbm}}</td>
+            <td> {{goodsinfo.wh_branch}}</td>
+            <td> {{goodsinfo.wh_unit}}</td>
+            <td> {{goodsinfo.wh_bay}}</td>
+            <td> {{goodsinfo.wh_stack_layer}}</td>
+            <td> {{goodsinfo.wh_checkin_time}}</td>
+            <td> {{goodsinfo.wh_check_in_out}}</td>
+            <td> {{goodsinfo.wh_checkout_time}}</td>
             <td> {{goodsinfo.wh_goods_status}}</td>
-            <!--                <td>-->
-            <!--                    <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">-->
-            <!--                        {% csrf_token %}-->
-            <!--                        <button type="submit" class="btn">-->
-            <!--                            <i class="fas fa-qrcode"></i>-->
-            <!--                        </button>-->
-            <!--                    </form>-->
-
-            <!--                </td>-->
+            <td>
+                <form action="{% url 'goods_qr_id' goodsinfo.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning ">
+                        <i class="fas fa-qrcode"></i>
+                    </button>
+                </form>
+            </td>
             <td>
 
                 <a class="btn btn-primary" href="{% url 'goods_update' goodsinfo.id %}" >

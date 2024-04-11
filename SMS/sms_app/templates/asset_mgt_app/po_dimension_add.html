@@ -1,0 +1,160 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" action="">
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Need Assessment Dimension</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Item Number</span>
+									</div>
+									{% render_field form.nad_item id="pod_item_id" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Assessment Number</span>
+									</div>
+									{% render_field form.pod_assess_num id="pod_assess_num" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Requirement Type</span>
+									</div>
+									{% render_field form.pod_type_of_req id="pod_type_of_req" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Wood Type</span>
+									</div>
+									{% render_field form.pod_wood_type id="pod_wood_type" onchange="plywood_thickness()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Wood Description</span>
+									</div>
+									{% render_field form.pod_wood_description id="pod_wood_description" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">UOM</span>
+									</div>
+									{% render_field form.pod_uom id="pod_uom" class="form-control" %}
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length</span>
+									</div>
+									{% render_field form.pod_length id="pod_length" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width</span>
+									</div>
+									{% render_field form.pod_width id="pod_width" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height</span>
+									</div>
+									{% render_field form.pod_height id="pod_height" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Plywood Thickness</span>
+									</div>
+									{% render_field form.pod_plywood_thickness id="pod_plywood_thickness" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Job Weight (kg)</span>
+									</div>
+									{% render_field form.pod_job_weight id="pod_job_weight" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quantity</span>
+									</div>
+									{% render_field form.pod_quantity id="pod_quantity" class="form-control" %}
+								</div>
+								{% render_field form.pod_updated_by id="pod_updated_by" hidden="True" class="form-control " %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success" id="save-btn" ><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'po_dimension_cancel' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+</form>
+<script>
+$(document).ready(function() {
+	document.getElementById("pod_updated_by").value ='{{user_id}}';
+	document.getElementById("pod_assess_num").value ='{{na_assessment_num_id}}';
+	plywood_thickness()
+	});
+</script>
+<script>
+   $("#pod_wood_type").change(function () {
+      var wood_type = $(this).val();
+      $('#pod_wood_description').removeClass('disable_a_href');
+           $.ajax({
+        url: '{% url 'load_stock_description' %}',
+        data: {
+          'stock_type': wood_type,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#pod_wood_description').removeClass('disable_a_href');
+			$("#pod_wood_description").empty();
+			$('#pod_wood_description').empty().append("<option value='0'>--Select--</option>");
+        	var pod_wood_description_name=JSON.parse(data)["stock_description"];
+        	var pod_wood_description_id=JSON.parse(data)["stock_description_id"];
+        	var len = (pod_wood_description_id).length;
+        	$('#pod_wood_description').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#pod_wood_description").append("<option value='"+pod_wood_description_id[i]+"'>"+pod_wood_description_name[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
+<script>
+function plywood_thickness() {
+  var wood_type=document.getElementById("pod_wood_type").value
+  if (wood_type==4)
+	{
+		$('#pod_plywood_thickness').removeClass('disable_a_href');
+	}
+  else
+	{
+		$('#pod_plywood_thickness').addClass('disable_a_href');
+  	}
+  endif
+}
+</script>
+{% endblock content %}

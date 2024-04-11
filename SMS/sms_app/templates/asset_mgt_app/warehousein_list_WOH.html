@@ -54,19 +54,10 @@
                 </form>
             </td>
             <td>
-
                 <a class="btn btn-primary" href="{% url 'warehousein_update' goodsinfo.id %}" >
                     <i class="far fa-edit"></i>
                 </a>
             </td>
-            <!--                <td>-->
-            <!--                    <form action="{% url 'goods_delete' goodsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
-            <!--                        {% csrf_token %}-->
-            <!--                        <button type="submit" class="btn">-->
-            <!--                            <i class="fas fa-trash-alt"></i>-->
-            <!--                        </button>-->
-            <!--                    </form>-->
-            <!--                </td>-->
         </tr>
         {% endfor %}
         </tbody>

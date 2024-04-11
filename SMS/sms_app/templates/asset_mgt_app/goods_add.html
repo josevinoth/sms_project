@@ -32,12 +32,8 @@
 		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before Offloading</a>
 		{% endif %}
 		<a class="btn  border focus border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
-		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>
+<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
 		<a class="btn  border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
-		<!--		<a class="btn  border border-dark disable_a_href" id="dispatch_btn" href="{% url 'dispatch_insert' %}">Dispatch</a>-->
-		<!--		<a class="btn  border border-dark disable_a_href" id="billing_btn">Billing</a>-->
-		<!--		<a class="btn  border border-dark disable_a_href" id="expense_btn">Expenses</a>-->
-		<!--		<a class="btn  border border-dark disable_a_href" id="reports_btn">Reports</a>-->
 	</div>
 	<div class="col-2"></div>
 </div>
@@ -45,11 +41,7 @@
 <hr>
 <form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" >
 	{% csrf_token %}
-
-	<!--{{form.as_p}}-->
-
 	<div class="row">
-
 		<div class="col-2">
 			<button type="button" class="btn-lg btn-info" style="width:270px">
 				Goods Qty (Invoice) <h2><span class="badge badge-light">{{gatein_no_of_pkg_val}}</span></h2>
@@ -98,7 +90,7 @@
 					<!--					<p>Invoice Number is  {{ request.session.invoice_num_stock }}</p>-->
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >WH Job Number</span>
@@ -191,7 +183,7 @@
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
-							<div class="col-6">
+							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Package Type</span>
@@ -291,6 +283,64 @@
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
+							<div class="col-4">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text " >Warehouse Branch</span>
+									</div>
+									{% render_field goods_form.wh_branch id="wh_branch" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Warehouse Unit</span>
+									</div>
+									{% render_field goods_form.wh_unit id="wh_unit" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Warehouse Bay</span>
+									</div>
+									{% render_field goods_form.wh_bay id="wh_bay" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Stacking Layer</span>
+									</div>
+									{% render_field goods_form.wh_stack_layer id="wh_stack_layer" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Available Area (Sq.ft)</span>
+									</div>
+									{% render_field goods_form.wh_available_area id="wh_available_area" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Available Volume (Cu.ft)</span>
+									</div>
+									{% render_field goods_form.wh_available_volume id="wh_available_volume" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3" >
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Check-In Time</span>
+									</div>
+									{% render_field goods_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" class="form-control"%}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3" >
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Goods Status</span>
+									</div>
+									{% render_field goods_form.wh_check_in_out id="wh_check_in_out" class="form-control disable_a_href"%}
+									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
 							<div class="container-fluid">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -377,7 +427,15 @@ $(document).ready(function() {
 	var warehousein_status_id='{{warehousein_status}}';
 	var wh_customer_name_val= document.getElementById("wh_customer_name").value;
 	var wh_customer_type_val= document.getElementById("wh_customer_type").value;
-
+	var shipper_invoice_val= document.getElementById("wh_goods_invoice").value;
+	if (shipper_invoice_val=="")
+	{
+		document.getElementById("wh_goods_invoice").value='{{shipper_invoice}}'
+	}
+	else
+	{
+		document.getElementById("wh_goods_invoice").value=shipper_invoice_val
+	}
 	if (wh_customer_name_val=="")
 	{
 		document.getElementById("wh_customer_name").value='{{customer_name_id}}';
@@ -546,5 +604,252 @@ function fumigation_action_chng() {
 	 		$('#wh_fumigation_date').addClass('disable_a_href');
 	 	}
 }
+</script>
+
+<script>
+   $("#wh_branch").change(function () {
+<!--      var url = $("#goods_add").attr("data-branches-url");-->
+      var branchId = $(this).val();
+      $.ajax({
+        url: '{% url 'load_units' %}',
+        data: {
+          'branchId': branchId,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#wh_unit').removeClass('disable_a_href');
+			$("#wh_unit").empty();
+			$('#wh_bay').empty().append("<option value='0'>--Select--</option>");
+			$("#wh_stack_layer").val($("#selectBox option:first").val());
+        	var unit_name=JSON.parse(data)["unit_name_list"];
+        	var unit_id=JSON.parse(data)["unit_id"];
+        	var len = (unit_name).length;
+        	$('#wh_unit').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#wh_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
+
+<!--Fetch Bays-->
+<script>
+   $("#wh_unit").change(function () {
+      var url = $("#goods_add").attr("data-units-url");
+      var branchId = document.getElementById("wh_branch").value
+      var unitId = $(this).val();
+      $.ajax({
+        url: '{% url 'load_bays' %}',
+        data: {
+          'branchId':branchId,
+          'unitId': unitId,
+        },
+		success: function (data) {
+			$('#wh_bay').removeClass('disable_a_href');
+			$("#wh_bay").empty();
+			$("#wh_stack_layer").val($("#selectBox option:first").val());
+        	var bay=JSON.parse(data)["bay_name_list"];
+        	var bay_id=JSON.parse(data)["bay_id"];
+			var len1 = (bay).length;
+        	$("#wh_bay").empty();
+        	$('#wh_bay').empty().append("<option value='0'>--Select--</option>");
+        	for( var j = 0; j<len1; j++){
+        		$("#wh_bay").append("<option value='"+bay_id[j]+"'>"+bay[j]+"</option>");
+			}
+        }
+      });
+    });
+</script>
+
+<!--Enable Stack layer-->
+<script>
+	$("#wh_bay").change(function () {
+		$('#wh_stack_layer').removeClass('disable_a_href');
+		$("#wh_stack_layer").val($("#selectBox option:first").val());
+	});
+</script>
+
+<!--Fetch Available Area and Volume-->
+<script>
+   $("#wh_stack_layer").change(function () {
+      	var url = $("#goods_add").attr("data-bay-url");
+      	var branchId = document.getElementById("wh_branch").value;
+      	var unitId = document.getElementById("wh_unit").value;
+      	var bayId = document.getElementById("wh_bay").value;
+   		var req_area_val = document.getElementById("req_area").value;
+   		var req_volume_val = document.getElementById("volume_weight").value;
+		  $.ajax({
+			url: '{% url 'load_area_volume' %}',
+			data: {
+				'req_area_val':req_area_val,
+				'req_volume_val':req_volume_val,
+				'branchId':branchId,
+				'unitId': unitId,
+				'bayId': bayId,
+			},
+			success: function (data) {
+				$("#wh_available_area").empty();
+				$("#wh_available_volume").empty();
+				var available_area_final=JSON.parse(data)["available_area_final"];
+				var available_volume_final=JSON.parse(data)["available_volume_final"];
+				$("#wh_available_area").val(available_area_final);
+				$("#wh_available_volume").val(available_volume_final);
+			}
+		  });
+    });
+</script>
+
+<!--calculate Area, Volume and Weight-->
+<script>
+function chargeable_weight_fn() {
+  var width_val=document.getElementById("width").value
+  var length_val=document.getElementById("length").value
+  var height_val=document.getElementById("height").value
+  var no_of_piece=document.getElementById("no_of_piece").value
+  selectElement = document.querySelector('#uom');
+  uom_val = selectElement.options[selectElement.selectedIndex].value;
+  if (uom_val=="cm")
+	{
+		var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/6000).toFixed(3)
+		document.getElementById("chargeable_weight").value =chargeable_weight_val;
+		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
+		var volume_val=(width_val*length_val*height_val*no_of_piece).toFixed(3);
+		document.getElementById("volume_weight").value =volume_val;
+		var req_area_val=(length_val*width_val*no_of_piece).toFixed(3)
+		document.getElementById("req_area").value =req_area_val;
+	}
+  else
+	{
+		var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece/366).toFixed(3)
+  		document.getElementById("chargeable_weight").value =chargeable_weight_val;
+  		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
+  		var volume_val=((width_val*length_val*height_val*no_of_piece)*16.3871).toFixed(3);
+		document.getElementById("volume_weight").value =volume_val;
+		var req_area_val=((length_val*width_val*no_of_piece)*6.4516).toFixed(3)
+		document.getElementById("req_area").value =req_area_val;
+  	}
+  endif
+}
+</script>
+
+<!--Enable Forms-->
+<script>
+$(document).ready(function() {
+	var gatein_status_id = '{{gatein_status}}';
+	var loadingbay_status_id='{{loadingbay_status}}';
+	var damage_before_status_id='{{damage_before_status}}';
+	var damage_after_status_id='{{damage_after_status}}';
+	var warehousein_status_id='{{warehousein_status}}';
+	var branch_val=document.getElementById("wh_branch").value
+	var user_role_val='{{user_role}}';
+	var user_branch_id_val='{{user_branch_id}}';
+	var user_branch_val1='{{user_branch}}';
+	var invoice_currency_val='{{invoice_currency}}'
+	var invoice_amount_inr_val='{{invoice_amount_inr}}'
+	if (gatein_status_id =="Completed")
+	{
+		$('#gatein_btn').removeClass('disable_a_href');
+		$('#gatein_btn1').removeClass('disable_a_href');
+		$('#gatein_btn').addClass('btn-success');
+		$('#gatein_btn1').addClass('btn-success');
+		$('#loadingbay_btn').removeClass('disable_a_href');
+		$('#loadingbay_btn1').removeClass('disable_a_href');
+	}
+	else if (gatein_status_id =="Work In Progress")
+	{
+		$('#gatein_btn').removeClass('disable_a_href');
+		$('#gatein_btn1').removeClass('disable_a_href');
+		$('#gatein_btn').addClass('btn-warning');
+		$('#gatein_btn1').addClass('btn-warning');
+	}
+
+	if (loadingbay_status_id =="Completed")
+	{
+		$('#loadingbay_btn').removeClass('disable_a_href');
+		$('#loadingbay_btn1').removeClass('disable_a_href');
+		$('#loadingbay_btn').addClass('btn-success');
+		$('#loadingbay_btn1').addClass('btn-success');
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+	}
+	else if (loadingbay_status_id =="Work In Progress")
+	{
+		$('#loadingbay_btn').removeClass('disable_a_href');
+		$('#loadingbay_btn1').removeClass('disable_a_href');
+		$('#loadingbay_btn').addClass('btn-warning');
+		$('#loadingbay_btn1').addClass('btn-warning');
+	}
+
+	if (damage_before_status_id =="Completed")
+	{
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+		$('#damagecheck_before_btn').addClass('btn-success');
+		$('#damagecheck_before_btn1').addClass('btn-success');
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+	}
+	else if (damage_before_status_id =="Work In Progress")
+	{
+		$('#damagecheck_before_btn').removeClass('disable_a_href');
+		$('#damagecheck_before_btn1').removeClass('disable_a_href');
+		$('#damagecheck_before_btn').addClass('btn-warning');
+		$('#damagecheck_before_btn1').addClass('btn-warning');
+	}
+	if (damage_after_status_id =="Completed")
+	{
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+		$('#damagecheck_after_btn').addClass('btn-success');
+		$('#warehousein_btn').removeClass('disable_a_href');
+	}
+	else if (damage_after_status_id =="No Status")
+	{
+		$('#damagecheck_after_btn').removeClass('disable_a_href');
+		$('#damagecheck_after_btn').addClass('btn-warning');
+	}
+
+	if (warehousein_status_id =="Completed")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
+		$('#warehousein_btn').addClass('btn-success');
+		$('#storage_btn').removeClass('disable_a_href');
+		$('#storage_btn').addClass('btn-success');
+	}
+	else if (warehousein_status_id =="None")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
+	}
+	else if (warehousein_status_id =="No Status")
+	{
+		$('#warehousein_btn').removeClass('disable_a_href');
+		$('#warehousein_btn').addClass('btn-warning');
+	}
+
+	if (user_role_val=="User")
+	{
+		if (branch_val=="")
+		{
+			$('#wh_branch').empty().append("<option value='0'>--Select--</option>");
+			$("#wh_branch").append("<option value='"+user_branch_id_val+"'>"+user_branch_val1+"</option>");
+		}
+		else
+		{
+			document.getElementById("wh_branch").value =branch_val;
+		}
+	}
+
+<!--	Check goods status and disable check-in time-->
+	var goods_status=document.getElementById("wh_check_in_out").value
+	if (goods_status==2)
+	{
+		$('#wh_checkin_time').addClass('disable_a_href');
+		$('#wh_branch').addClass('disable_a_href');
+	}
+	else
+	{
+		$('#wh_checkin_time').removeClass('disable_a_href');
+		$('#wh_branch').removeClass('disable_a_href');
+	}
+  });
 </script>
 {% endblock content %}

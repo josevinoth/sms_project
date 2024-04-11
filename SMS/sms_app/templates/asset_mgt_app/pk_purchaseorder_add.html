@@ -104,6 +104,49 @@
 		<div class="col-2"></div>
 	</div>
 </form>
+<hr>
+<div class="row">
+	<div class="col-1"></div>
+	<div class="col-10">
+		<div id="accordion" class="container-fluid">
+			<div class="card">
+				<div class="card-header bg-info" id="headingOne">
+					<h5 class="mb-0">
+						<button class="btn btn-warning text-white" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+							Add/Edit Comments
+						</button>
+					</h5>
+				</div>
+				<div id="collapseOne" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
+					<div class="card-body">
+						<div id="comments_list_WOH">
+							{% include "asset_mgt_app/comments_list_WOH.html" %}
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="card">
+				<div class="card-header bg-info" id="headingTwo">
+					<h5 class="mb-0">
+						<button class="btn btn-warning text-white collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+							Add/Edit Dimensions
+						</button>
+					</h5>
+				</div>
+				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+					<div class="card-body">
+						<div class="card-body">
+							<div id="na_dimension_list_WOH">
+								{% include "asset_mgt_app/po_dimension_list_WOH.html" %}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-1"></div>
+</div>
 <script>
 $(document).ready(function() {
 	document.getElementById("po_updated_by").value ='{{user_id}}';

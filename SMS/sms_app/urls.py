@@ -485,5 +485,9 @@ urlpatterns = [
     path('pk_get_pk_requirement_type/', views.pk_get_pk_requirement_type, name='pk_get_pk_requirement_type'),# pk_get_pk_requirement_type
     path('bvm_quotation_pdf/', views.bvm_quotation_pdf, name='bvm_quotation_pdf'),# bvm_quotation_pdf
     path('pk_store_na_dimension_id/', views.pk_store_na_dimension_id, name='pk_store_na_dimension_id'),# pk_store_na_dimension_id
+    path('po_dimension_list/', views.po_dimension_list, name='po_dimension_list'),  # List po_dimension
+    path('po_dimension_insert/', views.po_dimension_add, name='po_dimension_insert'),  # Add po_dimension
+    path('po_dimension_update/<int:po_dimension_id>', views.po_dimension_add, name='po_dimension_update'),  # update po_dimension
+    path('po_dimension_delete/<int:po_dimension_id>', views.po_dimension_delete, name='po_dimension_delete'),# delete po_dimension
+    path('po_dimension_cancel/', views.po_dimension_cancel, name='po_dimension_cancel'),  # cancel po_dimension
 ]
-

@@ -1,7 +1,6 @@
 from .sub_views.assetinfo_view import assetinfo_add,asset_list,asset_delete,asset_search,un_assigned_asset_list
 from .sub_views.assign_asset_add_view import assign_asset_add,assign_asset_delete,assign_asset_list_new
 from .sub_views.department_add_view import department_add,department_delete,department_list
-from .sub_views.goods_add_view import goods_add,goods_list,goods_delete
 from .sub_views.goods_check_view import goods_check
 from .sub_views.home_page_view import home_page,wh_e_way_bill_list,edit_wh_e_way_bill_list
 from .sub_views.insurance_add_view import insurance_add,insurance_delete,insurance_list
@@ -29,6 +28,7 @@ from .sub_views.peo_add_view import peo_add,peo_list,peo_delete
 from .sub_views.damage_add_view import damage_add,damage_list,damage_delete
 from .sub_views.damagereport_add_view import damagereport_add,damagereport_list
 from .sub_views.locationmaster_add_view import locationmaster_add,locationmaster_list,locationmaster_delete,load_customer_model,warehousevolme_area_calc
+from .sub_views.goods_add_view import goods_add,goods_list,goods_delete,goods_update
 from .sub_views.employee_add_view import emp_add,emp_list,emp_delete,emp_registration_page
 from .sub_views.unit_add_view import unit_add,unit_list,unit_delete
 from .sub_views.Bay_add_view import bay_add,bay_list,bay_delete
@@ -91,7 +91,7 @@ from .sub_views.Requirements_add_view import requirements_add,requirements_list,
 from .sub_views.pk_needassessment_view import needassessment_add,needassessment_list,needassessment_delete,na_dimension_add,na_dimension_list,na_dimension_delete,na_dimension_cancel
 from .sub_views.pk_openingstock_view import openingstock_add,openingstock_list,openingstock_delete
 from .sub_views.pk_stockpurchases_view import stockpurchases_add,stockpurchases_list,stockpurchases_delete,stockpurchases_cancel
-from .sub_views.pk_purchaseorder_view import purchaseorder_add,purchaseorder_list,purchaseorder_delete,pk_get_customer
+from .sub_views.pk_purchaseorder_view import purchaseorder_add,purchaseorder_list,purchaseorder_delete,pk_get_customer,po_dimension_add,po_dimension_cancel,po_dimension_list,po_dimension_delete
 from .sub_views.pk_quotes_view import quotes_add,quotes_list,quotes_delete
 from .sub_views.pk_costing_view import costing_add,costing_list,costing_delete,load_stock_description,costing_cancel,pk_item_search_page,modify_dimensions_view,pk_item_search_page_costing,pk_get_item_description,pk_get_pk_requirement_type,pk_store_na_dimension_id
 from .sub_views.pk_costing_summary_view import costingsummary_add,costingsummary_list,costingsummary_delete,costing_summary_check_unique_field,bvm_quotation_pdf

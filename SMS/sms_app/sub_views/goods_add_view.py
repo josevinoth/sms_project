@@ -6,7 +6,7 @@ from ..forms import GoodsaddForm
 from ..models import TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
-from random import randint
+from ..views import warehousevolme_area_calc
 # List goods
 @login_required(login_url='login_page')
 def goods_list(request):
@@ -133,19 +133,6 @@ def goods_add(request, goods_id=0):
             }
         else:
             print("I am inside get edit Goods")
-            # goods_list_1 = Warehouse_goods_info.objects.all()
-            # for i in goods_list_1:
-            #     customer_name = i.wh_customer_name
-            #     customer_type = i.wh_customer_type
-            #     try:
-            #         customer_name_id=CustomerInfo.objects.get(cu_name=customer_name).id
-            #         print('customer_name_id',customer_name_id)
-            #         Warehouse_goods_info.objects.filter(wh_customer_name=customer_name).update(wh_customer_name=customer_name_id)
-            #         customer_type_id = TrbusinesstypeInfo.objects.get(tb_trbusinesstype=customer_type).id
-            #         print('customer_type_id', customer_type_id)
-            #         Warehouse_goods_info.objects.filter(wh_customer_type=customer_type).update(wh_customer_type=customer_type_id)
-            #     except ObjectDoesNotExist:
-            #         pass
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(instance=goodsinfo)
             context = {
@@ -180,12 +167,34 @@ def goods_add(request, goods_id=0):
                     last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
                     wh_stock_num = str('Stock_') + str(int(((Warehouse_goods_info.objects.get(id=last_id)).wh_qr_rand_num).replace('Stock_', '')) + 1)
                 except ObjectDoesNotExist:
-                    wh_stock_num = str('Stock_') + str(randint(10000, 99999))
+                    wh_stock_num = str('Stock_') + str(1000000)
                 # wh_stock_num = last_id + 1
-                goods_form.save()
+
+                available_area_val = request.POST.get('wh_available_area')
+                available_volume_val = request.POST.get('wh_available_volume')
+                required_area_val = request.POST.get('wh_goods_area')
+                required_volume_val = request.POST.get('wh_goods_volume_weight')
+                stack_layer_val = request.POST.get('wh_stack_layer')
+                if (float(available_area_val) < float(required_area_val)):
+                    if (float(stack_layer_val) == 1):
+                        messages.error(request, 'Area Not Sufficient for Storage. Try to Stack in next layer!')
+                    else:
+                        messages.success(request, 'Goods Stacked above Ground Level!')
+                        if (float(available_volume_val) < float(required_volume_val)):
+                            messages.error(request, 'Volume Not Sufficient for Storage!')
+                        else:
+                            goods_form.save()
+                            messages.success(request, 'Record saved successfully')
+                else:
+                    if (float(available_volume_val) < float(required_volume_val)):
+                        messages.error(request, 'Volume Not Sufficient for Storage!')
+                    else:
+                        messages.success(request, 'Goods Stored!')
+                        goods_form.save()
+                        messages.success(request, 'Record saved successfully')
+                goods_update(request)
                 last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
                 Warehouse_goods_info.objects.filter(id=last_id).update(wh_qr_rand_num=wh_stock_num)
-                messages.success(request, 'Record saved successfully')
             else:
                 print("Goods Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
@@ -195,7 +204,27 @@ def goods_add(request, goods_id=0):
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(request.POST, instance=goodsinfo)
             if goods_form.is_valid():
-                goods_form.save()
+
+                available_area_val = request.POST.get('wh_available_area')
+                available_volume_val = request.POST.get('wh_available_volume')
+                required_area_val = request.POST.get('wh_goods_area')
+                required_volume_val = request.POST.get('wh_goods_volume_weight')
+                stack_layer_val = request.POST.get('wh_stack_layer')
+                if (float(available_area_val) < float(required_area_val)):
+                    if (float(stack_layer_val) == 1):
+                        messages.error(request, 'Area Not Sufficient for Storage. Try to Stack in next layer!')
+                    else:
+                        messages.success(request, 'Goods Stacked above Ground Level!')
+                        if (float(available_volume_val) < float(required_volume_val)):
+                            messages.error(request, 'Volume Not Sufficient for Storage!')
+                        else:
+                            goods_form.save()
+                else:
+                    if (float(available_volume_val) < float(required_volume_val)):
+                        messages.error(request, 'Volume Not Sufficient for Storage!')
+                    else:
+                        messages.success(request, 'Goods Stored!')
+                        goods_form.save()
                 print("Goods Form is Valid")
                 # Validate Invoice vs Actual weight & qty
                 raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
@@ -203,11 +232,11 @@ def goods_add(request, goods_id=0):
                 cumsum = sum(raw_data)
                 weight_cumsum = sum(weigth_data)
                 if cumsum > tot_package:
-                    messages.error(request, 'Record Not Updated.Number of Pacakges Exceeds Invoice Count')
+                    messages.error(request, 'Number of Pacakges Exceeds Invoice Count')
                     # transaction.set_rollback(True)
 
                 elif weight_cumsum > invoice_weight:
-                    messages.error(request, 'Record Not Updated.Goods Check-In weight Exceeds Invoice Weight')
+                    messages.error(request, 'Goods Check-In weight Exceeds Invoice Weight')
                     # transaction.set_rollback(True)
                 else:
                     messages.success(request, 'Record Updated Successfully')
@@ -224,4 +253,59 @@ def goods_delete(request, goods_id):
     goodsinfo.delete()
     return redirect('/SMS/goods_insert')
 
+@login_required(login_url='login_page')
+def goods_update(request):
+    wh_job_id = request.session.get('ses_gatein_id_nam')
+    print('wh_job_id',wh_job_id)
+    # //Update Invoice weight, qty,values
+    invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('id', flat=True)
+    stock_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num', flat=True)
+    job_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_job_no', flat=True)
+    invoice_weight = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_weight
+    invoice_package = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_no_of_pkg
+    invoice_value = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_value
+    invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_amount_in
+    gross_wt = 0
+    total_qty = 0
+    for j in stock_id:
+        gross_wt = gross_wt + (Warehouse_goods_info.objects.get(wh_qr_rand_num=j).wh_goods_weight)
+        total_qty = total_qty + (Warehouse_goods_info.objects.get(wh_qr_rand_num=j).wh_goods_pieces)
+
+    for i in range(0, len(invoice_id)):
+        if i == 0:
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=invoice_amount_inr)
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=invoice_weight)
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=invoice_value)
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=invoice_package)
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_gross_weight=gross_wt)
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_qty=total_qty)
+        else:
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=0.0)
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=0.0)
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=0.0)
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=0)
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_gross_weight=0.0)
+            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_qty=0)
+
+    # update gate-in ID in Warehouse_goods_info table
+    try:
+        gatein_job_num_id = Gatein_info.objects.get(gatein_job_no=wh_job_id).id
+        Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_gate_injob_no_id=gatein_job_num_id)
+    except ObjectDoesNotExist:
+        pass
+
+    # update Loading bay ID in Warehouse_goods_info table
+    try:
+        loadingbay_job_num_id = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).id
+        Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_lb_job_no_id=loadingbay_job_num_id)
+    except ObjectDoesNotExist:
+        pass
+
+    # update damage report ID in Warehouse_goods_info table
+    try:
+        dr_job_num_id = DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id).id
+        Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_Dam_rep_job_num_id=dr_job_num_id)
+    except ObjectDoesNotExist:
+        pass
+    warehousevolme_area_calc(request)
 

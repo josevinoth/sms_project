@@ -148,6 +148,7 @@ from .sub_models.pk_stockpurchases_mod import PkstockpurchasesInfo
 from .sub_models.pk_purchaseorder_mod import PkpurchaseorderInfo
 from .sub_models.pk_purchaseorder_mod import PkpurchaseorderInfo
 from .sub_models.na_dimension_mod import Nadimension
+from .sub_models.po_dimension_mod import POdimension
 from .sub_models.pk_quotes_mod import PkquotesInfo
 from .sub_models.pk_retrival_mod import PkretrivalInfo
 from .sub_models.pk_quotation_mod import PkquotationInfo
