@@ -9,7 +9,7 @@ class Gatein_info(models.Model):
     gatein_arrival_date = models.DateTimeField(blank=True, null=True)
     gatein_department = models.ForeignKey(CustomerdepartmentInfo,on_delete=models.CASCADE, blank=False, null=False)
     gatein_shipper = models.CharField(blank=True, null=True, max_length=200)
-    gatein_consignee = models.CharField(blank=True, null=True, max_length=20)
+    gatein_consignee = models.CharField(blank=True, null=True, max_length=200)
     gatein_no_of_pkg = models.IntegerField(blank=True, null=True)
     gatein_weight = models.FloatField(blank=True, null=True)
     gatein_actual_weight = models.FloatField(blank=True, null=True)

@@ -17,4 +17,4 @@ class GateinaddForm(forms.ModelForm):
         self.fields['gatein_pre_id'].empty_label = "--Select--"
         self.fields['gatein_updated_by'].empty_label = "--Select--"
         self.fields['gatein_comodity'].empty_label = "--Select--"
-        self.fields['gatein_pre_id'].queryset = Gatein_pre_info.objects.order_by('-id')[:50]
+        # self.fields['gatein_pre_id'].queryset = Gatein_pre_info.objects.order_by('-id')[:50]
