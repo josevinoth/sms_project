@@ -31,7 +31,7 @@ class Gatein_info(models.Model):
     gatein_po_num = models.CharField(blank=True, null=True, max_length=500)
     gatein_destination = models.CharField(blank=True, null=True, max_length=100)
     gatein_hawb = models.CharField(blank=True, null=True, max_length=100)
-    gatein_truck_number_n = models.ForeignKey(Pregateintruckinfo, on_delete=models.CASCADE, blank=False, null=False,default=22802)
+    gatein_truck_number_n = models.ForeignKey(Pregateintruckinfo, on_delete=models.CASCADE, blank=False, null=False)
     # gatein_sbill = models.CharField(blank=True, null=True, max_length=100)
     # gatein_sbill_date = models.DateField(blank=True, null=True)
 
