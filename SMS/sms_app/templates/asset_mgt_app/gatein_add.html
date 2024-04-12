@@ -103,7 +103,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Dock-In Date & Time</span>
 									</div>
-									{% render_field gatein_form.gatein_arrival_date type="datetime-local" class="form-control" %}
+									{% render_field gatein_form.gatein_arrival_date id='gatein_arrival_date' type="datetime-local" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -155,6 +155,13 @@
 										<span class="input-group-text">Pre-GateIn</span>
 									</div>
 									{% render_field gatein_form.gatein_pre_id class="form-control" id="gatein_pre_id"%}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Pre-GateIn Truck Number</span>
+									</div>
+									{% render_field gatein_form.gatein_truck_number_n class="form-control disable_a_href" id="gatein_truck_number_n"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -330,7 +337,6 @@ $(document).ready(function() {
 <script>
     $("#gatein_customer").change(function () {
       var url = $("#gate_in").attr("data-load_customer_model-url");
-
       var gatein_customer_id = $(this).find(":selected").text();
       $.ajax({
         url: url,
@@ -347,8 +353,6 @@ $(document).ready(function() {
 </script>
 <script>
     $("#gatein_pre_id").change(function () {
-      var url = $("#gate_in").attr("data-load_pregatein-url");
-
       var pre_gatein_val = $(this).find(":selected").text();
        $.ajax({
         url: '{% url 'load_pre_gate_in' %}',
@@ -356,20 +360,44 @@ $(document).ready(function() {
           'pre_gatein_val': pre_gatein_val
         },
 		success: function (data) {
-			var Transporter=JSON.parse(data)["Transporter"];
-			var Driver_Name=JSON.parse(data)["Driver_Name"];
-			var Driver_Contact=JSON.parse(data)["Driver_Contact"];
-			var Driver_License=JSON.parse(data)["Driver_License"];
-			var OTL=JSON.parse(data)["OTL"];
-			var Truck_Number=JSON.parse(data)["Truck_Number"];
-			var Truck_Type=JSON.parse(data)["Truck_Type"];
+			var truck_numbers=data.truck_numbers;
+			var truck_numbers_id=data.truck_numbers_id;
+			$('#gatein_truck_number_n').removeClass('disable_a_href');
+			var len = (truck_numbers).length;
+        	$('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#gatein_truck_number_n").append("<option value='"+truck_numbers_id[i]+"'>"+truck_numbers[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
+<script>
+    $("#gatein_truck_number_n").change(function () {
+      var gatein_truck_number_val = $(this).find(":selected").text();
+       var pre_gatein_id =document.getElementById("gatein_pre_id").value
+       $.ajax({
+        url: '{% url 'load_pre_gate_in_truck_details' %}',
+        data: {
+          'gatein_truck_number_val': gatein_truck_number_val,
+          'pre_gatein_id': pre_gatein_id,
+        },
+		success: function (data) {
+			var Transporter=data.Transporter;
+			var Driver_Name=data.Driver_Name;
+			var Driver_Contact=data.Driver_Contact;
+			var Driver_License=data.Driver_License;
+			var OTL=data.OTL;
+			var Truck_Number=data.Truck_Number;
+			var Truck_Type=data.Truck_Type;
+			var dock_in_time=data.dock_in_time;
 			document.getElementById("gatein_transporter").value =Transporter;
-			document.getElementById("gatein_truck_number").value =Truck_Number;
 			document.getElementById("gatein_truck_type").value =Truck_Type;
 			document.getElementById("gatein_otl").value =OTL;
 			document.getElementById("gatein_dl_number").value =Driver_License;
 			document.getElementById("gatein_contact_number").value =Driver_Contact;
 			document.getElementById("gatein_driver").value =Driver_Name;
+			document.getElementById("gatein_arrival_date").value =dock_in_time;
         }
       });
 

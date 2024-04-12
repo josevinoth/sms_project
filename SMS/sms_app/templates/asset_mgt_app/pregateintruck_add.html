@@ -76,6 +76,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Dock-In Date & Time</span>
+									</div>
+									{% render_field form.pregatein_dock_in_date_time id="pregatein_dock_in_date_time" type="datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">OTL Type</span>
 									</div>
 									{% render_field form.pregatein_otl_type id="pregatein_otl_type" class="form-control" %}

@@ -10,7 +10,8 @@ class Pregateintruckinfo(models.Model):
     pregatein_contact_number = models.CharField(blank=True, null=True, max_length=500)
     pregatein_dl_number = models.CharField(blank=True, null=True, max_length=500)
     pregatein_dl_exp_date = models.DateField(null=True,blank=True)
-    pregatein_arrival_date_time = models.DateTimeField(null=True)
+    pregatein_arrival_date_time = models.DateTimeField(null=True,blank=True)
+    pregatein_dock_in_date_time = models.DateTimeField(null=True,blank=True)
     pregatein_otl = models.CharField(max_length=500)
     pregatein_created_at = models.DateTimeField(null=True,auto_now_add=True)
     pregatein_updated_at = models.DateTimeField(null=True,auto_now=True)
@@ -21,7 +22,7 @@ class Pregateintruckinfo(models.Model):
     pregatein_qty = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ["pregatein_number"]
+        ordering = ["pregatein_truck_number"]
 
     def __str__(self):
-        return self.pregatein_number
+        return self.pregatein_truck_number

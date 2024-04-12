@@ -82,6 +82,7 @@ from .sub_models.received_not_mod import Received_not
 from .sub_models.typeofotl_mod import TypeofotlInfo
 from .sub_models.sealedoropened_mod import SealedoropenedInfo
 from.sub_models.gatein_mod_pre import Gatein_pre_info,Gatein_pre_info_att
+from .sub_models.pregatein_truck_mod import Pregateintruckinfo
 from .sub_models.gatein_mod import Gatein_info
 from .sub_models.damagereport_mod import DamagereportInfo,DamagereportImages
 from .sub_models.loadingbay_mod import Loadingbay_Info,Loadingbayimages_Info
@@ -164,5 +165,4 @@ from .sub_models.bunk_name_mod import Bunkname
 from .sub_models.fuelfilling_mod import Fuelfillinginfo
 from .sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
 from .sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
-from .sub_models.pregatein_truck_mod import Pregateintruckinfo
 from .sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
