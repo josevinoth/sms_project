@@ -291,7 +291,7 @@ def load_pre_gate_in_truck_details(request):
     Driver_Contact=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_contact_number',flat=True)
     Driver_License=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_dl_number',flat=True)
     OTL=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_otl',flat=True)
-    # Truck_Number=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_truck_number',flat=True)
+    Truck_Number=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_truck_number',flat=True)
     Truck_Type=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_truck_type',flat=True)
     dock_in_time = Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_dock_in_date_time', flat=True)
 
@@ -329,7 +329,7 @@ def load_pre_gate_in_truck_details(request):
             'Driver_Contact': list(Driver_Contact),
             'Driver_License': list(Driver_License),
             'OTL': list(OTL),
-            # 'Truck_Number':list(Truck_Number),
+            'Truck_Number':list(Truck_Number),
             'Truck_Type': list(Truck_Name),
             'dock_in_time': formatted_dock_in_time,
         }
