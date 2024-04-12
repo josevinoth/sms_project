@@ -49,7 +49,7 @@ def home_page(request):
 @login_required(login_url='login_page')
 def wh_e_way_bill_list(request):
     wh_check_in_jobs_1 = (Warehouse_goods_info.objects.filter(wh_check_in_out=1).values('wh_job_no')).distinct()
-    wh_check_in_jobs_2 = (Loadingbay_Info.objects.filter(lb_validity_date__lte=(timezone.now())+timedelta(days=1),lb_job_no__in=wh_check_in_jobs_1).values('lb_job_no')).distinct()
+    wh_check_in_jobs_2 = (Loadingbay_Info.objects.filter(lb_validity_date__lte=(timezone.now())+timedelta(days=1),lb_job_no__in=wh_check_in_jobs_1)).distinct()
     first_name = request.session.get('first_name')
     context = {
                 'wh_check_in_jobs_2' : wh_check_in_jobs_2,
@@ -58,7 +58,7 @@ def wh_e_way_bill_list(request):
     return render(request,"asset_mgt_app/wh_e_way_bill_list.html",context)
 @login_required(login_url='login_page')
 def edit_wh_e_way_bill_list(request,wh_job_id):
-    # wh_job_list_id=Gatein_info.objects.get(gatein_job_no=wh_job_num).id
+    # wh_job_list_id=Loadingbay_Info.objects.get(pk=wh_job_id)
     # job_id = Gatein_info.objects.get(gatein_job_no=wh_job_num_next).id
-    url = 'gatein_update/' + str(2)
+    url = 'loadingbay_update/' + str(wh_job_id)
     return redirect(url)

@@ -27,6 +27,9 @@
         <thead class="thead-dark">
         <tr>
             <th>WH Job Num</th>
+            <th>E-Way Bill Number</th>
+            <th>E-Way Bill Validity</th>
+            <th>ID</th>
         </tr>
 
         </thead>
@@ -34,6 +37,14 @@
         {% for jobs in wh_check_in_jobs_2 %}
         <tr>
             <td> {{jobs.lb_job_no}}</td>
+<!--            <td>-->
+<!--                <a   href="{% url 'loadingbay_update' jobs.id %}" >-->
+<!--                    {{jobs.lb_job_no}}-->
+<!--                </a>-->
+<!--            </td>-->
+            <td> {{jobs.lb_eway_bill}}</td>
+            <td> {{jobs.lb_validity_date}}</td>
+            <td> {{jobs.id}}</td>
         </tr>
         {% endfor %}
         </tbody>
