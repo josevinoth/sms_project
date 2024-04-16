@@ -204,7 +204,6 @@ def goods_add(request, goods_id=0):
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(request.POST, instance=goodsinfo)
             if goods_form.is_valid():
-
                 available_area_val = request.POST.get('wh_available_area')
                 available_volume_val = request.POST.get('wh_available_volume')
                 required_area_val = request.POST.get('wh_goods_area')
@@ -219,12 +218,14 @@ def goods_add(request, goods_id=0):
                             messages.error(request, 'Volume Not Sufficient for Storage!')
                         else:
                             goods_form.save()
+                            goods_update(request)
                 else:
                     if (float(available_volume_val) < float(required_volume_val)):
                         messages.error(request, 'Volume Not Sufficient for Storage!')
                     else:
                         messages.success(request, 'Goods Stored!')
                         goods_form.save()
+                        goods_update(request)
                 print("Goods Form is Valid")
                 # Validate Invoice vs Actual weight & qty
                 raw_data = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_pieces',flat=True)
