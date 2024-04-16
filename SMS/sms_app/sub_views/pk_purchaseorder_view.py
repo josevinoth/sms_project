@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import POdimension,PkneedassessmentInfo,PkpurchaseorderInfo
+from ..models import POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkcostingsummaryInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
@@ -82,13 +82,23 @@ def pk_get_customer(request):
     customer_id = []
     customer_name = []
     assessment_id = request.GET.get('assessment_num')
+    print('assessment_id',assessment_id)
     # Fetch item_description Details
     customer_id = PkneedassessmentInfo.objects.get(pk=assessment_id).na_customer_name.id
     customer_name = PkneedassessmentInfo.objects.get(pk=assessment_id).na_customer_name.cu_name
+    print('customer_id',customer_id)
+    # Fetch Quotation Number
+    try:
+        quotation_num_id=PkcostingsummaryInfo.objects.get(cs_assessment_num=assessment_id).id
+        print('quotation_num_id',quotation_num_id)
+    except ObjectDoesNotExist:
+        quotation_num_id=""
+    print('quotation_num_id',quotation_num_id)
     # Create JSON response data
     data = {
         'customer_name': customer_name,
         'customer_id': customer_id,
+        'quotation_num_id': quotation_num_id,
     }
 
     # Return JSON response

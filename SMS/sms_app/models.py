@@ -146,10 +146,7 @@ from .sub_models.stock_description_mod import Stockdescription
 from .sub_models.pk_needassessment_mod import PkneedassessmentInfo
 from .sub_models.pk_openingstock_mod import PkopeningstockInfo
 from .sub_models.pk_stockpurchases_mod import PkstockpurchasesInfo
-from .sub_models.pk_purchaseorder_mod import PkpurchaseorderInfo
-from .sub_models.pk_purchaseorder_mod import PkpurchaseorderInfo
 from .sub_models.na_dimension_mod import Nadimension
-from .sub_models.po_dimension_mod import POdimension
 from .sub_models.pk_quotes_mod import PkquotesInfo
 from .sub_models.pk_retrival_mod import PkretrivalInfo
 from .sub_models.pk_quotation_mod import PkquotationInfo
@@ -166,3 +163,5 @@ from .sub_models.fuelfilling_mod import Fuelfillinginfo
 from .sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
 from .sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from .sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
+from .sub_models.pk_purchaseorder_mod import PkpurchaseorderInfo
+from .sub_models.po_dimension_mod import POdimension

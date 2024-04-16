@@ -1,7 +1,7 @@
 import datetime
 
 from django.db import models
-from ..models import CustomerInfo,PkneedassessmentInfo,MyUser
+from ..models import PkcostingsummaryInfo,CustomerInfo,PkneedassessmentInfo,MyUser
 
 def Pkpurchaseorder_directory_path(instance, filename):
     return 'Pkpurchaseorderfiles/{0}/{1}'.format(instance.po_num, filename)
@@ -18,6 +18,7 @@ class PkpurchaseorderInfo(models.Model):
     po_updated_at = models.DateTimeField(null=True, auto_now=True)
     po_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='po_updated_by',db_column='po_updated_by', null=True)
     po_assessment_num = models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, related_name='po_assessment_num',db_column='po_assessment_num', blank=True,null=True)
+    po_quotation_num = models.ForeignKey(PkcostingsummaryInfo, on_delete=models.CASCADE, related_name='po_quotation_num',db_column='po_quotation_num', blank=True,null=True)
     po_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, related_name='po_customer_name',db_column='po_customer_name', blank=True,null=True)
     po_attach = models.FileField(upload_to=Pkpurchaseorder_directory_path, null=True, blank=True)
     class Meta:
