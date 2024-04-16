@@ -8,7 +8,7 @@
 		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Need Assessment Dimension</h3></div>
+					<div class="card-header text-center"><h3>Add/Update PO Dimension</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col-6">
@@ -16,13 +16,19 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Item Number</span>
 									</div>
-									{% render_field form.nad_item id="pod_item_id" class="form-control disable_a_href" %}
+									{% render_field form.pod_item class="form-control" id="pod_item"%}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
 									{% render_field form.pod_assess_num id="pod_assess_num" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">PO Number</span>
+									</div>
+									{% render_field form.pod_po_num id="pod_po_num" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -114,7 +120,26 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("pod_updated_by").value ='{{user_id}}';
-	document.getElementById("pod_assess_num").value ='{{na_assessment_num_id}}';
+	var na_assessment_num_id_val=document.getElementById("pod_assess_num").value
+	if (na_assessment_num_id_val=="")
+	{
+		document.getElementById("pod_assess_num").value='{{na_assessment_num_id}}'
+	}
+	else
+	{
+		document.getElementById("pod_assess_num").value=na_assessment_num_id_val
+	}
+
+	var purchaseorder_id_val=document.getElementById("pod_po_num").value
+	if (purchaseorder_id_val=="")
+	{
+		document.getElementById("pod_po_num").value='{{purchaseorder_id}}'
+	}
+	else
+	{
+		document.getElementById("pod_po_num").value=purchaseorder_id_val
+	}
+
 	plywood_thickness()
 	});
 </script>

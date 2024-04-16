@@ -110,22 +110,6 @@
 	<div class="col-10">
 		<div id="accordion" class="container-fluid">
 			<div class="card">
-				<div class="card-header bg-info" id="headingOne">
-					<h5 class="mb-0">
-						<button class="btn btn-warning text-white" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-							Add/Edit Comments
-						</button>
-					</h5>
-				</div>
-				<div id="collapseOne" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
-					<div class="card-body">
-						<div id="comments_list_WOH">
-							{% include "asset_mgt_app/comments_list_WOH.html" %}
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="card">
 				<div class="card-header bg-info" id="headingTwo">
 					<h5 class="mb-0">
 						<button class="btn btn-warning text-white collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
@@ -150,6 +134,22 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("po_updated_by").value ='{{user_id}}';
+	$('#na_dimension_list').DataTable({
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
+    var po_num = document.getElementById("po_num").value
+    if (po_num =="")
+	{
+		$('#add_dim_btn').addClass('disable_a_href');
+	}
+	else
+	{
+		$('#add_dim_btn').removeClass('disable_a_href');
+	}
+
 	});
 </script>
 

@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Unitofmeasure,Natypeofreq,Pkstocktype,Stockdescription,PkneedassessmentInfo,MyUser
+from ..models import PkpurchaseorderInfo,Unitofmeasure,Natypeofreq,Pkstocktype,Stockdescription,PkneedassessmentInfo,MyUser
 
 class POdimension(models.Model):
     pod_assess_num = models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='')
@@ -18,7 +18,8 @@ class POdimension(models.Model):
     pod_plywood_thickness = models.FloatField(default=0.0)
     pod_cost_unit=models.FloatField(default=0.0,null=True,blank=True)
     pod_cost_total=models.FloatField(default=0.0,null=True,blank=True)
-    pod_item=models.CharField(max_length=100,null=True,blank=True)
+    pod_item=models.CharField(max_length=100)
+    pod_po_num = models.ForeignKey(PkpurchaseorderInfo, on_delete=models.CASCADE, blank=True,null=True)
     class Meta:
         ordering = ["pod_assess_num"]
 

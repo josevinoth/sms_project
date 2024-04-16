@@ -10,23 +10,31 @@ from django.contrib import messages
 def purchaseorder_add(request,purchaseorder_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-
     if request.method == "GET":
         if purchaseorder_id == 0:
             form = PkpurchaseorderForm()
+            context = {
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+            }
         else:
             purchaseorder=PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
             form = PkpurchaseorderForm(instance=purchaseorder)
             purchaseorder_id = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id).id
-            print('purchaseorder_id',purchaseorder_id)
             purchaseorder_num = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id).po_assessment_num
-            print('purchaseorder_num',purchaseorder_num)
             request.session['purchaseorder_id'] = purchaseorder_id
-        context={
-                'form': form,
-                'first_name': first_name,
-                'user_id': user_id,
-                }
+            na_id = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id).po_assessment_num.id
+            print('na_id',na_id)
+            request.session['ses_na_id'] = na_id
+            po_dimension_list = POdimension.objects.filter(pod_po_num=purchaseorder_id)
+            context={
+                    'form': form,
+                    'first_name': first_name,
+                    'user_id': user_id,
+                    'na_id': na_id,
+                    'po_dimension_list': po_dimension_list,
+                    }
         return render(request, "asset_mgt_app/pk_purchaseorder_add.html", context)
     else:
         form = PkpurchaseorderForm(request.POST, request.FILES)
@@ -94,34 +102,42 @@ def po_dimension_cancel(request,needassessment_id=0):
     return redirect('/SMS/purchaseorder_update/' + str(purchaseorder_id))
 @login_required(login_url='login_page')
 def po_dimension_add(request, po_dimension_id=0):
+    global na_assessment_num_id
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    po_assessment_num_id=request.session.get('po_assessment_id')
+    purchaseorder_id=request.session.get('purchaseorder_id')
     if request.method == "GET":
         if po_dimension_id == 0:
             form = POdimensionForm()
+            na_assessment_num_id = request.session.get('ses_na_id')
+            context = {
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'purchaseorder_id': purchaseorder_id,
+                'na_assessment_num_id': na_assessment_num_id,
+            }
         else:
             po_dimensioninfo = POdimension.objects.get(pk=po_dimension_id)
             form = POdimensionForm(instance=po_dimensioninfo)
-        context={
-            'form': form,
-            'first_name': first_name,
-            'user_id': user_id,
-            'po_assessment_num_id': po_assessment_num_id,
-        }
+            context={
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+            }
         return render(request, "asset_mgt_app/po_dimension_add.html", context)
     else:
         if po_dimension_id == 0:
             form = POdimensionForm(request.POST)
             if form.is_valid():
                 form.save()
-                try:
-                    last_id = POdimension.objects.latest('id').id
-                    po_item_num_next = str('Item_') + str(int(1000000 + last_id))
-                except ObjectDoesNotExist:
-                    po_item_num_next = str('Item_') + str(1000000)
-                last_id = POdimension.objects.latest('id').id
-                POdimension.objects.filter(id=last_id).update(nad_item=po_item_num_next)
+                # try:
+                #     last_id = POdimension.objects.latest('id').id
+                #     po_item_num_next = str('Item_') + str(int(1000000 + last_id))
+                # except ObjectDoesNotExist:
+                #     po_item_num_next = str('Item_') + str(1000000)
+                # last_id = POdimension.objects.latest('id').id
+                # POdimension.objects.filter(id=last_id).update(nad_item=po_item_num_next)
                 print("Main Form Saved")
                 messages.success(request, "Record Updated Successfully")
             else:
@@ -143,9 +159,11 @@ def po_dimension_add(request, po_dimension_id=0):
 def po_dimension_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    po_dimension_list=POdimension.objects.all()
     context = {
         'user_id': user_id,
         'first_name': first_name,
+        'po_dimension_list': po_dimension_list,
     }
     return render(request, "asset_mgt_app/po_dimension_list.html", context)
 @login_required(login_url='login_page')
