@@ -30,4 +30,4 @@ class PkcostingsummaryInfo(models.Model):
         ordering = ["id"]
 
     def __str__(self):
-        return self.cs_quotation_number
+        return str(self.cs_quotation_number)
