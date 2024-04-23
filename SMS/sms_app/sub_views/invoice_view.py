@@ -185,18 +185,18 @@ def invoice_add(request,invoice_id=0):
                         no_of_forklifts = 0
                     if crane_hours <= 2 and forklift_hours <= 2:
                         print("inside Condition 1")
-                        crane_cost_l2hr = round((2 * crane_charge_l2h * no_of_cranes), 2)
+                        crane_cost_l2hr = round((1 * crane_charge_l2h * no_of_cranes), 2)
                         crane_cost_g2hr = 0
-                        forklift_cost_l2hr = round((2 * forklift_charge_l2h * no_of_forklifts), 2)
+                        forklift_cost_l2hr = round((1 * forklift_charge_l2h * no_of_forklifts), 2)
                         forklift_cost_g2hr = 0
                         crane_cost = crane_cost_l2hr + crane_cost_g2hr
                         forklift_cost = forklift_cost_l2hr + forklift_cost_g2hr
                     elif forklift_hours <= 2 and crane_hours > 2:
                         print("inside Condition 3")
                         crane_hours_aft_2 = int(crane_hours) - 2
-                        crane_cost_l2hr = round((2 * crane_charge_l2h * no_of_cranes), 2)
+                        crane_cost_l2hr = round((1 * crane_charge_l2h * no_of_cranes), 2)
                         crane_cost_g2hr = round((crane_charge_g2h * crane_hours_aft_2 * no_of_cranes), 2)
-                        forklift_cost_l2hr = round((2 * forklift_charge_l2h * no_of_forklifts), 2)
+                        forklift_cost_l2hr = round((1 * forklift_charge_l2h * no_of_forklifts), 2)
                         forklift_cost_g2hr = 0
 
                         crane_cost = crane_cost_l2hr + crane_cost_g2hr
@@ -204,9 +204,9 @@ def invoice_add(request,invoice_id=0):
                     elif crane_hours <= 2 and forklift_hours > 2:
                         print("inside Condition 4")
                         forklift_hours_aft_2 = forklift_hours - 2
-                        crane_cost_l2hr = round((2 * crane_charge_l2h * no_of_cranes), 2)
+                        crane_cost_l2hr = round((1 * crane_charge_l2h * no_of_cranes), 2)
                         crane_cost_g2hr = 0
-                        forklift_cost_l2hr = round((2 * forklift_charge_l2h * no_of_forklifts), 2)
+                        forklift_cost_l2hr = round((1 * forklift_charge_l2h * no_of_forklifts), 2)
                         forklift_cost_g2hr = round((forklift_charge_g2h * forklift_hours_aft_2 * no_of_forklifts), 2)
 
                         crane_cost = crane_cost_l2hr + crane_cost_g2hr
@@ -215,9 +215,9 @@ def invoice_add(request,invoice_id=0):
                         print("inside Condition 5")
                         crane_hours_aft_2 = int(crane_hours) - 2
                         forklift_hours_aft_2 = forklift_hours - 2
-                        crane_cost_l2hr = round((2 * crane_charge_l2h * no_of_cranes), 2)
+                        crane_cost_l2hr = round((1 * crane_charge_l2h * no_of_cranes), 2)
                         crane_cost_g2hr = round((crane_charge_g2h * crane_hours_aft_2 * no_of_cranes), 2)
-                        forklift_cost_l2hr = round((2 * forklift_charge_l2h * no_of_forklifts), 2)
+                        forklift_cost_l2hr = round((1 * forklift_charge_l2h * no_of_forklifts), 2)
                         forklift_cost_g2hr = round((forklift_charge_g2h * forklift_hours_aft_2 * no_of_forklifts), 2)
 
                         crane_cost = crane_cost_l2hr + crane_cost_g2hr
