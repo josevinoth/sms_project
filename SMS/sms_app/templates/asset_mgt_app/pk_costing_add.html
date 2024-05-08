@@ -40,7 +40,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field form.ct_stock_type id="ct_stock_type" onchange="changeItemDescription()" class="form-control disable_a_href" %}
+									{% render_field form.ct_stock_type id="ct_stock_type" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -60,43 +60,51 @@
 									</div>
 									{% render_field form.ct_itemdescription id="ct_itemdescription" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Width_requested (inch)</span>
+								<div class="row ">
+									<div class="col-9">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Height_requested (inch)</span>
+											</div>
+											{% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Width_requested (inch)</span>
+											</div>
+											{% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Length_requested (Ft)</span>
+											</div>
+											{% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
 									</div>
-									{% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Height_requested (inch)</span>
+									<div class="col-3 d-flex align-items-center justify-content-center">
+										<button id="search_wood" type="button" class="btn btn-warning btn-lg"><i class="fas fa-search"></i> Search Item</button>
 									</div>
-									{% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control " %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Length_requested (Ft)</span>
-									</div>
-									{% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control " %}
-								</div>
+
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Width_available (inch)</span>
+										<span class="input-group-text">Height_available (inch)</span>
 									</div>
-									{% render_field form.ct_width id="ct_width" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.ct_height id="ct_height" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Height_available (inch)</span>
+										<span class="input-group-text">Width_available (inch)</span>
 									</div>
-									{% render_field form.ct_height id="ct_height" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.ct_width id="ct_width" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Length_available (Ft)</span>
 									</div>
-									{% render_field form.ct_length id="ct_length" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.ct_length id="ct_length" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -140,6 +148,12 @@
 									</div>
 									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Status</span>
+									</div>
+									{% render_field form.ct_stock_status id="ct_stock_status" class="form-control" %}
+								</div>
 								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
 								{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
 							</div>
@@ -172,11 +186,15 @@
 </div>
 
 {% include "asset_mgt_app/pk_costing_list_WOH.html" %}
+
 <script>
 $(document).ready(function() {
 	document.getElementById("ct_updated_by").value ='{{user_id}}';
 	document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
 	change_cost_type();
+	$("#search_wood").on("click", function() {
+            search_wood();
+        });
 	});
 </script>
 
@@ -224,6 +242,7 @@ function change_cost_type() {
 		var jn=document.getElementById("ct_cost_type").value
 		if ( jn==8)
 		{
+			document.getElementById("ct_stock_status").value=1
 			$('#ct_stock_type').removeClass('disable_a_href');
 			var jn1=document.getElementById("ct_stock_type").value
 			if ( jn1==1)
@@ -357,6 +376,7 @@ function change_cost_type() {
 		}
 		else
 		{
+			document.getElementById("ct_stock_status").value=4
 			$('#ct_stock_type').addClass('disable_a_href');
 			$('#ct_stock_description').addClass('disable_a_href');
 			document.getElementById("ct_stock_type").value=""
@@ -432,16 +452,118 @@ function change_charge_type() {
 }
 </script>
 
+<!--<script>-->
+<!--    $("#ct_stock_description").change(function () {-->
+<!--        var stock_description = $(this).val();-->
+<!--        var stock_type = $("#ct_stock_type").val();-->
+<!--        var includeContainer = $('#pk_item_search_page_costing');-->
+<!--        $.ajax({-->
+<!--            url: '{% url 'pk_item_search_page_costing' %}',-->
+<!--            data: {-->
+<!--                'stock_type': stock_type,-->
+<!--                'stock_description': stock_description,-->
+<!--            },-->
+<!--            success: function (results)-->
+<!--            {-->
+<!--				// Generate HTML for the table-->
+<!--				var tableHtml = '<table class="table table-striped table-bordered">';-->
+<!--				tableHtml += '<thead class="thead-dark"><tr><th>ID</th><th>Vendor Bill</th><th>Stock Purchases Number</th><th>Category</th><th>Stock Type</th><th>Stock Description</th><th>Source</th><th>Thick/Height</th><th>Width</th><th>Length</th><th>CFT</th><th>Quantity</th><th>Rate/Qty (CFT)</th><th>UOM</th><th>Size</th><th>Select</th></tr></thead>';-->
+<!--				tableHtml += '<tbody>';-->
+<!--				// Iterate over the results and add rows to the table-->
+<!--				for (var i = 0; i < results.length; i++)-->
+<!--				{-->
+<!--					tableHtml += '<tr>';-->
+<!--					tableHtml += '<td>' + results[i].id + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_vendor_bill + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_purchase_num + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_category__category + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_source__source + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_rate + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';-->
+<!--					tableHtml += '<td class="hidden-column" style="display:none;">' + results[i].sp_uom + '</td>';-->
+<!--					tableHtml += '<td>' + results[i].sp_size + '</td>';-->
+<!--					tableHtml += '<td>';-->
+<!--        			tableHtml += '<a class="btn btn-primary" >';-->
+<!--        			tableHtml += '<i class="far fa-edit"></i> Select';-->
+<!--        			tableHtml += '</a>';-->
+<!--        			tableHtml += '</td>';-->
+<!--					tableHtml += '</tr>';-->
+<!--				}-->
+<!--				tableHtml += '</tbody></table>';-->
+
+<!--				 // Create the container and row structure-->
+<!--				var containerHtml = '<div class="container-fluid" style="padding:15px;">';-->
+<!--				containerHtml += '<div class="row">';-->
+<!--				containerHtml += '<div class="col-5"></div>';-->
+<!--				containerHtml += '<div class="col-2 rounded text-center bg-info">';-->
+<!--				containerHtml += '<h3>Packing Stock List</h3>';-->
+<!--				containerHtml += '</div>';-->
+<!--				containerHtml += '<div class="col-5"></div>';-->
+<!--				containerHtml += '</div>';-->
+<!--				containerHtml += '</div>';-->
+<!--				// Set the table HTML to the includeContainer-->
+<!--				includeContainer.html(containerHtml +tableHtml);-->
+<!--				var dataTable = includeContainer.find('table').DataTable();-->
+<!--           }-->
+<!--        });-->
+<!--        // Attach click event to the "Select" button-->
+<!--		includeContainer.on('click', 'a.btn-primary', function(e) {-->
+<!--			e.preventDefault(); // Prevent the default action of the link-->
+
+<!--			// Get the selected row data-->
+<!--			var selectedRow = $(this).closest('tr');-->
+<!--			var stockId = selectedRow.find('td:eq(0)').text();-->
+<!--			var stock_purchase_num = selectedRow.find('td:eq(1)').text(); // Update with the correct index-->
+<!--			var height = selectedRow.find('td:eq(7)').text(); // Update with the correct index-->
+<!--			var width = selectedRow.find('td:eq(8)').text(); // Update with the correct index-->
+<!--			var length = selectedRow.find('td:eq(9)').text(); // Update with the correct index-->
+<!--			var cft = selectedRow.find('td:eq(10)').text(); // Update with the correct index-->
+<!--			var quantity = selectedRow.find('td:eq(11)').text(); // Update with the correct index-->
+<!--			var rateCFT = selectedRow.find('td:eq(12)').text(); // Update with the correct index-->
+<!--			var uom = selectedRow.find('td:eq(13)').text(); // Update with the correct index-->
+<!--			var size = selectedRow.find('td:eq(14)').text(); // Update with the correct index-->
+<!--			var uom_id = selectedRow.find('.hidden-column').text();-->
+
+<!--			// Log the extracted values (you can do further processing here)-->
+<!--			document.getElementById("ct_stock_purchase_number").value=stockId;-->
+<!--			document.getElementById("ct_length").value=length;-->
+<!--			document.getElementById("ct_width").value=width;-->
+<!--			document.getElementById("ct_height").value=height;-->
+<!--			document.getElementById("ct_cft").value=cft;-->
+<!--			document.getElementById("ct_quantity").value=quantity;-->
+<!--			document.getElementById("ct_size").value=size;-->
+<!--			document.getElementById("ct_uom").value=uom_id;-->
+<!--			document.getElementById("ct_rate").value=rateCFT;-->
+<!--			change_cost_type();-->
+<!--		});-->
+<!--    });-->
+<!--</script>-->
+
 <script>
-    $("#ct_stock_description").change(function () {
-        var stock_description = $(this).val();
+function search_wood()
+	{
+<!--		var stock_description = $(this).val();-->
+		var stock_description = $("#ct_stock_description").val();
         var stock_type = $("#ct_stock_type").val();
+        var length_req = $("#ct_length_req").val();
+        var width_req = $("#ct_width_req").val();
+        var height_req = $("#ct_height_req").val();
         var includeContainer = $('#pk_item_search_page_costing');
         $.ajax({
             url: '{% url 'pk_item_search_page_costing' %}',
             data: {
                 'stock_type': stock_type,
                 'stock_description': stock_description,
+                'length_req': length_req,
+                'width_req': width_req,
+                'height_req': height_req,
             },
             success: function (results)
             {
@@ -523,9 +645,8 @@ function change_charge_type() {
 			document.getElementById("ct_rate").value=rateCFT;
 			change_cost_type();
 		});
-    });
+	}
 </script>
-
 <script>
 	function changeItemDescription() {
     var item_id = $('#ct_item').val();

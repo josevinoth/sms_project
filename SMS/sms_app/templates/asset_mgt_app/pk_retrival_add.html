@@ -1,109 +1,169 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-
-<form method="POST" action="" id="pk_item_retrival" data-stock_description-url="{% url 'load_stock_description' %}"  >
+<form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-2"></div>
 		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Packing Item Retrival</h3></div>
-					<div class="card-body bg-light" >
+					<div class="card-header text-center"><h3>Update Stock Retrival</h3></div>
+					<div class="card-body bg-light">
 						<div class="row">
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
-									{% render_field form.pret_assessment_num id="pret_assessment_num"  class="form-control disable_a_href" %}
+									{% render_field form.ct_assessment_num id="ct_assessment_num"  class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Costing Type</span>
+										<span class="input-group-text">Cost Type</span>
 									</div>
-									{% render_field form.pret_cost_type id="pret_cost_type" onchange="change_cost_type()" class="form-control" %}
+									{% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Item Name</span>
+									</div>
+									{% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_na_dimension_id()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Requirement Name & 	Size</span>
+									</div>
+									{% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field form.pret_stock_type id="pret_stock_type" onchange="change_cost_type()" class="form-control disable_a_href" %}
+									{% render_field form.ct_stock_type id="ct_stock_type" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Description</span>
 									</div>
-									{% render_field form.pret_stock_description id="pret_stock_description" class="form-control disable_a_href" %}
+									{% render_field form.ct_stock_description id="ct_stock_description" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Width(inch)</span>
+										<span class="input-group-text">Item</span>
 									</div>
-									{% render_field form.pret_width id="pret_width" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.ct_item id="ct_item" onchange="changeItemDescription()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Height(inch)</span>
+										<span class="input-group-text">Item Description</span>
 									</div>
-									{% render_field form.pret_height id="pret_height" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.ct_itemdescription id="ct_itemdescription" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Length(Ft)</span>
+								<div class="row ">
+									<div class="col-8">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Height_requested (inch)</span>
+											</div>
+											{% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Width_requested (inch)</span>
+											</div>
+											{% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Length_requested (Ft)</span>
+											</div>
+											{% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
 									</div>
-									{% render_field form.pret_length id="pret_length" onchange="change_cost_type()" class="form-control " %}
+									<div class="col-4 d-flex align-items-center justify-content-center">
+										<button id="search_wood" type="button" class="btn btn-warning btn-lg"><i class="fas fa-search"></i> Search Item</button>
+									</div>
 								</div>
+
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Height_available (inch)</span>
+									</div>
+									{% render_field form.ct_height id="ct_height" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width_available (inch)</span>
+									</div>
+									{% render_field form.ct_width id="ct_width" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length_available (Ft)</span>
+									</div>
+									{% render_field form.ct_length id="ct_length" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">UOM</span>
 									</div>
-									{% render_field form.pret_uom id="pret_uom" class="form-control " %}
+									{% render_field form.ct_uom id="ct_uom" class="form-control disable_a_href " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Size</span>
 									</div>
-									{% render_field form.pret_size id="pret_size" class="form-control " %}
+									{% render_field form.ct_size id="ct_size" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quantity</span>
 									</div>
-									{% render_field form.pret_quantity id="pret_quantity" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control disable_a_href " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">CFT</span>
+										<span class="input-group-text">Total CFT</span>
 									</div>
-									{% render_field form.pret_cft id="pret_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
+									{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Rate</span>
+										<span class="input-group-text">Rate/Qty (CFT)</span>
 									</div>
-									{% render_field form.pret_rate id="pret_rate" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Days</span>
 									</div>
-									{% render_field form.pret_days id="pret_days" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control disable_a_href " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Cost</span>
 									</div>
-									{% render_field form.pret_total_cost id="pret_total_cost" readonly="True" class="form-control disable_a_href" %}
+									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
 								</div>
-								{% render_field form.pret_updated_by id="pret_updated_by" hidden="True" class="form-control" %}
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Number</span>
+									</div>
+									{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Status</span>
+									</div>
+									{% render_field form.ct_stock_status id="ct_stock_status" class="form-control " %}
+								</div>
+								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control disable_a_href" %}
 
 							</div>
 						</div>
-
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
@@ -126,250 +186,87 @@
 		<div class="col-2"></div>
 	</div>
 </form>
+
+<div id="pk_item_search_page_costing">
+	{% include "asset_mgt_app/pk_item_search_page_costing.html" %}
+</div>
+
 <script>
 $(document).ready(function() {
-	document.getElementById("pret_updated_by").value ='{{user_id}}';
-	document.getElementById("pret_assessment_num").value ='{{na_assessment_num_id}}';
-	change_cost_type();
+	document.getElementById("ct_updated_by").value ='{{user_id}}';
+	document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
+	$("#search_wood").on("click", function() {
+            search_wood();
+        });
 	});
 </script>
 
 <script>
-   $("#pret_stock_type").change(function () {
-      var url = $("#pk_item_retrival").attr("data-stock_description-url");
-      var stock_type = $(this).val();
-      $.ajax({
-        url: url,
-        data: {
-          'stock_type': stock_type,
-        },
-		success: function (data) {
-			console.log(data);
-			$('#pret_stock_description').removeClass('disable_a_href');
-			$("#pret_stock_description").empty();
-			$('#pret_stock_description').empty().append("<option value='0'>--Select--</option>");
-        	var pret_stock_description_name=JSON.parse(data)["stock_description"];
-        	var pret_stock_description_id=JSON.parse(data)["stock_description_id"];
-        	var len = (pret_stock_description_id).length;
-        	$('#pret_stock_description').empty().append("<option value='0'>--Select--</option>");
-        	for( var i = 0; i<len; i++){
-        		$("#pret_stock_description").append("<option value='"+pret_stock_description_id[i]+"'>"+pret_stock_description_name[i]+"</option>");
-			}
-        }
-      });
-    });
-  </script>
-<script>
-function change_cost_type() {
-		var jn=document.getElementById("pret_cost_type").value
-		if ( jn==8)
-		{
-			$('#pret_stock_type').removeClass('disable_a_href');
-			var jn1=document.getElementById("pret_stock_type").value
-			if ( jn1==1)
-			{
-				$('#pret_stock_description').removeClass('disable_a_href');
-				$('#pret_length').removeClass('disable_a_href');
-				$('#pret_width').removeClass('disable_a_href');
-				$('#pret_height').removeClass('disable_a_href');
-				$('#pret_uom').addClass('disable_a_href');
-				$('#pret_quantity').removeClass('disable_a_href');
-				$('#pret_size').addClass('disable_a_href');
-				document.getElementById("pret_size").value=parseFloat(0.0)
-				$('#pret_days').addClass('disable_a_href');
-				document.getElementById("pret_days").value=0;
-
-				var length = parseFloat(document.getElementById("pret_length").value) || 0;
-				var height = parseFloat(document.getElementById("pret_height").value) || 0;
-				var width = parseFloat(document.getElementById("pret_width").value) || 0;
-				var rate = parseFloat(document.getElementById("pret_rate").value) || 0;
-				var quantity = parseInt(document.getElementById("pret_quantity").value) || 0;
-				var cft = length*height*width/144;
-				document.getElementById("pret_cft").value=cft.toFixed(2)
-				var totalCost = rate * cft*quantity;
-				document.getElementById("pret_total_cost").value=totalCost.toFixed(2)
-			}
-
-			else if (jn1==2)
-			{
-				$('#pret_stock_description').removeClass('disable_a_href');
-				$('#pret_length').addClass('disable_a_href');
-				$('#pret_width').addClass('disable_a_href');
-				$('#pret_height').addClass('disable_a_href');
-				$('#pret_uom').removeClass('disable_a_href');
-				$('#pret_quantity').removeClass('disable_a_href');
-				$('#pret_size').removeClass('disable_a_href');
-				$('#pret_cft').addClass('disable_a_href');
-				document.getElementById("pret_cft").value=0;
-				document.getElementById("pret_length").value=0;
-				document.getElementById("pret_width").value=0;
-				document.getElementById("pret_height").value=0;
-				$('#pret_rate').removeClass('disable_a_href');
-				$('#pret_days').addClass('disable_a_href');
-				var rate = parseFloat(document.getElementById("pret_rate").value) || 0;
-				var quantity = parseInt(document.getElementById("pret_quantity").value) || 0;
-				var totalCost = rate  * quantity;
-				document.getElementById("pret_total_cost").value=totalCost.toFixed(2)
-			}
-		}
-		else if (jn==4)
-		{
-			$('#pret_stock_type').addClass('disable_a_href');
-			$('#pret_stock_description').addClass('disable_a_href');
-			document.getElementById("pret_stock_type").value=""
-			document.getElementById("pret_stock_description").value=""
-			$('#pret_length').addClass('disable_a_href');
-			$('#pret_width').addClass('disable_a_href');
-			$('#pret_height').addClass('disable_a_href');
-			$('#pret_days').removeClass('disable_a_href');
-			$('#pret_uom').addClass('disable_a_href');
-			$('#pret_size').addClass('disable_a_href');
-			document.getElementById("pret_uom").value="";
-			document.getElementById("pret_size").value=0;
-			var rate = parseFloat(document.getElementById("pret_rate").value) || 0;
-			var quantity = parseInt(document.getElementById("pret_quantity").value) || 0;
-			var days = parseInt(document.getElementById("pret_days").value) || 0;
-			var totalCost = rate  * days * quantity;
-        	document.getElementById("pret_total_cost").value=totalCost.toFixed(2)
-		}
-		else if (jn==5)
-		{
-			$('#pret_stock_type').addClass('disable_a_href');
-			$('#pret_stock_description').addClass('disable_a_href');
-			document.getElementById("pret_stock_type").value=""
-			document.getElementById("pret_stock_description").value=""
-			$('#pret_length').addClass('disable_a_href');
-			$('#pret_width').addClass('disable_a_href');
-			$('#pret_height').addClass('disable_a_href');
-			$('#pret_days').addClass('disable_a_href');
-			$('#pret_uom').addClass('disable_a_href');
-			$('#pret_size').addClass('disable_a_href');
-			document.getElementById("pret_days").value=0;
-			document.getElementById("pret_uom").value="";
-			document.getElementById("pret_size").value=0;
-			var rate = parseFloat(document.getElementById("pret_rate").value) || 0;
-			var quantity = parseInt(document.getElementById("pret_quantity").value) || 0;
-			var totalCost = rate * quantity;
-        	document.getElementById("pret_total_cost").value=totalCost.toFixed(2)
-		}
-		else if (jn==6)
-		{
-			$('#pret_stock_type').addClass('disable_a_href');
-			$('#pret_stock_description').addClass('disable_a_href');
-			document.getElementById("pret_stock_type").value=""
-			document.getElementById("pret_stock_description").value=""
-			$('#pret_length').addClass('disable_a_href');
-			$('#pret_width').addClass('disable_a_href');
-			$('#pret_height').addClass('disable_a_href');
-			$('#pret_days').addClass('disable_a_href');
-			$('#pret_uom').addClass('disable_a_href');
-			$('#pret_size').addClass('disable_a_href');
-			document.getElementById("pret_uom").value="";
-			document.getElementById("pret_size").value=0;
-			document.getElementById("pret_days").value=0;
-			var rate = parseFloat(document.getElementById("pret_rate").value) || 0;
-			var quantity = parseInt(document.getElementById("pret_quantity").value) || 0;
-			var totalCost = rate * quantity;
-        	document.getElementById("pret_total_cost").value=totalCost.toFixed(2)
-		}
-		else if (jn==7)
-		{
-			$('#pret_stock_type').addClass('disable_a_href');
-			$('#pret_stock_description').addClass('disable_a_href');
-			document.getElementById("pret_stock_type").value=""
-			document.getElementById("pret_stock_description").value=""
-			$('#pret_length').addClass('disable_a_href');
-			$('#pret_width').addClass('disable_a_href');
-			$('#pret_height').addClass('disable_a_href');
-			$('#pret_days').addClass('disable_a_href');
-			$('#pret_quantity').addClass('disable_a_href');
-			$('#pret_cft').addClass('disable_a_href');
-			$('#pret_uom').addClass('disable_a_href');
-			$('#pret_size').addClass('disable_a_href');
-			document.getElementById("pret_days").value=0;
-			document.getElementById("pret_quantity").value=0;
-			document.getElementById("pret_cft").value=0;
-			document.getElementById("pret_uom").value="";
-			document.getElementById("pret_size").value=0;
-			var rate = parseFloat(document.getElementById("pret_rate").value) || 0;
-			var totalCost = rate;
-        	document.getElementById("pret_total_cost").value=totalCost.toFixed(2)
-		}
-		else
-		{
-			$('#pret_stock_type').addClass('disable_a_href');
-			$('#pret_stock_description').addClass('disable_a_href');
-			document.getElementById("pret_stock_type").value=""
-			document.getElementById("pret_stock_description").value=""
-			$('#pret_length').addClass('disable_a_href');
-			$('#pret_width').addClass('disable_a_href');
-			$('#pret_height').addClass('disable_a_href');
-			$('#pret_days').removeClass('disable_a_href');
-			$('#pret_cft').addClass('disable_a_href');
-			$('#pret_uom').addClass('disable_a_href');
-			$('#pret_size').addClass('disable_a_href');
-			document.getElementById("pret_uom").value="";
-			document.getElementById("pret_size").value=0;
-			document.getElementById("pret_cft").value=0;
-			var rate = parseFloat(document.getElementById("pret_rate").value) || 0;
-			var quantity = parseInt(document.getElementById("pret_quantity").value) || 0;
-			var days = parseInt(document.getElementById("pret_days").value) || 0;
-			var totalCost = rate  * days * quantity;
-			document.getElementById("pret_total_cost").value=totalCost.toFixed(2)
-
-		}
-	}
-</script>>
-
-<script>
-function change_charge_type() {
-	var jn=document.getElementById("pret_stock_type").value
-	if ( jn==1)
+function search_wood()
 	{
-		$('#pret_stock_description').removeClass('disable_a_href');
-		$('#pret_length').removeClass('disable_a_href');
-		$('#pret_width').removeClass('disable_a_href');
-		$('#pret_height').removeClass('disable_a_href');
-		$('#pret_uom').addClass('disable_a_href');
-		$('#pret_quantity').removeClass('disable_a_href');
-		$('#pret_size').addClass('disable_a_href');
-		document.getElementById("pret_size").value=parseFloat(0.0)
-		$('#pret_days').addClass('disable_a_href');
-		document.getElementById("pret_days").value=0;
+<!--		var stock_description = $(this).val();-->
+		var stock_description = $("#ct_stock_description").val();
+        var stock_type = $("#ct_stock_type").val();
+        var length_req = $("#ct_length_req").val();
+        var width_req = $("#ct_width_req").val();
+        var height_req = $("#ct_height_req").val();
+        var includeContainer = $('#pk_item_search_page_costing');
+        $.ajax({
+            url: '{% url 'pk_item_search_page_costing' %}',
+            data: {
+                'stock_type': stock_type,
+                'stock_description': stock_description,
+                'length_req': length_req,
+                'width_req': width_req,
+                'height_req': height_req,
+            },
+            success: function (results)
+            {
+				// Generate HTML for the table
+				var tableHtml = '<table class="table table-striped table-bordered">';
+				tableHtml += '<thead class="thead-dark"><tr><th>ID</th><th>Vendor Bill</th><th>Stock Purchases Number</th><th>Category</th><th>Stock Type</th><th>Stock Description</th><th>Source</th><th>Thick/Height</th><th>Width</th><th>Length</th><th>CFT</th><th>Quantity</th><th>Rate/Qty (CFT)</th><th>UOM</th><th>Size</th></tr></thead>';
+				tableHtml += '<tbody>';
+				// Iterate over the results and add rows to the table
+				for (var i = 0; i < results.length; i++)
+				{
+					tableHtml += '<tr>';
+					tableHtml += '<td>' + results[i].id + '</td>';
+					tableHtml += '<td>' + results[i].sp_vendor_bill + '</td>';
+					tableHtml += '<td>' + results[i].sp_purchase_num + '</td>';
+					tableHtml += '<td>' + results[i].sp_category__category + '</td>';
+					tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
+					tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
+					tableHtml += '<td>' + results[i].sp_source__source + '</td>';
+					tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_rate + '</td>';
+					tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
+					tableHtml += '<td class="hidden-column" style="display:none;">' + results[i].sp_uom + '</td>';
+					tableHtml += '<td>' + results[i].sp_size + '</td>';
+					tableHtml += '</tr>';
+				}
+				tableHtml += '</tbody></table>';
 
-		var length = parseFloat(document.getElementById("pret_length").value) || 0;
-		var height = parseFloat(document.getElementById("pret_height").value) || 0;
-		var width = parseFloat(document.getElementById("pret_width").value) || 0;
-		var rate = parseFloat(document.getElementById("pret_rate").value) || 0;
-		var quantity = parseInt(document.getElementById("pret_quantity").value) || 0;
-		var cft = length*height*width/144;
-		document.getElementById("pret_cft").value=cft.toFixed(2)
-		var totalCost = rate * cft*quantity;
-        document.getElementById("pret_total_cost").value=totalCost.toFixed(2)
-	}
+				 // Create the container and row structure
+				var containerHtml = '<div class="container-fluid" style="padding:15px;">';
+				containerHtml += '<div class="row">';
+				containerHtml += '<div class="col-5"></div>';
+				containerHtml += '<div class="col-2 rounded text-center bg-info">';
+				containerHtml += '<h3>Packing Stock List</h3>';
+				containerHtml += '</div>';
+				containerHtml += '<div class="col-5"></div>';
+				containerHtml += '</div>';
+				containerHtml += '</div>';
+				// Set the table HTML to the includeContainer
+				includeContainer.html(containerHtml +tableHtml);
+				var dataTable = includeContainer.find('table').DataTable();
+           }
+        });
 
-	else if (jn==2)
-	{
-		$('#pret_stock_description').removeClass('disable_a_href');
-		$('#pret_length').addClass('disable_a_href');
-		$('#pret_width').addClass('disable_a_href');
-		$('#pret_height').addClass('disable_a_href');
-		$('#pret_uom').removeClass('disable_a_href');
-		$('#pret_quantity').removeClass('disable_a_href');
-		$('#pret_size').removeClass('disable_a_href');
-		$('#pret_cft').addClass('disable_a_href');
-		document.getElementById("pret_cft").value=0;
-		document.getElementById("pret_length").value=0;
-		document.getElementById("pret_width").value=0;
-		document.getElementById("pret_height").value=0;
-		$('#pret_rate').removeClass('disable_a_href');
-		$('#pret_days').addClass('disable_a_href');
-		var rate = parseFloat(document.getElementById("pret_rate").value) || 0;
-		var quantity = parseInt(document.getElementById("pret_quantity").value) || 0;
-		var totalCost = rate  * quantity;
-        document.getElementById("pret_total_cost").value=totalCost.toFixed(2)
 	}
-}
 </script>
 
 {% endblock content %}

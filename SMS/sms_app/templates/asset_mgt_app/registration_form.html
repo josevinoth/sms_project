@@ -69,6 +69,12 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Organisation</span>
+									</div>
+									{% render_field user_ext_form.emp_organisation id="emp_organisation" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Department</span>
 									</div>
 									{% render_field user_ext_form.department class="form-control" %}

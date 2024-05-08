@@ -1,9 +1,9 @@
 import json
 from django.contrib.auth.decorators import login_required
-from ..forms import PkretrivalForm
-from ..models import PkretrivalInfo,PkquotationsummaryInfo
+from ..forms import PkcostingForm
+from ..models import PkstockpurchasesInfo,PkcostingInfo,PkquotationsummaryInfo
 from django.shortcuts import render, redirect
-
+from ..views import update_reduced_dimensions
 from django.contrib import messages
 
 @login_required(login_url='login_page')
@@ -13,10 +13,10 @@ def pk_retrival_add(request,retrival_id=0):
     na_assessment_num_id = request.session.get('na_assessment_id')
     if request.method == "GET":
         if retrival_id == 0:
-            form = PkretrivalForm()
+            form = PkcostingForm()
         else:
-            retrival=PkretrivalInfo.objects.get(pk=retrival_id)
-            form = PkretrivalForm(instance=retrival)
+            retrival=PkcostingInfo.objects.get(pk=retrival_id)
+            form = PkcostingForm(instance=retrival)
         context={
                 'form': form,
                 'first_name': first_name,
@@ -26,11 +26,11 @@ def pk_retrival_add(request,retrival_id=0):
         return render(request, "asset_mgt_app/pk_retrival_add.html", context)
     else:
         if retrival_id == 0:
-            form = PkretrivalForm(request.POST)
+            form = PkcostingForm(request.POST)
             if form.is_valid():
                 form.save()
                 print("retrival Form is Valid")
-                last_id = (PkretrivalInfo.objects.latest('id')).id
+                last_id = (PkcostingInfo.objects.latest('id')).id
                 messages.success(request, 'Record Updated Successfully')
                 return redirect('/SMS/pk_retrival_update/'+str(last_id))
             else:
@@ -38,12 +38,23 @@ def pk_retrival_add(request,retrival_id=0):
                 messages.error(request, 'Record Not Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
         else:
-            retrival = PkretrivalInfo.objects.get(pk=retrival_id)
-            form = PkretrivalForm(request.POST,instance=retrival)
+            retrival = PkcostingInfo.objects.get(pk=retrival_id)
+            form = PkcostingForm(request.POST,instance=retrival)
             if form.is_valid():
                 form.save()
+                last_id = retrival_id
+                stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
+                stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
+
                 print("retrival Form is Valid")
                 messages.success(request, 'Record Updated Successfully')
+                stock_status = (PkcostingInfo.objects.get(id=retrival_id)).ct_stock_status
+                print('stock_status',stock_status)
+                if stock_status ==2:
+                    messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                    update_reduced_dimensions(stock_purchase_num,last_id)
+                else:
+                    messages.success(request, 'Stock Status Updated Successfully')
             else:
                 print("retrival Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
@@ -54,13 +65,16 @@ def pk_retrival_add(request,retrival_id=0):
 @login_required(login_url='login_page')
 def pk_retrival_list(request):
     first_name = request.session.get('first_name')
-    context = {'pk_retrival_list' : PkretrivalInfo.objects.all(),'first_name': first_name}
+    context = {
+                'pk_retrival_list' : PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=1),
+                'first_name': first_name
+               }
     return render(request,"asset_mgt_app/pk_retrival_list.html",context)
 
 #Delete retrival
 @login_required(login_url='login_page')
 def pk_retrival_delete(request,retrival_id):
-    retrival = PkretrivalInfo.objects.get(pk=retrival_id)
+    retrival = PkcostingInfo.objects.get(pk=retrival_id)
     retrival.delete()
     # return redirect('/SMS/pK_retrival_cancel')
     return redirect(request.META['HTTP_REFERER'])

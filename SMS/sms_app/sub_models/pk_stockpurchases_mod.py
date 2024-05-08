@@ -32,7 +32,7 @@ class PkstockpurchasesInfo(models.Model):
     sp_width_reduced = models.FloatField(blank=True, null=True, default=0.0)
     sp_length_reduced = models.FloatField(blank=True, null=True, default=0.0)
     sp_quantity_reduced = models.FloatField(blank=True, null=True, default=0.0)
-    sp_cft_reduced = models.IntegerField(blank=True, null=True, default=0)
+    sp_cft_reduced = models.FloatField(blank=True, null=True, default=0.0)
     class Meta:
         ordering = ["sp_purchase_num"]
 

@@ -39,6 +39,7 @@
             <th>CFT</th>
             <th>Price</th>
             <th>Quantity</th>
+            <th>Quantity (Ava)</th>
             <th>UOM</th>
             <th>Size</th>
             <th>Updated On</th>
@@ -62,6 +63,7 @@
             <td> {{stockpurchasesinfo.sp_cft}}</td>
             <td> {{stockpurchasesinfo.sp_price}}</td>
             <td> {{stockpurchasesinfo.sp_quantity}}</td>
+            <td> {{stockpurchasesinfo.sp_quantity_reduced}}</td>
             <td> {{stockpurchasesinfo.sp_uom}}</td>
             <td> {{stockpurchasesinfo.sp_size}}</td>
             <td> {{stockpurchasesinfo.sp_updated_at}}</td>
@@ -88,7 +90,7 @@
     $(document).ready(function() {
     $('#stockpurchases_list').DataTable({
         order: [0, 'asc' ],
-        scrollX: true,
+<!--        scrollX: true,-->
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'

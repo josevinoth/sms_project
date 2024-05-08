@@ -11,8 +11,8 @@
         <div class="col-5"></div>
     </div>
 </div>
-<div class="container-fluid">
-    <table  class="table table-striped table-bordered">
+<div  class="container-fluid">
+    <table  id="pk_item_search_costing_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
             <th>ID</th>
@@ -23,11 +23,11 @@
             <th>Stock Description</th>
             <th>Type Of Wood</th>
             <th>Source</th>
-            <th>Thick/Height</th>
-            <th>Width</th>
-            <th>Length</th>
+            <th>Width (in)</th>
+            <th>Thick/Height (in)</th>
+            <th>Length (fT)</th>
             <th>Quantity</th>
-             <th>Total CFT</th>
+            <th>Total CFT</th>
             <th>Rate/Qty (CFT)</th>
             <th>UOM</th>
             <th>Size</th>
@@ -44,8 +44,8 @@
             <td> {{result.sp_stock_description}}</td>
             <td> {{result.sp_type_of_wood}}</td>
             <td> {{result.sp_source}}</td>
-            <td> {{result.sp_thick_height}}</td>
             <td> {{result.sp_width}}</td>
+            <td> {{result.sp_thick_height}}</td>
             <td> {{result.sp_length}}</td>
             <td> {{result.sp_quantity}}</td>
             <td> {{result.sp_total_cft}}</td>
@@ -62,4 +62,5 @@
         </tbody>
     </table>
 </div>
+
 {% endblock content %}

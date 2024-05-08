@@ -1,4 +1,5 @@
 from django.db import models
+from .sub_models.pk_stock_status_mod import pk_stock_statusinfo
 from .sub_models.gst_payable_mod import GST_payable_info
 from .sub_models.tr_businesstype_mod import Tr_businesstype_Info
 from .sub_models.tr_triptype_mod import Tr_triptype_Info

@@ -1,9 +1,7 @@
 import json
-from html import unescape
-
 from django.contrib.auth.decorators import login_required
 from ..forms import ModifyDimensionsForm,CostingSearchForm,PkcostingForm
-from ..models import Natypeofreq,Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo
+from ..models import Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
@@ -40,16 +38,35 @@ def costing_add(request,costing_id=0):
             print("Inside PK Costing post add")
             form = PkcostingForm(request.POST)
             if form.is_valid():
-                form.save()
-                print("costing Form is Valid")
-                last_id = (PkcostingInfo.objects.latest('id')).id
-                stock_purchase_num=PkcostingInfo.objects.get(pk=last_id).ct_stock_purchase_number
-                cost_type_id = PkcostingInfo.objects.get(pk=last_id).ct_cost_type.id
-                if cost_type_id==8:
-                    update_reduced_dimensions(stock_purchase_num,last_id)
+                cost_type_id = request.POST.get('ct_cost_type')
+                print('cost_type_id',cost_type_id)
+                if int(cost_type_id)==8:
+                    stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
+                    stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
+                    stock_qty = request.POST.get('ct_quantity')
+                    stock_qty_available=PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
+                    if int(stock_qty) <= 0:
+                        messages.error(request, 'Quantity should be greater than 0')
+                        return redirect(request.META['HTTP_REFERER'])
+                    elif int(stock_qty)>stock_qty_available:
+                        error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
+                        messages.error(request, error_message)
+                        return redirect(request.META['HTTP_REFERER'])
+                    else:
+                        form.save()
+                        print("costing Form is Valid")
+                        # last_id = (PkcostingInfo.objects.latest('id')).id
+                        # stock_status = (PkcostingInfo.objects.latest('id')).ct_stock_status
+                        # print('stock_status',stock_status)
+                        # if stock_status ==2:
+                        #     messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                        #     update_reduced_dimensions(stock_purchase_num,last_id)
+                        # else:
+                        #     messages.success(request, 'Stock Updated Successfully')
+                        messages.success(request, 'Stock Updated Successfully')
                 else:
-                    pass
-                messages.success(request, 'Record Updated Successfully')
+                    form.save()
+                    messages.success(request, 'Stock Updated Successfully')
                 # return redirect('/SMS/costing_update/'+str(last_id))
                 return redirect('/SMS/costing_insert/')
             else:
@@ -66,11 +83,33 @@ def costing_add(request,costing_id=0):
                 stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
                 last_id=costing_id
                 cost_type_id=PkcostingInfo.objects.get(pk=costing_id).ct_cost_type.id
-                if cost_type_id==8:
-                    update_reduced_dimensions(stock_purchase_num,last_id)
+                if int(cost_type_id) == 8:
+                    stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
+                    stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
+                    stock_qty = request.POST.get('ct_quantity')
+                    stock_qty_available = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
+                    if int(stock_qty) <= 0:
+                        messages.error(request, 'Quantity should be greater than 0')
+                        return redirect(request.META['HTTP_REFERER'])
+                    elif int(stock_qty) > stock_qty_available:
+                        error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
+                        messages.error(request, error_message)
+                        return redirect(request.META['HTTP_REFERER'])
+                    else:
+                        form.save()
+                        print("costing Form is Valid")
+                        # last_id = (PkcostingInfo.objects.latest('id')).id
+                        # stock_status = (PkcostingInfo.objects.latest('id')).ct_stock_status
+                        # print('stock_status',stock_status)
+                        # if stock_status ==2:
+                        #     messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                        #     update_reduced_dimensions(stock_purchase_num,last_id)
+                        # else:
+                        #     messages.success(request, 'Stock Updated Successfully')
+                        messages.success(request, 'Stock Updated Successfully')
                 else:
-                    pass
-                messages.success(request, 'Record Updated Successfully')
+                    form.save()
+                    messages.success(request, 'Stock Updated Successfully')
             else:
                 print("costing Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
@@ -81,26 +120,35 @@ def update_reduced_dimensions(stock_purchase_num,last_id):
     length = PkcostingInfo.objects.get(pk=last_id).ct_length
     qty = PkcostingInfo.objects.get(pk=last_id).ct_quantity
     cft = PkcostingInfo.objects.get(pk=last_id).ct_cft
-
+    print('length',length)
+    print('qty',qty)
+    print('cft',cft)
     prev_length = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_length_reduced
     prev_qty = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_quantity_reduced
     prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft_reduced
 
-    if prev_length>=length:
-        current_length = prev_length - length
-        current_cft= prev_cft - cft
-    else:
-        current_length = prev_length
-        current_cft= prev_cft
+    print('prev_length',prev_length)
+    print('prev_qty',prev_qty)
+    print('prev_cft',prev_cft)
 
-    if prev_qty >= qty:
-        current_qty=prev_qty-qty
-    else:
-        current_qty = prev_qty
+    # if prev_length>=length:
+        # current_length = prev_length - length
+        # current_cft= prev_cft - cft
+    # else:
+    #     current_length = prev_length
+    #     current_cft= prev_cft
 
+    # if prev_qty >= qty:
+    #     current_qty=prev_qty-qty
+    # else:
+    #     # current_qty = prev_qty
+    current_qty = prev_qty - qty
+    current_cft = prev_cft - cft
+    print('current_qty',current_qty)
+    print('current_cft',current_cft)
     # PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=current_cft)
+    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=round(current_cft,2))
 
 def append_reduced_dimensions(stock_purchase_num,costing_id):
     length = PkcostingInfo.objects.get(pk=costing_id).ct_length
@@ -112,10 +160,10 @@ def append_reduced_dimensions(stock_purchase_num,costing_id):
     prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft_reduced
 
     if prev_length>=length:
-        # current_length = prev_length + length
+        current_length = prev_length + length
         current_cft= prev_cft + cft
     else:
-        # current_length = prev_length
+        current_length = prev_length
         current_cft= prev_cft
 
     if prev_qty >= qty:
@@ -123,7 +171,7 @@ def append_reduced_dimensions(stock_purchase_num,costing_id):
     else:
         current_qty = prev_qty
 
-    # PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
+    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=current_cft)
 
@@ -158,8 +206,6 @@ def load_stock_description(request):
     stock_description.sort()
     for j in stock_description:
         stock_description_id.append(Stockdescription.objects.get(stock_description=j).id)
-    print('stock_description',stock_description)
-    print('stock_description_id',stock_description_id)
     data = {
         'stock_description':stock_description,
         'stock_description_id': stock_description_id,
@@ -177,14 +223,22 @@ def costing_cancel(request):
 def pk_item_search_page_costing(request):
     stock_type = request.GET.get('stock_type')
     stock_description = request.GET.get('stock_description')
-    # queryset = PkstockpurchasesInfo.objects.all()
-    queryset = PkstockpurchasesInfo.objects.filter(sp_quantity_reduced__gt=0)
-    if stock_description:
-        queryset = queryset.filter(sp_stock_description=stock_description)
-    if stock_type:
-        queryset = queryset.filter(sp_stock_type=stock_type)
+    length_req = request.GET.get('length_req')
+    width_req = request.GET.get('width_req')
+    height_req = request.GET.get('height_req')
+    print('length_req',length_req)
+    print('width_req',width_req)
+    print('height_req',height_req)
         # Serialize the queryset to JSON
-        results = list(queryset.values(
+    queryset = PkstockpurchasesInfo.objects.filter(
+        sp_quantity_reduced__gt=0,
+        sp_stock_description=stock_description if stock_description else '',
+        sp_stock_type=stock_type if stock_type else '',
+        sp_thick_height__gte=height_req if height_req else float('inf'),
+        sp_width__gte=width_req if width_req else float('inf'),
+        sp_length__gte=length_req if length_req else float('inf')
+    )
+    results = list(queryset.values(
             'id',
             'sp_vendor_bill',
             'sp_purchase_num',
@@ -204,7 +258,6 @@ def pk_item_search_page_costing(request):
         ))
     # Serialize the queryset to JSON and return it
     # results = list(queryset.values())
-    print('results', results)
     return JsonResponse(results, safe=False)
 
 @login_required(login_url='login_page')
@@ -257,13 +310,11 @@ def pk_get_item_description(request):
     item_description_val = []
     item_id = request.GET.get('item_id')
     # Fetch item_description Details
-    item_descriptions = pk_itemdescriptionInfo.objects.filter(id_item_name=item_id).order_by('id_item_description')
-
+    item_descriptions = pk_itemdescriptionInfo.objects.filter(id_item_name=int(item_id)).order_by('id_item_description')
     # Extract id and id_item_description attributes from queryset
     for item in item_descriptions:
         item_description_id.append(item.id)
         item_description_val.append(item.id_item_description)
-
     # Create JSON response data
     data = {
         'item_description_val': item_description_val,
@@ -289,7 +340,6 @@ def pk_get_pk_requirement_type(request):
     #     requirement_type_val.append(Natypeofreq.objects.get(id=type).type_of_req)
     # print('na_dimension_id',na_dimension_id)
     # Create JSON response data
-    print('requirement_type_id',requirement_type_id)
     data = {
         'requirement_type_val': requirement_type_val,
         'requirement_type_id': requirement_type_id,
@@ -302,11 +352,9 @@ def pk_get_pk_requirement_type(request):
 def pk_store_na_dimension_id(request):
     na_dimension_box_val = []
     ct_requirement_id= request.GET.get('ct_requirement_id')
-    print('ct_requirement_id',ct_requirement_id)
     # Fetch requirement type
     a = Nadimension.objects.get(pk=ct_requirement_id)
     na_dimension_box_val.append(str(a.nad_type_of_req)+str(' (')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
-    print('na_dimension_box_val',na_dimension_box_val)
     # Extract id and id_item_description attributes from queryset
     # for type in requirement_type:
     #     requirement_type_id.append(Natypeofreq.objects.get(id=type).id)

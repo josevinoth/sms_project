@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Capture</title>
+</head>
+<body>
+    <div>
+        <video id="video" width="640" height="480" autoplay></video>
+        <button id="capture-btn">Capture</button>
+        <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+        <img id="image" src="#" alt="Captured Image">
+    </div>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const captureButton = document.getElementById('capture-btn');
+        const image = document.getElementById('image');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error('Error accessing the camera:', err);
+            });
+
+        captureButton.addEventListener('click', () => {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/png');
+            image.setAttribute('src', imageData);
+
+            // Send imageData to the backend (Django) for saving
+            // You can use fetch() or XMLHttpRequest to send the data
+            // Example:
+            // fetch('/save-image', {
+            //     method: 'POST',
+            //     body: JSON.stringify({ image_data: imageData }),
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     }
+            // })
+            // .then(response => response.json())
+            // .then(data => console.log(data))
+            // .catch(error => console.error('Error saving image:', error));
+        });
+    </script>
+</body>
+</html>
