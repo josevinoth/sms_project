@@ -3,14 +3,26 @@
 {% block content %}
 <form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
 	{% csrf_token %}
+	<div class="container-fluid row">
+        <div class="col-md-1">
+            <a href="{% url 'costing_cancel' %}" class="btn btn-primary btn-block btn-lg">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+<!--    <div class="col-md-1.5">-->
+<!--        <a href="{% url 'costing_insert' %}" class="btn btn-success btn-block btn-lg">-->
+<!--            <i class="fas fa-plus"></i> Add Items-->
+<!--        </a>-->
+<!--    </div>-->
+</div>
 	<div class="row">
 		<div class="col-2"></div>
 		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Costing</h3></div>
-					<div class="card-body bg-light">
-						<div class="row">
+					<div class="card-body bg-light" id="costing_form">
+						<div class="row" >
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -150,12 +162,18 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Purchase Number</span>
+									</div>
+									{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Status</span>
 									</div>
-									{% render_field form.ct_stock_status id="ct_stock_status" class="form-control" %}
+									{% render_field form.ct_stock_status id="ct_stock_status" class="form-control disable_a_href" %}
 								</div>
 								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
-								{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
+
 							</div>
 						</div>
 						<div class="row">
@@ -189,6 +207,16 @@
 
 <script>
 $(document).ready(function() {
+	var stock_status=document.getElementById("ct_stock_status").value;
+	if (stock_status==2)
+	{
+		$('#costing_form').addClass('disable_a_href');
+		alert("User Cannot edit the form since stock is supplied")
+	}
+	else
+	{
+		$('#costing_form').removeClass('disable_a_href');
+	}
 	document.getElementById("ct_updated_by").value ='{{user_id}}';
 	document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
 	change_cost_type();
@@ -242,7 +270,6 @@ function change_cost_type() {
 		var jn=document.getElementById("ct_cost_type").value
 		if ( jn==8)
 		{
-			document.getElementById("ct_stock_status").value=1
 			$('#ct_stock_type').removeClass('disable_a_href');
 			var jn1=document.getElementById("ct_stock_type").value
 			if ( jn1==1)

@@ -195,6 +195,20 @@
 $(document).ready(function() {
 	document.getElementById("ct_updated_by").value ='{{user_id}}';
 	document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
+	var stock_status=document.getElementById("ct_stock_status").value
+	if (stock_status<=2)
+	{
+		alert("Form cannot be edited")
+		$('#ct_stock_status').addClass('disable_a_href');
+	}
+	elseif (stock_status=="")
+	{
+		$('#ct_stock_status').removeClass('disable_a_href');
+	}
+	else
+	{
+		$('#ct_stock_status').removeClass('disable_a_href');
+	}
 	$("#search_wood").on("click", function() {
             search_wood();
         });

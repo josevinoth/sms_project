@@ -1,6 +1,6 @@
 import json
 from django.contrib.auth.decorators import login_required
-from ..forms import PkcostingForm
+from ..forms import PkretrivalForm
 from ..models import PkstockpurchasesInfo,PkcostingInfo,PkquotationsummaryInfo
 from django.shortcuts import render, redirect
 from ..views import update_reduced_dimensions
@@ -13,10 +13,10 @@ def pk_retrival_add(request,retrival_id=0):
     na_assessment_num_id = request.session.get('na_assessment_id')
     if request.method == "GET":
         if retrival_id == 0:
-            form = PkcostingForm()
+            form = PkretrivalForm()
         else:
             retrival=PkcostingInfo.objects.get(pk=retrival_id)
-            form = PkcostingForm(instance=retrival)
+            form = PkretrivalForm(instance=retrival)
         context={
                 'form': form,
                 'first_name': first_name,
@@ -26,7 +26,7 @@ def pk_retrival_add(request,retrival_id=0):
         return render(request, "asset_mgt_app/pk_retrival_add.html", context)
     else:
         if retrival_id == 0:
-            form = PkcostingForm(request.POST)
+            form = PkretrivalForm(request.POST)
             if form.is_valid():
                 form.save()
                 print("retrival Form is Valid")
@@ -39,22 +39,18 @@ def pk_retrival_add(request,retrival_id=0):
                 return redirect(request.META['HTTP_REFERER'])
         else:
             retrival = PkcostingInfo.objects.get(pk=retrival_id)
-            form = PkcostingForm(request.POST,instance=retrival)
+            form = PkretrivalForm(request.POST,instance=retrival)
             if form.is_valid():
                 form.save()
                 last_id = retrival_id
                 stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
                 stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
-
-                print("retrival Form is Valid")
-                messages.success(request, 'Record Updated Successfully')
-                stock_status = (PkcostingInfo.objects.get(id=retrival_id)).ct_stock_status
-                print('stock_status',stock_status)
+                stock_status = (PkcostingInfo.objects.get(id=retrival_id)).ct_stock_status.id
                 if stock_status ==2:
                     messages.success(request, 'Stock Successfully Retrieved & Supplied')
                     update_reduced_dimensions(stock_purchase_num,last_id)
                 else:
-                    messages.success(request, 'Stock Status Updated Successfully')
+                    messages.success(request, 'Stock Not Retrieved')
             else:
                 print("retrival Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')

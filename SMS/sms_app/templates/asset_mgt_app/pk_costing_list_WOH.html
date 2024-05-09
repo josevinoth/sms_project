@@ -80,12 +80,16 @@
                 </a>
             </td>
             <td>
+                {% if costinginfo.ct_stock_status.id == 2 %}
+
+                {% else %}
                 <form action="{% url 'costing_delete' costinginfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
+                        <i class="fas fa-trash-alt"></i> Delete
                     </button>
                 </form>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}
