@@ -11,7 +11,8 @@ def costing_add(request,costing_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
-
+    na_customer_name_id = request.session.get('na_customer_name_id')
+    print('na_customer_name_id',na_customer_name_id)
     if request.method == "GET":
         if costing_id == 0:
             form = PkcostingForm()
@@ -20,6 +21,7 @@ def costing_add(request,costing_id=0):
                 'first_name': first_name,
                 'user_id': user_id,
                 'na_assessment_num_id': na_assessment_num_id,
+                'na_customer_name_id': na_customer_name_id,
                 'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id),
             }
         else:

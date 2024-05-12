@@ -1,7 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required
 from ..forms import PkquotationForm
-from ..models import PkquotationInfo,PkquotationsummaryInfo
+from ..models import PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo
 from django.shortcuts import render, redirect
 
 from django.contrib import messages
@@ -11,39 +11,107 @@ def pk_quotation_add(request,quotation_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
+    na_customer_name_id = request.session.get('na_customer_name_id')
+    print('na_customer_name_id', na_customer_name_id)
     if request.method == "GET":
         if quotation_id == 0:
             form = PkquotationForm()
-        else:
-            quotation=PkquotationInfo.objects.get(pk=quotation_id)
-            form = PkquotationForm(instance=quotation)
-        context={
+            context = {
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
                 'na_assessment_num_id': na_assessment_num_id,
-                }
+                'na_customer_name_id': na_customer_name_id,
+                'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
+            }
+        else:
+            quotation = PkquotationInfo.objects.get(pk=quotation_id)
+            form = PkquotationForm(instance=quotation)
+            context = {
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'na_assessment_num_id': na_assessment_num_id,
+                'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
+            }
         return render(request, "asset_mgt_app/pk_quotation_add.html", context)
     else:
         if quotation_id == 0:
+            print("Inside PK quotation post add")
             form = PkquotationForm(request.POST)
             if form.is_valid():
-                form.save()
-                print("quotation Form is Valid")
-                last_id = (PkquotationInfo.objects.latest('id')).id
-                messages.success(request, 'Record Updated Successfully')
-                return redirect('/SMS/pk_quotation_update/'+str(last_id))
+                cost_type_id = request.POST.get('pkqt_cost_type')
+                print('cost_type_id', cost_type_id)
+                if int(cost_type_id) == 8:
+                    stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
+                    stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
+                    stock_qty = request.POST.get('pkqt_quantity')
+                    stock_qty_available = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
+                    if int(stock_qty) <= 0:
+                        messages.error(request, 'Quantity should be greater than 0')
+                        return redirect(request.META['HTTP_REFERER'])
+                    elif int(stock_qty) > stock_qty_available:
+                        error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
+                        messages.error(request, error_message)
+                        return redirect(request.META['HTTP_REFERER'])
+                    else:
+                        form.save()
+                        print("quotation Form is Valid")
+                        # last_id = (PkquotationInfo.objects.latest('id')).id
+                        # stock_status = (PkquotationInfo.objects.latest('id')).pkqt_stock_status
+                        # print('stock_status',stock_status)
+                        # if stock_status ==2:
+                        #     messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                        #     update_reduced_dimensions(stock_purchase_num,last_id)
+                        # else:
+                        #     messages.success(request, 'Stock Updated Successfully')
+                        messages.success(request, 'Stock Updated Successfully')
+                else:
+                    form.save()
+                    messages.success(request, 'Stock Updated Successfully')
+                # return redirect('/SMS/quotation_update/'+str(last_id))
+                return redirect('/SMS/quotation_insert/')
             else:
                 print("quotation Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
         else:
+            print("Inside PK quotation post Edit")
             quotation = PkquotationInfo.objects.get(pk=quotation_id)
-            form = PkquotationForm(request.POST,instance=quotation)
+            form = PkquotationForm(request.POST, instance=quotation)
             if form.is_valid():
                 form.save()
                 print("quotation Form is Valid")
-                messages.success(request, 'Record Updated Successfully')
+                stock_purchase_num = PkquotationInfo.objects.get(pk=quotation_id).pkqt_stock_purchase_number
+                last_id = quotation_id
+                cost_type_id = PkquotationInfo.objects.get(pk=quotation_id).pkqt_cost_type.id
+                if int(cost_type_id) == 8:
+                    stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
+                    stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
+                    stock_qty = request.POST.get('pkqt_quantity')
+                    stock_qty_available = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
+                    if int(stock_qty) <= 0:
+                        messages.error(request, 'Quantity should be greater than 0')
+                        return redirect(request.META['HTTP_REFERER'])
+                    elif int(stock_qty) > stock_qty_available:
+                        error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
+                        messages.error(request, error_message)
+                        return redirect(request.META['HTTP_REFERER'])
+                    else:
+                        form.save()
+                        print("quotation Form is Valid")
+                        # last_id = (PkquotationInfo.objects.latest('id')).id
+                        # stock_status = (PkquotationInfo.objects.latest('id')).pkqt_stock_status
+                        # print('stock_status',stock_status)
+                        # if stock_status ==2:
+                        #     messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                        #     update_reduced_dimensions(stock_purchase_num,last_id)
+                        # else:
+                        #     messages.success(request, 'Stock Updated Successfully')
+                        messages.success(request, 'Stock Updated Successfully')
+                else:
+                    form.save()
+                    messages.success(request, 'Stock Updated Successfully')
             else:
                 print("quotation Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')

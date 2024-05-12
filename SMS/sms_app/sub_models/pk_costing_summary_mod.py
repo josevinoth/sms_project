@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import pk_itemdescriptionInfo,pk_itemInfo,MyUser,PkneedassessmentInfo
+from ..models import CustomerInfo,MyUser,PkneedassessmentInfo
 
 class PkcostingsummaryInfo(models.Model):
     cs_assessment_num=models.OneToOneField(PkneedassessmentInfo, on_delete=models.CASCADE, default='',unique=True)
@@ -26,6 +26,9 @@ class PkcostingsummaryInfo(models.Model):
     cs_client_scope = models.TextField(blank=True, null=True)
     cs_bvm_scope = models.TextField(blank=True, null=True)
     cs_quotation_number=models.CharField(max_length=100,blank=True,null=True)
+    cs_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, related_name='cs_customer_name',
+                                         db_column='cs_customer_name', blank=True, null=True)
+
     class Meta:
         ordering = ["id"]
 

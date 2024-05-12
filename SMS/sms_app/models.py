@@ -1,4 +1,6 @@
 from django.db import models
+from .sub_models.pk_item_mod import pk_itemInfo
+from .sub_models.pk_itemdescription_mod import pk_itemdescriptionInfo
 from .sub_models.pk_stock_status_mod import pk_stock_statusinfo
 from .sub_models.gst_payable_mod import GST_payable_info
 from .sub_models.tr_businesstype_mod import Tr_businesstype_Info
@@ -152,8 +154,6 @@ from .sub_models.pk_quotes_mod import PkquotesInfo
 from .sub_models.pk_retrival_mod import PkretrivalInfo
 from .sub_models.pk_quotation_mod import PkquotationInfo
 from .sub_models.pk_quotation_summary_mod import PkquotationsummaryInfo
-from .sub_models.pk_item_mod import pk_itemInfo
-from .sub_models.pk_itemdescription_mod import pk_itemdescriptionInfo
 from .sub_models.pk_costing_mod import PkcostingInfo
 from .sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
 from .sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo

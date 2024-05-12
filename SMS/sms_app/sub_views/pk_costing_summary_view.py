@@ -5,7 +5,7 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 
 from ..forms import PkcostingsummaryForm
-from ..models import Nadimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
+from ..models import PkpurchaseorderInfo,Nadimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
@@ -29,8 +29,9 @@ def costingsummary_add(request,costingsummary_id=0):
             costingsummary=PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
             needassessment_num = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_assessment_num
             needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
+            customer_name_id = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_customer_name.id
             request.session['na_assessment_id'] = needassessment_id
-            print('needassessment_id',needassessment_id)
+            request.session['na_customer_name_id'] = customer_name_id
             form = PkcostingsummaryForm(instance=costingsummary)
             costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id)
             # wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_cost_type=8,ct_stock_type=1,ct_stock_type=4).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
@@ -174,8 +175,18 @@ def costingsummary_delete(request,costingsummary_id):
 @login_required(login_url='login_page')
 def costing_summary_check_unique_field(request):
     cs_assessment_num = request.GET.get('cs_assessment_num')
+    customer_name_id=PkneedassessmentInfo.objects.get(id=cs_assessment_num).na_customer_name.id
+    customer_po_qs = PkpurchaseorderInfo.objects.filter(po_assessment_num=cs_assessment_num)
+    customer_po_id = list(customer_po_qs.values_list('id', flat=True))
     exists = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num).exists()
-    return JsonResponse({'exists': exists})
+    print('customer_po_id',customer_po_id)
+    return JsonResponse(
+        {
+            'exists': exists,
+            'customer_name_id':customer_name_id,
+            'customer_po_id':customer_po_id,
+        }
+    )
 
 @login_required(login_url='login_page')
 def bvm_quotation_pdf(request,quotation_id=0):
@@ -222,7 +233,7 @@ def bvm_quotation_pdf(request,quotation_id=0):
         'today_date': formatted_date,
     }
     file_name = str("Quotation_") + str(needassessment_num) + str(".pdf")
-    template_path = 'asset_mgt_app/bvm_quotation_pdf.html'
+    template_path = 'asset_mgt_app/bvm_pk_quotation_pdf.html'
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename={file_name}'
 

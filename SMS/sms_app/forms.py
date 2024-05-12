@@ -94,6 +94,7 @@ from.sub_forms.pregatein_truckform_Form import PregateintruckForm
 from.sub_forms.pk_stock_vendorform import PkstockvendorForm
 from.sub_forms.pk_quotationForm_form import PkquotationForm
 from.sub_forms.pk_retrivalForm_form import PkretrivalForm
+from.sub_forms.pk_stock_acceptance_form import PkacceptanceForm
 from.sub_forms.pk_quotation_summaryForm_form import PkquotationsummaryForm
 from.sub_forms.iouForm import IouForm
 from.sub_forms.CostingSearchForm import CostingSearchForm,ModifyDimensionsForm

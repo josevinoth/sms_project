@@ -9,7 +9,18 @@
 		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update quotation Summary</h3></div>
+					<div class="card-header text-center">
+						<div class="row">
+							<div class="col-3"></div>
+							<div class="col-6">
+								<h3>Add/Update quotation Summary</h3>
+							</div>
+							<div class="col-3">
+								<a href="{% url 'bvm_quotation_pdf' %}" class="btn btn-warning btn-block" id="damage_report_btn"><i class="fa fa-download" aria-hidden="true"> Quotation</i>
+								</a>
+							</div>
+						</div>
+					</div>
 					<div class="card-body bg-light" >
 						<div class="row">
 							<div class="col-6">
@@ -17,7 +28,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
-									{% render_field form.qs_assessment_num id="qs_assessment_num" name="qs_assessment_num"   class="form-control " %}
+									{% render_field form.qs_assessment_num id="qs_assessment_num" name="qs_assessment_num" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field form.qs_customer_name_2 id="qs_customer_name_2" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -55,6 +72,50 @@
 									</div>
 									{% render_field form.qs_management_cost id="qs_management_cost" class="form-control disable_a_href" %}
 								</div>
+								<div id="accordion" class="container-fluid">
+									<div class="card">
+										<div class="card-header bg-info" id="headingOne">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+													Address
+												</a>
+											</h5>
+										</div>
+										<div id="collapseOne" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.qs_address id="qs_address"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-header bg-info" id="headingTwo">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+													Cost Includes
+												</a>
+											</h5>
+										</div>
+										<div id="collapseTwo" class="collapse " aria-labelledby="headingTwo" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.qs_cost_includes id="qs_cost_includes"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-header bg-info" id="headingThree">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+													Notes
+												</a>
+											</h5>
+										</div>
+										<div id="collapseThree" class="collapse " aria-labelledby="headingThree" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.qs_notes id="qs_notes"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+								</div>
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
@@ -71,7 +132,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost(Without Margin)</span>
+										<span class="input-group-text">Total Cost (W/O Margin)</span>
 									</div>
 									{% render_field form.qs_total_cost_wom id="qs_total_cost_wom"  class="form-control disable_a_href" %}
 								</div>
@@ -83,7 +144,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost(With Margin)</span>
+										<span class="input-group-text">Total Cost (With Margin)</span>
 									</div>
 									{% render_field form.qs_total_cost_wm id="qs_total_cost_wm"  class="form-control disable_a_href " %}
 								</div>
@@ -99,14 +160,58 @@
 									</div>
 									{% render_field form.qs_rate_per_cft id="qs_rate_per_cft"  class="form-control disable_a_href" %}
 								</div>
-								{% render_field form.qs_updated_by id="qs_updated_by" hidden="True" class="form-control" %}
-							</div>
-							<div class="container-fluid input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Remarks</span>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quotation Number</span>
+									</div>
+									{% render_field form.qs_quotation_number id="qs_quotation_number"  class="form-control" %}
 								</div>
-								{% render_field form.qs_remarks id="qs_remarks"  class="form-control" %}
+								<div id="accordion_1" class="container-fluid mb-3">
+									<div class="card">
+										<div class="card-header bg-info" id="headingFour">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
+													Terms & Conditions
+												</a>
+											</h5>
+										</div>
+										<div id="collapseFour" class="collapse " aria-labelledby="headingFour" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.qs_terms_condition id="qs_terms_condition"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-header bg-info" id="headingFive">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
+													Client Scope
+												</a>
+											</h5>
+										</div>
+										<div id="collapseFive" class="collapse " aria-labelledby="headingFive" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.qs_client_scope id="qs_client_scope"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-header bg-info" id="headingSix">
+											<h5 class="mb-0">
+												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix">
+													BVM Scope
+												</a>
+											</h5>
+										</div>
+										<div id="collapseSix" class="collapse " aria-labelledby="headingSix" data-parent="#accordion">
+											<div class="card-body">
+												{% render_field form.qs_bvm_scope id="qs_bvm_scope"  class="form-control" %}
+											</div>
+										</div>
+									</div>
+								</div>
 							</div>
+							{% render_field form.qs_updated_by id="qs_updated_by" hidden="True" class="form-control" %}
 						</div>
 						<div class="row">
 							<div class="col-1"></div>
@@ -137,9 +242,9 @@
 	<!--            <i class="fas fa-arrow-left"></i> Back-->
 	<!--        </a>-->
 	<!--    </div>-->
-	<div class="col-md-1">
+	<div class="col-md-2">
 		<a href="{% url 'pk_quotation_insert' %}" id="add_quotation" class="btn btn-success btn-block btn-lg">
-			<i class="fas fa-plus"></i> Add
+			<i class="fas fa-plus"></i> Add/Modify Items
 		</a>
 	</div>
 </div>
@@ -150,6 +255,7 @@
 		<tr>
 			<th>Created On</th>
 			<th>Assessment Number</th>
+			<th>Requirement Type</th>
 			<th>Cost Type</th>
 			<th>Stock Type</th>
 			<th>Stock Description</th>
@@ -165,42 +271,43 @@
 			<th>Total Cost</th>
 			<th>Updated at</th>
 			<th>Updated By</th>
-			<th>Edit</th>
-			<th>Delete</th>
+			<!--			<th>Edit</th>-->
+			<!--			<th>Delete</th>-->
 		</thead>
 		<tbody>
 		{% for quotationinfo in quotation_list %}
 		<tr>
-			<td> {{quotationinfo.pkqt_created_at}}</td>
-			<td> {{quotationinfo.pkqt_assessment_num}}</td>
-			<td> {{quotationinfo.pkqt_cost_type}}</td>
-			<td> {{quotationinfo.pkqt_stock_type}}</td>
-			<td> {{quotationinfo.pkqt_stock_description}}</td>
-			<td> {{quotationinfo.pkqt_length}}</td>
-			<td> {{quotationinfo.pkqt_width}}</td>
-			<td> {{quotationinfo.pkqt_height}}</td>
-			<td> {{quotationinfo.pkqt_quantity}}</td>
-			<td> {{quotationinfo.pkqt_size}}</td>
-			<td> {{quotationinfo.pkqt_uom}}</td>
-			<td> {{quotationinfo.pkqt_cft}}</td>
-			<td> {{quotationinfo.pkqt_rate}}</td>
-			<td> {{quotationinfo.pkqt_days}}</td>
-			<td> {{quotationinfo.pkqt_total_cost}}</td>
-			<td> {{quotationinfo.pkqt_updated_at}}</td>
-			<td> {{quotationinfo.pkqt_updated_by}}</td>
-			<td>
-				<a class="btn btn-primary" href="{% url 'pk_quotation_update' quotationinfo.id %}" class="btn btn-primary">
-					<i class="far fa-edit"></i>
-				</a>
-			</td>
-			<td>
-				<form action="{% url 'pk_quotation_delete' quotationinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-					{% csrf_token %}
-					<button type="submit" class="btn btn-danger">
-						<i class="fas fa-trash-alt"></i>
-					</button>
-				</form>
-			</td>
+			<td> {{quotationinfo.ct_created_at}}</td>
+			<td> {{quotationinfo.ct_assessment_num}}</td>
+			<td> {{quotationinfo.ct_requirement}}</td>
+			<td> {{quotationinfo.ct_cost_type}}</td>
+			<td> {{quotationinfo.ct_stock_type}}</td>
+			<td> {{quotationinfo.ct_stock_description}}</td>
+			<td> {{quotationinfo.ct_length}}</td>
+			<td> {{quotationinfo.ct_width}}</td>
+			<td> {{quotationinfo.ct_height}}</td>
+			<td> {{quotationinfo.ct_quantity}}</td>
+			<td> {{quotationinfo.ct_size}}</td>
+			<td> {{quotationinfo.ct_uom}}</td>
+			<td> {{quotationinfo.ct_cft}}</td>
+			<td> {{quotationinfo.ct_rate}}</td>
+			<td> {{quotationinfo.ct_days}}</td>
+			<td> {{quotationinfo.ct_total_cost}}</td>
+			<td> {{quotationinfo.ct_updated_at}}</td>
+			<td> {{quotationinfo.ct_updated_by}}</td>
+			<!--			<td>-->
+			<!--				<a class="btn btn-primary" href="{% url 'quotation_update' quotationinfo.id %}" class="btn btn-primary">-->
+			<!--					<i class="far fa-edit"></i>-->
+			<!--				</a>-->
+			<!--			</td>-->
+			<!--			<td>-->
+			<!--				<form action="{% url 'quotation_delete' quotationinfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
+			<!--					{% csrf_token %}-->
+			<!--					<button type="submit" class="btn btn-danger">-->
+			<!--						<i class="fas fa-trash-alt"></i>-->
+			<!--					</button>-->
+			<!--				</form>-->
+			<!--			</td>-->
 		</tr>
 		{% endfor %}
 		</tbody>
@@ -209,6 +316,14 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("qs_updated_by").value ='{{user_id}}';
+	document.getElementById("qs_wood_cost").value ='{{wood_cost}}';
+	document.getElementById("qs_engineer_cost").value ='{{engineer_cost}}';
+	document.getElementById("qs_labour_cost").value ='{{labour_cost}}';
+	document.getElementById("qs_crane_cost").value ='{{crane_cost}}';
+	document.getElementById("qs_ht_cost").value ='{{ht_cost}}';
+	document.getElementById("qs_management_cost").value ='{{management_cost}}';
+	document.getElementById("qs_material_cost").value ='{{material_cost}}';
+	document.getElementById("qs_transport_cost").value ='{{transport_cost}}';
 	change_charge_type()
 	$('#quotation_list').DataTable({
         dom: 'lBfrtip',
@@ -265,6 +380,8 @@ document.getElementById("qs_rate_per_cft").value=rate_per_cft.toFixed(2)
                 },
                 dataType: 'json',
                 success: function(data) {
+                	var customer_name_id=data.customer_name_id
+                	document.getElementById("qs_customer_name_2").value=customer_name_id
                     if (data.exists) {
                         $('#unique_field_error').text('This Record already exists.');
                     } else {

@@ -28,7 +28,19 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
-									{% render_field form.cs_assessment_num id="cs_assessment_num" name="cs_assessment_num"   class="form-control " %}
+									{% render_field form.cs_assessment_num id="cs_assessment_num" name="cs_assessment_num" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field form.cs_customer_name id="cs_customer_name" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer PO</span>
+									</div>
+									{% render_field form.cs_customer_po id="cs_customer_po" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -154,6 +166,12 @@
 									</div>
 									{% render_field form.cs_rate_per_cft id="cs_rate_per_cft"  class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quotation Number</span>
+									</div>
+									{% render_field form.cs_quotation_number id="cs_quotation_number"  class="form-control" %}
+								</div>
 								<div id="accordion_1" class="container-fluid mb-3">
 									<div class="card">
 										<div class="card-header bg-info" id="headingFour">
@@ -198,12 +216,6 @@
 										</div>
 									</div>
 								</div>
-							</div>
-							<div class="container-fluid input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Quotation Number</span>
-								</div>
-								{% render_field form.cs_quotation_number id="cs_quotation_number"  class="form-control" %}
 							</div>
 							{% render_field form.cs_updated_by id="cs_updated_by" hidden="True" class="form-control" %}
 						</div>
@@ -374,6 +386,9 @@ document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
                 },
                 dataType: 'json',
                 success: function(data) {
+                	var customer_name_id=data.customer_name_id
+                	document.getElementById("cs_customer_name").value=customer_name_id
+                	alert(customer_name_id)
                     if (data.exists) {
                         $('#unique_field_error').text('This Record already exists.');
                     } else {

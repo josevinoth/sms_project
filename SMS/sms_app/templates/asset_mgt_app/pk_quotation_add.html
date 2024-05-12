@@ -1,17 +1,28 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-
 <form method="POST" action="" id="quotation_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
 	{% csrf_token %}
+	<div class="container-fluid row">
+        <div class="col-md-1">
+            <a href="{% url 'pk_quotation_cancel' %}" class="btn btn-primary btn-block btn-lg">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+<!--    <div class="col-md-1.5">-->
+<!--        <a href="{% url 'pk_quotation_insert' %}" class="btn btn-success btn-block btn-lg">-->
+<!--            <i class="fas fa-plus"></i> Add Items-->
+<!--        </a>-->
+<!--    </div>-->
+</div>
 	<div class="row">
 		<div class="col-2"></div>
 		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Quotation</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
+					<div class="card-body bg-light" id="quotation_form">
+						<div class="row" >
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -21,15 +32,33 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Costing Type</span>
+										<span class="input-group-text">Customer Name</span>
 									</div>
-									{% render_field form.pkqt_cost_type id="pkqt_cost_type" onchange="change_cost_type()" class="form-control" %}
+									{% render_field form.pkqt_customer_name id="pkqt_customer_name"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Cost Type</span>
+									</div>
+									{% render_field form.pkqt_cost_type id="pkqt_cost_type" onchange="onChangeHandler()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Item Name</span>
+									</div>
+									{% render_field form.pkqt_requirement id="pkqt_requirement" onchange="pk_store_na_dimension_id()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Requirement Name & 	Size</span>
+									</div>
+									{% render_field form.pkqt_requirement_size id="pkqt_requirement_size" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field form.pkqt_stock_type id="pkqt_stock_type" onchange="change_cost_type()" class="form-control disable_a_href" %}
+									{% render_field form.pkqt_stock_type id="pkqt_stock_type" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -39,24 +68,62 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Width(inch)</span>
+										<span class="input-group-text">Item</span>
 									</div>
-									{% render_field form.pkqt_width id="pkqt_width" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.pkqt_item id="pkqt_item" onchange="changeItemDescription()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Height(inch)</span>
+										<span class="input-group-text">Item Description</span>
 									</div>
-									{% render_field form.pkqt_height id="pkqt_height" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.pkqt_itemdescription id="pkqt_itemdescription" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Length(Ft)</span>
+								<div class="row ">
+									<div class="col-9">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Height_requested (inch)</span>
+											</div>
+											{% render_field form.pkqt_height_req id="pkqt_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Width_requested (inch)</span>
+											</div>
+											{% render_field form.pkqt_width_req id="pkqt_width_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Length_requested (Ft)</span>
+											</div>
+											{% render_field form.pkqt_length_req id="pkqt_length_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
 									</div>
-									{% render_field form.pkqt_length id="pkqt_length" onchange="change_cost_type()" class="form-control " %}
+									<div class="col-3 d-flex align-items-center justify-content-center">
+										<button id="search_wood" type="button" class="btn btn-warning btn-lg"><i class="fas fa-search"></i> Search Item</button>
+									</div>
 								</div>
+
 							</div>
 							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height_available (inch)</span>
+									</div>
+									{% render_field form.pkqt_height id="pkqt_height" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width_available (inch)</span>
+									</div>
+									{% render_field form.pkqt_width id="pkqt_width" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length_available (Ft)</span>
+									</div>
+									{% render_field form.pkqt_length id="pkqt_length" class="form-control disable_a_href" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">UOM</span>
@@ -67,7 +134,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Size</span>
 									</div>
-									{% render_field form.pkqt_size id="pkqt_size" class="form-control " %}
+									{% render_field form.pkqt_size id="pkqt_size" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -77,15 +144,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">CFT</span>
+										<span class="input-group-text">Total CFT</span>
 									</div>
 									{% render_field form.pkqt_cft id="pkqt_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Rate</span>
+										<span class="input-group-text">Rate/Qty (CFT)</span>
 									</div>
-									{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -99,11 +166,22 @@
 									</div>
 									{% render_field form.pkqt_total_cost id="pkqt_total_cost" readonly="True" class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Purchase Number</span>
+									</div>
+									{% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Status</span>
+									</div>
+									{% render_field form.pkqt_stock_status id="pkqt_stock_status" class="form-control disable_a_href" %}
+								</div>
 								{% render_field form.pkqt_updated_by id="pkqt_updated_by" hidden="True" class="form-control" %}
 
 							</div>
 						</div>
-
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
@@ -126,11 +204,51 @@
 		<div class="col-2"></div>
 	</div>
 </form>
+
+<div id="pk_item_search_page_costing">
+	{% include "asset_mgt_app/pk_item_search_page_costing.html" %}
+</div>
+
+{% include "asset_mgt_app/pk_quotation_list_WOH.html" %}
+
 <script>
 $(document).ready(function() {
+	var stock_status=document.getElementById("pkqt_stock_status").value;
+	var assessment_num=document.getElementById("pkqt_assessment_num").value;
+	var customer_name=document.getElementById("pkqt_customer_name").value;
+
+	if (stock_status==2)
+	{
+		$('#quotation_form').addClass('disable_a_href');
+		alert("User Cannot edit the form since stock is supplied")
+	}
+	else
+	{
+		$('#quotation_form').removeClass('disable_a_href');
+	}
 	document.getElementById("pkqt_updated_by").value ='{{user_id}}';
-	document.getElementById("pkqt_assessment_num").value ='{{na_assessment_num_id}}';
+	if (assessment_num=="")
+	{
+		document.getElementById("pkqt_assessment_num").value ='{{na_assessment_num_id}}';
+	}
+	else
+	{
+		document.getElementById("pkqt_assessment_num").value =assessment_num;
+	}
+
+	if (customer_name=="")
+	{
+		document.getElementById("pkqt_customer_name").value ='{{na_customer_name_id}}';
+	}
+	else
+	{
+		document.getElementById("pkqt_customer_name").value = customer_name;
+	}
+
 	change_cost_type();
+	$("#search_wood").on("click", function() {
+            search_wood();
+        });
 	});
 </script>
 
@@ -138,6 +256,20 @@ $(document).ready(function() {
    $("#pkqt_stock_type").change(function () {
       var url = $("#quotation_add").attr("data-stock_description-url");
       var stock_type = $(this).val();
+      if (stock_type == 1 || stock_type == 4)
+      {
+    	$('#pkqt_item').removeClass('disable_a_href');
+    	$('#pkqt_width_req').removeClass('disable_a_href');
+    	$('#pkqt_height_req').removeClass('disable_a_href');
+    	$('#pkqt_length_req').removeClass('disable_a_href');
+	  }
+	  else
+	  {
+	  	$('#pkqt_item').addClass('disable_a_href');
+	  	$('#pkqt_width_req').addClass('disable_a_href');
+    	$('#pkqt_height_req').addClass('disable_a_href');
+    	$('#pkqt_length_req').addClass('disable_a_href');
+	  }
       $.ajax({
         url: url,
         data: {
@@ -169,13 +301,13 @@ function change_cost_type() {
 			if ( jn1==1)
 			{
 				$('#pkqt_stock_description').removeClass('disable_a_href');
-				$('#pkqt_length').removeClass('disable_a_href');
-				$('#pkqt_width').removeClass('disable_a_href');
-				$('#pkqt_height').removeClass('disable_a_href');
+<!--				$('#pkqt_length').removeClass('disable_a_href');-->
+<!--				$('#pkqt_width').removeClass('disable_a_href');-->
+<!--				$('#pkqt_height').removeClass('disable_a_href');-->
 				$('#pkqt_uom').addClass('disable_a_href');
 				$('#pkqt_quantity').removeClass('disable_a_href');
-				$('#pkqt_size').addClass('disable_a_href');
-				document.getElementById("pkqt_size").value=parseFloat(0.0)
+<!--				$('#pkqt_size').addClass('disable_a_href');-->
+<!--				document.getElementById("pkqt_size").value=parseFloat(0.0)-->
 				$('#pkqt_days').addClass('disable_a_href');
 				document.getElementById("pkqt_days").value=0;
 
@@ -184,9 +316,9 @@ function change_cost_type() {
 				var width = parseFloat(document.getElementById("pkqt_width").value) || 0;
 				var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 				var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-				var cft = length*height*width/144;
+				var cft = (length*height*width/144)*quantity;
 				document.getElementById("pkqt_cft").value=cft.toFixed(2)
-				var totalCost = rate * cft*quantity;
+				var totalCost = rate * cft;
 				document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
 			}
 
@@ -196,9 +328,9 @@ function change_cost_type() {
 				$('#pkqt_length').addClass('disable_a_href');
 				$('#pkqt_width').addClass('disable_a_href');
 				$('#pkqt_height').addClass('disable_a_href');
-				$('#pkqt_uom').removeClass('disable_a_href');
+<!--				$('#pkqt_uom').removeClass('disable_a_href');-->
 				$('#pkqt_quantity').removeClass('disable_a_href');
-				$('#pkqt_size').removeClass('disable_a_href');
+<!--				$('#pkqt_size').removeClass('disable_a_href');-->
 				$('#pkqt_cft').addClass('disable_a_href');
 				document.getElementById("pkqt_cft").value=0;
 				document.getElementById("pkqt_length").value=0;
@@ -223,9 +355,9 @@ function change_cost_type() {
 			$('#pkqt_height').addClass('disable_a_href');
 			$('#pkqt_days').removeClass('disable_a_href');
 			$('#pkqt_uom').addClass('disable_a_href');
-			$('#pkqt_size').addClass('disable_a_href');
+<!--			$('#pkqt_size').addClass('disable_a_href');-->
 			document.getElementById("pkqt_uom").value="";
-			document.getElementById("pkqt_size").value=0;
+<!--			document.getElementById("pkqt_size").value=0;-->
 			var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 			var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
 			var days = parseInt(document.getElementById("pkqt_days").value) || 0;
@@ -243,10 +375,10 @@ function change_cost_type() {
 			$('#pkqt_height').addClass('disable_a_href');
 			$('#pkqt_days').addClass('disable_a_href');
 			$('#pkqt_uom').addClass('disable_a_href');
-			$('#pkqt_size').addClass('disable_a_href');
+<!--			$('#pkqt_size').addClass('disable_a_href');-->
 			document.getElementById("pkqt_days").value=0;
 			document.getElementById("pkqt_uom").value="";
-			document.getElementById("pkqt_size").value=0;
+<!--			document.getElementById("pkqt_size").value=0;-->
 			var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 			var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
 			var totalCost = rate * quantity;
@@ -263,9 +395,9 @@ function change_cost_type() {
 			$('#pkqt_height').addClass('disable_a_href');
 			$('#pkqt_days').addClass('disable_a_href');
 			$('#pkqt_uom').addClass('disable_a_href');
-			$('#pkqt_size').addClass('disable_a_href');
+<!--			$('#pkqt_size').addClass('disable_a_href');-->
 			document.getElementById("pkqt_uom").value="";
-			document.getElementById("pkqt_size").value=0;
+<!--			document.getElementById("pkqt_size").value=0;-->
 			document.getElementById("pkqt_days").value=0;
 			var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 			var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
@@ -285,12 +417,12 @@ function change_cost_type() {
 			$('#pkqt_quantity').addClass('disable_a_href');
 			$('#pkqt_cft').addClass('disable_a_href');
 			$('#pkqt_uom').addClass('disable_a_href');
-			$('#pkqt_size').addClass('disable_a_href');
+<!--			$('#pkqt_size').addClass('disable_a_href');-->
 			document.getElementById("pkqt_days").value=0;
 			document.getElementById("pkqt_quantity").value=0;
 			document.getElementById("pkqt_cft").value=0;
 			document.getElementById("pkqt_uom").value="";
-			document.getElementById("pkqt_size").value=0;
+<!--			document.getElementById("pkqt_size").value=0;-->
 			var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 			var totalCost = rate;
         	document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
@@ -307,9 +439,9 @@ function change_cost_type() {
 			$('#pkqt_days').removeClass('disable_a_href');
 			$('#pkqt_cft').addClass('disable_a_href');
 			$('#pkqt_uom').addClass('disable_a_href');
-			$('#pkqt_size').addClass('disable_a_href');
+<!--			$('#pkqt_size').addClass('disable_a_href');-->
 			document.getElementById("pkqt_uom").value="";
-			document.getElementById("pkqt_size").value=0;
+<!--			document.getElementById("pkqt_size").value=0;-->
 			document.getElementById("pkqt_cft").value=0;
 			var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 			var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
@@ -319,7 +451,7 @@ function change_cost_type() {
 
 		}
 	}
-</script>>
+</script>
 
 <script>
 function change_charge_type() {
@@ -327,13 +459,13 @@ function change_charge_type() {
 	if ( jn==1)
 	{
 		$('#pkqt_stock_description').removeClass('disable_a_href');
-		$('#pkqt_length').removeClass('disable_a_href');
-		$('#pkqt_width').removeClass('disable_a_href');
-		$('#pkqt_height').removeClass('disable_a_href');
+<!--		$('#pkqt_length').removeClass('disable_a_href');-->
+<!--		$('#pkqt_width').removeClass('disable_a_href');-->
+<!--		$('#pkqt_height').removeClass('disable_a_href');-->
 		$('#pkqt_uom').addClass('disable_a_href');
 		$('#pkqt_quantity').removeClass('disable_a_href');
-		$('#pkqt_size').addClass('disable_a_href');
-		document.getElementById("pkqt_size").value=parseFloat(0.0)
+<!--		$('#pkqt_size').addClass('disable_a_href');-->
+<!--		document.getElementById("pkqt_size").value=parseFloat(0.0)-->
 		$('#pkqt_days').addClass('disable_a_href');
 		document.getElementById("pkqt_days").value=0;
 
@@ -342,9 +474,9 @@ function change_charge_type() {
 		var width = parseFloat(document.getElementById("pkqt_width").value) || 0;
 		var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 		var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-		var cft = length*height*width/144;
+		var cft = (length*height*width/144)*quantity;
 		document.getElementById("pkqt_cft").value=cft.toFixed(2)
-		var totalCost = rate * cft*quantity;
+		var totalCost = rate * cft;
         document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
 	}
 
@@ -354,9 +486,9 @@ function change_charge_type() {
 		$('#pkqt_length').addClass('disable_a_href');
 		$('#pkqt_width').addClass('disable_a_href');
 		$('#pkqt_height').addClass('disable_a_href');
-		$('#pkqt_uom').removeClass('disable_a_href');
+<!--		$('#pkqt_uom').removeClass('disable_a_href');-->
 		$('#pkqt_quantity').removeClass('disable_a_href');
-		$('#pkqt_size').removeClass('disable_a_href');
+<!--		$('#pkqt_size').removeClass('disable_a_href');-->
 		$('#pkqt_cft').addClass('disable_a_href');
 		document.getElementById("pkqt_cft").value=0;
 		document.getElementById("pkqt_length").value=0;
@@ -372,4 +504,176 @@ function change_charge_type() {
 }
 </script>
 
+<script>
+function search_wood()
+	{
+<!--		var stock_description = $(this).val();-->
+		var stock_description = $("#pkqt_stock_description").val();
+        var stock_type = $("#pkqt_stock_type").val();
+        var length_req = $("#pkqt_length_req").val();
+        var width_req = $("#pkqt_width_req").val();
+        var height_req = $("#pkqt_height_req").val();
+        var includeContainer = $('#pk_item_search_page_costing');
+        $.ajax({
+            url: '{% url 'pk_item_search_page_costing' %}',
+            data: {
+                'stock_type': stock_type,
+                'stock_description': stock_description,
+                'length_req': length_req,
+                'width_req': width_req,
+                'height_req': height_req,
+            },
+            success: function (results)
+            {
+				// Generate HTML for the table
+				var tableHtml = '<table class="table table-striped table-bordered">';
+				tableHtml += '<thead class="thead-dark"><tr><th>ID</th><th>Vendor Bill</th><th>Stock Purchases Number</th><th>Category</th><th>Stock Type</th><th>Stock Description</th><th>Source</th><th>Thick/Height</th><th>Width</th><th>Length</th><th>CFT</th><th>Quantity</th><th>Rate/Qty (CFT)</th><th>UOM</th><th>Size</th><th>Select</th></tr></thead>';
+				tableHtml += '<tbody>';
+				// Iterate over the results and add rows to the table
+				for (var i = 0; i < results.length; i++)
+				{
+					tableHtml += '<tr>';
+					tableHtml += '<td>' + results[i].id + '</td>';
+					tableHtml += '<td>' + results[i].sp_vendor_bill + '</td>';
+					tableHtml += '<td>' + results[i].sp_purchase_num + '</td>';
+					tableHtml += '<td>' + results[i].sp_category__category + '</td>';
+					tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
+					tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
+					tableHtml += '<td>' + results[i].sp_source__source + '</td>';
+					tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
+					tableHtml += '<td>' + results[i].sp_rate + '</td>';
+					tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
+					tableHtml += '<td class="hidden-column" style="display:none;">' + results[i].sp_uom + '</td>';
+					tableHtml += '<td>' + results[i].sp_size + '</td>';
+					tableHtml += '<td>';
+        			tableHtml += '<a class="btn btn-primary" >';
+        			tableHtml += '<i class="far fa-edit"></i> Select';
+        			tableHtml += '</a>';
+        			tableHtml += '</td>';
+					tableHtml += '</tr>';
+				}
+				tableHtml += '</tbody></table>';
+
+				 // Create the container and row structure
+				var containerHtml = '<div class="container-fluid" style="padding:15px;">';
+				containerHtml += '<div class="row">';
+				containerHtml += '<div class="col-5"></div>';
+				containerHtml += '<div class="col-2 rounded text-center bg-info">';
+				containerHtml += '<h3>Packing Stock List</h3>';
+				containerHtml += '</div>';
+				containerHtml += '<div class="col-5"></div>';
+				containerHtml += '</div>';
+				containerHtml += '</div>';
+				// Set the table HTML to the includeContainer
+				includeContainer.html(containerHtml +tableHtml);
+				var dataTable = includeContainer.find('table').DataTable();
+           }
+        });
+        // Attach click event to the "Select" button
+		includeContainer.on('click', 'a.btn-primary', function(e) {
+			e.preventDefault(); // Prevent the default action of the link
+
+			// Get the selected row data
+			var selectedRow = $(this).closest('tr');
+			var stockId = selectedRow.find('td:eq(0)').text();
+			var stock_purchase_num = selectedRow.find('td:eq(1)').text(); // Update with the correct index
+			var height = selectedRow.find('td:eq(7)').text(); // Update with the correct index
+			var width = selectedRow.find('td:eq(8)').text(); // Update with the correct index
+			var length = selectedRow.find('td:eq(9)').text(); // Update with the correct index
+			var cft = selectedRow.find('td:eq(10)').text(); // Update with the correct index
+			var quantity = selectedRow.find('td:eq(11)').text(); // Update with the correct index
+			var rateCFT = selectedRow.find('td:eq(12)').text(); // Update with the correct index
+			var uom = selectedRow.find('td:eq(13)').text(); // Update with the correct index
+			var size = selectedRow.find('td:eq(14)').text(); // Update with the correct index
+			var uom_id = selectedRow.find('.hidden-column').text();
+
+			// Log the extracted values (you can do further processing here)
+			document.getElementById("pkqt_stock_purchase_number").value=stockId;
+			document.getElementById("pkqt_length").value=length;
+			document.getElementById("pkqt_width").value=width;
+			document.getElementById("pkqt_height").value=height;
+			document.getElementById("pkqt_cft").value=cft;
+			document.getElementById("pkqt_quantity").value=quantity;
+			document.getElementById("pkqt_size").value=size;
+			document.getElementById("pkqt_uom").value=uom_id;
+			document.getElementById("pkqt_rate").value=rateCFT;
+			change_cost_type();
+		});
+	}
+</script>
+<script>
+	function changeItemDescription() {
+    var item_id = $('#pkqt_item').val();
+    $.ajax({
+        url: '{% url 'pk_get_item_description' %}',
+        type: 'GET',
+        data: {'item_id': item_id},
+        dataType: 'json',
+        success: function(data) {
+            console.log("Data",data);
+			$('#pkqt_itemdescription').removeClass('disable_a_href');
+			$('#pkqt_itemdescription').empty();
+			$('#pkqt_itemdescription').empty().append("<option value='0'>--Select--</option>");
+        	var pkqt_itemdescription_name=data.item_description_val;
+        	var pkqt_itemdescription_id=data.item_description_id;
+        	var len = (pkqt_itemdescription_id).length;
+        	$('#pkqt_itemdescription').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#pkqt_itemdescription").append("<option value='"+pkqt_itemdescription_id[i]+"'>"+pkqt_itemdescription_name[i]+"</option>");
+			}
+        }
+    });
+}
+</script>
+
+<script>
+	function load_pk_requirement_type() {
+    var pkqt_assessment_num_id = $('#pkqt_assessment_num').val();
+    $.ajax({
+        url: '{% url 'pk_get_pk_requirement_type' %}',
+        type: 'GET',
+        data: {'pkqt_assessment_num_id': pkqt_assessment_num_id},
+        dataType: 'json',
+        success: function(data) {
+        	$('#pkqt_requirement').removeClass('disable_a_href');
+        	$('#pkqt_requirement').empty();
+			$('#pkqt_requirement').empty().append("<option value='0'>--Select--</option>");
+        	var pkqt_requirement_name=data.requirement_type_val;
+        	var pkqt_requirement_id=data.requirement_type_id;
+        	var len = (pkqt_requirement_id).length;
+        	$('#pkqt_requirement').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#pkqt_requirement").append("<option value='"+pkqt_requirement_id[i]+"'>"+pkqt_requirement_name[i]+"</option>");
+			}
+        }
+    });
+}
+</script>
+
+<script>
+	function pk_store_na_dimension_id() {
+    var pkqt_requirement_id = $('#pkqt_requirement').val();
+    $.ajax({
+        url: '{% url 'pk_store_na_dimension_id' %}',
+        type: 'GET',
+        data: {'pkqt_requirement_id': pkqt_requirement_id},
+        dataType: 'json',
+        success: function(data) {
+        	var na_dimension_box_val=data.na_dimension_box_val;
+        	document.getElementById("pkqt_requirement_size").value=na_dimension_box_val;
+        }
+    });
+}
+</script>
+
+<script>
+    function onChangeHandler() {
+        change_cost_type();
+        load_pk_requirement_type();
+    }
+</script>
 {% endblock content %}

@@ -1,0 +1,85 @@
+{% extends "asset_mgt_app/report_header_landscape.html" %}
+{% block content %}
+<div>
+    <table class='report_details'>
+        <tr>
+            <td colspan="3">
+                <h1 style="color:red;">BVM PACK SOLUTIONS PVT LTD</h1>
+                <p>Address 70, Adam Nagar Road Nagalkeni, Chrompet Chennai 600 044</p>
+            </td>
+            <td colspan="1">
+                <img src="media/Company_Logo.png" alt="home" class="centered-image">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h3>INVOICE FOR PACKING SERVICE</h3>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="1">
+                <b>Address:</b> {{address}}
+            </td>
+            <td colspan="1">
+                <b>Quotation Date:</b> {{today_date}}
+            </td>
+            <td colspan="1">
+                <b>Quotation Number:</b> {{quotation_number}}
+            </td>
+        </tr>
+    </table>
+    <br>
+    <small> Refer to our discussion, please find our offer for packing service at your premises</small>
+    <hr class="report_hrItem"/>
+    <table class='report_details'>
+        <tr>
+            <th>Item</th>
+            <th>Description</th>
+            <th>UOM</th>
+            <th>Length</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Unit Cost (INR)</th>
+            <th>Qty</th>
+            <th>Total Cost (INR)</th>
+        </tr>
+        {% for quote in quotation %}
+        <tr>
+            <td>{{quote.nad_item}}</td>
+            <td>{{quote.nad_type_of_req}}</td>
+            <td>{{quote.nad_uom}}</td>
+            <td>{{quote.nad_length}}</td>
+            <td>{{quote.nad_width}}</td>
+            <td>{{quote.nad_height}}</td>
+            <td>{{quote.nad_cost_unit}}</td>
+            <td>{{quote.nad_quantity}}</td>
+            <td>{{quote.nad_cost_total}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <table class='report_details'>
+        <tr>
+            <td colspan="7"></td>
+            <td colspan="1"><b>Total Cost</b></td>
+            <td colspan="1">
+                <b>{{total_sum}}</b>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="7"></td>
+            <td colspan="1"><b>TAXES AT ACTUAL 18%</b></td>
+            <td colspan="1">
+                <b>{{gst}}</b>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="7"></td>
+            <td colspan="1"><b>Final Cost</b></td>
+            <td colspan="1">
+                <b>{{final_cost}}</b>
+            </td>
+        </tr>
+    </table>
+
+</div>
+{% endblock content %}
