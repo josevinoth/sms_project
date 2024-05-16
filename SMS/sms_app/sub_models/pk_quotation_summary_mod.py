@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import CustomerInfo,MyUser,PkneedassessmentInfo
+from ..models import StatusList,CustomerInfo,MyUser,PkneedassessmentInfo
 
 class PkquotationsummaryInfo(models.Model):
     qs_assessment_num = models.OneToOneField(PkneedassessmentInfo, on_delete=models.CASCADE, default='', unique=True)
@@ -29,6 +29,8 @@ class PkquotationsummaryInfo(models.Model):
     qs_quotation_number = models.CharField(max_length=100, blank=True, null=True)
     qs_customer_name_2 = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, related_name='qs_customer_name_2',
                                          db_column='qs_customer_name_2', blank=True, null=True)
+    qs_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, related_name='qs_status',
+                                           db_column='qs_status', blank=True, null=True,default=6)
 
     class Meta:
         ordering = ["id"]

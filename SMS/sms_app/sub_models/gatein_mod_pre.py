@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import StatusList,MyUser,Location_info,TypeofotlInfo
+from ..models import StatusList,MyUser,Location_info
 
 def pre_checkin_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>

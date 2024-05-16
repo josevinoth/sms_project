@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,pk_stock_statusinfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
+from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,StatusList,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
 
 class PkquotationInfo(models.Model):
     pkqt_cost_type = models.ForeignKey(Costtype, on_delete=models.CASCADE, default='')
@@ -33,8 +33,6 @@ class PkquotationInfo(models.Model):
     pkqt_width_req = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_height_req = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_length_req = models.FloatField(blank=True, null=True, default=0.0)
-    pkqt_stock_status = models.ForeignKey(pk_stock_statusinfo, on_delete=models.CASCADE,
-                                        related_name='pkqt_stock_status', db_column='pkqt_stock_status', default=1)
     pkqt_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, related_name='pkqt_customer_name',
                                          db_column='pkqt_customer_name', blank=True, null=True)
 

@@ -45,6 +45,7 @@
             <th>Rate Per CFT</th>
             <th>Updated at</th>
             <th>Updated By</th>
+            <th>Status</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
@@ -71,6 +72,7 @@
             <td> {{quotationsummaryinfo.qs_rate_per_cft}}</td>
             <td> {{quotationsummaryinfo.qs_updated_at}}</td>
             <td> {{quotationsummaryinfo.qs_updated_by}}</td>
+            <td> {{quotationsummaryinfo.qs_status}}</td>
             <td>
                 <a class="btn btn-primary" href="{% url 'pk_quotationsummary_update' quotationsummaryinfo.id %}">
                     <i class="far fa-edit"></i>

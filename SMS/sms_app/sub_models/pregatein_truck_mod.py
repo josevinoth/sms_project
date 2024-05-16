@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import TypeofotlInfo,Location_info,VehicletypeInfo,MyUser,GstexcemptionInfo,Gatein_pre_info,SealedoropenedInfo
+from ..models import TypeofotlInfo,VehicletypeInfo,MyUser,GstexcemptionInfo,Gatein_pre_info
 
 class Pregateintruckinfo(models.Model):
     pregatein_number = models.ForeignKey(Gatein_pre_info, null=True,on_delete=models.CASCADE, default='')

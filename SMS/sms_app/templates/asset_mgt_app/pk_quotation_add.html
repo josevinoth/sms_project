@@ -172,12 +172,6 @@
 									</div>
 									{% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Status</span>
-									</div>
-									{% render_field form.pkqt_stock_status id="pkqt_stock_status" class="form-control disable_a_href" %}
-								</div>
 								{% render_field form.pkqt_updated_by id="pkqt_updated_by" hidden="True" class="form-control" %}
 
 							</div>
@@ -244,7 +238,6 @@ $(document).ready(function() {
 	{
 		document.getElementById("pkqt_customer_name").value = customer_name;
 	}
-
 	change_cost_type();
 	$("#search_wood").on("click", function() {
             search_wood();
@@ -291,6 +284,7 @@ $(document).ready(function() {
       });
     });
   </script>
+
 <script>
 function change_cost_type() {
 		var jn=document.getElementById("pkqt_cost_type").value

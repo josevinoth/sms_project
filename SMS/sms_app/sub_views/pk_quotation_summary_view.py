@@ -5,7 +5,7 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 
 from ..forms import PkquotationsummaryForm
-from ..models import PkpurchaseorderInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo
+from ..models import User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
@@ -16,7 +16,8 @@ from django.http import JsonResponse, HttpResponse
 def pk_quotationsummary_add(request,pk_quotationsummary_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-
+    role = User_extInfo.objects.get(user=user_id).emp_role
+    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
     if request.method == "GET":
         if pk_quotationsummary_id == 0:
             form = PkquotationsummaryForm()
@@ -24,6 +25,8 @@ def pk_quotationsummary_add(request,pk_quotationsummary_id=0):
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
+                'role': role,
+                'role_id': role_id,
             }
         else:
             quotationsummary=PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
@@ -131,6 +134,8 @@ def pk_quotationsummary_add(request,pk_quotationsummary_id=0):
                     'management_cost': management_cost,
                     'material_cost': material_cost,
                     'transport_cost': transport_cost,
+                    'role_id': role_id,
+                    'role': role,
                     }
         return render(request, "asset_mgt_app/pk_quotationsummary_add.html", context)
     else:
@@ -199,12 +204,14 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
     # get requirement type from need assessment dimension model
     na_req=Nadimension.objects.filter(nad_assess_num=needassessment_id)
     quotation_number = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_quotation_number
+    margin = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_margin
     total_sum=0
     for i in na_req:
         j=i.nad_item
         k=i.id
         qty=i.nad_quantity
-        total_cost=PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id,pkqt_requirement=i).aggregate(total_cost=Sum('pkqt_total_cost'))['total_cost'] or 0
+        total_cost_wom=PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id,pkqt_requirement=i).aggregate(total_cost=Sum('pkqt_total_cost'))['total_cost'] or 0
+        total_cost=total_cost_wom+(total_cost_wom*margin/100)
         Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost,2))
         try:
             Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost/qty,2))

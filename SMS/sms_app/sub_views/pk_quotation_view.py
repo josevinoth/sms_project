@@ -1,9 +1,11 @@
 import json
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 
 from ..forms import PkquotationForm
-from ..models import Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo
+from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo
 from django.shortcuts import render, redirect
 
 from django.contrib import messages
@@ -14,7 +16,9 @@ def pk_quotation_add(request,quotation_id=0):
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
     na_customer_name_id = request.session.get('na_customer_name_id')
-    print('na_customer_name_id', na_customer_name_id)
+    role = User_extInfo.objects.get(user=user_id).emp_role
+    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+    print('role',role)
     if request.method == "GET":
         if quotation_id == 0:
             form = PkquotationForm()
@@ -24,6 +28,8 @@ def pk_quotation_add(request,quotation_id=0):
                 'user_id': user_id,
                 'na_assessment_num_id': na_assessment_num_id,
                 'na_customer_name_id': na_customer_name_id,
+                'role': role,
+                'role_id': role_id,
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
             }
         else:
@@ -33,6 +39,8 @@ def pk_quotation_add(request,quotation_id=0):
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
+                'role': role,
+                'role_id': role_id,
                 'na_assessment_num_id': na_assessment_num_id,
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
             }
@@ -171,3 +179,4 @@ def pk_store_na_dimension_id(request):
         'na_dimension_box_val': na_dimension_box_val,
     }
     return JsonResponse(data)
+

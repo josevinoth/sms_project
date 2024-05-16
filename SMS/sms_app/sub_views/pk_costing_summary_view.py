@@ -193,7 +193,7 @@ def costing_summary_check_unique_field(request):
     )
 
 @login_required(login_url='login_page')
-def bvm_quotation_pdf(request,quotation_id=0):
+def pk_bvm_invoice_pdf(request,quotation_id=0):
     needassessment_id = request.session.get('na_assessment_id')
     address=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_address
     cost_includes=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_cost_includes

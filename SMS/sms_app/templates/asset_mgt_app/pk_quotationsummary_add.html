@@ -16,13 +16,13 @@
 								<h3>Add/Update quotation Summary</h3>
 							</div>
 							<div class="col-3">
-								<a href="{% url 'bvm_quotation_pdf' %}" class="btn btn-warning btn-block" id="damage_report_btn"><i class="fa fa-download" aria-hidden="true"> Quotation</i>
+								<a href="{% url 'bvm_quotation_pdf' %}" class="btn btn-warning btn-block" id="quotation_report_btn"><i class="fa fa-download" aria-hidden="true"> Quotation</i>
 								</a>
 							</div>
 						</div>
 					</div>
 					<div class="card-body bg-light" >
-						<div class="row">
+						<div class="row" id="quotation_summary">
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -166,6 +166,12 @@
 									</div>
 									{% render_field form.qs_quotation_number id="qs_quotation_number"  class="form-control" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quotation Status</span>
+									</div>
+									{% render_field form.qs_status id="qs_status"  class="form-control" %}
+								</div>
 								<div id="accordion_1" class="container-fluid mb-3">
 									<div class="card">
 										<div class="card-header bg-info" id="headingFour">
@@ -225,7 +231,7 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<button id="qs_submit_btn" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'pk_quotationsummary_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
@@ -312,21 +318,44 @@ $(document).ready(function() {
 	document.getElementById("qs_material_cost").value ='{{material_cost}}';
 	document.getElementById("qs_transport_cost").value ='{{transport_cost}}';
 	change_charge_type()
+
+	var user_role='{{role_id}}'
+	var status=document.getElementById("qs_status").value
+	if (status==5)
+	{
+		$('#quotation_report_btn').removeClass('disable_a_href');
+		if (user_role==2)
+		{
+			alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
+			$('#quotation_summary').addClass('disable_a_href');
+			$('#qs_submit_btn').addClass('disable_a_href');
+			$('#add_quotation').addClass('disable_a_href');
+			var assessment_num = document.getElementById("qs_assessment_num").value
+		}
+		else
+		{
+			$('#quotation_summary').removeClass('disable_a_href');
+			if (assessment_num =="")
+			{
+				$('#add_quotation').addClass('disable_a_href');
+			}
+			else
+			{
+				$('#add_quotation').removeClass('disable_a_href');
+			}
+		}
+	}
+	else
+	{
+		$('#quotation_report_btn').addClass('disable_a_href');
+	}
+
 	$('#quotation_list').DataTable({
         dom: 'lBfrtip',
         buttons: [
             'copy', 'csv', 'excel','print'
         ]
     });
-	var assessment_num = document.getElementById("qs_assessment_num").value
-    if (assessment_num =="")
-	{
-		$('#add_quotation').addClass('disable_a_href');
-	}
-	else
-	{
-		$('#add_quotation').removeClass('disable_a_href');
-	}
 	});
 </script>
 
