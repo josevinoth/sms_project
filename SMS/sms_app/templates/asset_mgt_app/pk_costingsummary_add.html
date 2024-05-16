@@ -40,7 +40,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer PO</span>
 									</div>
-									{% render_field form.cs_customer_po id="cs_customer_po" class="form-control" %}
+									{% render_field form.cs_customer_po id="cs_customer_po" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -71,12 +71,6 @@
 										<span class="input-group-text">HT Cost</span>
 									</div>
 									{% render_field form.cs_ht_cost id="cs_ht_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Management Cost</span>
-									</div>
-									{% render_field form.cs_management_cost id="cs_management_cost" class="form-control disable_a_href" %}
 								</div>
 								<div id="accordion" class="container-fluid">
 									<div class="card">
@@ -126,6 +120,12 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Management Cost</span>
+									</div>
+									{% render_field form.cs_management_cost id="cs_management_cost" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Consumables Cost</span>
 									</div>
 									{% render_field form.cs_material_cost id="cs_material_cost" class="form-control disable_a_href" %}
@@ -165,12 +165,6 @@
 										<span class="input-group-text">Rate Per CFT</span>
 									</div>
 									{% render_field form.cs_rate_per_cft id="cs_rate_per_cft"  class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quotation Number</span>
-									</div>
-									{% render_field form.cs_quotation_number id="cs_quotation_number"  class="form-control" %}
 								</div>
 								<div id="accordion_1" class="container-fluid mb-3">
 									<div class="card">
@@ -261,6 +255,7 @@
 		<tr>
 			<th>Created On</th>
 			<th>Assessment Number</th>
+			<th>Customer PO Number</th>
 			<th>Requirement Type</th>
 			<th>Cost Type</th>
 			<th>Stock Type</th>
@@ -285,6 +280,7 @@
 		<tr>
 			<td> {{costinginfo.ct_created_at}}</td>
 			<td> {{costinginfo.ct_assessment_num}}</td>
+			<td> {{costinginfo.ct_customer_po}}</td>
 			<td> {{costinginfo.ct_requirement}}</td>
 			<td> {{costinginfo.ct_cost_type}}</td>
 			<td> {{costinginfo.ct_stock_type}}</td>
@@ -375,9 +371,19 @@ document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
 <!--Unique Field validation-->
 <script>
     $(document).ready(function() {
+
+    	assessment_num=document.getElementById("cs_assessment_num").value
+    	if (assessment_num=='')
+    	{
+			$('#cs_assessment_num').removeClass('disable_a_href');
+    	}
+    	else
+    	{
+    		$('#cs_assessment_num').addClass('disable_a_href');
+    	}
+
         $('#cs_assessment_num').on('change', function() {
             var cs_assessment_num = $(this).val();
-
             // Send an AJAX request to check if the value exists in the database
             $.ajax({
                 url: '{% url "costing_summary_check_unique_field" %}',
@@ -388,12 +394,23 @@ document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
                 success: function(data) {
                 	var customer_name_id=data.customer_name_id
                 	document.getElementById("cs_customer_name").value=customer_name_id
-                	alert(customer_name_id)
                     if (data.exists) {
                         $('#unique_field_error').text('This Record already exists.');
                     } else {
                         $('#unique_field_error').text('');
                     }
+
+					$('#cs_customer_po').removeClass('disable_a_href');
+					$("#cs_customer_po").empty();
+					$("#wh_stack_layer").val($("#selectBox option:first").val());
+					var customer_po_id=data.customer_po_id;
+					var customer_po_name=data.customer_po_name;
+					var len1 = (customer_po_id).length;
+					$("#cs_customer_po").empty();
+					$('#cs_customer_po').empty().append("<option value='0'>--Select--</option>");
+					for( var j = 0; j<len1; j++){
+						$("#cs_customer_po").append("<option value='"+customer_po_id[j]+"'>"+customer_po_name[j]+"</option>");
+					}
                 }
             });
         });

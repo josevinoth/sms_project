@@ -1,7 +1,9 @@
 import json
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
 from ..forms import PkquotationForm
-from ..models import PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo
+from ..models import Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo
 from django.shortcuts import render, redirect
 
 from django.contrib import messages
@@ -69,8 +71,8 @@ def pk_quotation_add(request,quotation_id=0):
                 else:
                     form.save()
                     messages.success(request, 'Stock Updated Successfully')
-                # return redirect('/SMS/quotation_update/'+str(last_id))
-                return redirect('/SMS/quotation_insert/')
+                # return redirect('/SMS/pk_quotation_update/'+str(last_id))
+                return redirect('/SMS/pk_quotation_insert/')
             else:
                 print("quotation Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
@@ -138,3 +140,34 @@ def pK_quotation_cancel(request):
     assessment_num_val = request.session.get('na_assessment_id')
     quotation_summary_id=PkquotationsummaryInfo.objects.get(qs_assessment_num=assessment_num_val).id
     return redirect('/SMS/pk_quotationsummary_update/' + str(quotation_summary_id))
+
+@login_required(login_url='login_page')
+def pk_get_pk_requirement_type(request):
+    requirement_type_id = []
+    requirement_type_val = []
+    ct_assessment_num_id = request.GET.get('ct_assessment_num_id')
+    print('ct_assessment_num_id',ct_assessment_num_id)
+    # Fetch requirement type from Need Assessment dimension
+    na_dimension_id = Nadimension.objects.filter(nad_assess_num=ct_assessment_num_id)
+    for a in na_dimension_id:
+        requirement_type_id.append(a.id)
+        requirement_type_val.append(str(a.nad_item)+str(' (')+str(a.nad_type_of_req)+str(' ')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
+
+    data = {
+        'requirement_type_val': requirement_type_val,
+        'requirement_type_id': requirement_type_id,
+    }
+    return JsonResponse(data)
+
+@login_required(login_url='login_page')
+def pk_store_na_dimension_id(request):
+    na_dimension_box_val = []
+    ct_requirement_id= request.GET.get('ct_requirement_id')
+    # Fetch requirement type from need assessment
+    a = Nadimension.objects.get(pk=ct_requirement_id)
+    na_dimension_box_val.append(str(a.nad_type_of_req)+str(' (')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
+
+    data = {
+        'na_dimension_box_val': na_dimension_box_val,
+    }
+    return JsonResponse(data)

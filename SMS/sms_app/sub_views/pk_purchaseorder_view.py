@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkcostingsummaryInfo
+from ..models import POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
@@ -89,8 +89,7 @@ def pk_get_customer(request):
     print('customer_id',customer_id)
     # Fetch Quotation Number
     try:
-        quotation_num_id=PkcostingsummaryInfo.objects.get(cs_assessment_num=assessment_id).id
-        print('quotation_num_id',quotation_num_id)
+        quotation_num_id=PkquotationsummaryInfo.objects.get(qs_assessment_num=assessment_id).id
     except ObjectDoesNotExist:
         quotation_num_id=""
     print('quotation_num_id',quotation_num_id)

@@ -54,7 +54,7 @@ def pk_acceptance_add(request,retrival_id=0):
 def pk_acceptance_list(request):
     first_name = request.session.get('first_name')
     context = {
-                'pk_retrival_list' : PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2),
+                'pk_retrival_list' : PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2).order_by('-id'),
                 'first_name': first_name
                }
     return render(request,"asset_mgt_app/pk_acceptance_list.html",context)

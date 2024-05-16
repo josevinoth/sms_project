@@ -1,7 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required
 from ..forms import ModifyDimensionsForm,CostingSearchForm,PkcostingForm
-from ..models import Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo
+from ..models import POdimension,Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
@@ -12,6 +12,7 @@ def costing_add(request,costing_id=0):
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
     na_customer_name_id = request.session.get('na_customer_name_id')
+    ses_customer_po_id = request.session.get('ses_customer_po_id')
     print('na_customer_name_id',na_customer_name_id)
     if request.method == "GET":
         if costing_id == 0:
@@ -22,6 +23,7 @@ def costing_add(request,costing_id=0):
                 'user_id': user_id,
                 'na_assessment_num_id': na_assessment_num_id,
                 'na_customer_name_id': na_customer_name_id,
+                'ses_customer_po_id': ses_customer_po_id,
                 'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id),
             }
         else:
@@ -327,47 +329,38 @@ def pk_get_item_description(request):
     return JsonResponse(data)
 
 @login_required(login_url='login_page')
-def pk_get_pk_requirement_type(request):
-    requirement_type_id = []
-    requirement_type_val = []
+def pk_get_po_requirement_type(request):
+    po_requirement_type_id = []
+    po_requirement_type_val = []
     ct_assessment_num_id = request.GET.get('ct_assessment_num_id')
-    # Fetch requirement type
-    na_dimension_id = Nadimension.objects.filter(nad_assess_num=ct_assessment_num_id)
-    for a in na_dimension_id:
-        requirement_type_id.append(a.id)
-        requirement_type_val.append(str(a.nad_item)+str(' (')+str(a.nad_type_of_req)+str(' ')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
-    # Extract id and id_item_description attributes from queryset
-    # for type in requirement_type:
-    #     requirement_type_id.append(Natypeofreq.objects.get(id=type).id)
-    #     requirement_type_val.append(Natypeofreq.objects.get(id=type).type_of_req)
-    # print('na_dimension_id',na_dimension_id)
-    # Create JSON response data
-    data = {
-        'requirement_type_val': requirement_type_val,
-        'requirement_type_id': requirement_type_id,
-    }
+    ct_customer_po_id = request.GET.get('ct_customer_po_id')
+    print('ct_assessment_num_id',ct_assessment_num_id)
+    print('ct_customer_po_id',ct_customer_po_id)
+    # Fetch requirement type from Need Assessment dimension
+    po_dimension_id = POdimension.objects.filter(pod_assess_num=ct_assessment_num_id,pod_po_num=ct_customer_po_id)
+    for a in po_dimension_id:
+        po_requirement_type_id.append(a.id)
+        po_requirement_type_val.append(str(a.pod_item)+str(' (')+str(a.pod_type_of_req)+str(' ')+str(a.pod_length)+str('x')+str(a.pod_width)+str('x')+str(a.pod_height)+str(')'))
 
-    # Return JSON response
+    data = {
+        'po_requirement_type_val': po_requirement_type_val,
+        'po_requirement_type_id': po_requirement_type_id,
+    }
     return JsonResponse(data)
 
 @login_required(login_url='login_page')
-def pk_store_na_dimension_id(request):
-    na_dimension_box_val = []
+def pk_store_po_dimension_id(request):
+    po_dimension_box_val = []
     ct_requirement_id= request.GET.get('ct_requirement_id')
-    # Fetch requirement type
-    a = Nadimension.objects.get(pk=ct_requirement_id)
-    na_dimension_box_val.append(str(a.nad_type_of_req)+str(' (')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
-    # Extract id and id_item_description attributes from queryset
-    # for type in requirement_type:
-    #     requirement_type_id.append(Natypeofreq.objects.get(id=type).id)
-    #     requirement_type_val.append(Natypeofreq.objects.get(id=type).type_of_req)
-    # print('na_dimension_id',na_dimension_id)
-    # Create JSON response data
+    print('ct_requirement_id',ct_requirement_id)
+    # Fetch requirement type from PO
+    b = POdimension.objects.get(pk=ct_requirement_id)
+    print(b)
+    po_dimension_box_val.append(str(b.pod_type_of_req) + str(' (') + str(b.pod_length) + str('x') + str(b.pod_width) + str('x') + str(b.pod_height) + str(')'))
+    print(po_dimension_box_val)
     data = {
-        'na_dimension_box_val': na_dimension_box_val,
+        'po_dimension_box_val': po_dimension_box_val,
     }
-
-    # Return JSON response
     return JsonResponse(data)
 
 

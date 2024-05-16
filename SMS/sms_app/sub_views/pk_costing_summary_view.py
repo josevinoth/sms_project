@@ -30,8 +30,10 @@ def costingsummary_add(request,costingsummary_id=0):
             needassessment_num = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_assessment_num
             needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
             customer_name_id = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_customer_name.id
+            customer_po_id = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_customer_po.id
             request.session['na_assessment_id'] = needassessment_id
             request.session['na_customer_name_id'] = customer_name_id
+            request.session['ses_customer_po_id'] = customer_po_id
             form = PkcostingsummaryForm(instance=costingsummary)
             costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id)
             # wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_cost_type=8,ct_stock_type=1,ct_stock_type=4).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
@@ -177,6 +179,7 @@ def costing_summary_check_unique_field(request):
     cs_assessment_num = request.GET.get('cs_assessment_num')
     customer_name_id=PkneedassessmentInfo.objects.get(id=cs_assessment_num).na_customer_name.id
     customer_po_qs = PkpurchaseorderInfo.objects.filter(po_assessment_num=cs_assessment_num)
+    customer_po_name = list(customer_po_qs.values_list('po_num', flat=True))
     customer_po_id = list(customer_po_qs.values_list('id', flat=True))
     exists = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num).exists()
     print('customer_po_id',customer_po_id)
@@ -185,6 +188,7 @@ def costing_summary_check_unique_field(request):
             'exists': exists,
             'customer_name_id':customer_name_id,
             'customer_po_id':customer_po_id,
+            'customer_po_name':customer_po_name,
         }
     )
 

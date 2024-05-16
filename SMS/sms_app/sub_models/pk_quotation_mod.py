@@ -42,4 +42,4 @@ class PkquotationInfo(models.Model):
         ordering = ["pkqt_cost_type"]
 
     def __str__(self):
-        return self.pkqt_cost_type
+        return str(self.pkqt_cost_type)

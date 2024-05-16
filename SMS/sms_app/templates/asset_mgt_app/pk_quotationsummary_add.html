@@ -277,37 +277,24 @@
 		<tbody>
 		{% for quotationinfo in quotation_list %}
 		<tr>
-			<td> {{quotationinfo.ct_created_at}}</td>
-			<td> {{quotationinfo.ct_assessment_num}}</td>
-			<td> {{quotationinfo.ct_requirement}}</td>
-			<td> {{quotationinfo.ct_cost_type}}</td>
-			<td> {{quotationinfo.ct_stock_type}}</td>
-			<td> {{quotationinfo.ct_stock_description}}</td>
-			<td> {{quotationinfo.ct_length}}</td>
-			<td> {{quotationinfo.ct_width}}</td>
-			<td> {{quotationinfo.ct_height}}</td>
-			<td> {{quotationinfo.ct_quantity}}</td>
-			<td> {{quotationinfo.ct_size}}</td>
-			<td> {{quotationinfo.ct_uom}}</td>
-			<td> {{quotationinfo.ct_cft}}</td>
-			<td> {{quotationinfo.ct_rate}}</td>
-			<td> {{quotationinfo.ct_days}}</td>
-			<td> {{quotationinfo.ct_total_cost}}</td>
-			<td> {{quotationinfo.ct_updated_at}}</td>
-			<td> {{quotationinfo.ct_updated_by}}</td>
-			<!--			<td>-->
-			<!--				<a class="btn btn-primary" href="{% url 'quotation_update' quotationinfo.id %}" class="btn btn-primary">-->
-			<!--					<i class="far fa-edit"></i>-->
-			<!--				</a>-->
-			<!--			</td>-->
-			<!--			<td>-->
-			<!--				<form action="{% url 'quotation_delete' quotationinfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
-			<!--					{% csrf_token %}-->
-			<!--					<button type="submit" class="btn btn-danger">-->
-			<!--						<i class="fas fa-trash-alt"></i>-->
-			<!--					</button>-->
-			<!--				</form>-->
-			<!--			</td>-->
+			<td> {{quotationinfo.pkqt_created_at}}</td>
+			<td> {{quotationinfo.pkqt_assessment_num}}</td>
+			<td> {{quotationinfo.pkqt_requirement}}</td>
+			<td> {{quotationinfo.pkqt_cost_type}}</td>
+			<td> {{quotationinfo.pkqt_stock_type}}</td>
+			<td> {{quotationinfo.pkqt_stock_description}}</td>
+			<td> {{quotationinfo.pkqt_length}}</td>
+			<td> {{quotationinfo.pkqt_width}}</td>
+			<td> {{quotationinfo.pkqt_height}}</td>
+			<td> {{quotationinfo.pkqt_quantity}}</td>
+			<td> {{quotationinfo.pkqt_size}}</td>
+			<td> {{quotationinfo.pkqt_uom}}</td>
+			<td> {{quotationinfo.pkqt_cft}}</td>
+			<td> {{quotationinfo.pkqt_rate}}</td>
+			<td> {{quotationinfo.pkqt_days}}</td>
+			<td> {{quotationinfo.pkqt_total_cost}}</td>
+			<td> {{quotationinfo.pkqt_updated_at}}</td>
+			<td> {{quotationinfo.pkqt_updated_by}}</td>
 		</tr>
 		{% endfor %}
 		</tbody>

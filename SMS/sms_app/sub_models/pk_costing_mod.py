@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import CustomerInfo,Nadimension,pk_stock_statusinfo,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
+from ..models import PkpurchaseorderInfo,CustomerInfo,Nadimension,pk_stock_statusinfo,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
 
 class PkcostingInfo(models.Model):
     ct_cost_type = models.ForeignKey(Costtype, on_delete=models.CASCADE, default='')
@@ -32,6 +32,8 @@ class PkcostingInfo(models.Model):
                                        related_name='ct_stock_status', db_column='ct_stock_status',default=1)
     ct_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, related_name='ct_customer_name',
                                          db_column='ct_customer_name', blank=True, null=True)
+    ct_customer_po = models.ForeignKey(PkpurchaseorderInfo, on_delete=models.CASCADE, related_name='ct_customer_po',
+                                       db_column='ct_customer_po', blank=True, null=True)
     class Meta:
         ordering = ["ct_cost_type"]
 

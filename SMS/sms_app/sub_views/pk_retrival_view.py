@@ -62,7 +62,7 @@ def pk_retrival_add(request,retrival_id=0):
 def pk_retrival_list(request):
     first_name = request.session.get('first_name')
     context = {
-                'pk_retrival_list' : PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status__in=[1, 3]),
+                'pk_retrival_list' : PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status__in=[1, 3]).order_by('-id'),
                 'first_name': first_name
                }
     return render(request,"asset_mgt_app/pk_retrival_list.html",context)

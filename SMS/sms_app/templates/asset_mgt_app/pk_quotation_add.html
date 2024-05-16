@@ -636,7 +636,7 @@ function search_wood()
     $.ajax({
         url: '{% url 'pk_get_pk_requirement_type' %}',
         type: 'GET',
-        data: {'pkqt_assessment_num_id': pkqt_assessment_num_id},
+        data: {'ct_assessment_num_id': pkqt_assessment_num_id},
         dataType: 'json',
         success: function(data) {
         	$('#pkqt_requirement').removeClass('disable_a_href');
@@ -660,7 +660,7 @@ function search_wood()
     $.ajax({
         url: '{% url 'pk_store_na_dimension_id' %}',
         type: 'GET',
-        data: {'pkqt_requirement_id': pkqt_requirement_id},
+        data: {'ct_requirement_id': pkqt_requirement_id},
         dataType: 'json',
         success: function(data) {
         	var na_dimension_box_val=data.na_dimension_box_val;

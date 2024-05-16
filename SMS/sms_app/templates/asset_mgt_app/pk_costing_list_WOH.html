@@ -31,6 +31,7 @@
             <th>Stock Purchase Number</th>
             <th>Assessment Number</th>
             <th>Customer Name</th>
+            <th>Customer PO</th>
             <th>Requirement Type</th>
             <th>Cost Type</th>
             <th>Stock Type</th>
@@ -59,6 +60,7 @@
             <td> {{costinginfo.ct_stock_purchase_number}}</td>
             <td> {{costinginfo.ct_assessment_num}}</td>
             <td> {{costinginfo.ct_customer_name}}</td>
+            <td> {{costinginfo.ct_customer_po}}</td>
             <td> {{costinginfo.ct_requirement}}</td>
             <td> {{costinginfo.ct_cost_type}}</td>
             <td> {{costinginfo.ct_stock_type}}</td>
@@ -76,16 +78,41 @@
             <td> {{costinginfo.ct_stock_status}}</td>
             <td> {{costinginfo.ct_updated_at}}</td>
             <td> {{costinginfo.ct_updated_by}}</td>
+
+            {% if costinginfo.ct_stock_status.id == 2 %}
+            <td>
+                <a class="btn btn-primary disable_a_href" href="{% url 'costing_update' costinginfo.id %}" class="btn btn-primary">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            {% elif costinginfo.ct_stock_status.id == 4 %}
+            <td>
+                <a class="btn btn-primary disable_a_href" href="{% url 'costing_update' costinginfo.id %}" class="btn btn-primary">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            {% else %}
             <td>
                 <a class="btn btn-primary" href="{% url 'costing_update' costinginfo.id %}" class="btn btn-primary">
                     <i class="far fa-edit"></i>
                 </a>
             </td>
+            {% endif %}
             <td>
                 {% if costinginfo.ct_stock_status.id == 2 %}
-
+                <form class="disable_a_href" action="{% url 'costing_delete' costinginfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger ">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
                 {% elif costinginfo.ct_stock_status.id == 4 %}
-
+                <form class="disable_a_href" action="{% url 'costing_delete' costinginfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger ">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
                 {% else %}
                 <form action="{% url 'costing_delete' costinginfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
