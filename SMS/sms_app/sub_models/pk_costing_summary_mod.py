@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import PkpurchaseorderInfo,CustomerInfo,MyUser,PkneedassessmentInfo
+from ..models import StatusList,PkpurchaseorderInfo,CustomerInfo,MyUser,PkneedassessmentInfo
 
 class PkcostingsummaryInfo(models.Model):
     cs_assessment_num=models.OneToOneField(PkneedassessmentInfo, on_delete=models.CASCADE, default='',unique=True)
@@ -29,6 +29,8 @@ class PkcostingsummaryInfo(models.Model):
                                          db_column='cs_customer_name', blank=True, null=True)
     cs_customer_po = models.ForeignKey(PkpurchaseorderInfo, on_delete=models.CASCADE, related_name='cs_customer_po',
                                          db_column='cs_customer_po', blank=True, null=True)
+    cs_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, related_name='cs_status',
+                                       db_column='cs_status', blank=True, null=True)
 
     class Meta:
         ordering = ["id"]

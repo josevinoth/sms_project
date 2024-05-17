@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo
+from ..models import User_extInfo,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
@@ -10,6 +10,8 @@ from django.contrib import messages
 def purchaseorder_add(request,purchaseorder_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    role = User_extInfo.objects.get(user=user_id).emp_role
+    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
     if request.method == "GET":
         if purchaseorder_id == 0:
             form = PkpurchaseorderForm()
@@ -17,6 +19,8 @@ def purchaseorder_add(request,purchaseorder_id=0):
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
+                'role': role,
+                'role_id': role_id,
             }
         else:
             purchaseorder=PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
@@ -34,6 +38,8 @@ def purchaseorder_add(request,purchaseorder_id=0):
                     'user_id': user_id,
                     'na_id': na_id,
                     'po_dimension_list': po_dimension_list,
+                    'role': role,
+                    'role_id': role_id,
                     }
         return render(request, "asset_mgt_app/pk_purchaseorder_add.html", context)
     else:

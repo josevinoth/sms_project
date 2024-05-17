@@ -19,3 +19,4 @@ class PkcostingsummaryForm(forms.ModelForm):
         self.fields['cs_assessment_num'].empty_label = "--Select--"
         self.fields['cs_updated_by'].empty_label = "--Select--"
         self.fields['cs_customer_po'].empty_label = "--Select--"
+        self.fields['cs_status'].empty_label = "--Select--"

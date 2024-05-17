@@ -330,12 +330,20 @@ $(document).ready(function() {
 			$('#quotation_summary').addClass('disable_a_href');
 			$('#qs_submit_btn').addClass('disable_a_href');
 			$('#add_quotation').addClass('disable_a_href');
-			var assessment_num = document.getElementById("qs_assessment_num").value
 		}
 		else
 		{
 			$('#quotation_summary').removeClass('disable_a_href');
-			if (assessment_num =="")
+			$('#qs_submit_btn').removeClass('disable_a_href');
+			$('#add_quotation').removeClass('disable_a_href');
+
+		}
+	}
+	else
+	{
+		$('#quotation_report_btn').addClass('disable_a_href');
+		var assessment_num = document.getElementById("qs_assessment_num").value
+		if (assessment_num =="")
 			{
 				$('#add_quotation').addClass('disable_a_href');
 			}
@@ -343,11 +351,6 @@ $(document).ready(function() {
 			{
 				$('#add_quotation').removeClass('disable_a_href');
 			}
-		}
-	}
-	else
-	{
-		$('#quotation_report_btn').addClass('disable_a_href');
 	}
 
 	$('#quotation_list').DataTable({

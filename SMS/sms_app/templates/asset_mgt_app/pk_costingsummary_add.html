@@ -16,13 +16,13 @@
 								<h3>Add/Update Costing Summary</h3>
 							</div>
 							<div class="col-3">
-								<a href="{% url 'bvm_quotation_pdf' %}" class="btn btn-warning btn-block" id="damage_report_btn"><i class="fa fa-download" aria-hidden="true"> Quotation</i>
+								<a href="{% url 'pk_bvm_invoice_pdf' %}" class="btn btn-warning btn-block" id="invoice_report_btn"><i class="fa fa-download" aria-hidden="true"> Invoice</i>
 								</a>
 							</div>
 						</div>
 					</div>
 					<div class="card-body bg-light" >
-						<div class="row">
+						<div class="row" id="costing_summary">
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -166,6 +166,12 @@
 									</div>
 									{% render_field form.cs_rate_per_cft id="cs_rate_per_cft"  class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Status</span>
+									</div>
+									{% render_field form.cs_status id="cs_status"  class="form-control" %}
+								</div>
 								<div id="accordion_1" class="container-fluid mb-3">
 									<div class="card">
 										<div class="card-header bg-info" id="headingFour">
@@ -225,7 +231,7 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<button id="cs_submit_btn" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'costingsummary_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
@@ -237,11 +243,6 @@
 	</div>
 </form>
 <div class="container-fluid row">
-	<!--    <div class="col-md-1">-->
-	<!--        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-	<!--            <i class="fas fa-arrow-left"></i> Back-->
-	<!--        </a>-->
-	<!--    </div>-->
 	<div class="col-md-2">
 		<a href="{% url 'costing_insert' %}" id="add_costing" class="btn btn-success btn-block btn-lg">
 			<i class="fas fa-plus"></i> Add/Modify Items
@@ -272,8 +273,6 @@
 			<th>Total Cost</th>
 			<th>Updated at</th>
 			<th>Updated By</th>
-			<!--			<th>Edit</th>-->
-			<!--			<th>Delete</th>-->
 		</thead>
 		<tbody>
 		{% for costinginfo in costing_list %}
@@ -297,19 +296,6 @@
 			<td> {{costinginfo.ct_total_cost}}</td>
 			<td> {{costinginfo.ct_updated_at}}</td>
 			<td> {{costinginfo.ct_updated_by}}</td>
-			<!--			<td>-->
-			<!--				<a class="btn btn-primary" href="{% url 'costing_update' costinginfo.id %}" class="btn btn-primary">-->
-			<!--					<i class="far fa-edit"></i>-->
-			<!--				</a>-->
-			<!--			</td>-->
-			<!--			<td>-->
-			<!--				<form action="{% url 'costing_delete' costinginfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
-			<!--					{% csrf_token %}-->
-			<!--					<button type="submit" class="btn btn-danger">-->
-			<!--						<i class="fas fa-trash-alt"></i>-->
-			<!--					</button>-->
-			<!--				</form>-->
-			<!--			</td>-->
 		</tr>
 		{% endfor %}
 		</tbody>
@@ -326,6 +312,41 @@ $(document).ready(function() {
 	document.getElementById("cs_management_cost").value ='{{management_cost}}';
 	document.getElementById("cs_material_cost").value ='{{material_cost}}';
 	document.getElementById("cs_transport_cost").value ='{{transport_cost}}';
+
+	var user_role='{{role_id}}'
+	var status=document.getElementById("cs_status").value
+	if (status==5)
+	{
+		$('#invoice_report_btn').removeClass('disable_a_href');
+		if (user_role==2)
+		{
+			alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
+			$('#costing_summary').addClass('disable_a_href');
+			$('#cs_submit_btn').addClass('disable_a_href');
+			$('#add_costing').addClass('disable_a_href');
+		}
+		else
+		{
+			$('#costing_summary').removeClass('disable_a_href');
+			$('#cs_submit_btn').removeClass('disable_a_href');
+			$('#add_costing').removeClass('disable_a_href');
+
+		}
+	}
+	else
+	{
+		$('#invoice_report_btn').addClass('disable_a_href');
+		var assessment_num = document.getElementById("cs_assessment_num").value
+		if (assessment_num =="")
+		{
+			$('#add_costing').addClass('disable_a_href');
+		}
+		else
+		{
+			$('#add_costing').removeClass('disable_a_href');
+		}
+	}
+
 	change_charge_type()
 	$('#costing_list').DataTable({
         dom: 'lBfrtip',
@@ -333,16 +354,7 @@ $(document).ready(function() {
             'copy', 'csv', 'excel','print'
         ]
     });
-	var assessment_num = document.getElementById("cs_assessment_num").value
-    if (assessment_num =="")
-	{
-		$('#add_costing').addClass('disable_a_href');
-	}
-	else
-	{
-		$('#add_costing').removeClass('disable_a_href');
-	}
-	});
+});
 </script>
 
 <script>
@@ -386,7 +398,7 @@ document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
             var cs_assessment_num = $(this).val();
             // Send an AJAX request to check if the value exists in the database
             $.ajax({
-                url: '{% url "costing_summary_check_unique_field" %}',
+                url: '{% url "pk_costing_get_customer" %}',
                 data: {
                     'cs_assessment_num': cs_assessment_num
                 },
@@ -411,6 +423,27 @@ document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
 					for( var j = 0; j<len1; j++){
 						$("#cs_customer_po").append("<option value='"+customer_po_id[j]+"'>"+customer_po_name[j]+"</option>");
 					}
+                }
+            });
+        });
+
+        $('#cs_customer_po').on('change', function() {
+            var cs_customer_po_num = $(this).val();
+            var cs_assessment_num = document.getElementById("cs_assessment_num").value
+            // Send an AJAX request to check if the value exists in the database
+            $.ajax({
+                url: '{% url "pk_costing_summary_check_unique_field" %}',
+                data: {
+                    'cs_assessment_num': cs_assessment_num,
+                    'cs_customer_po_num': cs_customer_po_num,
+                },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.exists) {
+                        $('#unique_field_error').text('This Record already exists.');
+                    } else {
+                        $('#unique_field_error').text('');
+                    }
                 }
             });
         });

@@ -45,6 +45,7 @@
             <th>Rate Per CFT</th>
             <th>Updated at</th>
             <th>Updated By</th>
+            <th>Status</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
@@ -71,6 +72,7 @@
             <td> {{costingsummaryinfo.cs_rate_per_cft}}</td>
             <td> {{costingsummaryinfo.cs_updated_at}}</td>
             <td> {{costingsummaryinfo.cs_updated_by}}</td>
+            <td> {{costingsummaryinfo.cs_status}}</td>
             <td>
                 <a class="btn btn-primary" href="{% url 'costingsummary_update' costingsummaryinfo.id %}">
                     <i class="far fa-edit"></i>

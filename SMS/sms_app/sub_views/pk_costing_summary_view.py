@@ -5,7 +5,7 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 
 from ..forms import PkcostingsummaryForm
-from ..models import PkpurchaseorderInfo,Nadimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
+from ..models import User_extInfo,PkpurchaseorderInfo,Nadimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
@@ -16,7 +16,8 @@ from django.http import JsonResponse, HttpResponse
 def costingsummary_add(request,costingsummary_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-
+    role = User_extInfo.objects.get(user=user_id).emp_role
+    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
     if request.method == "GET":
         if costingsummary_id == 0:
             form = PkcostingsummaryForm()
@@ -24,6 +25,8 @@ def costingsummary_add(request,costingsummary_id=0):
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
+                'role': role,
+                'role_id': role_id,
             }
         else:
             costingsummary=PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
@@ -132,6 +135,8 @@ def costingsummary_add(request,costingsummary_id=0):
                     'management_cost': management_cost,
                     'material_cost': material_cost,
                     'transport_cost': transport_cost,
+                    'role': role,
+                    'role_id': role_id,
                     }
         return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
     else:
@@ -175,20 +180,28 @@ def costingsummary_delete(request,costingsummary_id):
     return redirect('/SMS/costingsummary_list')
 
 @login_required(login_url='login_page')
-def costing_summary_check_unique_field(request):
+def pk_costing_get_customer(request):
     cs_assessment_num = request.GET.get('cs_assessment_num')
     customer_name_id=PkneedassessmentInfo.objects.get(id=cs_assessment_num).na_customer_name.id
-    customer_po_qs = PkpurchaseorderInfo.objects.filter(po_assessment_num=cs_assessment_num)
+    customer_po_qs = PkpurchaseorderInfo.objects.filter(po_assessment_num=cs_assessment_num,po_status=5)
     customer_po_name = list(customer_po_qs.values_list('po_num', flat=True))
     customer_po_id = list(customer_po_qs.values_list('id', flat=True))
-    exists = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num).exists()
-    print('customer_po_id',customer_po_id)
     return JsonResponse(
         {
-            'exists': exists,
             'customer_name_id':customer_name_id,
             'customer_po_id':customer_po_id,
             'customer_po_name':customer_po_name,
+        }
+    )
+
+@login_required(login_url='login_page')
+def pk_costing_summary_check_unique_field(request):
+    cs_assessment_num = request.GET.get('cs_assessment_num')
+    cs_po_num = request.GET.get('cs_customer_po_num')
+    exists = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num,cs_customer_po=cs_po_num).exists()
+    return JsonResponse(
+        {
+            'exists': exists,
         }
     )
 

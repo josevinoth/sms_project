@@ -12,3 +12,4 @@ class PkpurchaseorderForm(forms.ModelForm):
         self.fields['po_updated_by'].empty_label = "--Select--"
         self.fields['po_assessment_num'].empty_label = "--Select--"
         self.fields['po_customer_name'].empty_label = "--Select--"
+        self.fields['po_status'].empty_label = "--Select--"

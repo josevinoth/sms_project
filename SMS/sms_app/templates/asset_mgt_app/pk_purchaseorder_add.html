@@ -11,7 +11,7 @@
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Purchase Order</h3></div>
 					<div class="card-body bg-light" >
-						<div class="row">
+						<div class="row" id="purchase_order">
 							<div class="col-12">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -88,6 +88,12 @@
 							</div>
 							{% render_field form.po_attach id="po_attach"  class="form-control " %}
 						</div>
+						<div class="input-group input-group-sm mb-3 bg-dark block">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Status</span>
+							</div>
+							{% render_field form.po_status id="po_status"  class="form-control " %}
+						</div>
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
@@ -99,7 +105,7 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<button type="submit" id="po_submit_btn" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'purchaseorder_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
@@ -113,7 +119,7 @@
 <hr>
 <div class="row">
 	<div class="col-1"></div>
-	<div class="col-10">
+	<div class="col-10" id="purchase_order_dims">
 		<div id="accordion" class="container-fluid">
 			<div class="card">
 				<div class="card-header bg-info" id="headingTwo">
@@ -123,7 +129,7 @@
 						</button>
 					</h5>
 				</div>
-				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+				<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordion">
 					<div class="card-body">
 						<div class="card-body">
 							<div id="na_dimension_list_WOH">
@@ -140,22 +146,43 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("po_updated_by").value ='{{user_id}}';
+	var user_role='{{role_id}}'
+	var status=document.getElementById("po_status").value
+	if (status==5)
+	{
+		if (user_role==2)
+		{
+			alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
+			$('#purchase_order').addClass('disable_a_href');
+			$('#po_submit_btn').addClass('disable_a_href');
+			$('#purchase_order_dims').addClass('disable_a_href');
+		}
+		else
+		{
+			$('#purchase_order').removeClass('disable_a_href');
+			$('#po_submit_btn').removeClass('disable_a_href');
+			$('#purchase_order_dims').removeClass('disable_a_href');
+		}
+	}
+	else
+		{
+			var po_num = document.getElementById("po_num").value
+    		if (po_num =="")
+			{
+				$('#add_dim_btn').addClass('disable_a_href');
+			}
+			else
+			{
+				$('#add_dim_btn').removeClass('disable_a_href');
+			}
+		}
+
 	$('#na_dimension_list').DataTable({
         dom: 'lBfrtip',
         buttons: [
             'copy', 'csv', 'excel','print'
         ]
     });
-    var po_num = document.getElementById("po_num").value
-    if (po_num =="")
-	{
-		$('#add_dim_btn').addClass('disable_a_href');
-	}
-	else
-	{
-		$('#add_dim_btn').removeClass('disable_a_href');
-	}
-
 	});
 </script>
 
