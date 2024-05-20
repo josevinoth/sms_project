@@ -32,13 +32,11 @@ def pk_quotationsummary_add(request,pk_quotationsummary_id=0):
             quotationsummary=PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
             needassessment_num = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id).qs_assessment_num
             needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
-            # customer_name_id = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id).qs_customer_name_2.id
+            customer_name_id = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id).qs_customer_name_2.id
             request.session['na_assessment_id'] = needassessment_id
-            print('needassessment_id',needassessment_id)
-            # request.session['na_customer_name_id'] = customer_name_id
+            request.session['na_customer_name_id'] = customer_name_id
             form = PkquotationsummaryForm(instance=quotationsummary)
             quotation_list = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id)
-            print('quotation_list',quotation_list)
             # wood_cost = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id,pkqt_cost_type=8,pkqt_stock_type=1,pkqt_stock_type=4).aggregate(Sum('pkqt_total_cost'))['pkqt_total_cost__sum']
             wood_cost = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id,pkqt_stock_type__in=[1, 4],pkqt_cost_type=8).aggregate(Sum('pkqt_total_cost'))['pkqt_total_cost__sum']
             if wood_cost is not None:

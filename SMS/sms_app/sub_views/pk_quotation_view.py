@@ -18,7 +18,6 @@ def pk_quotation_add(request,quotation_id=0):
     na_customer_name_id = request.session.get('na_customer_name_id')
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id = User_extInfo.objects.get(user=user_id).emp_role.id
-    print('role',role)
     if request.method == "GET":
         if quotation_id == 0:
             form = PkquotationForm()

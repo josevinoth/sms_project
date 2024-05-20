@@ -207,37 +207,35 @@
 
 <script>
 $(document).ready(function() {
-	var stock_status=document.getElementById("pkqt_stock_status").value;
 	var assessment_num=document.getElementById("pkqt_assessment_num").value;
 	var customer_name=document.getElementById("pkqt_customer_name").value;
+	var user_id=document.getElementById("pkqt_updated_by").value;
+	if (user_id=="")
+	{
+		document.getElementById("pkqt_updated_by").value ='{{user_id}}';
+	}
+	else
+	{
+		document.getElementById("pkqt_updated_by").value =user_id;
+	}
 
-	if (stock_status==2)
-	{
-		$('#quotation_form').addClass('disable_a_href');
-		alert("User Cannot edit the form since stock is supplied")
-	}
-	else
-	{
-		$('#quotation_form').removeClass('disable_a_href');
-	}
-	document.getElementById("pkqt_updated_by").value ='{{user_id}}';
 	if (assessment_num=="")
-	{
-		document.getElementById("pkqt_assessment_num").value ='{{na_assessment_num_id}}';
-	}
+		{
+			document.getElementById("pkqt_assessment_num").value ='{{na_assessment_num_id}}';
+		}
 	else
-	{
-		document.getElementById("pkqt_assessment_num").value =assessment_num;
-	}
+		{
+			document.getElementById("pkqt_assessment_num").value =assessment_num;
+		}
 
 	if (customer_name=="")
-	{
-		document.getElementById("pkqt_customer_name").value ='{{na_customer_name_id}}';
-	}
+		{
+			document.getElementById("pkqt_customer_name").value ='{{na_customer_name_id}}';
+		}
 	else
-	{
-		document.getElementById("pkqt_customer_name").value = customer_name;
-	}
+		{
+			document.getElementById("pkqt_customer_name").value = customer_name;
+		}
 	change_cost_type();
 	$("#search_wood").on("click", function() {
             search_wood();
