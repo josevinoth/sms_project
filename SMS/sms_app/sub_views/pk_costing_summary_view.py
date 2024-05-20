@@ -20,6 +20,7 @@ def costingsummary_add(request,costingsummary_id=0):
     role_id = User_extInfo.objects.get(user=user_id).emp_role.id
     if request.method == "GET":
         if costingsummary_id == 0:
+            print('Inside costing summary Get add')
             form = PkcostingsummaryForm()
             context = {
                 'form': form,
@@ -29,6 +30,7 @@ def costingsummary_add(request,costingsummary_id=0):
                 'role_id': role_id,
             }
         else:
+            print('Inside costing summary Get edit')
             costingsummary=PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
             needassessment_num = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_assessment_num
             needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
@@ -140,7 +142,9 @@ def costingsummary_add(request,costingsummary_id=0):
                     }
         return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
     else:
+        print('costingsummary_id',costingsummary_id)
         if costingsummary_id == 0:
+            print("Inside pk_costing_summary post add")
             form = PkcostingsummaryForm(request.POST)
             if form.is_valid():
                 form.save()
@@ -153,6 +157,7 @@ def costingsummary_add(request,costingsummary_id=0):
                 messages.error(request, 'Record Not Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
         else:
+            print("Inside pk_costing_summary post edit")
             costingsummary = PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
             form = PkcostingsummaryForm(request.POST,instance=costingsummary)
             if form.is_valid():

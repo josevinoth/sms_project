@@ -313,6 +313,7 @@ $(document).ready(function() {
 	document.getElementById("cs_material_cost").value ='{{material_cost}}';
 	document.getElementById("cs_transport_cost").value ='{{transport_cost}}';
 
+	change_charge_type()
 	var user_role='{{role_id}}'
 	var status=document.getElementById("cs_status").value
 	if (status==5)
@@ -347,7 +348,7 @@ $(document).ready(function() {
 		}
 	}
 
-	change_charge_type()
+
 	$('#costing_list').DataTable({
         dom: 'lBfrtip',
         buttons: [
@@ -380,23 +381,10 @@ var rate_per_cft=total_cost/total_cft
 document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
 }
 </script>
-<!--Unique Field validation-->
+
 <script>
-    $(document).ready(function() {
-
-    	assessment_num=document.getElementById("cs_assessment_num").value
-    	if (assessment_num=='')
-    	{
-			$('#cs_assessment_num').removeClass('disable_a_href');
-    	}
-    	else
-    	{
-    		$('#cs_assessment_num').addClass('disable_a_href');
-    	}
-
-        $('#cs_assessment_num').on('change', function() {
+	$('#cs_assessment_num').on('change', function() {
             var cs_assessment_num = $(this).val();
-            // Send an AJAX request to check if the value exists in the database
             $.ajax({
                 url: '{% url "pk_costing_get_customer" %}',
                 data: {
@@ -406,15 +394,8 @@ document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
                 success: function(data) {
                 	var customer_name_id=data.customer_name_id
                 	document.getElementById("cs_customer_name").value=customer_name_id
-                    if (data.exists) {
-                        $('#unique_field_error').text('This Record already exists.');
-                    } else {
-                        $('#unique_field_error').text('');
-                    }
-
-					$('#cs_customer_po').removeClass('disable_a_href');
+   					$('#cs_customer_po').removeClass('disable_a_href');
 					$("#cs_customer_po").empty();
-					$("#wh_stack_layer").val($("#selectBox option:first").val());
 					var customer_po_id=data.customer_po_id;
 					var customer_po_name=data.customer_po_name;
 					var len1 = (customer_po_id).length;
@@ -426,27 +407,34 @@ document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
                 }
             });
         });
-
-        $('#cs_customer_po').on('change', function() {
-            var cs_customer_po_num = $(this).val();
-            var cs_assessment_num = document.getElementById("cs_assessment_num").value
-            // Send an AJAX request to check if the value exists in the database
-            $.ajax({
-                url: '{% url "pk_costing_summary_check_unique_field" %}',
-                data: {
-                    'cs_assessment_num': cs_assessment_num,
-                    'cs_customer_po_num': cs_customer_po_num,
-                },
-                dataType: 'json',
-                success: function(data) {
-                    if (data.exists) {
-                        $('#unique_field_error').text('This Record already exists.');
-                    } else {
-                        $('#unique_field_error').text('');
-                    }
+</script>
+<script>
+$('#cs_customer_po').on('change', function() {
+	var cs_customer_po_num = $(this).val();
+    var cs_assessment_num = document.getElementById("cs_assessment_num").value
+    // Send an AJAX request to check if the value exists in the database
+    $.ajax
+    ({
+    	url: '{% url "pk_costing_summary_check_unique_field" %}',
+        data: {
+        	'cs_assessment_num': cs_assessment_num,
+        	'cs_customer_po_num': cs_customer_po_num,
+        },
+        dataType: 'json',
+        success: function(data)
+        {
+        	if (data.exists)
+        		{
+                	$('#unique_field_error').text('Record already exists for selected Assessment and Customer PO.');
+                	document.getElementById("cs_assessment_num").value=""
+                	document.getElementById("cs_customer_name").value=""
                 }
-            });
-        });
+                else
+                {
+                	$('#unique_field_error').text('');
+                }
+        }
     });
+});
 </script>
 {% endblock content %}

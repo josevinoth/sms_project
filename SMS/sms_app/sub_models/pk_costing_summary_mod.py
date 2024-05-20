@@ -2,7 +2,7 @@ from django.db import models
 from ..models import StatusList,PkpurchaseorderInfo,CustomerInfo,MyUser,PkneedassessmentInfo
 
 class PkcostingsummaryInfo(models.Model):
-    cs_assessment_num=models.OneToOneField(PkneedassessmentInfo, on_delete=models.CASCADE, default='',unique=True)
+    cs_assessment_num=models.OneToOneField(PkneedassessmentInfo, on_delete=models.CASCADE)
     cs_wood_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_engineer_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_labour_cost = models.FloatField(blank=True, null=True, default=0.0)
@@ -30,10 +30,10 @@ class PkcostingsummaryInfo(models.Model):
     cs_customer_po = models.ForeignKey(PkpurchaseorderInfo, on_delete=models.CASCADE, related_name='cs_customer_po',
                                          db_column='cs_customer_po', blank=True, null=True)
     cs_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, related_name='cs_status',
-                                       db_column='cs_status', blank=True, null=True)
+                                       db_column='cs_status', default=6)
 
     class Meta:
         ordering = ["id"]
 
     def __str__(self):
-        return str(self.cs_quotation_number)
+        return str(self.cs_total_cost_wm)
