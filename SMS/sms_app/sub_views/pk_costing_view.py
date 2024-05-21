@@ -66,6 +66,7 @@ def costing_add(request,costing_id=0):
             else:
                 return redirect(request.META['HTTP_REFERER'])
         else:
+            print("Form errors:", form.errors)
             messages.error(request, 'Form is not valid. Please correct the errors.')
 
         return redirect(request.META['HTTP_REFERER'])
