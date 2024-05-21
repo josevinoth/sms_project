@@ -13,113 +13,62 @@ def costing_add(request,costing_id=0):
     na_assessment_num_id = request.session.get('na_assessment_id')
     na_customer_name_id = request.session.get('na_customer_name_id')
     ses_customer_po_id = request.session.get('ses_customer_po_id')
-    print('na_customer_name_id',na_customer_name_id)
+
     if request.method == "GET":
         if costing_id == 0:
             form = PkcostingForm()
-            context = {
-                'form': form,
-                'first_name': first_name,
-                'user_id': user_id,
-                'na_assessment_num_id': na_assessment_num_id,
-                'na_customer_name_id': na_customer_name_id,
-                'ses_customer_po_id': ses_customer_po_id,
-                'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id),
-            }
         else:
-            costing=PkcostingInfo.objects.get(pk=costing_id)
+            costing = PkcostingInfo.objects.get(pk=costing_id)
             form = PkcostingForm(instance=costing)
-            context={
-                    'form': form,
-                    'first_name': first_name,
-                    'user_id': user_id,
-                    'na_assessment_num_id': na_assessment_num_id,
-                    'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id),
-                    }
+
+        context = {
+            'form': form,
+            'first_name': first_name,
+            'user_id': user_id,
+            'na_assessment_num_id': na_assessment_num_id,
+            'na_customer_name_id': na_customer_name_id,
+            'ses_customer_po_id': ses_customer_po_id,
+            'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id),
+        }
+
         return render(request, "asset_mgt_app/pk_costing_add.html", context)
+
     else:
         if costing_id == 0:
-            print("Inside PK Costing post add")
             form = PkcostingForm(request.POST)
-            if form.is_valid():
-                cost_type_id = request.POST.get('ct_cost_type')
-                print('cost_type_id',cost_type_id)
-                if int(cost_type_id)==8:
-                    stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
-                    stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
-                    stock_qty = request.POST.get('ct_quantity')
-                    stock_qty_available=PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
-                    if int(stock_qty) <= 0:
-                        messages.error(request, 'Quantity should be greater than 0')
-                        return redirect(request.META['HTTP_REFERER'])
-                    elif int(stock_qty)>stock_qty_available:
-                        error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
-                        messages.error(request, error_message)
-                        return redirect(request.META['HTTP_REFERER'])
-                    else:
-                        form.save()
-                        print("costing Form is Valid")
-                        # last_id = (PkcostingInfo.objects.latest('id')).id
-                        # stock_status = (PkcostingInfo.objects.latest('id')).ct_stock_status
-                        # print('stock_status',stock_status)
-                        # if stock_status ==2:
-                        #     messages.success(request, 'Stock Successfully Retrieved & Supplied')
-                        #     update_reduced_dimensions(stock_purchase_num,last_id)
-                        # else:
-                        #     messages.success(request, 'Stock Updated Successfully')
-                        messages.success(request, 'Stock Updated Successfully')
+        else:
+            costing = PkcostingInfo.objects.get(pk=costing_id)
+            form = PkcostingForm(request.POST, instance=costing)
+
+        if form.is_valid():
+            cost_type_id = int(request.POST.get('ct_cost_type'))
+
+            if cost_type_id == 8:
+                stock_purchase_num_id = int(request.POST.get('ct_stock_purchase_number'))
+                stock_purchase = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
+                stock_qty = int(request.POST.get('ct_quantity'))
+                stock_qty_available = stock_purchase.sp_quantity_reduced
+
+                if stock_qty <= 0:
+                    messages.error(request, 'Quantity should be greater than 0')
+                elif stock_qty > stock_qty_available:
+                    error_message = f'Quantity should be less than or equal to available stock {stock_purchase.sp_purchase_num} quantity {stock_qty_available}'
+                    messages.error(request, error_message)
                 else:
                     form.save()
                     messages.success(request, 'Stock Updated Successfully')
-                # return redirect('/SMS/costing_update/'+str(last_id))
+            else:
+                form.save()
+                messages.success(request, 'Stock Updated Successfully')
+
+            if costing_id == 0:
                 return redirect('/SMS/costing_insert/')
             else:
-                print("costing Form is Not Valid")
-                messages.error(request, 'Record Not Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
         else:
-            print("Inside PK Costing post Edit")
-            costing = PkcostingInfo.objects.get(pk=costing_id)
-            form = PkcostingForm(request.POST,instance=costing)
-            if form.is_valid():
-                form.save()
-                print("costing Form is Valid")
-                stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
-                last_id=costing_id
-                cost_type_id=PkcostingInfo.objects.get(pk=costing_id).ct_cost_type.id
-                if int(cost_type_id) == 8:
-                    stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
-                    stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
-                    stock_qty = request.POST.get('ct_quantity')
-                    stock_qty_available = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
-                    if int(stock_qty) <= 0:
-                        messages.error(request, 'Quantity should be greater than 0')
-                        return redirect(request.META['HTTP_REFERER'])
-                    elif int(stock_qty) > stock_qty_available:
-                        error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
-                        messages.error(request, error_message)
-                        return redirect(request.META['HTTP_REFERER'])
-                    else:
-                        form.save()
-                        print("costing Form is Valid")
-                        # last_id = (PkcostingInfo.objects.latest('id')).id
-                        # stock_status = (PkcostingInfo.objects.latest('id')).ct_stock_status
-                        # print('stock_status',stock_status)
-                        # if stock_status ==2:
-                        #     messages.success(request, 'Stock Successfully Retrieved & Supplied')
-                        #     update_reduced_dimensions(stock_purchase_num,last_id)
-                        # else:
-                        #     messages.success(request, 'Stock Updated Successfully')
-                        messages.success(request, 'Stock Updated Successfully')
-                else:
-                    form.save()
-                    messages.success(request, 'Stock Updated Successfully')
-            else:
-                print("costing Form is Not Valid")
-                messages.error(request, 'Record Not Updated Successfully')
-            return redirect(request.META['HTTP_REFERER'])
-        # return redirect('/SMS/requirements_list')
+            messages.error(request, 'Form is not valid. Please correct the errors.')
 
+        return redirect(request.META['HTTP_REFERER'])
 def update_reduced_dimensions(stock_purchase_num,last_id):
     length = PkcostingInfo.objects.get(pk=last_id).ct_length
     qty = PkcostingInfo.objects.get(pk=last_id).ct_quantity
