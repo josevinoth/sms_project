@@ -308,16 +308,26 @@ def pk_get_po_requirement_type(request):
 
 @login_required(login_url='login_page')
 def pk_store_po_dimension_id(request):
+    # Initialize the list
     po_dimension_box_val = []
-    ct_requirement_id= request.GET.get('ct_requirement_id')
-    print('ct_requirement_id',ct_requirement_id)
-    # Fetch requirement type from PO
+
+    # Fetch the requirement ID from the request
+    ct_requirement_id = request.GET.get('ct_requirement_id')
+
+    # Fetch the requirement type from PO using the primary key
     b = POdimension.objects.get(pk=ct_requirement_id)
-    print(b)
-    po_dimension_box_val.append(str(b.pod_type_of_req) + str(' (') + str(b.pod_length) + str('x') + str(b.pod_width) + str('x') + str(b.pod_height) + str(')'))
-    print(po_dimension_box_val)
+
+    # Append the formatted string to the list
+    po_dimension_box_val.append(
+        f"{b.pod_type_of_req} ({b.pod_length}x{b.pod_width}x{b.pod_height})"
+    )
+
+    # Convert the list to a single string without brackets
+    po_dimension_box_str = ', '.join(po_dimension_box_val)
+
+    # Create the data dictionary with the string value
     data = {
-        'po_dimension_box_val': po_dimension_box_val,
+        'po_dimension_box_val': po_dimension_box_str,
     }
     return JsonResponse(data)
 
