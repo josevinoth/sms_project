@@ -1,5 +1,5 @@
 from django import forms
-from ..models import PkquotationsummaryInfo
+from ..models import PkneedassessmentInfo,PkquotationsummaryInfo
 
 class PkquotationsummaryForm(forms.ModelForm):
 
@@ -10,5 +10,6 @@ class PkquotationsummaryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PkquotationsummaryForm,self).__init__(*args, **kwargs)
         self.fields['qs_assessment_num'].empty_label = "--Select--"
+        self.fields['qs_assessment_num'].queryset = PkneedassessmentInfo.objects.filter(na_status=5)
         self.fields['qs_updated_by'].empty_label = "--Select--"
         self.fields['qs_status'].empty_label = "--Select--"
