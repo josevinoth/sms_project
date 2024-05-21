@@ -58,7 +58,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Requirement Name & 	Size</span>
 									</div>
-									{% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control disable_a_href" %}
+									{% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -228,47 +228,48 @@
 
 <script>
 $(document).ready(function() {
+	document.getElementById("ct_updated_by").value ='{{user_id}}';
 	var stock_status=document.getElementById("ct_stock_status").value;
 	var assessment_num=document.getElementById("ct_assessment_num").value;
 	var customer_name=document.getElementById("ct_customer_name").value;
 	var customer_po=document.getElementById("ct_customer_po").value;
 
 	if (stock_status==2)
-	{
-		$('#costing_form').addClass('disable_a_href');
-		alert("User Cannot edit the form since stock is supplied")
-	}
+		{
+			$('#costing_form').addClass('disable_a_href');
+			alert("User Cannot edit the form since stock is supplied")
+		}
 	else
-	{
-		$('#costing_form').removeClass('disable_a_href');
-	}
-	document.getElementById("ct_updated_by").value ='{{user_id}}';
+		{
+			$('#costing_form').removeClass('disable_a_href');
+		}
+
 	if (assessment_num=="")
-	{
-		document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
-	}
+		{
+			document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
+		}
 	else
-	{
-		document.getElementById("ct_assessment_num").value =assessment_num;
-	}
+		{
+			document.getElementById("ct_assessment_num").value =assessment_num;
+		}
 
 	if (customer_po=="")
-	{
-		document.getElementById("ct_customer_po").value ='{{ses_customer_po_id}}';
-	}
+		{
+			document.getElementById("ct_customer_po").value ='{{ses_customer_po_id}}';
+		}
 	else
-	{
-		document.getElementById("ct_customer_po").value =customer_po;
-	}
+		{
+			document.getElementById("ct_customer_po").value =customer_po;
+		}
 
 	if (customer_name=="")
-	{
-		document.getElementById("ct_customer_name").value ='{{na_customer_name_id}}';
-	}
+		{
+			document.getElementById("ct_customer_name").value ='{{na_customer_name_id}}';
+		}
 	else
-	{
-		document.getElementById("ct_customer_name").value = customer_name;
-	}
+		{
+			document.getElementById("ct_customer_name").value = customer_name;
+		}
 
 	change_cost_type();
 	$("#search_wood").on("click", function() {
