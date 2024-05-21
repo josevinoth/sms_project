@@ -95,10 +95,9 @@ def pk_get_customer(request):
     print('customer_id',customer_id)
     # Fetch Quotation Number
     try:
-        quotation_num_id=PkquotationsummaryInfo.objects.get(qs_assessment_num=assessment_id).id
+        quotation_num_id=PkquotationsummaryInfo.objects.get(qs_assessment_num=assessment_id,qs_status=5).id
     except ObjectDoesNotExist:
         quotation_num_id=""
-    print('quotation_num_id',quotation_num_id)
     # Create JSON response data
     data = {
         'customer_name': customer_name,

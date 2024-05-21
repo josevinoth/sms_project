@@ -381,7 +381,15 @@ var total_cost=margin_value+total_cost_wo_m
 document.getElementById("qs_total_cost_wm").value=total_cost.toFixed(2)
 
 var total_cft=parseFloat(document.getElementById("qs_total_cft").value) || 0;
-var rate_per_cft=total_cost/total_cft
+var rate_per_cft_val=parseFloat(total_cost/total_cft)
+if (isNaN(rate_per_cft_val))
+{
+    rate_per_cft = 0;
+}
+else
+{
+	rate_per_cft = rate_per_cft_val;
+}
 document.getElementById("qs_rate_per_cft").value=rate_per_cft.toFixed(2)
 }
 </script>
