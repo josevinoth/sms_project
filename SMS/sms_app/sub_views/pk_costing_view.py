@@ -103,36 +103,12 @@ def costing_add(request,costing_id=0):
                 messages.error(request, 'Record Not Updated Successfully')
             return redirect(request.META['HTTP_REFERER'])
 def update_reduced_dimensions(stock_purchase_num,last_id):
-    length = PkcostingInfo.objects.get(pk=last_id).ct_length
     qty = PkcostingInfo.objects.get(pk=last_id).ct_quantity
     cft = PkcostingInfo.objects.get(pk=last_id).ct_cft
-    print('length',length)
-    print('qty',qty)
-    print('cft',cft)
-    prev_length = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_length_reduced
     prev_qty = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_quantity_reduced
     prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft_reduced
-
-    print('prev_length',prev_length)
-    print('prev_qty',prev_qty)
-    print('prev_cft',prev_cft)
-
-    # if prev_length>=length:
-        # current_length = prev_length - length
-        # current_cft= prev_cft - cft
-    # else:
-    #     current_length = prev_length
-    #     current_cft= prev_cft
-
-    # if prev_qty >= qty:
-    #     current_qty=prev_qty-qty
-    # else:
-    #     # current_qty = prev_qty
     current_qty = prev_qty - qty
     current_cft = prev_cft - cft
-    print('current_qty',current_qty)
-    print('current_cft',current_cft)
-    # PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=round(current_cft,2))
 
