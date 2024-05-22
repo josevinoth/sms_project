@@ -266,8 +266,8 @@ def pk_get_po_requirement_type(request):
 
     for dimension in po_dimensions:
         po_requirement_type_id.append(dimension.id)
-        # po_requirement_type_val.append(f"{dimension.pod_item} ({dimension.pod_type_of_req} {dimension.pod_length}x{dimension.pod_width}x{dimension.pod_height})")
-        po_requirement_type_val.append(dimension.pod_item)
+        po_requirement_type_val.append(f"{dimension.pod_item} ({dimension.pod_type_of_req} {dimension.pod_length}x{dimension.pod_width}x{dimension.pod_height})")
+        # po_requirement_type_val.append(dimension.pod_item)
 
     data = {
         'po_requirement_type_val': po_requirement_type_val,

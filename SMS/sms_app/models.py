@@ -155,6 +155,7 @@ from .sub_models.pk_retrival_mod import PkretrivalInfo
 from .sub_models.pk_quotation_mod import PkquotationInfo
 from .sub_models.pk_quotation_summary_mod import PkquotationsummaryInfo
 from .sub_models.pk_purchaseorder_mod import PkpurchaseorderInfo
+from .sub_models.po_dimension_mod import POdimension
 from .sub_models.pk_costing_mod import PkcostingInfo
 from .sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
 from .sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
@@ -165,4 +166,3 @@ from .sub_models.fuelfilling_mod import Fuelfillinginfo
 from .sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
 from .sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from .sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
-from .sub_models.po_dimension_mod import POdimension
