@@ -72,6 +72,12 @@
 									</div>
 									{% render_field form.qs_management_cost id="qs_management_cost" class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consumables Cost</span>
+									</div>
+									{% render_field form.qs_material_cost id="qs_material_cost" class="form-control disable_a_href" %}
+								</div>
 								<div id="accordion" class="container-fluid">
 									<div class="card">
 										<div class="card-header bg-info" id="headingOne">
@@ -120,12 +126,6 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Consumables Cost</span>
-									</div>
-									{% render_field form.qs_material_cost id="qs_material_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Transport Cost</span>
 									</div>
 									{% render_field form.qs_transport_cost id="qs_transport_cost" class="form-control disable_a_href" %}
@@ -153,6 +153,18 @@
 										<span class="input-group-text">Total CFT</span>
 									</div>
 									{% render_field form.qs_total_cft id="qs_total_cft"  onchange="change_charge_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST %</span>
+									</div>
+									{% render_field form.qs_gst id="qs_gst"  onchange="change_charge_type()" class="form-control  " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Final Cost</span>
+									</div>
+									{% render_field form.qs_final_cost id="qs_final_cost"  class="form-control  disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -377,8 +389,11 @@ var total_cost_wo_m= wood_cost+engineer_cost+labour_cost+crane_cost+ht_cost+mana
 document.getElementById("qs_total_cost_wom").value=total_cost_wo_m.toFixed(2)
 var margin_value=total_cost_wo_m*(margin/100)
 var total_cost=margin_value+total_cost_wo_m
-
 document.getElementById("qs_total_cost_wm").value=total_cost.toFixed(2)
+
+var gst=parseFloat(document.getElementById("qs_gst").value) || 0;
+var final_cost=total_cost+(total_cost*gst/100)
+document.getElementById("qs_final_cost").value=final_cost.toFixed(2)
 
 var total_cft=parseFloat(document.getElementById("qs_total_cft").value) || 0;
 var rate_per_cft_val=parseFloat(total_cost/total_cft)

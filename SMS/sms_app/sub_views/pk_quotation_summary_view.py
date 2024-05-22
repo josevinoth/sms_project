@@ -156,6 +156,7 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
     na_req=Nadimension.objects.filter(nad_assess_num=needassessment_id)
     quotation_number = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_quotation_number
     margin = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_margin
+    gst_val = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_gst
     total_sum=0
     for i in na_req:
         j=i.nad_item
@@ -168,8 +169,8 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
             Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost/qty,2))
         except:
             Nadimension.objects.filter(pk=k).update(nad_cost_unit=0)
-        total_sum=total_sum+total_cost
-    gst=round(total_sum*18/100,2)
+        total_sum=round((total_sum+total_cost),2)
+    gst=round(total_sum*gst_val/100,2)
     final_cost=round((total_sum+gst),2)
     today = datetime.now()
     formatted_date = today.strftime("%d-%b-%Y")
@@ -183,6 +184,7 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
         'quotation': quotation,
         'total_sum': total_sum,
         'gst': gst,
+        'gst_val': gst_val,
         'final_cost': final_cost,
         'quotation_number': quotation_number,
         'today_date': formatted_date,

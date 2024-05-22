@@ -31,7 +31,8 @@ class PkquotationsummaryInfo(models.Model):
                                          db_column='qs_customer_name_2', blank=True, null=True)
     qs_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, related_name='qs_status',
                                            db_column='qs_status', blank=True, null=True,default=6)
-
+    qs_gst = models.FloatField(blank=True, null=True, default=0.0)
+    qs_final_cost = models.FloatField(blank=True, null=True, default=0.0)
     class Meta:
         ordering = ["id"]
 

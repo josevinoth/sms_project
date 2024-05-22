@@ -31,6 +31,8 @@ class PkcostingsummaryInfo(models.Model):
                                          db_column='cs_customer_po', blank=True, null=True)
     cs_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, related_name='cs_status',
                                        db_column='cs_status', default=6)
+    cs_gst = models.FloatField(blank=True, null=True, default=0.0)
+    cs_final_cost = models.FloatField(blank=True, null=True, default=0.0)
 
     class Meta:
         ordering = ["id"]

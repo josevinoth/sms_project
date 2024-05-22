@@ -12,10 +12,14 @@
 					<div class="card-header text-center">
 						<div class="row">
 							<div class="col-3"></div>
-							<div class="col-6">
+							<div class="col-4">
 								<h3>Add/Update Costing Summary</h3>
 							</div>
-							<div class="col-3">
+							<div class="col-2">
+<!--								<a href="{% url 'pk_bvm_invoice_excel' %}" class="btn btn-warning btn-block" id="excel_invoice_report_btn"><i class="fa fa-download" aria-hidden="true"> Excel Invoice</i>-->
+<!--								</a>-->
+							</div>
+							<div class="col-2">
 								<a href="{% url 'pk_bvm_invoice_pdf' %}" class="btn btn-warning btn-block" id="invoice_report_btn"><i class="fa fa-download" aria-hidden="true"> Invoice</i>
 								</a>
 							</div>
@@ -72,6 +76,12 @@
 									</div>
 									{% render_field form.cs_ht_cost id="cs_ht_cost" class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Management Cost</span>
+									</div>
+									{% render_field form.cs_management_cost id="cs_management_cost" class="form-control disable_a_href" %}
+								</div>
 								<div id="accordion" class="container-fluid">
 									<div class="card">
 										<div class="card-header bg-info" id="headingOne">
@@ -120,12 +130,6 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Management Cost</span>
-									</div>
-									{% render_field form.cs_management_cost id="cs_management_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Consumables Cost</span>
 									</div>
 									{% render_field form.cs_material_cost id="cs_material_cost" class="form-control disable_a_href" %}
@@ -156,13 +160,25 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">GST (%)</span>
+									</div>
+									{% render_field form.cs_gst id="cs_gst"  onchange="change_charge_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Final Cost</span>
+									</div>
+									{% render_field form.cs_final_cost id="cs_final_cost"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Total CFT</span>
 									</div>
 									{% render_field form.cs_total_cft id="cs_total_cft"  onchange="change_charge_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Rate Per CFT</span>
+										<span class="input-group-text">Rate Per CFT (W/O GST)</span>
 									</div>
 									{% render_field form.cs_rate_per_cft id="cs_rate_per_cft"  class="form-control disable_a_href" %}
 								</div>
@@ -369,12 +385,15 @@ var management_cost=parseFloat(document.getElementById("cs_management_cost").val
 var material_cost=parseFloat(document.getElementById("cs_material_cost").value) || 0;
 var transport_cost=parseFloat(document.getElementById("cs_transport_cost").value) || 0;
 var margin=parseFloat(document.getElementById("cs_margin").value) || 0;
+var gst=parseFloat(document.getElementById("cs_gst").value) || 0;
 var total_cost_wo_m= wood_cost+engineer_cost+labour_cost+crane_cost+ht_cost+management_cost+material_cost+transport_cost
 document.getElementById("cs_total_cost_wom").value=total_cost_wo_m.toFixed(2)
 var margin_value=total_cost_wo_m*(margin/100)
 var total_cost=margin_value+total_cost_wo_m
+var final_cost=total_cost+(total_cost*gst/100)
 
 document.getElementById("cs_total_cost_wm").value=total_cost.toFixed(2)
+document.getElementById("cs_final_cost").value=final_cost.toFixed(2)
 
 var total_cft=parseFloat(document.getElementById("cs_total_cft").value) || 0;
 var rate_per_cft=total_cost/total_cft

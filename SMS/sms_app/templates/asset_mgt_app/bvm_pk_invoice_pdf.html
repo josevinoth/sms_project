@@ -24,7 +24,7 @@
                 <b>Quotation Date:</b> {{today_date}}
             </td>
             <td colspan="1">
-                <b>Quotation Number:</b> {{quotation_number}}
+                <b>Customer Purchase Order Number:</b> {{po_number}}
             </td>
         </tr>
     </table>
@@ -43,17 +43,17 @@
             <th>Qty</th>
             <th>Total Cost (INR)</th>
         </tr>
-        {% for quote in quotation %}
+        {% for invoice in invoices %}
         <tr>
-            <td>{{quote.nad_item}}</td>
-            <td>{{quote.nad_type_of_req}}</td>
-            <td>{{quote.nad_uom}}</td>
-            <td>{{quote.nad_length}}</td>
-            <td>{{quote.nad_width}}</td>
-            <td>{{quote.nad_height}}</td>
-            <td>{{quote.nad_cost_unit}}</td>
-            <td>{{quote.nad_quantity}}</td>
-            <td>{{quote.nad_cost_total}}</td>
+            <td>{{invoice.pod_item}}</td>
+            <td>{{invoice.pod_type_of_req}}</td>
+            <td>{{invoice.pod_uom}}</td>
+            <td>{{invoice.pod_length}}</td>
+            <td>{{invoice.pod_width}}</td>
+            <td>{{invoice.pod_height}}</td>
+            <td>{{invoice.pod_cost_unit}}</td>
+            <td>{{invoice.pod_quantity}}</td>
+            <td>{{invoice.pod_cost_total}}</td>
         </tr>
         {% endfor %}
     </table>
@@ -67,7 +67,7 @@
         </tr>
         <tr>
             <td colspan="7"></td>
-            <td colspan="1"><b>TAXES AT ACTUAL 18%</b></td>
+            <td colspan="1"><b>TAXES AT ACTUAL {{gst_val}} %</b></td>
             <td colspan="1">
                 <b>{{gst}}</b>
             </td>

@@ -1,11 +1,10 @@
 from datetime import datetime
-
+import openpyxl
 from django.contrib.auth.decorators import login_required
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-
 from ..forms import PkcostingsummaryForm
-from ..models import User_extInfo,PkpurchaseorderInfo,Nadimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
+from ..models import User_extInfo,PkpurchaseorderInfo,POdimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
@@ -211,7 +210,7 @@ def pk_costing_summary_check_unique_field(request):
     )
 
 @login_required(login_url='login_page')
-def pk_bvm_invoice_pdf(request,quotation_id=0):
+def pk_bvm_invoice_pdf(request,invoice_id=0):
     needassessment_id = request.session.get('na_assessment_id')
     address=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_address
     cost_includes=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_cost_includes
@@ -220,23 +219,26 @@ def pk_bvm_invoice_pdf(request,quotation_id=0):
     client_scope=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_client_scope
     bvm_scope=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_bvm_scope
     needassessment_num=PkneedassessmentInfo.objects.get(pk=needassessment_id).na_assessment_num
-    quotation=Nadimension.objects.filter(nad_assess_num=needassessment_id)
+    invoices=POdimension.objects.filter(pod_assess_num=needassessment_id)
     # get requirement type from need assessment dimension model
-    na_req=Nadimension.objects.filter(nad_assess_num=needassessment_id)
-    quotation_number = PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_quotation_number
+    na_req=POdimension.objects.filter(pod_assess_num=needassessment_id)
+    po_number = PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_customer_po
+    margin = PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_margin
     total_sum=0
     for i in na_req:
-        j=i.nad_item
+        j=i.pod_item
         k=i.id
-        qty=i.nad_quantity
-        total_cost=PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_requirement=i).aggregate(total_cost=Sum('ct_total_cost'))['total_cost'] or 0
-        Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost,2))
+        qty=i.pod_quantity
+        total_cost_wom=PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_requirement=i).aggregate(total_cost=Sum('ct_total_cost'))['total_cost'] or 0
+        total_cost=total_cost_wom+(total_cost_wom*margin/100)
+        POdimension.objects.filter(pk=k).update(pod_cost_total=round(total_cost,2))
         try:
-            Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost/qty,2))
+            POdimension.objects.filter(pk=k).update(pod_cost_unit=round(total_cost/qty,2))
         except:
-            Nadimension.objects.filter(pk=k).update(nad_cost_unit=0)
-        total_sum=total_sum+total_cost
-    gst=round(total_sum*18/100,2)
+            POdimension.objects.filter(pk=k).update(pod_cost_unit=0)
+        total_sum=round((total_sum+total_cost),2)
+    gst_val=PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id).cs_gst
+    gst=round(total_sum*gst_val/100,2)
     final_cost=round((total_sum+gst),2)
     today = datetime.now()
     formatted_date = today.strftime("%d-%b-%Y")
@@ -247,15 +249,16 @@ def pk_bvm_invoice_pdf(request,quotation_id=0):
         'terms_condition': terms_condition,
         'client_scope': client_scope,
         'bvm_scope': bvm_scope,
-        'quotation': quotation,
+        'invoices': invoices,
         'total_sum': total_sum,
+        'gst_val': gst_val,
         'gst': gst,
         'final_cost': final_cost,
-        'quotation_number': quotation_number,
+        'po_number': po_number,
         'today_date': formatted_date,
     }
-    file_name = str("Quotation_") + str(needassessment_num) + str(".pdf")
-    template_path = 'asset_mgt_app/bvm_pk_quotation_pdf.html'
+    file_name = str("Invoice_") + str(needassessment_num) + str(".pdf")
+    template_path = 'asset_mgt_app/bvm_pk_invoice_pdf.html'
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename={file_name}'
 
@@ -267,4 +270,69 @@ def pk_bvm_invoice_pdf(request,quotation_id=0):
 
     if pisa_status.err:
         return HttpResponse('We has some error <pre>' + html + '</pre>')
+    return response
+
+def pk_bvm_invoice_excel(request, invoice_id=0):
+    needassessment_id = request.session.get('na_assessment_id')
+    summary_info = PkcostingsummaryInfo.objects.get(cs_assessment_num=needassessment_id)
+    needassessment_num = PkneedassessmentInfo.objects.get(pk=needassessment_id).na_assessment_num
+    invoices = POdimension.objects.filter(pod_assess_num=needassessment_id)
+    na_req = POdimension.objects.filter(pod_assess_num=needassessment_id)
+    margin = summary_info.cs_margin
+    total_sum = 0
+
+    for i in na_req:
+        qty = i.pod_quantity
+        total_cost_wom = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_requirement=i).aggregate(
+            total_cost=Sum('ct_total_cost'))['total_cost'] or 0
+        total_cost = total_cost_wom + (total_cost_wom * margin / 100)
+        POdimension.objects.filter(pk=i.id).update(pod_cost_total=round(total_cost, 2))
+        try:
+            POdimension.objects.filter(pk=i.id).update(pod_cost_unit=round(total_cost / qty, 2))
+        except:
+            POdimension.objects.filter(pk=i.id).update(pod_cost_unit=0)
+        total_sum = round((total_sum + total_cost), 2)
+
+    gst_val = summary_info.cs_gst
+    gst = round(total_sum * gst_val / 100, 2)
+    final_cost = round((total_sum + gst), 2)
+    today = datetime.now().strftime("%d-%b-%Y")
+
+    # Create an Excel workbook and add a worksheet.
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Invoice"
+
+    # Write the header
+    ws.append([
+        "Address", "Cost Includes", "Notes", "Terms & Conditions",
+        "Client Scope", "BVM Scope", "PO Number", "Total Sum",
+        "GST Value", "GST", "Final Cost", "Date"
+    ])
+    # Write the summary info
+    ws.append([
+        summary_info.cs_address, summary_info.cs_cost_includes, summary_info.cs_notes, summary_info.cs_terms_condition,
+        summary_info.cs_client_scope, summary_info.cs_bvm_scope, summary_info.cs_customer_po, total_sum,
+        gst_val, gst, final_cost, today
+    ])
+
+    # Write the invoice items header
+    ws.append([
+        "Item", "Type of Requirement", "Length", "Width",
+        "Height", "Quantity", "Total Cost", "Unit Cost"
+    ])
+    # Write the invoice items
+    for invoice in invoices:
+        ws.append([
+            invoice.pod_item, invoice.pod_type_of_req, invoice.pod_length, invoice.pod_width,
+            invoice.pod_height, invoice.pod_quantity, invoice.pod_cost_total, invoice.pod_cost_unit
+        ])
+
+    # Create an HttpResponse with the appropriate Excel content type
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    file_name = f"Invoice_{needassessment_num}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename={file_name}'
+
+    # Save the workbook to the response
+    wb.save(response)
     return response
