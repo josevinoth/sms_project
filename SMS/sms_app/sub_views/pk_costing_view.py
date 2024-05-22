@@ -60,7 +60,12 @@ def costing_add(request,costing_id=0):
                 messages.success(request, 'Stock Updated Successfully')
                 return redirect('/SMS/costing_insert/')
         else:
-            messages.error(request, 'Form is not valid. Please check the input.')
+            print("Costing Form is Not Valid")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"Error in {field}: {error}")
+                    messages.error(request, f"Error in {field}: {error}")
+            messages.error(request, 'Record Not Updated Successfully')
 
         return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
 
@@ -251,17 +256,19 @@ def pk_get_item_description(request):
 
 @login_required(login_url='login_page')
 def pk_get_po_requirement_type(request):
-    po_requirement_type_id = []
-    po_requirement_type_val = []
     ct_assessment_num_id = request.GET.get('ct_assessment_num_id')
     ct_customer_po_id = request.GET.get('ct_customer_po_id')
-    print('ct_assessment_num_id',ct_assessment_num_id)
-    print('ct_customer_po_id',ct_customer_po_id)
+
     # Fetch requirement type from Need Assessment dimension
-    po_dimension_id = POdimension.objects.filter(pod_assess_num=ct_assessment_num_id,pod_po_num=ct_customer_po_id)
-    for a in po_dimension_id:
-        po_requirement_type_id.append(a.id)
-        po_requirement_type_val.append(str(a.pod_item)+str(' (')+str(a.pod_type_of_req)+str(' ')+str(a.pod_length)+str('x')+str(a.pod_width)+str('x')+str(a.pod_height)+str(')'))
+    po_dimensions = POdimension.objects.filter(pod_assess_num=ct_assessment_num_id, pod_po_num=ct_customer_po_id)
+
+    po_requirement_type_id = []
+    po_requirement_type_val = []
+
+    for dimension in po_dimensions:
+        po_requirement_type_id.append(dimension.id)
+        po_requirement_type_val.append(
+            f"{dimension.pod_item} ({dimension.pod_type_of_req} {dimension.pod_length}x{dimension.pod_width}x{dimension.pod_height})")
 
     data = {
         'po_requirement_type_val': po_requirement_type_val,

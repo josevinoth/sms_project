@@ -66,14 +66,6 @@ def pk_quotation_add(request,quotation_id=0):
                     else:
                         form.save()
                         print("quotation Form is Valid")
-                        # last_id = (PkquotationInfo.objects.latest('id')).id
-                        # stock_status = (PkquotationInfo.objects.latest('id')).pkqt_stock_status
-                        # print('stock_status',stock_status)
-                        # if stock_status ==2:
-                        #     messages.success(request, 'Stock Successfully Retrieved & Supplied')
-                        #     update_reduced_dimensions(stock_purchase_num,last_id)
-                        # else:
-                        #     messages.success(request, 'Stock Updated Successfully')
                         messages.success(request, 'Stock Updated Successfully')
                 else:
                     form.save()
@@ -91,8 +83,6 @@ def pk_quotation_add(request,quotation_id=0):
             if form.is_valid():
                 form.save()
                 print("quotation Form is Valid")
-                stock_purchase_num = PkquotationInfo.objects.get(pk=quotation_id).pkqt_stock_purchase_number
-                last_id = quotation_id
                 cost_type_id = PkquotationInfo.objects.get(pk=quotation_id).pkqt_cost_type.id
                 if int(cost_type_id) == 8:
                     stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
@@ -108,15 +98,6 @@ def pk_quotation_add(request,quotation_id=0):
                         return redirect(request.META['HTTP_REFERER'])
                     else:
                         form.save()
-                        print("quotation Form is Valid")
-                        # last_id = (PkquotationInfo.objects.latest('id')).id
-                        # stock_status = (PkquotationInfo.objects.latest('id')).pkqt_stock_status
-                        # print('stock_status',stock_status)
-                        # if stock_status ==2:
-                        #     messages.success(request, 'Stock Successfully Retrieved & Supplied')
-                        #     update_reduced_dimensions(stock_purchase_num,last_id)
-                        # else:
-                        #     messages.success(request, 'Stock Updated Successfully')
                         messages.success(request, 'Stock Updated Successfully')
                 else:
                     form.save()
