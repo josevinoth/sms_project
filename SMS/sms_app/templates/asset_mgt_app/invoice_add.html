@@ -101,14 +101,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Billing Start Date</span>
 									</div>
-									{% render_field invoice_form.bill_start_date type="date" id="bill_start_date" class="form-control " %}
+									{% render_field invoice_form.bill_start_date type="date" id="bill_start_date" onchange="no_of_days_calc()"  class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Billing End Date</span>
 									</div>
-									{% render_field invoice_form.bill_end_date type="date" id="bill_end_date" class="form-control " %}
+									{% render_field invoice_form.bill_end_date type="date" id="bill_end_date" onchange="no_of_days_calc()"  class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -257,6 +257,20 @@
 </form>
 
 <script>
+	function no_of_days_calc()
+	{
+		bill_start_date_val= new Date(document.getElementById("bill_start_date").value);
+		bill_end_date_val= new Date(document.getElementById("bill_end_date").value);
+		// Calculate the difference in time (in milliseconds)
+    	time_difference = bill_end_date_val - bill_start_date_val;
+    	// Convert the time difference from milliseconds to days
+    	no_of_days = (time_difference / (1000 * 3600 * 24))+1;
+		document.getElementById("bill_no_of_days").value=no_of_days;
+	}
+
+</script>
+
+<script>
 $(document).ready(function() {
 	document.getElementById("bill_updated_by").value ='{{user_id}}';
 	document.getElementById("bill_weight").value ='{{weight_sum}}';
@@ -269,24 +283,17 @@ $(document).ready(function() {
 	document.getElementById("bill_tot_crane_charges").value ='{{crane_cost_sum}}';
 	document.getElementById("bill_tot_forklift_charges").value ='{{forklift_cost_sum}}';
 	bvm_invoice=document.getElementById("bill_customer_name").value
-	bill_start_date_val=document.getElementById("bill_start_date").value
-	bill_end_date_val=document.getElementById("bill_end_date").value
-	document.getElementById("bill_no_of_days").value='{{no_of_days}}';
-	bill_no_of_days_val=document.getElementById("bill_no_of_days").value
-	if (bill_start_date_val=="")
+	customer_type_val='{{customer_type_id}}'
+	if (customer_type_val==1)
+	{
 		document.getElementById("bill_start_date").value='{{min_check_in_time}}';
-	else
-		document.getElementById("bill_start_date").value=bill_start_date_val;
-
-	if (bill_end_date_val=="")
 		document.getElementById("bill_end_date").value='{{max_check_out_time}}';
+		document.getElementById("bill_no_of_days").value='{{no_of_days}}';
+	}
 	else
-		document.getElementById("bill_end_date").value=bill_end_date_val;
-
-<!--	if (bill_no_of_days_val==0)-->
-<!--		document.getElementById("bill_no_of_days").value='{{no_of_days}}';-->
-<!--	else-->
-<!--		document.getElementById("bill_no_of_days").value=bill_no_of_days_val;-->
+	{
+		no_of_days_calc()
+	}
 
 	if (bvm_invoice=="")
 	{
@@ -335,20 +342,6 @@ $(document).ready(function() {
 			bill_start_date_val=document.getElementById("bill_start_date").value
 			bill_end_date_val=document.getElementById("bill_end_date").value
 			bill_no_of_days_val=document.getElementById("bill_no_of_days").value
-			if (bill_start_date_val=="")
-				document.getElementById("bill_start_date").value=min_check_in_time;
-			else
-				document.getElementById("bill_start_date").value=bill_start_date_val;
-
-			if (bill_end_date_val=="")
-				document.getElementById("bill_end_date").value=max_check_out_time;
-			else
-				document.getElementById("bill_end_date").value=bill_end_date_val;
-
-<!--			if (bill_no_of_days_val=="")-->
-<!--				document.getElementById("bill_no_of_days").value=max_storage_days;-->
-<!--			else-->
-<!--				document.getElementById("bill_no_of_days").value=bill_no_of_days_val;-->
 
        		fumigation_charge_change_fn()
        }

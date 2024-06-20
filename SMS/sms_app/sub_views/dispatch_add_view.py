@@ -10,11 +10,6 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
-from django.views import View
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Frame, PageTemplate, BaseDocTemplate
 from xhtml2pdf import pisa
 
 from ..forms import DispatchaddForm
