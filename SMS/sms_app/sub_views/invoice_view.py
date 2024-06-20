@@ -32,7 +32,7 @@ def invoice_add(request,invoice_id=0):
             count_stocks=len(list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num)))
 
             # check whether shipper details added
-            if count_stocks==200000:
+            if count_stocks==0:
                 messages.error(request, 'Add Shipper Invoice!')
                 return redirect(request.META['HTTP_REFERER'])
             else:
@@ -60,11 +60,9 @@ def invoice_add(request,invoice_id=0):
                 else:
                     total_area=0
                     messages.error(request, 'Unable to Calculate Total Area!')
-                print('customer_type_id',customer_type_id)
 
                 # check loading unloading crane and forklift charges
                 for k in wh_job_num:
-                    print('K',k)
                     # check warehouse charges based on customer type
                     if customer_type_id == 2:
                         print("Inside Exclusive Case")
@@ -149,7 +147,6 @@ def invoice_add(request,invoice_id=0):
                         dispatch_num_2 = list((Warehouse_goods_info.objects.filter(wh_job_no=k).values_list('wh_dispatch_num', flat=True)).distinct())
 
                         billing_truck_type = (Dispatch_info.objects.filter(dispatch_num__in=dispatch_num_2).values_list('dispatch_billing_truck_type', flat=True)).distinct()
-                        print('billing_truck_type',billing_truck_type)
 
                         # Check if the list is empty or all elements are None
                         if not billing_truck_type or all(bt is None for bt in billing_truck_type):
@@ -159,14 +156,11 @@ def invoice_add(request,invoice_id=0):
                             # Proceed with the original list including None values
                             billing_truck_type_id = billing_truck_type
 
-                        print('billing_truck_type_id', billing_truck_type_id)
                         for dis_num in dispatch_num_2:
-                            print('dis_num',dis_num)
                             billing_truck_type = Dispatch_info.objects.get(dispatch_num=dis_num).dispatch_billing_truck_type.id
-                            print('billing_truck_type',billing_truck_type)
+
                             if billing_truck_type == 1:
                                 print("Inside Truck Type 1")
-                                print('k',k)
                                 try:
                                     gatein_truck_type = Gatein_info.objects.get(gatein_job_no=k).gatein_truck_type
                                     vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=gatein_truck_type).id
@@ -178,8 +172,6 @@ def invoice_add(request,invoice_id=0):
                                         warehouse_charge = 0
                                         messages.error(request,'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
                                         return redirect(request.META['HTTP_REFERER'])
-                                    print('vehicle_type_id', vehicle_type_id)
-                                    print('warehouse_charge', warehouse_charge)
                                 except:
                                     messages.error(request, 'Check Vehicle Type Gate-In ' + str(k))
                                     return redirect(request.META['HTTP_REFERER'])
@@ -194,8 +186,6 @@ def invoice_add(request,invoice_id=0):
                                         warehouse_charge = 0
                                         messages.error(request,'Warehouse Storage Charges not available in master for selected Customer and Vehicle Type!')
                                         return redirect(request.META['HTTP_REFERER'])
-                                    print('vehicle_type_id',vehicle_type_id)
-                                    print('warehouse_charge',warehouse_charge)
                                 except:
                                     messages.error(request, 'Check Vehicle Type Gate-In ' + str(k))
                                     return redirect(request.META['HTTP_REFERER'])
@@ -212,7 +202,6 @@ def invoice_add(request,invoice_id=0):
                                 # Convert to datetime if necessary
                                 if isinstance(min_check_in_time, datetime):
                                     min_check_in_time = min_check_in_time.date()
-                                print(min_check_in_time)
 
                                 # Extract the list of check-out times
                                 checkout_times = Warehouse_goods_info.objects.filter(wh_job_no=k,wh_dispatch_num=dis_num).values_list('wh_checkout_time', flat=True)
@@ -221,9 +210,7 @@ def invoice_add(request,invoice_id=0):
                                 # Convert to datetime if necessary
                                 if isinstance(max_check_out_time, datetime):
                                     max_check_out_time = max_check_out_time.date()
-                                print(max_check_out_time)
                                 max_storage_days = ((max_check_out_time - min_check_in_time).days)
-                                print('max_storage_days', max_storage_days)
                             except:
                                 min_check_in_time = 0
                                 max_check_out_time = 0
@@ -251,7 +238,6 @@ def invoice_add(request,invoice_id=0):
                         piece_rate_val = 0
                         total_loading_cost = piece_rate_val * no_of_pieces
                     else:
-                        print('weight_per_piece',weight_per_piece)
                         try:
                             piece_rate = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_min_wt__lte=weight_per_piece,whrm_max_wt__gte=weight_per_piece, whrm_charge_type=3)
                             piece_rate_val = piece_rate.whrm_rate
@@ -369,7 +355,6 @@ def invoice_add(request,invoice_id=0):
 
                 # calculate checkin_times & checkout_times, max_storage_days for Invoice voucher
                 try:
-                    print('Voucher Num', voucher_num)
                     # Extract the list of check-in times
                     checkin_times = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_checkin_time', flat=True)
                     # Find the minimum check-in time
@@ -377,7 +362,6 @@ def invoice_add(request,invoice_id=0):
                     # Convert to datetime if necessary
                     if isinstance(min_check_in_time, datetime):
                         min_check_in_time = min_check_in_time.date()
-                    print(min_check_in_time)
 
                     # Extract the list of check-out times
                     checkout_times = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_checkout_time', flat=True)
@@ -386,9 +370,7 @@ def invoice_add(request,invoice_id=0):
                     # Convert to datetime if necessary
                     if isinstance(max_check_out_time, datetime):
                         max_check_out_time = max_check_out_time.date()
-                    print(max_check_out_time)
                     max_storage_days = ((max_check_out_time - min_check_in_time).days)
-                    print('max_storage_days', max_storage_days)
                 except:
                     min_check_in_time = 0
                     max_check_out_time = 0
