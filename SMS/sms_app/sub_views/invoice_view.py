@@ -243,7 +243,7 @@ def invoice_add(request,invoice_id=0):
                             piece_rate_val = piece_rate.whrm_rate
                             total_loading_cost = piece_rate_val * no_of_pieces
                         except ObjectDoesNotExist:
-                            messages.error(request,'Loading/Unloading Charges not available in master for selected Customer for weight! '+str(total_weight)+str(' kg'))
+                            messages.error(request,'Loading/Unloading Charges not available in master for selected Customer for weight! '+str(weight_per_piece)+str(' kg'))
                             return redirect(request.META['HTTP_REFERER'])
 
                     # Calculate Crane and Forklift cost
