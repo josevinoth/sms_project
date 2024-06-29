@@ -143,6 +143,7 @@ def invoice_add(request,invoice_id=0):
                             pre_gate_in_nums= sorted(list(set(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_dispatch_id__dispatch_billing_truck_type=btt).values_list('wh_gate_injob_no_id__gatein_pre_id',flat=True))))
                             print('pre_gate_in_nums', pre_gate_in_nums)
                             for pgn in pre_gate_in_nums:
+                                print('exp',Gatein_pre_info.objects.get(pk=pgn).gatein_pre_number)
                                 print('pgn',pgn)
                                 vehicle_type=list((Warehouse_goods_info.objects.filter(wh_gate_injob_no_id__gatein_pre_id=pgn).values_list('wh_gate_injob_no_id__gatein_truck_type',flat=True).distinct()))
                                 vehicle_type_id=VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type[0]).id
@@ -165,7 +166,7 @@ def invoice_add(request,invoice_id=0):
                                 storage_cost_total = round((warehouse_charge * max_storage_days), 2)
                                 print('storage_cost_total', storage_cost_total)
 
-                                ids=Warehouse_goods_info.objects.filter(wh_gate_injob_no_id__gatein_pre_id=pgn).values_list('id',flat=True)
+                                ids=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_gate_injob_no_id__gatein_pre_id=pgn).values_list('id',flat=True)
                                 for index,id in enumerate(ids):
                                     if index == 0:
                                         print('Index is 0')
