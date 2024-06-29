@@ -185,13 +185,13 @@ def invoice_add(request,invoice_id=0):
                             print('dispatch_ids', dispatch_ids)
                             for dis in dispatch_ids:
                                 print('dis',dis)
-                                vehicle_type_id=Warehouse_goods_info.objects.get(wh_dispatch_id=dis).wh_dispatch_id.dispatch_truck_type
+                                vehicle_type_id=list((Warehouse_goods_info.objects.filter(wh_dispatch_id=dis).values_list('wh_dispatch_id__dispatch_truck_type',flat=True).distinct()))
                                 print('vehicle_type_id',vehicle_type_id)
                                 try:
                                     warehouse_charge = WhratemasterInfo.objects.get(
                                         whrm_customer_name=customer_id,
                                         whrm_charge_type=1,
-                                        whrm_vehicle_type=vehicle_type_id
+                                        whrm_vehicle_type=vehicle_type_id[0]
                                     ).whrm_rate
                                     # unique_charges.add(warehouse_charge)
                                 except ObjectDoesNotExist:
