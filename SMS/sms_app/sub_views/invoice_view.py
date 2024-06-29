@@ -148,6 +148,7 @@ def invoice_add(request,invoice_id=0):
                                 vehicle_type=list((Warehouse_goods_info.objects.filter(wh_gate_injob_no_id__gatein_pre_id=pgn).values_list('wh_gate_injob_no_id__gatein_truck_type',flat=True).distinct()))
                                 vehicle_type_id=VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type[0]).id
                                 print('vehicle_type_id',vehicle_type_id)
+                                truck_num=sorted(list(set(Warehouse_goods_info.objects.filter(wh_gate_injob_no_id__gatein_pre_id=pgn).values_list('wh_gate_injob_no_id__gatein_truck_number',flat=True))))
                                 try:
                                     warehouse_charge = WhratemasterInfo.objects.get(
                                         whrm_customer_name=customer_id,
@@ -166,7 +167,7 @@ def invoice_add(request,invoice_id=0):
                                 storage_cost_total = round((warehouse_charge * max_storage_days), 2)
                                 print('storage_cost_total', storage_cost_total)
 
-                                ids=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_gate_injob_no_id__gatein_pre_id=pgn).values_list('id',flat=True)
+                                ids=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_gate_injob_no_id__gatein_pre_id=pgn,wh_gate_injob_no_id__gatein_truck_number=truck_num).values_list('id',flat=True)
                                 for index,id in enumerate(ids):
                                     if index == 0:
                                         print('Index is 0')
@@ -205,7 +206,7 @@ def invoice_add(request,invoice_id=0):
                                 storage_cost_total = round((warehouse_charge * max_storage_days), 2)
                                 print('storage_cost_total', storage_cost_total)
 
-                                ids=Warehouse_goods_info.objects.filter(wh_dispatch_id=dis).values_list('id',flat=True)
+                                ids=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_dispatch_id=dis).values_list('id',flat=True)
                                 for index,id in enumerate(ids):
                                     if index == 0:
                                         print('Index is 0')
