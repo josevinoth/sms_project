@@ -18,10 +18,14 @@ class Loadingbay_Info(models.Model):
     lb_stock_amount_in = models.FloatField(null=True,default=0.0)
     lb_stock_invoice_currency = models.ForeignKey(Currency_type, on_delete=models.CASCADE, blank=True, null=True)
     lb_stock_currency_con = models.FloatField(null=True,default=0.0)
-    lb_mh_manual = models.BooleanField(null=True)
-    lb_mh_forklift = models.BooleanField(null=True)
-    lb_mh_crane = models.BooleanField(null=True)
-    lb_mh_handtrolley = models.BooleanField(null=True)
+    lb_mh_manual = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True,
+                                     related_name='lb_mh_manual', db_column='lb_mh_manual', default=2)
+    lb_mh_forklift = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True,
+                                       related_name='lb_mh_forklift', db_column='lb_mh_forklift', default=2)
+    lb_mh_crane = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, related_name='lb_mh_crane',
+                                    db_column='lb_mh_crane', default=2)
+    lb_mh_handtrolley = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True,
+                                          related_name='lb_mh_handtrolley', db_column='lb_mh_handtrolley', default=2)
     lb_crane_time = models.FloatField(blank=False, null=False,default=0.0)
     lb_forklift_time = models.FloatField(blank=False, null=False,default=0.0)
     lb_forklift_charges_std_l2hr = models.FloatField(blank=False, null=False,default=0.0)
