@@ -1,10 +1,10 @@
 {% block content %}
 <div class="container-fluid row">
-<!--    <div class="col-md-1">-->
-<!--        <a href="{% url 'invoice_list' %}" class="btn btn-primary btn-block btn-lg">-->
-<!--            <i class="fas fa-arrow-left"></i>-->
-<!--        </a>-->
-<!--    </div>-->
+    <!--    <div class="col-md-1">-->
+    <!--        <a href="{% url 'invoice_list' %}" class="btn btn-primary btn-block btn-lg">-->
+    <!--            <i class="fas fa-arrow-left"></i>-->
+    <!--        </a>-->
+    <!--    </div>-->
     <!--    <div class="col-md-1">-->
     <!--        <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">-->
     <!--            <i class="fas fa-plus"></i>-->
@@ -49,6 +49,7 @@
             <th>Total Loading Cost (INR)</th>
             <th>Total Un-Loading Cost (INR)</th>
             <th>Storage Cost/Day (INR)</th>
+            <th>No of Days</th>
             <th>Total Storage Cost (INR)</th>
             <th>Crane Cost upto 2hr (INR)</th>
             <th>Crane Cost after 2hr (INR)</th>
@@ -59,7 +60,6 @@
             <th>Weight</th>
             <th>In Time</th>
             <th>Out Time</th>
-            <th>No of Days</th>
             <th>Goods Status</th>
         </thead>
         <tbody>
@@ -84,6 +84,7 @@
             <td> {{shipperinvoiceinfo.wh_total_loading_cost}}</td>
             <td> {{shipperinvoiceinfo.wh_total_loading_cost}}</td>
             <td> {{shipperinvoiceinfo.wh_storage_cost_per_day}}</td>
+            <td> {{shipperinvoiceinfo.wh_storage_time}}</td>
             <td> {{shipperinvoiceinfo.wh_storage_cost_total}}</td>
             <td> {{shipperinvoiceinfo.wh_crane_cost_l2h}}</td>
             <td> {{shipperinvoiceinfo.wh_crane_cost_g2h}}</td>
@@ -94,7 +95,6 @@
             <td> {{shipperinvoiceinfo.wh_goods_weight}}</td>
             <td> {{shipperinvoiceinfo.wh_checkin_time}}</td>
             <td> {{shipperinvoiceinfo.wh_checkout_time}}</td>
-            <td> {{shipperinvoiceinfo.wh_storage_time}}</td>
             <td> {{shipperinvoiceinfo.wh_check_in_out}}</td>
         </tr>
         {% endfor %}
