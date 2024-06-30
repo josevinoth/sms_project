@@ -166,7 +166,7 @@ def invoice_add(request,invoice_id=0):
                                 print('max_storage_days', max_storage_days)
                                 storage_cost_total = round((warehouse_charge * max_storage_days), 2)
                                 print('storage_cost_total', storage_cost_total)
-
+                                print('truck_num',truck_num)
                                 ids=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_gate_injob_no_id__gatein_pre_id=pgn,wh_gate_injob_no_id__gatein_truck_number=truck_num).values_list('id',flat=True)
                                 for index,id in enumerate(ids):
                                     if index == 0:
