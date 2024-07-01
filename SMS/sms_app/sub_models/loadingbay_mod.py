@@ -19,7 +19,7 @@ class Loadingbay_Info(models.Model):
     lb_stock_invoice_currency = models.ForeignKey(Currency_type, on_delete=models.CASCADE, blank=True, null=True)
     lb_stock_currency_con = models.FloatField(null=True,default=0.0)
     lb_mh_manual = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True,
-                                     related_name='lb_mh_manual', db_column='lb_mh_manual', default=2)
+                                     related_name='lb_mh_manual', db_column='lb_mh_manual', default=1)
     lb_mh_forklift = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True,
                                        related_name='lb_mh_forklift', db_column='lb_mh_forklift', default=2)
     lb_mh_crane = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, related_name='lb_mh_crane',

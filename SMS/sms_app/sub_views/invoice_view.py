@@ -264,28 +264,32 @@ def invoice_add(request,invoice_id=0):
                 # check Crane and forklift charges
                 for k in wh_job_num:
                     # Calculate Loading & Unloading Charge
-                    total_weight = Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
-                    no_of_pieces = Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
-                    try:
-                        weight_per_piece = round((total_weight) / (no_of_pieces),0)
-                    except ZeroDivisionError:
-                        weight_per_piece = float(0.0)
-
-                    if customer_type_id==2:
-                        piece_rate_val = 0
-                        total_loading_cost = piece_rate_val * no_of_pieces
-                    else:
+                    manual_handling_status=Loadingbay_Info.objects.get(lb_job_no=k).lb_mh_manual.id
+                    if manual_handling_status==1:
+                        total_weight = Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
+                        no_of_pieces = Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
                         try:
-                            piece_rate = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_min_wt__lte=weight_per_piece,whrm_max_wt__gte=weight_per_piece, whrm_charge_type=3)
-                            piece_rate_val = piece_rate.whrm_rate
-                            total_loading_cost = piece_rate_val * no_of_pieces
-                        except ObjectDoesNotExist:
-                            messages.error(request,'Loading/Unloading Charges not available in master for selected Customer for weight! '+str(weight_per_piece)+str(' kg'))
-                            return redirect(request.META['HTTP_REFERER'])
-                        except MultipleObjectsReturned:
-                            messages.error(request,'Multiple loading/unloading charge rates found in master for selected Customer and weight! Please check the master data.'+str(weight_per_piece)+str(' kg'))
-                            return redirect(request.META['HTTP_REFERER'])
+                            weight_per_piece = round((total_weight) / (no_of_pieces),0)
+                        except ZeroDivisionError:
+                            weight_per_piece = float(0.0)
 
+                        if customer_type_id==2:
+                            piece_rate_val = 0
+                            total_loading_cost = piece_rate_val * no_of_pieces
+                        else:
+                            try:
+                                piece_rate = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_min_wt__lte=weight_per_piece,whrm_max_wt__gte=weight_per_piece, whrm_charge_type=3)
+                                piece_rate_val = piece_rate.whrm_rate
+                                total_loading_cost = piece_rate_val * no_of_pieces
+                            except ObjectDoesNotExist:
+                                messages.error(request,'Loading/Unloading Charges not available in master for selected Customer for weight! '+str(weight_per_piece)+str(' kg'))
+                                return redirect(request.META['HTTP_REFERER'])
+                            except MultipleObjectsReturned:
+                                messages.error(request,'Multiple loading/unloading charge rates found in master for selected Customer and weight! Please check the master data.'+str(weight_per_piece)+str(' kg'))
+                                return redirect(request.META['HTTP_REFERER'])
+                    else:
+                        piece_rate_val =0
+                        total_loading_cost =0
                     # Calculate Crane and Forklift cost
                     try:
                         crane_hours = Loadingbay_Info.objects.get(lb_job_no=k).lb_crane_time
