@@ -152,10 +152,10 @@ def invoice_add(request,invoice_id=0):
                             )
 
                             for pgn in pre_gate_in_nums:
-                                vehicle_type = Warehouse_goods_info.objects.filter(
+                                vehicle_type = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,
                                     wh_gate_injob_no_id__gatein_pre_id=pgn
                                 ).values_list('wh_gate_injob_no_id__gatein_truck_type', flat=True).first()
-
+                                print('vehicle_type',vehicle_type)
                                 vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
                                 truck_num = sorted(
                                     Warehouse_goods_info.objects.filter(

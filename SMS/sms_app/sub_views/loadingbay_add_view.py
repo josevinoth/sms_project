@@ -145,8 +145,10 @@ def loadingbay_add(request, loadingbay_id=0):
             loadingbay_form = LoadingbayddForm(request.POST)
             loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES)
             if loadingbay_form.is_valid():
-                forkift_status=Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_forklift
-                crane_status=Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_crane
+                # forkift_status=Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_forklift
+                # crane_status=Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_crane
+                forkift_status=request.POST.get('lb_mh_forklift')
+                crane_status=request.POST.get('lb_mh_crane')
                 if forkift_status==1:
                     if forklift_1st_2hr == None or forklift_nxt_2hr == None:
                         messages.error(request,'Forklift Charges not available in master for selected Job/Stock Number!')
@@ -155,7 +157,6 @@ def loadingbay_add(request, loadingbay_id=0):
                         print("Loadingbay Main Form Saved")
                         loadingbay_form.save()
                         messages.success(request, 'Record Updated Successfully')
-
                 elif crane_status==1:
                     if crane_1st_2hr == None or crane_nxt_2hr == None:
                         messages.error(request,'Crane Charges not available in master for selected Job/Stock Number!')
@@ -192,18 +193,28 @@ def loadingbay_add(request, loadingbay_id=0):
             loadingbay_form = LoadingbayddForm(request.POST, instance=loadingbay_info)
             loadingbayimg_info=Loadingbayimages_Info.objects.get(lbimg_job_no=wh_job_id)
             loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES,instance=loadingbayimg_info)
-            if loadingbay_form.is_valid():
-                if crane_1st_2hr == None or crane_nxt_2hr == None or forklift_1st_2hr == None or forklift_nxt_2hr == None:
-                    messages.error(request,
-                                   'Crane or Forklift Charges not available in master for selected Job/Stock Number!')
+            forkift_status = request.POST.get('lb_mh_forklift')
+            crane_status = request.POST.get('lb_mh_crane')
+            if forkift_status == 1:
+                if forklift_1st_2hr == None or forklift_nxt_2hr == None:
+                    messages.error(request, 'Forklift Charges not available in master for selected Job/Stock Number!')
                     return redirect(request.META['HTTP_REFERER'])
                 else:
-                    loadingbay_form.save()
                     print("Loadingbay Main Form Saved")
+                    loadingbay_form.save()
+                    messages.success(request, 'Record Updated Successfully')
+            elif crane_status == 1:
+                if crane_1st_2hr == None or crane_nxt_2hr == None:
+                    messages.error(request, 'Crane Charges not available in master for selected Job/Stock Number!')
+                    return redirect(request.META['HTTP_REFERER'])
+                else:
+                    print("Loadingbay Main Form Saved")
+                    loadingbay_form.save()
                     messages.success(request, 'Record Updated Successfully')
             else:
-                print("Loadingbay Main Form Not saved")
-                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+                print("Loadingbay Main Form Saved")
+                loadingbay_form.save()
+                messages.success(request, 'Record Updated Successfully')
 
             if loadingbayimg_form.is_valid():
                 if crane_1st_2hr == None or crane_nxt_2hr == None or forklift_1st_2hr == None or forklift_nxt_2hr == None:
