@@ -263,6 +263,7 @@ def invoice_add(request,invoice_id=0):
 
                 # check Crane and forklift charges
                 for k in wh_job_num:
+                    print('k',k)
                     # Calculate Loading & Unloading Charge
                     manual_handling_status=Loadingbay_Info.objects.get(lb_job_no=k).lb_mh_manual.id
                     if manual_handling_status==1:

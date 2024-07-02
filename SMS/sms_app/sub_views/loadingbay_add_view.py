@@ -115,6 +115,8 @@ def loadingbay_add(request, loadingbay_id=0):
             loadingbay_form = LoadingbayddForm(instance=loadingbay_info)
             loadingbayimg_info=Loadingbayimages_Info.objects.get(lbimg_job_no=wh_job_id)
             loadingbayimg_form = LoadingbayImagesForm(request.FILES,instance=loadingbayimg_info)
+            forkift_status = Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_forklift
+            crane_status = Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_crane
             context = {
                 'currency_EUR': currency_EUR,
                 'currency_INR': currency_INR,
@@ -145,8 +147,6 @@ def loadingbay_add(request, loadingbay_id=0):
             loadingbay_form = LoadingbayddForm(request.POST)
             loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES)
             if loadingbay_form.is_valid():
-                # forkift_status=Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_forklift
-                # crane_status=Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_crane
                 forkift_status=request.POST.get('lb_mh_forklift')
                 crane_status=request.POST.get('lb_mh_crane')
                 if forkift_status==1:
@@ -193,8 +193,8 @@ def loadingbay_add(request, loadingbay_id=0):
             loadingbay_form = LoadingbayddForm(request.POST, instance=loadingbay_info)
             loadingbayimg_info=Loadingbayimages_Info.objects.get(lbimg_job_no=wh_job_id)
             loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES,instance=loadingbayimg_info)
-            forkift_status = request.POST.get('lb_mh_forklift')
-            crane_status = request.POST.get('lb_mh_crane')
+            forkift_status = Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_forklift
+            crane_status = Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_crane
             if forkift_status == 1:
                 if forklift_1st_2hr == None or forklift_nxt_2hr == None:
                     messages.error(request, 'Forklift Charges not available in master for selected Job/Stock Number!')
