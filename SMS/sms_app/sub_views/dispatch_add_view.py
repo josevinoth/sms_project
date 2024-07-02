@@ -246,10 +246,10 @@ def dispatch_add_goods(request):
             Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=dispatch_num_val)
             Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_checkout_time=current_date)
             Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_truck_type=vehicle_type)
-            check_in_date = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time
-            check_out_date = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkout_time
+            check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
+            check_out_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkout_time)
             date_diff = (check_out_date - check_in_date)  # Differnce between dates
-            date_diff_days = date_diff.days
+            date_diff_days = (date_diff.days)
             duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
             storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
             # storage_days = (check_out_date - check_in_date).days  # In days
