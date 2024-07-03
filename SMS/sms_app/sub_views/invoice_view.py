@@ -88,15 +88,17 @@ def invoice_add(request,invoice_id=0):
                     max_check_out_time = BilingInfo.objects.get(pk=invoice_id).bill_end_date
                     max_storage_days = ((max_check_out_time - min_check_in_time).days) + 1
 
-                    invoice_id = list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('id', flat=True))
+                    invoices = list((Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_gate_injob_no_id', flat=True)).distinct())
+                    for inv in invoices:
+                        invoice_id = list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_gate_injob_no_id=inv).values_list('id',flat=True))
+                        for i in range(0, len(invoice_id)):
+                            if i == 0:
+                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=round(warehouse_charge_1, 2))
+                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
+                            else:
+                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=0)
+                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=0)
 
-                    for i in range(0, len(invoice_id)):
-                        if i == 0:
-                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=round(warehouse_charge_1, 2))
-                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
-                        else:
-                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=0)
-                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=0)
                 elif customer_type_id == 3:
                     print("Inside Dedicated Case")
                     try:
@@ -123,15 +125,16 @@ def invoice_add(request,invoice_id=0):
                     max_check_out_time = BilingInfo.objects.get(pk=invoice_id).bill_end_date
                     max_storage_days = ((max_check_out_time - min_check_in_time).days) + 1
 
-                    invoice_id = list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('id', flat=True))
-
-                    for i in range(0, len(invoice_id)):
-                        if i == 0:
-                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=round(warehouse_charge_1, 2))
-                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
-                        else:
-                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=0)
-                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=0)
+                    invoices = list((Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_gate_injob_no_id', flat=True)).distinct())
+                    for inv in invoices:
+                        invoice_id = list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_gate_injob_no_id=inv).values_list('id',flat=True))
+                        for i in range(0, len(invoice_id)):
+                            if i == 0:
+                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=round(warehouse_charge_1, 2))
+                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
+                            else:
+                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=0)
+                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=0)
                 else:
                     print("Inside Case To Case")
                     # Get billing_truck_type for voucher number
