@@ -108,3 +108,4 @@ from .sub_views.pk_quotation_summary_view import pk_quotationsummary_add,pk_quot
 from .sub_views.pk_retrival_view import pk_retrival_add,pk_retrival_list,pk_retrival_delete,pK_retrival_cancel
 from .sub_views.pk_stock_acceptance_view import pK_acceptance_cancel,pk_acceptance_add,pk_acceptance_delete,pk_acceptance_list
 from .sub_views.comments_add_view import comments_list,comments_delete,comments_add,comments_cancel
+from .sub_views.chart_view import bar_chart,bar_chart_data

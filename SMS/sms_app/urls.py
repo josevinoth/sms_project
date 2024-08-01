@@ -498,4 +498,6 @@ urlpatterns = [
     path('po_dimension_update/<int:po_dimension_id>', views.po_dimension_add, name='po_dimension_update'),  # update po_dimension
     path('po_dimension_delete/<int:po_dimension_id>', views.po_dimension_delete, name='po_dimension_delete'),# delete po_dimension
     path('po_dimension_cancel/', views.po_dimension_cancel, name='po_dimension_cancel'),  # cancel po_dimension
+    path('bar_chart_data/', views.bar_chart_data, name='bar_chart_data'),
+    path('bar_chart/', views.bar_chart, name='bar_chart'),
 ]
