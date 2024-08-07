@@ -1,4 +1,5 @@
 from django.db import models
+from .sub_models.assign_status import assign_status_info
 from .sub_models.pk_item_mod import pk_itemInfo
 from .sub_models.pk_itemdescription_mod import pk_itemdescriptionInfo
 from .sub_models.pk_stock_status_mod import pk_stock_statusinfo

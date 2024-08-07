@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Product_info,Department_info,MyUser,Location_info,Vendor_info,Insurance_Info,UnitInfo
+from ..models import Product_info,assign_status_info,MyUser,Location_info,Vendor_info,Insurance_Info,UnitInfo
 
 class AssetInfo(models.Model):
     asset_number = models.CharField(max_length=50,null=True,blank=True)
@@ -22,5 +22,7 @@ class AssetInfo(models.Model):
     asset_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,related_name='asset_updated_by',db_column='asset_updated_by')
     asset_remarks = models.TextField(max_length=300,null=True,blank=True)
     asset_audit_date = models.DateTimeField(null=True, blank=True)
+    asset_assign_status = models.ForeignKey(assign_status_info, on_delete=models.CASCADE, null=True,blank=True,related_name='asset_assign_status',
+                                         db_column='asset_assign_status')
     def __str__(self):
         return self.asset_number

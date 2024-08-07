@@ -1,6 +1,4 @@
 {% extends "asset_mgt_app/base.html" %}
-
-
 {% block content %}
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
@@ -32,6 +30,7 @@
             <th>Status</th>
             <th>Edit</th>
             <th>Delete</th>
+        </tr>
     </thead>
     <tbody>
         {% for departmentinfo in department_list %}
@@ -39,7 +38,6 @@
                 <td> {{departmentinfo.dept_name}}</td>
                 <td> {{departmentinfo.dept_status}}</td>
                 <td>
-
                     <a class="btn btn-primary" href="{% url 'department_update' departmentinfo.id %}" >
                         <i class="far fa-edit"></i>
                     </a>
@@ -57,11 +55,9 @@
     </tbody>
 </table>
 </div>
-
 <script>
     $(document).ready(function() {
     $('#department_list').DataTable();
 } );
 </script>
-
 {% endblock content %}
