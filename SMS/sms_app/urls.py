@@ -132,7 +132,7 @@ urlpatterns = [
     path('role_insert', views.role_add, name='role_insert'),  # Add role
     path('role_update/<int:role_id>/', views.role_add, name='role_update'),  # Update role
     path('role_delete/<int:role_id>/', views.role_delete, name='role_delete'),  # Delete role
-    path('password_reset/', views.password_reset_request, name='password_reset'),
+    path('password_reset', views.password_reset_request, name='password_reset'),
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name="password/password_reset_done.html"), name='password_reset_done'),  # Password Reset
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name="password/password_reset_confirm.html"), name='password_reset_confirm'),# Password Reset
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password/password_reset_complete.html'), name='password_reset_complete'),# Password Reset
