@@ -25,3 +25,9 @@ class UserextForm(forms.ModelForm):
         self.fields['emp_role'].empty_label = "--Select--"
         self.fields['department'].empty_label = "--Select--"
         self.fields['emp_organisation'].empty_label = "--Select--"
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email and User.objects.filter(email=email).exists():
+            raise ValidationError('Email is already in use.')
+        return email
