@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.utils import timezone
-from ..models import Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
+from ..models import RequirementsInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
 from django.shortcuts import render, redirect
 from django.db.models import Sum
 from datetime import timedelta
@@ -24,6 +25,7 @@ def home_page(request):
     wh_check_in_jobs_1 = (Warehouse_goods_info.objects.filter(wh_check_in_out=1).values('wh_job_no')).distinct()
     wh_check_in_jobs_2 = (Loadingbay_Info.objects.filter(lb_validity_date__lte=(timezone.now())+timedelta(days=1),lb_job_no__in=wh_check_in_jobs_1)).distinct()
     wh_job_count=len(wh_check_in_jobs_2)
+    open_requirements=len(RequirementsInfo.objects.filter(req_status=2))
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
@@ -43,6 +45,7 @@ def home_page(request):
                'bussiness_solution': bussiness_solution,
                'wh_job_count': wh_job_count,
                'wh_check_in_jobs_2': wh_check_in_jobs_2,
+               'open_requirements': open_requirements,
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 
@@ -62,3 +65,17 @@ def edit_wh_e_way_bill_list(request,wh_job_id):
     # job_id = Gatein_info.objects.get(gatein_job_no=wh_job_num_next).id
     url = 'loadingbay_update/' + str(wh_job_id)
     return redirect(url)
+
+@login_required(login_url='login_page')
+def open_requirements_list(request):
+    first_name = request.session.get('first_name')
+    requirements_list = (RequirementsInfo.objects.filter(req_status=2)).order_by('-id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(requirements_list, 10000)
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'requirements_list': requirements_list,
+        'first_name': first_name,
+        'page_obj': page_obj,
+    }
+    return render(request, "asset_mgt_app/requirements_list.html", context)

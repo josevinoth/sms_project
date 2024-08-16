@@ -2,7 +2,7 @@ from .sub_views.assetinfo_view import assetinfo_add,asset_list,asset_delete,asse
 from .sub_views.assign_asset_add_view import assign_asset_add,assign_asset_delete,assign_asset_list_new
 from .sub_views.department_add_view import department_add,department_delete,department_list
 from .sub_views.goods_check_view import goods_check
-from .sub_views.home_page_view import home_page,wh_e_way_bill_list,edit_wh_e_way_bill_list
+from .sub_views.home_page_view import home_page,wh_e_way_bill_list,edit_wh_e_way_bill_list,open_requirements_list
 from .sub_views.insurance_add_view import insurance_add,insurance_delete,insurance_list
 from .sub_views.location_add_view import location_add,location_list,location_delete
 from .sub_views.login_page_view import login_page

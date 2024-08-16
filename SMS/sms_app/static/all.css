@@ -343,6 +343,18 @@ nav > div a.nav-item.nav-link:focus
     margin: 0 auto; /* Center the image horizontally */
 }
 
+/*blink text*/
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.blink {
+  animation: blink 1s infinite;
 }
 
 

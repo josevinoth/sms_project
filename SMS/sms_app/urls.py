@@ -354,6 +354,7 @@ urlpatterns = [
     path('ar_comments_insert/', views.arcomments_add, name='ar_comments_insert'),  # Add ar_comments
     path('ar_comments_update/<int:arcomments_id>', views.arcomments_add, name='ar_comments_update'),  # update ar_comments
     path('ar_comments_delete/<int:arcomments_id>', views.arcomments_delete, name='ar_comments_delete'),  # delete ar_comments
+    path('open_requirements_list/', views.open_requirements_list, name='open_requirements_list'),  # open List requirements
     path('requirements_list/', views.requirements_list, name='requirements_list'),  # List requirements
     path('requirements_insert/', views.requirements_add, name='requirements_insert'),  # Add requirements
     path('requirements_update/<int:requirements_id>', views.requirements_add, name='requirements_update'),# update requirements
