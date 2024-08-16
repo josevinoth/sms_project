@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,StatusList,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
+from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
 
 class PkquotationInfo(models.Model):
     pkqt_cost_type = models.ForeignKey(Costtype, on_delete=models.CASCADE, default='')
