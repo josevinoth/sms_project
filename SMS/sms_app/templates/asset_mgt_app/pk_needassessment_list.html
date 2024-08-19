@@ -26,6 +26,7 @@
     <table id="needassessment_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>ID</th>
             <th>Created On</th>
             <th>Assessment NO.</th>
             <th>Date</th>
@@ -42,6 +43,7 @@
         <tbody>
         {% for needassessmentinfo in needassessment_list %}
         <tr>
+            <td>{{ needassessmentinfo.id }}</td>
             <td>{{ needassessmentinfo.na_created_at }}</td>
             <td>{{ needassessmentinfo.na_assessment_num }}</td>
             <td>{{ needassessmentinfo.na_date }}</td>
@@ -72,7 +74,7 @@
 <script>
     $(document).ready(function() {
     $('#needassessment_list').DataTable({
-         order: [0, 'asc' ],
+         order: [0, 'desc' ],
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'

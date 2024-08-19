@@ -41,7 +41,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Type Of Packing</span>
 									</div>
-									{% render_field form.na_type_of_pack id="na_type_of_pack" class="form-control " %}
+									{% render_field form.na_type_of_pack id="na_type_of_pack" class="form-control " onchange="package_type_change()" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Others</span>
+									</div>
+									{% render_field form.na_others_type_pack id="na_others_type_pack" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -212,8 +218,22 @@ $(document).ready(function() {
 			$('#na_dimension_list_WOH').addClass('disable_a_href');
 		}
 	}
+	package_type_change()
 });
 </script>
+
+<script>
+    function package_type_change() {
+        var type_packing = document.getElementById("na_type_of_pack").value;
+        if (type_packing == 7) {
+            $('#na_others_type_pack').removeClass('disable_a_href');
+        } else {
+            $('#na_others_type_pack').addClass('disable_a_href');
+         	document.getElementById("na_others_type_pack").value =" ";
+        }
+    }
+</script>
+
 <script>
     $(document).ready(function() {
     $('#comments_list').DataTable();

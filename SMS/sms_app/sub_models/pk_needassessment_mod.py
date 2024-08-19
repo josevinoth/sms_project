@@ -21,6 +21,8 @@ class PkneedassessmentInfo(models.Model):
     na_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='na_updated_by',db_column='na_updated_by', null=True)
     na_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,blank=True,null=True)
     na_attach = models.FileField(upload_to=Pkneedassessment_directory_path, null=True,blank=True)
+    na_others_type_pack = models.CharField(max_length=100,null=True,blank=True, default='')
+
 
     class Meta:
         ordering = ["na_assessment_num"]
