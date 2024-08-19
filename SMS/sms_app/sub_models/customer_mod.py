@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Business_Sol_info,MyUser,PaymentcycleInfo,GstexcemptionInfo,GstmodelInfo,PaymenttypeInfo,CrcountfromInfo,TrbusinesstypeInfo,CustomertypeInfo
+from ..models import Industrytype,Business_Sol_info,MyUser,PaymentcycleInfo,GstexcemptionInfo,GstmodelInfo,PaymenttypeInfo,CrcountfromInfo,TrbusinesstypeInfo,CustomertypeInfo
 
 def customercontractinfo_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
@@ -33,6 +33,7 @@ class CustomerInfo(models.Model):
     cu_contract_validity_from = models.DateTimeField(blank=True,null=True)
     cu_contract_validity_to = models.DateTimeField(blank=True,null=True)
     cu_contract = models.FileField(upload_to=customercontractinfo_directory_path, blank=True,null=True)
+    cu_industry_type = models.ForeignKey(Industrytype, blank=True, null=True, on_delete=models.CASCADE, default='')
     class Meta:
         ordering = ["cu_name"]
 
