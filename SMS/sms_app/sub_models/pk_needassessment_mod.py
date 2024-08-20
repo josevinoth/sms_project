@@ -12,7 +12,7 @@ class PkneedassessmentInfo(models.Model):
     na_wood_treatment_req = models.ForeignKey(Nawoodtreatmentreq, on_delete=models.CASCADE, default='')
     na_unloading = models.ForeignKey(Nabvmcustomer,on_delete=models.CASCADE, related_name='na_unloading',db_column='na_unloading',default='')
     na_wood_norms =models.ForeignKey(Nawoodnorms,on_delete=models.CASCADE,default='')
-    na_vehicle = models.ForeignKey(Nabvmcustomer,on_delete=models.CASCADE, related_name='na_vehicle',db_column='na_vehicle',default='')
+    na_delivery_by = models.ForeignKey(Nabvmcustomer,on_delete=models.CASCADE, related_name='na_delivery_by',db_column='na_delivery_by',null=True,blank=True,default='')
     na_vehicle_type = models.ForeignKey(VehicletypeInfo,on_delete=models.CASCADE,default='')
     na_type_of_access = models.ForeignKey(Natypeofaccess,on_delete=models.CASCADE,default='')
     na_consumables = models.ForeignKey(Stockdescription,on_delete=models.CASCADE,default='')

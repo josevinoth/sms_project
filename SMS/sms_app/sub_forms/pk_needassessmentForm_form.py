@@ -15,7 +15,7 @@ class PkneedassessmentForm(forms.ModelForm):
         self.fields['na_wood_treatment_req'].empty_label = "--Select--"
         self.fields['na_unloading'].empty_label = "--Select--"
         self.fields['na_wood_norms'].empty_label = "--Select--"
-        self.fields['na_vehicle'].empty_label = "--Select--"
+        self.fields['na_delivery_by'].empty_label = "--Select--"
         self.fields['na_vehicle_type'].empty_label = "--Select--"
         self.fields['na_type_of_access'].empty_label = "--Select--"
         self.fields['na_consumables'].empty_label = "--Select--"
