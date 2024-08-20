@@ -55,14 +55,20 @@
 									</div>
 									{% render_field form.na_wood_treatment_req  id="na_wood_treatment_req" class="form-control " %}
 								</div>
-							</div>
-							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Special Requirements</span>
+									</div>
+									{% render_field form.na_special_requirements  id="na_special_requirements" class="form-control " %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading</span>
 									</div>
 									{% render_field form.na_unloading id="na_unloading" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Norms</span>
@@ -77,13 +83,25 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Delivery Type</span>
+									</div>
+									{% render_field form.na_delivery_type id="na_delivery_type" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Delivery Location</span>
+									</div>
+									{% render_field form.na_delivery_location id="na_delivery_location" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Type</span>
 									</div>
 									{% render_field form.na_vehicle_type id="na_vehicle_type" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Type Of Access</span>
+										<span class="input-group-text">Type Of Lifting</span>
 									</div>
 									{% render_field form.na_type_of_access id="na_type_of_access" class="form-control " %}
 								</div>
@@ -92,6 +110,12 @@
 										<span class="input-group-text">Consumables</span>
 									</div>
 									{% render_field form.na_consumables id="na_consumables" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Packing Field</span>
+									</div>
+									{% render_field form.na_packing_field id="na_packing_field" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">

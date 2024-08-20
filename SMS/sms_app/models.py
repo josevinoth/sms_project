@@ -137,6 +137,7 @@ from .sub_models.na_typeofplywood_mod import Natypeofplywood
 from .sub_models.na_woodtreatmentreq_mod import Nawoodtreatmentreq
 from .sub_models.na_typeofwood_mod import Natypeofwood
 from .sub_models.na_bvm_customer_mod import Nabvmcustomer
+from.sub_models.pk_delivery_type_mod import Nadeliverytype
 from .sub_models.na_woodnorms_mod import Nawoodnorms
 from .sub_models.na_typeofaccess_mod import Natypeofaccess
 from .sub_models.na_consumables_mod import Naconsumables
@@ -147,6 +148,8 @@ from .sub_models.cost_description_mod import Costdescription
 from .sub_models.unit_of_measure_mod import Unitofmeasure
 from .sub_models.pk_stock_type_mod import Pkstocktype
 from .sub_models.stock_description_mod import Stockdescription
+from .sub_models.pk_packing_field_mod import Napackingfield
+from .sub_models.pk_special_requirements import Naspecialrequirements
 from .sub_models.pk_needassessment_mod import PkneedassessmentInfo
 from .sub_models.pk_openingstock_mod import PkopeningstockInfo
 from .sub_models.pk_stockpurchases_mod import PkstockpurchasesInfo

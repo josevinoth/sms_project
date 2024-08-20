@@ -1,5 +1,6 @@
 from django.db import models
-from ..models import StatusList,MyUser,Natypeofwork,Natypeofpack,CustomerInfo,Nawoodtreatmentreq,Nabvmcustomer,Nawoodnorms,VehicletypeInfo,Natypeofaccess,Stockdescription
+
+from ..models import StatusList,MyUser,Natypeofwork,Nadeliverytype,Naspecialrequirements,Napackingfield,Natypeofpack,CustomerInfo,Nawoodtreatmentreq,Nabvmcustomer,Nawoodnorms,VehicletypeInfo,Natypeofaccess,Stockdescription
 
 def Pkneedassessment_directory_path(instance, filename):
     return 'Pkneedassessmentfiles/{0}/{1}'.format(instance.na_assessment_num, filename)
@@ -22,6 +23,10 @@ class PkneedassessmentInfo(models.Model):
     na_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,blank=True,null=True)
     na_attach = models.FileField(upload_to=Pkneedassessment_directory_path, null=True,blank=True)
     na_others_type_pack = models.CharField(max_length=100,null=True,blank=True, default='')
+    na_delivery_type = models.ForeignKey(Nadeliverytype,on_delete=models.CASCADE,blank=True,null=True,default='')
+    na_packing_field = models.ForeignKey(Napackingfield,on_delete=models.CASCADE,blank=True,null=True,default='')
+    na_special_requirements = models.ForeignKey(Naspecialrequirements,on_delete=models.CASCADE,blank=True,null=True,default='')
+    na_delivery_location = models.CharField(max_length=100,null=True,blank=True, default='')
 
 
     class Meta:
