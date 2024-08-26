@@ -501,4 +501,14 @@ urlpatterns = [
     path('po_dimension_cancel/', views.po_dimension_cancel, name='po_dimension_cancel'),  # cancel po_dimension
     path('bar_chart_data/', views.bar_chart_data, name='bar_chart_data'),
     path('bar_chart/', views.bar_chart, name='bar_chart'),
+    path('task_list/', views.task_list, name='task_list'),  # List task
+    path('task_insert/', views.task_add, name='task_insert'),  # Add task
+    path('task_update/<int:task_id>', views.task_add, name='task_update'),  # update task
+    path('task_delete/<int:task_id>', views.task_delete, name='task_delete'),  # delete task
+    path('timesheet_list/', views.timesheet_list, name='timesheet_list'),  # List timesheet
+    path('timesheet_insert/', views.timesheet_add, name='timesheet_insert'),  # Add timesheet
+    path('timesheet_update/<int:timesheet_id>', views.timesheet_add, name='timesheet_update'),  # update timesheet
+    path('timesheet_delete/<int:timesheet_id>', views.timesheet_delete, name='timesheet_delete'),  # delete timesheet
+    path('timesheet_nav/<int:task_id>', views.timesheet_nav, name='timesheet_nav'),  # delete timesheet
+
 ]

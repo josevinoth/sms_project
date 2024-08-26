@@ -1,0 +1,82 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" action="" id="task_add"  onload="bay_branch_name()" data-branches-url="{% url 'load_units_origin' %}">
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-3"></div>
+		<div class="col-6">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Task</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Application</span>
+									</div>
+									{% render_field form.application id="application" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Main Task</span>
+									</div>
+									{% render_field form.main_task id="main_task" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Sub Task</span>
+									</div>
+									{% render_field form.sub_task id="sub_task" class="form-control" %}
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'task_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-3"></div>
+	</div>
+</form>
+<script>
+   $("#bay_branch_name").change(function () {
+      var url = $("#bay_add").attr("data-branches-url");
+      var branchId = $(this).val();
+      $.ajax({
+        url: url,
+        data: {
+          'branchId': branchId,
+        },
+		success: function (data) {
+			console.log(data);
+			$('#Bay_unit_name').removeClass('disable_a_href');
+			$('#bay_bayname').removeClass('disable_a_href');
+			$('#Bay_unit_name').empty().append("<option value='0'>--Select--</option>");
+        	var unit_name=JSON.parse(data)["unit_name_list"];
+        	var unit_id=JSON.parse(data)["unit_id"];
+        	var len = (unit_name).length;
+        	$('#Bay_unit_name').empty().append("<option value='0'>--Select--</option>");
+        	for( var i = 0; i<len; i++){
+        		$("#Bay_unit_name").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+			}
+        }
+      });
+    });
+  </script>
+{% endblock content %}
