@@ -14,21 +14,9 @@
 							<div class="col">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Application</span>
+										<span class="input-group-text">Task Number</span>
 									</div>
-									{% render_field form.ts_application id="ts_application" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Main timesheet</span>
-									</div>
-									{% render_field form.ts_main_task id="ts_main_task" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Sub Task</span>
-									</div>
-									{% render_field form.ts_sub_task id="ts_sub_task" class="form-control" %}
+									{% render_field form.ts_task_id  id="ts_task_id" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -60,6 +48,7 @@
 									</div>
 									{% render_field form.ts_remarks id="ts_remarks" class="form-control" %}
 								</div>
+								{% render_field form.ts_updated_by id="ts_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>
 						<div class="row">
@@ -74,7 +63,7 @@
 							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'timesheet_list' %}" class="btn btn-danger float-right">
+						<a href="{% url 'task_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</div>
@@ -84,29 +73,30 @@
 		<div class="col-3"></div>
 	</div>
 </form>
+<div class="container-fluid">
+	{% include "asset_mgt_app/timesheet_list_woh.html" %}
+</div>
 <script>
-   $("#bay_branch_name").change(function () {
-      var url = $("#bay_add").attr("data-branches-url");
-      var branchId = $(this).val();
-      $.ajax({
-        url: url,
-        data: {
-          'branchId': branchId,
-        },
-		success: function (data) {
-			console.log(data);
-			$('#Bay_unit_name').removeClass('disable_a_href');
-			$('#bay_bayname').removeClass('disable_a_href');
-			$('#Bay_unit_name').empty().append("<option value='0'>--Select--</option>");
-        	var unit_name=JSON.parse(data)["unit_name_list"];
-        	var unit_id=JSON.parse(data)["unit_id"];
-        	var len = (unit_name).length;
-        	$('#Bay_unit_name').empty().append("<option value='0'>--Select--</option>");
-        	for( var i = 0; i<len; i++){
-        		$("#Bay_unit_name").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-			}
-        }
-      });
-    });
-  </script>
+$(document).ready(function() {
+	document.getElementById("ts_updated_by").value ='{{user_id}}';
+	ts_task_id_val=document.getElementById("ts_task_id").value
+		if (ts_task_id_val=="")
+		{
+			document.getElementById("ts_task_id").value ='{{task_id}}';
+		}
+		else
+		{
+			document.getElementById("ts_task_id").value =ts_task_id_val;
+		}
+	ts_developer_val=document.getElementById("ts_developer").value
+		if (ts_developer_val=="")
+		{
+			document.getElementById("ts_developer").value ='{{user_id}}';
+		}
+		else
+		{
+			document.getElementById("ts_developer").value =ts_developer_val;
+		}
+	});
+</script>
 {% endblock content %}

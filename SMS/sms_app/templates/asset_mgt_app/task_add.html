@@ -1,7 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" action="" id="task_add"  onload="bay_branch_name()" data-branches-url="{% url 'load_units_origin' %}">
+<form method="POST" action="" id="task_add" >
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-3"></div>
@@ -30,6 +30,8 @@
 									</div>
 									{% render_field form.sub_task id="sub_task" class="form-control" %}
 								</div>
+								{% render_field form.task_id id="task_id" hidden="True" class="form-control" %}
+								{% render_field form.t_updated_by id="t_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>
 						<div class="row">
@@ -55,28 +57,8 @@
 	</div>
 </form>
 <script>
-   $("#bay_branch_name").change(function () {
-      var url = $("#bay_add").attr("data-branches-url");
-      var branchId = $(this).val();
-      $.ajax({
-        url: url,
-        data: {
-          'branchId': branchId,
-        },
-		success: function (data) {
-			console.log(data);
-			$('#Bay_unit_name').removeClass('disable_a_href');
-			$('#bay_bayname').removeClass('disable_a_href');
-			$('#Bay_unit_name').empty().append("<option value='0'>--Select--</option>");
-        	var unit_name=JSON.parse(data)["unit_name_list"];
-        	var unit_id=JSON.parse(data)["unit_id"];
-        	var len = (unit_name).length;
-        	$('#Bay_unit_name').empty().append("<option value='0'>--Select--</option>");
-        	for( var i = 0; i<len; i++){
-        		$("#Bay_unit_name").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-			}
-        }
-      });
-    });
-  </script>
+$(document).ready(function() {
+	document.getElementById("t_updated_by").value ='{{user_id}}';
+	});
+</script>
 {% endblock content %}

@@ -8,6 +8,5 @@ class timesheetaddForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(timesheetaddForm,self).__init__(*args, **kwargs)
-        self.fields['ts_application'].empty_label = "--Select--"
+        self.fields['ts_task_id'].empty_label = "--Select--"
         self.fields['ts_developer'].empty_label = "--Select--"
-        # self.fields['Bay_unit_name'].empty_label = "--Select--"

@@ -1,37 +1,34 @@
-{% extends "asset_mgt_app/base.html" %}
-
-
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Time Sheet List</h3>
-        </div>
-        <div class="col-5"></div>
-    </div>
-</div>
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-    <div class="col-md-1">
-        <a href="{% url 'timesheet_insert' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
-</div>
+<!--<div class="container-fluid" style="padding:15px;">-->
+<!--    <div class="row">-->
+<!--        <div class="col-5"></div>-->
+<!--        <div class="col-2 rounded text-center bg-info">-->
+<!--            <h3>Time Sheet List</h3>-->
+<!--        </div>-->
+<!--        <div class="col-5"></div>-->
+<!--    </div>-->
+<!--</div>-->
+<br>
+
+<!--<div class="container-fluid row">-->
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
+<!--            <i class="fas fa-arrow-left"></i> Back-->
+<!--        </a>-->
+<!--    </div>-->
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'timesheet_insert' %}" class="btn btn-success btn-block btn-lg">-->
+<!--            <i class="fas fa-plus"></i> Add-->
+<!--        </a>-->
+<!--    </div>-->
+<!--</div>-->
 <hr>
 <div class="container-fluid">
     <table  id="timeshet_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
             <th>ID</th>
-            <th>Application</th>
-            <th>Main Task</th>
-            <th>Sub Task</th>
+            <th>Task Number</th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Hours</th>
@@ -45,9 +42,7 @@
         {% for timesheet in timesheet_list %}
         <tr>
             <td> {{timesheet.id}}</td>
-            <td> {{timesheet.ts_application}}</td>
-            <td> {{timesheet.ts_main_task}}</td>
-            <td> {{timesheet.ts_sub_task}}</td>
+            <td> {{timesheet.ts_task_id}}</td>
             <td> {{timesheet.ts_start_date}}</td>
             <td> {{timesheet.ts_end_date}}</td>
             <td> {{timesheet.ts_hours}}</td>
@@ -75,8 +70,7 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#timeshet_list').DataTable(
-        {
+    $('#timeshet_list').DataTable({
         order: [0, 'desc' ],
         dom: 'lBfrtip',
         buttons: [
