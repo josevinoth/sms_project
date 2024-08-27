@@ -501,6 +501,7 @@ urlpatterns = [
     path('po_dimension_cancel/', views.po_dimension_cancel, name='po_dimension_cancel'),  # cancel po_dimension
     path('bar_chart_data/', views.bar_chart_data, name='bar_chart_data'),
     path('bar_chart/', views.bar_chart, name='bar_chart'),
+    path('get_requirement_description/', views.get_requirement_description, name='get_requirement_description'),  # List task
     path('task_list/', views.task_list, name='task_list'),  # List task
     path('task_insert/', views.task_add, name='task_insert'),  # Add task
     path('task_update/<int:task_id>', views.task_add, name='task_update'),  # update task

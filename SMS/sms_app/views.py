@@ -109,5 +109,5 @@ from .sub_views.pk_retrival_view import pk_retrival_add,pk_retrival_list,pk_retr
 from .sub_views.pk_stock_acceptance_view import pK_acceptance_cancel,pk_acceptance_add,pk_acceptance_delete,pk_acceptance_list
 from .sub_views.comments_add_view import comments_list,comments_delete,comments_add,comments_cancel
 from .sub_views.chart_view import bar_chart,bar_chart_data
-from .sub_views.task_add_view import task_add,task_list,task_delete
+from .sub_views.task_add_view import task_add,task_list,task_delete,get_requirement_description
 from .sub_views.timesheet_add_view import timesheet_add,timesheet_list,timesheet_delete,timesheet_nav
