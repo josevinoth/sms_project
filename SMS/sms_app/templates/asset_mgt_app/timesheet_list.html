@@ -29,9 +29,7 @@
         <thead class="thead-dark">
         <tr>
             <th>ID</th>
-            <th>Application</th>
-            <th>Main Task</th>
-            <th>Sub Task</th>
+            <th>Task Number</th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Hours</th>
@@ -45,9 +43,7 @@
         {% for timesheet in timesheet_list %}
         <tr>
             <td> {{timesheet.id}}</td>
-            <td> {{timesheet.ts_application}}</td>
-            <td> {{timesheet.ts_main_task}}</td>
-            <td> {{timesheet.ts_sub_task}}</td>
+            <td> {{timesheet.ts_task_id}}</td>
             <td> {{timesheet.ts_start_date}}</td>
             <td> {{timesheet.ts_end_date}}</td>
             <td> {{timesheet.ts_hours}}</td>
