@@ -59,12 +59,10 @@ def task_delete(request,task_id):
 @login_required(login_url='login_page')
 def get_requirement_description(request):
     requirement_id = request.GET.get('id', None)
-    print('requirement_id',requirement_id)
     if requirement_id:
         requirement = get_object_or_404(RequirementsInfo, id=requirement_id)
         data = {
             'description': requirement.req_backlogs  # Adjust based on your model's field name
         }
-        print('description',requirement.req_backlogs)
         return JsonResponse(data)
     return JsonResponse({'description': ''})
