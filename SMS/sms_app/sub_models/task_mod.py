@@ -11,6 +11,7 @@ class task_Info(models.Model):
     t_updated_by = models.ForeignKey(MyUser, related_name='t_updated_by', db_column='t_updated_by',on_delete=models.CASCADE, null=True)
     t_requirement_id = models.ForeignKey(RequirementsInfo, related_name='t_requirement_id', db_column='t_requirement_id',on_delete=models.CASCADE,null=True,blank=True)
     t_requirement_description = models.TextField(max_length=500, blank=True, null=True)
+    t_requirement_description_test = models.TextField(max_length=500, blank=True, null=True)
 
     class Meta:
         ordering = ["task_id"]
