@@ -32,6 +32,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Delivery Schedule Date</span>
+									</div>
+									{% render_field form.pod_delivery_schedule_date id="pod_delivery_schedule_date" type="Date" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Requirement Type</span>
 									</div>
 									{% render_field form.pod_type_of_req id="pod_type_of_req" class="form-control" %}
@@ -48,14 +54,14 @@
 									</div>
 									{% render_field form.pod_wood_description id="pod_wood_description" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">UOM</span>
 									</div>
 									{% render_field form.pod_uom id="pod_uom" class="form-control" %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Length</span>

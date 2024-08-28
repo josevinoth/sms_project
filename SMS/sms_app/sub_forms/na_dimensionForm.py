@@ -14,3 +14,4 @@ class NadimensionForm(forms.ModelForm):
         self.fields['nad_plywood_thickness'].empty_label = "--Select--"
         self.fields['nad_wood_type'].empty_label = "--Select--"
         self.fields['nad_wood_description'].empty_label = "--Select--"
+        self.fields['nad_dimension_type'].empty_label = "--Select--"

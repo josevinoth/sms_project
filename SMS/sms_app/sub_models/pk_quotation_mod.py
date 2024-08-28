@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
+from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo,Nadimensiontype
 
 class PkquotationInfo(models.Model):
     pkqt_cost_type = models.ForeignKey(Costtype, on_delete=models.CASCADE, default='')
@@ -35,7 +35,10 @@ class PkquotationInfo(models.Model):
     pkqt_length_req = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, related_name='pkqt_customer_name',
                                          db_column='pkqt_customer_name', blank=True, null=True)
-
+    pkqt_dimension_type = models.ForeignKey(Nadimensiontype,on_delete=models.CASCADE,blank=True,null=True,default='')
+    pkqt_width_boxod = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_height_boxod = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_length_boxod = models.FloatField(blank=True, null=True, default=0.0)
     class Meta:
         ordering = ["pkqt_cost_type"]
 

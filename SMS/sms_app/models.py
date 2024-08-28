@@ -153,6 +153,7 @@ from .sub_models.pk_special_requirements import Naspecialrequirements
 from .sub_models.pk_needassessment_mod import PkneedassessmentInfo
 from .sub_models.pk_openingstock_mod import PkopeningstockInfo
 from .sub_models.pk_stockpurchases_mod import PkstockpurchasesInfo
+from .sub_models.pk_dimension_type_mod import Nadimensiontype
 from .sub_models.na_dimension_mod import Nadimension
 from .sub_models.pk_quotes_mod import PkquotesInfo
 from .sub_models.pk_retrival_mod import PkretrivalInfo
