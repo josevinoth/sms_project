@@ -332,14 +332,20 @@ $(document).ready(function() {
     function disableElement(elementId) {
         $('#' + elementId).addClass('disable_a_href');
     }
-    if (user_id==1 || user_id==93 )
+    if (user_id==1 || user_id==93 || user_id==86 || user_id==100)
     {
         $('#task').css('display', 'block');
-        $('#timesheet').css('display', 'block');
     }
     else
     {
         $('#task').css('display', 'none');
+    }
+    if (user_id==1)
+    {
+        $('#timesheet').css('display', 'block');
+    }
+    else
+    {
         $('#timesheet').css('display', 'none');
     }
     // Admin can view all elements
