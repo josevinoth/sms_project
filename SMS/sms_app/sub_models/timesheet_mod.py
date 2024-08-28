@@ -6,7 +6,6 @@ class timesheet_Info(models.Model):
     ts_start_date = models.DateTimeField()
     ts_end_date = models.DateTimeField()
     ts_hours = models.FloatField(default=0.0)
-    ts_hours_test = models.FloatField(default=0.0)
     ts_developer = models.ForeignKey(MyUser, on_delete=models.CASCADE,related_name='ts_developer', db_column='ts_developer')
     ts_remarks = models.TextField(max_length=30, blank=True, null=True)
     ts_updated_at = models.DateTimeField(null=True, auto_now=True)

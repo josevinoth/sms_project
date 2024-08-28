@@ -3,7 +3,6 @@ from django.db import models
 
 class applicaiton_Info(models.Model):
     app_name = models.CharField(max_length=100, blank=True, null=True)
-    app_name_test = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         ordering = ["app_name"]
