@@ -41,6 +41,7 @@ def home_page(request):
                'dedicated_list': len(dedicated_list),
                'exclusive_list': len(exclusive_list),
                'role': role,
+               'user_id': user_id,
                'department': department,
                'bussiness_solution': bussiness_solution,
                'wh_job_count': wh_job_count,

@@ -171,3 +171,6 @@ from .sub_models.fuelfilling_mod import Fuelfillinginfo
 from .sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
 from .sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from .sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
+from .sub_models.applicaiton_mod import applicaiton_Info
+from .sub_models.task_mod import task_Info
+from .sub_models.timesheet_mod import timesheet_Info
