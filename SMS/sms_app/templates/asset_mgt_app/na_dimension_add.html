@@ -48,6 +48,12 @@
 									</div>
 									{% render_field form.nad_uom id="nad_uom" class="form-control" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dimension Type</span>
+									</div>
+									{% render_field form.nad_dimension_type id="nad_dimension_type" class="form-control" %}
+								</div>
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
@@ -85,6 +91,12 @@
 										<span class="input-group-text">Quantity</span>
 									</div>
 									{% render_field form.nad_quantity id="nad_quantity" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Clearance</span>
+									</div>
+									{% render_field form.na_clearance id="na_clearance" class="form-control" %}
 								</div>
 								{% render_field form.nad_updated_by id="nad_updated_by" hidden="True" class="form-control " %}
 							</div>

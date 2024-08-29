@@ -1,5 +1,6 @@
 from django.db import models
-from ..models import StatusList,MyUser,Natypeofwork,Natypeofpack,CustomerInfo,Nawoodtreatmentreq,Nabvmcustomer,Nawoodnorms,VehicletypeInfo,Natypeofaccess,Stockdescription
+
+from ..models import StatusList,MyUser,Natypeofwork,Nadeliverytype,Naspecialrequirements,Napackingfield,Natypeofpack,CustomerInfo,Nawoodtreatmentreq,Nabvmcustomer,Nawoodnorms,VehicletypeInfo,Natypeofaccess,Stockdescription
 
 def Pkneedassessment_directory_path(instance, filename):
     return 'Pkneedassessmentfiles/{0}/{1}'.format(instance.na_assessment_num, filename)
@@ -12,7 +13,7 @@ class PkneedassessmentInfo(models.Model):
     na_wood_treatment_req = models.ForeignKey(Nawoodtreatmentreq, on_delete=models.CASCADE, default='')
     na_unloading = models.ForeignKey(Nabvmcustomer,on_delete=models.CASCADE, related_name='na_unloading',db_column='na_unloading',default='')
     na_wood_norms =models.ForeignKey(Nawoodnorms,on_delete=models.CASCADE,default='')
-    na_vehicle = models.ForeignKey(Nabvmcustomer,on_delete=models.CASCADE, related_name='na_vehicle',db_column='na_vehicle',default='')
+    na_delivery_by = models.ForeignKey(Nabvmcustomer,on_delete=models.CASCADE, related_name='na_delivery_by',db_column='na_delivery_by',null=True,blank=True,default='')
     na_vehicle_type = models.ForeignKey(VehicletypeInfo,on_delete=models.CASCADE,default='')
     na_type_of_access = models.ForeignKey(Natypeofaccess,on_delete=models.CASCADE,default='')
     na_consumables = models.ForeignKey(Stockdescription,on_delete=models.CASCADE,default='')
@@ -22,6 +23,10 @@ class PkneedassessmentInfo(models.Model):
     na_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,blank=True,null=True)
     na_attach = models.FileField(upload_to=Pkneedassessment_directory_path, null=True,blank=True)
     na_others_type_pack = models.CharField(max_length=100,null=True,blank=True, default='')
+    na_delivery_type = models.ForeignKey(Nadeliverytype,on_delete=models.CASCADE,blank=True,null=True,default='')
+    na_packing_field = models.ForeignKey(Napackingfield,on_delete=models.CASCADE,blank=True,null=True,default='')
+    na_special_requirements = models.ForeignKey(Naspecialrequirements,on_delete=models.CASCADE,blank=True,null=True,default='')
+    na_delivery_location = models.CharField(max_length=100,null=True,blank=True, default='')
 
 
     class Meta:

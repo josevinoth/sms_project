@@ -20,6 +20,7 @@ class POdimension(models.Model):
     pod_cost_total=models.FloatField(default=0.0,null=True,blank=True)
     pod_item=models.CharField(max_length=100)
     pod_po_num = models.ForeignKey(PkpurchaseorderInfo, on_delete=models.CASCADE, blank=True,null=True)
+    pod_delivery_schedule_date = models.DateField(blank=True, null=True)
     class Meta:
         ordering = ["pod_assess_num"]
 

@@ -45,33 +45,28 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text"> Value</span>
+										<span class="input-group-text">Value</span>
 									</div>
-									{% render_field form.po_value id="po_value" class="form-control " %}
+									{% render_field form.po_value id="po_value" class="form-control" oninput="calculateTotal()" %}
 								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Tax</span>
 									</div>
-									{% render_field form.po_tax id="po_tax" class="form-control " %}
+									{% render_field form.po_tax id="po_tax" class="form-control" oninput="calculateTotal()" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Value</span>
 									</div>
-									{% render_field form.po_total_value id="po_total_value" class="form-control " %}
+									{% render_field form.po_total_value id="po_total_value" class="form-control" readonly="readonly"%}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Validity Date</span>
 									</div>
 									{% render_field form.po_validity_date id="po_validity_date" type="Date" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Delivery Schedule Date</span>
-									</div>
-									{% render_field form.po_delivery_schedule_date id="po_delivery_schedule_date" type="Date" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -94,6 +89,13 @@
 							</div>
 							{% render_field form.po_status id="po_status"  class="form-control " %}
 						</div>
+						<div class="input-group input-group-sm mb-3 bg-dark block">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Comment Box</span>
+									</div>
+									{% render_field form.po_comments_box id="po_comments_box" class="form-control"   %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
@@ -202,5 +204,14 @@ $(document).ready(function() {
       });
    });
 </script>
+<script>
+    function calculateTotal() {
+        var value = parseFloat(document.getElementById('po_value').value) || 0;
+        var tax = parseFloat(document.getElementById('po_tax').value) || 0;
+        var total = value + (value * tax);
+        document.getElementById('po_total_value').value = total.toFixed(2);
+    }
+</script>
+
 
 {% endblock content %}

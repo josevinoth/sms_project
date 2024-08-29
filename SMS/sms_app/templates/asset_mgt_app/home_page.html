@@ -174,9 +174,11 @@
     </div>
     <hr class="hr_style">
     <button type="button" class="collapsible d-flex align-items-center"><i class="fas fa-phone-alt p-2"></i> Supports<a href="{% url 'open_requirements_list' %}"><span class="badge bg-danger p-2 blink">{{ open_requirements }}</span></a>
-</button>
+    </button>
     <div class="content">
         <a href="{% url 'requirements_search' %}"><i class="fas fa-wrench"></i> Requirements List</a>
+        <a id="task" href="{% url 'task_list' %}"><i class="fas fa-flask"></i> Task List</a>
+        <a id="timesheet" href="{% url 'timesheet_list' %}"><i class="fas fa-history"></i> Time Sheet List</a>
         <a href="#"><i class="fas fa-book"></i> User Guide</a>
         <a href="#"><i class="fas fa-question"></i> FAQs</a>
     </div>
@@ -319,6 +321,7 @@ $(document).ready(function() {
     console.log("JavaScript code is running!"); // Check if JavaScript is executing
     var user_role = '{{ role }}';
     var department = '{{ department }}';
+    var user_id='{{user_id}}';
     var bussiness_solution = '{{ bussiness_solution }}';
     // Function to remove disable_a_href class
     function enableElement(elementId) {
@@ -329,7 +332,22 @@ $(document).ready(function() {
     function disableElement(elementId) {
         $('#' + elementId).addClass('disable_a_href');
     }
-
+    if (user_id==1 || user_id==93 || user_id==86 || user_id==100)
+    {
+        $('#task').css('display', 'block');
+    }
+    else
+    {
+        $('#task').css('display', 'none');
+    }
+    if (user_id==1)
+    {
+        $('#timesheet').css('display', 'block');
+    }
+    else
+    {
+        $('#timesheet').css('display', 'none');
+    }
     // Admin can view all elements
     if (user_role !== 'User') {
         enableElement('finance');

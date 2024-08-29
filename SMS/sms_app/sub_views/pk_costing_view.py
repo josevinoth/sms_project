@@ -155,10 +155,13 @@ def pk_item_search_page_costing(request):
     length_req = request.GET.get('length_req')
     width_req = request.GET.get('width_req')
     height_req = request.GET.get('height_req')
-    print('length_req',length_req)
-    print('width_req',width_req)
-    print('height_req',height_req)
-        # Serialize the queryset to JSON
+
+    # Print statements for debugging
+    print('length_req:', length_req)
+    print('width_req:', width_req)
+    print('height_req:', height_req)
+
+    # Query the database
     queryset = PkstockpurchasesInfo.objects.filter(
         sp_quantity_reduced__gt=0,
         sp_stock_description=stock_description if stock_description else '',
@@ -167,26 +170,36 @@ def pk_item_search_page_costing(request):
         sp_width__gte=width_req if width_req else float('inf'),
         sp_length__gte=length_req if length_req else float('inf')
     )
+
+    # Function to format date
+    def format_date(date):
+        return date.strftime('%B %d, %Y') if date else ''
+
+    # Serialize the queryset to JSON with date formatting
     results = list(queryset.values(
-            'id',
-            'sp_vendor_bill',
-            'sp_purchase_num',
-            'sp_category__category',
-            'sp_stock_type__pk_stocktype',  # Replace 'name' with the actual field in the related model
-            'sp_stock_description__stock_description',
-            'sp_source__source',  # Replace 'name' with the actual field in the related model
-            'sp_thick_height_reduced',
-            'sp_width_reduced',
-            'sp_length_reduced',
-            'sp_cft_reduced',
-            'sp_rate',
-            'sp_quantity_reduced',
-            'sp_uom__unit_of_measure',
-            'sp_uom',
-            'sp_size',
-        ))
-    # Serialize the queryset to JSON and return it
-    # results = list(queryset.values())
+        'id',
+        'sp_vendor_bill',
+        'sp_stock_in_date',
+        'sp_purchase_num',
+        'sp_category__category',
+        'sp_stock_type__pk_stocktype',
+        'sp_stock_description__stock_description',
+        'sp_source__source',
+        'sp_thick_height_reduced',
+        'sp_width_reduced',
+        'sp_length_reduced',
+        'sp_cft_reduced',
+        'sp_rate',
+        'sp_quantity_reduced',
+        'sp_uom__unit_of_measure',
+        'sp_uom',
+        'sp_size',
+    ))
+
+    # Apply date formatting to the results
+    for result in results:
+        result['sp_stock_in_date'] = format_date(result['sp_stock_in_date'])
+
     return JsonResponse(results, safe=False)
 
 @login_required(login_url='login_page')

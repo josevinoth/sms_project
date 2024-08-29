@@ -5,10 +5,13 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 
 from ..forms import PkquotationForm
-from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo
+from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo,UOM
+
 from django.shortcuts import render, redirect
 
 from django.contrib import messages
+
+
 
 @login_required(login_url='login_page')
 def pk_quotation_add(request,quotation_id=0):
@@ -53,6 +56,7 @@ def pk_quotation_add(request,quotation_id=0):
                 print('cost_type_id', cost_type_id)
                 if int(cost_type_id) == 8:
                     stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
+                    print('stock_purchase_num_id',stock_purchase_num_id)
                     stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
                     stock_qty = request.POST.get('pkqt_quantity')
                     stock_qty_available = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
@@ -135,7 +139,6 @@ def pk_get_pk_requirement_type(request):
     requirement_type_val = []
     ct_assessment_num_id = request.GET.get('ct_assessment_num_id')
     print('ct_assessment_num_id',ct_assessment_num_id)
-    # Fetch requirement type from Need Assessment dimension
     na_dimension_id = Nadimension.objects.filter(nad_assess_num=ct_assessment_num_id)
     for a in na_dimension_id:
         requirement_type_id.append(a.id)
@@ -150,13 +153,39 @@ def pk_get_pk_requirement_type(request):
 @login_required(login_url='login_page')
 def pk_store_na_dimension_id(request):
     na_dimension_box_val = []
+    na_dimension_type=[]
+    na_dimension_type_id=[]
+    na_uom=[]
+    na_length=[]
+    na_width=[]
+    na_height=[]
+    na_uom_id=[]
     ct_requirement_id= request.GET.get('ct_requirement_id')
     # Fetch requirement type from need assessment
     a = Nadimension.objects.get(pk=ct_requirement_id)
+
     na_dimension_box_val.append(str(a.nad_type_of_req)+str(' (')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
+    na_dimension_type =str(a.nad_dimension_type)
+    print(na_dimension_type)
+    na_dimension_type_id = str(a.nad_dimension_type.id)
+    na_uom=str(a.nad_uom)
+    na_uom_id=str(a.nad_uom.id)
+    na_length=str(a.nad_length)
+    na_width=str(a.nad_width)
+    na_height = str(a.nad_height)
+    print(f"Length: {na_length}")
+    print(f"Width: {na_width}")
+    print(f"Height: {na_height}")
+    print(na_uom)
+    print(na_uom_id)
 
     data = {
         'na_dimension_box_val': na_dimension_box_val,
+        'na_dimension_type': na_dimension_type,
+        'na_dimension_type_id': na_dimension_type_id,
+        'na_uom_id': na_uom_id,
+        'na_length': na_length,
+        'na_width': na_width,
+        'na_height': na_height,
     }
     return JsonResponse(data)
-
