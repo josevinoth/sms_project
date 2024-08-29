@@ -56,6 +56,12 @@ class SalesInfo(models.Model):
     s_payment_cycle = models.ForeignKey(PaymentcycleInfo, related_name='s_payment_cycle', db_column='s_payment_cycle',on_delete=models.CASCADE, default=1)
     s_not_competitive_remarks=models.TextField(default="NA")
     s_remarks=models.TextField(default="")
+    s_rate_approval_customer = models.CharField(blank=True, null=True, max_length=50)
+    s_sow = models.ForeignKey(YesNoInfo, blank=True, null=True, on_delete=models.CASCADE,related_name='s_sow', db_column='s_sow', default=2)
+    s_ops_sop = models.ForeignKey(YesNoInfo, blank=True, null=True, on_delete=models.CASCADE, related_name='s_ops_sop',db_column='s_ops_sop', default=2)
+    s_billing_sop = models.ForeignKey(YesNoInfo, blank=True, null=True, on_delete=models.CASCADE, related_name='billing_sop',db_column='billing_sop', default=2)
+    s_trans_imp = models.ForeignKey(YesNoInfo, blank=True, null=True, on_delete=models.CASCADE, related_name='trans_imp',db_column='trans_imp', default=2)
+    s_customer_code = models.CharField(blank=True, null=True, max_length=30)
     class Meta:
         ordering = ["s_sale_number"]
     def __str__(self):
