@@ -166,23 +166,19 @@ def pk_store_na_dimension_id(request):
 
     na_dimension_box_val.append(str(a.nad_type_of_req)+str(' (')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
     na_dimension_type =str(a.nad_dimension_type)
-    print(na_dimension_type)
     na_dimension_type_id = str(a.nad_dimension_type.id)
     na_uom=str(a.nad_uom)
     na_uom_id=str(a.nad_uom.id)
     na_length=str(a.nad_length)
     na_width=str(a.nad_width)
     na_height = str(a.nad_height)
-    print(f"Length: {na_length}")
-    print(f"Width: {na_width}")
-    print(f"Height: {na_height}")
-    print(na_uom)
-    print(na_uom_id)
+
 
     data = {
         'na_dimension_box_val': na_dimension_box_val,
         'na_dimension_type': na_dimension_type,
         'na_dimension_type_id': na_dimension_type_id,
+        'na_uom': na_uom,
         'na_uom_id': na_uom_id,
         'na_length': na_length,
         'na_width': na_width,
