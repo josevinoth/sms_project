@@ -62,6 +62,16 @@ class SalesInfo(models.Model):
     s_billing_sop = models.ForeignKey(YesNoInfo, blank=True, null=True, on_delete=models.CASCADE, related_name='billing_sop',db_column='billing_sop', default=2)
     s_trans_imp = models.ForeignKey(YesNoInfo, blank=True, null=True, on_delete=models.CASCADE, related_name='trans_imp',db_column='trans_imp', default=2)
     s_customer_code = models.CharField(blank=True, null=True, max_length=30)
+    s_wh_volume = models.CharField(blank=True, null=True, max_length=30)
+    s_wh_business = models.CharField(blank=True, null=True, max_length=30)
+    s_tr_volume = models.CharField(blank=True, null=True, max_length=30)
+    s_tr_business = models.CharField(blank=True, null=True, max_length=30)
+    s_pr_volume = models.CharField(blank=True, null=True, max_length=30)
+    s_pr_business = models.CharField(blank=True, null=True, max_length=30)
+    s_fmr_volume = models.CharField(blank=True, null=True, max_length=30)
+    s_fmr_business = models.CharField(blank=True, null=True, max_length=30)
+    s_or_volume = models.CharField(blank=True, null=True, max_length=30)
+    s_or_business = models.CharField(blank=True, null=True, max_length=30)
     class Meta:
         ordering = ["s_sale_number"]
     def __str__(self):

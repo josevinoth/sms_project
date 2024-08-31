@@ -23,7 +23,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Handling Company</span>
 									</div>
-									{% render_field form.s_company class="form-control" %}
+									{% render_field form.s_company class="form-control" id="s_company" onchange="hc_enabler()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -210,7 +210,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Type of supply</span>
 									</div>
-									{% render_field form.s_supply_type class="form-control" %}
+									{% render_field form.s_supply_type class="form-control" id="s_supply_type" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -305,7 +305,7 @@
 										<div class="input-group-prepend">
 											<span class="input-group-text" >Prospective Customer?</span>
 										</div>
-										{% render_field form.s_customer_prospective class="form-control" id="s_customer_prospective" onchange="pc_enabler()"%}
+										{% render_field form.s_customer_prospective class="form-control" id="s_customer_prospective" onchange="pc_enabler()" %}
 										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
@@ -643,6 +643,7 @@
         enable_customer_code()
         enable_sales()
         sl_customerinfo_id()
+		hc_enabler()
         });
 </script>
 
@@ -743,6 +744,8 @@
             $('#s_quote_ref').removeClass('disable_a_href');
             document.getElementById("s_noreason_cp").value=""
             $('#Commercials').removeClass('disable_a_href');
+            $('#s_supply_type').removeClass('disable_a_href');
+
         }
       else
           {
@@ -752,6 +755,8 @@
             document.getElementById("s_yesdate_quote").value=""
             document.getElementById("s_quote_ref").value=""
             $('#Commercials').addClass('disable_a_href');
+            $('#s_supply_type').addClass('disable_a_href');
+
         }
     }
 </script>

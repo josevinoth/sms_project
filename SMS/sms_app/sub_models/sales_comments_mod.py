@@ -9,7 +9,7 @@ class Sales_Comments_Info(models.Model):
     sc_updated_by = models.ForeignKey(MyUser, related_name='sc_added_by', db_column='sc_added_by',on_delete=models.CASCADE, null=True,)
     sc_created_at = models.DateTimeField(null=True, auto_now_add=True)
     sc_updated_at = models.DateTimeField(null=True, auto_now=True)
-    sc_comments = models.TextField(max_length=300,null=True, blank=True)
+    sc_comments = models.TextField(max_length=300)
     sc_complaints = models.TextField(max_length=300,null=True, blank=True)
     sc_compliments = models.TextField(max_length=300,null=True, blank=True)
     sc_date_of_call = models.DateField()
