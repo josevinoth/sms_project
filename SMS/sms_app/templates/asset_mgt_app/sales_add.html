@@ -66,7 +66,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Industry Type</span>
 									</div>
-									{% render_field form.s_industry_type id="s_industry_type" class="form-control" %}
+									{% render_field form.s_industry_type id="s_industry_type" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -686,7 +686,15 @@
             var customer_type=JSON.parse(data)["customer_type_val"];
             var industry_type=JSON.parse(data)["industry_type"];
             document.getElementById("s_customer_type").value =customer_type;
-            document.getElementById("s_industry_type").value =industry_type;
+            if (industry_type=="")
+            {
+            	alert("Please add Industry type for selected Customer and select Customer again")
+            	document.getElementById("s_customer_name").value =""
+            }
+            else
+            {
+                document.getElementById("s_industry_type").value = industry_type;
+            }
         }
       });
 
