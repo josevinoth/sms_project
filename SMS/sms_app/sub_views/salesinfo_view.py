@@ -3,11 +3,16 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.http import JsonResponse
 
 from ..forms import SalescommentForm,SalesinfoaddForm
 from ..models import RoleInfo,Sales_Comments_Info,User_extInfo,SalesInfo
 from django.shortcuts import render, redirect
 from random import randint
+
+from ..sub_models.customer_mod import CustomerInfo
+
+
 @login_required(login_url='login_page')
 def sales_list(request):
     first_name = request.session.get('first_name')
@@ -38,6 +43,7 @@ def sales_add(request, sales_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
+    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
     if request.method == "GET":
         if sales_id == 0:
             form = SalesinfoaddForm()
@@ -45,6 +51,8 @@ def sales_add(request, sales_id=0):
             context = {
                 'form': form,
                 'role': role,
+                'role_id': role_id,
+                'sales_id':sales_id,
                 'first_name': first_name,
                 'created_by': created_by,
                 'user_id': user_id,
@@ -63,6 +71,8 @@ def sales_add(request, sales_id=0):
             context={
                 'form': form,
                 'role': role,
+                'role_id': role_id,
+                'sales_id':sales_id,
                 'first_name': first_name,
                 'user_id': user_id,
                 'comments_list_filterd': comments_list_filterd,

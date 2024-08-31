@@ -32,3 +32,7 @@ class SalesinfoaddForm(forms.ModelForm):
         self.fields['s_not_reason'].empty_label = "--Select--"
         self.fields['s_company'].empty_label = "--Select--"
         self.fields['s_payment_cycle'].empty_label = "--Select--"
+        self.fields['s_sow'].empty_label = "--Select--"
+        self.fields['s_ops_sop'].empty_label = "--Select--"
+        self.fields['s_billing_sop'].empty_label = "--Select--"
+        self.fields['s_trans_imp'].empty_label = "--Select--"

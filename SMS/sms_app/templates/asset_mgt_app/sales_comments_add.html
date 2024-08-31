@@ -42,20 +42,20 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Purpose of Call</span>
 									</div>
-									{% render_field sales_comments_form.sc_call_purpose id="sc_call_purpose" onchange="purpose_call_change()" class="form-control"%}
+									{% render_field sales_comments_form.sc_call_purpose id="sc_call_purpose"  class="form-control"%}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Complaints</span>
 									</div>
-									{% render_field sales_comments_form.sc_complaints id="sc_complaints" class="form-control disable_a_href" %}
+									{% render_field sales_comments_form.sc_complaints id="sc_complaints" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Compliments</span>
 									</div>
-									{% render_field sales_comments_form.sc_compliments id="sc_compliments" class="form-control disable_a_href" %}
+									{% render_field sales_comments_form.sc_compliments id="sc_compliments" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -84,7 +84,6 @@ $(document).ready(function() {
 	var sale_num_id='{{ses_sales_num_id}}';
 	document.getElementById("sc_sales_number").value=sale_num_id
 	document.getElementById("sc_updated_by").value='{{user_id}}'
-	purpose_call_change()
 	date_of_call_change()
   });
 </script>
