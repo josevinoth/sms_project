@@ -16,7 +16,7 @@ class PkquotationInfo(models.Model):
                                       db_column='pkqt_updated_by', null=True)
     pkqt_quantity = models.IntegerField(blank=True, null=True, default=0)
     pkqt_size = models.FloatField(blank=True, null=True, default=0.0)
-    pkqt_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='', blank=True, null=True)
+    pkqt_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE,related_name='pkqt_uom', db_column='pkqt_uom', default='', blank=True, null=True)
     pkqt_assessment_num = models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='', blank=True,
                                           null=True)
     pkqt_length = models.FloatField(blank=True, null=True, default=0.0)
@@ -39,6 +39,17 @@ class PkquotationInfo(models.Model):
     pkqt_width_boxod = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_height_boxod = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_length_boxod = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_box_id_clearance_l = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_box_id_clearance_w = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_box_id_clearance_h = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_box_od_clearance_l = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_box_od_clearance_w = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_box_od_clearance_h = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_uom_calc = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='',related_name='pkqt_uom_calc', db_column='pkqt_uom_calc', limit_choices_to={'id__in': [1,2,3,4]},blank=True,null=True)
+    pkqt_quantity_req= models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_sqrt_req = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_cft_req = models.FloatField(blank=True, null=True, default=0.0)
+
     class Meta:
         ordering = ["pkqt_cost_type"]
 

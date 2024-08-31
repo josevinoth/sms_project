@@ -518,7 +518,7 @@ def export_stockreport_to_csv(request):
         'wh_gate_injob_no_id__gatein_transporter',
         'wh_gate_injob_no_id__gatein_truck_number',
         'wh_consigner', 'wh_consignee', 'wh_lb_job_no_id__lb_packing_list__ge_gstexcepmtion',
-        'wh_gate_injob_no_id__gatein_h  awb', 'wh_gate_injob_no_id__gatein_destination',
+        'wh_gate_injob_no_id__gatein_hawb', 'wh_gate_injob_no_id__gatein_destination',
         'wh_gate_injob_no_id__gatein_invoice', 'wh_po_num', 'wh_total_qty',
         'wh_gross_weight', 'wh_invoice_weight_unit', 'wh_uom', 'wh_goods_length',
         'wh_goods_width', 'wh_goods_height', 'wh_goods_pieces',
