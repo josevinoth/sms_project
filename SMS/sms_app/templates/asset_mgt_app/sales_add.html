@@ -424,14 +424,14 @@
 														<div class="input-group-prepend">
 															<span class="input-group-text">KYC</span>
 														</div>
-														{% render_field form.s_kyc class="form-control" %}
+														{% render_field form.s_kyc class="form-control" id="s_kyc" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">Contract</span>
 														</div>
-														{% render_field form.s_contract class="form-control" %}
+														{% render_field form.s_contract class="form-control" id="s_contract" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 												</div>
@@ -769,12 +769,16 @@
             $('#s_not_reason').addClass('disable_a_href');
             $('#s_yesdate_business').removeClass('disable_a_href');
             document.getElementById("s_not_reason").value=""
+            $('#s_kyc').removeClass('disable_a_href');
+            $('#s_contract').removeClass('disable_a_href');
         }
       else
           {
             $('#s_not_reason').removeClass('disable_a_href');
             $('#s_yesdate_business').addClass('disable_a_href');
             document.getElementById("s_yesdate_business").value=""
+            $('#s_kyc').addClass('disable_a_href');
+            $('#s_contract').addClass('disable_a_href')
         }
     }
 </script>
