@@ -15,3 +15,7 @@ class PkquotationForm(forms.ModelForm):
         self.fields['pkqt_updated_by'].empty_label = "--Select--"
         self.fields['pkqt_uom'].empty_label = "--Select--"
         self.fields['pkqt_assessment_num'].empty_label = "--Select--"
+        self.fields['pkqt_requirement'].empty_label = "--Select--"
+        self.fields['pkqt_item'].empty_label = "--Select--"
+        self.fields['pkqt_itemdescription'].empty_label = "--Select--"
+        self.fields['pkqt_stock_purchase_number'].empty_label = "--Select--"

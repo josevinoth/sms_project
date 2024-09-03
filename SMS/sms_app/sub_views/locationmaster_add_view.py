@@ -2,6 +2,7 @@ import json
 from datetime import timedelta, date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.aggregates import Sum
 from django.http import HttpResponse
 from ..forms import LocationmasteraddForm
@@ -179,7 +180,11 @@ def load_customer_model(request):
     customer_address = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_address')
     customer_type = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_type')
     customer_email = CustomerInfo.objects.get(cu_name=lm_customer_name_id).cu_email
-    industry_type = CustomerInfo.objects.get(cu_name=lm_customer_name_id).cu_industry_type.id
+    try:
+        customer_info = CustomerInfo.objects.get(cu_name=lm_customer_name_id)
+        industry_type = customer_info.cu_industry_type.id if customer_info.cu_industry_type else ""
+    except ObjectDoesNotExist:
+        industry_type = ""
     customer_businessmodel_val=customer_businessmodel[0]['cu_businessmodel'] #Get value from Queryset
     customer_short_name_val=customer_short_name[0]['cu_nameshort'] #Get value from Queryset
     customer_code_val=customer_code[0]['cu_customercode'] #Get value from Queryset
