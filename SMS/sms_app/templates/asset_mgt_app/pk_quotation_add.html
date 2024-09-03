@@ -389,6 +389,13 @@
          $('#pkqt_length_req').removeClass('disable_a_href');
          $('#pkqt_quantity_req').removeClass('disable_a_href');
        }
+       else if (stock_type == 2){
+         $('#pkqt_item').addClass('disable_a_href');
+         $('#pkqt_width_req').addClass('disable_a_href');
+         $('#pkqt_height_req').addClass('disable_a_href');
+         $('#pkqt_length_req').addClass('disable_a_href');
+         $('#pkqt_quantity_req').removeClass('disable_a_href');
+       }
        else
        {
            $('#pkqt_item').addClass('disable_a_href');
@@ -516,17 +523,17 @@
                     document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2);
 
 					var stock_desc = document.getElementById("pkqt_stock_description").value;
-					if (stock_desc == 14 || stock_desc == 15 || stock_desc == 23 || stock_desc == 38) {
+					if (stock_desc == 14 || stock_desc == 15 || stock_desc == 23 || stock_desc == 38 || stock_desc == 39 || stock_desc == 44 || stock_desc == 45 || stock_desc == 46) {
 						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
 						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
 						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
-                    	var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
 
-						var sqft = ((len_ft * wid_ft * 2) + (wid_ft * heig_ft * 2) + (len_ft * heig_ft * 2))*quantity_req;
+						var sqft = ((len_ft * wid_ft * 2) + (wid_ft * heig_ft * 2) + (len_ft * heig_ft * 2)) * quantity_req;
 						document.getElementById("pkqt_sqrt_req").value = sqft.toFixed(2);
 
-						var totalCost = rate  * sqft;
-                    	document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2);
+						var totalCost = rate * sqft;
+						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
 					}
 					else if (stock_desc == 35) {
 						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
