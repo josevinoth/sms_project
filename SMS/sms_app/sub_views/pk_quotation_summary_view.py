@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 
@@ -99,10 +100,34 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             form = PkquotationsummaryForm(request.POST, instance=quotationsummary)
 
         if form.is_valid():
+
             quotation_num = form.cleaned_data['qs_quotation_number']
             if not PkquotationsummaryInfo.objects.filter(qs_quotation_number=quotation_num).exclude(
                     id=pk_quotationsummary_id).exists():
                 form.save()
+                if pk_quotationsummary_id==0:
+                    try:
+                        last_id = (PkquotationsummaryInfo.objects.values_list('id', flat=True)).last()
+                        quotation_number=100000+last_id
+                        date_to_check = datetime.now()
+                        current_year = date_to_check.year
+                        end_of_march = datetime(current_year, 3, 31)
+                        if date_to_check <= end_of_march:
+                            financial_year = f"{current_year - 1}-{str(current_year)[-2:]}"
+                        else:
+                            financial_year = f"{current_year}-{str(current_year + 1)[-2:]}"
+                        # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
+                    except ObjectDoesNotExist:
+                        quotation_number=100000
+                        # req_num_next = str('Req_') + str(randint(10000, 99999))
+                    # quotation_num_next=str('BVM/PKG/24-25/') + str(quotation_number)
+                    quotation_number = f'{quotation_number:03}'
+                    quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number}'
+
+                    print("Requirement Form is Valid")
+                    print("Requirement Form is Valid")
+                    PkquotationsummaryInfo.objects.filter(id=last_id).update(qs_quotation_number=quotation_num_next)
+
                 messages.success(request, 'Record Updated Successfully')
                 if pk_quotationsummary_id == 0:
                     last_id = PkquotationsummaryInfo.objects.latest('id').id
