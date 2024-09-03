@@ -125,7 +125,6 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                     quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number}'
 
                     print("Requirement Form is Valid")
-                    print("Requirement Form is Valid")
                     PkquotationsummaryInfo.objects.filter(id=last_id).update(qs_quotation_number=quotation_num_next)
 
                 messages.success(request, 'Record Updated Successfully')
