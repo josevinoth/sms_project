@@ -8,7 +8,7 @@ from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import VehicletypeInfo,Pregateintruckinfo,Location_info,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from ..models import User_extInfo
 import pytz
 
@@ -270,8 +270,6 @@ def load_pre_gate_in(request):
     for i in pre_gatein_truck_list:
         truck_numbers.append(i.pregatein_truck_number)
         truck_numbers_id.append(i.id)
-    print('truck_numbers',truck_numbers)
-    print('truck_numbers_id',truck_numbers_id)
     data = {
             'truck_numbers_id': truck_numbers_id,
             'truck_numbers': truck_numbers,
@@ -284,7 +282,6 @@ def load_pre_gate_in(request):
 def load_pre_gate_in_truck_details(request):
     # Fetch pre_gate_in details
     pre_gatein_id = request.GET.get('pre_gatein_id')
-    print('pre_gatein_id',pre_gatein_id)
     pre_gatein_truck_number_val = request.GET.get('gatein_truck_number_val')
     Transporter=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_transporter',flat=True)
     Driver_Name=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_driver',flat=True)

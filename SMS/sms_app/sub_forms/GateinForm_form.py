@@ -7,6 +7,9 @@ class GateinaddForm(forms.ModelForm):
         fields = '__all__'
         # fields = ['gatein_job_no','gatein_invoice','gatein_customer','gatein_customer_type','gatein_arrival_date','gatein_department','gatein_shipper','gatein_consignee','gatein_no_of_pkg','gatein_weight','gatein_driver','gatein_contact_number','gatein_DL_number','gatein_otl','gatein_transporter','gatein_truck_number','gatein_truck_type','gatein_status','gatein_pre_id','gatein_updated_by']
 
+    gatein_pre_id = forms.ModelChoiceField(
+        queryset=Gatein_pre_info.objects.all().order_by('-id')[:30]
+    )
     def __init__(self, *args, **kwargs):
         super(GateinaddForm, self).__init__(*args, **kwargs)
         self.fields['gatein_driver'].empty_label = "--Select--"
