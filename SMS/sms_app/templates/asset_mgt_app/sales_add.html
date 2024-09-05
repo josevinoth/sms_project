@@ -752,7 +752,7 @@
             $('#s_quote_ref').removeClass('disable_a_href');
             document.getElementById("s_noreason_cp").value=""
             $('#Commercials').removeClass('disable_a_href');
-            $('#s_supply_type').removeClass('disable_a_href');
+
 
         }
       else
@@ -763,7 +763,7 @@
             document.getElementById("s_yesdate_quote").value=""
             document.getElementById("s_quote_ref").value=""
             $('#Commercials').addClass('disable_a_href');
-            $('#s_supply_type').addClass('disable_a_href');
+
 
         }
     }
@@ -821,6 +821,17 @@
     }
 </script>
 
+
+<script>
+	function hc_enabler() {
+    var jn7 = document.getElementById("s_company").value;
+    if (jn7 == 3) {
+        $("#s_supply_type").removeClass('disable_a_href');
+    } else {
+        $("#s_supply_type").addClass('disable_a_href');
+    }
+}
+</script>
 
 
 
