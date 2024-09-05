@@ -519,4 +519,31 @@ function change_pouch() {
 	}
 }
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const lb_stock_unloading_start_time = document.getElementById('lb_stock_unloading_start_time');
+        const lb_stock_unloading_end_time = document.getElementById('lb_stock_unloading_end_time');
+
+        // Get the current date and time in UTC
+        const now = new Date();
+
+        // Convert to IST (UTC+5:30)
+        const nowIST = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+
+        // Format the current IST date and time to YYYY-MM-DDTHH:MM
+        const formattedNowIST = nowIST.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+
+        // Set the max attribute for the input to the current date and time in IST
+        lb_stock_unloading_start_time.max = formattedNowIST;
+        lb_stock_unloading_end_time.max = formattedNowIST;
+
+        // Set default value only if in create mode (no existing value)
+        if (!lb_stock_unloading_start_time.value) { // If there is no value, assume "create" mode
+            lb_stock_unloading_start_time.value = formattedNowIST; // Set current time as default value
+        }
+        if (!lb_stock_unloading_end_time.value) { // If there is no value, assume "create" mode
+            lb_stock_unloading_end_time.value = formattedNowIST; // Set current time as default value
+        }
+    });
+</script>
 {% endblock content %}

@@ -15,6 +15,7 @@ from django.http import JsonResponse, HttpResponse
 
 @login_required(login_url='login_page')
 def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
+    global financial_year, last_id
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
@@ -100,10 +101,9 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             form = PkquotationsummaryForm(request.POST, instance=quotationsummary)
 
         if form.is_valid():
-
+            print("Requirement Form is Valid")
             quotation_num = form.cleaned_data['qs_quotation_number']
-            if not PkquotationsummaryInfo.objects.filter(qs_quotation_number=quotation_num).exclude(
-                    id=pk_quotationsummary_id).exists():
+            if not PkquotationsummaryInfo.objects.filter(qs_quotation_number=quotation_num).exclude(id=pk_quotationsummary_id).exists():
                 form.save()
                 if pk_quotationsummary_id==0:
                     try:
@@ -119,13 +119,8 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                         # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
                     except ObjectDoesNotExist:
                         quotation_number=100000
-                        # req_num_next = str('Req_') + str(randint(10000, 99999))
-                    # quotation_num_next=str('BVM/PKG/24-25/') + str(quotation_number)
                     quotation_number = f'{quotation_number:03}'
                     quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number}'
-
-                    print("Requirement Form is Valid")
-                    print("Requirement Form is Valid")
                     PkquotationsummaryInfo.objects.filter(id=last_id).update(qs_quotation_number=quotation_num_next)
 
                 messages.success(request, 'Record Updated Successfully')

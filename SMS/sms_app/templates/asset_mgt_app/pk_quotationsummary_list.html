@@ -26,6 +26,7 @@
     <table  id="quotationsummary_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>ID</th>
             <th>Created On</th>
             <th>Assessment Number</th>
             <th>Customer Name</th>
@@ -53,6 +54,7 @@
         <tbody>
         {% for quotationsummaryinfo in quotationsummary_list %}
         <tr>
+            <td> {{quotationsummaryinfo.id}}</td>
             <td> {{quotationsummaryinfo.qs_created_at}}</td>
             <td> {{quotationsummaryinfo.qs_assessment_num}}</td>
             <td> {{quotationsummaryinfo.qs_customer_name_2}}</td>
@@ -94,7 +96,7 @@
 <script>
     $(document).ready(function() {
     $('#quotationsummary_list').DataTable({
-        order: [0, 'asc' ],
+        order: [0, 'desc' ],
 <!--        scrollY: "600px",-->
         scrollX: true,
         dom: 'Bfrtip',
