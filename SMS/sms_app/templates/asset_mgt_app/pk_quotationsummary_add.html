@@ -2,257 +2,273 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="quotationsummary_add"   >
-	{% csrf_token %}
-	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center">
-						<div class="row">
-							<div class="col-3"></div>
-							<div class="col-6">
-								<h3>Add/Update quotation Summary</h3>
-							</div>
-							<div class="col-3">
-								<a href="{% url 'bvm_quotation_pdf' %}" class="btn btn-warning btn-block" id="quotation_report_btn"><i class="fa fa-download" aria-hidden="true"> Quotation</i>
-								</a>
-							</div>
+< method="POST" action="" id="quotationsummary_add"   >
+{% csrf_token %}
+<div class="row">
+	<div class="col-2"></div>
+	<div class="col-8">
+		<div class="container-fluid">
+			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+				<div class="card-header text-center">
+					<div class="row">
+						<div class="col-3"></div>
+						<div class="col-6">
+							<h3>Add/Update quotation Summary</h3>
+						</div>
+						<div class="col-3">
+							<a href="{% url 'bvm_quotation_pdf' %}" class="btn btn-warning btn-block" id="quotation_report_btn"><i class="fa fa-download" aria-hidden="true"> Quotation</i>
+							</a>
 						</div>
 					</div>
-					<div class="card-body bg-light" >
-						<div class="row" id="quotation_summary">
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Assessment Number</span>
-									</div>
-									{% render_field form.qs_assessment_num id="qs_assessment_num" name="qs_assessment_num" class="form-control " %}
+				</div>
+				<div class="card-body bg-light" >
+					<div class="row" id="quotation_summary">
+						<div class="col-6">
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Assessment Number</span>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Name</span>
-									</div>
-									{% render_field form.qs_customer_name_2 id="qs_customer_name_2" class="form-control disable_a_href" %}
+								{% render_field form.qs_assessment_num id="qs_assessment_num" name="qs_assessment_num" class="form-control " %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Estimation Type</span>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Wood Cost</span>
-									</div>
-									{% render_field form.qs_wood_cost id="qs_wood_cost"  class="form-control disable_a_href" %}
+								{% render_field form.qs_estimation_type id="qs_estimation_type" class="form-control " %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Customer Name</span>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Engineer Cost</span>
-									</div>
-									{% render_field form.qs_engineer_cost id="qs_engineer_cost" class="form-control disable_a_href" %}
+								{% render_field form.qs_customer_name_2 id="qs_customer_name_2" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Customer Po</span>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Labour Cost</span>
-									</div>
-									{% render_field form.qs_labour_cost id="qs_labour_cost" class="form-control disable_a_href" %}
+								{% render_field form.qs_customer_po id="qs_customer_po" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Wood Cost</span>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Crane Cost</span>
-									</div>
-									{% render_field form.qs_crane_cost id="qs_crane_cost" class="form-control disable_a_href" %}
+								{% render_field form.qs_wood_cost id="qs_wood_cost"  class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Engineer Cost</span>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">HT Cost</span>
-									</div>
-									{% render_field form.qs_ht_cost id="qs_ht_cost" class="form-control disable_a_href" %}
+								{% render_field form.qs_engineer_cost id="qs_engineer_cost" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Labour Cost</span>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Management Cost</span>
-									</div>
-									{% render_field form.qs_management_cost id="qs_management_cost" class="form-control disable_a_href" %}
+								{% render_field form.qs_labour_cost id="qs_labour_cost" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Crane Cost</span>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consumables Cost</span>
-									</div>
-									{% render_field form.qs_material_cost id="qs_material_cost" class="form-control disable_a_href" %}
+								{% render_field form.qs_crane_cost id="qs_crane_cost" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">HT Cost</span>
 								</div>
-								<div id="accordion" class="container-fluid">
-									<div class="card">
-										<div class="card-header bg-info" id="headingOne">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-													Address
-												</a>
-											</h5>
-										</div>
-										<div id="collapseOne" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_address id="qs_address"  class="form-control" %}
-											</div>
-										</div>
+								{% render_field form.qs_ht_cost id="qs_ht_cost" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Management Cost</span>
+								</div>
+								{% render_field form.qs_management_cost id="qs_management_cost" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Consumables Cost</span>
+								</div>
+								{% render_field form.qs_material_cost id="qs_material_cost" class="form-control disable_a_href" %}
+							</div>
+							<div id="accordion" class="container-fluid">
+								<div class="card">
+									<div class="card-header bg-info" id="headingOne">
+										<h5 class="mb-0">
+											<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+												Address
+											</a>
+										</h5>
 									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingTwo">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
-													Cost Includes
-												</a>
-											</h5>
-										</div>
-										<div id="collapseTwo" class="collapse " aria-labelledby="headingTwo" data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_cost_includes id="qs_cost_includes"  class="form-control" %}
-											</div>
+									<div id="collapseOne" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
+										<div class="card-body">
+											{% render_field form.qs_address id="qs_address"  class="form-control" %}
 										</div>
 									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingThree">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
-													Notes
-												</a>
-											</h5>
+								</div>
+								<div class="card">
+									<div class="card-header bg-info" id="headingTwo">
+										<h5 class="mb-0">
+											<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+												Cost Includes
+											</a>
+										</h5>
+									</div>
+									<div id="collapseTwo" class="collapse " aria-labelledby="headingTwo" data-parent="#accordion">
+										<div class="card-body">
+											{% render_field form.qs_cost_includes id="qs_cost_includes"  class="form-control" %}
 										</div>
-										<div id="collapseThree" class="collapse " aria-labelledby="headingThree" data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_notes id="qs_notes"  class="form-control" %}
-											</div>
+									</div>
+								</div>
+								<div class="card">
+									<div class="card-header bg-info" id="headingThree">
+										<h5 class="mb-0">
+											<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+												Notes
+											</a>
+										</h5>
+									</div>
+									<div id="collapseThree" class="collapse " aria-labelledby="headingThree" data-parent="#accordion">
+										<div class="card-body">
+											{% render_field form.qs_notes id="qs_notes"  class="form-control" %}
 										</div>
 									</div>
 								</div>
 							</div>
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Transport Cost</span>
-									</div>
-									{% render_field form.qs_transport_cost id="qs_transport_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost (W/O Margin)</span>
-									</div>
-									{% render_field form.qs_total_cost_wom id="qs_total_cost_wom"  class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Margin (%)</span>
-									</div>
-									{% render_field form.qs_margin id="qs_margin"  onchange="change_charge_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost (With Margin)</span>
-									</div>
-									{% render_field form.qs_total_cost_wm id="qs_total_cost_wm"  class="form-control disable_a_href " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total CFT</span>
-									</div>
-									{% render_field form.qs_total_cft id="qs_total_cft"  onchange="change_charge_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">GST %</span>
-									</div>
-									{% render_field form.qs_gst id="qs_gst"  onchange="change_charge_type()" class="form-control  " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Final Cost</span>
-									</div>
-									{% render_field form.qs_final_cost id="qs_final_cost"  class="form-control  disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Rate Per CFT</span>
-									</div>
-									{% render_field form.qs_rate_per_cft id="qs_rate_per_cft"  class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quotation Number</span>
-									</div>
-									{% render_field form.qs_quotation_number id="qs_quotation_number"  class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quotation Status</span>
-									</div>
-									{% render_field form.qs_status id="qs_status"  class="form-control" %}
-								</div>
-								<div id="accordion_1" class="container-fluid mb-3">
-									<div class="card">
-										<div class="card-header bg-info" id="headingFour">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
-													Terms & Conditions
-												</a>
-											</h5>
-										</div>
-										<div id="collapseFour" class="collapse " aria-labelledby="headingFour" data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_terms_condition id="qs_terms_condition"  class="form-control" %}
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingFive">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
-													Client Scope
-												</a>
-											</h5>
-										</div>
-										<div id="collapseFive" class="collapse " aria-labelledby="headingFive" data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_client_scope id="qs_client_scope"  class="form-control" %}
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingSix">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix">
-													BVM Scope
-												</a>
-											</h5>
-										</div>
-										<div id="collapseSix" class="collapse " aria-labelledby="headingSix" data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_bvm_scope id="qs_bvm_scope"  class="form-control" %}
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-							{% render_field form.qs_updated_by id="qs_updated_by" hidden="True" class="form-control" %}
 						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-									<span id="unique_field_error" style="color: red;"></span>
+						<div class="col-6">
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Transport Cost</span>
+								</div>
+								{% render_field form.qs_transport_cost id="qs_transport_cost" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Total Cost (W/O Margin)</span>
+								</div>
+								{% render_field form.qs_total_cost_wom id="qs_total_cost_wom"  class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Margin (%)</span>
+								</div>
+								{% render_field form.qs_margin id="qs_margin"  onchange="change_charge_type()" class="form-control " %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Total Cost (With Margin)</span>
+								</div>
+								{% render_field form.qs_total_cost_wm id="qs_total_cost_wm"  class="form-control disable_a_href " %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Total CFT</span>
+								</div>
+								{% render_field form.qs_total_cft id="qs_total_cft"  onchange="change_charge_type()" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">GST %</span>
+								</div>
+								{% render_field form.qs_gst id="qs_gst"  onchange="change_charge_type()" class="form-control  " %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Final Cost</span>
+								</div>
+								{% render_field form.qs_final_cost id="qs_final_cost"  class="form-control  disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Rate Per CFT</span>
+								</div>
+								{% render_field form.qs_rate_per_cft id="qs_rate_per_cft"  class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Quotation Number</span>
+								</div>
+								{% render_field form.qs_quotation_number id="qs_quotation_number"  class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Quotation Status</span>
+								</div>
+								{% render_field form.qs_status id="qs_status"  class="form-control" %}
+							</div>
+							<div id="accordion_1" class="container-fluid mb-3">
+								<div class="card">
+									<div class="card-header bg-info" id="headingFour">
+										<h5 class="mb-0">
+											<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
+												Terms & Conditions
+											</a>
+										</h5>
+									</div>
+									<div id="collapseFour" class="collapse " aria-labelledby="headingFour" data-parent="#accordion">
+										<div class="card-body">
+											{% render_field form.qs_terms_condition id="qs_terms_condition"  class="form-control" %}
+										</div>
+									</div>
+								</div>
+								<div class="card">
+									<div class="card-header bg-info" id="headingFive">
+										<h5 class="mb-0">
+											<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
+												Client Scope
+											</a>
+										</h5>
+									</div>
+									<div id="collapseFive" class="collapse " aria-labelledby="headingFive" data-parent="#accordion">
+										<div class="card-body">
+											{% render_field form.qs_client_scope id="qs_client_scope"  class="form-control" %}
+										</div>
+									</div>
+								</div>
+								<div class="card">
+									<div class="card-header bg-info" id="headingSix">
+										<h5 class="mb-0">
+											<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix">
+												BVM Scope
+											</a>
+										</h5>
+									</div>
+									<div id="collapseSix" class="collapse " aria-labelledby="headingSix" data-parent="#accordion">
+										<div class="card-body">
+											{% render_field form.qs_bvm_scope id="qs_bvm_scope"  class="form-control" %}
+										</div>
+									</div>
 								</div>
 							</div>
-							<div class="col-1"></div>
 						</div>
-						<button id="qs_submit_btn" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'pk_quotationsummary_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
+						{% render_field form.qs_updated_by id="qs_updated_by" hidden="True" class="form-control" %}
 					</div>
+					<div class="row">
+						<div class="col-1"></div>
+						<div class="col-10">
+							<div class="message text-center">
+								{% for message in messages %}
+								<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+								{% endfor %}
+								<span id="unique_field_error" style="color: red;"></span>
+							</div>
+						</div>
+						<div class="col-1"></div>
+					</div>
+					<button id="qs_submit_btn" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+					<a href="{% url 'pk_quotationsummary_list' %}" class="btn btn-danger float-right">
+						<i class="fas fa-times"></i> Cancel
+					</a>
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
+	<div class="col-2">
+		<a href="{% url 'pk_quotationsummary_clone' pk_quotationsummary.id %}" class="btn btn-primary float-right">
+			<i class="fas fa-clone"></i> Clone
+		</a>
+	</div>
+</div>
 </form>
 <div class="container-fluid row">
 	<!--    <div class="col-md-1">-->
@@ -319,98 +335,98 @@
 	</table>
 </div>
 <script>
-$(document).ready(function() {
-	document.getElementById("qs_updated_by").value ='{{user_id}}';
-	document.getElementById("qs_wood_cost").value ='{{wood_cost}}';
-	document.getElementById("qs_engineer_cost").value ='{{engineer_cost}}';
-	document.getElementById("qs_labour_cost").value ='{{labour_cost}}';
-	document.getElementById("qs_crane_cost").value ='{{crane_cost}}';
-	document.getElementById("qs_ht_cost").value ='{{ht_cost}}';
-	document.getElementById("qs_management_cost").value ='{{management_cost}}';
-	document.getElementById("qs_material_cost").value ='{{material_cost}}';
-	document.getElementById("qs_transport_cost").value ='{{transport_cost}}';
-	change_charge_type()
+	$(document).ready(function() {
+        document.getElementById("qs_updated_by").value ='{{user_id}}';
+        document.getElementById("qs_wood_cost").value ='{{wood_cost}}';
+        document.getElementById("qs_engineer_cost").value ='{{engineer_cost}}';
+        document.getElementById("qs_labour_cost").value ='{{labour_cost}}';
+        document.getElementById("qs_crane_cost").value ='{{crane_cost}}';
+        document.getElementById("qs_ht_cost").value ='{{ht_cost}}';
+        document.getElementById("qs_management_cost").value ='{{management_cost}}';
+        document.getElementById("qs_material_cost").value ='{{material_cost}}';
+        document.getElementById("qs_transport_cost").value ='{{transport_cost}}';
+        change_charge_type()
 
-	var user_role='{{role_id}}'
-	var status=document.getElementById("qs_status").value
-	if (status==5)
-	{
-		$('#quotation_report_btn').removeClass('disable_a_href');
-		if (user_role==2)
-		{
-			alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
-			$('#quotation_summary').addClass('disable_a_href');
-			$('#qs_submit_btn').addClass('disable_a_href');
-			$('#add_quotation').addClass('disable_a_href');
-		}
-		else
-		{
-			$('#quotation_summary').removeClass('disable_a_href');
-			$('#qs_submit_btn').removeClass('disable_a_href');
-			$('#add_quotation').removeClass('disable_a_href');
+        var user_role='{{role_id}}'
+        var status=document.getElementById("qs_status").value
+        if (status==5)
+        {
+            $('#quotation_report_btn').removeClass('disable_a_href');
+            if (user_role==2)
+            {
+                alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
+                $('#quotation_summary').addClass('disable_a_href');
+                $('#qs_submit_btn').addClass('disable_a_href');
+                $('#add_quotation').addClass('disable_a_href');
+            }
+            else
+            {
+                $('#quotation_summary').removeClass('disable_a_href');
+                $('#qs_submit_btn').removeClass('disable_a_href');
+                $('#add_quotation').removeClass('disable_a_href');
 
-		}
-	}
-	else
-	{
-		$('#quotation_report_btn').addClass('disable_a_href');
-		var assessment_num = document.getElementById("qs_assessment_num").value
-		if (assessment_num =="")
-			{
-				$('#add_quotation').addClass('disable_a_href');
-			}
-			else
-			{
-				$('#add_quotation').removeClass('disable_a_href');
-			}
-	}
+            }
+        }
+        else
+        {
+            $('#quotation_report_btn').addClass('disable_a_href');
+            var assessment_num = document.getElementById("qs_assessment_num").value
+            if (assessment_num =="")
+                {
+                    $('#add_quotation').addClass('disable_a_href');
+                }
+                else
+                {
+                    $('#add_quotation').removeClass('disable_a_href');
+                }
+        }
 
-	$('#quotation_list').DataTable({
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
-    });
-	});
+        $('#quotation_list').DataTable({
+            dom: 'lBfrtip',
+            buttons: [
+                'copy', 'csv', 'excel','print'
+            ]
+        });
+        });
 </script>
 
 <script>
-function change_charge_type() {
-var wood_cost=parseFloat(document.getElementById("qs_wood_cost").value) || 0;
-var engineer_cost=parseFloat(document.getElementById("qs_engineer_cost").value) || 0;
-var labour_cost=parseFloat(document.getElementById("qs_labour_cost").value) || 0;
-var crane_cost=parseFloat(document.getElementById("qs_crane_cost").value) || 0;
-var ht_cost=parseFloat(document.getElementById("qs_ht_cost").value) || 0;
-var management_cost=parseFloat(document.getElementById("qs_management_cost").value) || 0;
-var material_cost=parseFloat(document.getElementById("qs_material_cost").value) || 0;
-var transport_cost=parseFloat(document.getElementById("qs_transport_cost").value) || 0;
-var margin=parseFloat(document.getElementById("qs_margin").value) || 0;
-var total_cost_wo_m= wood_cost+engineer_cost+labour_cost+crane_cost+ht_cost+management_cost+material_cost+transport_cost
-document.getElementById("qs_total_cost_wom").value=total_cost_wo_m.toFixed(2)
-var margin_value=total_cost_wo_m*(margin/100)
-var total_cost=margin_value+total_cost_wo_m
-document.getElementById("qs_total_cost_wm").value=total_cost.toFixed(2)
+	function change_charge_type() {
+    var wood_cost=parseFloat(document.getElementById("qs_wood_cost").value) || 0;
+    var engineer_cost=parseFloat(document.getElementById("qs_engineer_cost").value) || 0;
+    var labour_cost=parseFloat(document.getElementById("qs_labour_cost").value) || 0;
+    var crane_cost=parseFloat(document.getElementById("qs_crane_cost").value) || 0;
+    var ht_cost=parseFloat(document.getElementById("qs_ht_cost").value) || 0;
+    var management_cost=parseFloat(document.getElementById("qs_management_cost").value) || 0;
+    var material_cost=parseFloat(document.getElementById("qs_material_cost").value) || 0;
+    var transport_cost=parseFloat(document.getElementById("qs_transport_cost").value) || 0;
+    var margin=parseFloat(document.getElementById("qs_margin").value) || 0;
+    var total_cost_wo_m= wood_cost+engineer_cost+labour_cost+crane_cost+ht_cost+management_cost+material_cost+transport_cost
+    document.getElementById("qs_total_cost_wom").value=total_cost_wo_m.toFixed(2)
+    var margin_value=total_cost_wo_m*(margin/100)
+    var total_cost=margin_value+total_cost_wo_m
+    document.getElementById("qs_total_cost_wm").value=total_cost.toFixed(2)
 
-var gst=parseFloat(document.getElementById("qs_gst").value) || 0;
-var final_cost=total_cost+(total_cost*gst/100)
-document.getElementById("qs_final_cost").value=final_cost.toFixed(2)
+    var gst=parseFloat(document.getElementById("qs_gst").value) || 0;
+    var final_cost=total_cost+(total_cost*gst/100)
+    document.getElementById("qs_final_cost").value=final_cost.toFixed(2)
 
-var total_cft=parseFloat(document.getElementById("qs_total_cft").value) || 0;
-var rate_per_cft_val=parseFloat(total_cost/total_cft)
-if (isNaN(rate_per_cft_val))
-{
-    rate_per_cft = 0;
-}
-else
-{
-	rate_per_cft = rate_per_cft_val;
-}
-document.getElementById("qs_rate_per_cft").value=rate_per_cft.toFixed(2)
-}
+    var total_cft=parseFloat(document.getElementById("qs_total_cft").value) || 0;
+    var rate_per_cft_val=parseFloat(total_cost/total_cft)
+    if (isNaN(rate_per_cft_val))
+    {
+        rate_per_cft = 0;
+    }
+    else
+    {
+        rate_per_cft = rate_per_cft_val;
+    }
+    document.getElementById("qs_rate_per_cft").value=rate_per_cft.toFixed(2)
+    }
 </script>
 <!--Unique Field validation-->
 <script>
-    $(document).ready(function() {
+	$(document).ready(function() {
         $('#qs_assessment_num').on('change', function() {
             var qs_assessment_num = $(this).val();
 
@@ -422,8 +438,8 @@ document.getElementById("qs_rate_per_cft").value=rate_per_cft.toFixed(2)
                 },
                 dataType: 'json',
                 success: function(data) {
-                	var customer_name_id=data.customer_name_id
-                	document.getElementById("qs_customer_name_2").value=customer_name_id
+                    var customer_name_id=data.customer_name_id
+                    document.getElementById("qs_customer_name_2").value=customer_name_id
                     if (data.exists) {
                         $('#unique_field_error').text('This Record already exists.');
                     } else {

@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import StatusList,CustomerInfo,MyUser,PkneedassessmentInfo
+from ..models import StatusList,CustomerInfo,MyUser,PkneedassessmentInfo, PKestimationtype
 
 class PkquotationsummaryInfo(models.Model):
     qs_assessment_num = models.OneToOneField(PkneedassessmentInfo, on_delete=models.CASCADE, default='', unique=True)
@@ -33,6 +33,9 @@ class PkquotationsummaryInfo(models.Model):
                                            db_column='qs_status', blank=True, null=True,default=6)
     qs_gst = models.FloatField(blank=True, null=True, default=0.0)
     qs_final_cost = models.FloatField(blank=True, null=True, default=0.0)
+    qs_estimation_type = models.ForeignKey(PKestimationtype,on_delete=models.CASCADE,blank=True,null=True,default='')
+    # qs_customer_po = models.ForeignKey(PkpurchaseorderInfo, on_delete=models.CASCADE, related_name='ct_customer_po',
+    #                                    db_column='ct_customer_po', blank=True, null=True)
     class Meta:
         ordering = ["id"]
 

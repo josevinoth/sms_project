@@ -1,15 +1,19 @@
 from datetime import datetime
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models.aggregates import Sum
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import get_object_or_404
+from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-
-from ..forms import PkquotationsummaryForm
-from ..models import User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo
-from django.shortcuts import render, redirect
-from django.db.models.aggregates import Sum
+from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
+from ..models import PkquotationsummaryInfo
+from django.contrib.auth.decorators import login_required
+from ..forms import PkquotationsummaryForm
+from ..models import User_extInfo, Nadimension, PkneedassessmentInfo, PkquotationInfo
 
 
 @login_required(login_url='login_page')
@@ -19,18 +23,20 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id = User_extInfo.objects.get(user=user_id).emp_role.id
 
+    context = {}  # Initialize context to avoid UnboundLocalError
+
     if request.method == "GET":
         if pk_quotationsummary_id == 0:
             form = PkquotationsummaryForm()
-            context = {
+            context.update({
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
                 'role': role,
                 'role_id': role_id,
-            }
+            })
         else:
-            quotationsummary = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
+            quotationsummary = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
             needassessment_num = quotationsummary.qs_assessment_num
             needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
             customer_name_id = quotationsummary.qs_customer_name_2.id
@@ -72,7 +78,7 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 qs_transport_cost=transport_cost
             )
 
-            context = {
+            context.update({
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
@@ -87,15 +93,15 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 'transport_cost': transport_cost,
                 'role_id': role_id,
                 'role': role,
-            }
+            })
 
         return render(request, "asset_mgt_app/pk_quotationsummary_add.html", context)
 
-    else:
+    elif request.method == "POST":
         if pk_quotationsummary_id == 0:
             form = PkquotationsummaryForm(request.POST)
         else:
-            quotationsummary = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
+            quotationsummary = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
             form = PkquotationsummaryForm(request.POST, instance=quotationsummary)
 
         if form.is_valid():
@@ -106,7 +112,7 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 messages.success(request, 'Record Updated Successfully')
                 if pk_quotationsummary_id == 0:
                     last_id = PkquotationsummaryInfo.objects.latest('id').id
-                    return redirect('/SMS/pk_quotationsummary_update/' + str(last_id))
+                    return redirect('pk_quotationsummary_update', pk_quotationsummary_id=last_id)
                 else:
                     return redirect(request.META['HTTP_REFERER'])
             else:
@@ -115,12 +121,13 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             messages.error(request, 'Record Not Updated Successfully')
 
         return redirect(request.META['HTTP_REFERER'])
+
+
 # List quotationsummary
-@login_required(login_url='login_page')
 def pk_quotationsummary_list(request):
-    first_name = request.session.get('first_name')
-    context = {'quotationsummary_list' : PkquotationsummaryInfo.objects.all(),'first_name': first_name}
-    return render(request,"asset_mgt_app/pk_quotationsummary_list.html",context)
+    quotationsummary_list = PkquotationsummaryInfo.objects.all()
+    context = {'quotationsummary_list': quotationsummary_list}
+    return render(request, 'asset_mgt_app/pk_quotationsummary_list.html', context)
 
 #Delete quotationsummary
 @login_required(login_url='login_page')
@@ -203,3 +210,25 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
     if pisa_status.err:
         return HttpResponse('We has some error <pre>' + html + '</pre>')
     return response
+
+
+@login_required(login_url='login_page')
+def pk_quotationsummary_clone(request, pk_quotationsummary_id):
+    # Fetch the original object
+    original = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
+
+    if request.method == "POST":
+        # Clone the object by copying the original
+        clone = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
+        clone.pk = None  # This ensures a new instance is created
+        clone.qs_quotation_number = None  # Optionally reset fields that need to be unique
+        clone.qs_assessment_num = original.qs_assessment_num  # Reuse the same assessment number if needed
+        # clone = PkquotationsummaryForm(request.POST)
+        clone.save()  # Save the new instance
+
+        messages.success(request, 'Quotation summary cloned successfully.')
+        return redirect('pk_quotationsummary_list')  # Redirect to the list view after cloning
+
+    # If the request method isn't POST, show an error
+    messages.error(request, 'Invalid request method. Please use POST for cloning.')
+    return redirect('pk_quotationsummary_list')

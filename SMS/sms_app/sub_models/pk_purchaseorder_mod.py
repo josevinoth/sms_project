@@ -1,7 +1,7 @@
 import datetime
 
 from django.db import models
-from ..models import StatusList,PkquotationsummaryInfo,CustomerInfo,PkneedassessmentInfo,MyUser
+from ..models import StatusList,PkneedassessmentInfo,CustomerInfo,MyUser, PkquotationsummaryInfo
 
 def Pkpurchaseorder_directory_path(instance, filename):
     return 'Pkpurchaseorderfiles/{0}/{1}'.format(instance.po_num, filename)
