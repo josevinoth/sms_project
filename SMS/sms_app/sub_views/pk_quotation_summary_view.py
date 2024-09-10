@@ -2,41 +2,42 @@ from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.aggregates import Sum
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from ..models import PkquotationsummaryInfo
-from django.contrib.auth.decorators import login_required
+
 from ..forms import PkquotationsummaryForm
-from ..models import User_extInfo, Nadimension, PkneedassessmentInfo, PkquotationInfo
+from ..models import User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo
+from django.shortcuts import render, redirect
+from django.db.models.aggregates import Sum
+from django.contrib import messages
+from django.http import JsonResponse, HttpResponse
 
 
 @login_required(login_url='login_page')
 def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
+    global financial_year, last_id
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id = User_extInfo.objects.get(user=user_id).emp_role.id
 
-    context = {}  # Initialize context to avoid UnboundLocalError
-
     if request.method == "GET":
         if pk_quotationsummary_id == 0:
             form = PkquotationsummaryForm()
-            context.update({
+            context = {
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
                 'role': role,
                 'role_id': role_id,
-            })
+            }
         else:
-            quotationsummary = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
+            quotationsummary = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
             needassessment_num = quotationsummary.qs_assessment_num
             needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
             customer_name_id = quotationsummary.qs_customer_name_2.id
@@ -78,7 +79,7 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 qs_transport_cost=transport_cost
             )
 
-            context.update({
+            context = {
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
@@ -93,26 +94,44 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 'transport_cost': transport_cost,
                 'role_id': role_id,
                 'role': role,
-            })
+            }
 
         return render(request, "asset_mgt_app/pk_quotationsummary_add.html", context)
 
-    elif request.method == "POST":
+    else:
         if pk_quotationsummary_id == 0:
             form = PkquotationsummaryForm(request.POST)
         else:
-            quotationsummary = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
+            quotationsummary = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
             form = PkquotationsummaryForm(request.POST, instance=quotationsummary)
 
         if form.is_valid():
+            print("Requirement Form is Valid")
             quotation_num = form.cleaned_data['qs_quotation_number']
-            if not PkquotationsummaryInfo.objects.filter(qs_quotation_number=quotation_num).exclude(
-                    id=pk_quotationsummary_id).exists():
+            if not PkquotationsummaryInfo.objects.filter(qs_quotation_number=quotation_num).exclude(id=pk_quotationsummary_id).exists():
                 form.save()
+                if pk_quotationsummary_id==0:
+                    try:
+                        last_id = (PkquotationsummaryInfo.objects.values_list('id', flat=True)).last()
+                        quotation_number=100000+last_id
+                        date_to_check = datetime.now()
+                        current_year = date_to_check.year
+                        end_of_march = datetime(current_year, 3, 31)
+                        if date_to_check <= end_of_march:
+                            financial_year = f"{current_year - 1}-{str(current_year)[-2:]}"
+                        else:
+                            financial_year = f"{current_year}-{str(current_year + 1)[-2:]}"
+                        # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
+                    except ObjectDoesNotExist:
+                        quotation_number=100000
+                    quotation_number = f'{quotation_number:03}'
+                    quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number}'
+                    PkquotationsummaryInfo.objects.filter(id=last_id).update(qs_quotation_number=quotation_num_next)
+
                 messages.success(request, 'Record Updated Successfully')
                 if pk_quotationsummary_id == 0:
                     last_id = PkquotationsummaryInfo.objects.latest('id').id
-                    return redirect('pk_quotationsummary_update', pk_quotationsummary_id=last_id)
+                    return redirect('/SMS/pk_quotationsummary_update/' + str(last_id))
                 else:
                     return redirect(request.META['HTTP_REFERER'])
             else:
@@ -121,13 +140,12 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             messages.error(request, 'Record Not Updated Successfully')
 
         return redirect(request.META['HTTP_REFERER'])
-
-
 # List quotationsummary
+@login_required(login_url='login_page')
 def pk_quotationsummary_list(request):
-    quotationsummary_list = PkquotationsummaryInfo.objects.all()
-    context = {'quotationsummary_list': quotationsummary_list}
-    return render(request, 'asset_mgt_app/pk_quotationsummary_list.html', context)
+    first_name = request.session.get('first_name')
+    context = {'quotationsummary_list' : PkquotationsummaryInfo.objects.all(),'first_name': first_name}
+    return render(request,"asset_mgt_app/pk_quotationsummary_list.html",context)
 
 #Delete quotationsummary
 @login_required(login_url='login_page')

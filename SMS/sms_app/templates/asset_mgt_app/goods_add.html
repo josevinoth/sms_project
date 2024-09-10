@@ -330,7 +330,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Check-In Time</span>
 									</div>
-									{% render_field goods_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" class="form-control"%}
+									{% render_field goods_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" class="form-control" %}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3" >
@@ -851,5 +851,28 @@ $(document).ready(function() {
 		$('#wh_branch').removeClass('disable_a_href');
 	}
   });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkinTimeInput = document.getElementById('wh_checkin_time');
+
+        // Get the current date and time in UTC
+        const now = new Date();
+
+        // Convert to IST (UTC+5:30)
+        const nowIST = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+
+        // Format the current IST date and time to YYYY-MM-DDTHH:MM
+        const formattedNowIST = nowIST.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+
+        // Set the max attribute for the input to the current date and time in IST
+        checkinTimeInput.max = formattedNowIST;
+
+        // Set default value only if in create mode (no existing value)
+        if (!checkinTimeInput.value) { // If there is no value, assume "create" mode
+            checkinTimeInput.value = formattedNowIST; // Set current time as default value
+        }
+    });
 </script>
 {% endblock content %}
