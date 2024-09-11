@@ -512,5 +512,8 @@ urlpatterns = [
     path('timesheet_update/<int:timesheet_id>', views.timesheet_add, name='timesheet_update'),  # update timesheet
     path('timesheet_delete/<int:timesheet_id>', views.timesheet_delete, name='timesheet_delete'),  # delete timesheet
     path('timesheet_nav/<int:task_id>', views.timesheet_nav, name='timesheet_nav'),  # delete timesheet
-
+    path('ml_product_add', views.create_product, name='ml_product_add'),  # multi select
+    path('ml_product_edit/<int:product_id>', views.create_product, name='ml_product_edit'),  # multi select
+    path('ml_product_list', views.ml_product_list, name='ml_product_list'),  # multi select
+    path('ml_product_delete/<int:product_id>', views.ml_product_delete, name='ml_product_delete'),  # multi select
 ]

@@ -102,3 +102,4 @@ from.sub_forms.commentsForm_Form import commentsaddForm
 from.sub_forms.po_dimensionForm import POdimensionForm
 from .sub_forms.task_form import taskaddForm
 from .sub_forms.timesheet_form import timesheetaddForm
+from .sub_forms.ml_category_form import ProductForm
