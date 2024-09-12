@@ -6,6 +6,9 @@ class PkneedassessmentForm(forms.ModelForm):
     class Meta:
         model = PkneedassessmentInfo
         fields = '__all__'
+        widgets = {
+            'na_type_of_access': forms.SelectMultiple(),
+        }
 
     def __init__(self, *args, **kwargs):
         super(PkneedassessmentForm,self).__init__(*args, **kwargs)
