@@ -7,10 +7,7 @@ class PkneedassessmentForm(forms.ModelForm):
         model = PkneedassessmentInfo
         fields = '__all__'
         widgets = {
-            'na_type_of_access': forms.SelectMultiple(attrs={
-                'class': 'form-control',  # Keep Bootstrap styling
-                'id': 'id_na_type_of_access'
-            }),
+            'na_type_of_access': forms.SelectMultiple(),
         }
 
     def __init__(self, *args, **kwargs):
