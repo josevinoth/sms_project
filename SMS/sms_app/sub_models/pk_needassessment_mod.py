@@ -32,5 +32,6 @@ class PkneedassessmentInfo(models.Model):
     class Meta:
         ordering = ["na_assessment_num"]
 
+
     def __str__(self):
         return self.na_assessment_num

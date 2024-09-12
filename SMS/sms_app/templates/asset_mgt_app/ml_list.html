@@ -40,15 +40,12 @@
             <td>{{ prod.name }}</td>
             <td>
                 {% if prod.categories.exists %}
-                <ul>
-                    {% for category in prod.categories.all %}
-                    <li>{{ category.name }}</li>
-                    {% endfor %}
-                </ul>
+                        {% for category in prod.categories.all %}
+                            <li>{{ category }}</li>
+                        {% endfor %}
                 {% else %}
                 No categories
                 {% endif %}
-
             </td>
             <td>
                 <a class="btn btn-primary" href="{% url 'ml_product_edit' prod.id %}">
