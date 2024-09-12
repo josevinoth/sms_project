@@ -82,7 +82,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text" >WR Volume potential</span>
 											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
+											{% render_field form.s_wh_volume class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
@@ -91,7 +91,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text" >WR Business potential</span>
 											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
+											{% render_field form.s_wh_business class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
@@ -109,7 +109,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text" >TR Volume potential</span>
 											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
+											{% render_field form.s_tr_volume class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
@@ -118,7 +118,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text" >TR Business potential</span>
 											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
+											{% render_field form.s_tr_business class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
@@ -138,7 +138,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text" >PR Volume potential</span>
 											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
+											{% render_field form.s_pr_volume class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
@@ -147,7 +147,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text" >PR Business potential</span>
 											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
+											{% render_field form.s_pr_business class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
@@ -165,7 +165,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text" >FMR Volume potential</span>
 											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
+											{% render_field form.s_fmr_volume class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
@@ -174,7 +174,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text" >FMR Business potential</span>
 											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
+											{% render_field form.s_fmr_business class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
@@ -192,7 +192,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text" >OR Volume potential</span>
 											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
+											{% render_field form.s_or_volume class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
@@ -201,7 +201,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text" >OR Business potential</span>
 											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
+											{% render_field form.s_or_business class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
@@ -213,20 +213,26 @@
 									{% render_field form.s_supply_type class="form-control" id="s_supply_type" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text" >Volume potential</span>
+								<div class="row">
+									<div class="col-6">
+										<div class=" mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text" > Volume potential</span>
+											</div>
+											{% render_field form.s_vol_customer class="form-control" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
-										{% render_field form.s_vol_customer class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text" >Business potential</span>
-										</div>
-										{% render_field form.s_bus_customer class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
+									<div class="col-6">
+										<div class=" mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text" > Business potential</span>
+											</div>
+											{% render_field form.s_bus_customer class="form-control" %}
+											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										</div>
+									</div>
+								</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Name of the Person Met</span>
@@ -809,6 +815,7 @@
         	{
         		if (sales_id > 0)
         			{
+
             			$('#add_sales_info').addClass('disable_a_href');
         			}
         		else
