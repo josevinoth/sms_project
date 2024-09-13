@@ -304,7 +304,7 @@
 										<div class="input-group-prepend">
 											<span class="input-group-text" >Joint call Participant</span>
 										</div>
-										{% render_field form.s_joint_call_name class="form-control" %}
+										{% render_field form.s_joint_call_name id="s_joint_call_name" class="form-control" %}
 										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
@@ -839,7 +839,17 @@
 }
 </script>
 
-
+<script>
+    $(document).ready(function() {
+        $('#s_joint_call_name').multiselect({
+            includeSelectAllOption: true,
+            nonSelectedText: 'Select options',
+            buttonWidth: '100%',
+            enableFiltering: true,
+            maxHeight: 250
+        });
+    });
+</script>
 
 {% endblock content %}
 
