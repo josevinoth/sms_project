@@ -60,7 +60,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Special Requirements</span>
 									</div>
-									{% render_field form.na_special_requirements  id="na_special_requirements" class="form-control " %}
+									{% render_field form.na_special_requirements id="na_special_requirements" class="form-control select2-multiple-checkbox" multiple="multiple" style="height:150px" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -74,7 +74,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Norms</span>
 									</div>
-									{% render_field form.na_wood_norms id="na_wood_norms"  class="form-control " %}
+									{% render_field form.na_wood_norms id="na_wood_norms" class="form-control select2-multiple-checkbox" multiple="multiple" style="height:150px" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -104,13 +104,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Type Of Lifting</span>
 									</div>
-									{% render_field form.na_type_of_access id="na_type_of_access" class="form-control " style="height: 150px;" %}
+									{% render_field form.na_type_of_access id="na_type_of_access" class="form-control select2-multiple-checkbox" multiple="multiple"  %}
 								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consumables</span>
 									</div>
-									{% render_field form.na_consumables id="na_consumables" class="form-control " %}
+									{% render_field form.na_consumables id="na_consumables" class="form-control select2-multiple-checkbox" multiple="multiple"  %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -203,7 +204,7 @@
 
 
 <script>
-    $(document).ready(function() {
+	$(document).ready(function() {
     document.getElementById("na_updated_by").value ='{{user_id}}';
     $('#na_dimension_list').DataTable({
         dom: 'lBfrtip',
@@ -213,70 +214,148 @@
     });
     var assessment_num = document.getElementById("na_assessment_num").value
     if (assessment_num =="")
-	{
-		$('#add_dim_btn').addClass('disable_a_href');
-		$('#comments_add_btn').addClass('disable_a_href');
-		$('#comments_list_WOH').addClass('disable_a_href');
-	}
-	else
-	{
-		$('#add_dim_btn').removeClass('disable_a_href');
-		$('#comments_add_btn').removeClass('disable_a_href');
-		$('#comments_list_WOH').removeClass('disable_a_href');
-	}
+    {
+        $('#add_dim_btn').addClass('disable_a_href');
+        $('#comments_add_btn').addClass('disable_a_href');
+        $('#comments_list_WOH').addClass('disable_a_href');
+    }
+    else
+    {
+        $('#add_dim_btn').removeClass('disable_a_href');
+        $('#comments_add_btn').removeClass('disable_a_href');
+        $('#comments_list_WOH').removeClass('disable_a_href');
+    }
 } );
 </script>
 
 <script>
-$(document).ready(function() {
-	var user_role='{{role}}'
-	var status=document.getElementById("na_status").value
-	if (status==5)
-	{
-		if (user_role=="User")
-		{
-			alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
-			// Disable all form input fields
+	$(document).ready(function() {
+        var user_role='{{role}}'
+        var status=document.getElementById("na_status").value
+        if (status==5)
+        {
+            if (user_role=="User")
+            {
+                alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
+                // Disable all form input fields
 
-			// Hide the submit button
-			$('#na_submit_btn').addClass('disable_a_href');
-			$('#need_assessment_main').addClass('disable_a_href');
-			$('#comments_list_WOH').addClass('disable_a_href');
-			$('#na_dimension_list_WOH').addClass('disable_a_href');
-		}
-	}
-	package_type_change()
-});
+                // Hide the submit button
+                $('#na_submit_btn').addClass('disable_a_href');
+                $('#need_assessment_main').addClass('disable_a_href');
+                $('#comments_list_WOH').addClass('disable_a_href');
+                $('#na_dimension_list_WOH').addClass('disable_a_href');
+            }
+        }
+        package_type_change()
+    });
 </script>
 
 <script>
-    function package_type_change() {
+	function package_type_change() {
         var type_packing = document.getElementById("na_type_of_pack").value;
         if (type_packing == 7) {
             $('#na_others_type_pack').removeClass('disable_a_href');
         } else {
             $('#na_others_type_pack').addClass('disable_a_href');
-         	document.getElementById("na_others_type_pack").value =" ";
+             document.getElementById("na_others_type_pack").value =" ";
         }
     }
 </script>
 
 <script>
-    $(document).ready(function() {
+	$(document).ready(function() {
     $('#comments_list').DataTable();
 } );
 </script>
+<style>
+    /* Custom styles for multiselect dropdown */
+    .multiselect-container {
+        max-width: 1000px !important;  /* Set your desired max width for the dropdown */
+        min-width: 375px;              /* Ensure a minimum width */
+        width: 100% !important;        /* Ensure it fills the width of the button */
+        box-sizing: border-box;        /* Ensure padding and border are included in width */
+    }
+
+    .custom-multiselect-button {
+        border: 1px solid lightgray;  /* Light border for the button */
+    }
+	.multiselect-container li a label {
+    display: flex;
+    align-items: center;
+    cursor: pointer; /* Ensures the entire label is clickable */
+}
+
+/* Position the checkbox after the text */
+.multiselect-container li a label input[type="checkbox"] {
+    margin-left: -150px; /* Space between text and checkbox */
+}
+
+    /* Position the input box (checkbox) before the text and align it */
+
+
+    /* Correct alignment of the checkbox to be line-wise with text */
+    .multiselect-container li a label {
+        cursor: pointer; /* Ensures the entire area is clickable */
+        height: auto; /* Adjusts height based on content, ensuring vertical center alignment */
+    }
+</style>
+
 <script>
     $(document).ready(function() {
+        // Initialize DataTables
+        $('#yourTableId').DataTable({
+            // DataTable options
+        });
+
+        // Initialize Multiselect for Type of Lifting
         $('#na_type_of_access').multiselect({
             includeSelectAllOption: true,
-            nonSelectedText: 'Select options',
-            buttonWidth: '100%',
             enableFiltering: true,
-            maxHeight: 250
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '375px',  // Increase the width of the button
+            nonSelectedText: 'Select Types of Lifting',
+            buttonClass: 'custom-multiselect-button',
+             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            dropUp: false
+        });
+
+        // Initialize Multiselect for Special Requirements
+        $('#na_special_requirements').multiselect({
+            includeSelectAllOption: false,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '375px',
+            nonSelectedText: 'Select Special Requirements',
+            buttonClass: 'custom-multiselect-button',
+             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            dropUp: false
+        });
+
+        // Initialize Multiselect for Wood Norms
+        $('#na_wood_norms').multiselect({
+            includeSelectAllOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '375px',
+            nonSelectedText: 'Select Wood Norms',
+            buttonClass: 'custom-multiselect-button',
+             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            dropUp: false
+        });
+        // Initialize Multiselect for Wood Norms
+        $('#na_consumables').multiselect({
+            includeSelectAllOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '375px',
+            nonSelectedText: 'Select Consumables',
+            buttonClass: 'custom-multiselect-button',
+             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            dropUp: false
         });
     });
 </script>
+
 
 
 {% endblock content %}

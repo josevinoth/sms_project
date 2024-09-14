@@ -357,4 +357,16 @@ nav > div a.nav-item.nav-link:focus
   animation: blink 1s infinite;
 }
 
+/*light border for custom multiselect dropdown*/
+    .custom-multiselect-button {
+        border: 1px solid #cccccc;  /* Light gray border */
+        border-radius: 5px;         /* Optional: Rounded corners */
+        padding: 5px 10px;          /* Padding for better appearance */
+        background-color: #f9f9f9;  /* Optional: Light background color */
+        color: #333;                /* Optional: Darker text for contrast */
+    }
 
+    /* Optional: Add hover effect */
+    .custom-multiselect-button:hover {
+        border-color: #aaaaaa;      /* Slightly darker gray on hover */
+    }
