@@ -27,9 +27,12 @@
         <thead class="thead-dark">
         <tr>
             <th>ID</th>
+            <th>Clone</th>
+            <th>Edit</th>
             <th>Created On</th>
             <th>Assessment Number</th>
             <th>Customer Name</th>
+            <th>Estimation Type</th>
             <th>BVM Quotation #</th>
             <th>Wood Cost</th>
             <th>Engineer Cost</th>
@@ -47,7 +50,6 @@
             <th>Updated at</th>
             <th>Updated By</th>
             <th>Status</th>
-            <th>Edit</th>
             <th>Delete</th>
         </tr>
         </thead>
@@ -55,9 +57,26 @@
         {% for quotationsummaryinfo in quotationsummary_list %}
         <tr>
             <td> {{quotationsummaryinfo.id}}</td>
+            <td>
+                {% if quotationsummaryinfo.qs_status.id == 5 %}
+                <a href="{% url 'pk_quotationsummary_clone' quotationsummaryinfo.id %}" class="btn btn-warning">
+                    <i class="fas fa-clone"></i>
+                </a>
+                {% else %}
+                <a href="#" class="btn btn-warning disabled" aria-disabled="true">
+                    <i class="fas fa-clone"></i>
+                </a>
+                {% endif %}
+            </td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'pk_quotationsummary_update' quotationsummaryinfo.id %}">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
             <td> {{quotationsummaryinfo.qs_created_at}}</td>
             <td> {{quotationsummaryinfo.qs_assessment_num}}</td>
             <td> {{quotationsummaryinfo.qs_customer_name_2}}</td>
+            <td> {{quotationsummaryinfo.qs_estimation_type}}</td>
             <td> {{quotationsummaryinfo.qs_quotation_number}}</td>
             <td> {{quotationsummaryinfo.qs_wood_cost}}</td>
             <td> {{quotationsummaryinfo.qs_engineer_cost}}</td>
@@ -75,11 +94,6 @@
             <td> {{quotationsummaryinfo.qs_updated_at}}</td>
             <td> {{quotationsummaryinfo.qs_updated_by}}</td>
             <td> {{quotationsummaryinfo.qs_status}}</td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'pk_quotationsummary_update' quotationsummaryinfo.id %}">
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
             <td>
                 <form action="{% url 'pk_quotationsummary_delete' quotationsummaryinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}

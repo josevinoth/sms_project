@@ -32,7 +32,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
-									{% render_field form.cs_assessment_num id="cs_assessment_num" name="cs_assessment_num" class="form-control " %}
+									{% render_field form.cs_assessment_num id="cs_assessment_num" name="cs_assessment_num" onchange="cs_assessment_num_change()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Estimation Type</span>
+									</div>
+									{% render_field form.cs_estimation_type id="cs_estimation_type" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -233,7 +239,7 @@
 									</div>
 								</div>
 							</div>
-							{% render_field form.cs_updated_by id="cs_updated_by" hidden="True" class="form-control" %}
+							{% render_field form.cs_updated_by id="cs_updated_by"  hidden="True" class="form-control" %}
 						</div>
 						<div class="row">
 							<div class="col-1"></div>
@@ -243,6 +249,7 @@
 									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
 									{% endfor %}
 									<span id="unique_field_error" style="color: red;"></span>
+									<span id="unique_record" style="color: green;"></span>
 								</div>
 							</div>
 							<div class="col-1"></div>
@@ -320,16 +327,15 @@
 <script>
 $(document).ready(function() {
 	document.getElementById("cs_updated_by").value ='{{user_id}}';
-	document.getElementById("cs_wood_cost").value ='{{wood_cost}}';
-	document.getElementById("cs_engineer_cost").value ='{{engineer_cost}}';
-	document.getElementById("cs_labour_cost").value ='{{labour_cost}}';
-	document.getElementById("cs_crane_cost").value ='{{crane_cost}}';
-	document.getElementById("cs_ht_cost").value ='{{ht_cost}}';
-	document.getElementById("cs_management_cost").value ='{{management_cost}}';
-	document.getElementById("cs_material_cost").value ='{{material_cost}}';
-	document.getElementById("cs_transport_cost").value ='{{transport_cost}}';
+<!--	document.getElementById("cs_wood_cost").value ='{{wood_cost}}';-->
+<!--	document.getElementById("cs_engineer_cost").value ='{{engineer_cost}}';-->
+<!--	document.getElementById("cs_labour_cost").value ='{{labour_cost}}';-->
+<!--	document.getElementById("cs_crane_cost").value ='{{crane_cost}}';-->
+<!--	document.getElementById("cs_ht_cost").value ='{{ht_cost}}';-->
+<!--	document.getElementById("cs_management_cost").value ='{{management_cost}}';-->
+<!--	document.getElementById("cs_material_cost").value ='{{material_cost}}';-->
+<!--	document.getElementById("cs_transport_cost").value ='{{transport_cost}}';-->
 
-	change_charge_type()
 	var user_role='{{role_id}}'
 	var status=document.getElementById("cs_status").value
 	if (status==5)
@@ -364,13 +370,19 @@ $(document).ready(function() {
 		}
 	}
 
-
 	$('#costing_list').DataTable({
         dom: 'lBfrtip',
         buttons: [
             'copy', 'csv', 'excel','print'
         ]
     });
+
+    customer_po_val= document.getElementById("cs_customer_po").value;
+    if (customer_po_val=='')
+    	{
+    		cs_assessment_num_change()
+    	}
+
 });
 </script>
 
@@ -402,30 +414,38 @@ document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
 </script>
 
 <script>
-	$('#cs_assessment_num').on('change', function() {
-            var cs_assessment_num = $(this).val();
-            $.ajax({
-                url: '{% url "pk_costing_get_customer" %}',
-                data: {
+	function cs_assessment_num_change()
+	{
+    	var cs_assessment_num = document.getElementById("cs_assessment_num").value;
+        $.ajax
+        ({
+        	url: '{% url "pk_costing_get_customer" %}',
+            data: {
                     'cs_assessment_num': cs_assessment_num
                 },
-                dataType: 'json',
-                success: function(data) {
-                	var customer_name_id=data.customer_name_id
-                	document.getElementById("cs_customer_name").value=customer_name_id
-   					$('#cs_customer_po').removeClass('disable_a_href');
-					$("#cs_customer_po").empty();
-					var customer_po_id=data.customer_po_id;
-					var customer_po_name=data.customer_po_name;
-					var len1 = (customer_po_id).length;
-					$("#cs_customer_po").empty();
-					$('#cs_customer_po').empty().append("<option value='0'>--Select--</option>");
-					for( var j = 0; j<len1; j++){
-						$("#cs_customer_po").append("<option value='"+customer_po_id[j]+"'>"+customer_po_name[j]+"</option>");
-					}
+            dataType: 'json',
+            success: function(data)
+            {
+            	var customer_name_id=data.customer_name_id
+                document.getElementById("cs_customer_name").value=customer_name_id
+   				$('#cs_customer_po').removeClass('disable_a_href');
+				$("#cs_customer_po").empty();
+				var customer_po_id=data.customer_po_id;
+				if (customer_po_id=="")
+				{
+                    $('#unique_field_error').text('Customer PO not available for the selected Assessment Number.');
                 }
-            });
+				var customer_po_name=data.customer_po_name;
+				var len1 = (customer_po_id).length;
+				$("#cs_customer_po").empty();
+				$('#cs_customer_po').empty().append("<option value='0'>--Select--</option>");
+				for( var j = 0; j<len1; j++)
+				{
+					$("#cs_customer_po").append("<option value='"+customer_po_id[j]+"'>"+customer_po_name[j]+"</option>");
+				}
+            }
         });
+	}
 </script>
 <script>
 $('#cs_customer_po').on('change', function() {
@@ -445,11 +465,11 @@ $('#cs_customer_po').on('change', function() {
         	if (data.exists)
         		{
                 	$('#unique_field_error').text('Record already exists for selected Assessment and Customer PO.');
-                	document.getElementById("cs_assessment_num").value=""
-                	document.getElementById("cs_customer_name").value=""
+                	$('#unique_record').text('');
                 }
                 else
                 {
+                	$('#unique_record').text('Unique Record');
                 	$('#unique_field_error').text('');
                 }
         }

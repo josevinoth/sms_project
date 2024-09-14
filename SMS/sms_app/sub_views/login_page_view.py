@@ -7,27 +7,26 @@ from ..models import User_extInfo
 
 def login_page(request):
     request.session['ses_username'] = request.POST.get('username')
-    # if request.user.is_authenticated:
-    #     return redirect('home_page')
-    # else:
     if request.method=='POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         user_id = User.objects.get(username=username).id
+        department_id = User_extInfo.objects.get(user=user_id).department.id
+        department_name = User_extInfo.objects.get(user=user_id).department.dept_name
+        role = User_extInfo.objects.get(user=user_id).emp_role.role_name
+        role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+        organisation_id = User_extInfo.objects.get(user=user_id).emp_organisation.id
         first_name1 = User.objects.get(pk=user_id).first_name
         last_name=User.objects.get(pk=user_id).last_name
         first_name=first_name1+" " +last_name
-        pwd_1=User.objects.get(pk=user_id).password
-        un_1 = User.objects.get(pk=user_id).username
-        print(first_name)
-        print(un_1)
-        print(pwd_1)
-        print("Form Username",username)
-        print("Form password",password)
-        print("User_id",user_id)
         request.session['ses_userID'] = user_id
         user = authenticate(request, username=username,password=password)
         request.session['first_name'] = first_name
+        request.session['ses_department_id'] = department_id
+        request.session['ses_department_name'] = department_name
+        request.session['ses_role_id'] = role_id
+        request.session['ses_role'] = role
+        request.session['ses_organisation_id'] = organisation_id
         if user is not None:
             login(request,user)
             return redirect('home_page')

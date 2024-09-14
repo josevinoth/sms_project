@@ -75,7 +75,9 @@ def expense_add(request,expense_id=0):
 @login_required(login_url='login_page')
 def expense_list(request):
     first_name = request.session.get('first_name')
-    expense_list_val = (ExpenseInfo.objects.all()).order_by('-id')
+    organisation_id = request.session.get('ses_organisation_id')
+    role_id = request.session.get('ses_role_id')
+    expense_list_val = (ExpenseInfo.objects.filter(Q(exp_business=organisation_id))).order_by('-id')
     page_number = request.GET.get('page')
     paginator = Paginator(expense_list_val, 1000000)
     page_obj = paginator.get_page(page_number)
@@ -83,6 +85,7 @@ def expense_list(request):
                 'expense_list_val' : expense_list_val,
                 'first_name': first_name,
                 'page_obj': page_obj,
+                'role_id': role_id,
                 }
     return render(request,"asset_mgt_app/expense_list.html",context)
 
@@ -96,10 +99,12 @@ def expense_delete(request,expense_id):
 def expense_search(request):
     first_name = request.session.get('first_name')
     expense_number = request.GET.get('expense_number')
-    print('expense_number',expense_number)
+    role = request.session.get('ses_role')
+    organisation_id = request.session.get('ses_organisation_id')
+    print('organisation_id',organisation_id)
     if not expense_number:
         expense_number = ""
-    expense_list = ExpenseInfo.objects.filter((Q(exp_number__icontains=expense_number)) | (Q(exp_number__isnull=True))).order_by('-id')
+    expense_list = ExpenseInfo.objects.filter(Q(exp_business=organisation_id)&(Q(exp_number__icontains=expense_number)) | (Q(exp_number__isnull=True))).order_by('-id')
     page_number = request.GET.get('page')
     paginator = Paginator(expense_list, 50)
     page_obj = paginator.get_page(page_number)
@@ -107,6 +112,7 @@ def expense_search(request):
             'expense_list' : expense_list,
             'first_name': first_name,
             'page_obj': page_obj,
+            'role': role,
             }
     return render(request,"asset_mgt_app/expense_list.html",context)
 

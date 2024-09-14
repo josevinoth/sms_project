@@ -1,8 +1,8 @@
 from django.db import models
-from ..models import StatusList,PkpurchaseorderInfo,CustomerInfo,MyUser,PkneedassessmentInfo
+from ..models import PKestimationtype,StatusList,PkpurchaseorderInfo,CustomerInfo,MyUser,PkneedassessmentInfo
 
 class PkcostingsummaryInfo(models.Model):
-    cs_assessment_num=models.OneToOneField(PkneedassessmentInfo, on_delete=models.CASCADE)
+    cs_assessment_num=models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE)
     cs_wood_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_engineer_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_labour_cost = models.FloatField(blank=True, null=True, default=0.0)
@@ -28,11 +28,12 @@ class PkcostingsummaryInfo(models.Model):
     cs_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, related_name='cs_customer_name',
                                          db_column='cs_customer_name', blank=True, null=True)
     cs_customer_po = models.ForeignKey(PkpurchaseorderInfo, on_delete=models.CASCADE, related_name='cs_customer_po',
-                                         db_column='cs_customer_po', blank=True, null=True)
+                                         db_column='cs_customer_po')
     cs_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, related_name='cs_status',
                                        db_column='cs_status', default=6)
     cs_gst = models.FloatField(blank=True, null=True, default=0.0)
     cs_final_cost = models.FloatField(blank=True, null=True, default=0.0)
+    cs_estimation_type = models.ForeignKey(PKestimationtype, on_delete=models.CASCADE, default=1)
 
     class Meta:
         ordering = ["id"]
