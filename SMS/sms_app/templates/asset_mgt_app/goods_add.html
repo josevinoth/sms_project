@@ -275,13 +275,6 @@
 									{% render_field goods_form.wh_fumigation_date type="datetime-local" id="wh_fumigation_date" class="form-control disable_a_href"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Status</span>
-									</div>
-									{% render_field goods_form.wh_goods_status id="wh_goods_status" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
 							</div>
 							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
@@ -339,6 +332,13 @@
 									</div>
 									{% render_field goods_form.wh_check_in_out id="wh_check_in_out" class="form-control disable_a_href"%}
 									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Job Status</span>
+									</div>
+									{% render_field goods_form.wh_goods_status id="wh_goods_status" class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
 							<div class="container-fluid">
