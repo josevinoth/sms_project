@@ -101,10 +101,14 @@ def expense_search(request):
     expense_number = request.GET.get('expense_number')
     role = request.session.get('ses_role')
     organisation_id = request.session.get('ses_organisation_id')
-    print('organisation_id',organisation_id)
+    role_id = request.session.get('ses_role_id')
     if not expense_number:
         expense_number = ""
-    expense_list = ExpenseInfo.objects.filter(Q(exp_business=organisation_id)&(Q(exp_number__icontains=expense_number)) | (Q(exp_number__isnull=True))).order_by('-id')
+    if role_id==2:
+        expense_list = ExpenseInfo.objects.filter(Q(exp_business=organisation_id)&(Q(exp_number__icontains=expense_number)) | (Q(exp_number__isnull=True))).order_by('-id')
+    else:
+        expense_list = ExpenseInfo.objects.filter((Q(exp_number__icontains=expense_number)) | (Q(exp_number__isnull=True))).order_by('-id')
+
     page_number = request.GET.get('page')
     paginator = Paginator(expense_list, 50)
     page_obj = paginator.get_page(page_number)
