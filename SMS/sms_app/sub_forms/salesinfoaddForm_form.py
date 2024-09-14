@@ -4,7 +4,9 @@ class SalesinfoaddForm(forms.ModelForm):
     class Meta:
         model = SalesInfo
         fields = '__all__'
-
+        widgets = {
+            's_joint_call_name': forms.SelectMultiple(),
+        }
     s_not_competitive_remarks = forms.CharField(widget=forms.Textarea(attrs={'rows': 3, 'cols': 40}))
     def __init__(self, *args, **kwargs):
         super(SalesinfoaddForm,self).__init__(*args, **kwargs)
