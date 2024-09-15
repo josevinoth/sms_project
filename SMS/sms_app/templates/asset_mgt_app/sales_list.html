@@ -73,7 +73,18 @@
             <td> {{salesinfo.s_customer_name}}</td>
             <td> {{salesinfo.s_customer_new_name}}</td>
             <td> {{salesinfo.s_industry_type}}</td>
-            <td> {{salesinfo.s_joint_call_name}}</td>
+<!--            <td> {{salesinfo.s_joint_call_name}}</td>-->
+            <td>
+                {% if salesinfo.s_joint_call_name.exists %}
+                <ul>
+                    {% for category in salesinfo.s_joint_call_name.all %}
+                    <li>{{ category }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                No categories
+                {% endif %}
+            </td>
             <td> {{salesinfo.s_bus_won_not}}</td>
             <td> {{salesinfo.s_yesdate_quote}}</td>
             <td> {{salesinfo.s_yesdate_business}}</td>

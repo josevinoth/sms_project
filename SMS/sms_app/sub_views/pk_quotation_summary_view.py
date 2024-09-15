@@ -1,17 +1,11 @@
 from datetime import datetime
-
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models.aggregates import Sum
-from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
-from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-
-from ..forms import PkquotationsummaryForm
-from ..models import User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo
+from ..forms import PkcostingsummaryForm,PkquotationsummaryForm
+from ..models import User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo,PkcostingsummaryInfo
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
@@ -108,34 +102,41 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
         if form.is_valid():
             print("Requirement Form is Valid")
             quotation_num = form.cleaned_data['qs_quotation_number']
-            if not PkquotationsummaryInfo.objects.filter(qs_quotation_number=quotation_num).exclude(id=pk_quotationsummary_id).exists():
-                form.save()
-                if pk_quotationsummary_id==0:
-                    try:
-                        last_id = (PkquotationsummaryInfo.objects.values_list('id', flat=True)).last()
-                        quotation_number=100000+last_id
-                        date_to_check = datetime.now()
-                        current_year = date_to_check.year
-                        end_of_march = datetime(current_year, 3, 31)
-                        if date_to_check <= end_of_march:
-                            financial_year = f"{current_year - 1}-{str(current_year)[-2:]}"
-                        else:
-                            financial_year = f"{current_year}-{str(current_year + 1)[-2:]}"
-                        # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
-                    except ObjectDoesNotExist:
-                        quotation_number=100000
-                    quotation_number = f'{quotation_number:03}'
-                    quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number}'
-                    PkquotationsummaryInfo.objects.filter(id=last_id).update(qs_quotation_number=quotation_num_next)
-
-                messages.success(request, 'Record Updated Successfully')
-                if pk_quotationsummary_id == 0:
-                    last_id = PkquotationsummaryInfo.objects.latest('id').id
-                    return redirect('/SMS/pk_quotationsummary_update/' + str(last_id))
+            estimation_type = form.cleaned_data['qs_estimation_type']
+            print(estimation_type)
+            if estimation_type.id==2:
+                if not PkquotationsummaryInfo.objects.filter(qs_quotation_number=quotation_num).exclude(id=pk_quotationsummary_id).exists():
+                    form.save()
+                    if pk_quotationsummary_id==0:
+                        try:
+                            last_id = (PkquotationsummaryInfo.objects.values_list('id', flat=True)).last()
+                            quotation_number=100000+last_id
+                            date_to_check = datetime.now()
+                            current_year = date_to_check.year
+                            end_of_march = datetime(current_year, 3, 31)
+                            if date_to_check <= end_of_march:
+                                financial_year = f"{current_year - 1}-{str(current_year)[-2:]}"
+                            else:
+                                financial_year = f"{current_year}-{str(current_year + 1)[-2:]}"
+                            # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
+                        except ObjectDoesNotExist:
+                            quotation_number=100000
+                        quotation_number = f'{quotation_number:03}'
+                        quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number}'
+                        PkquotationsummaryInfo.objects.filter(id=last_id).update(qs_quotation_number=quotation_num_next)
+                        messages.success(request, 'Record Updated Successfully')
+                    # if pk_quotationsummary_id == 0:
+                        last_id = PkquotationsummaryInfo.objects.latest('id').id
+                        return redirect('/SMS/pk_quotationsummary_update/' + str(last_id))
+                    else:
+                        form.save()
+                        messages.success(request, 'Record Updated Successfully')
+                        return redirect(request.META['HTTP_REFERER'])
                 else:
-                    return redirect(request.META['HTTP_REFERER'])
+                    messages.error(request, 'Please enter a Unique Quotation Number.')
             else:
-                messages.error(request, 'Please enter a Unique Quotation Number.')
+                form.save()
+                messages.success(request, 'Record Updated Successfully')
         else:
             messages.error(request, 'Record Not Updated Successfully')
 
@@ -157,8 +158,12 @@ def pk_quotationsummary_delete(request,pk_quotationsummary_id):
 @login_required(login_url='login_page')
 def pk_quotation_summary_check_unique_field(request):
     qs_assessment_num = request.GET.get('qs_assessment_num')
+    qs_estimation_type = request.GET.get('qs_estimation_type')
+    print(qs_assessment_num)
+    print(qs_estimation_type)
     customer_name_id=PkneedassessmentInfo.objects.get(id=qs_assessment_num).na_customer_name.id
-    exists = PkquotationsummaryInfo.objects.filter(qs_assessment_num=qs_assessment_num).exists()
+    exists = PkquotationsummaryInfo.objects.filter(qs_assessment_num=qs_assessment_num,qs_estimation_type=qs_estimation_type).exists()
+    print(exists)
     return JsonResponse(
         {
             'exists': exists,
@@ -232,21 +237,76 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
 
 @login_required(login_url='login_page')
 def pk_quotationsummary_clone(request, pk_quotationsummary_id):
-    # Fetch the original object
-    original = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    role = User_extInfo.objects.get(user=user_id).emp_role
+    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+    quotationsummary = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
+    if request.method == "GET":
+        # Prefill the form with the values from the quotation summary
+        form = PkcostingsummaryForm(initial={
+            'cs_assessment_num': quotationsummary.qs_assessment_num,
+            'cs_wood_cost': quotationsummary.qs_wood_cost,
+            'cs_engineer_cost': quotationsummary.qs_engineer_cost,
+            'cs_labour_cost': quotationsummary.qs_labour_cost,
+            'cs_margin': quotationsummary.qs_margin,
+            'cs_total_cost_wm': quotationsummary.qs_total_cost_wm,
+            'cs_rate_per_cft': quotationsummary.qs_rate_per_cft,
+            'cs_total_cft': quotationsummary.qs_total_cft,
+            'cs_crane_cost': quotationsummary.qs_crane_cost,
+            'cs_ht_cost': quotationsummary.qs_ht_cost,
+            'cs_management_cost': quotationsummary.qs_management_cost,
+            'cs_material_cost': quotationsummary.qs_material_cost,
+            'cs_transport_cost': quotationsummary.qs_transport_cost,
+            'cs_total_cost_wom': quotationsummary.qs_total_cost_wom,
+            'cs_address': quotationsummary.qs_address,
+            'cs_cost_includes': quotationsummary.qs_cost_includes,
+            'cs_notes': quotationsummary.qs_notes,
+            'cs_terms_condition': quotationsummary.qs_terms_condition,
+            'cs_client_scope': quotationsummary.qs_client_scope,
+            'cs_bvm_scope': quotationsummary.qs_bvm_scope,
+            'cs_customer_name': quotationsummary.qs_customer_name_2,
+            'cs_gst': quotationsummary.qs_gst,
+            'cs_final_cost': quotationsummary.qs_final_cost,
+            'cs_estimation_type': 1,
+        })
 
-    if request.method == "POST":
-        # Clone the object by copying the original
-        clone = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
-        clone.pk = None  # This ensures a new instance is created
-        clone.qs_quotation_number = None  # Optionally reset fields that need to be unique
-        clone.qs_assessment_num = original.qs_assessment_num  # Reuse the same assessment number if needed
-        # clone = PkquotationsummaryForm(request.POST)
-        clone.save()  # Save the new instance
+        context = {
+            'form': form,
+            'first_name': first_name,
+            'user_id': user_id,
+            'role': role,
+            'role_id': role_id,
+        }
+        return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
 
-        messages.success(request, 'Quotation summary cloned successfully.')
-        return redirect('pk_quotationsummary_list')  # Redirect to the list view after cloning
+    elif request.method == "POST":
+        # Create a form instance with POST data
+        form = PkcostingsummaryForm(request.POST)
 
-    # If the request method isn't POST, show an error
-    messages.error(request, 'Invalid request method. Please use POST for cloning.')
-    return redirect('pk_quotationsummary_list')
+        if form.is_valid():
+            # Check if a costing summary with the same assessment number and estimation type already exists
+            existing_summary = PkcostingsummaryInfo.objects.filter(
+                cs_assessment_num=quotationsummary.qs_assessment_num,
+                cs_estimation_type=quotationsummary.qs_estimation_type
+            ).exists()
+
+            if existing_summary:
+                # Show an error message if such a record already exists
+                messages.error(request,'A costing summary with the same assessment number and estimation type already exists.')
+            else:
+                # Save the valid form data to create a new costing summary
+                costing_summary = form.save(commit=False)
+                costing_summary.cs_updated_by = request.user  # Set the current user as the one updating
+                costing_summary.save()
+                # Show a success message
+                messages.success(request, 'Costing summary cloned and saved successfully.')
+        else:
+            # If the form is not valid, display specific field errors
+            for field, errors in form.errors.items():
+                messages.error(request, f"Error in {field}: {', '.join(errors)}")
+            # If the form is not valid, return the form with errors
+            messages.error(request, 'Form is not valid. Please correct the errors.')
+
+        # Redirect to the previous page or another page after saving
+        return redirect(request.META['HTTP_REFERER'])

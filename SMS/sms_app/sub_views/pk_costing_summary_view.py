@@ -188,6 +188,7 @@ def pk_costing_get_customer(request):
     cs_assessment_num = request.GET.get('cs_assessment_num')
     customer_name_id=PkneedassessmentInfo.objects.get(id=cs_assessment_num).na_customer_name.id
     customer_po_qs = PkpurchaseorderInfo.objects.filter(po_assessment_num=cs_assessment_num,po_status=5)
+    print('customer_po',customer_po_qs)
     customer_po_name = list(customer_po_qs.values_list('po_num', flat=True))
     customer_po_id = list(customer_po_qs.values_list('id', flat=True))
     return JsonResponse(

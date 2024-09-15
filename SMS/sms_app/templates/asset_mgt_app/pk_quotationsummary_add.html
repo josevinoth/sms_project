@@ -44,12 +44,6 @@
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Customer Po</span>
-								</div>
-								{% render_field form.qs_customer_po id="qs_customer_po" class="form-control disable_a_href" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
 									<span class="input-group-text">Wood Cost</span>
 								</div>
 								{% render_field form.qs_wood_cost id="qs_wood_cost"  class="form-control disable_a_href" %}
@@ -186,15 +180,15 @@
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Quotation Number</span>
-								</div>
-								{% render_field form.qs_quotation_number id="qs_quotation_number"  class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
 									<span class="input-group-text">Quotation Status</span>
 								</div>
 								{% render_field form.qs_status id="qs_status"  class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Quotation Number</span>
+								</div>
+								{% render_field form.qs_quotation_number id="qs_quotation_number"  class="form-control" %}
 							</div>
 							<div id="accordion_1" class="container-fluid mb-3">
 								<div class="card">
@@ -262,11 +256,6 @@
 				</div>
 			</div>
 		</div>
-	</div>
-	<div class="col-2">
-		<a href="{% url 'pk_quotationsummary_clone' pk_quotationsummary.id %}" class="btn btn-primary float-right">
-			<i class="fas fa-clone"></i> Clone
-		</a>
 	</div>
 </div>
 </form>
@@ -345,6 +334,7 @@ $(document).ready(function() {
 	document.getElementById("qs_management_cost").value ='{{management_cost}}';
 	document.getElementById("qs_material_cost").value ='{{material_cost}}';
 	document.getElementById("qs_transport_cost").value ='{{transport_cost}}';
+	estimation_type_val=document.getElementById("qs_estimation_type").value;
 	change_charge_type()
 
 	var user_role='{{role_id}}'
@@ -427,14 +417,16 @@ document.getElementById("qs_rate_per_cft").value=rate_per_cft.toFixed(2)
 <!--Unique Field validation-->
 <script>
     $(document).ready(function() {
-        $('#qs_assessment_num').on('change', function() {
-            var qs_assessment_num = $(this).val();
-
+        $('#qs_estimation_type').on('change', function() {
+            var qs_assessment_num = document.getElementById("qs_assessment_num").value;
+            var qs_estimation_type = document.getElementById("qs_estimation_type").value;
+			alert(qs_assessment_num)
             // Send an AJAX request to check if the value exists in the database
             $.ajax({
                 url: '{% url "pk_quotation_summary_check_unique_field" %}',
                 data: {
-                    'qs_assessment_num': qs_assessment_num
+                    'qs_assessment_num': qs_assessment_num,
+                    'qs_estimation_type': qs_estimation_type,
                 },
                 dataType: 'json',
                 success: function(data) {

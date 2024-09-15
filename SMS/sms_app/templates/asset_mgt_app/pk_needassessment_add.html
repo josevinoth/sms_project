@@ -272,27 +272,45 @@
     .multiselect-container {
         max-width: 1000px !important;  /* Set your desired max width for the dropdown */
         min-width: 375px;              /* Ensure a minimum width */
-        width: 100% !important;        /* Ensure it fills the width of the button */
         box-sizing: border-box;        /* Ensure padding and border are included in width */
+        overflow-x: auto;              /* Allows horizontal scrolling */
+        overflow-y: auto;              /* Allows vertical scrolling */
+        padding: 0;                    /* Remove padding */
+        margin: 0;                     /* Remove margin */
     }
 
     .custom-multiselect-button {
         border: 1px solid lightgray;  /* Light border for the button */
     }
-	.multiselect-container li a label {
-    display: flex;
-    align-items: center;
-    cursor: pointer; /* Ensures the entire label is clickable */
-    height: auto; /* Adjusts height based on content, ensuring vertical center alignment */
 
-}
+    /* Ensure the entire label is clickable and aligned properly */
+    .multiselect-container li a {
+        display: flex;                /* Use Flexbox for alignment */
+        align-items: center;          /* Vertically center items */
+        text-decoration: none;        /* Remove underline from links */
+    }
 
-	/* Position the checkbox after the text */
-	.multiselect-container li a label input[type="checkbox"] {
-		margin-left: -150px; /* Space between text and checkbox */
-	}
+    .multiselect-container li a label {
+        display: flex;                /* Use Flexbox for alignment */
+        align-items: center;          /* Vertically center items */
+        cursor: pointer;
+        white-space: nowrap;          /* Prevent text wrapping */
+        width: 100%;                   /* Ensures the label takes the full width */
+        justify-content: flex-start;  /* Aligns content to the left */
+        text-overflow: ellipsis;       /* Adds ellipsis for long text */
+        overflow: hidden;              /* Hides text overflow */
+        padding-left: 10px;            /* Adjust space between checkbox and text */
+    }
 
+    /* Align checkbox to the left and ensure spacing between checkbox and text */
+    .multiselect-container li a label input[type="checkbox"] {
+        margin-right: 10px;            /* Adjust space between checkbox and text */
+        flex-shrink: 0;               /* Prevents checkbox from shrinking */
+    }
 </style>
+
+
+
 
 <script>
     $(document).ready(function() {
@@ -321,7 +339,7 @@
             buttonWidth: '375px',
             nonSelectedText: 'Select Special Requirements',
             buttonClass: 'custom-multiselect-button',
-            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
         });
 
@@ -333,7 +351,7 @@
             buttonWidth: '375px',
             nonSelectedText: 'Select Wood Norms',
             buttonClass: 'custom-multiselect-button',
-            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
         });
         // Initialize Multiselect for Wood Norms
@@ -344,7 +362,7 @@
             buttonWidth: '375px',
             nonSelectedText: 'Select Consumables',
             buttonClass: 'custom-multiselect-button',
-            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
         });
     });
