@@ -8,7 +8,7 @@ class PkneedassessmentForm(forms.ModelForm):
     # Many-to-Many field for multiple selections
     na_type_of_access = forms.ModelMultipleChoiceField(
         queryset=Natypeofaccess.objects.all(),
-        widget=Select2MultipleWidget(),  # Optional: provides enhanced multi-select UI
+        # widget=Select2MultipleWidget(),  # Optional: provides enhanced multi-select UI
         required=False
     )
 

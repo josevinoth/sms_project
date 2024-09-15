@@ -283,21 +283,15 @@
     display: flex;
     align-items: center;
     cursor: pointer; /* Ensures the entire label is clickable */
+    height: auto; /* Adjusts height based on content, ensuring vertical center alignment */
+
 }
 
-/* Position the checkbox after the text */
-.multiselect-container li a label input[type="checkbox"] {
-    margin-left: -150px; /* Space between text and checkbox */
-}
+	/* Position the checkbox after the text */
+	.multiselect-container li a label input[type="checkbox"] {
+		margin-left: -150px; /* Space between text and checkbox */
+	}
 
-    /* Position the input box (checkbox) before the text and align it */
-
-
-    /* Correct alignment of the checkbox to be line-wise with text */
-    .multiselect-container li a label {
-        cursor: pointer; /* Ensures the entire area is clickable */
-        height: auto; /* Adjusts height based on content, ensuring vertical center alignment */
-    }
 </style>
 
 <script>
@@ -315,7 +309,7 @@
             buttonWidth: '375px',  // Increase the width of the button
             nonSelectedText: 'Select Types of Lifting',
             buttonClass: 'custom-multiselect-button',
-             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
         });
 
@@ -327,7 +321,7 @@
             buttonWidth: '375px',
             nonSelectedText: 'Select Special Requirements',
             buttonClass: 'custom-multiselect-button',
-             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
         });
 
@@ -339,7 +333,7 @@
             buttonWidth: '375px',
             nonSelectedText: 'Select Wood Norms',
             buttonClass: 'custom-multiselect-button',
-             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
         });
         // Initialize Multiselect for Wood Norms
@@ -350,7 +344,7 @@
             buttonWidth: '375px',
             nonSelectedText: 'Select Consumables',
             buttonClass: 'custom-multiselect-button',
-             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
         });
     });

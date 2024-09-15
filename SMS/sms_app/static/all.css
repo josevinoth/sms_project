@@ -365,8 +365,3 @@ nav > div a.nav-item.nav-link:focus
         background-color: #f9f9f9;  /* Optional: Light background color */
         color: #333;                /* Optional: Darker text for contrast */
     }
-
-    /* Optional: Add hover effect */
-    .custom-multiselect-button:hover {
-        border-color: #aaaaaa;      /* Slightly darker gray on hover */
-    }
