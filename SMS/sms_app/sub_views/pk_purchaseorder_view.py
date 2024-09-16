@@ -5,6 +5,8 @@ from ..forms import POdimensionForm,PkpurchaseorderForm
 from ..models import User_extInfo,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete
+
 
 @login_required(login_url='login_page')
 def purchaseorder_add(request,purchaseorder_id=0):
@@ -80,7 +82,20 @@ def purchaseorder_list(request):
 @login_required(login_url='login_page')
 def purchaseorder_delete(request,purchaseorder_id):
     purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
-    purchaseorder.delete()
+    assessment_num = purchaseorder.po_assessment_num
+
+    # Deleting PkcostingInfo objects
+    Pkcosting_delete(assessment_num)
+
+    # Deleting Pkcosting summary objects
+    Pkcostingsummary_delete(assessment_num)
+
+    # Deleting Pkpurchaseorders objects
+    Pkpurchaseorder_delete(assessment_num)
+
+    # Deleting Pkpurchaseorders dims objects
+    Pkpurchaseorder_dim_delete(assessment_num)
+
     return redirect('/SMS/purchaseorder_list')
 
 @login_required(login_url='login_page')

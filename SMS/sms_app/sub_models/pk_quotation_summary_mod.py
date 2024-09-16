@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import StatusList,CustomerInfo,MyUser,PkneedassessmentInfo, PKestimationtype
+from ..models import StatusList,CustomerInfo,MyUser,PkneedassessmentInfo
 
 class PkquotationsummaryInfo(models.Model):
     qs_assessment_num = models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='')
@@ -33,7 +33,7 @@ class PkquotationsummaryInfo(models.Model):
                                            db_column='qs_status', blank=True, null=True,default=6)
     qs_gst = models.FloatField(blank=True, null=True, default=0.0)
     qs_final_cost = models.FloatField(blank=True, null=True, default=0.0)
-    qs_estimation_type = models.ForeignKey(PKestimationtype,on_delete=models.CASCADE,default=2)
+
     class Meta:
         ordering = ["id"]
 

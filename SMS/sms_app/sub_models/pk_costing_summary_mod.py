@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import PKestimationtype,StatusList,PkpurchaseorderInfo,CustomerInfo,MyUser,PkneedassessmentInfo
+from ..models import StatusList,PkpurchaseorderInfo,CustomerInfo,MyUser,PkneedassessmentInfo
 
 class PkcostingsummaryInfo(models.Model):
     cs_assessment_num=models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE)
@@ -33,8 +33,6 @@ class PkcostingsummaryInfo(models.Model):
                                        db_column='cs_status', default=6)
     cs_gst = models.FloatField(blank=True, null=True, default=0.0)
     cs_final_cost = models.FloatField(blank=True, null=True, default=0.0)
-    cs_estimation_type = models.ForeignKey(PKestimationtype, on_delete=models.CASCADE, default=1)
-
     class Meta:
         ordering = ["id"]
 

@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
-
+from ..views import Pkcosting_delete,Pkcostingsummary_delete
 
 @login_required(login_url='login_page')
 def costingsummary_add(request,costingsummary_id=0):
@@ -38,6 +38,7 @@ def costingsummary_add(request,costingsummary_id=0):
             request.session['na_assessment_id'] = needassessment_id
             request.session['na_customer_name_id'] = customer_name_id
             request.session['ses_customer_po_id'] = customer_po_id
+            request.session['ses_costing_summary_id'] = costingsummary_id
             form = PkcostingsummaryForm(instance=costingsummary)
             costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id)
             # wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_cost_type=8,ct_stock_type=1,ct_stock_type=4).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
@@ -180,7 +181,14 @@ def costingsummary_list(request):
 @login_required(login_url='login_page')
 def costingsummary_delete(request,costingsummary_id):
     costingsummary = PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
-    costingsummary.delete()
+    assessment_num = costingsummary.cs_assessment_num
+
+    # Deleting PkcostingInfo objects
+    Pkcosting_delete(assessment_num)
+
+    # Deleting Pkcosting summary objects
+    Pkcostingsummary_delete(assessment_num)
+
     return redirect('/SMS/costingsummary_list')
 
 @login_required(login_url='login_page')

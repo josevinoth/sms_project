@@ -145,7 +145,8 @@ def load_stock_description(request):
 @login_required(login_url='login_page')
 def costing_cancel(request):
     assessment_num_val = request.session.get('na_assessment_id')
-    costing_summary_id=PkcostingsummaryInfo.objects.get(cs_assessment_num=assessment_num_val).id
+    # costing_summary_id=PkcostingsummaryInfo.objects.get(cs_assessment_num=assessment_num_val).id
+    costing_summary_id=request.session.get('ses_costing_summary_id') 
     return redirect('/SMS/costingsummary_update/' + str(costing_summary_id))
 
 @login_required(login_url='login_page')

@@ -1,16 +1,9 @@
-import json
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
-from django.template.loader import get_template
-from xhtml2pdf import pisa
-
+from django.http import JsonResponse
 from ..forms import PkquotationForm
-from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo,UOM
-
+from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo
 from django.shortcuts import render, redirect
-
 from django.contrib import messages
-
 
 
 @login_required(login_url='login_page')
@@ -23,6 +16,7 @@ def pk_quotation_add(request,quotation_id=0):
     role_id = User_extInfo.objects.get(user=user_id).emp_role.id
     if request.method == "GET":
         if quotation_id == 0:
+            print("Inside PK quotation get add")
             form = PkquotationForm()
             context = {
                 'form': form,
@@ -35,6 +29,7 @@ def pk_quotation_add(request,quotation_id=0):
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
             }
         else:
+            print("Inside PK quotation get edit")
             quotation = PkquotationInfo.objects.get(pk=quotation_id)
             form = PkquotationForm(instance=quotation)
             context = {
@@ -52,8 +47,8 @@ def pk_quotation_add(request,quotation_id=0):
             print("Inside PK quotation post add")
             form = PkquotationForm(request.POST)
             if form.is_valid():
+                print('form is valid')
                 cost_type_id = request.POST.get('pkqt_cost_type')
-                print('cost_type_id', cost_type_id)
                 if int(cost_type_id) == 8:
                     stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
                     print('stock_purchase_num_id',stock_purchase_num_id)
@@ -85,8 +80,8 @@ def pk_quotation_add(request,quotation_id=0):
             quotation = PkquotationInfo.objects.get(pk=quotation_id)
             form = PkquotationForm(request.POST, instance=quotation)
             if form.is_valid():
-                form.save()
-                print("quotation Form is Valid")
+                # form.save()
+                # print("quotation Form is Valid")
                 cost_type_id = PkquotationInfo.objects.get(pk=quotation_id).pkqt_cost_type.id
                 if int(cost_type_id) == 8:
                     stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
@@ -153,15 +148,10 @@ def pk_get_pk_requirement_type(request):
 @login_required(login_url='login_page')
 def pk_store_na_dimension_id(request):
     na_dimension_box_val = []
-    na_dimension_type=[]
-    na_dimension_type_id=[]
-    na_uom=[]
-    na_length=[]
-    na_width=[]
-    na_height=[]
-    na_uom_id=[]
     ct_requirement_id= request.GET.get('ct_requirement_id')
+    print('ct_requirement_id',ct_requirement_id)
     # Fetch requirement type from need assessment
+
     a = Nadimension.objects.get(pk=ct_requirement_id)
 
     na_dimension_box_val.append(str(a.nad_type_of_req)+str(' (')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))

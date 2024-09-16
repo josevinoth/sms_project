@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from ..forms import PkneedassessmentForm,NadimensionForm
-from ..models import commentsInfo,User_extInfo,PkneedassessmentInfo,Nadimension
+from ..models import  PkquotationsummaryInfo,PkquotationInfo,POdimension,PkpurchaseorderInfo,PkcostingsummaryInfo,PkcostingInfo,commentsInfo,User_extInfo,PkneedassessmentInfo,Nadimension
 from django.shortcuts import render, redirect
 from random import randint
 from django.contrib import messages
@@ -88,8 +88,108 @@ def needassessment_list(request):
 @login_required(login_url='login_page')
 def needassessment_delete(request,needassessment_id):
     needassessment = PkneedassessmentInfo.objects.get(pk=needassessment_id)
+    assessment_num = needassessment.na_assessment_num
+
+    # Deleting PkcostingInfo objects
+    Pkcosting_delete(assessment_num)
+
+    # Deleting Pkcosting summary objects
+    Pkcostingsummary_delete(assessment_num)
+
+    # Deleting Pkpurchaseorders objects
+    Pkpurchaseorder_delete(assessment_num)
+
+    # Deleting Pkpurchaseorders dims objects
+    Pkpurchaseorder_dim_delete(assessment_num)
+
+    #Deleting Pkquotations objects
+    Pkquotation_delete(assessment_num)
+
+    # Deleting quotation summary objects
+    Pkquotation_summary_delete(assessment_num)
+
+    # Deleting need assessment objects
     needassessment.delete()
+
     return redirect('/SMS/needassessment_list')
+
+
+def Pkcosting_delete(assessment_num):
+    try:
+        # Fetch the queryset for the matching records
+        costing_objects = PkcostingInfo.objects.filter(ct_assessment_num=assessment_num)
+
+        # Check if any objects were found
+        if costing_objects.exists():
+            # Delete the objects
+            costing_objects.delete()
+        else:
+            # Handle the case where no objects were found, if needed
+            print("No matching costing info found to delete.")
+    except Exception as e:
+        # Handle any unexpected exceptions
+        print(f"An error occurred: {e}")
+
+
+def Pkcostingsummary_delete(assessment_num):
+    # Deleting PkcostingsummaryInfo objects
+    try:
+        costingsummary_objects = PkcostingsummaryInfo.objects.filter(cs_assessment_num=assessment_num)
+        if costingsummary_objects.exists():
+            costingsummary_objects.delete()
+        else:
+            print("No matching PkcostingsummaryInfo found to delete.")
+    except Exception as e:
+        print(f"An error occurred while deleting PkcostingsummaryInfo: {e}")
+
+
+def Pkpurchaseorder_delete(assessment_num):
+    # Deleting PkpurchaseorderInfo objects
+    try:
+        customer_po_objects = PkpurchaseorderInfo.objects.filter(po_assessment_num=assessment_num)
+        if customer_po_objects.exists():
+            customer_po_objects.delete()
+        else:
+            print("No matching PkpurchaseorderInfo found to delete.")
+    except Exception as e:
+        print(f"An error occurred while deleting PkpurchaseorderInfo: {e}")
+
+
+def Pkpurchaseorder_dim_delete(assessment_num):
+    # Deleting Pkpurchaseorder dimension objects
+    try:
+        customer_po_dim_objects = POdimension.objects.filter(pod_assess_num=assessment_num)
+        if customer_po_dim_objects.exists():
+            customer_po_dim_objects.delete()
+        else:
+            print("No matching Pkpurchaseorder dimensions found to delete.")
+    except Exception as e:
+        print(f"An error occurred while deleting Pkpurchaseorder dimensions: {e}")
+
+
+def Pkquotation_delete(assessment_num):
+    # Deleting PkquotationInfo objects
+    try:
+        quotation_objects = PkquotationInfo.objects.filter(pkqt_assessment_num=assessment_num)
+        if quotation_objects.exists():
+            quotation_objects.delete()
+        else:
+            print("No matching PkquotationInfo found to delete.")
+    except Exception as e:
+        print(f"An error occurred while deleting PkquotationInfo: {e}")
+
+
+def Pkquotation_summary_delete(assessment_num):
+    # Deleting PkquotationsummaryInfo objects
+    try:
+        quotationsummary_objects = PkquotationsummaryInfo.objects.filter(qs_assessment_num=assessment_num)
+        if quotationsummary_objects.exists():
+            quotationsummary_objects.delete()
+        else:
+            print("No matching PkquotationsummaryInfo found to delete.")
+    except Exception as e:
+        print(f"An error occurred while deleting PkquotationsummaryInfo: {e}")
+
 
 @login_required(login_url='login_page')
 def na_dimension_cancel(request,needassessment_id=0):

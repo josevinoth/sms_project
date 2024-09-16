@@ -32,12 +32,6 @@
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Estimation Type</span>
-								</div>
-								{% render_field form.qs_estimation_type id="qs_estimation_type" class="form-control " %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
 									<span class="input-group-text">Customer Name</span>
 								</div>
 								{% render_field form.qs_customer_name_2 id="qs_customer_name_2" class="form-control disable_a_href" %}
@@ -188,7 +182,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Quotation Number</span>
 								</div>
-								{% render_field form.qs_quotation_number id="qs_quotation_number"  class="form-control" %}
+								{% render_field form.qs_quotation_number id="qs_quotation_number"  class="form-control disable_a_href" %}
 							</div>
 							<div id="accordion_1" class="container-fluid mb-3">
 								<div class="card">
@@ -334,7 +328,6 @@ $(document).ready(function() {
 	document.getElementById("qs_management_cost").value ='{{management_cost}}';
 	document.getElementById("qs_material_cost").value ='{{material_cost}}';
 	document.getElementById("qs_transport_cost").value ='{{transport_cost}}';
-	estimation_type_val=document.getElementById("qs_estimation_type").value;
 	change_charge_type()
 
 	var user_role='{{role_id}}'
@@ -417,16 +410,13 @@ document.getElementById("qs_rate_per_cft").value=rate_per_cft.toFixed(2)
 <!--Unique Field validation-->
 <script>
     $(document).ready(function() {
-        $('#qs_estimation_type').on('change', function() {
+        $('#qs_assessment_num').on('change', function() {
             var qs_assessment_num = document.getElementById("qs_assessment_num").value;
-            var qs_estimation_type = document.getElementById("qs_estimation_type").value;
-			alert(qs_assessment_num)
             // Send an AJAX request to check if the value exists in the database
             $.ajax({
                 url: '{% url "pk_quotation_summary_check_unique_field" %}',
                 data: {
                     'qs_assessment_num': qs_assessment_num,
-                    'qs_estimation_type': qs_estimation_type,
                 },
                 dataType: 'json',
                 success: function(data) {
