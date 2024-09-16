@@ -108,6 +108,9 @@ def needassessment_delete(request,needassessment_id):
     # Deleting quotation summary objects
     Pkquotation_summary_delete(assessment_num)
 
+    # Deleting Pkneedassessment dims objects
+    Pkneedassessment_dim_delete(assessment_num)
+
     # Deleting need assessment objects
     needassessment.delete()
 
@@ -190,6 +193,21 @@ def Pkquotation_summary_delete(assessment_num):
     except Exception as e:
         print(f"An error occurred while deleting PkquotationsummaryInfo: {e}")
 
+def Pkneedassessment_dim_delete(assessment_num):
+    try:
+        # Fetch the queryset for the matching records
+        na_dim_objects = Nadimension.objects.filter(nad_assess_num=assessment_num)
+
+        # Check if any objects were found
+        if na_dim_objects.exists():
+            # Delete the objects
+            na_dim_objects.delete()
+        else:
+            # Handle the case where no objects were found, if needed
+            print("No matching costing info found to delete.")
+    except Exception as e:
+        # Handle any unexpected exceptions
+        print(f"An error occurred: {e}")
 
 @login_required(login_url='login_page')
 def na_dimension_cancel(request,needassessment_id=0):
