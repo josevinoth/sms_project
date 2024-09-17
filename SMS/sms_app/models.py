@@ -158,7 +158,6 @@ from .sub_models.na_dimension_mod import Nadimension
 from .sub_models.pk_quotes_mod import PkquotesInfo
 from .sub_models.pk_retrival_mod import PkretrivalInfo
 from .sub_models.pk_quotation_mod import PkquotationInfo
-from .sub_models.pk_estimation_type_mod import PKestimationtype
 from .sub_models.pk_quotation_summary_mod import PkquotationsummaryInfo
 from .sub_models.pk_purchaseorder_mod import PkpurchaseorderInfo
 from .sub_models.po_dimension_mod import POdimension
