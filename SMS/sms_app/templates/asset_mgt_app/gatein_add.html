@@ -32,7 +32,7 @@
 		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before Offloading</a>
 		{% endif %}
 		<a class="btn  border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
-<!--		<a class="btn  border border-dark disable_a_href " id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
+		<!--		<a class="btn  border border-dark disable_a_href " id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
 		<a class="btn  border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
 	</div>
 	<div class="col-2"></div>
@@ -154,9 +154,9 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Pre-GateIn</span>
 									</div>
-									{% render_field gatein_form.gatein_pre_id class="form-control" id="gatein_pre_id"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									{% render_field gatein_form.gatein_pre_id class="form-control" id="gatein_pre_id" %}
 								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Pre-GateIn Truck Number</span>
@@ -246,96 +246,96 @@
 </form>
 
 <script>
-$(document).ready(function() {
-	var gatein_status_id = '{{gatein_status}}';
-	var loadingbay_status_id='{{loadingbay_status}}';
-	var damage_before_status_id='{{damage_before_status}}';
-	var damage_after_status_id='{{damage_after_status}}';
-	var warehousein_status_id='{{warehousein_status}}';
+	$(document).ready(function() {
+        var gatein_status_id = '{{gatein_status}}';
+        var loadingbay_status_id='{{loadingbay_status}}';
+        var damage_before_status_id='{{damage_before_status}}';
+        var damage_after_status_id='{{damage_after_status}}';
+        var warehousein_status_id='{{warehousein_status}}';
 
-	if (gatein_status_id =="Completed")
-	{
-		$('#gatein_btn').removeClass('disable_a_href');
-		$('#gatein_btn1').removeClass('disable_a_href');
-		$('#gatein_btn').addClass('btn-success');
-		$('#gatein_btn1').addClass('btn-success');
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-	}
-	else if (gatein_status_id =="Work In Progress")
-	{
-		$('#gatein_btn').removeClass('disable_a_href');
-		$('#gatein_btn1').removeClass('disable_a_href');
-		$('#gatein_btn').addClass('btn-warning');
-		$('#gatein_btn1').addClass('btn-warning');
-	}
+        if (gatein_status_id =="Completed")
+        {
+            $('#gatein_btn').removeClass('disable_a_href');
+            $('#gatein_btn1').removeClass('disable_a_href');
+            $('#gatein_btn').addClass('btn-success');
+            $('#gatein_btn1').addClass('btn-success');
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+        }
+        else if (gatein_status_id =="Work In Progress")
+        {
+            $('#gatein_btn').removeClass('disable_a_href');
+            $('#gatein_btn1').removeClass('disable_a_href');
+            $('#gatein_btn').addClass('btn-warning');
+            $('#gatein_btn1').addClass('btn-warning');
+        }
 
-	if (loadingbay_status_id =="Completed")
-	{
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		$('#loadingbay_btn').addClass('btn-success');
-		$('#loadingbay_btn1').addClass('btn-success');
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-	}
-	else if (loadingbay_status_id =="Work In Progress")
-	{
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		$('#loadingbay_btn').addClass('btn-warning');
-		$('#loadingbay_btn1').addClass('btn-warning');
-	}
+        if (loadingbay_status_id =="Completed")
+        {
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+            $('#loadingbay_btn').addClass('btn-success');
+            $('#loadingbay_btn1').addClass('btn-success');
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+        }
+        else if (loadingbay_status_id =="Work In Progress")
+        {
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+            $('#loadingbay_btn').addClass('btn-warning');
+            $('#loadingbay_btn1').addClass('btn-warning');
+        }
 
-	if (damage_before_status_id =="Completed")
-	{
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		$('#damagecheck_before_btn').addClass('btn-success');
-		$('#damagecheck_before_btn1').addClass('btn-success');
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-	}
-	else if (damage_before_status_id =="Work In Progress")
-	{
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		$('#damagecheck_before_btn').addClass('btn-warning');
-		$('#damagecheck_before_btn1').addClass('btn-warning');
-	}
-	if (damage_after_status_id =="Completed")
-	{
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-success');
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (damage_after_status_id =="No Status")
-	{
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-warning');
-	}
+        if (damage_before_status_id =="Completed")
+        {
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            $('#damagecheck_before_btn').addClass('btn-success');
+            $('#damagecheck_before_btn1').addClass('btn-success');
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+        }
+        else if (damage_before_status_id =="Work In Progress")
+        {
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            $('#damagecheck_before_btn').addClass('btn-warning');
+            $('#damagecheck_before_btn1').addClass('btn-warning');
+        }
+        if (damage_after_status_id =="Completed")
+        {
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+            $('#damagecheck_after_btn').addClass('btn-success');
+            $('#warehousein_btn').removeClass('disable_a_href');
+        }
+        else if (damage_after_status_id =="No Status")
+        {
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+            $('#damagecheck_after_btn').addClass('btn-warning');
+        }
 
-	if (warehousein_status_id =="Completed")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-success');
-		$('#storage_btn').removeClass('disable_a_href');
-		$('#storage_btn').addClass('btn-success');
-	}
-	else if (warehousein_status_id =="None")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (warehousein_status_id =="No Status")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-warning');
-	}
-	document.getElementById("gatein_updated_by").value ='{{user_id}}';
+        if (warehousein_status_id =="Completed")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn').addClass('btn-success');
+            $('#storage_btn').removeClass('disable_a_href');
+            $('#storage_btn').addClass('btn-success');
+        }
+        else if (warehousein_status_id =="None")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+        }
+        else if (warehousein_status_id =="No Status")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn').addClass('btn-warning');
+        }
+        document.getElementById("gatein_updated_by").value ='{{user_id}}';
 
-  });
+      });
 </script>
 <script>
-    $("#gatein_customer").change(function () {
+	$("#gatein_customer").change(function () {
       var url = $("#gate_in").attr("data-load_customer_model-url");
       var gatein_customer_id = $(this).find(":selected").text();
       $.ajax({
@@ -343,72 +343,72 @@ $(document).ready(function() {
         data: {
           'lm_customer_name_id': gatein_customer_id
         },
-		success: function (data) {
-			var customer_model=JSON.parse(data)["customer_businessmodel_val"];
-			document.getElementById("gatein_customer_type").value =customer_model;
+        success: function (data) {
+            var customer_model=JSON.parse(data)["customer_businessmodel_val"];
+            document.getElementById("gatein_customer_type").value =customer_model;
         }
       });
 
     });
 </script>
 <script>
-    $("#gatein_pre_id").change(function () {
+	$("#gatein_pre_id").change(function () {
       var pre_gatein_val = $(this).find(":selected").text();
        $.ajax({
         url: '{% url 'load_pre_gate_in' %}',
         data: {
           'pre_gatein_val': pre_gatein_val
         },
-		success: function (data) {
-			var truck_numbers=data.truck_numbers;
-			var truck_numbers_id=data.truck_numbers_id;
-			$('#gatein_truck_number_n').removeClass('disable_a_href');
-			$('#gatein_truck_number_n').empty();
-			$('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
-			var len = (truck_numbers).length;
-        	$('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
-        	for( var i = 0; i<len; i++){
-        		$("#gatein_truck_number_n").append("<option value='"+truck_numbers_id[i]+"'>"+truck_numbers[i]+"</option>");
-			}
+        success: function (data) {
+            var truck_numbers=data.truck_numbers;
+            var truck_numbers_id=data.truck_numbers_id;
+            $('#gatein_truck_number_n').removeClass('disable_a_href');
+            $('#gatein_truck_number_n').empty();
+            $('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
+            var len = (truck_numbers).length;
+            $('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
+            for( var i = 0; i<len; i++){
+                $("#gatein_truck_number_n").append("<option value='"+truck_numbers_id[i]+"'>"+truck_numbers[i]+"</option>");
+            }
         }
       });
     });
-  </script>
+</script>
 <script>
-    $("#gatein_truck_number_n").change(function () {
+	$("#gatein_truck_number_n").change(function () {
       var gatein_truck_number_val = $(this).find(":selected").text();
        var pre_gatein_id =document.getElementById("gatein_pre_id").value
        $.ajax({
         url: '{% url 'load_pre_gate_in_truck_details' %}',
         data: {
           'gatein_truck_number_val': gatein_truck_number_val,
-          'pre_gatein_id': pre_gatein_id,
+              'pre_gatein_id': pre_gatein_id,
         },
-		success: function (data) {
-			var Transporter=data.Transporter;
-			var Driver_Name=data.Driver_Name;
-			var Driver_Contact=data.Driver_Contact;
-			var Driver_License=data.Driver_License;
-			var OTL=data.OTL;
-			var Truck_Number=data.Truck_Number;
-			var Truck_Type=data.Truck_Type;
-			var dock_in_time=data.dock_in_time;
-			document.getElementById("gatein_transporter").value =Transporter;
-			document.getElementById("gatein_truck_type").value =Truck_Type;
-			document.getElementById("gatein_truck_number").value =Truck_Number;
-			document.getElementById("gatein_otl").value =OTL;
-			document.getElementById("gatein_dl_number").value =Driver_License;
-			document.getElementById("gatein_contact_number").value =Driver_Contact;
-			document.getElementById("gatein_driver").value =Driver_Name;
-			document.getElementById("gatein_arrival_date").value =dock_in_time;
+        success: function (data) {
+            var Transporter=data.Transporter;
+            var Driver_Name=data.Driver_Name;
+            var Driver_Contact=data.Driver_Contact;
+            var Driver_License=data.Driver_License;
+            var OTL=data.OTL;
+            var Truck_Number=data.Truck_Number;
+            var Truck_Type=data.Truck_Type;
+            var dock_in_time=data.dock_in_time;
+            document.getElementById("gatein_transporter").value =Transporter;
+            document.getElementById("gatein_truck_type").value =Truck_Type;
+            document.getElementById("gatein_truck_number").value =Truck_Number;
+            document.getElementById("gatein_otl").value =OTL;
+            document.getElementById("gatein_dl_number").value =Driver_License;
+            document.getElementById("gatein_contact_number").value =Driver_Contact;
+            document.getElementById("gatein_driver").value =Driver_Name;
+            document.getElementById("gatein_arrival_date").value =dock_in_time;
         }
       });
 
     });
-  </script>
+</script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+	document.addEventListener("DOMContentLoaded", function() {
         const checkinTimeInput = document.getElementById('gatein_arrival_date');
 
         // Get the current date and time in UTC
@@ -429,4 +429,13 @@ $(document).ready(function() {
         }
     });
 </script>
+<script>
+	$(document).ready(function() {
+        $('#gatein_pre_id').select2({
+            placeholder: 'Search Pre-GateIn',
+            allowClear: true
+        });
+    });
+</script>
+
 {% endblock content %}

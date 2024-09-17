@@ -9,6 +9,8 @@ from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
+
+from ..sub_models.na_dimension_mod import Nadimension
 from ..views import Pkcosting_delete,Pkcostingsummary_delete
 
 @login_required(login_url='login_page')
@@ -345,3 +347,34 @@ def pk_bvm_invoice_excel(request, invoice_id=0):
     # Save the workbook to the response
     wb.save(response)
     return response
+
+@login_required(login_url='login_page')
+def pk_store_na_dimension_id(request):
+    na_dimension_box_val = []
+    ct_requirement_id= request.GET.get('ct_requirement_id')
+    print('ct_requirement_id',ct_requirement_id)
+    # Fetch requirement type from need assessment
+
+    a = Nadimension.objects.get(pk=ct_requirement_id)
+
+    na_dimension_box_val.append(str(a.nad_type_of_req)+str(' (')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
+    na_dimension_type =str(a.nad_dimension_type)
+    na_dimension_type_id = str(a.nad_dimension_type.id)
+    na_uom=str(a.nad_uom)
+    na_uom_id=str(a.nad_uom.id)
+    na_length=str(a.nad_length)
+    na_width=str(a.nad_width)
+    na_height = str(a.nad_height)
+
+
+    data = {
+        'na_dimension_box_val': na_dimension_box_val,
+        'na_dimension_type': na_dimension_type,
+        'na_dimension_type_id': na_dimension_type_id,
+        'na_uom': na_uom,
+        'na_uom_id': na_uom_id,
+        'na_length': na_length,
+        'na_width': na_width,
+        'na_height': na_height,
+    }
+    return JsonResponse(data)
