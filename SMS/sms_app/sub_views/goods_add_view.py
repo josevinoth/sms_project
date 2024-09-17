@@ -162,14 +162,6 @@ def goods_add(request, goods_id=0):
             goods_form = GoodsaddForm(request.POST)
             if goods_form.is_valid():
                 print("Goods Form is Valid")
-                # Generate Random WH_stock number
-                try:
-                    last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
-                    wh_stock_num = str('Stock_') + str(int(((Warehouse_goods_info.objects.get(id=last_id)).wh_qr_rand_num).replace('Stock_', '')) + 1)
-                except ObjectDoesNotExist:
-                    wh_stock_num = str('Stock_') + str(1000000)
-                # wh_stock_num = last_id + 1
-
                 available_area_val = request.POST.get('wh_available_area')
                 available_volume_val = request.POST.get('wh_available_volume')
                 required_area_val = request.POST.get('wh_goods_area')
@@ -193,6 +185,15 @@ def goods_add(request, goods_id=0):
                         goods_form.save()
                         messages.success(request, 'Record saved successfully')
                 goods_update(request)
+
+                # Generate Random WH_stock number
+                try:
+                    last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
+                    wh_stock_num = 2000000+last_id
+                except ObjectDoesNotExist:
+                    wh_stock_num = 2000000
+                wh_stock_num = str('Stock_') + str(wh_stock_num)
+                # wh_stock_num = last_id + 1
                 last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
                 Warehouse_goods_info.objects.filter(id=last_id).update(wh_qr_rand_num=wh_stock_num)
             else:
