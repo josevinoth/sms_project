@@ -22,6 +22,9 @@
     <!-- Custom CSS -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'all.css' %}">
+
+     <!-- Include Select Plugin CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.4.0/css/select.dataTables.min.css">
 </head>
 <body style="background-color: #99ccff ">
 
@@ -78,6 +81,10 @@
 
 <!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- Include Select Plugin JS -->
+    <script src="https://cdn.datatables.net/select/1.4.0/js/dataTables.select.min.js"></script>
+
 <script>
     $(document).ready(function() {
         // Initialize DataTables
