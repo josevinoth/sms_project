@@ -17,6 +17,7 @@ def gatein_pre_add(request, gatein_pre_id=0):
     user_id = request.session.get('ses_userID')
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
     user_branch_id=Location_info.objects.get(loc_name=user_branch).id
+    print('user_branch_id',user_branch_id)
     if request.method == "GET":
         if gatein_pre_id == 0:
             print("I am inside Get add Pre Gatein")
@@ -47,19 +48,19 @@ def gatein_pre_add(request, gatein_pre_id=0):
             gatein_pre_form = Gatein_preaddForm(request.POST,request.FILES)
             if gatein_pre_form.is_valid():
                 print( "Pre-Gate-in Main Form is Valid")
-                # Generate Random pre-gatein number
-                try:
-                    last_id = (Gatein_pre_info.objects.latest('id')).id
-                    # last_id = (Gatein_pre_info.objects.values_list('gatein_pre_number',flat=True)).last()
-                    pre_gatein_num = (int((Gatein_pre_info.objects.get(id=last_id)).gatein_pre_number) + 1)
-                except ObjectDoesNotExist:
-                    pre_gatein_num = (randint(10000, 999999))
                 gatein_pre_form.save()
-                last_id = (Gatein_pre_info.objects.latest('id')).id
+
+                # Generate Random requirement number
+                try:
+                    last_id = Gatein_pre_info.objects.order_by('-id').values_list('id', flat=True).first()
+                    print('last_id',last_id)
+                    pre_gatein_num = 2000000 + last_id
+                except ObjectDoesNotExist:
+                    pre_gatein_num = 2000000
+                print('pre_gatein_num', pre_gatein_num)
                 Gatein_pre_info.objects.filter(id=last_id).update(gatein_pre_number=pre_gatein_num)
                 messages.success(request, 'Record Updated Successfully')
-                job_id = Gatein_pre_info.objects.get(gatein_pre_number=pre_gatein_num).id
-                url = 'gatein_pre_update/' + str(job_id)
+                url = 'gatein_pre_update/' + str(last_id)
                 return redirect(url)
             else:
                 print("Pre-Gate-in Main Form is In-Valid")

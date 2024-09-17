@@ -1,6 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+
 <div class="col-md-1">
 	<a href="{% url 'search' %}" class="btn btn-primary btn-block btn-lg">
 		<i class="fas fa-arrow-left"></i> Back
@@ -154,7 +155,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Pre-GateIn</span>
 									</div>
-									{% render_field gatein_form.gatein_pre_id class="form-control" id="gatein_pre_id" %}
+									{% render_field gatein_form.gatein_pre_id class="form-control " id="gatein_pre_id" %}
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
@@ -429,13 +430,13 @@
         }
     });
 </script>
-<!--<script>-->
-<!--	$(document).ready(function() {-->
-<!--        $('#gatein_pre_id').select2({-->
-<!--            placeholder: 'Search Pre-GateIn',-->
-<!--            allowClear: true-->
-<!--        });-->
-<!--    });-->
-<!--</script>-->
+<script>
+    $(document).ready(function() {
+        $('#gatein_pre_id').selectpicker({
+            liveSearch: true,
+            noneSelectedText: 'Search Pre-GateIn'
+        });
+    });
+</script>
 
 {% endblock content %}

@@ -7,7 +7,7 @@ from xhtml2pdf import pisa
 
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,Pkquotation_delete,Pkquotation_summary_delete
 from ..forms import PkcostingsummaryForm,PkquotationsummaryForm
-from ..models import POdimension,PkpurchaseorderInfo,pk_stock_statusinfo,PkcostingInfo,User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo,PkcostingsummaryInfo
+from ..models import pk_stock_statusinfo,PkcostingInfo,User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo,PkcostingsummaryInfo
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages

@@ -305,19 +305,6 @@ def load_pre_gate_in_truck_details(request):
     Truck_Name=[]
     for i in Truck_Type:
         Truck_Name.append(VehicletypeInfo.objects.get(id=i).vt_vehicletype)
-
-    # gatein_record=Gatein_info.objects.all()
-    # # gatein_record=Gatein_info.objects.filter(gatein_pre_id=pre_gatein_id)
-    # for i in gatein_record:
-    #     truck_number=i.gatein_truck_number
-    #     pre_gatein_id=i.gatein_pre_id
-    #     try:
-    #         truck_id=Pregateintruckinfo.objects.get(pregatein_number=pre_gatein_id,pregatein_truck_number=truck_number).id
-    #         print('truck_id',truck_id)
-    #     except ObjectDoesNotExist:
-    #         pass
-    #     Gatein_info.objects.filter(gatein_pre_id=pre_gatein_id,gatein_truck_number=truck_number).update(gatein_truck_number_n=truck_id)
-
     data = {
             'Transporter': list(Transporter),
             'Driver_Name': list(Driver_Name),
@@ -330,3 +317,4 @@ def load_pre_gate_in_truck_details(request):
         }
     # return HttpResponse(json.dumps(data))
     return JsonResponse((data))
+
