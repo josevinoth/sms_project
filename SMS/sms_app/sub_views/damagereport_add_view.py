@@ -135,11 +135,11 @@ def damagereport_add(request,damagereport_id=0):
                 except ObjectDoesNotExist:
                     wh_grn_num_next = str(branch) + str(randint(10000, 99999))
                 damagereport_form.save()
+                print('wh_grn_num_next',wh_grn_num_next)
                 last_id = (DamagereportInfo.objects.values_list('id', flat=True)).last()
                 DamagereportInfo.objects.filter(id=last_id).update(dam_GRN_num=wh_grn_num_next)
                 messages.success(request, 'Record Updated Successfully')
-                job_id = DamagereportInfo.objects.get(dam_GRN_num=wh_grn_num_next).id
-                url = 'damagereport_update/' + str(job_id)
+                url = 'damagereport_update/' + str(last_id)
                 return redirect(url)
             else:
                 print("Main Form Not saved")

@@ -147,25 +147,23 @@ def gatein_add(request, gatein_id=0):
                     branch = 'PNY_WH_Job_'
                 else:
                     branch = 'HYD_WH_Job_'
-                try:
-                    last_id = Gatein_info.objects.latest('id').id
-                    wh_job_num=Gatein_info.objects.get(id=last_id).gatein_job_no
-                    group=[]
-                    for i in wh_job_num:
-                        try:
-                            int(i)
-                            group.append(i)
-                        except ValueError:
-                            pass
-                    wh_job_num_next = str(branch) + str(int(''.join(group)) + 1)
-                except ObjectDoesNotExist:
-                    wh_job_num_next = str(branch) + str(randint(10000, 99999))
+
+                last_id = Gatein_info.objects.latest('id').id
                 gatein_form.save()
-                last_id = (Gatein_info.objects.values_list('id', flat=True)).last()
+                # Generate Random requirement number
+                try:
+                    last_id = (Gatein_info.objects.values_list('id', flat=True)).last()
+                    wh_job_num_next = 2000000 + last_id
+                    # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
+                except ObjectDoesNotExist:
+                    wh_job_num_next = 2000000
+                    # req_num_next = str('Req_') + str(randint(10000, 99999))
+                wh_job_num_next = str(branch) + str(wh_job_num_next)
+
                 Gatein_info.objects.filter(id=last_id).update(gatein_job_no=wh_job_num_next)
                 messages.success(request, 'Record Updated Successfully')
-                job_id = Gatein_info.objects.get(gatein_job_no=wh_job_num_next).id
-                url = 'gatein_update/' + str(job_id)
+                # job_id = Gatein_info.objects.get(gatein_job_no=wh_job_num_next).id
+                url = 'gatein_update/' + str(last_id)
                 return redirect(url)
             else:
                 print("Form is In-Valid")
