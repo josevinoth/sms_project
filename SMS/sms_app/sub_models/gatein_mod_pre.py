@@ -17,7 +17,7 @@ class Gatein_pre_info(models.Model):
     gatein_pre_driver_name = models.CharField(blank=True, null=True, max_length=10000)
 
     class Meta:
-        ordering = ["id"]
+        ordering = ["-id"]
 
     def __str__(self):
         return self.gatein_pre_number
