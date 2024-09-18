@@ -4,7 +4,8 @@ from ..models import Business_Sol_info,ExpenseCategoryInfo,MyUser,Location_info,
 
 class ExpenseInfo(models.Model):
     exp_branch = models.ForeignKey(Location_info, on_delete=models.CASCADE,blank=True, null=True)
-    exp_unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE,blank=True, null=True)
+    exp_unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE,blank=True,related_name='exp_unit', db_column='exp_unit', null=True)
+    exp_unit_1 = models.ManyToManyField(UnitInfo,related_name='exp_unit_1', db_column='exp_unit_1')
     exp_vendor = models.ForeignKey(Vendor_info, on_delete=models.CASCADE,blank=True, null=True)
     exp_vendor_bill=models.CharField(max_length=20,default = '',blank=True, null=True)
     exp_vendor_bill_date=models.DateTimeField(blank=True, null=True)

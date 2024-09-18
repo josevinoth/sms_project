@@ -839,18 +839,61 @@
 }
 </script>
 
+
+<style>
+    /* Custom styles for multiselect dropdown */
+    .multiselect-container {
+        max-width: 1000px !important;  /* Set your desired max width for the dropdown */
+        min-width: 200px;              /* Ensure a minimum width */
+        width: 100% !important;        /* Ensure it fills the width of the button */
+        box-sizing: border-box;			/* Ensure padding and border are included in width */
+
+    }
+
+    .custom-multiselect-button {
+        border: 1px solid lightgray;  /* Light border for the button */
+    }
+	.multiselect-container li a label {
+    display: flex;
+    align-items: center;
+    padding-right:10px;
+    cursor: pointer; /* Ensures the entire label is clickable */
+}
+
+/* Position the checkbox after the text */
+.multiselect-container li a label input[type="checkbox"] {
+    margin-left: -30px; /* Space between text and checkbox */
+}
+
+    /* Position the input box (checkbox) before the text and align it */
+
+
+    /* Correct alignment of the checkbox to be line-wise with text */
+    .multiselect-container li a label {
+        cursor: pointer; /* Ensures the entire area is clickable */
+        height: auto; /* Adjusts height based on content, ensuring vertical center alignment */
+    }
+</style>
+
+
 <script>
     $(document).ready(function() {
         $('#s_joint_call_name').multiselect({
             includeSelectAllOption: true,
+            enableCaseInsensitiveFiltering: true,
             nonSelectedText: 'Select options',
-            buttonWidth: '130%',
+            buttonWidth: '195',
+            buttonHeight:'200',
+            buttonClass: 'custom-multiselect-button',
             enableFiltering: true,
-            maxHeight: 250
+            maxHeight: 250,
+            dropUp: false
 
         });
     });
+
 </script>
+
 
 {% endblock content %}
 
