@@ -49,6 +49,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">unit_1</span>
+									</div>
+									{% render_field expense_form.exp_unit_1 id="exp_unit_1" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Vendor</span>
 									</div>
 									{% render_field expense_form.exp_vendor id="exp_vendor" class="form-control" %}
@@ -229,28 +236,35 @@ $(document).ready(function() {
   });
 </script>
 <script>
-   $("#exp_branch").change(function () {
-      var url = $("#invoice_add").attr("data-units-url");
-      var branchId = $(this).val();
-      $.ajax({
-        url: '{% url 'load_units_origin' %}',
-        data: {
-          'branchId': branchId,
-        },
-		success: function (data) {
-			console.log(data);
-			$('#exp_unit').removeClass('disable_a_href');
-			$('#exp_unit').empty().append("<option value='0'>--Select--</option>");
-        	var unit_name=JSON.parse(data)["unit_name_list"];
-        	var unit_id=JSON.parse(data)["unit_id"];
-        	var len = (unit_name).length;
-        	$('#exp_unit').empty().append("<option value='0'>--Select--</option>");
-        	for( var i = 0; i<len; i++){
-        		$("#exp_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-			}
-        }
-      });
-    });
+	$("#exp_branch").change(function () {
+       var url = $("#invoice_add").attr("data-units-url");
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units_origin' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#exp_unit').removeClass('disable_a_href');
+             $('#exp_unit').empty().append("<option value='0'>--Select--</option>");
+             $('#exp_unit_1').removeClass('disable_a_href');
+             $('#exp_unit_1').empty().append("<option value='0'>--Select--</option>");
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#exp_unit').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#exp_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+
+             $('#exp_unit_1').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#exp_unit_1").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
 </script>
 <script>
 	function update_rates_fn() {
@@ -272,4 +286,61 @@ $(document).ready(function() {
 
 	}
 </script>
+
+
+
+<style>
+    /* Custom styles for multiselect dropdown */
+    .multiselect-container {
+        max-width: 1000px !important;  /* Set your desired max width for the dropdown */
+        min-width: 200px;              /* Ensure a minimum width */
+        width: 100% !important;        /* Ensure it fills the width of the button */
+        box-sizing: border-box;			/* Ensure padding and border are included in width */
+
+    }
+
+    .custom-multiselect-button {
+        border: 1px solid lightgray;  /* Light border for the button */
+    }
+	.multiselect-container li a label {
+    display: flex;
+    align-items: center;
+    padding-right:40px;
+    cursor: pointer; /* Ensures the entire label is clickable */
+}
+
+/* Position the checkbox after the text */
+.multiselect-container li a label input[type="checkbox"] {
+    margin-left: -70px; /* Space between text and checkbox */
+}
+
+    /* Position the input box (checkbox) before the text and align it */
+
+
+    /* Correct alignment of the checkbox to be line-wise with text */
+    .multiselect-container li a label {
+        cursor: pointer; /* Ensures the entire area is clickable */
+        height: auto; /* Adjusts height based on content, ensuring vertical center alignment */
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('#exp_unit_1').multiselect({
+            includeSelectAllOption: true,
+            enableCaseInsensitiveFiltering: true,
+            nonSelectedText: 'Select options',
+            buttonWidth: '160',
+            buttonHeight:'200',
+            buttonClass: 'custom-multiselect-button',
+            enableFiltering: true,
+            maxHeight: 250,
+            dropUp: false
+
+        });
+    });
+
+</script>
+
+
 {% endblock content %}

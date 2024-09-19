@@ -46,6 +46,7 @@
             <th>Created On</th>
             <th>Branch</th>
             <th>Unit</th>
+            <th>Unit_1</th>
             <th>Vendor</th>
             <th>Bill No</th>
             <th>Bill Date</th>
@@ -69,6 +70,17 @@
             <td> {{expenseinfo.exp_created_on}}</td>
             <td> {{expenseinfo.exp_branch}}</td>
             <td> {{expenseinfo.exp_unit}}</td>
+            <td>
+                {% if ExpenseInfo.exp_unit_1.exists %}
+                <ul>
+                    {% for category in ExpenseInfo.exp_unit_1.all %}
+                    <li>{{ category }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                No categories
+                {% endif %}
+            </td>
             <td> {{expenseinfo.exp_vendor}}</td>
             <td> {{expenseinfo.exp_vendor_bill}}</td>
             <td> {{expenseinfo.exp_vendor_bill_date}}</td>
