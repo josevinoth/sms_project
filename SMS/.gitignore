@@ -6,6 +6,8 @@
 # Ignore IDE-related files
 .idea/
 
-# Ignore specific files and directories
+# Ignore everything in Requirements folder
 Requirements/*
-!Requirements/*.py   # (keep only Python files if needed)
+
+# But do not ignore Python files in the Requirements folder
+!Requirements/*.py
