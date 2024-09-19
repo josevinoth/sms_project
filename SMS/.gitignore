@@ -1,17 +1,11 @@
-SMS/SMS/__init__.py
-SMS/manage.py
-SMS/SMS
-# Ignore Python cache
-__pycache__/
-*.py[cod]
+# Ignore all Excel, PowerPoint, and PDF files
+*.xlsx
+*.pptx
+*.pdf
 
-# Ignore IDE-specific files
+# Ignore IDE-related files
 .idea/
 
-# Ignore documents and other generated files
-*.xlsx
-*.pdf
-*.pptx
-*.eml
-*.txt
-
+# Ignore specific files and directories
+Requirements/*
+!Requirements/*.py   # (keep only Python files if needed)
