@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'SMS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'asset_mgt_31_jan',
+        'NAME': 'asset_mgt_29_jun-24',
         'USER': 'postgres',
         'PASSWORD': '244613',
         'HOST': 'localhost'
