@@ -14,6 +14,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from django.contrib import messages
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -83,7 +84,7 @@ WSGI_APPLICATION = 'SMS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'asset_mgt_29_jun-24',
+        'NAME': 'asset_mgt_012',
         'USER': 'postgres',
         'PASSWORD': '244613',
         'HOST': 'localhost'
@@ -140,13 +141,40 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, ''),)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-#Email feature
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# #Email feature
+# # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = config('EMAIL_HOST')
+# EMAIL_PORT = config('EMAIL_PORT', cast=int)
+# EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+DEPARTMENT_EMAILS = {
+    'sales': {
+        'EMAIL_HOST': 'smtp.gmail.com',
+        'EMAIL_PORT': 587,
+        'EMAIL_USE_TLS': True,
+        'EMAIL_HOST_USER': 'sales@example.com',
+        'EMAIL_HOST_PASSWORD': 'sales-password'
+    },
+    'support': {
+        'EMAIL_HOST' :'smtp.gmail.com',
+        'EMAIL_PORT' :587,
+        'EMAIL_USE_TLS' :True,
+        'EMAIL_HOST_USER' :'josevinoth83@gmail.com',
+        'EMAIL_HOST_PASSWORD' :'oygs mlgf bmxf tqoi',
+    },
+    'warehouse': {
+        'EMAIL_HOST' : 'smtp.office365.com',
+        'EMAIL_PORT' : 587,
+        'EMAIL_USE_TLS' : True,
+        'EMAIL_HOST_USER' : 'erpwarehouse@bvmstorage.com',
+        'EMAIL_HOST_PASSWORD' : 'V#387577871721ow',
+    }
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-
