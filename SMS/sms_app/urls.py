@@ -516,4 +516,5 @@ urlpatterns = [
     path('ml_product_edit/<int:product_id>', views.create_product, name='ml_product_edit'),  # multi select
     path('ml_product_list', views.ml_product_list, name='ml_product_list'),  # multi select
     path('ml_product_delete/<int:product_id>', views.ml_product_delete, name='ml_product_delete'),  # multi select
+    path('warehouse_send_email/', views.warehouse_send_email_view, name='warehouse_send_email'),
 ]

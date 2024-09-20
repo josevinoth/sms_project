@@ -318,95 +318,95 @@ for (i = 0; i < coll.length; i++) {
 </script>
 
 <script>
-$(document).ready(function() {
-    console.log("JavaScript code is running!"); // Check if JavaScript is executing
-    var user_role = '{{ role }}';
-    var department = '{{ department }}';
-    var user_id='{{user_id}}';
-    var bussiness_solution = '{{ bussiness_solution }}';
-    // Function to remove disable_a_href class
-    function enableElement(elementId) {
-        $('#' + elementId).removeClass('disable_a_href');
-    }
-
-    // Function to add disable_a_href class
-    function disableElement(elementId) {
-        $('#' + elementId).addClass('disable_a_href');
-    }
-    if (user_id==1 || user_id==93 || user_id==86 || user_id==100 || user_id==88)
-    {
-        $('#task').css('display', 'block');
-    }
-    else
-    {
-        $('#task').css('display', 'none');
-    }
-    if (user_id==1)
-    {
-        $('#timesheet').css('display', 'block');
-    }
-    else
-    {
-        $('#timesheet').css('display', 'none');
-    }
-    // Admin can view all elements
-    if (user_role !== 'User') {
-        enableElement('finance');
-        enableElement('sales');
-        enableElement('warehouse');
-        enableElement('transport');
-        enableElement('packing');
-    } else { // User view based on role, business solution, and department
-        disableElement('employee_management_system');
-        disableElement('administration');
-        disableElement('sales'); // Disable sales by default
-        disableElement('customer');
-        disableElement('asset');
-        disableElement('vendor');
-        disableElement('finance');
-        disableElement('packing'); // Disable packing for BVM Storage Solutions
-        disableElement('transport'); // Disable transport for BVM Storage Solutions
-        disableElement('warehouse');
-
-        if (department === 'Corporate')
-        {
-            enableElement('customer');
-            enableElement('asset');
-            enableElement('vendor'); // Enable the vendor element for the Corporate department
-        }
-        else if (department === 'Human Resource')
-        {
-            enableElement('employee_management_system');
-        }
-        else if (department === 'Human Resource')
-        {
-            enableElement('employee_management_system');
-        }
-        else if (department === 'Finance')
-        {
-            enableElement('finance'); // Enable finance for the Finance department
-            disableElement('sales');
+    $(document).ready(function() {
+        console.log("JavaScript code is running!"); // Check if JavaScript is executing
+        var user_role = '{{ role }}';
+        var department = '{{ department }}';
+        var user_id='{{user_id}}';
+        var bussiness_solution = '{{ bussiness_solution }}';
+        // Function to remove disable_a_href class
+        function enableElement(elementId) {
+            $('#' + elementId).removeClass('disable_a_href');
         }
 
-        else if (department === 'Sales')
+        // Function to add disable_a_href class
+        function disableElement(elementId) {
+            $('#' + elementId).addClass('disable_a_href');
+        }
+        if (user_id==1 || user_id==93 || user_id==86 || user_id==100 || user_id==88)
         {
-            enableElement('sales'); // Enable sales for Sales department
+            $('#task').css('display', 'block');
+        }
+        else
+        {
+            $('#task').css('display', 'none');
+        }
+        if (user_id==1)
+        {
+            $('#timesheet').css('display', 'block');
+        }
+        else
+        {
+            $('#timesheet').css('display', 'none');
+        }
+        // Admin can view all elements
+        if (user_role !== 'User') {
+            enableElement('finance');
+            enableElement('sales');
+            enableElement('warehouse');
+            enableElement('transport');
+            enableElement('packing');
+        } else { // User view based on role, business solution, and department
+            disableElement('employee_management_system');
+            disableElement('administration');
+            disableElement('sales'); // Disable sales by default
+            disableElement('customer');
+            disableElement('asset');
+            disableElement('vendor');
             disableElement('finance');
-        }
+            disableElement('packing'); // Disable packing for BVM Storage Solutions
+            disableElement('transport'); // Disable transport for BVM Storage Solutions
+            disableElement('warehouse');
 
-        if (bussiness_solution === 'BVM Storage Solutions')
-        {
-            enableElement('warehouse'); // Enable warehouse for BVM Storage Solutions
+            if (department === 'Corporate')
+            {
+                enableElement('customer');
+                enableElement('asset');
+                enableElement('vendor'); // Enable the vendor element for the Corporate department
+            }
+            else if (department === 'Human Resource')
+            {
+                enableElement('employee_management_system');
+            }
+            else if (department === 'Human Resource')
+            {
+                enableElement('employee_management_system');
+            }
+            else if (department === 'Finance')
+            {
+                enableElement('finance'); // Enable finance for the Finance department
+                disableElement('sales');
+            }
+
+            else if (department === 'Sales')
+            {
+                enableElement('sales'); // Enable sales for Sales department
+                disableElement('finance');
+            }
+
+            if (bussiness_solution === 'BVM Storage Solutions')
+            {
+                enableElement('warehouse'); // Enable warehouse for BVM Storage Solutions
+            }
+            else if (bussiness_solution === 'BVM Pack Solutions')
+            {
+                enableElement('packing'); // Enable packing for BVM Pack Solutions
+            }
+            else if (bussiness_solution === 'BVM Trans Solutions')
+            {
+                enableElement('transport'); // Enable transport for BVM Trans Solutions
+            }
         }
-        else if (bussiness_solution === 'BVM Pack Solutions')
-        {
-            enableElement('packing'); // Enable packing for BVM Pack Solutions
-        }
-        else if (bussiness_solution === 'BVM Trans Solutions')
-        {
-            enableElement('transport'); // Enable transport for BVM Trans Solutions
-        }
-    }
-});
+    });
 </script>
 {% endblock content %}

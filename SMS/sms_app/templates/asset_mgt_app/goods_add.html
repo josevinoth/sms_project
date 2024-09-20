@@ -32,63 +32,107 @@
 		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before Offloading</a>
 		{% endif %}
 		<a class="btn  border focus border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
-<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
+		<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
 		<a class="btn  border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
 	</div>
 	<div class="col-2"></div>
 </div>
-
 <hr>
-<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" >
-	{% csrf_token %}
-	<div class="row">
-		<div class="col-2">
-			<button type="button" class="btn-lg btn-info" style="width:270px">
-				Goods Qty (Invoice) <h2><span class="badge badge-light">{{gatein_no_of_pkg_val}}</span></h2>
-				<span class="sr-only">unread messages</span>
-			</button>
-			<br>
-			<br>
-			<button type="button" class="btn-lg btn-info" style="width:270px">
-				Goods Qty (Check-In) <h2><span class="badge badge-light">{{goods_checkin_count}}</span></h2>
-				<span class="sr-only">unread messages</span>
-			</button>
-			<br>
-			<br>
-			<button type="button" class="btn-lg btn-info" style="width:270px">
-				Goods Weight (Invoice) <h2><span class="badge badge-light">{{gatein_weight_val}}</span></h2>
-				<span class="sr-only">unread messages</span>
-			</button>
-			<br>
-			<br>
-			<button type="button" class="btn-lg btn-info" style="width:270px">
-				Goods Weight (Check-In) <h2><span class="badge badge-light">{{goods_checkin_weight}}</span></h2>
-				<span class="sr-only">unread messages</span>
-			</button>
-		</div>
-		<div class="col-8">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center">
-						<div class="row">
-							<div class="col-3"></div>
-							<div class="col-5">
-								<h3>Add/Update Damage Check/After</h3>
-							</div>
-							<div class="col-2">
-								<a href="#" class="btn btn-warning btn-block" id="delivery_chalan_btn">
-									Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>
-								</a>
-							</div>
-							<div class="col-2">
-								<a href="#" class="btn btn-warning btn-block" id="damage_report_btn">
-									Inspection Report          <i class="fa fa-download" aria-hidden="true"></i>
-								</a>
+<div class="row">
+	<div class="col-2">
+		<button type="button" class="btn-lg btn-info" style="width:270px">
+			Goods Qty (Invoice) <h2><span class="badge badge-light">{{gatein_no_of_pkg_val}}</span></h2>
+			<span class="sr-only">unread messages</span>
+		</button>
+		<br>
+		<br>
+		<button type="button" class="btn-lg btn-info" style="width:270px">
+			Goods Qty (Check-In) <h2><span class="badge badge-light">{{goods_checkin_count}}</span></h2>
+			<span class="sr-only">unread messages</span>
+		</button>
+		<br>
+		<br>
+		<button type="button" class="btn-lg btn-info" style="width:270px">
+			Goods Weight (Invoice) <h2><span class="badge badge-light">{{gatein_weight_val}}</span></h2>
+			<span class="sr-only">unread messages</span>
+		</button>
+		<br>
+		<br>
+		<button type="button" class="btn-lg btn-info" style="width:270px">
+			Goods Weight (Check-In) <h2><span class="badge badge-light">{{goods_checkin_weight}}</span></h2>
+			<span class="sr-only">unread messages</span>
+		</button>
+	</div>
+	<div class="col-8">
+		<div class="container-fluid">
+			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+				<div class="card-header text-center">
+					<div class="row">
+						<div class="col-3">
+							<!-- Trigger Button to Open Modal -->
+							<button type="button" onclick="email_message_fn()" class="btn btn-warning" data-toggle="modal" data-target=".bd-example-modal-lg">
+								<i class="fas fa-envelope-square"></i> Email To Customer <span class="badge badge-danger">{{email_count}}</span>  <!-- Add the badge here -->
+							</button>
+							<!-- Modal Structure -->
+							<div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+								<div class="modal-dialog modal-lg" role="document">
+									<div class="modal-content">
+										<div class="modal-header bg-info">
+											<h5 class="modal-title text-center" id="sendEmailModalLabel">Send Email</h5>											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+											<span aria-hidden="true">&times;</span>
+										</button>
+										</div>
+										<div class="modal-body text-dark">
+											<!-- Email Form -->
+											<form method="post" action="{% url 'warehouse_send_email' %}">
+												{% csrf_token %}
+												<div class="input-group mb-3">
+													<div class="input-group-prepend">
+														<span class="input-group-text" id="to_emails">To</span>
+													</div>
+													{{ form_warehouse_email.recipient|add_class:"form-control" }}
+												</div>
+												<div class="input-group mb-3">
+													<div class="input-group-prepend">
+														<span class="input-group-text">Subject</span>
+													</div>
+													{{ form_warehouse_email.subject|add_class:"form-control" }}
+												</div>
+												<div class="input-group mb-3">
+													<div class="input-group-prepend">
+														<span class="input-group-text">Message</span>
+													</div>
+													{{ form_warehouse_email.message|add_class:"form-control" }}  <!-- Ensure this has an id="message" -->
+												</div>
+
+												<div class="form-group">
+													<button type="submit" class="btn btn-primary"><i class="fas fa-envelope-square"></i> Send Email</button>
+												</div>
+											</form>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
+						<div class="col-5">
+							<h3>Add/Update Damage Check/After</h3>
+						</div>
+						<div class="col-2">
+							<a href="#" class="btn btn-warning btn-block" id="delivery_chalan_btn">
+								Delivery Challan          <i class="fa fa-download" aria-hidden="true"></i>
+							</a>
+						</div>
+						<div class="col-2">
+							<a href="#" class="btn btn-warning btn-block" id="damage_report_btn">
+								Inspection Report          <i class="fa fa-download" aria-hidden="true"></i>
+							</a>
+						</div>
 					</div>
-					<!--					<p>Invoice Number is  {{ request.session.invoice_num_stock }}</p>-->
-					<div class="card-body bg-light" >
+				</div>
+				<!--					<p>Invoice Number is  {{ request.session.invoice_num_stock }}</p>-->
+				<div class="card-body bg-light" >
+					<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" >
+						{% csrf_token %}
 						<div class="row">
 							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
@@ -131,13 +175,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Consigner</span>
 									</div>
-									{% render_field goods_form.wh_consigner value=request.session.ses_consigner class="form-control disable_a_href" %}
+									{% render_field goods_form.wh_consigner id="wh_consigner" value=request.session.ses_consigner class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Consignee</span>
 									</div>
-									{% render_field goods_form.wh_consignee value=request.session.ses_consignee class="form-control disable_a_href" %}
+									{% render_field goods_form.wh_consignee id="wh_consignee" value=request.session.ses_consignee class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -377,289 +421,288 @@
 						<button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Save</button>
 						<!--						<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">-->
 						<!--							<i class="fas fa-times"></i> Cancel</a>-->
-					</div>
+					</form>
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
-</form>
-
+	<div class="col-2"></div>
+</div>
 {% include "asset_mgt_app/goods_list_woh.html" %}
 <script>
-function chargeable_weight_fn() {
-  var width_val=document.getElementById("width").value;
-  var length_val=document.getElementById("length").value;
-  var height_val=document.getElementById("height").value;
-  var no_of_piece=document.getElementById("no_of_piece").value
-  selectElement = document.querySelector('#uom');
-  uom_val = selectElement.options[selectElement.selectedIndex].value;
-  if (uom_val==1)
-	{
-		var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/6000).toFixed(3)
-		document.getElementById("chargeable_weight").value =chargeable_weight_val;
-		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
-		var volume_val=((width_val*length_val*height_val*no_of_piece)*0.0000353147).toFixed(3);
-		document.getElementById("volume_weight").value =volume_val;
-		var req_area_val=((length_val*width_val*no_of_piece)*0.00107639).toFixed(3)
-		document.getElementById("req_area").value =req_area_val;
-	}
-  else
-	{
-		var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/366).toFixed(3)
-  		document.getElementById("chargeable_weight").value =chargeable_weight_val;
-  		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
-  		var volume_val=((width_val*length_val*height_val*no_of_piece)*0.000578704).toFixed(3);
-		document.getElementById("volume_weight").value =volume_val;
-		var req_area_val=((length_val*width_val*no_of_piece)*0.00694444).toFixed(3)
-		document.getElementById("req_area").value =req_area_val;
-  	}
-  endif
-
-}
-</script>
-<script>
-$(document).ready(function() {
-	var gatein_status_id = '{{gatein_status}}';
-	var loadingbay_status_id='{{loadingbay_status}}';
-	var damage_before_status_id='{{damage_before_status}}';
-	var damage_after_status_id='{{damage_after_status}}';
-	var warehousein_status_id='{{warehousein_status}}';
-	var wh_customer_name_val= document.getElementById("wh_customer_name").value;
-	var wh_customer_type_val= document.getElementById("wh_customer_type").value;
-	var shipper_invoice_val= document.getElementById("wh_goods_invoice").value;
-	if (shipper_invoice_val=="")
-	{
-		document.getElementById("wh_goods_invoice").value='{{shipper_invoice}}'
-	}
-	else
-	{
-		document.getElementById("wh_goods_invoice").value=shipper_invoice_val
-	}
-	if (wh_customer_name_val=="")
-	{
-		document.getElementById("wh_customer_name").value='{{customer_name_id}}';
-	}
-	else
-	{
-		document.getElementById("wh_customer_name").value=wh_customer_name_val;
-	}
-	if (wh_customer_type_val=="")
-	{
-		document.getElementById("wh_customer_type").value='{{customer_type_id}}';
-	}
-	else
-	{
-		document.getElementById("wh_customer_type").value=wh_customer_type_val;
-	}
-
-	if (gatein_status_id =="Completed")
-	{
-		$('#gatein_btn').removeClass('disable_a_href');
-		$('#gatein_btn1').removeClass('disable_a_href');
-		$('#gatein_btn').addClass('btn-success');
-		$('#gatein_btn1').addClass('btn-success');
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-	}
-	else if (gatein_status_id =="Work In Progress")
-	{
-		$('#gatein_btn').removeClass('disable_a_href');
-		$('#gatein_btn1').removeClass('disable_a_href');
-		$('#gatein_btn').addClass('btn-warning');
-		$('#gatein_btn1').addClass('btn-warning');
-	}
-
-	if (loadingbay_status_id =="Completed")
-	{
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		$('#loadingbay_btn').addClass('btn-success');
-		$('#loadingbay_btn1').addClass('btn-success');
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-	}
-	else if (loadingbay_status_id =="Work In Progress")
-	{
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		$('#loadingbay_btn').addClass('btn-warning');
-		$('#loadingbay_btn1').addClass('btn-warning');
-	}
-
-	if (damage_before_status_id =="Completed")
-	{
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		$('#damagecheck_before_btn').addClass('btn-success');
-		$('#damagecheck_before_btn1').addClass('btn-success');
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-	}
-	else if (damage_before_status_id =="Work In Progress")
-	{
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		$('#damagecheck_before_btn').addClass('btn-warning');
-		$('#damagecheck_before_btn1').addClass('btn-warning');
-	}
-	if (damage_after_status_id =="Completed")
-	{
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-success');
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (damage_after_status_id =="No Status")
-	{
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-warning');
-	}
-
-	if (warehousein_status_id =="Completed")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-success');
-		$('#storage_btn').removeClass('disable_a_href');
-		$('#storage_btn').addClass('btn-success');
-	}
-	else if (warehousein_status_id =="None")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (warehousein_status_id =="No Status")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-warning');
-	}
-	challan_damage_btn_active()
-	package_type_chng()
-	fumigation_process_chng()
-	fumigation_action_chng()
-  });
-</script>
-
-<script>
-function package_type_chng() {
-	var wh_goods_package_type_val=document.getElementById("wh_goods_package_type").value;
-
-	if (wh_goods_package_type_val ==3)
-	{
-		$('#wh_fumigation_process').removeClass('disable_a_href');
-	}
-	else if (wh_goods_package_type_val ==9)
-	{
-		$('#wh_fumigation_process').removeClass('disable_a_href');
-	}
-	else
-	{
-		$('#wh_fumigation_process').addClass('disable_a_href');
-		document.getElementById("wh_fumigation_process").value=3
-	}
-	fumigation_process_chng()
-}
-</script>
-
-
-<script>
-function challan_damage_btn_active() {
-	var weight_deviation_val =document.getElementById("wh_weights_deviation").value;
-	var dimension_deviation_val=document.getElementById("wh_dimension_deviation").value;
-	var no_of_units_deviation_val=document.getElementById("wh_no_of_units_deviation").value;
-	var damages_val=document.getElementById("wh_damages").value;
-	var mismatches_val=document.getElementById("wh_mismatches").value;
-	if ((weight_deviation_val==1)||(dimension_deviation_val==1)||(no_of_units_deviation_val==1)||(damages_val!=6)||(mismatches_val==1))
-	 {
-	 	document.getElementById("wh_goods_status").value=6
-	 	$('#wh_goods_status').addClass('disable_a_href');
-	 }
-	 else
-	 {
-	 	$('#wh_goods_status').removeClass('disable_a_href');
-	 }
-}
-</script>
-
-<script>
-function fumigation_process_chng() {
-	var fumigation_process=document.getElementById("wh_fumigation_process").value;
-	if (fumigation_process==2)
-	 	{
-	 		$('#wh_fumigation_action').removeClass('disable_a_href');
-	 	}
-	else
-	 	{
-	 		$('#wh_fumigation_action').addClass('disable_a_href');
-	 		document.getElementById("wh_fumigation_action").value=3
-	 	}
-}
-</script>
-<script>
-function fumigation_action_chng() {
-	var fumigation_action=document.getElementById("wh_fumigation_action").value;
-	if (fumigation_action==1)
-	 	{
-	 		$('#wh_fumigation_date').removeClass('disable_a_href');
-	 	}
-	else
-	 	{
-	 		$('#wh_fumigation_date').addClass('disable_a_href');
-	 	}
-}
-</script>
-
-<script>
-   $("#wh_branch").change(function () {
-<!--      var url = $("#goods_add").attr("data-branches-url");-->
-      var branchId = $(this).val();
-      $.ajax({
-        url: '{% url 'load_units' %}',
-        data: {
-          'branchId': branchId,
-        },
-		success: function (data) {
-			console.log(data);
-			$('#wh_unit').removeClass('disable_a_href');
-			$("#wh_unit").empty();
-			$('#wh_bay').empty().append("<option value='0'>--Select--</option>");
-			$("#wh_stack_layer").val($("#selectBox option:first").val());
-        	var unit_name=JSON.parse(data)["unit_name_list"];
-        	var unit_id=JSON.parse(data)["unit_id"];
-        	var len = (unit_name).length;
-        	$('#wh_unit').empty().append("<option value='0'>--Select--</option>");
-        	for( var i = 0; i<len; i++){
-        		$("#wh_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-			}
+	function chargeable_weight_fn() {
+      var width_val=document.getElementById("width").value;
+      var length_val=document.getElementById("length").value;
+      var height_val=document.getElementById("height").value;
+      var no_of_piece=document.getElementById("no_of_piece").value
+      selectElement = document.querySelector('#uom');
+      uom_val = selectElement.options[selectElement.selectedIndex].value;
+      if (uom_val==1)
+        {
+            var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/6000).toFixed(3)
+            document.getElementById("chargeable_weight").value =chargeable_weight_val;
+            document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
+            var volume_val=((width_val*length_val*height_val*no_of_piece)*0.0000353147).toFixed(3);
+            document.getElementById("volume_weight").value =volume_val;
+            var req_area_val=((length_val*width_val*no_of_piece)*0.00107639).toFixed(3)
+            document.getElementById("req_area").value =req_area_val;
         }
+      else
+        {
+            var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/366).toFixed(3)
+              document.getElementById("chargeable_weight").value =chargeable_weight_val;
+              document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
+              var volume_val=((width_val*length_val*height_val*no_of_piece)*0.000578704).toFixed(3);
+            document.getElementById("volume_weight").value =volume_val;
+            var req_area_val=((length_val*width_val*no_of_piece)*0.00694444).toFixed(3)
+            document.getElementById("req_area").value =req_area_val;
+          }
+      endif
+
+    }
+</script>
+<script>
+	$(document).ready(function() {
+        var gatein_status_id = '{{gatein_status}}';
+        var loadingbay_status_id='{{loadingbay_status}}';
+        var damage_before_status_id='{{damage_before_status}}';
+        var damage_after_status_id='{{damage_after_status}}';
+        var warehousein_status_id='{{warehousein_status}}';
+        var wh_customer_name_val= document.getElementById("wh_customer_name").value;
+        var wh_customer_type_val= document.getElementById("wh_customer_type").value;
+        var shipper_invoice_val= document.getElementById("wh_goods_invoice").value;
+        if (shipper_invoice_val=="")
+        {
+            document.getElementById("wh_goods_invoice").value='{{shipper_invoice}}'
+        }
+        else
+        {
+            document.getElementById("wh_goods_invoice").value=shipper_invoice_val
+        }
+        if (wh_customer_name_val=="")
+        {
+            document.getElementById("wh_customer_name").value='{{customer_name_id}}';
+        }
+        else
+        {
+            document.getElementById("wh_customer_name").value=wh_customer_name_val;
+        }
+        if (wh_customer_type_val=="")
+        {
+            document.getElementById("wh_customer_type").value='{{customer_type_id}}';
+        }
+        else
+        {
+            document.getElementById("wh_customer_type").value=wh_customer_type_val;
+        }
+
+        if (gatein_status_id =="Completed")
+        {
+            $('#gatein_btn').removeClass('disable_a_href');
+            $('#gatein_btn1').removeClass('disable_a_href');
+            $('#gatein_btn').addClass('btn-success');
+            $('#gatein_btn1').addClass('btn-success');
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+        }
+        else if (gatein_status_id =="Work In Progress")
+        {
+            $('#gatein_btn').removeClass('disable_a_href');
+            $('#gatein_btn1').removeClass('disable_a_href');
+            $('#gatein_btn').addClass('btn-warning');
+            $('#gatein_btn1').addClass('btn-warning');
+        }
+
+        if (loadingbay_status_id =="Completed")
+        {
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+            $('#loadingbay_btn').addClass('btn-success');
+            $('#loadingbay_btn1').addClass('btn-success');
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+        }
+        else if (loadingbay_status_id =="Work In Progress")
+        {
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+            $('#loadingbay_btn').addClass('btn-warning');
+            $('#loadingbay_btn1').addClass('btn-warning');
+        }
+
+        if (damage_before_status_id =="Completed")
+        {
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            $('#damagecheck_before_btn').addClass('btn-success');
+            $('#damagecheck_before_btn1').addClass('btn-success');
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+        }
+        else if (damage_before_status_id =="Work In Progress")
+        {
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            $('#damagecheck_before_btn').addClass('btn-warning');
+            $('#damagecheck_before_btn1').addClass('btn-warning');
+        }
+        if (damage_after_status_id =="Completed")
+        {
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+            $('#damagecheck_after_btn').addClass('btn-success');
+            $('#warehousein_btn').removeClass('disable_a_href');
+        }
+        else if (damage_after_status_id =="No Status")
+        {
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+            $('#damagecheck_after_btn').addClass('btn-warning');
+        }
+
+        if (warehousein_status_id =="Completed")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn').addClass('btn-success');
+            $('#storage_btn').removeClass('disable_a_href');
+            $('#storage_btn').addClass('btn-success');
+        }
+        else if (warehousein_status_id =="None")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+        }
+        else if (warehousein_status_id =="No Status")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn').addClass('btn-warning');
+        }
+        challan_damage_btn_active()
+        package_type_chng()
+        fumigation_process_chng()
+        fumigation_action_chng()
       });
-    });
-  </script>
+</script>
+
+<script>
+	function package_type_chng() {
+        var wh_goods_package_type_val=document.getElementById("wh_goods_package_type").value;
+
+        if (wh_goods_package_type_val ==3)
+        {
+            $('#wh_fumigation_process').removeClass('disable_a_href');
+        }
+        else if (wh_goods_package_type_val ==9)
+        {
+            $('#wh_fumigation_process').removeClass('disable_a_href');
+        }
+        else
+        {
+            $('#wh_fumigation_process').addClass('disable_a_href');
+            document.getElementById("wh_fumigation_process").value=3
+        }
+        fumigation_process_chng()
+    }
+</script>
+
+
+<script>
+	function challan_damage_btn_active() {
+        var weight_deviation_val =document.getElementById("wh_weights_deviation").value;
+        var dimension_deviation_val=document.getElementById("wh_dimension_deviation").value;
+        var no_of_units_deviation_val=document.getElementById("wh_no_of_units_deviation").value;
+        var damages_val=document.getElementById("wh_damages").value;
+        var mismatches_val=document.getElementById("wh_mismatches").value;
+        if ((weight_deviation_val==1)||(dimension_deviation_val==1)||(no_of_units_deviation_val==1)||(damages_val!=6)||(mismatches_val==1))
+         {
+             document.getElementById("wh_goods_status").value=6
+             $('#wh_goods_status').addClass('disable_a_href');
+         }
+         else
+         {
+             $('#wh_goods_status').removeClass('disable_a_href');
+         }
+    }
+</script>
+
+<script>
+	function fumigation_process_chng() {
+        var fumigation_process=document.getElementById("wh_fumigation_process").value;
+        if (fumigation_process==2)
+             {
+                 $('#wh_fumigation_action').removeClass('disable_a_href');
+             }
+        else
+             {
+                 $('#wh_fumigation_action').addClass('disable_a_href');
+                 document.getElementById("wh_fumigation_action").value=3
+             }
+    }
+</script>
+<script>
+	function fumigation_action_chng() {
+        var fumigation_action=document.getElementById("wh_fumigation_action").value;
+        if (fumigation_action==1)
+             {
+                 $('#wh_fumigation_date').removeClass('disable_a_href');
+             }
+        else
+             {
+                 $('#wh_fumigation_date').addClass('disable_a_href');
+             }
+    }
+</script>
+
+<script>
+	$("#wh_branch").change(function () {
+ <!--      var url = $("#goods_add").attr("data-branches-url");-->
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#wh_unit').removeClass('disable_a_href');
+             $("#wh_unit").empty();
+             $('#wh_bay').empty().append("<option value='0'>--Select--</option>");
+             $("#wh_stack_layer").val($("#selectBox option:first").val());
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#wh_unit').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#wh_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
+</script>
 
 <!--Fetch Bays-->
 <script>
-   $("#wh_unit").change(function () {
-      var url = $("#goods_add").attr("data-units-url");
-      var branchId = document.getElementById("wh_branch").value
-      var unitId = $(this).val();
-      $.ajax({
-        url: '{% url 'load_bays' %}',
-        data: {
-          'branchId':branchId,
-          'unitId': unitId,
-        },
-		success: function (data) {
-			$('#wh_bay').removeClass('disable_a_href');
-			$("#wh_bay").empty();
-			$("#wh_stack_layer").val($("#selectBox option:first").val());
-        	var bay=JSON.parse(data)["bay_name_list"];
-        	var bay_id=JSON.parse(data)["bay_id"];
-			var len1 = (bay).length;
-        	$("#wh_bay").empty();
-        	$('#wh_bay').empty().append("<option value='0'>--Select--</option>");
-        	for( var j = 0; j<len1; j++){
-        		$("#wh_bay").append("<option value='"+bay_id[j]+"'>"+bay[j]+"</option>");
-			}
-        }
-      });
-    });
+	$("#wh_unit").change(function () {
+       var url = $("#goods_add").attr("data-units-url");
+       var branchId = document.getElementById("wh_branch").value
+       var unitId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_bays' %}',
+         data: {
+           'branchId':branchId,
+           'unitId': unitId,
+         },
+         success: function (data) {
+             $('#wh_bay').removeClass('disable_a_href');
+             $("#wh_bay").empty();
+             $("#wh_stack_layer").val($("#selectBox option:first").val());
+             var bay=JSON.parse(data)["bay_name_list"];
+             var bay_id=JSON.parse(data)["bay_id"];
+             var len1 = (bay).length;
+             $("#wh_bay").empty();
+             $('#wh_bay').empty().append("<option value='0'>--Select--</option>");
+             for( var j = 0; j<len1; j++){
+                 $("#wh_bay").append("<option value='"+bay_id[j]+"'>"+bay[j]+"</option>");
+             }
+         }
+       });
+     });
 </script>
 
 <!--Enable Stack layer-->
@@ -672,189 +715,189 @@ function fumigation_action_chng() {
 
 <!--Fetch Available Area and Volume-->
 <script>
-   $("#wh_stack_layer").change(function () {
-      	var url = $("#goods_add").attr("data-bay-url");
-      	var branchId = document.getElementById("wh_branch").value;
-      	var unitId = document.getElementById("wh_unit").value;
-      	var bayId = document.getElementById("wh_bay").value;
-   		var req_area_val = document.getElementById("req_area").value;
-   		var req_volume_val = document.getElementById("volume_weight").value;
-		  $.ajax({
-			url: '{% url 'load_area_volume' %}',
-			data: {
-				'req_area_val':req_area_val,
-				'req_volume_val':req_volume_val,
-				'branchId':branchId,
-				'unitId': unitId,
-				'bayId': bayId,
-			},
-			success: function (data) {
-				$("#wh_available_area").empty();
-				$("#wh_available_volume").empty();
-				var available_area_final=JSON.parse(data)["available_area_final"];
-				var available_volume_final=JSON.parse(data)["available_volume_final"];
-				$("#wh_available_area").val(available_area_final);
-				$("#wh_available_volume").val(available_volume_final);
-			}
-		  });
-    });
+	$("#wh_stack_layer").change(function () {
+           var url = $("#goods_add").attr("data-bay-url");
+           var branchId = document.getElementById("wh_branch").value;
+           var unitId = document.getElementById("wh_unit").value;
+           var bayId = document.getElementById("wh_bay").value;
+            var req_area_val = document.getElementById("req_area").value;
+            var req_volume_val = document.getElementById("volume_weight").value;
+           $.ajax({
+             url: '{% url 'load_area_volume' %}',
+             data: {
+                 'req_area_val':req_area_val,
+                 'req_volume_val':req_volume_val,
+                 'branchId':branchId,
+                 'unitId': unitId,
+                 'bayId': bayId,
+             },
+             success: function (data) {
+                 $("#wh_available_area").empty();
+                 $("#wh_available_volume").empty();
+                 var available_area_final=JSON.parse(data)["available_area_final"];
+                 var available_volume_final=JSON.parse(data)["available_volume_final"];
+                 $("#wh_available_area").val(available_area_final);
+                 $("#wh_available_volume").val(available_volume_final);
+             }
+           });
+     });
 </script>
 
 <!--calculate Area, Volume and Weight-->
 <script>
-function chargeable_weight_fn() {
-  var width_val=document.getElementById("width").value
-  var length_val=document.getElementById("length").value
-  var height_val=document.getElementById("height").value
-  var no_of_piece=document.getElementById("no_of_piece").value
-  selectElement = document.querySelector('#uom');
-  uom_val = selectElement.options[selectElement.selectedIndex].value;
-  if (uom_val=="cm")
-	{
-		var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/6000).toFixed(3)
-		document.getElementById("chargeable_weight").value =chargeable_weight_val;
-		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
-		var volume_val=(width_val*length_val*height_val*no_of_piece).toFixed(3);
-		document.getElementById("volume_weight").value =volume_val;
-		var req_area_val=(length_val*width_val*no_of_piece).toFixed(3)
-		document.getElementById("req_area").value =req_area_val;
-	}
-  else
-	{
-		var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece/366).toFixed(3)
-  		document.getElementById("chargeable_weight").value =chargeable_weight_val;
-  		document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
-  		var volume_val=((width_val*length_val*height_val*no_of_piece)*16.3871).toFixed(3);
-		document.getElementById("volume_weight").value =volume_val;
-		var req_area_val=((length_val*width_val*no_of_piece)*6.4516).toFixed(3)
-		document.getElementById("req_area").value =req_area_val;
-  	}
-  endif
-}
+	function chargeable_weight_fn() {
+      var width_val=document.getElementById("width").value
+      var length_val=document.getElementById("length").value
+      var height_val=document.getElementById("height").value
+      var no_of_piece=document.getElementById("no_of_piece").value
+      selectElement = document.querySelector('#uom');
+      uom_val = selectElement.options[selectElement.selectedIndex].value;
+      if (uom_val=="cm")
+        {
+            var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/6000).toFixed(3)
+            document.getElementById("chargeable_weight").value =chargeable_weight_val;
+            document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
+            var volume_val=(width_val*length_val*height_val*no_of_piece).toFixed(3);
+            document.getElementById("volume_weight").value =volume_val;
+            var req_area_val=(length_val*width_val*no_of_piece).toFixed(3)
+            document.getElementById("req_area").value =req_area_val;
+        }
+      else
+        {
+            var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece/366).toFixed(3)
+              document.getElementById("chargeable_weight").value =chargeable_weight_val;
+              document.getElementById("cbm").value=(chargeable_weight_val*0.006).toFixed(3);
+              var volume_val=((width_val*length_val*height_val*no_of_piece)*16.3871).toFixed(3);
+            document.getElementById("volume_weight").value =volume_val;
+            var req_area_val=((length_val*width_val*no_of_piece)*6.4516).toFixed(3)
+            document.getElementById("req_area").value =req_area_val;
+          }
+      endif
+    }
 </script>
 
 <!--Enable Forms-->
 <script>
-$(document).ready(function() {
-	var gatein_status_id = '{{gatein_status}}';
-	var loadingbay_status_id='{{loadingbay_status}}';
-	var damage_before_status_id='{{damage_before_status}}';
-	var damage_after_status_id='{{damage_after_status}}';
-	var warehousein_status_id='{{warehousein_status}}';
-	var branch_val=document.getElementById("wh_branch").value
-	var user_role_val='{{user_role}}';
-	var user_branch_id_val='{{user_branch_id}}';
-	var user_branch_val1='{{user_branch}}';
-	var invoice_currency_val='{{invoice_currency}}'
-	var invoice_amount_inr_val='{{invoice_amount_inr}}'
-	if (gatein_status_id =="Completed")
-	{
-		$('#gatein_btn').removeClass('disable_a_href');
-		$('#gatein_btn1').removeClass('disable_a_href');
-		$('#gatein_btn').addClass('btn-success');
-		$('#gatein_btn1').addClass('btn-success');
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-	}
-	else if (gatein_status_id =="Work In Progress")
-	{
-		$('#gatein_btn').removeClass('disable_a_href');
-		$('#gatein_btn1').removeClass('disable_a_href');
-		$('#gatein_btn').addClass('btn-warning');
-		$('#gatein_btn1').addClass('btn-warning');
-	}
+	$(document).ready(function() {
+        var gatein_status_id = '{{gatein_status}}';
+        var loadingbay_status_id='{{loadingbay_status}}';
+        var damage_before_status_id='{{damage_before_status}}';
+        var damage_after_status_id='{{damage_after_status}}';
+        var warehousein_status_id='{{warehousein_status}}';
+        var branch_val=document.getElementById("wh_branch").value
+        var user_role_val='{{user_role}}';
+        var user_branch_id_val='{{user_branch_id}}';
+        var user_branch_val1='{{user_branch}}';
+        var invoice_currency_val='{{invoice_currency}}'
+        var invoice_amount_inr_val='{{invoice_amount_inr}}'
+        if (gatein_status_id =="Completed")
+        {
+            $('#gatein_btn').removeClass('disable_a_href');
+            $('#gatein_btn1').removeClass('disable_a_href');
+            $('#gatein_btn').addClass('btn-success');
+            $('#gatein_btn1').addClass('btn-success');
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+        }
+        else if (gatein_status_id =="Work In Progress")
+        {
+            $('#gatein_btn').removeClass('disable_a_href');
+            $('#gatein_btn1').removeClass('disable_a_href');
+            $('#gatein_btn').addClass('btn-warning');
+            $('#gatein_btn1').addClass('btn-warning');
+        }
 
-	if (loadingbay_status_id =="Completed")
-	{
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		$('#loadingbay_btn').addClass('btn-success');
-		$('#loadingbay_btn1').addClass('btn-success');
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-	}
-	else if (loadingbay_status_id =="Work In Progress")
-	{
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		$('#loadingbay_btn').addClass('btn-warning');
-		$('#loadingbay_btn1').addClass('btn-warning');
-	}
+        if (loadingbay_status_id =="Completed")
+        {
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+            $('#loadingbay_btn').addClass('btn-success');
+            $('#loadingbay_btn1').addClass('btn-success');
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+        }
+        else if (loadingbay_status_id =="Work In Progress")
+        {
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+            $('#loadingbay_btn').addClass('btn-warning');
+            $('#loadingbay_btn1').addClass('btn-warning');
+        }
 
-	if (damage_before_status_id =="Completed")
-	{
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		$('#damagecheck_before_btn').addClass('btn-success');
-		$('#damagecheck_before_btn1').addClass('btn-success');
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-	}
-	else if (damage_before_status_id =="Work In Progress")
-	{
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		$('#damagecheck_before_btn').addClass('btn-warning');
-		$('#damagecheck_before_btn1').addClass('btn-warning');
-	}
-	if (damage_after_status_id =="Completed")
-	{
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-success');
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (damage_after_status_id =="No Status")
-	{
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-warning');
-	}
+        if (damage_before_status_id =="Completed")
+        {
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            $('#damagecheck_before_btn').addClass('btn-success');
+            $('#damagecheck_before_btn1').addClass('btn-success');
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+        }
+        else if (damage_before_status_id =="Work In Progress")
+        {
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            $('#damagecheck_before_btn').addClass('btn-warning');
+            $('#damagecheck_before_btn1').addClass('btn-warning');
+        }
+        if (damage_after_status_id =="Completed")
+        {
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+            $('#damagecheck_after_btn').addClass('btn-success');
+            $('#warehousein_btn').removeClass('disable_a_href');
+        }
+        else if (damage_after_status_id =="No Status")
+        {
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+            $('#damagecheck_after_btn').addClass('btn-warning');
+        }
 
-	if (warehousein_status_id =="Completed")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-success');
-		$('#storage_btn').removeClass('disable_a_href');
-		$('#storage_btn').addClass('btn-success');
-	}
-	else if (warehousein_status_id =="None")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (warehousein_status_id =="No Status")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-warning');
-	}
+        if (warehousein_status_id =="Completed")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn').addClass('btn-success');
+            $('#storage_btn').removeClass('disable_a_href');
+            $('#storage_btn').addClass('btn-success');
+        }
+        else if (warehousein_status_id =="None")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+        }
+        else if (warehousein_status_id =="No Status")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn').addClass('btn-warning');
+        }
 
-	if (user_role_val=="User")
-	{
-		if (branch_val=="")
-		{
-			$('#wh_branch').empty().append("<option value='0'>--Select--</option>");
-			$("#wh_branch").append("<option value='"+user_branch_id_val+"'>"+user_branch_val1+"</option>");
-		}
-		else
-		{
-			document.getElementById("wh_branch").value =branch_val;
-		}
-	}
+        if (user_role_val=="User")
+        {
+            if (branch_val=="")
+            {
+                $('#wh_branch').empty().append("<option value='0'>--Select--</option>");
+                $("#wh_branch").append("<option value='"+user_branch_id_val+"'>"+user_branch_val1+"</option>");
+            }
+            else
+            {
+                document.getElementById("wh_branch").value =branch_val;
+            }
+        }
 
-<!--	Check goods status and disable check-in time-->
-	var goods_status=document.getElementById("wh_check_in_out").value
-	if (goods_status==2)
-	{
-		$('#wh_checkin_time').addClass('disable_a_href');
-		$('#wh_branch').addClass('disable_a_href');
-	}
-	else
-	{
-		$('#wh_checkin_time').removeClass('disable_a_href');
-		$('#wh_branch').removeClass('disable_a_href');
-	}
-  });
+    <!--	Check goods status and disable check-in time-->
+        var goods_status=document.getElementById("wh_check_in_out").value
+        if (goods_status==2)
+        {
+            $('#wh_checkin_time').addClass('disable_a_href');
+            $('#wh_branch').addClass('disable_a_href');
+        }
+        else
+        {
+            $('#wh_checkin_time').removeClass('disable_a_href');
+            $('#wh_branch').removeClass('disable_a_href');
+        }
+      });
 </script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+	document.addEventListener("DOMContentLoaded", function() {
         const checkinTimeInput = document.getElementById('wh_checkin_time');
 
         // Get the current date and time in UTC
@@ -874,5 +917,37 @@ $(document).ready(function() {
             checkinTimeInput.value = formattedNowIST; // Set current time as default value
         }
     });
+</script>
+<script>
+	function email_message_fn() {
+	 // Assign Django template variables to JavaScript variables
+        var shipper_invoice = '{{ shipper_invoice|escapejs }}';
+        var invoice_count = '{{ gatein_no_of_pkg_val|escapejs }}';
+        var invoice_weight = '{{ gatein_weight_val|escapejs }}';
+        var checkin_count = '{{ goods_checkin_count|escapejs }}';
+        var checkin_weight = '{{ goods_checkin_weight|escapejs }}';
+        var consigner = document.getElementById("wh_consigner").value;
+        var consignee = document.getElementById("wh_consignee").value;
+
+       var message = 	"Dear Customer,\n\n" +
+        		"Please be advised that the following goods have arrived at our warehouse and have been stored.\n\n" +
+    			"Shipper Invoice: " + shipper_invoice + "\n" +
+              	"Consigner: " + consigner + "\n" +
+              	"Consignee: " + consignee + "\n" +
+              	"Invoice Qty: " + invoice_count + "\n" +
+              	"Invoice Weight: " + invoice_weight + "\n" +
+              	"Check-in Qty: " + checkin_count + "\n" +
+              	"Check-in Weight: " + checkin_weight + "\n\n" +
+              	"Regards,\n" +
+              	"BVM Warehouse Team";
+
+        // Set the consolidated message as the value of the form field with id 'message'
+        document.getElementById("message").value = message;
+
+       	var subject = "Goods Received: " + shipper_invoice;
+       	alert(subject);
+		document.getElementById("subject").value = subject;
+		document.getElementById("subject").value = email_count;
+	}
 </script>
 {% endblock content %}

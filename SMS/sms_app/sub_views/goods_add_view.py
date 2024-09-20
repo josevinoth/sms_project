@@ -2,11 +2,12 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models.aggregates import Sum
 from django.contrib import messages
-from ..forms import GoodsaddForm
-from ..models import TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info
+from ..forms import GoodsaddForm,warehouse_EmailForm
+from ..models import CustomerInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from ..views import warehousevolme_area_calc
+
 # List goods
 @login_required(login_url='login_page')
 def goods_list(request):
@@ -109,6 +110,8 @@ def goods_add(request, goods_id=0):
             customer_name_id = request.session.get('ses_customer_name_id')
             customer_type_id = request.session.get('ses_customer_type_id')
             goods_form = GoodsaddForm()
+            form_warehouse_email = warehouse_EmailForm(request.POST)
+            email_count=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_email_count
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -130,11 +133,16 @@ def goods_add(request, goods_id=0):
                 'shipper_invoice': shipper_invoice,
                 'customer_name_id': customer_name_id,
                 'customer_type_id': customer_type_id,
+                'form_warehouse_email': form_warehouse_email,
+                'email_count': email_count,
             }
         else:
             print("I am inside get edit Goods")
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(instance=goodsinfo)
+            print('wh_job_id',wh_job_id)
+            email_count=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_email_count
+            print('email_count',email_count)
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -154,6 +162,7 @@ def goods_add(request, goods_id=0):
                 'goods_checkin_count': goods_checkin_count_val,
                 'gatein_wh_job_id': gatein_wh_job_id,
                 'shipper_invoice': shipper_invoice,
+                'email_count': email_count,
             }
         return render(request, "asset_mgt_app/goods_add.html", context)
     else:
