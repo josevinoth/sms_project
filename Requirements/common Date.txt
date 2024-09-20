@@ -1,0 +1,55 @@
+To use a common date filter for both the SalesDate and CommentDate, you can create a Date Dimension Table (also called a Calendar Table) and relate it to both your SalesOrder and SalesComments tables. This will allow you to use a single date slicer that controls both tables.
+
+Step-by-Step Process:
+Create a Date Table:
+
+Go to Modeling in Power BI and select New Table.
+
+Use the following DAX formula to create a date table that covers the range of dates in both your SalesOrder and SalesComments tables:
+
+DAX
+Copy code
+DateTable = CALENDAR(MIN(SalesOrder[SalesDate]), MAX(SalesComments[CommentDate]))
+This creates a continuous list of dates that spans the minimum and maximum dates from both tables.
+
+Add Columns to Date Table: To make your date table more useful, you can add columns like year, month, or quarter to use in slicers.
+
+DAX
+Copy code
+Year = YEAR(DateTable[Date])
+Month = FORMAT(DateTable[Date], "MMMM")
+Quarter = "Q" & QUARTER(DateTable[Date])
+Establish Relationships: Now, you need to relate this DateTable to both your SalesOrder and SalesComments tables.
+
+Go to the Model view in Power BI.
+Create a relationship between DateTable[Date] and SalesOrder[SalesDate].
+Create another relationship between DateTable[Date] and SalesComments[CommentDate].
+Ensure that these relationships are active and set to a many-to-one relationship.
+
+Use the Date Table in Reports:
+
+Drag the DateTable[Date] (or Year, Month, etc.) into your report as a slicer or filter.
+This slicer will now control both the SalesOrder and SalesComments tables, allowing you to filter both tables with a single date selection.
+Modify DAX Measures to Use the Date Table: If necessary, modify your measures to use the DateTable instead of the individual date columns in the fact tables. For example:
+
+Customers Met by Salesperson:
+
+DAX
+Copy code
+CustomersMet = 
+CALCULATE(
+    DISTINCTCOUNT(SalesOrder[CustomerID]),
+    USERELATIONSHIP(DateTable[Date], SalesOrder[SalesDate])
+)
+Comments Entered by Salesperson:
+
+DAX
+Copy code
+CommentsEntered = 
+CALCULATE(
+    COUNT(SalesComments[CommentText]),
+    USERELATIONSHIP(DateTable[Date], SalesComments[CommentDate])
+)
+This ensures that the single date slicer works across both tables.
+
+Now, you'll have a common date slicer that will filter your SalesOrder and SalesComments tables simultaneously, making it easier to analyze the number of customers met and comments entered within a specific period.
