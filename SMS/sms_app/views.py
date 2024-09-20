@@ -112,3 +112,4 @@ from .sub_views.chart_view import bar_chart,bar_chart_data
 from .sub_views.task_add_view import task_add,task_list,task_delete,get_requirement_description
 from .sub_views.timesheet_add_view import timesheet_add,timesheet_list,timesheet_delete,timesheet_nav
 from .sub_views.ml_category_view import create_product,ml_product_list,ml_product_delete
+from .sub_views.businessrevenue_view import business_revenue_add,business_revenue_list,business_revenue_delete

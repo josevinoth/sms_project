@@ -516,4 +516,9 @@ urlpatterns = [
     path('ml_product_edit/<int:product_id>', views.create_product, name='ml_product_edit'),  # multi select
     path('ml_product_list', views.ml_product_list, name='ml_product_list'),  # multi select
     path('ml_product_delete/<int:product_id>', views.ml_product_delete, name='ml_product_delete'),  # multi select
+    path('business_revenue_list/', views.business_revenue_list, name='business_revenue_list'),  # List business_revenue
+    path('business_revenue_insert/', views.business_revenue_add, name='business_revenue_insert'),  # Add business_revenue
+    path('business_revenue_update/<int:business_id>', views.business_revenue_add, name='business_revenue_update'),# update business_revenue
+    path('business_revenue_delete/<int:business_id>', views.business_revenue_delete, name='business_revenue_delete'),# delete business_revenue
+
 ]

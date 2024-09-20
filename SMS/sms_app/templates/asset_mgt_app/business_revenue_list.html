@@ -1,0 +1,90 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Business Revenue List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'business_revenue_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="" class="btn btn-warning btn-block btn-lg">
+            <i class="fas fa-plus"></i> Select All
+        </a>
+    </div>
+
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="business_revenue_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>ID</th>
+            <th>Customer Name</th>
+            <th>Business</th>
+            <th>From Date</th>
+            <th>To Date</th>
+            <th>Sale Person</th>
+            <th>Revenue</th>
+            <th>Remarks</th>
+            <th>Updated On</th>
+            <th>Updated By</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+    {% for BusinessrevenueInfo in business_revenue_list %}
+    <tr>
+        <td>{{ BusinessrevenueInfo.id }}</td>
+        <td>{{ BusinessrevenueInfo.br_customer_name }}</td>
+        <td>{{ BusinessrevenueInfo.br_business }}</td>
+        <td>{{ BusinessrevenueInfo.br_from_date }}</td>
+        <td>{{ BusinessrevenueInfo.br_to_date }}</td>
+        <td>{{ BusinessrevenueInfo.br_sale_person }}</td>
+        <td>{{ BusinessrevenueInfo.br_revenue }}</td>
+        <td>{{ BusinessrevenueInfo.br_remarks }}</td>
+        <td>{{ BusinessrevenueInfo.br_updated_on }}</td>
+        <td>{{ BusinessrevenueInfo.br_updated_by }}</td>
+        <td>
+            <a class="btn btn-primary" href="{% url 'business_revenue_update' BusinessrevenueInfo.id %}">
+                <i class="far fa-edit"></i>
+            </a>
+        </td>
+        <td>
+            <form action="{% url 'business_revenue_delete' BusinessrevenueInfo.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+<script>
+    $(document).ready(function() {
+    $('#business_revenue_list').DataTable({
+        order: [0, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ],
+    });
+} );
+</script>
+
+{% endblock content %}
