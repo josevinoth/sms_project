@@ -11,3 +11,5 @@ Requirements/*
 
 # But do not ignore Python files in the Requirements folder
 !Requirements/*.py
+/sms_app/migrations/
+/media/
