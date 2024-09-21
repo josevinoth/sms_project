@@ -1,3 +1,5 @@
+from .sub_views.send_department_email import send_department_email
+from .sub_views.warehouse_email_view import warehouse_send_email_view
 from .sub_views.assetinfo_view import assetinfo_add,asset_list,asset_delete,asset_search,un_assigned_asset_list
 from .sub_views.assign_asset_add_view import assign_asset_add,assign_asset_delete,assign_asset_list_new
 from .sub_views.department_add_view import department_add,department_delete,department_list

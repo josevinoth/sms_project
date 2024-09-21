@@ -521,4 +521,5 @@ urlpatterns = [
     path('business_revenue_update/<int:business_id>', views.business_revenue_add, name='business_revenue_update'),# update business_revenue
     path('business_revenue_delete/<int:business_id>', views.business_revenue_delete, name='business_revenue_delete'),# delete business_revenue
 
+    path('warehouse_send_email/', views.warehouse_send_email_view, name='warehouse_send_email'),
 ]
