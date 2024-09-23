@@ -37,21 +37,15 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Branch</span>
 									</div>
-									{% render_field expense_form.exp_branch type="datetime-local" id="exp_branch" class="form-control" %}
+									{% render_field expense_form.exp_branch id="exp_branch" onchange="change_Branch()" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Unit</span>
+										<span class="input-group-text">unit</span>
 									</div>
-									{% render_field expense_form.exp_unit id="exp_unit" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">unit_1</span>
-									</div>
-									{% render_field expense_form.exp_unit_1 id="exp_unit_1" class="form-control disable_a_href" %}
+									{% render_field expense_form.exp_unit id="exp_unit" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -218,82 +212,29 @@
 </form>
 
 <script>
-$(document).ready(function() {
-	document.getElementById("exp_updated_by").value ='{{user_id}}';
-<!--	document.getElementById("bill_weight").value ='{{weight_sum}}';-->
-<!--	document.getElementById("bill_no_of_days").value ='{{no_of_days}}';-->
-<!--	document.getElementById("bill_no_of_pallets").value ='{{no_of_pieces}}';-->
-	var expense_category_val=document.getElementById("exp_category").value
-	if (expense_category_val=="")
-	{
-		$('#exp_category').removeClass('disable_a_href');
-	}
-	else
-	{
-		$('#exp_category').addClass('disable_a_href');
-	}
-	update_rates_fn()
-  });
+	$(document).ready(function() {
+        document.getElementById("exp_updated_by").value ='{{user_id}}';
+    <!--	document.getElementById("bill_weight").value ='{{weight_sum}}';-->
+    <!--	document.getElementById("bill_no_of_days").value ='{{no_of_days}}';-->
+    <!--	document.getElementById("bill_no_of_pallets").value ='{{no_of_pieces}}';-->
+        var expense_category_val=document.getElementById("exp_category").value
+        if (expense_category_val=="")
+        {
+            $('#exp_category').removeClass('disable_a_href');
+        }
+        else
+        {
+            $('#exp_category').addClass('disable_a_href');
+        }
+        update_rates_fn()
+
+      });
 </script>
-<script>
-	$("#exp_branch").change(function () {
-       var url = $("#invoice_add").attr("data-units-url");
-       var branchId = $(this).val();
-       $.ajax({
-         url: '{% url 'load_units_origin' %}',
-         data: {
-           'branchId': branchId,
-         },
-         success: function (data) {
-             console.log(data);
-             $('#exp_unit').removeClass('disable_a_href');
-             $('#exp_unit').empty().append("<option value='0'>--Select--</option>");
-             $('#exp_unit_1').removeClass('disable_a_href');
-             $('#exp_unit_1').empty().append("<option value='0'>--Select--</option>");
-             var unit_name=JSON.parse(data)["unit_name_list"];
-             var unit_id=JSON.parse(data)["unit_id"];
-             var len = (unit_name).length;
-             $('#exp_unit').empty().append("<option value='0'>--Select--</option>");
-             for( var i = 0; i<len; i++){
-                 $("#exp_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-             }
-
-             $('#exp_unit_1').empty().append("<option value='0'>--Select--</option>");
-             for( var i = 0; i<len; i++){
-                 $("#exp_unit_1").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-             }
-         }
-       });
-     });
-</script>
-<script>
-	function update_rates_fn() {
-		var exp_rate_val=parseFloat(document.getElementById("exp_rate").value)
-		var exp_quantity_val=parseFloat(document.getElementById("exp_quantity").value)
-		var exp_amount_val=parseFloat(exp_rate_val*exp_quantity_val)
-		var exp_gst_rate_val=parseFloat(document.getElementById("exp_gst_rate").value)
-		var exp_gst_amount_val=parseFloat((exp_amount_val*exp_gst_rate_val)/100)
-		var exp_total_amount_val=parseFloat(exp_gst_amount_val)+parseFloat(exp_amount_val)
-		var exp_tds_rate_val=parseFloat(document.getElementById("exp_tds_rate").value)
-		var exp_tds_amount_val=parseFloat((exp_amount_val)*exp_tds_rate_val/100)
-		var exp_amount_payable_val=parseFloat(exp_total_amount_val-exp_tds_amount_val)
-
-		document.getElementById("exp_amount").value=exp_amount_val.toFixed(2)
-		document.getElementById("exp_gst_amount").value=exp_gst_amount_val.toFixed(2)
-		document.getElementById("exp_total_amount").value=exp_total_amount_val.toFixed(2)
-		document.getElementById("exp_tds_amount").value=exp_tds_amount_val.toFixed(2)
-		document.getElementById("exp_amount_payable").value=exp_amount_payable_val.toFixed(2)
-
-	}
-</script>
-
-
-
 <style>
-    /* Custom styles for multiselect dropdown */
+	/* Custom styles for multiselect dropdown */
     .multiselect-container {
         max-width: 1000px !important;  /* Set your desired max width for the dropdown */
-        min-width: 200px;              /* Ensure a minimum width */
+        min-width: 300px;              /* Ensure a minimum width */
         width: 100% !important;        /* Ensure it fills the width of the button */
         box-sizing: border-box;			/* Ensure padding and border are included in width */
 
@@ -302,7 +243,7 @@ $(document).ready(function() {
     .custom-multiselect-button {
         border: 1px solid lightgray;  /* Light border for the button */
     }
-	.multiselect-container li a label {
+    .multiselect-container li a label {
     display: flex;
     align-items: center;
     padding-right:40px;
@@ -325,22 +266,73 @@ $(document).ready(function() {
 </style>
 
 <script>
-    $(document).ready(function() {
-        $('#exp_unit_1').multiselect({
-            includeSelectAllOption: true,
-            enableCaseInsensitiveFiltering: true,
-            nonSelectedText: 'Select options',
-            buttonWidth: '160',
-            buttonHeight:'200',
-            buttonClass: 'custom-multiselect-button',
-            enableFiltering: true,
-            maxHeight: 250,
-            dropUp: false
+	function update_rates_fn() {
+		var exp_rate_val=parseFloat(document.getElementById("exp_rate").value)
+		var exp_quantity_val=parseFloat(document.getElementById("exp_quantity").value)
+		var exp_amount_val=parseFloat(exp_rate_val*exp_quantity_val)
+		var exp_gst_rate_val=parseFloat(document.getElementById("exp_gst_rate").value)
+		var exp_gst_amount_val=parseFloat((exp_amount_val*exp_gst_rate_val)/100)
+		var exp_total_amount_val=parseFloat(exp_gst_amount_val)+parseFloat(exp_amount_val)
+		var exp_tds_rate_val=parseFloat(document.getElementById("exp_tds_rate").value)
+		var exp_tds_amount_val=parseFloat((exp_amount_val)*exp_tds_rate_val/100)
+		var exp_amount_payable_val=parseFloat(exp_total_amount_val-exp_tds_amount_val)
 
-        });
-    });
-
+		document.getElementById("exp_amount").value=exp_amount_val.toFixed(2)
+		document.getElementById("exp_gst_amount").value=exp_gst_amount_val.toFixed(2)
+		document.getElementById("exp_total_amount").value=exp_total_amount_val.toFixed(2)
+		document.getElementById("exp_tds_amount").value=exp_tds_amount_val.toFixed(2)
+		document.getElementById("exp_amount_payable").value=exp_amount_payable_val.toFixed(2)
+	}
 </script>
 
+<script>
+function change_Branch() {
+	var branchId = document.getElementById("exp_branch").value;
+    fetchUnitsByBranch(branchId); // Fetch units when a branch is selected
+  }
+</script>
 
+<script>
+function fetchUnitsByBranch(branchId) {
+    $.ajax({
+        url: '{% url 'load_units_origin' %}',
+        data: {
+            'branchId': branchId,
+        },
+        success: function (data) {
+            console.log(data);
+            $('#exp_unit').removeClass('disable_a_href');
+            $('#exp_unit').empty().append("<option value='0'>--Select--</option>");
+            var unit_name = JSON.parse(data)["unit_name_list"];
+            var unit_id = JSON.parse(data)["unit_id"];
+            alert(unit_name)
+            alert(unit_id)
+            var len = unit_name.length;
+            for (var i = 0; i < len; i++) {
+                $("#exp_unit").append("<option value='" + unit_id[i] + "'>" + unit_name[i] + "</option>");
+            }
+
+            // After fetching the units, initialize the multi-select
+			initializeMultiSelect('#exp_unit');
+        }
+    });
+}
+</script>
+
+<script>
+	function initializeMultiSelect(selector) {
+
+    $(selector).multiselect({
+        includeSelectAllOption: true,
+        enableCaseInsensitiveFiltering: true,
+        nonSelectedText: 'Select options',
+        buttonWidth: '160px',
+        buttonHeight: '200px',
+        buttonClass: 'custom-multiselect-button',
+        enableFiltering: true,
+        maxHeight: 250,
+        dropUp: false
+    });
+}
+</script>
 {% endblock content %}
