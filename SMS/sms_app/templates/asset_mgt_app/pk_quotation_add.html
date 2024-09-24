@@ -213,121 +213,8 @@
 		</form>
 	</div>
 	<div class="col-3 ">
-	<div class="container">
-		<div class="card text-dark bg-warning  mb-3" style="max-width: 100%;">
-			<div class="card-header text-center"><h3>Calculation</h3></div>
-			<div class="card-body " id="dimension_type">
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Dimension Type</span>
-					</div>
-					{% render_field form.pkqt_dimension_type id="pkqt_dimension_type" class="form-control disable_a_href" %}
-				</div>
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">UOM</span>
-					</div>
-					{% render_field form.pkqt_uom_calc id="pkqt_uom_calc" class="form-control disable_a_href" %}
-				</div>
-				<!-- Input fields for length, width, and height -->
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Length</span>
-					</div>
-					<input type="number" id="pkqt_l" class="form-control disable_a_href">
-				</div>
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Width</span>
-					</div>
-					<input type="number" id="pkqt_w" class="form-control disable_a_href">
-				</div>
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Height</span>
-					</div>
-					<input type="number" id="pkqt_h" class="form-control disable_a_href">
-				</div>
-
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Box ID Clearance Length:</span>
-					</div>
-					{% render_field form.pkqt_box_id_clearance_l id="pkqt_box_id_clearance_l" class="form-control" %}
-				</div>
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Box ID Clearance Width:</span>
-					</div>
-					{% render_field form.pkqt_box_id_clearance_w id="pkqt_box_id_clearance_w" class="form-control" %}
-				</div>
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Box ID Clearance Height:</span>
-					</div>
-					{% render_field form.pkqt_box_id_clearance_h id="pkqt_box_id_clearance_h" class="form-control" %}
-				</div>
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Box OD Clearance Length:</span>
-					</div>
-					{% render_field form.pkqt_box_od_clearance_l id="pkqt_box_od_clearance_l" class="form-control" %}
-				</div>
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Box OD Clearance Width:</span>
-					</div>
-					{% render_field form.pkqt_box_od_clearance_w id="pkqt_box_od_clearance_w" class="form-control" %}
-				</div>
-				<div class="input-group input-group-sm mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Box OD Clearance Height:</span>
-					</div>
-					{% render_field form.pkqt_box_od_clearance_h id="pkqt_box_od_clearance_h" class="form-control" %}
-				</div>
-
-				<!-- Table to display calculated values -->
-				<table class="table table-sm table-bordered">
-					<thead>
-					<tr class="text-center  bg-info">
-						<th>UOM</th>
-						<th>Length</th>
-						<th>Width</th>
-						<th>Height</th>
-					</tr>
-					</thead>
-					<tbody>
-					<tr>
-						<td class="bg-info">cm</td>
-						<td><input type="text" id="length_cm" class="form-control form-control-sm" readonly></td>
-						<td><input type="text" id="width_cm" class="form-control form-control-sm" readonly></td>
-						<td><input type="text" id="height_cm" class="form-control form-control-sm" readonly></td>
-					</tr>
-					<tr>
-						<td class="bg-info">inch</td>
-						<td><input type="text" id="length_in" class="form-control form-control-sm" readonly></td>
-						<td><input type="text" id="width_in" class="form-control form-control-sm" readonly></td>
-						<td><input type="text" id="height_in" class="form-control form-control-sm" readonly></td>
-					</tr>
-					<tr>
-						<td class="bg-info">feet</td>
-						<td><input type="text" id="length_ft" class="form-control form-control-sm" readonly></td>
-						<td><input type="text" id="width_ft" class="form-control form-control-sm" readonly></td>
-						<td><input type="text" id="height_ft" class="form-control form-control-sm" readonly></td>
-					</tr>
-					</tbody>
-				</table>
-
-				<!-- Button to trigger calculation -->
-				<div class="d-flex justify-content-end mt-3">
-					<button class="btn btn-primary" onclick="pk_store_na_dimension_id()">Calculate</button>
-				</div>
-			</div>
-
-			{% render_field form.pkqt_updated_by id="pkqt_updated_by" hidden="True" class="form-control" %}
-		</div>
+		{% include "asset_mgt_app/calculation_card.html" %}
 	</div>
-</div>
 </div>
 <div id="pk_item_search_page_costing">
 	{% include "asset_mgt_app/pk_item_search_page_costing.html" %}
@@ -723,106 +610,118 @@
 </script>
 
 <script>
-	function search_wood()
-        {
-    <!--		var stock_description = $(this).val();-->
-            var stock_description = $("#pkqt_stock_description").val();
-            var stock_type = $("#pkqt_stock_type").val();
-            var length_req = $("#pkqt_length_req").val();
-            var width_req = $("#pkqt_width_req").val();
-            var height_req = $("#pkqt_height_req").val();
-            var includeContainer = $('#pk_item_search_page_costing');
-            $.ajax({
-                url: '{% url 'pk_item_search_page_costing' %}',
-                data: {
-                    'stock_type': stock_type,
-                    'stock_description': stock_description,
-                    'length_req': length_req,
-                    'width_req': width_req,
-                    'height_req': height_req,
-                },
-                success: function (results)
-                {
-                    // Generate HTML for the table
-                    var tableHtml = '<table class="table table-striped table-bordered">';
-                    tableHtml += '<thead class="thead-dark"><tr><th>ID</th><th>Vendor Bill</th><th>Date</th><th>Stock Purchases Number</th><th>Category</th><th>Stock Type</th><th>Stock Description</th><th>Source</th><th>Thick/Height</th><th>Width</th><th>Length</th><th>CFT</th><th>Quantity</th><th>Rate/Qty (CFT)</th><th>UOM</th><th>Size</th><th>Select</th></tr></thead>';
-                    tableHtml += '<tbody>';
-                    // Iterate over the results and add rows to the table
-                    for (var i = 0; i < results.length; i++)
-                    {
-                        tableHtml += '<tr>';
-                        tableHtml += '<td>' + results[i].id + '</td>';
-                        tableHtml += '<td>' + results[i].sp_vendor_bill + '</td>';
-                        tableHtml += '<td>' + results[i].sp_stock_in_date + '</td>';
-                        tableHtml += '<td>' + results[i].sp_purchase_num + '</td>';
-                        tableHtml += '<td>' + results[i].sp_category__category + '</td>';
-                        tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
-                        tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
-                        tableHtml += '<td>' + results[i].sp_source__source + '</td>';
-                        tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
-                        tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
-                        tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
-                        tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
-                        tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
-                        tableHtml += '<td>' + results[i].sp_rate + '</td>';
-                        tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
-                        tableHtml += '<td class="hidden-column" style="display:none;">' + results[i].sp_uom + '</td>';
-                        tableHtml += '<td>' + results[i].sp_size + '</td>';
-                        tableHtml += '<td>';
-                        tableHtml += '<a class="btn btn-primary" >';
-                        tableHtml += '<i class="far fa-edit"></i> Select';
-                        tableHtml += '</a>';
-                        tableHtml += '</td>';
-                        tableHtml += '</tr>';
-                    }
-                    tableHtml += '</tbody></table>';
+	function search_wood() {
+    var stock_description = $("#pkqt_stock_description").val();
+    var stock_type = $("#pkqt_stock_type").val();
+    var length_req = parseFloat($("#pkqt_length_req").val());
+    var width_req = parseFloat($("#pkqt_width_req").val());
+    var height_req = parseFloat($("#pkqt_height_req").val());
+    var includeContainer = $('#pk_item_search_page_costing');
 
-                     // Create the container and row structure
-                    var containerHtml = '<div class="container-fluid" style="padding:15px;">';
-                    containerHtml += '<div class="row">';
-                    containerHtml += '<div class="col-5"></div>';
-                    containerHtml += '<div class="col-2 rounded text-center bg-info">';
-                    containerHtml += '<h3>Packing Stock List</h3>';
-                    containerHtml += '</div>';
-                    containerHtml += '<div class="col-5"></div>';
-                    containerHtml += '</div>';
-                    containerHtml += '</div>';
-                    // Set the table HTML to the includeContainer
-                    includeContainer.html(containerHtml +tableHtml);
-                    var dataTable = includeContainer.find('table').DataTable();
-               }
+    $.ajax({
+        url: '{% url "pk_item_search_page_costing" %}',  // Ensure the correct URL here
+        data: {
+            'stock_type': stock_type,
+            'stock_description': stock_description,
+            'length_req': length_req,
+            'width_req': width_req,
+            'height_req': height_req,
+        },
+        success: function (results) {
+            console.log("Results:", results);  // Debug: Check the data structure
+
+            if (results.length === 0) {
+                $('#unique_field_error').text('No stock found for the given criteria.');
+                return;
+            }
+
+            // Sorting logic (optional)
+            results.sort(function (a, b) {
+                return a.sp_length_reduced - b.sp_length_reduced;  // Example sorting by length
             });
-            // Attach click event to the "Select" button
-            includeContainer.on('click', 'a.btn-primary', function(e) {
-                e.preventDefault(); // Prevent the default action of the link
 
-                // Get the selected row data
-                var selectedRow = $(this).closest('tr');
-                var stockId = selectedRow.find('td:eq(0)').text();
-                var stock_purchase_num = selectedRow.find('td:eq(1)').text(); // Update with the correct index
-                var height = selectedRow.find('td:eq(8)').text(); // Update with the correct index
-                var width = selectedRow.find('td:eq(9)').text(); // Update with the correct index
-                var length = selectedRow.find('td:eq(10)').text(); // Update with the correct index
-                var cft = selectedRow.find('td:eq(11)').text(); // Update with the correct index
-                var quantity = selectedRow.find('td:eq(12)').text(); // Update with the correct index
-                var rateCFT = selectedRow.find('td:eq(13)').text(); // Update with the correct index
-                var uom = selectedRow.find('td:eq(14)').text(); // Update with the correct index
-                var size = selectedRow.find('td:eq(15)').text(); // Update with the correct index
-                var uom_id = selectedRow.find('.hidden-column').text();
+            // Generate HTML for the table
+            var tableHtml = '<table id="stockTable" class="table table-striped table-bordered">';
+            tableHtml += '<thead class="thead-dark">';
+            tableHtml += '<tr>';
+            tableHtml += '<th>ID</th>';
+            tableHtml += '<th>Vendor Bill</th>';
+            tableHtml += '<th>Date</th>';
+            tableHtml += '<th>Stock Purchases Number</th>';
+            tableHtml += '<th>Category</th>';
+            tableHtml += '<th>Stock Type</th>';
+            tableHtml += '<th>Stock Description</th>';
+            tableHtml += '<th>Source</th>';
+            tableHtml += '<th>Thick/Height</th>';
+            tableHtml += '<th>Width</th>';
+            tableHtml += '<th>Length</th>';
+            tableHtml += '<th>CFT</th>';
+            tableHtml += '<th>Quantity</th>';
+            tableHtml += '<th>Rate/Qty (CFT)</th>';
+            tableHtml += '<th>UOM</th>';
+            tableHtml += '<th>Size</th>';
+            tableHtml += '<th>Select</th>';
+            tableHtml += '</tr>';
+            tableHtml += '</thead>';
+            tableHtml += '<tbody>';
 
-                // Log the extracted values (you can do further processing here)
-                document.getElementById("pkqt_stock_purchase_number").value=stockId;
-                document.getElementById("pkqt_length").value=length;
-                document.getElementById("pkqt_width").value=width;
-                document.getElementById("pkqt_height").value=height;
-                document.getElementById("pkqt_cft").value=cft;
-                document.getElementById("pkqt_quantity").value=quantity;
-                document.getElementById("pkqt_size").value=size;
-                document.getElementById("pkqt_uom").value=uom_id;
-                document.getElementById("pkqt_rate").value=rateCFT;
-                change_cost_type();
-            });
+            for (var i = 0; i < results.length; i++) {
+                tableHtml += '<tr>';
+                tableHtml += '<td>' + results[i].id + '</td>';
+                tableHtml += '<td>' + results[i].sp_vendor_bill + '</td>';
+                tableHtml += '<td>' + results[i].sp_stock_in_date + '</td>';
+                tableHtml += '<td>' + results[i].sp_purchase_num + '</td>';
+                tableHtml += '<td>' + results[i].sp_category__category + '</td>';
+                tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
+                tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
+                tableHtml += '<td>' + results[i].sp_source__source + '</td>';
+                tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
+                tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
+                tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
+                tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
+                tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
+                tableHtml += '<td>' + results[i].sp_rate + '</td>';
+                tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
+                tableHtml += '<td>' + results[i].sp_size + '</td>';
+                tableHtml += '<td><a class="btn btn-primary"><i class="far fa-edit"></i> Select</a></td>';
+                tableHtml += '</tr>';
+            }
+            tableHtml += '</tbody></table>';
+
+            // Set the table HTML to the includeContainer inside the modal
+            includeContainer.html(tableHtml);
+
+            // Initialize DataTable after rendering the table
+            $('#stockTable').DataTable();
         }
+    });
+
+    // Attach click event to the "Select" button inside the modal
+    includeContainer.on('click', 'a.btn-primary', function (e) {
+        e.preventDefault();
+
+        var selectedRow = $(this).closest('tr');
+        var stockId = selectedRow.find('td:eq(0)').text();
+        var height = selectedRow.find('td:eq(8)').text();
+        var width = selectedRow.find('td:eq(9)').text();
+        var length = selectedRow.find('td:eq(10)').text();
+        var cft = selectedRow.find('td:eq(11)').text();
+        var quantity = selectedRow.find('td:eq(12)').text();
+        var rateCFT = selectedRow.find('td:eq(13)').text();
+        var uom_id = selectedRow.find('.hidden-column').text();
+
+        $("#pkqt_stock_purchase_number").val(stockId);
+        $("#pkqt_length").val(length);
+        $("#pkqt_width").val(width);
+        $("#pkqt_height").val(height);
+        $("#pkqt_cft").val(cft);
+        $("#pkqt_quantity").val(quantity);
+        $("#pkqt_rate").val(rateCFT);
+        $("#pkqt_uom").val(uom_id);
+
+        change_cost_type();  // Custom function
+    });
+}
 </script>
 <script>
 	function changeItemDescription() {

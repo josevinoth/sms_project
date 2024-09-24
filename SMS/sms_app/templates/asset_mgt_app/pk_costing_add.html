@@ -1,23 +1,23 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
-	{% csrf_token %}
-	<div class="container-fluid row">
-		<div class="col-md-1">
-			<a href="{% url 'costing_cancel' %}" class="btn btn-primary btn-block btn-lg">
-				<i class="fas fa-arrow-left"></i> Back
-			</a>
-		</div>
-		<!--    <div class="col-md-1.5">-->
-		<!--        <a href="{% url 'costing_insert' %}" class="btn btn-success btn-block btn-lg">-->
-		<!--            <i class="fas fa-plus"></i> Add Items-->
-		<!--        </a>-->
-		<!--    </div>-->
+<div class="container-fluid row">
+	<div class="col-md-1">
+		<a href="{% url 'costing_cancel' %}" class="btn btn-primary btn-block btn-lg">
+			<i class="fas fa-arrow-left"></i> Back
+		</a>
 	</div>
-	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+	<!--    <div class="col-md-1.5">-->
+	<!--        <a href="{% url 'costing_insert' %}" class="btn btn-success btn-block btn-lg">-->
+	<!--            <i class="fas fa-plus"></i> Add Items-->
+	<!--        </a>-->
+	<!--    </div>-->
+</div>
+<div class="row">
+	<div class="col-1"></div>
+	<div class="col-8">
+		<form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
+			{% csrf_token %}
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Costing</h3></div>
@@ -103,6 +103,18 @@
 												<span class="input-group-text">Length_requested (Ft)</span>
 											</div>
 											{% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Quantity_requested</span>
+											</div>
+											{% render_field form.ct_quantity_req id="ct_quantity_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">CFT/Sqft_requested<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
+											</div>
+											{% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
 									</div>
 									<div class="col-3 d-flex align-items-center justify-content-center">
@@ -215,10 +227,13 @@
 					</div>
 				</div>
 			</div>
-		</div>
-		<div class="col-2"></div>
+		</form>
 	</div>
-</form>
+	<div class="col-3">
+		{% include "asset_mgt_app/calculation_card.html" %}
+	</div>
+
+</div>
 
 <div id="pk_item_search_page_costing">
 	{% include "asset_mgt_app/pk_item_search_page_costing.html" %}
@@ -227,411 +242,505 @@
 {% include "asset_mgt_app/pk_costing_list_WOH.html" %}
 
 <script>
-$(document).ready(function() {
-	document.getElementById("ct_updated_by").value ='{{user_id}}';
-	var stock_status=document.getElementById("ct_stock_status").value;
-	var assessment_num=document.getElementById("ct_assessment_num").value;
-	var customer_name=document.getElementById("ct_customer_name").value;
-	var customer_po=document.getElementById("ct_customer_po").value;
+	$(document).ready(function() {
+        document.getElementById("ct_updated_by").value ='{{user_id}}';
+        var stock_status=document.getElementById("ct_stock_status").value;
+        var assessment_num=document.getElementById("ct_assessment_num").value;
+        var customer_name=document.getElementById("ct_customer_name").value;
+        var customer_po=document.getElementById("ct_customer_po").value;
 
-	if (stock_status==2)
-		{
-			$('#costing_form').addClass('disable_a_href');
-			alert("User Cannot edit the form since stock is supplied")
-		}
-	else
-		{
-			$('#costing_form').removeClass('disable_a_href');
-		}
-
-	if (assessment_num=="")
-		{
-			document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
-		}
-	else
-		{
-			document.getElementById("ct_assessment_num").value =assessment_num;
-		}
-
-	if (customer_po=="")
-		{
-			document.getElementById("ct_customer_po").value ='{{ses_customer_po_id}}';
-		}
-	else
-		{
-			document.getElementById("ct_customer_po").value =customer_po;
-		}
-
-	if (customer_name=="")
-		{
-			document.getElementById("ct_customer_name").value ='{{na_customer_name_id}}';
-		}
-	else
-		{
-			document.getElementById("ct_customer_name").value = customer_name;
-		}
-
-	change_cost_type();
-	$("#search_wood").on("click", function() {
-            search_wood();
-        });
-	});
-</script>
-
-<script>
-   $("#ct_stock_type").change(function () {
-      var url = $("#costing_add").attr("data-stock_description-url");
-      var stock_type = $(this).val();
-      if (stock_type == 1 || stock_type == 4)
-      {
-    	$('#ct_item').removeClass('disable_a_href');
-    	$('#ct_width_req').removeClass('disable_a_href');
-    	$('#ct_height_req').removeClass('disable_a_href');
-    	$('#ct_length_req').removeClass('disable_a_href');
-	  }
-	  else
-	  {
-	  	$('#ct_item').addClass('disable_a_href');
-	  	$('#ct_width_req').addClass('disable_a_href');
-    	$('#ct_height_req').addClass('disable_a_href');
-    	$('#ct_length_req').addClass('disable_a_href');
-	  }
-      $.ajax({
-        url: url,
-        data: {
-          'stock_type': stock_type,
-        },
-		success: function (data) {
-			console.log(data);
-			$('#ct_stock_description').removeClass('disable_a_href');
-			$("#ct_stock_description").empty();
-			$('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
-        	var ct_stock_description_name=JSON.parse(data)["stock_description"];
-        	var ct_stock_description_id=JSON.parse(data)["stock_description_id"];
-        	var len = (ct_stock_description_id).length;
-        	$('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
-        	for( var i = 0; i<len; i++){
-        		$("#ct_stock_description").append("<option value='"+ct_stock_description_id[i]+"'>"+ct_stock_description_name[i]+"</option>");
-			}
-        }
-      });
-    });
-  </script>
-<script>
-function change_cost_type() {
-		var jn=document.getElementById("ct_cost_type").value
-		if ( jn==8)
-		{
-			document.getElementById("ct_stock_status").value=1
-			$('#ct_stock_type').removeClass('disable_a_href');
-			var jn1=document.getElementById("ct_stock_type").value
-			if ( jn1==1)
-			{
-				$('#ct_stock_description').removeClass('disable_a_href');
-<!--				$('#ct_length').removeClass('disable_a_href');-->
-<!--				$('#ct_width').removeClass('disable_a_href');-->
-<!--				$('#ct_height').removeClass('disable_a_href');-->
-				$('#ct_uom').addClass('disable_a_href');
-				$('#ct_quantity').removeClass('disable_a_href');
-<!--				$('#ct_size').addClass('disable_a_href');-->
-<!--				document.getElementById("ct_size").value=parseFloat(0.0)-->
-				$('#ct_days').addClass('disable_a_href');
-				document.getElementById("ct_days").value=0;
-
-				var length = parseFloat(document.getElementById("ct_length").value) || 0;
-				var height = parseFloat(document.getElementById("ct_height").value) || 0;
-				var width = parseFloat(document.getElementById("ct_width").value) || 0;
-				var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-				var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-				var cft = (length*height*width/144)*quantity;
-				document.getElementById("ct_cft").value=cft.toFixed(2)
-				var totalCost = rate * cft;
-				document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-			}
-
-			else if (jn1==2)
-			{
-				$('#ct_stock_description').removeClass('disable_a_href');
-				$('#ct_length').addClass('disable_a_href');
-				$('#ct_width').addClass('disable_a_href');
-				$('#ct_height').addClass('disable_a_href');
-<!--				$('#ct_uom').removeClass('disable_a_href');-->
-				$('#ct_quantity').removeClass('disable_a_href');
-<!--				$('#ct_size').removeClass('disable_a_href');-->
-				$('#ct_cft').addClass('disable_a_href');
-				document.getElementById("ct_cft").value=0;
-				document.getElementById("ct_length").value=0;
-				document.getElementById("ct_width").value=0;
-				document.getElementById("ct_height").value=0;
-				$('#ct_rate').removeClass('disable_a_href');
-				$('#ct_days').addClass('disable_a_href');
-				var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-				var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-				var totalCost = rate  * quantity;
-				document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-			}
-		}
-		else if (jn==4)
-		{
-			$('#ct_stock_type').addClass('disable_a_href');
-			$('#ct_stock_description').addClass('disable_a_href');
-			document.getElementById("ct_stock_type").value=""
-			document.getElementById("ct_stock_description").value=""
-			$('#ct_length').addClass('disable_a_href');
-			$('#ct_width').addClass('disable_a_href');
-			$('#ct_height').addClass('disable_a_href');
-			$('#ct_days').removeClass('disable_a_href');
-			$('#ct_uom').addClass('disable_a_href');
-<!--			$('#ct_size').addClass('disable_a_href');-->
-			document.getElementById("ct_uom").value="";
-<!--			document.getElementById("ct_size").value=0;-->
-			var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-			var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-			var days = parseInt(document.getElementById("ct_days").value) || 0;
-			var totalCost = rate  * days * quantity;
-        	document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-		}
-		else if (jn==5)
-		{
-			$('#ct_stock_type').addClass('disable_a_href');
-			$('#ct_stock_description').addClass('disable_a_href');
-			document.getElementById("ct_stock_type").value=""
-			document.getElementById("ct_stock_description").value=""
-			$('#ct_length').addClass('disable_a_href');
-			$('#ct_width').addClass('disable_a_href');
-			$('#ct_height').addClass('disable_a_href');
-			$('#ct_days').addClass('disable_a_href');
-			$('#ct_uom').addClass('disable_a_href');
-<!--			$('#ct_size').addClass('disable_a_href');-->
-			document.getElementById("ct_days").value=0;
-			document.getElementById("ct_uom").value="";
-<!--			document.getElementById("ct_size").value=0;-->
-			var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-			var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-			var totalCost = rate * quantity;
-        	document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-		}
-		else if (jn==6)
-		{
-			$('#ct_stock_type').addClass('disable_a_href');
-			$('#ct_stock_description').addClass('disable_a_href');
-			document.getElementById("ct_stock_type").value=""
-			document.getElementById("ct_stock_description").value=""
-			$('#ct_length').addClass('disable_a_href');
-			$('#ct_width').addClass('disable_a_href');
-			$('#ct_height').addClass('disable_a_href');
-			$('#ct_days').addClass('disable_a_href');
-			$('#ct_uom').addClass('disable_a_href');
-<!--			$('#ct_size').addClass('disable_a_href');-->
-			document.getElementById("ct_uom").value="";
-<!--			document.getElementById("ct_size").value=0;-->
-			document.getElementById("ct_days").value=0;
-			var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-			var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-			var totalCost = rate * quantity;
-        	document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-		}
-		else if (jn==7)
-		{
-			$('#ct_stock_type').addClass('disable_a_href');
-			$('#ct_stock_description').addClass('disable_a_href');
-			document.getElementById("ct_stock_type").value=""
-			document.getElementById("ct_stock_description").value=""
-			$('#ct_length').addClass('disable_a_href');
-			$('#ct_width').addClass('disable_a_href');
-			$('#ct_height').addClass('disable_a_href');
-			$('#ct_days').addClass('disable_a_href');
-			$('#ct_quantity').addClass('disable_a_href');
-			$('#ct_cft').addClass('disable_a_href');
-			$('#ct_uom').addClass('disable_a_href');
-<!--			$('#ct_size').addClass('disable_a_href');-->
-			document.getElementById("ct_days").value=0;
-			document.getElementById("ct_quantity").value=0;
-			document.getElementById("ct_cft").value=0;
-			document.getElementById("ct_uom").value="";
-<!--			document.getElementById("ct_size").value=0;-->
-			var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-			var totalCost = rate;
-        	document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-		}
-		else
-		{
-			document.getElementById("ct_stock_status").value=6
-			$('#ct_stock_type').addClass('disable_a_href');
-			$('#ct_stock_description').addClass('disable_a_href');
-			document.getElementById("ct_stock_type").value=""
-			document.getElementById("ct_stock_description").value=""
-			$('#ct_length').addClass('disable_a_href');
-			$('#ct_width').addClass('disable_a_href');
-			$('#ct_height').addClass('disable_a_href');
-			$('#ct_days').removeClass('disable_a_href');
-			$('#ct_cft').addClass('disable_a_href');
-			$('#ct_uom').addClass('disable_a_href');
-<!--			$('#ct_size').addClass('disable_a_href');-->
-			document.getElementById("ct_uom").value="";
-<!--			document.getElementById("ct_size").value=0;-->
-			document.getElementById("ct_cft").value=0;
-			var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-			var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-			var days = parseInt(document.getElementById("ct_days").value) || 0;
-			var totalCost = rate  * days * quantity;
-			document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-
-		}
-	}
-</script>
-
-<script>
-function change_charge_type() {
-	var jn=document.getElementById("ct_stock_type").value
-	if ( jn==1)
-	{
-		$('#ct_stock_description').removeClass('disable_a_href');
-<!--		$('#ct_length').removeClass('disable_a_href');-->
-<!--		$('#ct_width').removeClass('disable_a_href');-->
-<!--		$('#ct_height').removeClass('disable_a_href');-->
-		$('#ct_uom').addClass('disable_a_href');
-		$('#ct_quantity').removeClass('disable_a_href');
-<!--		$('#ct_size').addClass('disable_a_href');-->
-<!--		document.getElementById("ct_size").value=parseFloat(0.0)-->
-		$('#ct_days').addClass('disable_a_href');
-		document.getElementById("ct_days").value=0;
-
-		var length = parseFloat(document.getElementById("ct_length").value) || 0;
-		var height = parseFloat(document.getElementById("ct_height").value) || 0;
-		var width = parseFloat(document.getElementById("ct_width").value) || 0;
-		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-		var cft = (length*height*width/144)*quantity;
-		document.getElementById("ct_cft").value=cft.toFixed(2)
-		var totalCost = rate * cft;
-        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-	}
-
-	else if (jn==2)
-	{
-		$('#ct_stock_description').removeClass('disable_a_href');
-		$('#ct_length').addClass('disable_a_href');
-		$('#ct_width').addClass('disable_a_href');
-		$('#ct_height').addClass('disable_a_href');
-<!--		$('#ct_uom').removeClass('disable_a_href');-->
-		$('#ct_quantity').removeClass('disable_a_href');
-<!--		$('#ct_size').removeClass('disable_a_href');-->
-		$('#ct_cft').addClass('disable_a_href');
-		document.getElementById("ct_cft").value=0;
-		document.getElementById("ct_length").value=0;
-		document.getElementById("ct_width").value=0;
-		document.getElementById("ct_height").value=0;
-		$('#ct_rate').removeClass('disable_a_href');
-		$('#ct_days').addClass('disable_a_href');
-		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-		var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-		var totalCost = rate  * quantity;
-        document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-	}
-}
-</script>
-
-<script>
-function search_wood()
-	{
-<!--		var stock_description = $(this).val();-->
-		var stock_description = $("#ct_stock_description").val();
-        var stock_type = $("#ct_stock_type").val();
-        var length_req = $("#ct_length_req").val();
-        var width_req = $("#ct_width_req").val();
-        var height_req = $("#ct_height_req").val();
-        var includeContainer = $('#pk_item_search_page_costing');
-        $.ajax({
-            url: '{% url 'pk_item_search_page_costing' %}',
-            data: {
-                'stock_type': stock_type,
-                'stock_description': stock_description,
-                'length_req': length_req,
-                'width_req': width_req,
-                'height_req': height_req,
-            },
-            success: function (results)
+        if (stock_status==2)
             {
-				// Generate HTML for the table
-				var tableHtml = '<table class="table table-striped table-bordered">';
-				tableHtml += '<thead class="thead-dark"><tr><th>ID</th><th>Vendor Bill</th><th>Stock Purchases Number</th><th>Category</th><th>Stock Type</th><th>Stock Description</th><th>Source</th><th>Thick/Height</th><th>Width</th><th>Length</th><th>CFT</th><th>Quantity</th><th>Rate/Qty (CFT)</th><th>UOM</th><th>Size</th><th>Select</th></tr></thead>';
-				tableHtml += '<tbody>';
-				// Iterate over the results and add rows to the table
-				for (var i = 0; i < results.length; i++)
-				{
-					tableHtml += '<tr>';
-					tableHtml += '<td>' + results[i].id + '</td>';
-					tableHtml += '<td>' + results[i].sp_vendor_bill + '</td>';
-					tableHtml += '<td>' + results[i].sp_purchase_num + '</td>';
-					tableHtml += '<td>' + results[i].sp_category__category + '</td>';
-					tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
-					tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
-					tableHtml += '<td>' + results[i].sp_source__source + '</td>';
-					tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
-					tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
-					tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
-					tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
-					tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
-					tableHtml += '<td>' + results[i].sp_rate + '</td>';
-					tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
-					tableHtml += '<td class="hidden-column" style="display:none;">' + results[i].sp_uom + '</td>';
-					tableHtml += '<td>' + results[i].sp_size + '</td>';
-					tableHtml += '<td>';
-        			tableHtml += '<a class="btn btn-primary" >';
-        			tableHtml += '<i class="far fa-edit"></i> Select';
-        			tableHtml += '</a>';
-        			tableHtml += '</td>';
-					tableHtml += '</tr>';
-				}
-				tableHtml += '</tbody></table>';
+                $('#costing_form').addClass('disable_a_href');
+                alert("User Cannot edit the form since stock is supplied")
+            }
+        else
+            {
+                $('#costing_form').removeClass('disable_a_href');
+            }
 
-				 // Create the container and row structure
-				var containerHtml = '<div class="container-fluid" style="padding:15px;">';
-				containerHtml += '<div class="row">';
-				containerHtml += '<div class="col-5"></div>';
-				containerHtml += '<div class="col-2 rounded text-center bg-info">';
-				containerHtml += '<h3>Packing Stock List</h3>';
-				containerHtml += '</div>';
-				containerHtml += '<div class="col-5"></div>';
-				containerHtml += '</div>';
-				containerHtml += '</div>';
-				// Set the table HTML to the includeContainer
-				includeContainer.html(containerHtml +tableHtml);
-				var dataTable = includeContainer.find('table').DataTable();
-           }
+        if (assessment_num=="")
+            {
+                document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
+            }
+        else
+            {
+                document.getElementById("ct_assessment_num").value =assessment_num;
+            }
+
+        if (customer_po=="")
+            {
+                document.getElementById("ct_customer_po").value ='{{ses_customer_po_id}}';
+            }
+        else
+            {
+                document.getElementById("ct_customer_po").value =customer_po;
+            }
+
+        if (customer_name=="")
+            {
+                document.getElementById("ct_customer_name").value ='{{na_customer_name_id}}';
+            }
+        else
+            {
+                document.getElementById("ct_customer_name").value = customer_name;
+            }
+
+        change_cost_type();
+        $("#search_wood").on("click", function() {
+                search_wood();
+            });
         });
-        // Attach click event to the "Select" button
-		includeContainer.on('click', 'a.btn-primary', function(e) {
-			e.preventDefault(); // Prevent the default action of the link
+</script>
 
-			// Get the selected row data
-			var selectedRow = $(this).closest('tr');
-			var stockId = selectedRow.find('td:eq(0)').text();
-			var stock_purchase_num = selectedRow.find('td:eq(1)').text(); // Update with the correct index
-			var height = selectedRow.find('td:eq(7)').text(); // Update with the correct index
-			var width = selectedRow.find('td:eq(8)').text(); // Update with the correct index
-			var length = selectedRow.find('td:eq(9)').text(); // Update with the correct index
-			var cft = selectedRow.find('td:eq(10)').text(); // Update with the correct index
-			var quantity = selectedRow.find('td:eq(11)').text(); // Update with the correct index
-			var rateCFT = selectedRow.find('td:eq(12)').text(); // Update with the correct index
-			var uom = selectedRow.find('td:eq(13)').text(); // Update with the correct index
-			var size = selectedRow.find('td:eq(14)').text(); // Update with the correct index
-			var uom_id = selectedRow.find('.hidden-column').text();
+<script>
+	$("#ct_stock_type").change(function () {
+       var url = $("#costing_add").attr("data-stock_description-url");
+       var stock_type = $(this).val();
+       if (stock_type == 1 || stock_type == 4)
+       {
+         $('#ct_item').removeClass('disable_a_href');
+         $('#ct_width_req').removeClass('disable_a_href');
+         $('#ct_height_req').removeClass('disable_a_href');
+         $('#ct_length_req').removeClass('disable_a_href');
+         $('#ct_quantity_req').removeClass('disable_a_href');
+       }
+       else if (stock_type == 2){
+         $('#ct_item').addClass('disable_a_href');
+         $('#ct_width_req').addClass('disable_a_href');
+         $('#ct_height_req').addClass('disable_a_href');
+         $('#ct_length_req').addClass('disable_a_href');
+         $('#ct_quantity_req').removeClass('disable_a_href');
+       }
+       else
+       {
+           $('#ct_item').addClass('disable_a_href');
+           $('#ct_width_req').addClass('disable_a_href');
+         $('#ct_height_req').addClass('disable_a_href');
+         $('#ct_length_req').addClass('disable_a_href');
+         $('#ct_quantity_req').addClass('disable_a_href');
+       }
+       $.ajax({
+         url: url,
+         data: {
+           'stock_type': stock_type,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#ct_stock_description').removeClass('disable_a_href');
+             $("#ct_stock_description").empty();
+             $('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
+             var ct_stock_description_name=JSON.parse(data)["stock_description"];
+             var ct_stock_description_id=JSON.parse(data)["stock_description_id"];
+             var len = (ct_stock_description_id).length;
+             $('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#ct_stock_description").append("<option value='"+ct_stock_description_id[i]+"'>"+ct_stock_description_name[i]+"</option>");
+             }
+         }
+       });
+     });
+</script>
+<script>
+	function change_cost_type() {
+            var jn=document.getElementById("ct_cost_type").value
+            if ( jn==8)
+            {
+                document.getElementById("ct_stock_status").value=1
+                $('#ct_stock_type').removeClass('disable_a_href');
+                var jn1=document.getElementById("ct_stock_type").value
+                if ( jn1==1)
+                {
+                    $('#ct_stock_description').removeClass('disable_a_href');
+    <!--				$('#ct_length').removeClass('disable_a_href');-->
+    <!--				$('#ct_width').removeClass('disable_a_href');-->
+    <!--				$('#ct_height').removeClass('disable_a_href');-->
+                    $('#ct_uom').addClass('disable_a_href');
+                    $('#ct_quantity').removeClass('disable_a_href');
+                    $('#ct_sqrt_req').addClass('disable_a_href');
+    <!--				$('#ct_size').addClass('disable_a_href');-->
+    <!--				document.getElementById("ct_size").value=parseFloat(0.0)-->
+                    $('#ct_days').addClass('disable_a_href');
+                    document.getElementById("ct_days").value=0;
 
-			// Log the extracted values (you can do further processing here)
-			document.getElementById("ct_stock_purchase_number").value=stockId;
-			document.getElementById("ct_length").value=length;
-			document.getElementById("ct_width").value=width;
-			document.getElementById("ct_height").value=height;
-			document.getElementById("ct_cft").value=cft;
-			document.getElementById("ct_quantity").value=quantity;
-			document.getElementById("ct_size").value=size;
-			document.getElementById("ct_uom").value=uom_id;
-			document.getElementById("ct_rate").value=rateCFT;
-			change_cost_type();
-		});
-	}
+                    var length = parseFloat(document.getElementById("ct_length").value) || 0;
+                    var height = parseFloat(document.getElementById("ct_height").value) || 0;
+                    var width = parseFloat(document.getElementById("ct_width").value) || 0;
+                    var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                    var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                    var cft = (length*height*width/144)*quantity;
+                    document.getElementById("ct_cft").value=cft.toFixed(2)
+
+                    var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
+                    var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
+                    var height_req = parseFloat(document.getElementById("ct_height_req").value) || 0;
+                    var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+                    var cft_req = (length_req*width_req*height_req/144)*quantity_req;
+                    document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
+
+					var totalCost = rate * cft;
+                    document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+                }
+                else if ( jn1==4)
+                {
+                    $('#ct_stock_description').removeClass('disable_a_href');
+    <!--				$('#ct_length').removeClass('disable_a_href');-->
+    <!--				$('#ct_width').removeClass('disable_a_href');-->
+    <!--				$('#ct_height').removeClass('disable_a_href');-->
+                    $('#ct_uom').addClass('disable_a_href');
+                    $('#ct_quantity').removeClass('disable_a_href');
+                    $('#ct_sqrt_req').addClass('disable_a_href');
+                    $('#ct_height_req').addClass('disable_a_href');
+    <!--				$('#ct_size').addClass('disable_a_href');-->
+    <!--				document.getElementById("ct_size").value=parseFloat(0.0)-->
+                    $('#ct_days').addClass('disable_a_href');
+                    document.getElementById("ct_days").value=0;
+
+                    var length = parseFloat(document.getElementById("ct_length").value) || 0;
+                    var height = parseFloat(document.getElementById("ct_height").value) || 0;
+                    var width = parseFloat(document.getElementById("ct_width").value) || 0;
+                    var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                    var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                    var cft = (length*height*width/144)*quantity;
+                    document.getElementById("ct_cft").value=cft.toFixed(2)
+
+                    var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
+                    var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
+                    var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+                    var cft_req = (length_req*width_req*height_req/144)*quantity_req;
+                    document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
+
+                    var totalCost = rate * cft;
+                    document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+                }
+
+                else if (jn1==2)
+                {
+                    $('#ct_stock_description').removeClass('disable_a_href');
+                    $('#ct_length').addClass('disable_a_href');
+                    $('#ct_width').addClass('disable_a_href');
+                    $('#ct_height').addClass('disable_a_href');
+    <!--				$('#ct_uom').removeClass('disable_a_href');-->
+                    $('#ct_quantity_req').removeClass('disable_a_href');
+                    $('#ct_sqrt_req').addClass('disable_a_href');
+    <!--				$('#ct_size').removeClass('disable_a_href');-->
+                    $('#ct_cft').addClass('disable_a_href');
+                    document.getElementById("ct_cft").value=0;
+                    document.getElementById("ct_length").value=0;
+                    document.getElementById("ct_width").value=0;
+                    document.getElementById("ct_height").value=0;
+                    $('#ct_rate').removeClass('disable_a_href');
+                    $('#ct_days').addClass('disable_a_href');
+                    var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                    var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                    var totalCost = rate  * quantity;
+                    document.getElementById("ct_total_cost").value=totalCost.toFixed(2);
+
+                    var stock_desc = document.getElementById("ct_stock_description").value;
+					if (stock_desc == 14 || stock_desc == 15 || stock_desc == 23 || stock_desc == 38 || stock_desc == 39 || stock_desc == 44 || stock_desc == 45 || stock_desc == 46) {
+						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
+						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
+						var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+
+						var sqft = ((len_ft * wid_ft * 2) + (wid_ft * heig_ft * 2) + (len_ft * heig_ft * 2)) * quantity_req;
+						document.getElementById("ct_sqrt_req").value = sqft.toFixed(2);
+
+						var totalCost = rate * sqft;
+						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+					}
+					else if (stock_desc == 35) {
+						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
+						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+
+						var sqft = len_ft * wid_ft * 2;
+						document.getElementById("ct_sqrt_req").value = sqft.toFixed(2);
+
+						var totalCost = rate  * sqft;
+                    	document.getElementById("ct_total_cost").value=totalCost.toFixed(2);
+					}
+					else if (stock_desc == 6 || stock_desc == 47) {
+						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
+						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+
+						var sqft = (wid_ft * 2 + heig_ft * 2) * quantity_req;
+						document.getElementById("ct_sqrt_req").value = sqft.toFixed(2);
+
+						var totalCost = rate * sqft;
+						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+						}
+
+                }
+            }
+            else if (jn==4)
+            {
+                $('#ct_stock_type').addClass('disable_a_href');
+                $('#ct_stock_description').addClass('disable_a_href');
+                document.getElementById("ct_stock_type").value=""
+                document.getElementById("ct_stock_description").value=""
+                $('#ct_length').addClass('disable_a_href');
+                $('#ct_width').addClass('disable_a_href');
+                $('#ct_height').addClass('disable_a_href');
+                $('#ct_days').removeClass('disable_a_href');
+                $('#ct_uom').addClass('disable_a_href');
+    <!--			$('#ct_size').addClass('disable_a_href');-->
+                document.getElementById("ct_uom").value="";
+    <!--			document.getElementById("ct_size").value=0;-->
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                var days = parseInt(document.getElementById("ct_days").value) || 0;
+                var totalCost = rate  * days * quantity;
+                document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+
+                var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
+                var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
+                var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+                var cft_req = (length_req*width_req*height_req/144)*quantity_req;
+                document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
+
+            }
+            else if (jn==5)
+            {
+                $('#ct_stock_type').addClass('disable_a_href');
+                $('#ct_stock_description').addClass('disable_a_href');
+                document.getElementById("ct_stock_type").value=""
+                document.getElementById("ct_stock_description").value=""
+                $('#ct_length').addClass('disable_a_href');
+                $('#ct_width').addClass('disable_a_href');
+                $('#ct_height').addClass('disable_a_href');
+                $('#ct_days').addClass('disable_a_href');
+                $('#ct_uom').addClass('disable_a_href');
+    <!--			$('#ct_size').addClass('disable_a_href');-->
+                document.getElementById("ct_days").value=0;
+                document.getElementById("ct_uom").value="";
+    <!--			document.getElementById("ct_size").value=0;-->
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                var totalCost = rate * quantity;
+                document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+            }
+            else if (jn==6)
+            {
+                $('#ct_stock_type').addClass('disable_a_href');
+                $('#ct_stock_description').addClass('disable_a_href');
+                document.getElementById("ct_stock_type").value=""
+                document.getElementById("ct_stock_description").value=""
+                $('#ct_length').addClass('disable_a_href');
+                $('#ct_width').addClass('disable_a_href');
+                $('#ct_height').addClass('disable_a_href');
+                $('#ct_days').addClass('disable_a_href');
+                $('#ct_uom').addClass('disable_a_href');
+    <!--			$('#ct_size').addClass('disable_a_href');-->
+                document.getElementById("ct_uom").value="";
+    <!--			document.getElementById("ct_size").value=0;-->
+                document.getElementById("ct_days").value=0;
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                var totalCost = rate * quantity;
+                document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+            }
+            else if (jn==7)
+            {
+                $('#ct_stock_type').addClass('disable_a_href');
+                $('#ct_stock_description').addClass('disable_a_href');
+                document.getElementById("ct_stock_type").value=""
+                document.getElementById("ct_stock_description").value=""
+                $('#ct_length').addClass('disable_a_href');
+                $('#ct_width').addClass('disable_a_href');
+                $('#ct_height').addClass('disable_a_href');
+                $('#ct_days').addClass('disable_a_href');
+                $('#ct_quantity').addClass('disable_a_href');
+                $('#ct_cft').addClass('disable_a_href');
+                $('#ct_uom').addClass('disable_a_href');
+    <!--			$('#ct_size').addClass('disable_a_href');-->
+                document.getElementById("ct_days").value=0;
+                document.getElementById("ct_quantity").value=0;
+                document.getElementById("ct_cft").value=0;
+                document.getElementById("ct_uom").value="";
+    <!--			document.getElementById("ct_size").value=0;-->
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var totalCost = rate;
+                document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+            }
+            else
+            {
+<!--                document.getElementById("ct_stock_status").value=6-->
+                $('#ct_stock_type').addClass('disable_a_href');
+                $('#ct_stock_description').addClass('disable_a_href');
+                document.getElementById("ct_stock_type").value=""
+                document.getElementById("ct_stock_description").value=""
+                $('#ct_length').addClass('disable_a_href');
+                $('#ct_width').addClass('disable_a_href');
+                $('#ct_height').addClass('disable_a_href');
+                $('#ct_days').removeClass('disable_a_href');
+                $('#ct_cft').addClass('disable_a_href');
+                $('#ct_uom').addClass('disable_a_href');
+    <!--			$('#ct_size').addClass('disable_a_href');-->
+                document.getElementById("ct_uom").value="";
+    <!--			document.getElementById("ct_size").value=0;-->
+                document.getElementById("ct_cft").value=0;
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                var days = parseInt(document.getElementById("ct_days").value) || 0;
+                var totalCost = rate  * days * quantity;
+                document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+
+            }
+        }
+</script>
+
+<script>
+	function change_charge_type() {
+        var jn=document.getElementById("ct_stock_type").value
+        if ( jn==1)
+        {
+            $('#ct_stock_description').removeClass('disable_a_href');
+    <!--		$('#ct_length').removeClass('disable_a_href');-->
+    <!--		$('#ct_width').removeClass('disable_a_href');-->
+    <!--		$('#ct_height').removeClass('disable_a_href');-->
+            $('#ct_uom').addClass('disable_a_href');
+            $('#ct_quantity').removeClass('disable_a_href');
+    <!--		$('#ct_size').addClass('disable_a_href');-->
+    <!--		document.getElementById("ct_size").value=parseFloat(0.0)-->
+            $('#ct_days').addClass('disable_a_href');
+            document.getElementById("ct_days").value=0;
+
+            var length = parseFloat(document.getElementById("ct_length").value) || 0;
+            var height = parseFloat(document.getElementById("ct_height").value) || 0;
+            var width = parseFloat(document.getElementById("ct_width").value) || 0;
+            var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+            var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+            var cft = (length*height*width/144)*quantity;
+            document.getElementById("ct_cft").value=cft.toFixed(2)
+            var totalCost = rate * cft;
+            document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+        }
+
+        else if (jn==2)
+        {
+            $('#ct_stock_description').removeClass('disable_a_href');
+            $('#ct_length').addClass('disable_a_href');
+            $('#ct_width').addClass('disable_a_href');
+            $('#ct_height').addClass('disable_a_href');
+    <!--		$('#ct_uom').removeClass('disable_a_href');-->
+            $('#ct_quantity').removeClass('disable_a_href');
+    <!--		$('#ct_size').removeClass('disable_a_href');-->
+            $('#ct_cft').addClass('disable_a_href');
+            document.getElementById("ct_cft").value=0;
+            document.getElementById("ct_length").value=0;
+            document.getElementById("ct_width").value=0;
+            document.getElementById("ct_height").value=0;
+            $('#ct_rate').removeClass('disable_a_href');
+            $('#ct_days').addClass('disable_a_href');
+            var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+            var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+            var totalCost = rate  * quantity;
+            document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+        }
+    }
+</script>
+
+<script>
+	function search_wood()
+        {
+    <!--		var stock_description = $(this).val();-->
+            var stock_description = $("#ct_stock_description").val();
+            var stock_type = $("#ct_stock_type").val();
+            var length_req = $("#ct_length_req").val();
+            var width_req = $("#ct_width_req").val();
+            var height_req = $("#ct_height_req").val();
+            var includeContainer = $('#pk_item_search_page_costing');
+            $.ajax({
+                url: '{% url 'pk_item_search_page_costing' %}',
+                data: {
+                    'stock_type': stock_type,
+                    'stock_description': stock_description,
+                    'length_req': length_req,
+                    'width_req': width_req,
+                    'height_req': height_req,
+                },
+                success: function (results)
+                {
+                    // Generate HTML for the table
+                    var tableHtml = '<table class="table table-striped table-bordered">';
+                    tableHtml += '<thead class="thead-dark"><tr><th>ID</th><th>Vendor Bill</th><th>Stock Purchases Number</th><th>Category</th><th>Stock Type</th><th>Stock Description</th><th>Source</th><th>Thick/Height</th><th>Width</th><th>Length</th><th>CFT</th><th>Quantity</th><th>Rate/Qty (CFT)</th><th>UOM</th><th>Size</th><th>Select</th></tr></thead>';
+                    tableHtml += '<tbody>';
+                    // Iterate over the results and add rows to the table
+                    for (var i = 0; i < results.length; i++)
+                    {
+                        tableHtml += '<tr>';
+                        tableHtml += '<td>' + results[i].id + '</td>';
+                        tableHtml += '<td>' + results[i].sp_vendor_bill + '</td>';
+                        tableHtml += '<td>' + results[i].sp_purchase_num + '</td>';
+                        tableHtml += '<td>' + results[i].sp_category__category + '</td>';
+                        tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
+                        tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
+                        tableHtml += '<td>' + results[i].sp_source__source + '</td>';
+                        tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
+                        tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
+                        tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
+                        tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
+                        tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
+                        tableHtml += '<td>' + results[i].sp_rate + '</td>';
+                        tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
+                        tableHtml += '<td class="hidden-column" style="display:none;">' + results[i].sp_uom + '</td>';
+                        tableHtml += '<td>' + results[i].sp_size + '</td>';
+                        tableHtml += '<td>';
+                        tableHtml += '<a class="btn btn-primary" >';
+                        tableHtml += '<i class="far fa-edit"></i> Select';
+                        tableHtml += '</a>';
+                        tableHtml += '</td>';
+                        tableHtml += '</tr>';
+                    }
+                    tableHtml += '</tbody></table>';
+
+                     // Create the container and row structure
+                    var containerHtml = '<div class="container-fluid" style="padding:15px;">';
+                    containerHtml += '<div class="row">';
+                    containerHtml += '<div class="col-5"></div>';
+                    containerHtml += '<div class="col-2 rounded text-center bg-info">';
+                    containerHtml += '<h3>Packing Stock List</h3>';
+                    containerHtml += '</div>';
+                    containerHtml += '<div class="col-5"></div>';
+                    containerHtml += '</div>';
+                    containerHtml += '</div>';
+                    // Set the table HTML to the includeContainer
+                    includeContainer.html(containerHtml +tableHtml);
+                    var dataTable = includeContainer.find('table').DataTable();
+               }
+            });
+            // Attach click event to the "Select" button
+            includeContainer.on('click', 'a.btn-primary', function(e) {
+                e.preventDefault(); // Prevent the default action of the link
+
+                // Get the selected row data
+                var selectedRow = $(this).closest('tr');
+                var stockId = selectedRow.find('td:eq(0)').text();
+                var stock_purchase_num = selectedRow.find('td:eq(1)').text(); // Update with the correct index
+                var height = selectedRow.find('td:eq(7)').text(); // Update with the correct index
+                var width = selectedRow.find('td:eq(8)').text(); // Update with the correct index
+                var length = selectedRow.find('td:eq(9)').text(); // Update with the correct index
+                var cft = selectedRow.find('td:eq(10)').text(); // Update with the correct index
+                var quantity = selectedRow.find('td:eq(11)').text(); // Update with the correct index
+                var rateCFT = selectedRow.find('td:eq(12)').text(); // Update with the correct index
+                var uom = selectedRow.find('td:eq(13)').text(); // Update with the correct index
+                var size = selectedRow.find('td:eq(14)').text(); // Update with the correct index
+                var uom_id = selectedRow.find('.hidden-column').text();
+
+                // Log the extracted values (you can do further processing here)
+                document.getElementById("ct_stock_purchase_number").value=stockId;
+                document.getElementById("ct_length").value=length;
+                document.getElementById("ct_width").value=width;
+                document.getElementById("ct_height").value=height;
+                document.getElementById("ct_cft").value=cft;
+                document.getElementById("ct_quantity").value=quantity;
+                document.getElementById("ct_size").value=size;
+                document.getElementById("ct_uom").value=uom_id;
+                document.getElementById("ct_rate").value=rateCFT;
+                change_cost_type();
+            });
+        }
 </script>
 <script>
 	function changeItemDescription() {
@@ -661,21 +770,19 @@ function search_wood()
 <script>
 	function load_pk_requirement_type() {
     var ct_assessment_num_id = $('#ct_assessment_num').val();
-    var ct_customer_po_id = $('#ct_customer_po').val();
     $.ajax({
-        url: '{% url 'pk_get_po_requirement_type' %}',
+        url: '{% url 'pk_get_pk_requirement_type' %}',
         type: 'GET',
         data: {
         	'ct_assessment_num_id': ct_assessment_num_id,
-        	'ct_customer_po_id': ct_customer_po_id,
         	},
         dataType: 'json',
         success: function(data) {
         	$('#ct_requirement').removeClass('disable_a_href');
         	$('#ct_requirement').empty();
 			$('#ct_requirement').empty().append("<option value='0'>--Select--</option>");
-        	var ct_requirement_name=data.po_requirement_type_val;
-        	var ct_requirement_id=data.po_requirement_type_id;
+        	var ct_requirement_name=data.requirement_type_val;
+        	var ct_requirement_id=data.requirement_type_id;
         	var len = (ct_requirement_id).length;
         	$('#ct_requirement').empty().append("<option value='0'>--Select--</option>");
         	for( var i = 0; i<len; i++){
@@ -686,24 +793,54 @@ function search_wood()
 }
 </script>
 
+<!--<script>-->
+<!--	function pk_store_na_dimension_id() {-->
+<!--    var ct_requirement_id = $('#ct_requirement').val();-->
+<!--    $.ajax({-->
+<!--        url: '{% url 'pk_store_po_dimension_id' %}',-->
+<!--        type: 'GET',-->
+<!--        data: {'ct_requirement_id': ct_requirement_id},-->
+<!--        dataType: 'json',-->
+<!--        success: function(data) {-->
+<!--        	var po_dimension_box_val=data.po_dimension_box_val;-->
+<!--        	document.getElementById("ct_requirement_size").value=po_dimension_box_val;-->
+<!--        }-->
+<!--    });-->
+<!--}-->
+<!--</script>-->
 <script>
 	function pk_store_na_dimension_id() {
-    var ct_requirement_id = $('#ct_requirement').val();
-    $.ajax({
-        url: '{% url 'pk_store_po_dimension_id' %}',
-        type: 'GET',
-        data: {'ct_requirement_id': ct_requirement_id},
-        dataType: 'json',
-        success: function(data) {
-        	var po_dimension_box_val=data.po_dimension_box_val;
-        	document.getElementById("ct_requirement_size").value=po_dimension_box_val;
-        }
-    });
-}
+        var ct_requirement_id = $('#ct_requirement').val();
+        $.ajax({
+            url: '{% url "pk_store_na_dimension_id" %}',
+            type: 'GET',
+            data: {'ct_requirement_id': ct_requirement_id},
+            dataType: 'json',
+            success: function(data) {
+ 	     	    var na_dimension_box_val=data.na_dimension_box_val;
+ 		       	document.getElementById("ct_requirement_size").value=na_dimension_box_val;
+                var na_dimension_box_val = data.na_dimension_box_val;
+                var na_dimension_type_val = data.na_dimension_type;
+                var na_dimension_type_id_val = data.na_dimension_type_id;
+                document.getElementById("pkqt_dimension_type").value = na_dimension_type_val;
+                document.getElementById("pkqt_dimension_type_id").value = na_dimension_type_id_val;
+                var na_uom_val = data.na_uom;
+                var na_uom_id_val = data.na_uom_id;
+                document.getElementById("pkqt_uom_calc").value = na_uom_val;
+                var l = parseFloat(data.na_length);
+                document.getElementById("pkqt_l").value = l;
+                var w = parseFloat(data.na_width);
+                document.getElementById("pkqt_w").value = w;
+                var h = parseFloat(data.na_height);
+                document.getElementById("pkqt_h").value = h;
+                calculateDimensions(na_uom_id_val,l,w,h);
+            }
+        });
+    }
 </script>
 
 <script>
-    function onChangeHandler() {
+	function onChangeHandler() {
         change_cost_type();
         load_pk_requirement_type();
     }
