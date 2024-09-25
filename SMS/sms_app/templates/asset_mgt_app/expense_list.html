@@ -45,8 +45,7 @@
             <th>Expense Number</th>
             <th>Created On</th>
             <th>Branch</th>
-            <th>Unit</th>
-            <th>Unit_1</th>
+            <th style="width: 100px;">Unit</th>
             <th>Vendor</th>
             <th>Bill No</th>
             <th>Bill Date</th>
@@ -69,11 +68,11 @@
             <td> {{expenseinfo.exp_number}}</td>
             <td> {{expenseinfo.exp_created_on}}</td>
             <td> {{expenseinfo.exp_branch}}</td>
-            <td> {{expenseinfo.exp_unit}}</td>
-            <td>
-                {% if ExpenseInfo.exp_unit_1.exists %}
+
+            <td style="width: 100px;">
+                {% if expenseinfo.exp_unit.exists %}
                 <ul>
-                    {% for category in ExpenseInfo.exp_unit_1.all %}
+                    {% for category in expenseinfo.exp_unit.all %}
                     <li>{{ category }}</li>
                     {% endfor %}
                 </ul>
