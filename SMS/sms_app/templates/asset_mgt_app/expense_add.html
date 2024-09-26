@@ -43,7 +43,7 @@
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">unit</span>
+										<span class="input-group-text">Unit</span>
 									</div>
 									{% render_field expense_form.exp_unit id="exp_unit" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -226,44 +226,43 @@
         {
             $('#exp_category').addClass('disable_a_href');
         }
-        update_rates_fn()
-
+        update_rates_fn();
       });
 </script>
 <style>
-	/* Custom styles for multiselect dropdown */
+    /* Custom styles for multiselect dropdown */
     .multiselect-container {
         max-width: 1000px !important;  /* Set your desired max width for the dropdown */
-        min-width: 300px;              /* Ensure a minimum width */
-        width: 100% !important;        /* Ensure it fills the width of the button */
-        box-sizing: border-box;			/* Ensure padding and border are included in width */
-
+        min-width: 300px;               /* Ensure a minimum width */
+        width: 100% !important;         /* Ensure it fills the width of the button */
+        box-sizing: border-box;         /* Ensure padding and border are included in width */
+        z-index: 1000;                  /* Ensure it's on top of other elements */
+        position: relative;              /* Positioning to prevent overflow issues */
     }
 
     .custom-multiselect-button {
-        border: 1px solid lightgray;  /* Light border for the button */
+        border: 1px solid lightgray;    /* Light border for the button */
     }
+
     .multiselect-container li a label {
-    display: flex;
-    align-items: center;
-    padding-right:40px;
-    cursor: pointer; /* Ensures the entire label is clickable */
-}
+        display: flex;
+        align-items: center;
+        padding-right: 40px;
+        cursor: pointer;                /* Ensures the entire label is clickable */
+    }
 
-/* Position the checkbox after the text */
-.multiselect-container li a label input[type="checkbox"] {
-    margin-left: -70px; /* Space between text and checkbox */
-}
-
-    /* Position the input box (checkbox) before the text and align it */
-
+    /* Position the checkbox after the text */
+    .multiselect-container li a label input[type="checkbox"] {
+        margin-left: -70px;            /* Space between text and checkbox */
+    }
 
     /* Correct alignment of the checkbox to be line-wise with text */
     .multiselect-container li a label {
-        cursor: pointer; /* Ensures the entire area is clickable */
-        height: auto; /* Adjusts height based on content, ensuring vertical center alignment */
+        cursor: pointer;                /* Ensures the entire area is clickable */
+        height: auto;                  /* Adjusts height based on content, ensuring vertical center alignment */
     }
 </style>
+
 
 <script>
 	function update_rates_fn() {
@@ -286,53 +285,127 @@
 </script>
 
 <script>
-function change_Branch() {
-	var branchId = document.getElementById("exp_branch").value;
-    fetchUnitsByBranch(branchId); // Fetch units when a branch is selected
-  }
-</script>
+$(document).ready(function() {
+    $('#exp_unit').prop('disabled', true); // Make the unit dropdown readonly initially
+    initializeMultiSelect('#exp_unit'); // Initialize the multi-select
+    $('#exp_unit').next('.btn').addClass('disabled'); // Make the dropdown button visually disabled
+});
 
-<script>
+function change_Branch() {
+    var branchId = document.getElementById("exp_branch").value;
+    if (branchId != "0") {
+        $('#exp_unit').prop('disabled', false); // Enable the unit dropdown when a branch is selected
+        $('#exp_unit').next('.btn').removeClass('disabled'); // Visually enable the dropdown button
+        fetchUnitsByBranch(branchId); // Fetch units when a branch is selected
+    } else {
+        $('#exp_unit').prop('disabled', true); // Keep the dropdown disabled if no branch is selected
+        $('#exp_unit').next('.btn').addClass('disabled'); // Visually disable the dropdown button
+        $('#exp_unit').multiselect('rebuild'); // Rebuild the multiselect to reflect changes
+    }
+}
+
 function fetchUnitsByBranch(branchId) {
     $.ajax({
-        url: '{% url 'load_units_origin' %}',
+        url: '{% url "load_units_origin" %}', // Ensure the URL is correct
         data: {
             'branchId': branchId,
         },
         success: function (data) {
-            console.log(data);
-            $('#exp_unit').removeClass('disable_a_href');
-            $('#exp_unit').empty().append("<option value='0'>--Select--</option>");
-            var unit_name = JSON.parse(data)["unit_name_list"];
-            var unit_id = JSON.parse(data)["unit_id"];
-            alert(unit_name)
-            alert(unit_id)
-            var len = unit_name.length;
-            for (var i = 0; i < len; i++) {
-                $("#exp_unit").append("<option value='" + unit_id[i] + "'>" + unit_name[i] + "</option>");
-            }
+            console.log(data); // Debugging: log the received data
 
-            // After fetching the units, initialize the multi-select
-			initializeMultiSelect('#exp_unit');
+            var previousSelections = $('#exp_unit').val(); // Store previously selected options
+
+            // Clear previous options and add the default option
+            $('#exp_unit').empty().append("<option value='0'>--Select--</option>");
+
+            var unitData = JSON.parse(data);
+            var unit_name = unitData["unit_name_list"];
+            var unit_id = unitData["unit_id"];
+
+            // Check if unit data is available
+            if (unit_name && unit_id) {
+                var len = unit_name.length;
+                for (var i = 0; i < len; i++) {
+                    $("#exp_unit").append("<option value='" + unit_id[i] + "'>" + unit_name[i] + "</option>");
+                }
+
+                // Rebuild the multi-select to update the display
+                $('#exp_unit').multiselect('rebuild');
+
+                // Restore previous selections that are still valid
+                restoreSelections(previousSelections, unit_id);
+            } else {
+                console.warn('No unit data available for the selected branch.'); // Debugging message
+            }
+        },
+        error: function (error) {
+            console.error('Error fetching units:', error);
+            alert('Error fetching units. Please try again.');
         }
     });
 }
-</script>
 
-<script>
-	function initializeMultiSelect(selector) {
+function restoreSelections(previousSelections, unit_id) {
+    previousSelections.forEach(function (value) {
+        if (unit_id.includes(value)) {
+            $('#exp_unit').multiselect('select', value); // Select the previously selected option if valid
+        }
+    });
+}
 
+function initializeMultiSelect(selector) {
     $(selector).multiselect({
         includeSelectAllOption: true,
         enableCaseInsensitiveFiltering: true,
         nonSelectedText: 'Select options',
-        buttonWidth: '160px',
+        buttonWidth: '385px',
         buttonHeight: '200px',
         buttonClass: 'custom-multiselect-button',
         enableFiltering: true,
         maxHeight: 250,
-        dropUp: false
+        dropUp: false,
+        onChange: function(option, checked) {
+            checkSelectAll(); // Check if all options are selected
+        }
     });
 }
+
+function checkSelectAll() {
+    var selectedOptions = $('#exp_unit').val();
+    var allOptions = $('#exp_unit option').length - 1; // Exclude the '--Select--' option
+
+    if (selectedOptions.length === allOptions) {
+        // Remove the '--Select--' option if all are selected
+        $('#exp_unit option[value="0"]').remove();
+    } else {
+        if ($('#exp_unit option[value="0"]').length === 0) {
+            $('#exp_unit').prepend("<option value='0'>--Select--</option>"); // Add '--Select--' if not all options are selected
+        }
+    }
+}
 </script>
+
+<!-- CSS -->
+<style>
+/* Custom styles for multiselect dropdown */
+.multiselect-container {
+    max-width: 1000px !important;  /* Set your desired max width for the dropdown */
+    min-width: 300px;               /* Ensure a minimum width */
+    width: 100% !important;         /* Ensure it fills the width of the button */
+    box-sizing: border-box;         /* Ensure padding and border are included in width */
+    z-index: 1000;                  /* Ensure it's on top of other elements */
+    position: absolute;              /* Positioning to prevent overflow issues */
+}
+
+.custom-multiselect-button {
+    border: 1px solid lightgray;    /* Light border for the button */
+}
+
+/* Custom style for visually disabled multiselect button */
+.custom-multiselect-button.disabled {
+    pointer-events: none; /* Disable interactions */
+    opacity: 0.5;          /* Make it visually disabled */
+}
+</style>
+
 {% endblock content %}
