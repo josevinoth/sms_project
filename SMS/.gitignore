@@ -13,3 +13,4 @@ Requirements/*
 !Requirements/*.py
 /sms_app/migrations/
 /media/
+__pycache__/
