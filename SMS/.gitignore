@@ -14,3 +14,6 @@ Requirements/*
 /sms_app/migrations/
 /media/
 __pycache__/
+# Ignore __init__.py in migrations folder
+# Ignore all __init__.py files
+__init__.py
