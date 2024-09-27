@@ -113,9 +113,37 @@
 										</div>
 
 									</div>
-									<div class="col-3 d-flex align-items-center justify-content-center">
-										<button id="search_wood" type="button" class="btn btn-warning btn-lg"><i class="fas fa-search"></i> Search Item</button>
-									</div>
+
+    <!-- Button to trigger modal -->
+    <div class="col-3 d-flex align-items-center justify-content-center">
+        <button id="search_wood" type="button" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#stockModal">
+            <i class="fas fa-search"></i> Search Item
+        </button>
+    </div>
+
+    <!-- Modal Structure -->
+    <div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable custom-width"> <!-- Added custom-width class -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="stockModalLabel">Stock Items</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="unique_field_error" class="text-danger"></div>
+                    <div id="pk_item_search_page_costing"></div> <!-- Container for results -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 								</div>
 
 							</div>
@@ -213,12 +241,12 @@
 		</form>
 	</div>
 	<div class="col-3 ">
-		{% include "asset_mgt_app/calculation_card.html" %}
+		{% include "asset_mgt_app\calculation_card.html" %}
 	</div>
 </div>
-<div id="pk_item_search_page_costing">
-	{% include "asset_mgt_app/pk_item_search_page_costing.html" %}
-</div>
+<!--<div id="pk_item_search_page_costing">-->
+<!--	{% include "asset_mgt_app/pk_item_search_page_costing.html" %}-->
+<!--</div>-->
 
 {% include "asset_mgt_app/pk_quotation_list_WOH.html" %}
 
@@ -339,7 +367,6 @@
                     var cft = (length*height*width/144)*quantity;
                     document.getElementById("pkqt_cft").value=cft.toFixed(2)
 
-
                     var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
                     var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
                     var height_req = parseFloat(document.getElementById("pkqt_height_req").value) || 0;
@@ -372,7 +399,6 @@
                     var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
                     var cft = (length*height*width/144)*quantity;
                     document.getElementById("pkqt_cft").value=cft.toFixed(2)
-
 
                     var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
                     var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
@@ -608,120 +634,142 @@
         }
     }
 </script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* Custom width for modal */
+        .modal-dialog.custom-width {
+            max-width: 90%; /* 90% of the viewport width */
+        }
+    </style>
+
 
 <script>
-	function search_wood() {
-    var stock_description = $("#pkqt_stock_description").val();
-    var stock_type = $("#pkqt_stock_type").val();
-    var length_req = parseFloat($("#pkqt_length_req").val());
-    var width_req = parseFloat($("#pkqt_width_req").val());
-    var height_req = parseFloat($("#pkqt_height_req").val());
-    var includeContainer = $('#pk_item_search_page_costing');
+		$(document).ready(function () {
+			// Click event for search button
+			$('#search_wood').on('click', function () {
+				search_wood();  // Call the search function
+			});
+		});
 
-    $.ajax({
-        url: '{% url "pk_item_search_page_costing" %}',  // Ensure the correct URL here
-        data: {
-            'stock_type': stock_type,
-            'stock_description': stock_description,
-            'length_req': length_req,
-            'width_req': width_req,
-            'height_req': height_req,
-        },
-        success: function (results) {
-            console.log("Results:", results);  // Debug: Check the data structure
+		function search_wood() {
+			var stock_description = $("#pkqt_stock_description").val();
+			var stock_type = $("#pkqt_stock_type").val();
+			var length_req = parseFloat($("#pkqt_length_req").val());
+			var width_req = parseFloat($("#pkqt_width_req").val());
+			var height_req = parseFloat($("#pkqt_height_req").val());
+			var includeContainer = $('#pk_item_search_page_costing');
 
-            if (results.length === 0) {
-                $('#unique_field_error').text('No stock found for the given criteria.');
-                return;
-            }
+			$.ajax({
+				url: '{% url "pk_item_search_page_costing" %}',  // Ensure the correct URL here
+				data: {
+					'stock_type': stock_type,
+					'stock_description': stock_description,
+					'length_req': length_req,
+					'width_req': width_req,
+					'height_req': height_req,
+				},
+				success: function (results) {
+					console.log("Results:", results);  // Debug: Check the data structure
 
-            // Sorting logic (optional)
-            results.sort(function (a, b) {
-                return a.sp_length_reduced - b.sp_length_reduced;  // Example sorting by length
-            });
+					if (results.length === 0) {
+						$('#unique_field_error').text('No stock found for the given criteria.');
+						return;
+					}
 
-            // Generate HTML for the table
-            var tableHtml = '<table id="stockTable" class="table table-striped table-bordered">';
-            tableHtml += '<thead class="thead-dark">';
-            tableHtml += '<tr>';
-            tableHtml += '<th>ID</th>';
-            tableHtml += '<th>Vendor Bill</th>';
-            tableHtml += '<th>Date</th>';
-            tableHtml += '<th>Stock Purchases Number</th>';
-            tableHtml += '<th>Category</th>';
-            tableHtml += '<th>Stock Type</th>';
-            tableHtml += '<th>Stock Description</th>';
-            tableHtml += '<th>Source</th>';
-            tableHtml += '<th>Thick/Height</th>';
-            tableHtml += '<th>Width</th>';
-            tableHtml += '<th>Length</th>';
-            tableHtml += '<th>CFT</th>';
-            tableHtml += '<th>Quantity</th>';
-            tableHtml += '<th>Rate/Qty (CFT)</th>';
-            tableHtml += '<th>UOM</th>';
-            tableHtml += '<th>Size</th>';
-            tableHtml += '<th>Select</th>';
-            tableHtml += '</tr>';
-            tableHtml += '</thead>';
-            tableHtml += '<tbody>';
+					// Sorting logic (optional)
+					results.sort(function (a, b) {
+						return a.sp_length_reduced - b.sp_length_reduced;  // Example sorting by length
+					});
 
-            for (var i = 0; i < results.length; i++) {
-                tableHtml += '<tr>';
-                tableHtml += '<td>' + results[i].id + '</td>';
-                tableHtml += '<td>' + results[i].sp_vendor_bill + '</td>';
-                tableHtml += '<td>' + results[i].sp_stock_in_date + '</td>';
-                tableHtml += '<td>' + results[i].sp_purchase_num + '</td>';
-                tableHtml += '<td>' + results[i].sp_category__category + '</td>';
-                tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
-                tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
-                tableHtml += '<td>' + results[i].sp_source__source + '</td>';
-                tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
-                tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
-                tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
-                tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
-                tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
-                tableHtml += '<td>' + results[i].sp_rate + '</td>';
-                tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
-                tableHtml += '<td>' + results[i].sp_size + '</td>';
-                tableHtml += '<td><a class="btn btn-primary"><i class="far fa-edit"></i> Select</a></td>';
-                tableHtml += '</tr>';
-            }
-            tableHtml += '</tbody></table>';
+					// Generate HTML for the table
+					var tableHtml = '<div class="table-responsive">';
+					tableHtml += '<table id="stockTable" class="table table-striped table-bordered">';
+					tableHtml += '<thead class="thead-dark">';
+					tableHtml += '<tr>';
+					tableHtml += '<th>ID</th>';
+					tableHtml += '<th>Vendor Bill</th>';
+					tableHtml += '<th>Date</th>';
+					tableHtml += '<th>Stock Purchases Number</th>';
+					tableHtml += '<th>Category</th>';
+					tableHtml += '<th>Stock Type</th>';
+					tableHtml += '<th>Stock Description</th>';
+					tableHtml += '<th>Source</th>';
+					tableHtml += '<th>Thick/Height</th>';
+					tableHtml += '<th>Width</th>';
+					tableHtml += '<th>Length</th>';
+					tableHtml += '<th>CFT</th>';
+					tableHtml += '<th>Quantity</th>';
+					tableHtml += '<th>Rate/Qty (CFT)</th>';
+					tableHtml += '<th>UOM</th>';
+					tableHtml += '<th>Size</th>';
+					tableHtml += '<th>Select</th>';
+					tableHtml += '</tr>';
+					tableHtml += '</thead>';
+					tableHtml += '<tbody>';
 
-            // Set the table HTML to the includeContainer inside the modal
-            includeContainer.html(tableHtml);
+					for (var i = 0; i < results.length; i++) {
+						tableHtml += '<tr>';
+						tableHtml += '<td>' + results[i].id + '</td>';
+						tableHtml += '<td>' + results[i].sp_vendor_bill + '</td>';
+						tableHtml += '<td>' + results[i].sp_stock_in_date + '</td>';
+						tableHtml += '<td>' + results[i].sp_purchase_num + '</td>';
+						tableHtml += '<td>' + results[i].sp_category__category + '</td>';
+						tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
+						tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
+						tableHtml += '<td>' + results[i].sp_source__source + '</td>';
+						tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
+						tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
+						tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
+						tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
+						tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
+						tableHtml += '<td>' + results[i].sp_rate + '</td>';
+						tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
+						tableHtml += '<td>' + results[i].sp_size + '</td>';
+						tableHtml += '<td><button class="btn btn-primary select-btn"><i class="far fa-edit"></i> Select</button></td>';
+						tableHtml += '</tr>';
+					}
+					tableHtml += '</tbody></table></div>';
 
-            // Initialize DataTable after rendering the table
-            $('#stockTable').DataTable();
-        }
-    });
+					// Set the table HTML to the includeContainer inside the modal
+					includeContainer.html(tableHtml);
 
-    // Attach click event to the "Select" button inside the modal
-    includeContainer.on('click', 'a.btn-primary', function (e) {
-        e.preventDefault();
+					// Initialize DataTable after rendering the table
+					$('#stockTable').DataTable();
 
-        var selectedRow = $(this).closest('tr');
-        var stockId = selectedRow.find('td:eq(0)').text();
-        var height = selectedRow.find('td:eq(8)').text();
-        var width = selectedRow.find('td:eq(9)').text();
-        var length = selectedRow.find('td:eq(10)').text();
-        var cft = selectedRow.find('td:eq(11)').text();
-        var quantity = selectedRow.find('td:eq(12)').text();
-        var rateCFT = selectedRow.find('td:eq(13)').text();
-        var uom_id = selectedRow.find('.hidden-column').text();
+					// Show the modal
+					$('#stockModal').modal('show'); // Show modal after loading data
+				}
+			});
+		}
 
-        $("#pkqt_stock_purchase_number").val(stockId);
-        $("#pkqt_length").val(length);
-        $("#pkqt_width").val(width);
-        $("#pkqt_height").val(height);
-        $("#pkqt_cft").val(cft);
-        $("#pkqt_quantity").val(quantity);
-        $("#pkqt_rate").val(rateCFT);
-        $("#pkqt_uom").val(uom_id);
+		// Delegate the click event for dynamically created "Select" buttons
+		$('#pk_item_search_page_costing').on('click', '.select-btn', function (e) {
+			e.preventDefault();
 
-        change_cost_type();  // Custom function
-    });
-}
+			var selectedRow = $(this).closest('tr');
+			var stockId = selectedRow.find('td:eq(0)').text();
+			var height = selectedRow.find('td:eq(8)').text();
+			var width = selectedRow.find('td:eq(9)').text();
+			var length = selectedRow.find('td:eq(10)').text();
+			var cft = selectedRow.find('td:eq(11)').text();
+			var quantity = selectedRow.find('td:eq(12)').text();
+			var rateCFT = selectedRow.find('td:eq(13)').text();
+			var uom_id = selectedRow.find('.hidden-column').text();
+
+			// Set the values to the respective fields
+			$("#pkqt_stock_purchase_number").val(stockId);
+			$("#pkqt_length").val(length);
+			$("#pkqt_width").val(width);
+			$("#pkqt_height").val(height);
+			$("#pkqt_cft").val(cft);
+			$("#pkqt_quantity").val(quantity);
+			$("#pkqt_rate").val(rateCFT);
+			$("#pkqt_uom").val(uom_id);
+
+			// Close the modal after selection (optional)
+			$('#stockModal').modal('hide');
+		});
 </script>
 <script>
 	function changeItemDescription() {
