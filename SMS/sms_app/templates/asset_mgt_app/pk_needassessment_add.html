@@ -1,5 +1,4 @@
 {% extends "asset_mgt_app/base.html" %}
-{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 
 {% block content %}
@@ -59,15 +58,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Special Requirements</span>
-									</div>
-									{% render_field form.na_special_requirements id="na_special_requirements" class="form-control select2-multiple-checkbox" multiple="multiple" style="height:150px" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading</span>
 									</div>
 									{% render_field form.na_unloading id="na_unloading" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Special </span>
+									</div>
+									{% render_field form.na_special_requirements id="na_special_requirements" class="form-control"  %}
 								</div>
 							</div>
 							<div class="col-6">
@@ -75,7 +74,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Norms</span>
 									</div>
-									{% render_field form.na_wood_norms id="na_wood_norms" class="form-control select2-multiple-checkbox" multiple="multiple" style="height:150px" %}
+									{% render_field form.na_wood_norms id="na_wood_norms" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -105,14 +104,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Type Of Lifting</span>
 									</div>
-									{% render_field form.na_type_of_access id="na_type_of_access" class="form-control select2-multiple-checkbox" multiple="multiple"  %}
+									{% render_field form.na_type_of_access id="na_type_of_access" class="form-control"  %}
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consumables</span>
 									</div>
-									{% render_field form.na_consumables id="na_consumables" class="form-control select2-multiple-checkbox" multiple="multiple"  %}
+									{% render_field form.na_consumables id="na_consumables" class="form-control"  %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -268,34 +267,6 @@
     $('#comments_list').DataTable();
 } );
 </script>
-<style>
-    /* Custom styles for multiselect dropdown */
-    .multiselect-container {
-        max-width: 1000px !important;  /* Set your desired max width for the dropdown */
-        min-width: 375px;              /* Ensure a minimum width */
-        width: 100% !important;        /* Ensure it fills the width of the button */
-        box-sizing: border-box;        /* Ensure padding and border are included in width */
-    }
-
-    .custom-multiselect-button {
-        border: 1px solid lightgray;  /* Light border for the button */
-    }
-	.multiselect-container li a label {
-    display: flex;
-    align-items: center;
-    padding-right:50px;
-    cursor: pointer; /* Ensures the entire label is clickable */
-    height: auto; /* Adjusts height based on content, ensuring vertical center alignment */
-
-}
-
-	/* Position the checkbox after the text */
-	.multiselect-container li a label input[type="checkbox"] {
-		margin-left: -150px; /* Space between text and checkbox */
-	}
-
-</style>
-
 
 <script>
     $(document).ready(function() {
@@ -310,7 +281,7 @@
             enableFiltering: true,
             enableCaseInsensitiveFiltering: true,
             buttonWidth: '418px',  // Increase the width of the button
-				nonSelectedText: 'Select Types of Lifting',
+			nonSelectedText: 'Select Types of Lifting',
             buttonClass: 'custom-multiselect-button',
             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
@@ -318,13 +289,13 @@
 
         // Initialize Multiselect for Special Requirements
         $('#na_special_requirements').multiselect({
-            includeSelectAllOption: false,
+            includeSelectAllOption: true,
             enableFiltering: true,
             enableCaseInsensitiveFiltering: true,
             buttonWidth: '418px',
             nonSelectedText: 'Select Special Requirements',
             buttonClass: 'custom-multiselect-button',
-             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
         });
 
@@ -336,7 +307,7 @@
             buttonWidth: '418px',
             nonSelectedText: 'Select Wood Norms',
             buttonClass: 'custom-multiselect-button',
-             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
         });
         // Initialize Multiselect for Wood Norms
@@ -347,12 +318,9 @@
             buttonWidth: '418px',
             nonSelectedText: 'Select Consumables',
             buttonClass: 'custom-multiselect-button',
-             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
+            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
         });
     });
 </script>
-
-
-
 {% endblock content %}

@@ -5,9 +5,6 @@ class ExpenseaddForm(forms.ModelForm):
     class Meta:
         model = ExpenseInfo
         fields = '__all__'
-        widgets = {
-            'exp_unit': forms.SelectMultiple(),  # Custom widget for SelectMultiple
-        }
 
     def __init__(self, *args, **kwargs):
         super(ExpenseaddForm, self).__init__(*args, **kwargs)

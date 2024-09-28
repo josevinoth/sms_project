@@ -14,14 +14,14 @@ class PkneedassessmentInfo(models.Model):
     na_type_of_pack = models.ForeignKey(Natypeofpack, on_delete=models.CASCADE, default='')
     na_wood_treatment_req = models.ForeignKey(Nawoodtreatmentreq, on_delete=models.CASCADE, default='')
     na_unloading = models.ForeignKey(Nabvmcustomer, on_delete=models.CASCADE, related_name='na_unloading', db_column='na_unloading', default='')
-    na_wood_norms = models.ForeignKey(Nawoodnorms, on_delete=models.CASCADE, default='')
+    na_wood_norms = models.ManyToManyField(Nawoodnorms,blank=True)
     na_delivery_by = models.ForeignKey(Nabvmcustomer, on_delete=models.CASCADE, related_name='na_delivery_by', db_column='na_delivery_by', null=True, blank=True, default='')
     na_vehicle_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='')
 
     # Updated field to ManyToMany for multi-select functionality
-    na_type_of_access = models.ManyToManyField(Natypeofaccess)
+    na_type_of_access = models.ManyToManyField(Natypeofaccess,blank=True)
 
-    na_consumables = models.ForeignKey(Stockdescription, on_delete=models.CASCADE, default='')
+    na_consumables = models.ManyToManyField(Stockdescription,blank=True)
     na_created_at = models.DateTimeField(null=True, auto_now_add=True)
     na_updated_at = models.DateTimeField(null=True, auto_now=True)
     na_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='na_updated_by', db_column='na_updated_by', null=True)
@@ -30,7 +30,7 @@ class PkneedassessmentInfo(models.Model):
     na_others_type_pack = models.CharField(max_length=100, null=True, blank=True, default='')
     na_delivery_type = models.ForeignKey(Nadeliverytype, on_delete=models.CASCADE, blank=True, null=True, default='')
     na_packing_field = models.ForeignKey(Napackingfield, on_delete=models.CASCADE, blank=True, null=True, default='')
-    na_special_requirements = models.ForeignKey(Naspecialrequirements, on_delete=models.CASCADE, blank=True, null=True, default='')
+    na_special_requirements = models.ManyToManyField(Naspecialrequirements,blank=True)
     na_delivery_location = models.CharField(max_length=100, null=True, blank=True, default='')
 
     class Meta:

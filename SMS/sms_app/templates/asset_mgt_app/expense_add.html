@@ -229,40 +229,6 @@
         update_rates_fn();
       });
 </script>
-<style>
-    /* Custom styles for multiselect dropdown */
-    .multiselect-container {
-        max-width: 1000px !important;  /* Set your desired max width for the dropdown */
-        min-width: 300px;               /* Ensure a minimum width */
-        width: 100% !important;         /* Ensure it fills the width of the button */
-        box-sizing: border-box;         /* Ensure padding and border are included in width */
-        z-index: 1000;                  /* Ensure it's on top of other elements */
-        position: relative;              /* Positioning to prevent overflow issues */
-    }
-
-    .custom-multiselect-button {
-        border: 1px solid lightgray;    /* Light border for the button */
-    }
-
-    .multiselect-container li a label {
-        display: flex;
-        align-items: center;
-        padding-right: 40px;
-        cursor: pointer;                /* Ensures the entire label is clickable */
-    }
-
-    /* Position the checkbox after the text */
-    .multiselect-container li a label input[type="checkbox"] {
-        margin-left: -70px;            /* Space between text and checkbox */
-    }
-
-    /* Correct alignment of the checkbox to be line-wise with text */
-    .multiselect-container li a label {
-        cursor: pointer;                /* Ensures the entire area is clickable */
-        height: auto;                  /* Adjusts height based on content, ensuring vertical center alignment */
-    }
-</style>
-
 
 <script>
 	function update_rates_fn() {
@@ -358,7 +324,7 @@ function initializeMultiSelect(selector) {
         includeSelectAllOption: true,
         enableCaseInsensitiveFiltering: true,
         nonSelectedText: 'Select options',
-        buttonWidth: '385px',
+        buttonWidth: '210px',
         buttonHeight: '200px',
         buttonClass: 'custom-multiselect-button',
         enableFiltering: true,
@@ -384,28 +350,4 @@ function checkSelectAll() {
     }
 }
 </script>
-
-<!-- CSS -->
-<style>
-/* Custom styles for multiselect dropdown */
-.multiselect-container {
-    max-width: 1000px !important;  /* Set your desired max width for the dropdown */
-    min-width: 300px;               /* Ensure a minimum width */
-    width: 100% !important;         /* Ensure it fills the width of the button */
-    box-sizing: border-box;         /* Ensure padding and border are included in width */
-    z-index: 1000;                  /* Ensure it's on top of other elements */
-    position: absolute;              /* Positioning to prevent overflow issues */
-}
-
-.custom-multiselect-button {
-    border: 1px solid lightgray;    /* Light border for the button */
-}
-
-/* Custom style for visually disabled multiselect button */
-.custom-multiselect-button.disabled {
-    pointer-events: none; /* Disable interactions */
-    opacity: 0.5;          /* Make it visually disabled */
-}
-</style>
-
 {% endblock content %}

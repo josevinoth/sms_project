@@ -365,3 +365,46 @@ nav > div a.nav-item.nav-link:focus
         background-color: #f9f9f9;  /* Optional: Light background color */
         color: #333;                /* Optional: Darker text for contrast */
     }
+
+/*Multi select dropdown style
+
+/* Style the multiselect container and list items */
+.multiselect-container {
+    max-width: 1000px !important;
+    min-width: 375px;
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+.multiselect-container li {
+    display: flex;
+    align-items: center;
+    white-space: nowrap; /* Ensure the text doesn't break */
+    padding: 5px; /* Add padding for spacing */
+}
+
+/* Align checkbox and label properly */
+.multiselect-container li a label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 5px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.multiselect-container li a label input[type="checkbox"] {
+    margin-right: 10px; /* Add space between checkbox and label */
+}
+
+/* Fix for the search input box width */
+.multiselect-container input[type="text"] {
+    width: 100%; /* Make the search box fill the container width */
+    margin-bottom: 10px; /* Add space below the search box */
+    padding: 5px;
+}
+
+/* Align the "Select All" text */
+.multiselect-container .multiselect-all {
+    margin-left: 5px;
+}
