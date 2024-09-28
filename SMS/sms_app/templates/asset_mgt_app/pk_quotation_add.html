@@ -120,60 +120,63 @@
 
 							</div>
 							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Height_available (inch)</span>
+								<div class="company-side border border-2 border-warning rounded p-3">
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Height_available (inch)</span>
+										</div>
+										{% render_field form.pkqt_height id="pkqt_height" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.pkqt_height id="pkqt_height" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Width_available (inch)</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Width_available (inch)</span>
+										</div>
+										{% render_field form.pkqt_width id="pkqt_width" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.pkqt_width id="pkqt_width" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Length_available (Ft)</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Length_available (Ft)</span>
+										</div>
+										{% render_field form.pkqt_length id="pkqt_length" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.pkqt_length id="pkqt_length" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">UOM</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">UOM</span>
+										</div>
+										{% render_field form.pkqt_uom id="pkqt_uom" class="form-control " %}
 									</div>
-									{% render_field form.pkqt_uom id="pkqt_uom" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Size</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Size</span>
+										</div>
+										{% render_field form.pkqt_size id="pkqt_size" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.pkqt_size id="pkqt_size" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Quantity</span>
+										</div>
+										{% render_field form.pkqt_quantity id="pkqt_quantity" onchange="change_cost_type()" class="form-control " %}
 									</div>
-									{% render_field form.pkqt_quantity id="pkqt_quantity" onchange="change_cost_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total CFT/SQFT (Available)</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Total CFT/SQFT (Available)</span>
+										</div>
+										{% render_field form.pkqt_cft id="pkqt_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.pkqt_cft id="pkqt_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Purchase Number</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Stock Purchase Number</span>
+										</div>
+										{% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Rate/Qty (CFT)</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Rate/Qty (CFT)</span>
+										</div>
+										{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control" %}
 									</div>
-									{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control" %}
 								</div>
+								<br>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Days</span>
