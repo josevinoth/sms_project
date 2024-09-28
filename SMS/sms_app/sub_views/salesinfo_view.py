@@ -164,8 +164,8 @@ def sales_comments_add(request, sales_comments_id=0):
             print("Main Form Saved")
         else:
             print("Main form not saved")
-        # return redirect('/SMS/sales_list')
-        return redirect(request.META['HTTP_REFERER'])
+        return redirect('/SMS/sales_update/' + str(ses_sales_num_id))
+        # return redirect(request.META['HTTP_REFERER'])
 
         # return redirect(request.META['HTTP_REFERER'])
 @login_required(login_url='login_page')
