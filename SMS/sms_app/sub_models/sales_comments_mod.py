@@ -13,7 +13,7 @@ class Sales_Comments_Info(models.Model):
     sc_complaints = models.TextField(max_length=300,null=True, blank=True)
     sc_compliments = models.TextField(max_length=300,null=True, blank=True)
     sc_date_of_call= models.DateField()
-    sc_joint_call_name = models.ManyToManyField(MyUser,related_name='sc_joint_call_name', db_column='sc_joint_call_name')
+    sc_joint_call_name = models.ManyToManyField(MyUser,related_name='sc_joint_call_name', db_column='sc_joint_call_name',blank=True,null=True)
 
 
     class Meta:
