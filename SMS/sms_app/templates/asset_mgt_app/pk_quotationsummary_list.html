@@ -59,7 +59,7 @@
             <td> {{quotationsummaryinfo.id}}</td>
             <td>
                 {% if quotationsummaryinfo.qs_status.id == 5 %}
-                <a href="{% url 'pk_quotationsummary_clone' quotationsummaryinfo.id %}" class="btn btn-warning" onclick="return confirm('Would you like to make a copy of this record?');">
+                <a href="{% url 'pk_quotationsummary_clone' quotationsummaryinfo.id %}" class="btn btn-warning" onclick="return confirm('Would you like to make a copy of this record as Costing Summary?');">
                     <i class="fas fa-clone"></i>
                 </a>
                 {% else %}
