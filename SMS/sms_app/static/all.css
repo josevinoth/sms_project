@@ -370,11 +370,11 @@ nav > div a.nav-item.nav-link:focus
 
 /* Style the multiselect container and list items */
 .multiselect-container {
-    max-width: 1000px !important;
-    min-width: 375px;
-    width: 100% !important;
-    box-sizing: border-box;
-}
+      max-width: 1000px !important;  /* Set your desired max width for the dropdown */
+      min-width: 375px;              /* Ensure a minimum width */
+      width: 100% !important;        /* Ensure it fills the width of the button */
+      box-sizing: border-box;
+ }
 
 .multiselect-container li {
     display: flex;
@@ -399,7 +399,7 @@ nav > div a.nav-item.nav-link:focus
 
 /* Fix for the search input box width */
 .multiselect-container input[type="text"] {
-    width: 100%; /* Make the search box fill the container width */
+    width: 50%; /* Make the search box fill the container width */
     margin-bottom: 10px; /* Add space below the search box */
     padding: 5px;
 }
