@@ -43,6 +43,7 @@
             <th>Type of Call</th>
             <th>Nature of Call</th>
             <th>Purpose of Call</th>
+            <th>Joint Call Participant</th>
             <th>Comments</th>
             <th>Updated By</th>
             <th>Updated On</th>
@@ -59,6 +60,17 @@
             <td> {{commentsinfo.sc_call_type}}</td>
             <td> {{commentsinfo.sc_call_nature}}</td>
             <td> {{commentsinfo.sc_call_purpose}}</td>
+            <td>
+                {% if commentsinfo.sc_joint_call_name.exists %}
+                <ul>
+                    {% for category in commentsinfo.sc_joint_call_name.all %}
+                    <li>{{ category }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                No categories
+                {% endif %}
+            </td>
             <td> {{commentsinfo.sc_comments}}</td>
             <td> {{commentsinfo.sc_updated_by}}</td>
             <td> {{commentsinfo.sc_updated_at}}</td>

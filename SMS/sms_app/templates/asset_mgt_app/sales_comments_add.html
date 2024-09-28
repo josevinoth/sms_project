@@ -46,6 +46,14 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Joint Call Participant</span>
+									</div>
+									<!-- Render the form field for sc_joint_call_name -->
+									{% render_field sales_comments_form.sc_joint_call_name id="sc_joint_call_name" class="form-control" %}
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text" >Complaints</span>
 									</div>
 									{% render_field sales_comments_form.sc_complaints id="sc_complaints" class="form-control " %}
@@ -80,12 +88,12 @@
 </form>
 
 <script>
-$(document).ready(function() {
-	var sale_num_id='{{ses_sales_num_id}}';
-	document.getElementById("sc_sales_number").value=sale_num_id
-	document.getElementById("sc_updated_by").value='{{user_id}}'
-	date_of_call_change()
-  });
+	$(document).ready(function() {
+        var sale_num_id='{{ses_sales_num_id}}';
+        document.getElementById("sc_sales_number").value=sale_num_id
+        document.getElementById("sc_updated_by").value='{{user_id}}'
+        date_of_call_change()
+      });
 </script>
 
 <script>
@@ -113,26 +121,89 @@ $(document).ready(function() {
 </script>
 
 <script>
-        // Get today's date
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
+	// Get today's date
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
 
-         // Get yesterdays's date
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
-        const year_1 = yesterday.getFullYear();
-        const month_1 = String(yesterday.getMonth() + 1).padStart(2, '0');
-        const day_1 = String(yesterday.getDate()).padStart(2, '0');
+     // Get yesterdays's date
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const year_1 = yesterday.getFullYear();
+    const month_1 = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const day_1 = String(yesterday.getDate()).padStart(2, '0');
 
-        // Set the default value for today's date in the input field
-        const todayInput = document.getElementById('sc_date_of_call');
+    // Set the default value for today's date in the input field
+    const todayInput = document.getElementById('sc_date_of_call');
 <!--        todayInput.value = `${year}-${month}-${day}`;-->
 
-        // Set the 'max' and 'min' attributes to restrict selection to today's date
-        todayInput.setAttribute('max', `${year}-${month}-${day}`);
-        todayInput.setAttribute('min', `${year_1}-${month_1}-${day_1}`);
-    </script>
+    // Set the 'max' and 'min' attributes to restrict selection to today's date
+    todayInput.setAttribute('max', `${year}-${month}-${day}`);
+    todayInput.setAttribute('min', `${year_1}-${month_1}-${day_1}`);
+</script>
+
+<style>
+/* Style the multiselect container and list items */
+.multiselect-container {
+    max-width: 1000px !important;
+    min-width: 375px;
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+.multiselect-container li {
+    display: flex;
+    align-items: center;
+    white-space: nowrap; /* Ensure the text doesn't break */
+    padding: 5px; /* Add padding for spacing */
+}
+
+/* Align checkbox and label properly */
+.multiselect-container li a label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 5px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.multiselect-container li a label input[type="checkbox"] {
+    margin-right: 10px; /* Add space between checkbox and label */
+}
+
+/* Fix for the search input box width */
+.multiselect-container input[type="text"] {
+    width: 100%; /* Make the search box fill the container width */
+    margin-bottom: 10px; /* Add space below the search box */
+    padding: 5px;
+}
+
+/* Align the "Select All" text */
+.multiselect-container .multiselect-all {
+    margin-left: 5px;
+}
+</style>
+
+<script>
+	$(document).ready(function() {
+        $('#sc_joint_call_name').multiselect({
+            includeSelectAllOption: true,                // Allow selecting all options
+            enableCaseInsensitiveFiltering: true,        // Enable search functionality
+            nonSelectedText: 'Select options',           // Placeholder text for no selections
+            buttonWidth: '715px',                         // Ensure the button fills the parent width
+            buttonHeight: 'auto',                        // Auto height for flexibility
+            buttonClass: 'custom-multiselect-button',     // Apply custom styles to the button
+            enableFiltering: true,                       // Allow filtering options
+            maxHeight: 250,                              // Set max height for the dropdown
+            dropUp: false,                               // Ensure dropdown opens downwards
+            numberDisplayed: 3,                          // Display the number of selected items
+            selectAllText: 'Select All',                 // Text for "Select All" option
+            allSelectedText: 'All Selected'              // Text when all options are selected
+        });
+    });
+</script>
+
 {% endblock content %}
 

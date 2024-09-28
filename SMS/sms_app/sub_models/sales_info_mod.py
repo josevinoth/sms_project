@@ -27,7 +27,7 @@ class SalesInfo(models.Model):
     s_designation_dm = models.CharField(max_length=100,default='')
     s_emailid_dm = models.EmailField(max_length=100,default='')
     # s_joint_call_name = models.CharField(blank=True, null=True,max_length=100)
-    s_joint_call_name = models.ManyToManyField(MyUser,related_name='s_joint_call_name', db_column='s_joint_call_name')
+    # s_joint_call_name = models.ManyToManyField(MyUser,related_name='s_joint_call_name', db_column='s_joint_call_name')
     s_vol_customer = models.CharField(blank=True, null=True,max_length=30)
     s_bus_customer = models.CharField(blank=True, null=True,max_length=30)
     s_customer_prospective = models.ForeignKey(YesNoInfo,blank=True, null=True, on_delete=models.CASCADE, related_name='s_customer_prospective', db_column='s_customer_prospective',default=2)

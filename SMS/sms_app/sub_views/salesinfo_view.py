@@ -82,15 +82,16 @@ def sales_add(request, sales_id=0):
         if sales_id == 0:
             form = SalesinfoaddForm(request.POST, request.FILES)
             if form.is_valid():
-                try:
-                    last_id = SalesInfo.objects.latest('id').id
-                    sales_num_next =str('S_')+str(int(((SalesInfo.objects.get(id=last_id)).s_sale_number).replace('S_', ''))+1)
-                except ObjectDoesNotExist:
-                    sales_num_next = str('S_') + str(randint(10000, 99999))
-
                 form.save()
                 print("Sales Form Saved")
-                last_id = SalesInfo.objects.latest('id').id
+                try:
+                    last_id = SalesInfo.objects.latest('id').id
+                    # sales_num_next =str('S_')+str(int(((SalesInfo.objects.get(id=last_id)).s_sale_number).replace('S_', ''))+1)
+                    sales_num_next=1000000+last_id
+                except ObjectDoesNotExist:
+                    # sales_num_next = str('S_') + str(randint(10000, 99999))
+                    sales_num_next=1000000
+                sales_num_next = str('S_') +str(sales_num_next)
                 SalesInfo.objects.filter(id=last_id).update(s_sale_number=sales_num_next)
                 messages.success(request, 'Record Updated Successfully')
                 # sales_num = request.POST.get('s_sale_number')

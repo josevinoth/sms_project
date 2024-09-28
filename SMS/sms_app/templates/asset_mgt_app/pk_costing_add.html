@@ -230,8 +230,8 @@
 		</form>
 	</div>
 	<div class="col-3">
-		{% include "asset_mgt_app\calculation_card.html" %}
- 	</div>
+		{% include "asset_mgt_app/calculation_card.html" %}
+	</div>
 
 </div>
 
@@ -378,7 +378,7 @@
                     var cft_req = (length_req*width_req*height_req/144)*quantity_req;
                     document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
 
-					var totalCost = rate * cft_req;
+					var totalCost = rate * cft;
                     document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
                 }
                 else if ( jn1==4)
@@ -410,7 +410,7 @@
                     var cft_req = (length_req*width_req*height_req/144)*quantity_req;
                     document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
 
-                    var totalCost = rate * cft_req;
+                    var totalCost = rate * cft;
                     document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
                 }
 

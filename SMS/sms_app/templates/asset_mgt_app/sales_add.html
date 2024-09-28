@@ -302,13 +302,6 @@
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text" >Joint call Participant</span>
-										</div>
-										{% render_field form.s_joint_call_name id="s_joint_call_name" class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
 											<span class="input-group-text" >Prospective Customer?</span>
 										</div>
 										{% render_field form.s_customer_prospective class="form-control" id="s_customer_prospective" onchange="pc_enabler()" %}
@@ -827,7 +820,6 @@
     }
 </script>
 
-
 <script>
 	function hc_enabler() {
     var jn7 = document.getElementById("s_company").value;
@@ -838,62 +830,6 @@
     }
 }
 </script>
-
-
-<style>
-    /* Custom styles for multiselect dropdown */
-    .multiselect-container {
-        max-width: 1000px !important;  /* Set your desired max width for the dropdown */
-        min-width: 200px;              /* Ensure a minimum width */
-        width: 100% !important;        /* Ensure it fills the width of the button */
-        box-sizing: border-box;			/* Ensure padding and border are included in width */
-
-    }
-
-    .custom-multiselect-button {
-        border: 1px solid lightgray;  /* Light border for the button */
-    }
-	.multiselect-container li a label {
-    display: flex;
-    align-items: center;
-    padding-right:10px;
-    cursor: pointer; /* Ensures the entire label is clickable */
-}
-
-/* Position the checkbox after the text */
-.multiselect-container li a label input[type="checkbox"] {
-    margin-left: -30px; /* Space between text and checkbox */
-}
-
-    /* Position the input box (checkbox) before the text and align it */
-
-
-    /* Correct alignment of the checkbox to be line-wise with text */
-    .multiselect-container li a label {
-        cursor: pointer; /* Ensures the entire area is clickable */
-        height: auto; /* Adjusts height based on content, ensuring vertical center alignment */
-    }
-</style>
-
-
-<script>
-    $(document).ready(function() {
-        $('#s_joint_call_name').multiselect({
-            includeSelectAllOption: true,
-            enableCaseInsensitiveFiltering: true,
-            nonSelectedText: 'Select options',
-            buttonWidth: '420',
-            buttonHeight:'200',
-            buttonClass: 'custom-multiselect-button',
-            enableFiltering: true,
-            maxHeight: 250,
-            dropUp: false
-
-        });
-    });
-
-</script>
-
 
 {% endblock content %}
 
