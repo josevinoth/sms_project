@@ -293,12 +293,11 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
 
     elif request.method == "POST":
         form = PkcostingsummaryForm(request.POST)
-
+        costing_summary_id = None  # Initialize costing_summary_id
         if form.is_valid():
+            pkqt_customer_po = form.cleaned_data['cs_customer_po']
             # Check for an existing costing summary with the same assessment number
-            existing_summary = PkcostingsummaryInfo.objects.filter(
-                cs_assessment_num=quotationsummary.qs_assessment_num,
-            ).exists()
+            existing_summary = PkcostingsummaryInfo.objects.filter(cs_assessment_num=quotationsummary.qs_assessment_num,cs_customer_po=pkqt_customer_po).exists()
 
             if existing_summary:
                 messages.error(request, 'A costing summary with the same assessment number already exists.')
@@ -308,9 +307,8 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
                 costing_summary.cs_updated_by = request.user  # Set the current user as the one updating
                 costing_summary.save()
                 messages.success(request, 'Costing summary cloned and saved successfully.')
-                costing_summary_id=costing_summary.id
-                print('costing_summary_id',costing_summary_id)
-                pkqt_customer_po = form.cleaned_data['cs_customer_po']
+                costing_summary_id = costing_summary.id
+
 
                 # Fetch the quotation data using cs_assessment_num and cs_customer_po
                 quotations = PkquotationInfo.objects.filter(
@@ -351,15 +349,16 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
                     messages.success(request, 'Quotation data saved to costing info successfully.')
                 else:
                     messages.error(request, 'Quotation data could not be found.')
-
         else:
             # If the form is not valid, display specific field errors
             for field, errors in form.errors.items():
                 messages.error(request, f"Error in {field}: {', '.join(errors)}")
             messages.error(request, 'Form is not valid. Please correct the errors.')
 
-        # Redirect to the previous page or another page after saving
-        # return redirect(request.META.get('HTTP_REFERER', '/'))
-        return redirect('/SMS/costingsummary_update/' + str(costing_summary_id))
+            # Check if costing_summary_id is set before redirecting
+        if costing_summary_id:
+            return redirect('/SMS/costingsummary_update/' + str(costing_summary_id))
+        else:
+            return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
