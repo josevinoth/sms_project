@@ -75,6 +75,12 @@
 									</div>
 									{% render_field form.sp_length id="sp_length" onchange="change_charge_type()" class="form-control " %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weight (Kg)</span>
+									</div>
+									{% render_field form.sp_weight id="sp_weight" onchange="change_charge_type()" class="form-control disable_a_href" %}
+								</div>
 							</div>
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
@@ -111,7 +117,7 @@
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<!--										<span class="input-group-text">Rate (INR)</span>-->
-										<span class="input-group-text">Rate (INR) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood enter Rate/CFT. For other enter Rate/Qty"></i></span>
+										<span class="input-group-text">Rate CFT/SQFT/KG <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood enter Rate/CFT. For other enter Rate/Qty.For Reused wood enter Rate/KG"></i></span>
 									</div>
 									{% render_field form.sp_rate id="sp_rate" onchange="change_charge_type()" class="form-control " %}
 								</div>
@@ -214,157 +220,171 @@
 </script>
 <script>
 	function change_charge_type() {
-        var jn=document.getElementById("sp_stock_type").value
-        if (jn == 1)
-        {
-            $('#sp_thick_height').removeClass('disable_a_href');
-            $('#sp_length').removeClass('disable_a_href');
-            $('#sp_width').removeClass('disable_a_href');
-            $('#sp_cft').addClass('disable_a_href');
-            $('#sp_total_cft').addClass('disable_a_href');
-            $('#sp_uom').addClass('disable_a_href');
-            $('#sp_size').addClass('disable_a_href');
-            document.getElementById("sp_uom").value="";
-            document.getElementById("sp_size").value=0;
-            var length = parseFloat(document.getElementById("sp_length").value) || 0;
-            var height = parseFloat(document.getElementById("sp_thick_height").value) || 0;
-            var width = parseFloat(document.getElementById("sp_width").value) || 0;
-            var cft = length*height*width/144;
-            document.getElementById("sp_cft").value=cft.toFixed(2)
+		var jn = document.getElementById("sp_stock_type").value;
 
-            var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-            var total_cft=cft*quantity
-            document.getElementById("sp_total_cft").value=total_cft.toFixed(2)
+		if (jn == 1) {
+			var jn1 = document.getElementById("sp_stock_description").value;
+			if (jn1 == 11) {
+				// Enable weight and disable other size fields
+				$('#sp_weight').removeClass('disable_a_href');
+				$('#sp_cft, #sp_total_cft').addClass('disable_a_href');
+				$('#sp_uom, #sp_size').removeClass('disable_a_href');
 
-            var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-            var price=rate*total_cft
-            document.getElementById("sp_price").value=price.toFixed(2)
+				var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
+				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+				var price = rate * weight;
+				document.getElementById("sp_price").value = price.toFixed(2);
 
-            var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-            var gst_amount=price*(gst/100)
-            document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
+				// Reset other size-related fields to 0
+				document.getElementById("sp_width").value = 0.0;
+				document.getElementById("sp_length").value = 0.0;
+				document.getElementById("sp_thick_height").value = 0.0;
+				document.getElementById("sp_cft").value = 0.0;
+				document.getElementById("sp_total_cft").value = 0.0;
 
-            var total_bill_amount=price+gst_amount
-            document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
-        }
-        else if (jn == 4)
-        {
-            $('#sp_thick_height').removeClass('disable_a_href');
-            $('#sp_length').removeClass('disable_a_href');
-            $('#sp_width').removeClass('disable_a_href');
-            $('#sp_cft').addClass('disable_a_href');
-            $('#sp_total_cft').addClass('disable_a_href');
-            $('#sp_uom').addClass('disable_a_href');
-            $('#sp_size').addClass('disable_a_href');
-            document.getElementById("sp_uom").value="";
-            document.getElementById("sp_size").value=0;
-            var length = parseFloat(document.getElementById("sp_length").value) || 0;
-            var height = parseFloat(document.getElementById("sp_thick_height").value) || 0;
-            var width = parseFloat(document.getElementById("sp_width").value) || 0;
-            var cft = length*width;
-            document.getElementById("sp_cft").value=cft.toFixed(2)
+				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+				var gst_amount = price * (gst / 100);
+				document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
 
-            var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-            var total_cft=cft*quantity
-            document.getElementById("sp_total_cft").value=total_cft.toFixed(2)
+				var total_bill_amount = price + gst_amount;
+				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
+			} else {
+				// Disable weight and enable other size fields
+				$('#sp_weight').addClass('disable_a_href');
+				$('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');
+				$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
 
-            var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-            var price=rate*total_cft
-            document.getElementById("sp_price").value=price.toFixed(2)
+				document.getElementById("sp_uom").value = "";
+				document.getElementById("sp_size").value = 0;
+				var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
+				var length = parseFloat(document.getElementById("sp_length").value) || 0;
+				var height = parseFloat(document.getElementById("sp_thick_height").value) || 0;
+				var width = parseFloat(document.getElementById("sp_width").value) || 0;
+				var cft = (length * height * width) / 144;
+				document.getElementById("sp_cft").value = cft.toFixed(2);
 
-            var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-            var gst_amount=price*(gst/100)
-            document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
+				var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
+				var total_cft = cft * quantity;
+				document.getElementById("sp_total_cft").value = total_cft.toFixed(2);
 
-            var total_bill_amount=price+gst_amount
-            document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
-        }
-        else if (jn == 2)
-        {
-            $('#sp_thick_height').addClass('disable_a_href');
-            var jn1=document.getElementById("sp_stock_description").value
-            if(jn1== 14 || jn1 == 15 || jn1 == 23 || jn1 == 38 || jn1 == 39 || jn1 == 44 || jn1 == 45 || jn1 == 46){
-            $('#sp_length').removeClass('disable_a_href');
-            $('#sp_width').removeClass('disable_a_href');
-            $('#sp_cft').addClass('disable_a_href');
-            $('#sp_total_cft').addClass('disable_a_href');
-            $('#sp_uom').addClass('disable_a_href');
-            $('#sp_size').addClass('disable_a_href');
-            document.getElementById("sp_uom").value="";
-            document.getElementById("sp_size").value=0;
+				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+				var price = rate * total_cft;
+				document.getElementById("sp_price").value = price.toFixed(2);
 
-            var length = parseFloat(document.getElementById("sp_length").value) || 0;
-            var height = parseFloat(document.getElementById("sp_thick_height").value) || 0;
-            var width = parseFloat(document.getElementById("sp_width").value) || 0;
-            var cft = length*width;
-            document.getElementById("sp_cft").value=cft.toFixed(2)
+				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+				var gst_amount = price * (gst / 100);
+				document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
 
-            var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-            var total_cft=cft*quantity
-            document.getElementById("sp_total_cft").value=total_cft.toFixed(2)
+				var total_bill_amount = price + gst_amount;
+				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
+			}
+		} else if (jn == 4) {
+			// Logic for jn == 4
+			$('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');
+			$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
+			document.getElementById("sp_uom").value = "";
+			document.getElementById("sp_size").value = 0;
 
-            var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-            var price=rate*total_cft
-            document.getElementById("sp_price").value=price.toFixed(2)
+			var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
+			var length = parseFloat(document.getElementById("sp_length").value) || 0;
+			var width = parseFloat(document.getElementById("sp_width").value) || 0;
+			var cft = length * width;
+			document.getElementById("sp_cft").value = cft.toFixed(2);
 
-            var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-            var gst_amount=price*(gst/100)
-            document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
+			var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
+			var total_cft = cft * quantity;
+			document.getElementById("sp_total_cft").value = total_cft.toFixed(2);
 
-            var total_bill_amount=price+gst_amount
-            document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
-        }
-        else{
-            $('#sp_length').addClass('disable_a_href');
-            $('#sp_width').addClass('disable_a_href');
-            $('#sp_cft').addClass('disable_a_href');
-            $('#sp_total_cft').addClass('disable_a_href');
-            $('#sp_uom').removeClass('disable_a_href');
-            $('#sp_size').removeClass('disable_a_href');
-            var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-            var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-            var price=rate*quantity
-            document.getElementById("sp_price").value=price.toFixed(2)
-            document.getElementById("sp_width").value=0.0
-                document.getElementById("sp_length").value=0.0
-                document.getElementById("sp_thick_height").value=0.0
-                document.getElementById("sp_cft").value=0.0
-                document.getElementById("sp_total_cft").value=0.0
+			var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+			var price = rate * total_cft;
+			document.getElementById("sp_price").value = price.toFixed(2);
 
-                var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-                var gst_amount=price*(gst/100)
-                document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
+			var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+			var gst_amount = price * (gst / 100);
+			document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
 
-                var total_bill_amount=price+gst_amount
-                document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
-        }
-    }
-        else
-        {
-            $('#sp_thick_height').addClass('disable_a_href');
-            $('#sp_length').addClass('disable_a_href');
-            $('#sp_width').addClass('disable_a_href');
-            $('#sp_cft').addClass('disable_a_href');
-            $('#sp_total_cft').addClass('disable_a_href');
-            $('#sp_uom').removeClass('disable_a_href');
-            $('#sp_size').removeClass('disable_a_href');
-            var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-            var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-            var price=rate*quantity
-            document.getElementById("sp_price").value=price.toFixed(2)
-            document.getElementById("sp_width").value=0.0
-            document.getElementById("sp_length").value=0.0
-            document.getElementById("sp_thick_height").value=0.0
-            document.getElementById("sp_cft").value=0.0
-            document.getElementById("sp_total_cft").value=0.0
+			var total_bill_amount = price + gst_amount;
+			document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
+		} else if (jn == 2) {
+			// Logic for jn == 2
+			$('#sp_thick_height').addClass('disable_a_href');
+			var jn1 = document.getElementById("sp_stock_description").value;
 
-            var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-            var gst_amount=price*(gst/100)
-            document.getElementById("sp_gst_amount").value=gst_amount.toFixed(2)
+			if ([14, 15, 23, 38, 39, 44, 45, 46].includes(parseInt(jn1))) {
+				$('#sp_length, #sp_width').removeClass('disable_a_href');
+				$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
 
-            var total_bill_amount=price+gst_amount
-            document.getElementById("sp_totalbill_amount").value=total_bill_amount.toFixed(2)
-        }
-    }
+				document.getElementById("sp_uom").value = "";
+				document.getElementById("sp_size").value = 0;
+
+				var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
+				var length = parseFloat(document.getElementById("sp_length").value) || 0;
+				var width = parseFloat(document.getElementById("sp_width").value) || 0;
+				var cft = length * width;
+				document.getElementById("sp_cft").value = cft.toFixed(2);
+
+				var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
+				var total_cft = cft * quantity;
+				document.getElementById("sp_total_cft").value = total_cft.toFixed(2);
+
+				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+				var price = rate * total_cft;
+				document.getElementById("sp_price").value = price.toFixed(2);
+
+				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+				var gst_amount = price * (gst / 100);
+				document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
+
+				var total_bill_amount = price + gst_amount;
+				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
+			} else {
+				$('#sp_length, #sp_width').addClass('disable_a_href');
+				$('#sp_uom, #sp_size').removeClass('disable_a_href');
+
+				var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
+				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+				var price = rate * quantity;
+				document.getElementById("sp_price").value = price.toFixed(2);
+
+				// Reset fields
+				document.getElementById("sp_width").value = 0.0;
+				document.getElementById("sp_length").value = 0.0;
+				document.getElementById("sp_thick_height").value = 0.0;
+				document.getElementById("sp_cft").value = 0.0;
+				document.getElementById("sp_total_cft").value = 0.0;
+
+				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+				var gst_amount = price * (gst / 100);
+				document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
+
+				var total_bill_amount = price + gst_amount;
+				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
+			}
+		} else {
+			// Default case for other jn values
+			$('#sp_thick_height, #sp_length, #sp_width, #sp_cft, #sp_total_cft').addClass('disable_a_href');
+			$('#sp_uom, #sp_size').removeClass('disable_a_href');
+
+			var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
+			var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+			var price = rate * quantity;
+			document.getElementById("sp_price").value = price.toFixed(2);
+
+			// Reset fields
+			document.getElementById("sp_width").value = 0.0;
+			document.getElementById("sp_length").value = 0.0;
+			document.getElementById("sp_thick_height").value = 0.0;
+			document.getElementById("sp_cft").value = 0.0;
+			document.getElementById("sp_total_cft").value = 0.0;
+
+			var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+			var gst_amount = price * (gst / 100);
+			document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
+
+			var total_bill_amount = price + gst_amount;
+			document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
+		}
+	}
 </script>
+
 {% endblock content %}

@@ -124,6 +124,7 @@
 
 							</div>
 							<div class="col-6">
+								<div class="company-side border border-2 border-danger rounded p-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Height_available (inch)</span>
@@ -172,6 +173,8 @@
 									</div>
 									{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
 								</div>
+								</div>
+								<br>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Days</span>
@@ -378,7 +381,7 @@
                     var cft_req = (length_req*width_req*height_req/144)*quantity_req;
                     document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
 
-					var totalCost = rate * cft;
+					var totalCost = rate * cft_req;
                     document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
                 }
                 else if ( jn1==4)
@@ -410,7 +413,7 @@
                     var cft_req = (length_req*width_req*height_req/144)*quantity_req;
                     document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
 
-                    var totalCost = rate * cft;
+                    var totalCost = rate * cft_req;
                     document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
                 }
 
@@ -462,7 +465,7 @@
 					else if (stock_desc == 6 || stock_desc == 47) {
 						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
 						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
-						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+						var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
 
 						var sqft = (wid_ft * 2 + heig_ft * 2) * quantity_req;
 						document.getElementById("ct_sqrt_req").value = sqft.toFixed(2);
@@ -470,6 +473,11 @@
 						var totalCost = rate * sqft;
 						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
 						}
+					else{
+						var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+						var totalCost = rate * quantity_req;
+						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+					}
 
                 }
             }

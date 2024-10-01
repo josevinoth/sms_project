@@ -120,7 +120,7 @@
 
 							</div>
 							<div class="col-6">
-								<div class="company-side border border-2 border-warning rounded p-3">
+								<div class="company-side border border-danger rounded p-3" style="border-width: 225px;">
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Height_available (inch)</span>
@@ -441,6 +441,11 @@
 						document.getElementById("pkqt_sqrt_req").value = sqft.toFixed(2);
 
 						var totalCost = rate * sqft;
+						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+						}
+						else{
+						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+						var totalCost = rate * quantity_req;
 						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
 						}
   				  }
@@ -787,11 +792,13 @@
                 var na_dimension_box_val = data.na_dimension_box_val;
                 var na_dimension_type_val = data.na_dimension_type;
                 document.getElementById("pkqt_requirement_size").value = na_dimension_box_val;
+               	var na_dimension_type_val = data.na_dimension_type;
                 var na_dimension_type_id_val = data.na_dimension_type_id;
-                document.getElementById("pkqt_dimension_type").value = na_dimension_type_id_val;
+                document.getElementById("pkqt_dimension_type").value = na_dimension_type_val;
+                document.getElementById("pkqt_dimension_type_id").value = na_dimension_type_id_val;
                 var na_uom_val = data.na_uom;
                 var na_uom_id_val = data.na_uom_id;
-                document.getElementById("pkqt_uom_calc").value = na_uom_id_val;
+                document.getElementById("pkqt_uom_calc").value = na_uom_val;
                 var l = parseFloat(data.na_length);
                 document.getElementById("pkqt_l").value = l;
                 var w = parseFloat(data.na_width);
@@ -804,133 +811,6 @@
     }
 </script>
 
-<script>
-	function calculateDimensions(na_uom_id_val, l, w, h) {
-        var dimension_type = parseInt(document.getElementById("pkqt_dimension_type").value);
-        var UOM = parseInt(na_uom_id_val); // Convert UOM to integer
-
-        // Clearance values
-        var box_id_clearance_l = parseFloat(document.getElementById("pkqt_box_id_clearance_l").value) || 0;
-        var box_id_clearance_w = parseFloat(document.getElementById("pkqt_box_id_clearance_w").value) || 0;
-        var box_id_clearance_h = parseFloat(document.getElementById("pkqt_box_id_clearance_h").value) || 0;
-
-        var box_od_clearance_l = parseFloat(document.getElementById("pkqt_box_od_clearance_l").value) || 0;
-        var box_od_clearance_w = parseFloat(document.getElementById("pkqt_box_od_clearance_w").value) || 0;
-        var box_od_clearance_h = parseFloat(document.getElementById("pkqt_box_od_clearance_h").value) || 0;
-
-        var l_box_od, w_box_od, h_box_od;
-
-        // Dimension type check
-        if (dimension_type === 1) {
-            $('#pkqt_box_id_clearance_l').removeClass('disable_a_href');
-            $('#pkqt_box_id_clearance_w').removeClass('disable_a_href');
-            $('#pkqt_box_id_clearance_h').removeClass('disable_a_href');
-            $('#pkqt_box_od_clearance_l').removeClass('disable_a_href');
-            $('#pkqt_box_od_clearance_w').removeClass('disable_a_href');
-            $('#pkqt_box_od_clearance_h').removeClass('disable_a_href');
-            l_box_od = l + box_id_clearance_l + box_od_clearance_l;
-            w_box_od = w + box_id_clearance_w + box_od_clearance_w;
-            h_box_od = h + box_id_clearance_h + box_od_clearance_h;
-        } else if (dimension_type === 2) {
-            $('#pkqt_box_id_clearance_l').addClass('disable_a_href');
-            $('#pkqt_box_id_clearance_w').addClass('disable_a_href');
-            $('#pkqt_box_id_clearance_h').addClass('disable_a_href');
-            document.getElementById("pkqt_box_id_clearance_l").value = 0;
-            document.getElementById("pkqt_box_id_clearance_w").value = 0;
-            document.getElementById("pkqt_box_id_clearance_h").value = 0;
-            l_box_od = l + box_od_clearance_l;
-            w_box_od = w + box_od_clearance_w;
-            h_box_od = h + box_od_clearance_h;
-        } else {
-            $('#pkqt_box_id_clearance_l').addClass('disable_a_href');
-            $('#pkqt_box_id_clearance_w').addClass('disable_a_href');
-            $('#pkqt_box_id_clearance_h').addClass('disable_a_href');
-            $('#pkqt_box_od_clearance_l').addClass('disable_a_href');
-            $('#pkqt_box_od_clearance_w').addClass('disable_a_href');
-            $('#pkqt_box_od_clearance_h').addClass('disable_a_href');
-            document.getElementById("pkqt_box_id_clearance_l").value = 0;
-            document.getElementById("pkqt_box_id_clearance_w").value = 0;
-            document.getElementById("pkqt_box_id_clearance_h").value = 0;
-            document.getElementById("pkqt_box_od_clearance_l").value = 0;
-            document.getElementById("pkqt_box_od_clearance_w").value = 0;
-            document.getElementById("pkqt_box_od_clearance_h").value = 0;
-            l_box_od = l;
-            w_box_od = w;
-            h_box_od = h;
-        }
-
-        var l_box_od_cm, w_box_od_cm, h_box_od_cm;
-        var l_box_od_in, w_box_od_in, h_box_od_in;
-        var l_box_od_ft, w_box_od_ft, h_box_od_ft;
-
-        // UOM = 1 (ft), 2 (in), 3 (cm)
-        if (UOM == 1) { // Input is in feet
-            l_box_od_cm = (l_box_od * 30.48).toFixed(2);
-            w_box_od_cm = (w_box_od * 30.48).toFixed(2);
-            h_box_od_cm = (h_box_od * 30.48).toFixed(2);
-
-            l_box_od_in = (l_box_od * 12).toFixed(2);
-            w_box_od_in = (w_box_od * 12).toFixed(2);
-            h_box_od_in = (h_box_od * 12).toFixed(2);
-
-            // Assign calculated values
-            document.getElementById("length_cm").value = l_box_od_cm || "";
-            document.getElementById("width_cm").value = w_box_od_cm || "";
-            document.getElementById("height_cm").value = h_box_od_cm || "";
-
-            document.getElementById("length_in").value = l_box_od_in || "";
-            document.getElementById("width_in").value = w_box_od_in || "";
-            document.getElementById("height_in").value = h_box_od_in || "";
-
-            document.getElementById("length_ft").value = l_box_od || "";
-            document.getElementById("width_ft").value = w_box_od || "";
-            document.getElementById("height_ft").value = h_box_od || "";
-        } else if (UOM == 2) { // Input is in inches
-            l_box_od_cm = (l_box_od * 2.54).toFixed(2);
-            w_box_od_cm = (w_box_od * 2.54).toFixed(2);
-            h_box_od_cm = (h_box_od * 2.54).toFixed(2);
-
-            l_box_od_ft = (l_box_od / 12).toFixed(2);
-            w_box_od_ft = (w_box_od / 12).toFixed(2);
-            h_box_od_ft = (h_box_od / 12).toFixed(2);
-
-            // Assign calculated values
-            document.getElementById("length_cm").value = l_box_od_cm || "";
-            document.getElementById("width_cm").value = w_box_od_cm || "";
-            document.getElementById("height_cm").value = h_box_od_cm || "";
-
-            document.getElementById("length_in").value = l_box_od || "";
-            document.getElementById("width_in").value = w_box_od || "";
-            document.getElementById("height_in").value = h_box_od || "";
-
-            document.getElementById("length_ft").value = l_box_od_ft || "";
-            document.getElementById("width_ft").value = w_box_od_ft || "";
-            document.getElementById("height_ft").value = h_box_od_ft || "";
-        } else if (UOM == 3) { // Input is in cm
-            l_box_od_in = (l_box_od / 2.54).toFixed(2);
-            w_box_od_in = (w_box_od / 2.54).toFixed(2);
-            h_box_od_in = (h_box_od / 2.54).toFixed(2);
-
-            l_box_od_ft = (l_box_od / 30.48).toFixed(2);
-            w_box_od_ft = (w_box_od / 30.48).toFixed(2);
-            h_box_od_ft = (h_box_od / 30.48).toFixed(2);
-
-            // Assign calculated values
-            document.getElementById("length_cm").value = l_box_od || "";
-            document.getElementById("width_cm").value = w_box_od || "";
-            document.getElementById("height_cm").value = h_box_od || "";
-
-            document.getElementById("length_in").value = l_box_od_in || "";
-            document.getElementById("width_in").value = w_box_od_in || "";
-            document.getElementById("height_in").value = h_box_od_in || "";
-
-            document.getElementById("length_ft").value = l_box_od_ft || "";
-            document.getElementById("width_ft").value = w_box_od_ft || "";
-            document.getElementById("height_ft").value = h_box_od_ft || "";
-        }
-
-    }
-</script>
 <script>
 	function onChangeHandler() {
         change_cost_type();
