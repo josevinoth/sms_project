@@ -21,7 +21,7 @@ class RequirementsInfo(models.Model):
     req_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     req_attachment = models.FileField(upload_to=requirements_directory_path, null=True, blank=True)
     class Meta:
-        ordering = ["req_number"]
+        ordering = ["-id"]
 
     def __str__(self):
         return self.req_number
