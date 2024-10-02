@@ -26,6 +26,7 @@
     <table  id="stockpurchases_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>ID</th>
             <th>Created On</th>
             <th>Bill/Return/New Order</th>
             <th>Stock Purchases Number</th>
@@ -50,6 +51,7 @@
         <tbody>
         {% for stockpurchasesinfo in stockpurchases_list %}
         <tr>
+            <td> {{stockpurchasesinfo.id}}</td>
             <td> {{stockpurchasesinfo.sp_created_at}}</td>
             <td> {{stockpurchasesinfo.sp_vendor_bill}}</td>
             <td> {{stockpurchasesinfo.sp_purchase_num}}</td>
@@ -89,7 +91,7 @@
 <script>
     $(document).ready(function() {
     $('#stockpurchases_list').DataTable({
-        order: [0, 'asc' ],
+        order: [0, 'desc' ],
 <!--        scrollX: true,-->
         dom: 'Bfrtip',
         buttons: [

@@ -26,6 +26,7 @@
 <table  id="places_list" class="table table-striped table-bordered">
     <thead class="thead-dark">
         <tr>
+            <th>ID</th>
             <th>Created On</th>
             <th>Purchase Type</th>
             <th>Vendor Name</th>
@@ -39,6 +40,7 @@
     <tbody>
         {% for pk_stock_vendor in pk_stock_vendor_list %}
             <tr>
+                <td> {{pk_stock_vendor.id}}</td>
                 <td> {{pk_stock_vendor.spv_created_at}}</td>
                 <td> {{pk_stock_vendor.spv_stock_Purchasetype}}</td>
                 <td> {{pk_stock_vendor.spv_vendor_name}}</td>
@@ -66,7 +68,14 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#places_list').DataTable();
+    $('#places_list').DataTable({
+        order: [0, 'desc' ],
+<!--        scrollX: true,-->
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ],
+    });
 } );
 </script>
 
