@@ -1,3 +1,4 @@
+
 {% extends "asset_mgt_app/base.html" %}
 {% block content %}
 
@@ -44,7 +45,9 @@
         <tr>
             <td>{{ image.id }}</td>
             <td>
+                {% if image.image %}
                 <img src="{{ image.image.url }}" alt="Captured Image" width="150">
+                {% endif %}
             </td>
             <td>{{ image.timestamp }}</td>
             <td>
@@ -81,8 +84,3 @@
 
 
 {% endblock content %}
-
-
-
-
-

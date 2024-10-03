@@ -8,47 +8,50 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 
-@login_required(login_url='login_page')  # Login required to capture images
+@login_required(login_url='login_page')
 def capture_image(request, image_id=0):
     if request.method == 'GET':
-        # If it's an edit, get the existing image, otherwise initialize a new form
+        # If it's an edit, get the existing images, otherwise initialize a new form
         if image_id == 0:
             return render(request, 'asset_mgt_app/capture.html')
         else:
-            camera_image = CameraImage.objects.get(pk=image_id)
-            return render(request, 'asset_mgt_app/capture.html', {'camera_image': camera_image})
+            camera_images = CameraImage.objects.filter(pk=image_id)
+            return render(request, 'asset_mgt_app/capture.html', {'camera_images': camera_images})
 
     elif request.method == 'POST':
         try:
-            # Initialize OpenCV and capture image
+            # Initialize OpenCV and capture images
             camera = cv2.VideoCapture(0)
-            ret, frame = camera.read()
+            captured_images = []
 
-            if not ret:
-                messages.error(request, 'Failed to capture image')
-                return redirect('capture_image')
+            # Capture multiple images, e.g., 3 images
+            for _ in range(3):
+                ret, frame = camera.read()
 
-            # Release camera after capturing the image
+                if not ret:
+                    messages.error(request, 'Failed to capture image')
+                    return redirect('capture_image')
+
+                # Convert image to PIL format
+                image_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+
+                # Save image to a BytesIO buffer
+                buffer = BytesIO()
+                image_pil.save(buffer, format="JPEG")
+                image_content = ContentFile(buffer.getvalue())
+
+                captured_images.append(image_content)
+
+            # Release the camera after capturing
             camera.release()
 
-            # Convert image to PIL format
-            image_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            # Save or update the captured images in the Django model
+            for image_content in captured_images:
+                camera_image = CameraImage()  # New image instance
+                camera_image.image.save('captured_image.jpg', image_content)
+                camera_image.save()
 
-            # Save image to a BytesIO buffer
-            buffer = BytesIO()
-            image_pil.save(buffer, format="JPEG")
-            image_content = ContentFile(buffer.getvalue())
-
-            # Save or update the captured image in the Django model
-            if image_id == 0:
-                camera_image = CameraImage()  # New image
-            else:
-                camera_image = CameraImage.objects.get(pk=image_id)  # Editing existing image
-
-            camera_image.image.save('captured_image.jpg', image_content)
-            camera_image.save()
-
-            messages.success(request, 'Image saved successfully')
+            messages.success(request, 'Images saved successfully')
             return redirect('image_list')  # Redirect to the list of images after saving
 
         except Exception as e:
