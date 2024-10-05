@@ -16,4 +16,4 @@ class task_Info(models.Model):
         ordering = ["task_id"]
 
     def __str__(self):
-        return self.task_id if self.task_id else "No Name"
+        return str(self.task_id)
