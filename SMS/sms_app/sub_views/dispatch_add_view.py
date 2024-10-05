@@ -173,60 +173,6 @@ def dispatch_remove_goods(request):
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
 
-# @login_required(login_url='login_page')
-# def dispatch_add_goods(request):
-#     dispatch_num_val=request.session.get('ses_dispatch_num_val')
-#     # selected_stocks = request.GET.getlist('myList[]')
-#     # Get dispatch number greater than Nov 3
-#     dispatch_num_list=list(Dispatch_info.objects.filter(dispatch_depature_date__gt='2023-11-01').values_list('dispatch_num',flat=True))
-#
-#     first_name = request.session.get('first_name')
-#     current_date=(timezone.now()).astimezone(timezone.get_current_timezone())
-#     for k in dispatch_num_list:
-#         try:
-#             selected_stocks = Warehouse_goods_info.objects.filter(wh_dispatch_num=k).values_list('wh_qr_rand_num', flat=True)
-#             print(selected_stocks)
-#             for i in selected_stocks:
-#                 fumigation_action = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_fumigation_action
-#                 fumigation_date = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_fumigation_date
-#                 if str(fumigation_action) == 'BVM' and fumigation_date == None:
-#                     messages.error(request, 'Fumigation Date not entered for this Stock')
-#                     return redirect(request.META['HTTP_REFERER'])
-#                 else:
-#                     check_out_time = Warehouse_goods_info.objects.get(wh_dispatch_num=k).wh_checkout_time
-#                     vehicle_type = Dispatch_info.objects.get(dispatch_num=k).dispatch_truck_type
-#                     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=2)
-#                     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=dispatch_num_val)
-#                     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_checkout_time=check_out_time)
-#                     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_truck_type=vehicle_type)
-#                     check_in_date = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time
-#                     check_out_date = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkout_time
-#                     date_diff = (check_out_date - check_in_date)  # Differnce between dates
-#                     date_diff_days = date_diff.days
-#                     duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
-#                     storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
-#                     # storage_days = (check_out_date - check_in_date).days  # In days
-#                     storage_days = float(round(storage_hours / 24, 2))  # In days
-#                     Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
-#                     print("warehouseoutinfo is Valid")
-#                     try:
-#                         dispatch_num_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).id
-#                         Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_num_id)
-#                     except ObjectDoesNotExist:
-#                         pass
-#                 dispatch_invoice_job_update(dispatch_num_val)
-#                 warehousevolme_area_calc(request)
-#                 print("Inside dispatch_add_goods end")
-#         except:
-#             pass
-#     context = {
-#                 'first_name': first_name,
-#                 'dispatch_goods_list':dispatch_goods_list,
-#                }
-#     return redirect(request.META['HTTP_REFERER'])
-#     # return redirect('/SMS/dispatch_goods_list')
-
-# new
 @login_required(login_url='login_page')
 def dispatch_add_goods(request):
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
@@ -261,14 +207,14 @@ def dispatch_add_goods(request):
                 Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_num_id)
             except ObjectDoesNotExist:
                 pass
-        dispatch_invoice_job_update(dispatch_num_val)
-        warehousevolme_area_calc(request)
-        print("Inside dispatch_add_goods end")
+    dispatch_invoice_job_update(dispatch_num_val)
+    warehousevolme_area_calc(request)
+    print("Inside dispatch_add_goods end")
 
-    context = {
-                'first_name': first_name,
-                'dispatch_goods_list':dispatch_goods_list,
-               }
+    # context = {
+    #             'first_name': first_name,
+    #             'dispatch_goods_list':dispatch_goods_list,
+    #            }
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
 def dispatch_stock_list(request):
