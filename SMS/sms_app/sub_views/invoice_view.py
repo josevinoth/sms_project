@@ -543,27 +543,38 @@ def shipper_invoice_list(request,voucher_id):
                 }
     return render(request,"asset_mgt_app/shipper_invoice_list.html",context)
 @login_required(login_url='login_page')
-def shipper_invoice_add(request,voucher_id):
-    first_name = request.session.get('first_name')
+def shipper_invoice_goods_add(request):
     voucher_num_val = request.session.get('ses_voucher_num_val')
-    Warehouse_goods_info.objects.filter(pk=voucher_id).update(wh_voucher_num=voucher_num_val)
-    context =   {
-                # 'shipper_invoice_list' : shipper_invoice_list,
+    selected_stocks = request.GET.getlist('myList[]')
+    first_name = request.session.get('first_name')
+    for i in selected_stocks:
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_voucher_num=voucher_num_val)
+        print("Inside dispatch_add_goods end")
+    invoice_list_1 = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
+
+    context = {
                 'first_name': first_name,
-                # 'invoice_list_master': invoice_list_master,
-                }
+                'shipper_invoice_list':invoice_list_1,
+               }
     return redirect(request.META['HTTP_REFERER'])
-    # return render(request,"asset_mgt_app/shipper_invoice_list.html",context)
+    # return redirect('/SMS/dispatch_goods_list')
 
 @login_required(login_url='login_page')
-def shipper_invoice_remove(request,voucher_id):
+def shipper_invoice_goods_remove(request):
+    voucher_num_val = request.session.get('ses_voucher_num_val')
+    selected_stocks = request.GET.getlist('myList[]')
     first_name = request.session.get('first_name')
-    Warehouse_goods_info.objects.filter(pk=voucher_id).update(wh_voucher_num=None)
-    context =   {
+    for i in selected_stocks:
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_voucher_num=None)
+        print("Inside dispatch_add_goods end")
+    invoice_list_1 = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
+
+    context = {
                 'first_name': first_name,
-                }
+                'shipper_invoice_list':invoice_list_1,
+               }
     return redirect(request.META['HTTP_REFERER'])
-    # return render(request,"asset_mgt_app/shipper_invoice_list.html",context)
+    # return redirect('/SMS/dispatch_goods_list')
 
 # Custom serialization function for date objects
 def custom_serializer(obj):

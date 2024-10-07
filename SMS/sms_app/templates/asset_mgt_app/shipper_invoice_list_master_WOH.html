@@ -1,21 +1,24 @@
 {% block content %}
-<div class="container-fluid row">
-    <!--    <div class="col-md-1">-->
-    <!--      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-    <!--        <i class="fas fa-arrow-left"></i>-->
-    <!--      </a>-->
-    <!--    </div>-->
-    <!--    <div class="col-md-1">-->
-    <!--      <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">-->
-    <!--        <i class="fas fa-plus"></i>-->
-    <!--      </a>-->
-    <!--    </div>-->
-</div>
 <hr>
+<div class="container-fluid row">
+    <!-- Uncomment if needed -->
+    <!-- <div class="col-md-1"> -->
+    <!--   <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg"> -->
+    <!--     <i class="fas fa-arrow-left"></i> -->
+    <!--   </a> -->
+    <!-- </div> -->
+    <div class="col-md-1.5">
+        <a href="" id='add_btn' class="btn btn-success" onclick="return confirm('Are you sure to add this stock?');">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+<br>
 <div class="container-fluid">
-    <table  id="shipper_invoice_master_list" class="table table-striped table-bordered">
+    <table id="shipper_invoice_master_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>Select Stock</th>
             <th>WH Job Number</th>
             <th>Shipper Invoice</th>
             <th>Voucher Number</th>
@@ -31,27 +34,28 @@
             <th>No of Days</th>
             <th>Goods Status</th>
             <th>Add Invoice</th>
+        </tr>
         </thead>
         <tbody>
         {% for shipperinvoiceinfo in invoice_list_master %}
         <tr>
-            <td> {{shipperinvoiceinfo.wh_job_no}}</td>
-            <td> {{shipperinvoiceinfo.wh_goods_invoice}}</td>
-            <td> {{shipperinvoiceinfo.wh_voucher_num}}</td>
-            <td> {{shipperinvoiceinfo.wh_gate_injob_no_id.gatein_pre_id}}</td>
-            <td> {{shipperinvoiceinfo.wh_dispatch_id.dispatch_num}}</td>
-            <td> {{shipperinvoiceinfo.wh_qr_rand_num}}</td>
-            <td> {{shipperinvoiceinfo.wh_customer_name}}</td>
-            <td> {{shipperinvoiceinfo.wh_customer_type}}</td>
-            <td> {{shipperinvoiceinfo.wh_goods_pieces}}</td>
-            <td> {{shipperinvoiceinfo.wh_goods_weight}}</td>
-            <td> {{shipperinvoiceinfo.wh_checkin_time}}</td>
-            <td> {{shipperinvoiceinfo.wh_checkout_time}}</td>
-            <td> {{shipperinvoiceinfo.wh_storage_time}}</td>
-            <td> {{shipperinvoiceinfo.wh_check_in_out}}</td>
-
+            <td></td>
+            <td>{{ shipperinvoiceinfo.wh_job_no }}</td>
+            <td>{{ shipperinvoiceinfo.wh_goods_invoice }}</td>
+            <td>{{ shipperinvoiceinfo.wh_voucher_num }}</td>
+            <td>{{ shipperinvoiceinfo.wh_gate_injob_no_id.gatein_pre_id }}</td>
+            <td>{{ shipperinvoiceinfo.wh_dispatch_id.dispatch_num }}</td>
+            <td>{{ shipperinvoiceinfo.wh_qr_rand_num }}</td>
+            <td>{{ shipperinvoiceinfo.wh_customer_name }}</td>
+            <td>{{ shipperinvoiceinfo.wh_customer_type }}</td>
+            <td>{{ shipperinvoiceinfo.wh_goods_pieces }}</td>
+            <td>{{ shipperinvoiceinfo.wh_goods_weight }}</td>
+            <td>{{ shipperinvoiceinfo.wh_checkin_time }}</td>
+            <td>{{ shipperinvoiceinfo.wh_checkout_time }}</td>
+            <td>{{ shipperinvoiceinfo.wh_storage_time }}</td>
+            <td>{{ shipperinvoiceinfo.wh_check_in_out }}</td>
             <td>
-                <a class="btn btn-success" href="{% url 'shipperinvoice_add' shipperinvoiceinfo.id  %}" onclick="return confirm('Are you sure to add this stock?');">
+                <a class="btn btn-success" href="{% url 'shipper_invoice_goods_add' %}" onclick="return confirm('Are you sure to add this stock?');">
                     <i class="fas fa-plus"></i>
                 </a>
             </td>
@@ -60,9 +64,50 @@
         </tbody>
     </table>
 </div>
+
 <script>
-    $(document).ready(function() {
-    $('#shipper_invoice_master_list').DataTable();
-} );
+$(document).ready(function () {
+    var table = new DataTable('#shipper_invoice_master_list', {
+        columnDefs: [
+            {
+                orderable: false,
+                className: 'select-checkbox',
+                targets: 0
+            }
+        ],
+        select: {
+            style: 'os',
+            selector: 'td:first-child'
+        },
+        order: [[1, 'asc']],
+        dom: 'lBfrtip',
+        scrollX: true,
+    });
+
+    // Handle form submission event
+    $('#add_btn').on('click', function () {
+        var rows_selected = table.column(0).selected();
+        let selectedValues = table.rows({ selected: true }).data();
+        var len1 = selectedValues.length;
+        console.log(len1);
+        var elements = [];
+        for (var i = 0; i < len1; i++) {
+            console.log(selectedValues[i][6]);
+            elements.push(selectedValues[i][6]);
+        }
+        var elements_list = elements;
+
+        $.ajax({
+            url: '{% url 'shipper_invoice_goods_add' %}',
+            type: 'GET',
+            data: {
+                'myList[]': elements_list,  // This will encode the list as URL parameters
+            },
+            success: function (response) {
+                // Handle the response from the Django view
+            },
+        });
+    });
+});
 </script>
 {% endblock content %}
