@@ -141,6 +141,7 @@ def dispatch_goods_list(request,dispatch_id):
     dispatch_customer = Dispatch_info.objects.get(pk=dispatch_id).dispatch_customer
     print('dispatch_customer',dispatch_customer)
     request.session['ses_dispatch_num_val'] = dispatch_num_val
+    request.session['ses_dispatch_id_val'] = dispatch_id
     # # dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
     dispatch_master_list=Warehouse_goods_info.objects.filter(wh_check_in_out=1,wh_customer_name=dispatch_customer)
     goods_list=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
@@ -155,6 +156,7 @@ def dispatch_goods_list(request,dispatch_id):
 def dispatch_remove_goods(request):
     selected_stocks = request.GET.getlist('myList[]')
     print('selected_stocks',selected_stocks)
+    dispatch_id_val = request.session.get('ses_dispatch_id_val')
     for i in selected_stocks:
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=None)
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_id="")
@@ -170,12 +172,14 @@ def dispatch_remove_goods(request):
     context = {
                'first_name': first_name,
                }
-    return redirect(request.META['HTTP_REFERER'])
+    # return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
+    return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
 
 @login_required(login_url='login_page')
 def dispatch_add_goods(request):
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
+    dispatch_id_val=request.session.get('ses_dispatch_id_val')
     selected_stocks = request.GET.getlist('myList[]')
     vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).dispatch_truck_type
     first_name = request.session.get('first_name')
@@ -215,7 +219,8 @@ def dispatch_add_goods(request):
     #             'first_name': first_name,
     #             'dispatch_goods_list':dispatch_goods_list,
     #            }
-    return redirect(request.META['HTTP_REFERER'])
+    # return redirect(request.META['HTTP_REFERER'])
+    return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
     # return redirect('/SMS/dispatch_goods_list')
 def dispatch_stock_list(request):
     myList = request.GET.getlist('myList[]')

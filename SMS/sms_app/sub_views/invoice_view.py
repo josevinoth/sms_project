@@ -521,6 +521,7 @@ def shipper_invoice_list(request,voucher_id):
     billing_start_date = BilingInfo.objects.get(pk=voucher_id).bill_start_date
     billing_end_date = BilingInfo.objects.get(pk=voucher_id).bill_end_date
     request.session['ses_voucher_num_val'] = voucher_num_val
+    request.session['ses_voucher_id'] = voucher_id
     shipper_invoice_list=Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
     if customer_type_id>1:
         print("Inside Exclusive Loop")
@@ -545,6 +546,8 @@ def shipper_invoice_list(request,voucher_id):
 @login_required(login_url='login_page')
 def shipper_invoice_goods_add(request):
     voucher_num_val = request.session.get('ses_voucher_num_val')
+    voucher_id_val = request.session.get('ses_voucher_id')
+    print(voucher_num_val)
     selected_stocks = request.GET.getlist('myList[]')
     first_name = request.session.get('first_name')
     for i in selected_stocks:
@@ -556,12 +559,14 @@ def shipper_invoice_goods_add(request):
                 'first_name': first_name,
                 'shipper_invoice_list':invoice_list_1,
                }
-    return redirect(request.META['HTTP_REFERER'])
+    # return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
+    return redirect('/SMS/shipper_invoice_list/'+ str(voucher_id_val))
 
 @login_required(login_url='login_page')
 def shipper_invoice_goods_remove(request):
     voucher_num_val = request.session.get('ses_voucher_num_val')
+    voucher_id_val = request.session.get('ses_voucher_id')
     selected_stocks = request.GET.getlist('myList[]')
     first_name = request.session.get('first_name')
     for i in selected_stocks:
@@ -573,9 +578,9 @@ def shipper_invoice_goods_remove(request):
                 'first_name': first_name,
                 'shipper_invoice_list':invoice_list_1,
                }
-    return redirect(request.META['HTTP_REFERER'])
+    # return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
-
+    return redirect('/SMS/shipper_invoice_list/' + str(voucher_id_val))
 # Custom serialization function for date objects
 def custom_serializer(obj):
     if isinstance(obj, date):

@@ -33,7 +33,7 @@
             <th>Out Time</th>
             <th>No of Days</th>
             <th>Goods Status</th>
-            <th>Add Invoice</th>
+<!--            <th>Add Invoice</th>-->
         </tr>
         </thead>
         <tbody>
@@ -54,11 +54,11 @@
             <td>{{ shipperinvoiceinfo.wh_checkout_time }}</td>
             <td>{{ shipperinvoiceinfo.wh_storage_time }}</td>
             <td>{{ shipperinvoiceinfo.wh_check_in_out }}</td>
-            <td>
-                <a class="btn btn-success" href="{% url 'shipper_invoice_goods_add' %}" onclick="return confirm('Are you sure to add this stock?');">
-                    <i class="fas fa-plus"></i>
-                </a>
-            </td>
+<!--            <td>-->
+<!--                <a class="btn btn-success" href="{% url 'shipper_invoice_goods_add' %}" onclick="return confirm('Are you sure to add this stock?');">-->
+<!--                    <i class="fas fa-plus"></i>-->
+<!--                </a>-->
+<!--            </td>-->
         </tr>
         {% endfor %}
         </tbody>

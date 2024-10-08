@@ -48,7 +48,7 @@
             <th>Out Time</th>
             <th>No of Days</th>
             <th>Goods Status</th>
-            <th>Remove Stock</th>
+<!--            <th>Remove Stock</th>-->
         </tr>
         </thead>
         <tbody>
@@ -69,14 +69,14 @@
             <td>{{ shipperinvoiceinfo.wh_checkout_time }}</td>
             <td>{{ shipperinvoiceinfo.wh_storage_time }}</td>
             <td>{{ shipperinvoiceinfo.wh_check_in_out }}</td>
-            <td>
-                <form action="{% url 'shipper_invoice_goods_remove' %}" method="post" onclick="return confirm('Are you sure to remove this stock?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
+<!--            <td>-->
+<!--                <form action="{% url 'shipper_invoice_goods_remove' %}" method="post" onclick="return confirm('Are you sure to remove this stock?');">-->
+<!--                    {% csrf_token %}-->
+<!--                    <button type="submit" class="btn btn-danger">-->
+<!--                        <i class="fas fa-trash-alt"></i>-->
+<!--                    </button>-->
+<!--                </form>-->
+<!--            </td>-->
         </tr>
         {% endfor %}
         </tbody>
