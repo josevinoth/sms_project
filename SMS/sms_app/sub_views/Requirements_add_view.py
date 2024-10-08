@@ -32,15 +32,16 @@ def requirements_add(request,requirements_id=0):
                 # Generate Random requirement number
                 form.save()
                 try:
-                    last_id = (RequirementsInfo.objects.values_list('id', flat=True)).last()
+                    last_id = RequirementsInfo.objects.order_by('-id').values_list('id', flat=True).first()
                     reg_number=100000+last_id
                     # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
                 except ObjectDoesNotExist:
                     reg_number=100000
                     # req_num_next = str('Req_') + str(randint(10000, 99999))
+                print('reg_number',reg_number)
                 req_num_next=str('Req_') + str(reg_number)
                 print("Requirement Form is Valid")
-                last_id = (RequirementsInfo.objects.values_list('id', flat=True)).last()
+                # last_id = (RequirementsInfo.objects.values_list('id', flat=True)).last()
                 RequirementsInfo.objects.filter(id=last_id).update(req_number=req_num_next)
                 req_id = RequirementsInfo.objects.get(req_number=req_num_next).id
                 messages.success(request, 'Record Updated Successfully')
