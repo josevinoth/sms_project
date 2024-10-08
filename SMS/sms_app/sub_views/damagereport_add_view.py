@@ -1,11 +1,15 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
 from ..forms import DamagereportaddForm,DamagereportImagesForm
 from ..models import Location_info,DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from ..models import User_extInfo
 from random import randint
+from ..views import capture_image
+
 @login_required(login_url='login_page')
 def damagereport_add(request,damagereport_id=0):
     first_name = request.session.get('first_name')
@@ -65,6 +69,7 @@ def damagereport_add(request,damagereport_id=0):
             print("I am inside Get add damagereport")
             damagereport_form = DamagereportaddForm()
             damagereportimg_form = DamagereportImagesForm()
+            capture_image(request)
             context = {
                 'first_name': first_name,
                 'damagereport_form': damagereport_form,
@@ -107,6 +112,7 @@ def damagereport_add(request,damagereport_id=0):
             print("I am inside post add damagereport")
             damagereport_form = DamagereportaddForm(request.POST)
             damagereportimg_form=DamagereportImagesForm(request.POST,request.FILES)
+            capture_image(request)
             if damagereport_form.is_valid():
                 print("Main Form Saved")
                 if damagereportimg_form.is_valid():
@@ -151,6 +157,7 @@ def damagereport_add(request,damagereport_id=0):
             damagereport_form = DamagereportaddForm(request.POST,instance=damagereport_info)
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.POST,request.FILES,instance=damagereportimg_info)
+            capture_image(request)
             if damagereport_form.is_valid():
                 print("Damage_Report Main Form Saved")
                 damagereport_form.save()
@@ -164,8 +171,22 @@ def damagereport_add(request,damagereport_id=0):
                 damagereportimg_form.save()
             else:
                 print("Damage_Report Sub Form Not saved")
-            return redirect(request.META['HTTP_REFERER'])
-            # return redirect('/SMS/gatein_list')
+            # return redirect(request.META['HTTP_REFERER'])
+            return redirect('/SMS/gatein_list')
+
+
+
+def save_captured_image(request):
+    if request.method == "POST" and request.FILES.get('image'):
+        image_file = request.FILES['image']
+        # You can save the image to your model here
+        damagereport_img = DamagereportImages(damimage_file=image_file)  # Adjust field name based on your model
+        damagereport_img.save()
+
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'message': 'No image found'}, status=400)
+
 
 # List damagereport
 @login_required(login_url='login_page')

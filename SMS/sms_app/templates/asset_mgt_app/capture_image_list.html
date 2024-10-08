@@ -17,16 +17,20 @@
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
-    <div class="col-md-1">
-        <a href="{% url 'capture_image' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'capture_image' %}" class="btn btn-success btn-block btn-lg">-->
+<!--            <i class="fas fa-plus"></i> Add-->
+<!--        </a>-->
+<!--    </div>-->
     <div class="col-md-2">
-        <a href="" class="btn btn-warning btn-block btn-lg">
-            <i class="fas fa-plus"></i> Select All
-        </a>
+        <!-- Button to open the modal -->
+        <button id="open-camera-btn" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target="#captureModal">
+            <i class="fas fa-camera"></i> Capture Image
+        </button>
     </div>
+
+    <!-- Include the modal here or load via AJAX -->
+    {% include 'asset_mgt_app/capture.html' %}
 
 </div>
 <hr>
@@ -37,7 +41,7 @@
             <th>ID</th>
             <th>Image</th>
             <th>Time</th>
-            <th>Edit</th>
+<!--            <th>Edit</th>-->
             <th>Delete</th>
         </thead>
         <tbody>
@@ -50,11 +54,11 @@
                 {% endif %}
             </td>
             <td>{{ image.timestamp }}</td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'image_update' image.id %}">
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
+<!--            <td>-->
+<!--                <a class="btn btn-primary" href="{% url 'image_update' image.id %}">-->
+<!--                    <i class="far fa-edit"></i>-->
+<!--                </a>-->
+<!--            </td>-->
             <td>
                 <form action="{% url 'image_delete' image.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this entry?');">
                     {% csrf_token %}
@@ -79,8 +83,4 @@
     });
 } );
 </script>
-
-
-
-
 {% endblock content %}
