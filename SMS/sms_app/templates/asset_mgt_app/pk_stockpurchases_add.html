@@ -145,6 +145,12 @@
 									</div>
 									{% render_field form.sp_totalbill_amount id="sp_totalbill_amount" class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Status</span>
+									</div>
+									{% render_field form.sp_status id="sp_status" class="form-control " %}
+								</div>
 								{% render_field form.sp_updated_by id="sp_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>

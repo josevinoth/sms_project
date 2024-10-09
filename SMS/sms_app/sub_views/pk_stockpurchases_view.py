@@ -1,11 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import JsonResponse
+
 from ..forms import PkstockpurchasesForm
 from ..models import PkstockpurchasesInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
 from ..sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
+from ..sub_models.stock_description_mod import Stockdescription
 
 
 @login_required(login_url='login_page')
@@ -88,3 +91,23 @@ def stockpurchases_cancel(request):
     id=PkstockvebdorInfo.objects.get(spv_vendor_bill=pk_vendor_bill).id
     url = '/SMS/pk_stock_vendor_update/' + str(id)
     return redirect(url)
+
+# @login_required(login_url='login_page')
+# def SP_fetch_stock_description(request):
+#     stock_description_id = []
+#     stock_description_val = []
+#     stock_id = request.GET.get('stock_id')
+#     # Fetch item_description Details
+#     stock_descriptions = Stockdescription.objects.filter(id_stock_name=int(stock_id)).order_by('stock_description')
+#     # Extract id and id_item_description attributes from queryset
+#     for stock in stock_descriptions:
+#         stock_description_id.append(stock.id)
+#         stock_description_val.append(stock.stock_description)
+#     # Create JSON response data
+#     data = {
+#         'stock_description_val': stock_description_val,
+#         'stock_description_id': stock_description_id,
+#     }
+#
+#     # Return JSON response
+#     return JsonResponse(data)
