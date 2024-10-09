@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-
 from ..forms import DamagereportaddForm,DamagereportImagesForm
 from ..models import Location_info,DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages
 from django.shortcuts import render, redirect
@@ -9,6 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from ..models import User_extInfo
 from random import randint
 from ..views import capture_image
+from ..models import CameraImage
 
 @login_required(login_url='login_page')
 def damagereport_add(request,damagereport_id=0):
@@ -91,6 +91,7 @@ def damagereport_add(request,damagereport_id=0):
             damagereport_form = DamagereportaddForm(instance=damagereport_info)
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.FILES, instance=damagereportimg_info)
+            images = CameraImage.objects.all()
             context = {
                 'damagereport_form': damagereport_form,
                 'damagereportimg_form':damagereportimg_form,
@@ -105,6 +106,7 @@ def damagereport_add(request,damagereport_id=0):
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
+                'images': images
             }
         return render(request, "asset_mgt_app/damagereport_add.html", context)
     else:
