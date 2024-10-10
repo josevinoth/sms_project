@@ -8,4 +8,4 @@ class cameraForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(cameraForm,self).__init__(*args, **kwargs)
-        self.fields['requirement_id'].empty_label = "--Select--"
+        self.fields['reference'].empty_label = "--Select--"
