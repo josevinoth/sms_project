@@ -11,16 +11,20 @@
                 </button>
             </div>
             <div class="modal-body">
+                <!-- Video stream from the webcam -->
                 <video id="video" width="640" height="480" autoplay></video>
                 <br>
                 <button id="capture-btn" class="btn btn-primary mt-2">Capture</button>
+
+                <!-- Hidden canvas for drawing the captured image -->
                 <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
                 <img id="captured-image" src="" alt="Captured Image" style="display:none;"/>
 
+                <!-- Form to submit the captured image -->
                 <form id="image-form" method="POST" enctype="multipart/form-data" class="mt-3">
                     {% csrf_token %}
                     <input type="hidden" id="image-data" name="image-data">
-                    {% render_field form.reference id="reference"class="form-control" %}
+                    {% render_field form.reference id="reference" class="form-control" %}
                     <button type="submit" class="btn btn-success">Save Image</button>
                 </form>
             </div>
@@ -30,11 +34,10 @@
 
 <script>
     $(document).ready(function() {
-        document.getElementById("reference").value = '{{ last_id }}';
+        // Set the damagereport_id to the reference field
+        document.getElementById("reference").value = '{{ damagereport_id }}';
     });
-</script>
 
-<script>
     let stream;
 
     // Access the user's webcam
@@ -47,6 +50,7 @@
             console.log("Error accessing webcam: ", err);
         });
 
+    // Capture the image from the webcam when the button is clicked
     document.getElementById('capture-btn').addEventListener('click', function() {
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -56,12 +60,18 @@
 
         // Draw the current video frame onto the canvas
         context.drawImage(video, 0, 0, 640, 480);
+
+        // Convert the canvas image to a Base64 string (jpeg format)
         const dataUrl = canvas.toDataURL('image/jpeg');
+
+        // Display the captured image in the img tag
         capturedImage.src = dataUrl;
         capturedImage.style.display = 'block';
-        imageDataInput.value = dataUrl; // Store base64 image in the hidden field
 
-        // Stop the webcam stream after capture
+        // Set the hidden input field value with the base64 image data
+        imageDataInput.value = dataUrl;
+
+        // Stop the webcam stream after capturing the image
         stream.getTracks().forEach(track => track.stop());
     });
 </script>

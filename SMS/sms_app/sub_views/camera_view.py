@@ -9,7 +9,12 @@ from django.contrib.auth.decorators import login_required
 def capture_image(request, image_id=0):
     if request.method == 'GET':
         camera_images = CameraImage.objects.filter(pk=image_id) if image_id != 0 else None
-        return render(request, 'asset_mgt_app/capture.html', {'camera_images': camera_images})
+        damagereport_id = request.session.get('ses_damagereport_id')
+        print('damagereport_id', damagereport_id)
+        return render(request, 'asset_mgt_app/capture.html', {
+            'camera_images': camera_images,
+            'damagereport_id': damagereport_id
+        })
 
     elif request.method == 'POST':
         try:
@@ -26,20 +31,30 @@ def capture_image(request, image_id=0):
 
             # Decode the base64 image data
             format, imgstr = image_data.split(';base64,')
-            ext = format.split('/')[-1]  # Extract file extension (jpeg, png, etc.)
+            ext = format.split('/')[-1]
             image_content = ContentFile(base64.b64decode(imgstr), name=f'captured_image.{ext}')
 
-            # Save the image to the CameraImage model
+            # Get damagereport_id from session
+            damagereport_id = request.session.get('ses_damagereport_id')
+            if not damagereport_id:
+                messages.error(request, 'No damagereport ID found in session.')
+                return redirect('capture_image')
+
+            # Save the image to the CameraImage model with the reference to damagereport_id
             camera_image = CameraImage()
             camera_image.image.save(f'captured_image.{ext}', image_content)
+            camera_image.reference_id = damagereport_id
             camera_image.save()
 
             messages.success(request, 'Image saved successfully.')
-            return redirect('image_list')
+            # return redirect('damage_report_detail', damagereport_id=damagereport_id)  # Redirect back to the damage report page
+            url = 'damagereport_update/' + str(damagereport_id)
+            return redirect(url)
 
         except Exception as e:
             messages.error(request, f'An error occurred: {str(e)}')
             return redirect('capture_image')
+
 
 
 @login_required(login_url='login_page')

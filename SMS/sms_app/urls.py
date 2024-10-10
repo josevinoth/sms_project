@@ -525,5 +525,4 @@ urlpatterns = [
     path('images/', views.image_list, name='image_list'),
     path('image_update/<int:image_id>/', views.capture_image, name='image_update'),
     path('image_delete/<int:image_id>/', views.image_delete, name='image_delete'),
-    path('damage/', views.save_captured_image, name='image_delete'),
 ]

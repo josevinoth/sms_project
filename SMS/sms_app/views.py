@@ -29,7 +29,7 @@ from .sub_views.stud_add_view import stud_add,stud_delete,stud_list
 from .sub_views.peo_add_view import peo_add,peo_list,peo_delete
 from .sub_views.camera_view import capture_image,image_list,image_delete
 from .sub_views.damage_add_view import damage_add,damage_list,damage_delete
-from .sub_views.damagereport_add_view import damagereport_add,damagereport_list,save_captured_image
+from .sub_views.damagereport_add_view import damagereport_add,damagereport_list
 from .sub_views.locationmaster_add_view import locationmaster_add,locationmaster_list,locationmaster_delete,load_customer_model,warehousevolme_area_calc
 from .sub_views.goods_add_view import goods_add,goods_list,goods_delete,goods_update
 from .sub_views.employee_add_view import emp_add,emp_list,emp_delete,emp_registration_page

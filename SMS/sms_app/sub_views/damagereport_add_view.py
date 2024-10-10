@@ -87,11 +87,12 @@ def damagereport_add(request,damagereport_id=0):
             }
         else:
             print("I am inside get edit damagereport")
+            request.session['ses_damagereport_id'] = damagereport_id
             damagereport_info=DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id)
             damagereport_form = DamagereportaddForm(instance=damagereport_info)
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.FILES, instance=damagereportimg_info)
-            images = CameraImage.objects.all()
+            images = CameraImage.objects.filter(reference=damagereport_id)
             context = {
                 'damagereport_form': damagereport_form,
                 'damagereportimg_form':damagereportimg_form,
@@ -173,8 +174,10 @@ def damagereport_add(request,damagereport_id=0):
                 damagereportimg_form.save()
             else:
                 print("Damage_Report Sub Form Not saved")
-            # return redirect(request.META['HTTP_REFERER'])
-            return redirect('/SMS/gatein_list')
+            return redirect(request.META['HTTP_REFERER'])
+            # return redirect('/SMS/gatein_list')
+            # url = 'damagereport_update/' + str(damagereport_id)
+            # return redirect(url)
 
 
 
