@@ -41,6 +41,7 @@
             <th>ID</th>
             <th>Image</th>
             <th>Time</th>
+            <th>Reference ID</th>
 <!--            <th>Edit</th>-->
             <th>Delete</th>
         </thead>
@@ -54,6 +55,7 @@
                 {% endif %}
             </td>
             <td>{{ image.timestamp }}</td>
+            <td>{{ image.reference}}</td>
 <!--            <td>-->
 <!--                <a class="btn btn-primary" href="{% url 'image_update' image.id %}">-->
 <!--                    <i class="far fa-edit"></i>-->

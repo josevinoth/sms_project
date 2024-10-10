@@ -8,6 +8,7 @@
                 <th>ID</th>
                 <th>Image</th>
                 <th>Time</th>
+                 <th>Reference ID</th>
                 <th>Delete</th>
             </tr>
         </thead>
@@ -21,6 +22,7 @@
                     {% endif %}
                 </td>
                 <td>{{ image.timestamp }}</td>
+                <td>{{ image.reference}}</td>
                 <td>
                     <form action="{% url 'image_delete' image.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this entry?');">
                         {% csrf_token %}

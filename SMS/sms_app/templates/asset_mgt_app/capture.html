@@ -20,12 +20,19 @@
                 <form id="image-form" method="POST" enctype="multipart/form-data" class="mt-3">
                     {% csrf_token %}
                     <input type="hidden" id="image-data" name="image-data">
+                    {% render_field form.reference id="reference"class="form-control" %}
                     <button type="submit" class="btn btn-success">Save Image</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    $(document).ready(function() {
+        document.getElementById("reference").value = '{{ last_id }}';
+    });
+</script>
 
 <script>
     let stream;
