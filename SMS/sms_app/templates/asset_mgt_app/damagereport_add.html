@@ -32,7 +32,7 @@
 		<a class="btn  border focus border-dark " id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before Offloading</a>
 		{% endif %}
 		<a class="btn  border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
-<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}" >Warehouse In</a>-->
+		<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}" >Warehouse In</a>-->
 		<a class="btn  border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
 	</div>
 	<div class="col-2"></div>
@@ -126,6 +126,7 @@
 									</div>
 									{% render_field damagereportimg_form.dam_closed_door_pic class="form-control" %}
 								</div>
+
 								<div class="input-group input-group-sm mb-3 bg-dark block">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Opened Door Pic</span>
@@ -158,11 +159,11 @@
 								</div>
 							</div>
 							<div class="input-group input-group-sm mb-3 container-fluid">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Comments</span>
-									</div>
-									{% render_field damagereport_form.dam_comments id="dam_comments" class="form-control"%}
+								<div class="input-group-prepend">
+									<span class="input-group-text">Comments</span>
 								</div>
+								{% render_field damagereport_form.dam_comments id="dam_comments" class="form-control"%}
+							</div>
 						</div>
 						<div class="row">
 							<div class="col-1"></div>
@@ -183,108 +184,197 @@
 		<div class="col-2"></div>
 	</div>
 </form>
+<div class="container-fluid">
+	{% include "asset_mgt_app/damagereport_list_woh.html" %}
+</div>
+
 <script>
-function challan_damage_btn_active() {
-	var damage_type_val =document.getElementById("dam_damage_type").value;
-	var marks_numbers_val =document.getElementById("dam_marks_numbers").value;
-	var damage_status_val =document.getElementById("dam_status").value;
-	if ((damage_type_val!=6)||(marks_numbers_val==1))
-	 {
-	 	$('#dam_customer_approval').removeClass('disable_a_href');
-	 }
-	 else
-	 {
-	 	$('#dam_customer_approval').addClass('disable_a_href');
-	 }
-}
+	function challan_damage_btn_active() {
+        var damage_type_val =document.getElementById("dam_damage_type").value;
+        var marks_numbers_val =document.getElementById("dam_marks_numbers").value;
+        var damage_status_val =document.getElementById("dam_status").value;
+        if ((damage_type_val!=6)||(marks_numbers_val==1))
+         {
+             $('#dam_customer_approval').removeClass('disable_a_href');
+         }
+         else
+         {
+             $('#dam_customer_approval').addClass('disable_a_href');
+         }
+    }
 </script>
 <script>
-$(document).ready(function() {
-	var gatein_status_id = '{{gatein_status}}';
-	var loadingbay_status_id='{{loadingbay_status}}';
-	var damage_before_status_id='{{damage_before_status}}';
-	var damage_after_status_id='{{damage_after_status}}';
-	var warehousein_status_id='{{warehousein_status}}';
+	$(document).ready(function() {
+        var gatein_status_id = '{{gatein_status}}';
+        var loadingbay_status_id='{{loadingbay_status}}';
+        var damage_before_status_id='{{damage_before_status}}';
+        var damage_after_status_id='{{damage_after_status}}';
+        var warehousein_status_id='{{warehousein_status}}';
 
-	if (gatein_status_id =="Completed")
-	{
-		$('#gatein_btn').removeClass('disable_a_href');
-		$('#gatein_btn1').removeClass('disable_a_href');
-		$('#gatein_btn').addClass('btn-success');
-		$('#gatein_btn1').addClass('btn-success');
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-	}
-	else if (gatein_status_id =="Work In Progress")
-	{
-		$('#gatein_btn').removeClass('disable_a_href');
-		$('#gatein_btn1').removeClass('disable_a_href');
-		$('#gatein_btn').addClass('btn-warning');
-		$('#gatein_btn1').addClass('btn-warning');
-	}
+        if (gatein_status_id =="Completed")
+        {
+            $('#gatein_btn').removeClass('disable_a_href');
+            $('#gatein_btn1').removeClass('disable_a_href');
+            $('#gatein_btn').addClass('btn-success');
+            $('#gatein_btn1').addClass('btn-success');
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+        }
+        else if (gatein_status_id =="Work In Progress")
+        {
+            $('#gatein_btn').removeClass('disable_a_href');
+            $('#gatein_btn1').removeClass('disable_a_href');
+            $('#gatein_btn').addClass('btn-warning');
+            $('#gatein_btn1').addClass('btn-warning');
+        }
 
-	if (loadingbay_status_id =="Completed")
-	{
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		$('#loadingbay_btn').addClass('btn-success');
-		$('#loadingbay_btn1').addClass('btn-success');
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-	}
-	else if (loadingbay_status_id =="Work In Progress")
-	{
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		$('#loadingbay_btn').addClass('btn-warning');
-		$('#loadingbay_btn1').addClass('btn-warning');
-	}
+        if (loadingbay_status_id =="Completed")
+        {
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+            $('#loadingbay_btn').addClass('btn-success');
+            $('#loadingbay_btn1').addClass('btn-success');
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+        }
+        else if (loadingbay_status_id =="Work In Progress")
+        {
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+            $('#loadingbay_btn').addClass('btn-warning');
+            $('#loadingbay_btn1').addClass('btn-warning');
+        }
 
-	if (damage_before_status_id =="Completed")
-	{
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		$('#damagecheck_before_btn').addClass('btn-success');
-		$('#damagecheck_before_btn1').addClass('btn-success');
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-	}
-	else if (damage_before_status_id =="Work In Progress")
-	{
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		$('#damagecheck_before_btn').addClass('btn-warning');
-		$('#damagecheck_before_btn1').addClass('btn-warning');
-	}
-	if (damage_after_status_id =="Completed")
-	{
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-success');
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (damage_after_status_id =="No Status")
-	{
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-warning');
-	}
+        if (damage_before_status_id =="Completed")
+        {
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            $('#damagecheck_before_btn').addClass('btn-success');
+            $('#damagecheck_before_btn1').addClass('btn-success');
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+        }
+        else if (damage_before_status_id =="Work In Progress")
+        {
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            $('#damagecheck_before_btn').addClass('btn-warning');
+            $('#damagecheck_before_btn1').addClass('btn-warning');
+        }
+        if (damage_after_status_id =="Completed")
+        {
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+            $('#damagecheck_after_btn').addClass('btn-success');
+            $('#warehousein_btn').removeClass('disable_a_href');
+        }
+        else if (damage_after_status_id =="No Status")
+        {
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+            $('#damagecheck_after_btn').addClass('btn-warning');
+        }
 
-	if (warehousein_status_id =="Completed")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-success');
-		$('#storage_btn').removeClass('disable_a_href');
-		$('#storage_btn').addClass('btn-success');
-	}
-	else if (warehousein_status_id =="None")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (warehousein_status_id =="No Status")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-warning');
-	}
-<!--	grnnum()-->
-challan_damage_btn_active()
-  });
+        if (warehousein_status_id =="Completed")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn').addClass('btn-success');
+            $('#storage_btn').removeClass('disable_a_href');
+            $('#storage_btn').addClass('btn-success');
+        }
+        else if (warehousein_status_id =="None")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+        }
+        else if (warehousein_status_id =="No Status")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn').addClass('btn-warning');
+        }
+    <!--	grnnum()-->
+    challan_damage_btn_active()
+      });
+</script>
+
+<script>
+	function captureImageAndSave() {
+    // Capture the image from your camera or input
+    const capturedImage = document.getElementById('captured-image').files[0]; // Assuming you have an input for image
+
+    if (!capturedImage) {
+        alert('Please capture an image first!');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', capturedImage);
+
+    // Send the image data to the server
+    fetch('/your-django-url-to-save-image/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken') // Get the CSRF token
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Image saved successfully!');
+        } else {
+            alert('Error saving image: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Check if the cookie is the one we want
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+</script>
+
+<script>
+	let stream;
+
+    // Access the user's webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(s => {
+            stream = s;
+            document.getElementById('video').srcObject = stream;
+        })
+        .catch(err => {
+            console.log("Error accessing webcam: ", err);
+        });
+
+    document.getElementById('capture-btn').addEventListener('click', function() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const capturedImage = document.getElementById('captured-image');
+        const imageDataInput = document.getElementById('image-data');
+
+        // Draw the current video frame onto the canvas
+        context.drawImage(video, 0, 0, 640, 480);
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        capturedImage.src = dataUrl;
+        capturedImage.style.display = 'block';
+        imageDataInput.value = dataUrl; // Store base64 image in the hidden field
+
+        // Stop the webcam stream after capture
+        stream.getTracks().forEach(track => track.stop());
+    });
 </script>
 {% endblock content %}

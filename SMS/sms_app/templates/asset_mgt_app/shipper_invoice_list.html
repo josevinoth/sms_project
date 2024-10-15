@@ -6,17 +6,12 @@
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
-    <!--    <div class="col-md-1">-->
-    <!--        <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">-->
-    <!--            <i class="fas fa-plus"></i>-->
-    <!--        </a>-->
-    <!--    </div>-->
 </div>
 
 <br>
 <div class="row">
     <div class="col-4">
-        <h3><span class="badge bg-info ">Shipper Invoice List</span></h3>
+        <h3><span class="badge bg-info">Shipper Invoice List</span></h3>
     </div>
     <div class="col-4 message text-center">
         {% for message in messages %}
@@ -27,10 +22,18 @@
 </div>
 
 <hr>
+<div class="col-md-1.5">
+    <a href="" id="remove_btn" class="btn btn-danger" onclick="return confirm('Are you sure to Remove this stock?');">
+        <i class="fas fa-minus"></i> Remove
+    </a>
+</div>
+<br>
+
 <div class="container-fluid">
-    <table  id="shipper_invoice_list" class="table table-striped table-bordered">
+    <table id="shipper_invoice_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>Select</th>
             <th>WH Job Number</th>
             <th>Shipper Invoice</th>
             <th>Voucher Number</th>
@@ -45,46 +48,96 @@
             <th>Out Time</th>
             <th>No of Days</th>
             <th>Goods Status</th>
-            <th>Remove Stock</th>
+<!--            <th>Remove Stock</th>-->
+        </tr>
         </thead>
         <tbody>
         {% for shipperinvoiceinfo in shipper_invoice_list %}
         <tr>
-            <td> {{shipperinvoiceinfo.wh_job_no}}</td>
-            <td> {{shipperinvoiceinfo.wh_goods_invoice}}</td>
-            <td> {{shipperinvoiceinfo.wh_voucher_num}}</td>
-            <td> {{shipperinvoiceinfo.wh_gate_injob_no_id.gatein_pre_id}}</td>
-            <td> {{shipperinvoiceinfo.wh_dispatch_id.dispatch_num}}</td>
-            <td> {{shipperinvoiceinfo.wh_qr_rand_num}}</td>
-            <td> {{shipperinvoiceinfo.wh_customer_name}}</td>
-            <td> {{shipperinvoiceinfo.wh_customer_type}}</td>
-            <td> {{shipperinvoiceinfo.wh_goods_pieces}}</td>
-            <td> {{shipperinvoiceinfo.wh_goods_weight}}</td>
-            <td> {{shipperinvoiceinfo.wh_checkin_time}}</td>
-            <td> {{shipperinvoiceinfo.wh_checkout_time}}</td>
-            <td> {{shipperinvoiceinfo.wh_storage_time}}</td>
-            <td> {{shipperinvoiceinfo.wh_check_in_out}}</td>
-            <td>
-                <form action="{% url 'shipperinvoice_remove' shipperinvoiceinfo.id %}" method="post" onclick="return confirm('Are you sure to remove this stock?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
+            <td></td>
+            <td>{{ shipperinvoiceinfo.wh_job_no }}</td>
+            <td>{{ shipperinvoiceinfo.wh_goods_invoice }}</td>
+            <td>{{ shipperinvoiceinfo.wh_voucher_num }}</td>
+            <td>{{ shipperinvoiceinfo.wh_gate_injob_no_id.gatein_pre_id }}</td>
+            <td>{{ shipperinvoiceinfo.wh_dispatch_id.dispatch_num }}</td>
+            <td>{{ shipperinvoiceinfo.wh_qr_rand_num }}</td>
+            <td>{{ shipperinvoiceinfo.wh_customer_name }}</td>
+            <td>{{ shipperinvoiceinfo.wh_customer_type }}</td>
+            <td>{{ shipperinvoiceinfo.wh_goods_pieces }}</td>
+            <td>{{ shipperinvoiceinfo.wh_goods_weight }}</td>
+            <td>{{ shipperinvoiceinfo.wh_checkin_time }}</td>
+            <td>{{ shipperinvoiceinfo.wh_checkout_time }}</td>
+            <td>{{ shipperinvoiceinfo.wh_storage_time }}</td>
+            <td>{{ shipperinvoiceinfo.wh_check_in_out }}</td>
+<!--            <td>-->
+<!--                <form action="{% url 'shipper_invoice_goods_remove' %}" method="post" onclick="return confirm('Are you sure to remove this stock?');">-->
+<!--                    {% csrf_token %}-->
+<!--                    <button type="submit" class="btn btn-danger">-->
+<!--                        <i class="fas fa-trash-alt"></i>-->
+<!--                    </button>-->
+<!--                </form>-->
+<!--            </td>-->
         </tr>
         {% endfor %}
         </tbody>
     </table>
 </div>
+
 <br>
 <div class="container-fluid">
     <h3><span class="badge bg-info light">Shipper Invoice Master List</span></h3>
     {% include "asset_mgt_app/shipper_invoice_list_master_WOH.html" %}
 </div>
+
 <script>
-    $(document).ready(function() {
-    $('#shipper_invoice_list').DataTable();
-} );
+$(document).ready(function (){
+      var table=new DataTable('#shipper_invoice_list', {
+        columnDefs: [
+            {
+                orderable: false,
+                className: 'select-checkbox',
+                targets: 0
+            }
+        ],
+        select: {
+            style: 'os',
+            selector: 'td:first-child'
+      },
+        order: [[1, 'asc']],
+        dom: 'lBfrtip',
+<!--        scrollY: "300px",-->
+        scrollX: true,
+});
+
+   // Handle form submission event
+   $('#remove_btn').on('click', function(){
+      	var rows_selected = table.column(0).selected();
+      	let selectedValues = table.rows( { selected: true } ).data();
+      	var len1=( selectedValues ).length;
+      	console.log( len1 );
+      	var len=( selectedValues[0] ).length;
+      	console.log( selectedValues );
+      	console.log( selectedValues[0] );
+      	console.log( len );
+      	var elements = [];
+      	for (var i = 0; i < len1; i++) {
+				console.log(selectedValues[i][6]);
+				elements.push(selectedValues[i][6]);
+			}
+		var elements_list=elements;
+   $.ajax({
+        url: '{% url 'shipper_invoice_goods_remove' %}',
+        type: 'GET',
+        data: {
+            'myList[]': elements_list,  // This will encode the list as URL parameters
+        },
+        success: function(response) {
+            // Handle the response from the Django view
+        },
+   });
+
+   });
+});
 </script>
+
 {% endblock content %}

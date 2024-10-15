@@ -1,0 +1,99 @@
+{% load widget_tweaks %}
+{% block content %}
+<!-- Modal for Capturing Image -->
+<div class="modal fade" id="captureModal" tabindex="-1" role="dialog" aria-labelledby="captureModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-dark">
+                <h5 class="modal-title" id="captureModalLabel">Capture Image</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <video id="camera-stream" width="100%" autoplay></video>
+                    <canvas id="snapshot" style="display:none;"></canvas>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="capture-btn" class="btn btn-primary">Capture</button>
+                <button type="button" id="save-btn" class="btn btn-success">Save Image</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Define video and canvas elements
+const video = document.getElementById('camera-stream');
+const canvas = document.getElementById('snapshot');
+const context = canvas.getContext('2d');
+const captureButton = document.getElementById('capture-btn');
+const saveButton = document.getElementById('save-btn');
+let stream; // Hold the stream
+
+// Function to start the camera stream
+async function startCamera() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+    } catch (err) {
+        console.error('Error accessing camera: ', err);
+    }
+}
+
+// Start camera stream when modal is shown
+$('#captureModal').on('shown.bs.modal', function () {
+    startCamera();
+});
+
+// Capture image from the video stream
+captureButton.addEventListener('click', function () {
+    // Set canvas size equal to video size
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Draw current frame from video on the canvas
+    context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+
+    // Optionally stop the webcam stream
+    stream.getTracks().forEach(track => track.stop());
+
+    // Display the captured image on the canvas
+    canvas.style.display = 'block';
+});
+
+// Save the captured image
+saveButton.addEventListener('click', function () {
+    // Convert canvas to base64 string
+    const dataURL = canvas.toDataURL('image/png');
+
+    // Send the image data to Django backend via AJAX
+    fetch("{% url 'damage_capture_image' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}', // Ensure CSRF token is correctly included
+        },
+        body: JSON.stringify({
+            image: dataURL, // Send base64 image
+            wh_job_num: '{{ request.session.ses_gatein_id_nam }}' // Additional data (if needed)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Image saved successfully!');
+            $('#captureModal').modal('hide'); // Close the modal on success
+        } else {
+            alert('Failed to save the image.');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving image:', error);
+    });
+});
+</script>
+
+{% endblock content %}

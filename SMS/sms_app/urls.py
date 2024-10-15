@@ -307,8 +307,8 @@ urlpatterns = [
     path('damage_report_list/',views.damage_reports_list,name='damage_report_list'),
     path('deviation_report/',views.deviation_report,name='deviation_report'),
     path('shipperinvoice_list/<int:voucher_id>', views.shipper_invoice_list, name='shipperinvoice_list'),  # List invoice
-    path('shipperinvoice_add/<int:voucher_id>', views.shipper_invoice_add, name='shipperinvoice_add'),  # add shipper invoice to voucher list
-    path('shipperinvoice_remove/<int:voucher_id>', views.shipper_invoice_remove, name='shipperinvoice_remove'),  # remove shipper invoice to voucher list
+    path('shipper_invoice_goods_add/', views.shipper_invoice_goods_add, name='shipper_invoice_goods_add'),  # add shipper invoice to voucher list
+    path('shipper_invoice_goods_remove/', views.shipper_invoice_goods_remove, name='shipper_invoice_goods_remove'),  # remove shipper invoice to voucher list
     path('load_whrate_model/', views.load_whrate_model, name='load_whrate_model'),  # load WH rate
     path('expense_list/',views.expense_list,name='expense_list'), # List expense
     path('expense_insert/',views.expense_add,name='expense_insert'), # Add expense
@@ -521,5 +521,8 @@ urlpatterns = [
     path('business_revenue_update/<int:business_id>', views.business_revenue_add, name='business_revenue_update'),    # update business_revenue
     path('business_revenue_delete/<int:business_id>', views.business_revenue_delete, name='business_revenue_delete'),    # delete business_revenue
     path('warehouse_send_email/', views.warehouse_send_email_view, name='warehouse_send_email'), #send emails
-
+    path('capture/', views.capture_image, name='capture_image'),
+    path('images/', views.image_list, name='image_list'),
+    path('image_update/<int:image_id>/', views.capture_image, name='image_update'),
+    path('image_delete/<int:image_id>/', views.image_delete, name='image_delete'),
 ]

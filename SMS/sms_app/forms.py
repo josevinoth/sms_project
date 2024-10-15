@@ -106,3 +106,4 @@ from .sub_forms.ml_category_form import ProductForm
 from .sub_forms.warehouse_email_form import warehouse_EmailForm
 from .sub_forms.businessrevenueForm_Form import BusinessrevenueForm
 from .sub_forms.warehouse_email_form import warehouse_EmailForm
+from .sub_forms.cameraForm_form import cameraForm

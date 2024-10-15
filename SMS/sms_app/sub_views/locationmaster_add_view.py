@@ -155,6 +155,7 @@ def warehousevolme_area_calc(request):
         LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_available_volume=round(available_volume, 2))
         LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_volume_occupied=round(volume_occupied_val, 2))
         LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_area_occupied=round(area_occupied_val, 2))
+    return()
 #Delete locationmaster
 @login_required(login_url='login_page')
 def locationmaster_delete(request,locationmaster_id):
