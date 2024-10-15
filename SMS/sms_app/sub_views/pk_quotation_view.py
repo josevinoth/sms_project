@@ -126,10 +126,10 @@ def pk_quotation_add(request,quotation_id=0):
                     stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
                     stock_qty = request.POST.get('pkqt_quantity')
                     stock_qty_available = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
-                    if int(stock_qty) <= 0:
+                    if float(stock_qty) <= 0:
                         messages.error(request, 'Quantity should be greater than 0')
                         return redirect(request.META['HTTP_REFERER'])
-                    elif int(stock_qty) > stock_qty_available:
+                    elif float(stock_qty) > stock_qty_available:
                         error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
                         messages.error(request, error_message)
                         return redirect(request.META['HTTP_REFERER'])
