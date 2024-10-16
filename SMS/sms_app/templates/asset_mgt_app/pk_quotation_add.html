@@ -85,7 +85,7 @@
 									<div class="col-9">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Height_requested (inch)</span>
+												<span class="input-group-text">Height_requested<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood MM. For Plywood Inch"></i></span>
 											</div>
 											{% render_field form.pkqt_height_req id="pkqt_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
@@ -97,7 +97,7 @@
 										</div>
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Length_requested (Ft)</span>
+												<span class="input-group-text">Length_requested<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood Feet. For Plywood Inch"></i></span>
 											</div>
 											{% render_field form.pkqt_length_req id="pkqt_length_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>

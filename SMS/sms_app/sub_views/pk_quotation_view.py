@@ -99,7 +99,6 @@ def pk_quotation_add(request,quotation_id=0):
 
                     # Save the form regardless of whether the stock purchase number exists
                     form.save()
-                    messages.success(request, 'Quotation saved without stock purchase number.')
                 else:
                     # If the cost type is not stock-related, simply save the form
                     form.save()
