@@ -177,4 +177,4 @@ from .sub_models.timesheet_mod import timesheet_Info
 from .sub_models.ml_category_mod_ import ml_Category,ml_Product
 from .sub_models.business_revenue_mod import BusinessrevenueInfo
 from .sub_models.damage_image_type_mod import damage_image_type_info
-from .sub_models.camera_mod import CameraImage
+from .sub_models.picture_mod import PictureImage
