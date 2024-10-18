@@ -8,7 +8,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from ..models import User_extInfo
 from random import randint
 from ..views import picture_add
-# from ..models import CameraImage
 
 @login_required(login_url='login_page')
 def damagereport_add(request,damagereport_id=0):
@@ -92,10 +91,8 @@ def damagereport_add(request,damagereport_id=0):
             damagereport_form = DamagereportaddForm(instance=damagereport_info)
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.FILES, instance=damagereportimg_info)
-            # images = CameraImage.objects.filter(reference=damagereport_id)
-            picture_list = PictureImage.objects.all()  # Fetch all image types
-            # for image_type in image_types:
-            #     print(image_type.id, image_type.dimt_name)
+            picture_list = PictureImage.objects.filter(pi_reference=damagereport_id)  # Fetch all the pictures
+
             context = {
                 'damagereport_form': damagereport_form,
                 'damagereportimg_form':damagereportimg_form,
@@ -110,7 +107,6 @@ def damagereport_add(request,damagereport_id=0):
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
-                # 'images': images,
                 'picture_list': picture_list,
                 'damagereport_id': damagereport_id,
             }

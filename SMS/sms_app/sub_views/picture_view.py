@@ -80,13 +80,15 @@ def picture_add(request, picture_id=0):
         except Exception as e:
             messages.error(request, f'An error occurred: {str(e)}')
 
-        return redirect('/SMS/picture_list')
+        # return redirect('/SMS/picture_list')
+        return redirect('/SMS/damagereport_update/' + str(damagereport_id))
 
 # List View
 @login_required(login_url='login_page')
 def picture_list(request):
     first_name = request.session.get('first_name')
-    pictures = PictureImage.objects.all()  # Fetch all the pictures
+
+    pictures = PictureImage.objects.all()  # Fetch all image types
     context = {
         'picture_list': pictures,
         'first_name': first_name
