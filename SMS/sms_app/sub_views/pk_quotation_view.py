@@ -199,6 +199,7 @@ def pk_store_na_dimension_id(request):
     na_length=str(a.nad_length)
     na_width=str(a.nad_width)
     na_height = str(a.nad_height)
+    na_quantity = str(a.nad_quantity)
 
 
     data = {
@@ -210,5 +211,6 @@ def pk_store_na_dimension_id(request):
         'na_length': na_length,
         'na_width': na_width,
         'na_height': na_height,
+        'na_quantity': na_quantity,
     }
     return JsonResponse(data)

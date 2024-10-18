@@ -50,6 +50,8 @@ class PkquotationInfo(models.Model):
     pkqt_sqrt_req = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_cft_req = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_totalbox_cost = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_na_quantity = models.FloatField(blank=True, null=True, default=0.0)
+
 
     class Meta:
         ordering = ["pkqt_cost_type"]
