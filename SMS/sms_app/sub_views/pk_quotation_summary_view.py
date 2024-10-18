@@ -206,7 +206,7 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
         total_cost=total_cost_wom+(total_cost_wom*margin/100)
         Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost,2))
         try:
-            Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost/qty,2))
+            Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost*qty,2))
         except:
             Nadimension.objects.filter(pk=k).update(nad_cost_unit=0)
         total_sum=round((total_sum+total_cost),2)
@@ -360,5 +360,3 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
             return redirect('/SMS/costingsummary_update/' + str(costing_summary_id))
         else:
             return redirect(request.META.get('HTTP_REFERER', '/'))
-
-

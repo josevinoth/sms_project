@@ -46,33 +46,70 @@ def pk_quotation_add(request,quotation_id=0):
         if quotation_id == 0:
             print("Inside PK quotation post add")
             form = PkquotationForm(request.POST)
+
             if form.is_valid():
                 print('form is valid')
                 cost_type_id = request.POST.get('pkqt_cost_type')
-                if int(cost_type_id) == 8:
+
+                if int(cost_type_id) == 8:  # For stock-related cost types
                     stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
-                    print('stock_purchase_num_id',stock_purchase_num_id)
-                    stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
-                    stock_qty = request.POST.get('pkqt_quantity')
-                    stock_qty_available = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
-                    if int(stock_qty) <= 0:
-                        messages.error(request, 'Quantity should be greater than 0')
-                        return redirect(request.META['HTTP_REFERER'])
-                    elif int(stock_qty) > stock_qty_available:
-                        error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
-                        messages.error(request, error_message)
-                        return redirect(request.META['HTTP_REFERER'])
-                    else:
-                        form.save()
-                        print("quotation Form is Valid")
-                        messages.success(request, 'Stock Updated Successfully')
-                else:
+                    print('stock_purchase_num_id:', stock_purchase_num_id)
+
+                    stock_purchase_num = None  # Initialize as None in case it's not found
+
+                    if stock_purchase_num_id:
+                        try:
+                            # Try fetching the stock purchase record based on the given ID
+                            stock_purchase = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
+                            stock_purchase_num = stock_purchase.sp_purchase_num
+                            stock_qty_available = stock_purchase.sp_quantity_reduced
+
+                            # Get the quantity from the form
+                            stock_qty_str = request.POST.get('pkqt_quantity', None)
+                            if not stock_qty_str:
+                                messages.error(request, 'Quantity is required.')
+                                return redirect(request.META['HTTP_REFERER'])
+
+                            try:
+                                stock_qty = int(stock_qty_str)
+                            except ValueError:
+                                messages.error(request, 'Invalid quantity value. It should be a number.')
+                                return redirect(request.META['HTTP_REFERER'])
+
+                            # Validate the stock quantity
+                            if stock_qty <= 0:
+                                messages.error(request, 'Quantity should be greater than 0.')
+                                return redirect(request.META['HTTP_REFERER'])
+                            elif stock_qty > stock_qty_available:
+                                error_message = (
+                                    f'Quantity should be less than or equal to available stock: '
+                                    f'{stock_purchase_num}. Available quantity: {stock_qty_available}.'
+                                )
+                                messages.error(request, error_message)
+                                return redirect(request.META['HTTP_REFERER'])
+                            else:
+                                # Save the form and process the stock update
+                                form.save()
+                                print("Quotation form is valid and stock updated.")
+                                messages.success(request, 'Stock Updated Successfully')
+
+                        except PkstockpurchasesInfo.DoesNotExist:
+                            # If stock purchase number is not found, pass silently
+                            pass
+
+                    # Save the form regardless of whether the stock purchase number exists
                     form.save()
-                    messages.success(request, 'Stock Updated Successfully')
-                # return redirect('/SMS/pk_quotation_update/'+str(last_id))
+                else:
+                    # If the cost type is not stock-related, simply save the form
+                    form.save()
+                    messages.success(request, 'Quotation Updated Successfully')
+
+                # Redirect after a successful save
                 return redirect('/SMS/pk_quotation_insert/')
+
             else:
-                print("quotation Form is Not Valid")
+                # If the form is not valid
+                print("Quotation form is not valid.")
                 messages.error(request, 'Record Not Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
         else:
@@ -88,10 +125,10 @@ def pk_quotation_add(request,quotation_id=0):
                     stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
                     stock_qty = request.POST.get('pkqt_quantity')
                     stock_qty_available = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
-                    if int(stock_qty) <= 0:
+                    if float(stock_qty) <= 0:
                         messages.error(request, 'Quantity should be greater than 0')
                         return redirect(request.META['HTTP_REFERER'])
-                    elif int(stock_qty) > stock_qty_available:
+                    elif float(stock_qty) > stock_qty_available:
                         error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
                         messages.error(request, error_message)
                         return redirect(request.META['HTTP_REFERER'])

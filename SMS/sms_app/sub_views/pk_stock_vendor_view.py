@@ -19,7 +19,8 @@ def pk_stock_vendor_add(request,stock_vendor_id=0):
                 'psv_form': psv_form,
                 'first_name': first_name,
                 'user_id': user_id,
-                'stockpurchases_list': stockpurchases_list, }
+                'stockpurchases_list': stockpurchases_list,
+                 }
         else:
             pk_vendor_bill = PkstockvebdorInfo.objects.get(pk=stock_vendor_id).spv_vendor_bill
             print('vendor_bill', pk_vendor_bill)
