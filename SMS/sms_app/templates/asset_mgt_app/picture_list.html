@@ -1,39 +1,34 @@
+{% extends "asset_mgt_app/base.html" %}
 {% block content %}
-<br>
-<hr>
-<!--<div class="col-md-2">-->
-<!--    &lt;!&ndash; Button to open the modal &ndash;&gt;-->
-<!--    <button id="open-camera-btn" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target="#pictureModal">-->
-<!--        <i class="fas fa-camera"></i> Capture Image-->
-<!--    </button>-->
-<!--</div>-->
 
-<!-- Include the modal here or load via AJAX -->
-
-
-
-
-
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Picture List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
 
 <div class="container-fluid row">
-<!--    <div class="col-md-1">-->
-<!--        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-<!--            <i class="fas fa-arrow-left"></i> Back-->
-<!--        </a>-->
-<!--    </div>-->
-    <div class="col-md-2">
-        <a href="{% url 'picture_add' %}"  class="btn btn-warning btn-block btn-lg">
-            <i class="fas fa-camera"></i> Capture Image
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
-
-<!--    <div class="col-md-2">-->
-<!--        <a href="" class="btn btn-warning btn-block btn-lg">-->
-<!--            <i class="fas fa-check"></i> Select All-->
-<!--        </a>-->
-<!--    </div>-->
+    <div class="col-md-1">
+        <a href="{% url 'picture_add' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="" class="btn btn-warning btn-block btn-lg">
+            <i class="fas fa-check"></i> Select All
+        </a>
+    </div>
 </div>
-<br>
+<hr>
 
 <div class="container-fluid">
     <table id="picture_list" class="table table-striped table-bordered">

@@ -2,13 +2,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from ..forms import DamagereportaddForm,DamagereportImagesForm
-from ..models import damage_image_type_info,Location_info,DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages
+from ..models import PictureImage,Location_info,DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from ..models import User_extInfo
 from random import randint
-from ..views import capture_image
-from ..models import CameraImage
+from ..views import picture_add
 
 @login_required(login_url='login_page')
 def damagereport_add(request,damagereport_id=0):
@@ -69,7 +68,7 @@ def damagereport_add(request,damagereport_id=0):
             print("I am inside Get add damagereport")
             damagereport_form = DamagereportaddForm()
             damagereportimg_form = DamagereportImagesForm()
-            capture_image(request)
+            picture_add(request)
             context = {
                 'first_name': first_name,
                 'damagereport_form': damagereport_form,
@@ -92,10 +91,8 @@ def damagereport_add(request,damagereport_id=0):
             damagereport_form = DamagereportaddForm(instance=damagereport_info)
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.FILES, instance=damagereportimg_info)
-            images = CameraImage.objects.filter(reference=damagereport_id)
-            image_types = damage_image_type_info.objects.all()  # Fetch all image types
-            for image_type in image_types:
-                print(image_type.id, image_type.dimt_name)
+            picture_list = PictureImage.objects.filter(pi_reference=damagereport_id)  # Fetch all the pictures
+
             context = {
                 'damagereport_form': damagereport_form,
                 'damagereportimg_form':damagereportimg_form,
@@ -110,8 +107,8 @@ def damagereport_add(request,damagereport_id=0):
                 'damage_before_status': damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
-                'images': images,
-                'image_types': image_types,
+                'picture_list': picture_list,
+                'damagereport_id': damagereport_id,
             }
         return render(request, "asset_mgt_app/damagereport_add.html", context)
     else:
@@ -119,7 +116,7 @@ def damagereport_add(request,damagereport_id=0):
             print("I am inside post add damagereport")
             damagereport_form = DamagereportaddForm(request.POST)
             damagereportimg_form=DamagereportImagesForm(request.POST,request.FILES)
-            capture_image(request)
+            picture_add(request)
             if damagereport_form.is_valid():
                 print("Main Form Saved")
                 if damagereportimg_form.is_valid():
@@ -164,7 +161,7 @@ def damagereport_add(request,damagereport_id=0):
             damagereport_form = DamagereportaddForm(request.POST,instance=damagereport_info)
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.POST,request.FILES,instance=damagereportimg_info)
-            capture_image(request)
+            picture_add(request)
             if damagereport_form.is_valid():
                 print("Damage_Report Main Form Saved")
                 damagereport_form.save()

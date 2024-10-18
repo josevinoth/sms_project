@@ -521,8 +521,8 @@ urlpatterns = [
     path('business_revenue_update/<int:business_id>', views.business_revenue_add, name='business_revenue_update'),    # update business_revenue
     path('business_revenue_delete/<int:business_id>', views.business_revenue_delete, name='business_revenue_delete'),    # delete business_revenue
     path('warehouse_send_email/', views.warehouse_send_email_view, name='warehouse_send_email'), #send emails
-    path('capture/', views.capture_image, name='capture_image'),
-    path('images/', views.image_list, name='image_list'),
-    path('image_update/<int:image_id>/', views.capture_image, name='image_update'),
-    path('image_delete/<int:image_id>/', views.image_delete, name='image_delete'),
+    path('picture/', views.picture_add, name='picture_add'),
+    path('picture_list/', views.picture_list, name='picture_list'),
+    path('picture_update/<int:picture_id>/', views.picture_add, name='picture_add'),
+    path('picture_delete/<int:picture_id>/', views.picture_delete, name='picture_delete'),
 ]

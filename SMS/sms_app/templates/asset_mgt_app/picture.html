@@ -1,0 +1,116 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" action="" id="picture_add" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center">
+                        <h3>Add/Update Picture</h3>
+                    </div>
+                    <div class="card-body bg-light">
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Select Image Type</span>
+                                    </div>
+                                    {% render_field form.pi_image_type class="form-control" %}
+                                </div>
+
+                                <input type="hidden" id="pi_reference" name="pi_reference" value="{{ damagereport_id }}">
+                            </div>
+                        </div>
+                        <video id="video" width="" height="" autoplay></video>
+                        <br>
+                        <button id="capture-btn" class="btn btn-primary mt-2" type="button">Capture</button>
+
+                        <!-- Hidden canvas for drawing the captured image -->
+                        <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+                        <img id="captured-image" src="" alt="Captured Image" style="display:none;"/>
+
+                        <!-- Hidden input to store base64 image data -->
+                        <input type="hidden" id="image-data" name="image-data">
+
+                        <!-- Message Display Section -->
+                        <div class="row">
+                            <div class="col text-center">
+                                <div class="message">
+                                    {% if messages %}
+                                    <ul class="messages list-unstyled">
+                                        {% for message in messages %}
+                                            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                                                {{ message }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit and Cancel Buttons -->
+                        <div class="row mt-4">
+                            <div class="col text-center">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Submit
+                                </button>
+                                <a href="{% url 'picture_list' %}" class="btn btn-danger ml-2">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+
+    $(document).ready(function() {
+        // Set the damagereport_id to the hidden reference field
+        document.getElementById("pi_reference").value = '{{ damagereport_id }}';
+    });
+
+    let stream;
+
+    // Access the user's webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(s => {
+            stream = s;
+            document.getElementById('video').srcObject = stream;
+        })
+        .catch(err => {
+            console.log("Error accessing webcam: ", err);
+        });
+
+    // Capture the image from the webcam when the button is clicked
+    document.getElementById('capture-btn').addEventListener('click', function() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const capturedImage = document.getElementById('captured-image');
+        const imageDataInput = document.getElementById('image-data');
+
+        // Draw the current video frame onto the canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert the canvas image to a Base64 string (jpeg format)
+        const dataUrl = canvas.toDataURL('image/jpeg');
+
+        // Display the captured image in the img tag
+        capturedImage.src = dataUrl;
+        capturedImage.style.display = 'block';
+
+        // Set the hidden input field value with the base64 image data
+        imageDataInput.value = dataUrl;
+
+        // Stop the webcam stream after capturing the image
+        stream.getTracks().forEach(track => track.stop());
+    });
+</script>
+{% endblock content %}
