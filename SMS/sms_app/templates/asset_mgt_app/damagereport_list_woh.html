@@ -1,50 +1,69 @@
 {% block content %}
 <br>
 <hr>
-<div class="col-md-2">
-    <!-- Button to open the modal -->
-    <button id="open-camera-btn" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target="#captureModal">
-        <i class="fas fa-camera"></i> Capture Image
-    </button>
-</div>
+<!--<div class="col-md-2">-->
+<!--    &lt;!&ndash; Button to open the modal &ndash;&gt;-->
+<!--    <button id="open-camera-btn" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target="#pictureModal">-->
+<!--        <i class="fas fa-camera"></i> Capture Image-->
+<!--    </button>-->
+<!--</div>-->
 
 <!-- Include the modal here or load via AJAX -->
-{% include 'asset_mgt_app/capture.html' %}
 
+
+
+
+
+
+<div class="container-fluid row">
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
+<!--            <i class="fas fa-arrow-left"></i> Back-->
+<!--        </a>-->
+<!--    </div>-->
+    <div class="col-md-1">
+        <a href="{% url 'picture_add' %}"  class="btn btn-warning btn-block btn-lg">
+            <i class="fas fa-camera"></i> Capture Image
+        </a>
+    </div>
+<!--    <div class="col-md-2">-->
+<!--        <a href="" class="btn btn-warning btn-block btn-lg">-->
+<!--            <i class="fas fa-check"></i> Select All-->
+<!--        </a>-->
+<!--    </div>-->
 </div>
-<br>
+
+
 <div class="container-fluid">
-    <table  id="image_list" class="table table-striped table-bordered">
+    <table id="picture_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
             <th>ID</th>
-            <th>Image Type</th>
-            <th>Image</th>
-            <th>Time</th>
             <th>Reference ID</th>
-            <!--            <th>Edit</th>-->
+            <th>Image</th>
+            <th>Image Type</th>
+            <th>Edit</th>
             <th>Delete</th>
+        </tr>
         </thead>
         <tbody>
-        {% for image in images %}
+        {% for Picture in picture_list %}
         <tr>
-            <td>{{ image.id }}</td>
-            <td>{{ image.image_type}}</td>
-
+            <td>{{ Picture.id }}</td>
+            <td>{{ Picture.pi_reference }}</td>
             <td>
-                {% if image.image %}
-                <img src="{{ image.image.url }}" alt="Captured Image" width="150">
+                {% if Picture.pi_image %}
+                <img src="{{ Picture.pi_image.url }}" alt="Captured Image" width="150">
                 {% endif %}
             </td>
-            <td>{{ image.timestamp }}</td>
-            <td>{{ image.reference}}</td>
-            <!--            <td>-->
-            <!--                <a class="btn btn-primary" href="{% url 'image_update' image.id %}">-->
-            <!--                    <i class="far fa-edit"></i>-->
-            <!--                </a>-->
-            <!--            </td>-->
+            <td>{{ Picture.pi_image_type }}</td>
             <td>
-                <form action="{% url 'image_delete' image.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+                <a class="btn btn-primary" href="{% url 'picture_add' Picture.id %}">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'picture_delete' Picture.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this entry?');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash-alt"></i>
@@ -59,13 +78,14 @@
 
 <script>
     $(document).ready(function() {
-        $('#image_list').DataTable({
-            order: [[0, 'desc']],  // Sorting by the first column (ID) in descending order
+        $('#picture_list').DataTable({
+            order: [0, 'desc'],
             dom: 'lBfrtip',
             buttons: [
                 'copy', 'csv', 'excel', 'print'
-            ],
+            ]
         });
     });
 </script>
+
 {% endblock content %}

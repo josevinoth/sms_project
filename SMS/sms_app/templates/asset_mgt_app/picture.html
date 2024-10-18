@@ -19,12 +19,8 @@
                                     </div>
                                     {% render_field form.pi_image_type class="form-control" %}
                                 </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Select Reference ID</span>
-                                    </div>
-                                    {% render_field form.pi_reference class="form-control" %}
-                                </div>
+
+                                <input type="hidden" id="pi_reference" name="pi_reference" value="{{ damagereport_id }}">
                             </div>
                         </div>
                         <video id="video" width="" height="" autoplay></video>
@@ -74,6 +70,12 @@
 </form>
 
 <script>
+
+    $(document).ready(function() {
+        // Set the damagereport_id to the hidden reference field
+        document.getElementById("pi_reference").value = '{{ damagereport_id }}';
+    });
+
     let stream;
 
     // Access the user's webcam
