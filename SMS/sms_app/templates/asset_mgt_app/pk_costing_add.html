@@ -50,7 +50,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Requirement Item</span>
+										<span class="input-group-text">Job Type</span>
 									</div>
 									{% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_na_dimension_id()" class="form-control disable_a_href" %}
 								</div>
@@ -125,73 +125,85 @@
 							</div>
 							<div class="col-6">
 								<div class="company-side border border-2 border-danger rounded p-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Height_available (inch)</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Height_available (inch)</span>
+										</div>
+										{% render_field form.ct_height id="ct_height" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.ct_height id="ct_height" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Width_available (inch)</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Width_available (inch)</span>
+										</div>
+										{% render_field form.ct_width id="ct_width" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.ct_width id="ct_width" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Length_available (Ft)</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Length_available (Ft)</span>
+										</div>
+										{% render_field form.ct_length id="ct_length" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.ct_length id="ct_length" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">UOM</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">UOM</span>
+										</div>
+										{% render_field form.ct_uom id="ct_uom" class="form-control " %}
 									</div>
-									{% render_field form.ct_uom id="ct_uom" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Size</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Size</span>
+										</div>
+										{% render_field form.ct_size id="ct_size" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.ct_size id="ct_size" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Quantity</span>
+										</div>
+										{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
 									</div>
-									{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total CFT</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Total CFT</span>
+										</div>
+										{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
 									</div>
-									{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Rate/Qty (CFT)</span>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Rate/Qty (CFT)</span>
+										</div>
+										{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
 									</div>
-									{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
-								</div>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Stock Purchase Number</span>
+										</div>
+										{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
+									</div>
 								</div>
 								<br>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Days</span>
+										<span class="input-group-text">Days/Hours</span>
 									</div>
 									{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost</span>
+										<span class="input-group-text">Unit Cost</span>
 									</div>
 									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Purchase Number</span>
+										<span class="input-group-text">Job Type Quantity</span>
 									</div>
-									{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
+									{% render_field form.ct_na_quantity id="ct_na_quantity" readonly="True" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Cost</span>
+									</div>
+									{% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -344,6 +356,7 @@
        });
      });
 </script>
+
 <script>
 	function change_cost_type() {
             var jn=document.getElementById("ct_cost_type").value
@@ -383,6 +396,9 @@
 
 					var totalCost = rate * cft_req;
                     document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+                    var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    var totalboxCost = totalCost * na_quantity;
+                    document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
                 }
                 else if ( jn1==4)
                 {
@@ -415,6 +431,9 @@
 
                     var totalCost = rate * cft_req;
                     document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+                    var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    var totalboxCost = totalCost * na_quantity;
+                    document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
                 }
 
                 else if (jn1==2)
@@ -438,6 +457,9 @@
                     var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
                     var totalCost = rate  * quantity;
                     document.getElementById("ct_total_cost").value=totalCost.toFixed(2);
+                    var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    var totalboxCost = totalCost * na_quantity;
+                    document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
 
                     var stock_desc = document.getElementById("ct_stock_description").value;
 					if (stock_desc == 14 || stock_desc == 15 || stock_desc == 23 || stock_desc == 38 || stock_desc == 39 || stock_desc == 44 || stock_desc == 45 || stock_desc == 46) {
@@ -451,6 +473,9 @@
 
 						var totalCost = rate * sqft;
 						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    	var totalboxCost = totalCost * na_quantity;
+                    	document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
 					}
 					else if (stock_desc == 35) {
 						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
@@ -461,6 +486,9 @@
 
 						var totalCost = rate  * sqft;
                     	document.getElementById("ct_total_cost").value=totalCost.toFixed(2);
+                    	var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    	var totalboxCost = totalCost * na_quantity;
+                    	document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
 					}
 					else if (stock_desc == 6 || stock_desc == 47) {
 						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
@@ -472,11 +500,17 @@
 
 						var totalCost = rate * sqft;
 						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    	var totalboxCost = totalCost * na_quantity;
+                    	document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
 						}
 					else{
 						var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
 						var totalCost = rate * quantity_req;
 						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    	var totalboxCost = totalCost * na_quantity;
+                    	document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
 					}
 
                 }
@@ -500,7 +534,8 @@
                 var days = parseInt(document.getElementById("ct_days").value) || 0;
                 var totalCost = rate  * days * quantity;
                 document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-
+				var totalboxCost = totalCost * quantity;
+                document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
                 var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
                 var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
                 var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
@@ -527,6 +562,9 @@
                 var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
                 var totalCost = rate * quantity;
                 document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+                var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                var totalboxCost = totalCost * na_quantity;
+                document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
             }
             else if (jn==6)
             {
@@ -547,6 +585,9 @@
                 var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
                 var totalCost = rate * quantity;
                 document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+               var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+               var totalboxCost = totalCost * na_quantity;
+               document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
             }
             else if (jn==7)
             {
@@ -570,6 +611,9 @@
                 var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
                 var totalCost = rate;
                 document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+               var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+               var totalboxCost = totalCost * na_quantity;
+               document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
             }
             else
             {
@@ -593,7 +637,9 @@
                 var days = parseInt(document.getElementById("ct_days").value) || 0;
                 var totalCost = rate  * days * quantity;
                 document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
-
+				var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+              	var totalboxCost = totalCost * na_quantity;
+           	    document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
             }
         }
 </script>
@@ -621,8 +667,9 @@
             var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
             var cft = (length*height*width/144)*quantity;
             document.getElementById("ct_cft").value=cft.toFixed(2)
-            var totalCost = rate * cft;
-            document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+            var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+            var totalboxCost = totalCost * na_quantity;
+            document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
         }
 
         else if (jn==2)
@@ -643,8 +690,9 @@
             $('#ct_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
             var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-            var totalCost = rate  * quantity;
-            document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+			var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+         	var totalboxCost = totalCost * na_quantity;
+            document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
         }
     }
 </script>

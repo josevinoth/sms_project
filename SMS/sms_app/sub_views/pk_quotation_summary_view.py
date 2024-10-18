@@ -47,8 +47,8 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 filter_kwargs = {'pkqt_assessment_num': assessment_id, 'pkqt_cost_type': cost_type}
                 if stock_types:
                     filter_kwargs['pkqt_stock_type__in'] = stock_types
-                cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(Sum('pkqt_total_cost'))[
-                    'pkqt_total_cost__sum']
+                cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(Sum('pkqt_totalbox_cost'))[
+                    'pkqt_totalbox_cost__sum']
                 return round(cost, 2) if cost is not None else 0.0
 
             wood_cost = get_aggregate_cost(needassessment_id, 8, [1, 4])
@@ -345,6 +345,7 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
                             ct_customer_name=quotation.pkqt_customer_name,
                             ct_customer_po=pkqt_customer_po,
                             ct_updated_by=request.user,
+                            ct_na_quantity=quotation.pkqt_na_quantity,
                         )
                     messages.success(request, 'Quotation data saved to costing info successfully.')
                 else:

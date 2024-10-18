@@ -276,10 +276,12 @@
 			<th>Created On</th>
 			<th>Assessment Number</th>
 			<th>Customer PO Number</th>
-			<th>Requirement Type</th>
+			<th>Job Type</th>
 			<th>Cost Type</th>
 			<th>Stock Type</th>
 			<th>Stock Description</th>
+			<th>Item Name</th>
+            <th>Item Description</th>
 			<th>Length</th>
 			<th>Width(inch)</th>
 			<th>Height(inch)</th>
@@ -289,6 +291,8 @@
 			<th>CFT</th>
 			<th>Rate</th>
 			<th>Days</th>
+			<th>Job Type Quantity</th>
+            <th>Unit Cost</th>
 			<th>Total Cost</th>
 			<th>Updated at</th>
 			<th>Updated By</th>
@@ -303,6 +307,8 @@
 			<td> {{costinginfo.ct_cost_type}}</td>
 			<td> {{costinginfo.ct_stock_type}}</td>
 			<td> {{costinginfo.ct_stock_description}}</td>
+			<td> {{costinginfo.ct_item}}</td>
+			<td> {{costinginfo.ct_itemdescription}}</td>
 			<td> {{costinginfo.ct_length}}</td>
 			<td> {{costinginfo.ct_width}}</td>
 			<td> {{costinginfo.ct_height}}</td>
@@ -312,7 +318,9 @@
 			<td> {{costinginfo.ct_cft}}</td>
 			<td> {{costinginfo.ct_rate}}</td>
 			<td> {{costinginfo.ct_days}}</td>
+			<td> {{costinginfo.ct_quantity}}</td>
 			<td> {{costinginfo.ct_total_cost}}</td>
+			<td> {{costinginfo.ct_totalbox_cost}}</td>
 			<td> {{costinginfo.ct_updated_at}}</td>
 			<td> {{costinginfo.ct_updated_by}}</td>
 		</tr>
@@ -367,6 +375,7 @@ $(document).ready(function() {
 	}
 
 	$('#costing_list').DataTable({
+		scrollX: true,
         dom: 'lBfrtip',
         buttons: [
             'copy', 'csv', 'excel','print'
