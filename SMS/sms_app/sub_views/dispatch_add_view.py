@@ -317,9 +317,12 @@ def dispatch_gatepass_pdf(request,dispatch_id=0):
     dispatch_num=Dispatch_info.objects.get(id=dispatch_id).dispatch_num
     wh_dispatch_details = (Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num)).order_by('id')
     dispatch_details = (Dispatch_info.objects.filter(dispatch_num=dispatch_num)).order_by('-id')
+    wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name',flat=True).order_by('id').first()
+    print(wh_location)
     context = {
         'dispatch_details': dispatch_details,
         'wh_dispatch_details': wh_dispatch_details,
+        'wh_location': wh_location,
     }
     dispatch_invoice_job_update(dispatch_num)
     file_name=str("WH_Gate_Pass_")+str(dispatch_num)+str(".pdf")
