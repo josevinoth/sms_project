@@ -80,6 +80,18 @@
 											</div>
 											{% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Quantity_Requested</span>
+											</div>
+											{% render_field form.ct_quantity_req id="ct_quantity_req" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">CFT/Sqft_requested</span>
+											</div>
+											{% render_field form.ct_sqrt_req id="ct_sqrt_req" class="form-control disable_a_href" %}
+										</div>
 									</div>
 									<div class="col-4 d-flex align-items-center justify-content-center">
 										<button id="search_wood" type="button" class="btn btn-warning btn-lg"><i class="fas fa-search"></i> Search Item</button>
