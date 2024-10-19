@@ -353,6 +353,7 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
                             ct_customer_po=pkqt_customer_po,
                             ct_updated_by=request.user,
                             ct_na_quantity=quotation.pkqt_na_quantity,
+                            ct_totalbox_cost=quotation.pkqt_totalbox_cost,
                         )
                     messages.success(request, 'Quotation data saved to costing info successfully.')
                 else:

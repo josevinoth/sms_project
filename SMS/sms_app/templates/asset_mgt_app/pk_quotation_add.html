@@ -166,15 +166,15 @@
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Stock Purchase Number</span>
-										</div>
-										{% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
 											<span class="input-group-text">Rate/Qty (CFT)</span>
 										</div>
 										{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control" %}
+									</div>
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Stock Purchase Number</span>
+										</div>
+										{% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control disable_a_href" %}
 									</div>
 								</div>
 								<br>
@@ -194,7 +194,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Job Type Quantity</span>
 									</div>
-									{% render_field form.pkqt_na_quantity id="pkqt_na_quantity" class="form-control " %}
+									{% render_field form.pkqt_na_quantity id="pkqt_na_quantity" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -267,27 +267,309 @@
                 document.getElementById("pkqt_customer_name").value = customer_name;
             }
         change_cost_type();
+        pk_store_na_dimension_id();
         $("#search_wood").on("click", function() {
                 search_wood();
             });
-        pk_store_na_dimension_id();
         });
 </script>
 
 <script>
+	function change_cost_type() {
+            var jn=document.getElementById("pkqt_cost_type").value
+            if ( jn==8)
+            {
+
+        		$('#pkqt_stock_type').removeClass('disable_a_href');
+                var jn1=document.getElementById("pkqt_stock_type").value
+                if (jn1==1)
+                {
+            		$('#pkqt_stock_description').removeClass('disable_a_href');
+                    $('#pkqt_uom').addClass('disable_a_href');
+                    $('#pkqt_quantity').removeClass('disable_a_href');
+                    $('#pkqt_sqrt_req').addClass('disable_a_href');
+                    $('#pkqt_days').addClass('disable_a_href');
+                    document.getElementById("pkqt_days").value=0;
+
+                    var length = parseFloat(document.getElementById("pkqt_length").value) || 0;
+                    var height = parseFloat(document.getElementById("pkqt_height").value) || 0;
+                    var width = parseFloat(document.getElementById("pkqt_width").value) || 0;
+                    var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+                    var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+                    var cft = (length*height*width/144)*quantity;
+                    document.getElementById("pkqt_cft").value=cft.toFixed(2)
+
+                    var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
+                    var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
+                    var height_req = parseFloat(document.getElementById("pkqt_height_req").value) || 0;
+                    var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+                    var cft_req = (length_req*width_req*height_req/144)*quantity_req;
+                    document.getElementById("pkqt_sqrt_req").value=cft_req.toFixed(2)
+
+                    var totalCost = rate * cft_req;
+                    document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                    var totalboxCost = totalCost * na_quantity;
+                    document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+                }
+                else if (jn1==4)
+                {
+          			$('#pkqt_item').addClass('disable_a_href');
+          			$('#pkqt_itemdescription').addClass('disable_a_href');
+            		$('#pkqt_stock_description').removeClass('disable_a_href');
+					$('#pkqt_uom').addClass('disable_a_href');
+					$('#pkqt_quantity').removeClass('disable_a_href');
+					$('#pkqt_sqrt_req').addClass('disable_a_href');
+					$('#pkqt_days').addClass('disable_a_href');
+					document.getElementById("pkqt_days").value = 0;
+
+					var length = parseFloat(document.getElementById("pkqt_length").value) || 0;
+					var height = parseFloat(document.getElementById("pkqt_height").value) || 0;
+					var width = parseFloat(document.getElementById("pkqt_width").value) || 0;
+					var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+					var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+					var cft = length * width * quantity;
+                    document.getElementById("pkqt_cft").value=cft.toFixed(2)
+
+					var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
+					var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
+					var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+					var cft_req = length_req * width_req * quantity_req;
+					document.getElementById("pkqt_sqrt_req").value = cft_req.toFixed(2);
+
+					var totalCost = rate * cft_req;
+					document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+ 					var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+					var totalboxCost = totalCost * na_quantity;
+					document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+                }
+
+                else if (jn1 == 2)
+                {
+					$('#pkqt_quantity_req').removeClass('disable_a_href');
+                    $('#pkqt_item').addClass('disable_a_href');
+                    $('#pkqt_itemdescription').addClass('disable_a_href');
+                    $('#pkqt_stock_description').removeClass('disable_a_href');
+                    $('#pkqt_length').addClass('disable_a_href');
+                    $('#pkqt_width').addClass('disable_a_href');
+                    $('#pkqt_height').addClass('disable_a_href');
+                    $('#pkqt_quantity').removeClass('disable_a_href');
+                    $('#pkqt_sqrt_req').addClass('disable_a_href');
+                    $('#pkqt_cft').addClass('disable_a_href');
+                    document.getElementById("pkqt_cft").value=0;
+                    document.getElementById("pkqt_length").value=0;
+                    document.getElementById("pkqt_width").value=0;
+                    document.getElementById("pkqt_height").value=0;
+                    $('#pkqt_rate').removeClass('disable_a_href');
+                    $('#pkqt_days').addClass('disable_a_href');
+                    var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+                    var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+
+                    var totalCost = rate  * quantity;
+                    document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2);
+ 					var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                    var totalboxCost = totalCost * na_quantity;
+                    document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+
+					var stock_desc = document.getElementById("pkqt_stock_description").value;
+					if (stock_desc == 14 || stock_desc == 15 || stock_desc == 23 || stock_desc == 38 || stock_desc == 39 || stock_desc == 44 || stock_desc == 45 || stock_desc == 46) {
+						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
+						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
+						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+
+						var sqft = ((len_ft * wid_ft * 2) + (wid_ft * heig_ft * 2) + (len_ft * heig_ft * 2)) * quantity_req;
+						document.getElementById("pkqt_sqrt_req").value = sqft.toFixed(2);
+
+						var totalCost = rate * sqft;
+						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+						var totalboxCost = totalCost * na_quantity;
+						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+
+					}
+					else if (stock_desc == 35) {
+						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
+						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+
+						var sqft = len_ft * wid_ft * 2;
+						document.getElementById("pkqt_sqrt_req").value = sqft.toFixed(2);
+
+						var totalCost = rate  * sqft;
+                    	document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+						var totalboxCost = totalCost * na_quantity;
+						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+
+					}
+					else if (stock_desc == 6 || stock_desc == 47) {
+						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
+						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+
+						var sqft = (wid_ft * 2 + heig_ft * 2) * quantity_req;
+						document.getElementById("pkqt_sqrt_req").value = sqft.toFixed(2);
+
+						var totalCost = rate * sqft;
+						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+						var totalboxCost = totalCost * na_quantity;
+						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+						}
+						else
+						{
+						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+						var totalCost = rate * quantity_req;
+						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+						var totalboxCost = totalCost * na_quantity;
+						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+						}
+  				  }
+            }
+            else if (jn==4)
+            {
+                $('#pkqt_stock_type').addClass('disable_a_href');
+                $('#pkqt_stock_description').addClass('disable_a_href');
+                document.getElementById("pkqt_stock_type").value=""
+                document.getElementById("pkqt_stock_description").value=""
+                $('#pkqt_length').addClass('disable_a_href');
+                $('#pkqt_width').addClass('disable_a_href');
+                $('#pkqt_height').addClass('disable_a_href');
+                $('#pkqt_days').removeClass('disable_a_href');
+                $('#pkqt_uom').addClass('disable_a_href');
+                document.getElementById("pkqt_uom").value="";
+                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+                var days = parseInt(document.getElementById("pkqt_days").value) || 0;
+                var totalCost = rate  * days * quantity;
+                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+             	var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                var totalboxCost = totalCost * na_quantity;
+                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+
+				var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
+                var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
+                var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+                var sqft_req = length_req * width_req * quantity_req;
+                document.getElementById("pkqt_sqrt_req").value=sqft_req.toFixed(2)
+            }
+            else if (jn==5)
+            {
+                $('#pkqt_stock_type').addClass('disable_a_href');
+                $('#pkqt_stock_description').addClass('disable_a_href');
+                document.getElementById("pkqt_stock_type").value=""
+                document.getElementById("pkqt_stock_description").value=""
+                $('#pkqt_length').addClass('disable_a_href');
+                $('#pkqt_width').addClass('disable_a_href');
+                $('#pkqt_height').addClass('disable_a_href');
+                $('#pkqt_days').addClass('disable_a_href');
+                $('#pkqt_uom').addClass('disable_a_href');
+                document.getElementById("pkqt_days").value=0;
+                document.getElementById("pkqt_uom").value="";
+                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+                var totalCost = rate * quantity;
+                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+                var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                var totalboxCost = totalCost * na_quantity;
+                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+            }
+            else if (jn==6)
+            {
+                $('#pkqt_stock_type').addClass('disable_a_href');
+                $('#pkqt_stock_description').addClass('disable_a_href');
+                document.getElementById("pkqt_stock_type").value=""
+                document.getElementById("pkqt_stock_description").value=""
+                $('#pkqt_length').addClass('disable_a_href');
+                $('#pkqt_width').addClass('disable_a_href');
+                $('#pkqt_height').addClass('disable_a_href');
+                $('#pkqt_days').addClass('disable_a_href');
+                $('#pkqt_uom').addClass('disable_a_href');
+                document.getElementById("pkqt_uom").value="";
+                document.getElementById("pkqt_days").value=0;
+                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+                var totalCost = rate * quantity;
+                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+                var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                var totalboxCost = totalCost * na_quantity;
+                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+            }
+            else if (jn==7)
+            {
+                $('#pkqt_stock_type').addClass('disable_a_href');
+                $('#pkqt_stock_description').addClass('disable_a_href');
+                document.getElementById("pkqt_stock_type").value=""
+                document.getElementById("pkqt_stock_description").value=""
+                $('#pkqt_length').addClass('disable_a_href');
+                $('#pkqt_width').addClass('disable_a_href');
+                $('#pkqt_height').addClass('disable_a_href');
+                $('#pkqt_days').addClass('disable_a_href');
+                $('#pkqt_quantity').addClass('disable_a_href');
+                $('#pkqt_cft').addClass('disable_a_href');
+                $('#pkqt_uom').addClass('disable_a_href');
+                document.getElementById("pkqt_days").value=0;
+                document.getElementById("pkqt_quantity").value=0;
+                document.getElementById("pkqt_cft").value=0;
+                document.getElementById("pkqt_uom").value="";
+                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+                var totalCost = rate;
+                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+				var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                var totalboxCost = totalCost * na_quantity;
+                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)            }
+            else
+            {
+                $('#pkqt_stock_type').addClass('disable_a_href');
+                $('#pkqt_stock_description').addClass('disable_a_href');
+                document.getElementById("pkqt_stock_type").value=""
+                document.getElementById("pkqt_stock_description").value=""
+                $('#pkqt_length').addClass('disable_a_href');
+                $('#pkqt_width').addClass('disable_a_href');
+                $('#pkqt_height').addClass('disable_a_href');
+                $('#pkqt_days').removeClass('disable_a_href');
+                $('#pkqt_cft').addClass('disable_a_href');
+                $('#pkqt_uom').addClass('disable_a_href');
+                document.getElementById("pkqt_uom").value="";
+                document.getElementById("pkqt_cft").value=0;
+                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
+                var days = parseInt(document.getElementById("pkqt_days").value) || 0;
+                var totalCost = rate  * days * quantity;
+                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+ 				var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                var totalboxCost = totalCost * na_quantity;
+                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+            }
+        }
+</script>
+<script>
 	$("#pkqt_stock_type").change(function () {
        var url = $("#quotation_add").attr("data-stock_description-url");
        var stock_type = $(this).val();
-       if (stock_type == 1 || stock_type == 4)
+       if (stock_type == 1)
        {
          $('#pkqt_item').removeClass('disable_a_href');
+         $('#pkqt_itemdescription').removeClass('disable_a_href');
          $('#pkqt_width_req').removeClass('disable_a_href');
          $('#pkqt_height_req').removeClass('disable_a_href');
          $('#pkqt_length_req').removeClass('disable_a_href');
          $('#pkqt_quantity_req').removeClass('disable_a_href');
        }
-       else if (stock_type == 2){
+        else if (stock_type == 4)
+       {
          $('#pkqt_item').addClass('disable_a_href');
+         $('#pkqt_itemdescription').addClass('disable_a_href');
+         $('#pkqt_width_req').removeClass('disable_a_href');
+         $('#pkqt_height_req').removeClass('disable_a_href');
+         $('#pkqt_length_req').removeClass('disable_a_href');
+         $('#pkqt_quantity_req').removeClass('disable_a_href');
+       }
+       else if (stock_type == 2)
+       {
+         $('#pkqt_item').addClass('disable_a_href');
+         $('#pkqt_itemdescription').addClass('disable_a_href');
          $('#pkqt_width_req').addClass('disable_a_href');
          $('#pkqt_height_req').addClass('disable_a_href');
          $('#pkqt_length_req').addClass('disable_a_href');
@@ -296,6 +578,7 @@
        else
        {
          $('#pkqt_item').addClass('disable_a_href');
+         $('#pkqt_itemdescription').addClass('disable_a_href');
          $('#pkqt_width_req').addClass('disable_a_href');
          $('#pkqt_height_req').addClass('disable_a_href');
          $('#pkqt_length_req').addClass('disable_a_href');
@@ -357,333 +640,13 @@
 </script>
 
 <script>
-	function change_cost_type() {
-            var jn=document.getElementById("pkqt_cost_type").value
-            if ( jn==8)
-            {
-				 $('#pkqt_item').addClass('disable_a_href');
-				 $('#pkqt_width_req').addClass('disable_a_href');
-				 $('#pkqt_height_req').addClass('disable_a_href');
-				 $('#pkqt_length_req').addClass('disable_a_href');
-				 $('#pkqt_quantity_req').addClass('disable_a_href');
-                $('#pkqt_item').addClass('disable_a_href');
-                $('#pkqt_itemdescription').addClass('disable_a_href');
-        		$('#pkqt_stock_type').removeClass('disable_a_href');
-                var jn1=document.getElementById("pkqt_stock_type").value
-                if ( jn1==1)
-                {
-					 $('#pkqt_item').removeClass('disable_a_href');
-					 $('#pkqt_width_req').removeClass('disable_a_href');
-					 $('#pkqt_height_req').removeClass('disable_a_href');
-					 $('#pkqt_length_req').removeClass('disable_a_href');
-					 $('#pkqt_quantity_req').removeClass('disable_a_href');
-                	$('#pkqt_item').removeClass('disable_a_href');
-                    $('#pkqt_itemdescription').removeClass('disable_a_href');
-            		$('#pkqt_stock_description').removeClass('disable_a_href');
-    <!--				$('#pkqt_length').removeClass('disable_a_href');-->
-    <!--				$('#pkqt_width').removeClass('disable_a_href');-->
-    <!--				$('#pkqt_height').removeClass('disable_a_href');-->
-                    $('#pkqt_uom').addClass('disable_a_href');
-                    $('#pkqt_quantity').removeClass('disable_a_href');
-                    $('#pkqt_sqrt_req').addClass('disable_a_href');
-    <!--				$('#pkqt_size').addClass('disable_a_href');-->
-    <!--				document.getElementById("pkqt_size").value=parseFloat(0.0)-->
-                    $('#pkqt_days').addClass('disable_a_href');
-                    document.getElementById("pkqt_days").value=0;
-
-                    var length = parseFloat(document.getElementById("pkqt_length").value) || 0;
-                    var height = parseFloat(document.getElementById("pkqt_height").value) || 0;
-                    var width = parseFloat(document.getElementById("pkqt_width").value) || 0;
-                    var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-                    var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-                    var cft = (length*height*width/144)*quantity;
-                    document.getElementById("pkqt_cft").value=cft.toFixed(2)
-
-                    var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
-                    var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
-                    var height_req = parseFloat(document.getElementById("pkqt_height_req").value) || 0;
-                    var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
-                    var cft_req = (length_req*width_req*height_req/144)*quantity_req;
-                    document.getElementById("pkqt_sqrt_req").value=cft_req.toFixed(2)
-
-                    var totalCost = rate * cft_req;
-                    document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
-                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-                    var totalboxCost = totalCost * na_quantity;
-                    document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-                }
-                else if ( jn1==4)
-                {
-					 $('#pkqt_item').removeClass('disable_a_href');
-					 $('#pkqt_width_req').removeClass('disable_a_href');
-					 $('#pkqt_height_req').removeClass('disable_a_href');
-					 $('#pkqt_length_req').removeClass('disable_a_href');
-					 $('#pkqt_quantity_req').removeClass('disable_a_href');
-                        $('#pkqt_item').addClass('disable_a_href');
-          			    $('#pkqt_item').prop('disabled', true); // Disable the option
-          			    $('#pkqt_itemdescription').addClass('disable_a_href');
-          			    $('#pkqt_itemdescription').prop('disabled', true); // Disable the option
-            			$('#pkqt_stock_description').removeClass('disable_a_href');
-						$('#pkqt_uom').addClass('disable_a_href');
-						$('#pkqt_quantity').removeClass('disable_a_href');
-						$('#pkqt_sqrt_req').addClass('disable_a_href');
-						$('#pkqt_itemdescription').addClass('disable_a_href');
-						$('#pkqt_days').addClass('disable_a_href');
-						document.getElementById("pkqt_days").value = 0;
-
-						var length = parseFloat(document.getElementById("pkqt_length").value) || 0;
-						var height = parseFloat(document.getElementById("pkqt_height").value) || 0;
-						var width = parseFloat(document.getElementById("pkqt_width").value) || 0;
-						var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-						var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-						var cft = length * width * quantity;
-                    	document.getElementById("pkqt_cft").value=cft.toFixed(2)
-
-						var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
-						var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
-						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
-						var cft_req = length_req * width_req * quantity_req;
-						document.getElementById("pkqt_sqrt_req").value = cft_req.toFixed(2);
-
-						var totalCost = rate * cft_req;
-						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
- 						var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-						var totalboxCost = totalCost * na_quantity;
-						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-                }
-
-                else if (jn1 == 2)
-                {
-                     $('#pkqt_item').addClass('disable_a_href');
-					 $('#pkqt_width_req').addClass('disable_a_href');
-					 $('#pkqt_height_req').addClass('disable_a_href');
-					 $('#pkqt_length_req').addClass('disable_a_href');
-					 $('#pkqt_quantity_req').removeClass('disable_a_href');
-
-                    $('#pkqt_item').removeClass('disable_a_href');
-                    $('#pkqt_itemdescription').removeClass('disable_a_href');
-                    $('#pkqt_stock_description').removeClass('disable_a_href');
-                    $('#pkqt_length').addClass('disable_a_href');
-                    $('#pkqt_width').addClass('disable_a_href');
-                    $('#pkqt_height').addClass('disable_a_href');
-    <!--				$('#pkqt_uom').removeClass('disable_a_href');-->
-                    $('#pkqt_quantity').removeClass('disable_a_href');
-                    $('#pkqt_sqrt_req').addClass('disable_a_href');
-    <!--				$('#pkqt_size').removeClass('disable_a_href');-->
-                    $('#pkqt_cft').addClass('disable_a_href');
-                    document.getElementById("pkqt_cft").value=0;
-                    document.getElementById("pkqt_length").value=0;
-                    document.getElementById("pkqt_width").value=0;
-                    document.getElementById("pkqt_height").value=0;
-                    $('#pkqt_rate').removeClass('disable_a_href');
-                    $('#pkqt_days').addClass('disable_a_href');
-                    var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-                    var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-                    var totalCost = rate  * quantity;
-                    document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2);
- 					var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-                    var totalboxCost = totalCost * na_quantity;
-                    document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-
-					var stock_desc = document.getElementById("pkqt_stock_description").value;
-					if (stock_desc == 14 || stock_desc == 15 || stock_desc == 23 || stock_desc == 38 || stock_desc == 39 || stock_desc == 44 || stock_desc == 45 || stock_desc == 46) {
-						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
-						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
-						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
-						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
-
-						var sqft = ((len_ft * wid_ft * 2) + (wid_ft * heig_ft * 2) + (len_ft * heig_ft * 2)) * quantity_req;
-						document.getElementById("pkqt_sqrt_req").value = sqft.toFixed(2);
-
-						var totalCost = rate * sqft;
-						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-						var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-						var totalboxCost = totalCost * na_quantity;
-						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-
-					}
-					else if (stock_desc == 35) {
-						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
-						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
-
-						var sqft = len_ft * wid_ft * 2;
-						document.getElementById("pkqt_sqrt_req").value = sqft.toFixed(2);
-
-						var totalCost = rate  * sqft;
-                    	document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2);
-						var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-						var totalboxCost = totalCost * na_quantity;
-						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-
-					}
-					else if (stock_desc == 6 || stock_desc == 47) {
-						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
-						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
-						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
-
-						var sqft = (wid_ft * 2 + heig_ft * 2) * quantity_req;
-						document.getElementById("pkqt_sqrt_req").value = sqft.toFixed(2);
-
-						var totalCost = rate * sqft;
-						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-						var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-						var totalboxCost = totalCost * na_quantity;
-						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-
-						}
-						else{
-						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
-						var totalCost = rate * quantity_req;
-						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-						var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-						var totalboxCost = totalCost * na_quantity;
-						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-
-						}
-  				  }
-            }
-            else if (jn==4)
-            {
-                $('#pkqt_stock_type').addClass('disable_a_href');
-                $('#pkqt_stock_description').addClass('disable_a_href');
-                document.getElementById("pkqt_stock_type").value=""
-                document.getElementById("pkqt_stock_description").value=""
-                $('#pkqt_length').addClass('disable_a_href');
-                $('#pkqt_width').addClass('disable_a_href');
-                $('#pkqt_height').addClass('disable_a_href');
-                $('#pkqt_days').removeClass('disable_a_href');
-                $('#pkqt_uom').addClass('disable_a_href');
-<!--                $('#pkqt_cft_req').addClass('disable_a_href');-->
-    <!--			$('#pkqt_size').addClass('disable_a_href');-->
-                document.getElementById("pkqt_uom").value="";
-    <!--			document.getElementById("pkqt_size").value=0;-->
-                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-                var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-                var days = parseInt(document.getElementById("pkqt_days").value) || 0;
-                var totalCost = rate  * days * quantity;
-                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
-             	var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-                var totalboxCost = totalCost * na_quantity;
-                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-
-				var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
-                var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
-                var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
-                var sqft_req = length_req * width_req * quantity_req;
-                document.getElementById("pkqt_sqrt_req").value=sqft_req.toFixed(2)
-            }
-            else if (jn==5)
-            {
-                $('#pkqt_stock_type').addClass('disable_a_href');
-                $('#pkqt_stock_description').addClass('disable_a_href');
-                document.getElementById("pkqt_stock_type").value=""
-                document.getElementById("pkqt_stock_description").value=""
-                $('#pkqt_length').addClass('disable_a_href');
-                $('#pkqt_width').addClass('disable_a_href');
-                $('#pkqt_height').addClass('disable_a_href');
-                $('#pkqt_days').addClass('disable_a_href');
-                $('#pkqt_uom').addClass('disable_a_href');
-    <!--			$('#pkqt_size').addClass('disable_a_href');-->
-                document.getElementById("pkqt_days").value=0;
-                document.getElementById("pkqt_uom").value="";
-    <!--			document.getElementById("pkqt_size").value=0;-->
-                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-                var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-                var totalCost = rate * quantity;
-                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
-                var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-                var totalboxCost = totalCost * na_quantity;
-                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-            }
-            else if (jn==6)
-            {
-                $('#pkqt_stock_type').addClass('disable_a_href');
-                $('#pkqt_stock_description').addClass('disable_a_href');
-                document.getElementById("pkqt_stock_type").value=""
-                document.getElementById("pkqt_stock_description").value=""
-                $('#pkqt_length').addClass('disable_a_href');
-                $('#pkqt_width').addClass('disable_a_href');
-                $('#pkqt_height').addClass('disable_a_href');
-                $('#pkqt_days').addClass('disable_a_href');
-                $('#pkqt_uom').addClass('disable_a_href');
-    <!--			$('#pkqt_size').addClass('disable_a_href');-->
-                document.getElementById("pkqt_uom").value="";
-    <!--			document.getElementById("pkqt_size").value=0;-->
-                document.getElementById("pkqt_days").value=0;
-                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-                var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-                var totalCost = rate * quantity;
-                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
-                var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-                var totalboxCost = totalCost * na_quantity;
-                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-            }
-            else if (jn==7)
-            {
-                $('#pkqt_stock_type').addClass('disable_a_href');
-                $('#pkqt_stock_description').addClass('disable_a_href');
-                document.getElementById("pkqt_stock_type").value=""
-                document.getElementById("pkqt_stock_description").value=""
-                $('#pkqt_length').addClass('disable_a_href');
-                $('#pkqt_width').addClass('disable_a_href');
-                $('#pkqt_height').addClass('disable_a_href');
-                $('#pkqt_days').addClass('disable_a_href');
-                $('#pkqt_quantity').addClass('disable_a_href');
-                $('#pkqt_cft').addClass('disable_a_href');
-                $('#pkqt_uom').addClass('disable_a_href');
-    <!--			$('#pkqt_size').addClass('disable_a_href');-->
-                document.getElementById("pkqt_days").value=0;
-                document.getElementById("pkqt_quantity").value=0;
-                document.getElementById("pkqt_cft").value=0;
-                document.getElementById("pkqt_uom").value="";
-    <!--			document.getElementById("pkqt_size").value=0;-->
-                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-                var totalCost = rate;
-                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
-				var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-                var totalboxCost = totalCost * na_quantity;
-                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)            }
-            else
-            {
-                $('#pkqt_stock_type').addClass('disable_a_href');
-                $('#pkqt_stock_description').addClass('disable_a_href');
-                document.getElementById("pkqt_stock_type").value=""
-                document.getElementById("pkqt_stock_description").value=""
-                $('#pkqt_length').addClass('disable_a_href');
-                $('#pkqt_width').addClass('disable_a_href');
-                $('#pkqt_height').addClass('disable_a_href');
-                $('#pkqt_days').removeClass('disable_a_href');
-                $('#pkqt_cft').addClass('disable_a_href');
-                $('#pkqt_uom').addClass('disable_a_href');
-    <!--			$('#pkqt_size').addClass('disable_a_href');-->
-                document.getElementById("pkqt_uom").value="";
-    <!--			document.getElementById("pkqt_size").value=0;-->
-                document.getElementById("pkqt_cft").value=0;
-                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-                var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-                var days = parseInt(document.getElementById("pkqt_days").value) || 0;
-                var totalCost = rate  * days * quantity;
-                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
- 				var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-                var totalboxCost = totalCost * na_quantity;
-                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-            }
-        }
-</script>
-
-<script>
 	function change_charge_type() {
         var jn=document.getElementById("pkqt_stock_type").value
         if ( jn==1)
         {
             $('#pkqt_stock_description').removeClass('disable_a_href');
-    <!--		$('#pkqt_length').removeClass('disable_a_href');-->
-    <!--		$('#pkqt_width').removeClass('disable_a_href');-->
-    <!--		$('#pkqt_height').removeClass('disable_a_href');-->
             $('#pkqt_uom').addClass('disable_a_href');
             $('#pkqt_quantity').removeClass('disable_a_href');
-    <!--		$('#pkqt_size').addClass('disable_a_href');-->
-    <!--		document.getElementById("pkqt_size").value=parseFloat(0.0)-->
             $('#pkqt_days').addClass('disable_a_href');
             document.getElementById("pkqt_days").value=0;
 
@@ -705,9 +668,7 @@
             $('#pkqt_length').addClass('disable_a_href');
             $('#pkqt_width').addClass('disable_a_href');
             $('#pkqt_height').addClass('disable_a_href');
-    <!--		$('#pkqt_uom').removeClass('disable_a_href');-->
             $('#pkqt_quantity').removeClass('disable_a_href');
-    <!--		$('#pkqt_size').removeClass('disable_a_href');-->
             $('#pkqt_cft').addClass('disable_a_href');
             document.getElementById("pkqt_cft").value=0;
             document.getElementById("pkqt_length").value=0;

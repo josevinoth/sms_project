@@ -26,6 +26,7 @@
     <table  id="purchaseorder_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>ID</th>
             <th>Created On</th>
             <th>Assessment Number</th>
             <th>Customer PO Number</th>
@@ -45,6 +46,7 @@
         <tbody>
         {% for purchaseorderinfo in purchaseorder_list %}
         <tr>
+            <td> {{purchaseorderinfo.id}}</td>
             <td> {{purchaseorderinfo.po_created_at}}</td>
             <td> {{purchaseorderinfo.po_assessment_num}}</td>
             <td> {{purchaseorderinfo.po_num}}</td>
@@ -79,7 +81,7 @@
 <script>
     $(document).ready(function() {
     $('#purchaseorder_list').DataTable({
-         order: [0, 'asc' ],
+         order: [0, 'desc' ],
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'

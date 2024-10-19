@@ -7,12 +7,13 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 
 @login_required(login_url='login_page')
-def costing_add(request,costing_id=0):
+def costing_add(request, costing_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
     na_customer_name_id = request.session.get('na_customer_name_id')
     ses_customer_po_id = request.session.get('ses_customer_po_id')
+    print('ses_customer_po_id', ses_customer_po_id)
 
     if request.method == "GET":
         if costing_id == 0:
@@ -28,7 +29,7 @@ def costing_add(request,costing_id=0):
             'na_assessment_num_id': na_assessment_num_id,
             'na_customer_name_id': na_customer_name_id,
             'ses_customer_po_id': ses_customer_po_id,
-            'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id),
+            'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id, ct_customer_po=ses_customer_po_id),
         }
         return render(request, "asset_mgt_app/pk_costing_add.html", context)
 
@@ -40,32 +41,72 @@ def costing_add(request,costing_id=0):
             form = PkcostingForm(request.POST, instance=costing)
 
         if form.is_valid():
+            print('Form is valid')
             cost_type_id = request.POST.get('ct_cost_type')
-            if int(cost_type_id) == 8:
-                stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
-                stock_qty = int(request.POST.get('ct_quantity'))
-                stock_purchase = get_object_or_404(PkstockpurchasesInfo, id=stock_purchase_num_id)
 
-                if stock_qty <= 0:
-                    messages.error(request, 'Quantity should be greater than 0')
-                elif stock_qty > stock_purchase.sp_quantity_reduced:
-                    error_message = f'Quantity should be less than or equal to available stock {stock_purchase.sp_purchase_num} quantity {stock_purchase.sp_quantity_reduced}'
-                    messages.error(request, error_message)
+            if int(cost_type_id) == 8:  # For stock-related cost types
+                stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
+                stock_purchase_num = None
+
+                if stock_purchase_num_id:
+                    try:
+                        # Fetch stock purchase record
+                        stock_purchase = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
+                        stock_purchase_num = stock_purchase.sp_purchase_num
+                        stock_qty_available = stock_purchase.sp_quantity_reduced
+
+                        # Validate quantity
+                        stock_qty_str = request.POST.get('ct_quantity', None)
+                        if not stock_qty_str:
+                            messages.error(request, 'Quantity is required.')
+                            return redirect(request.META['HTTP_REFERER'])
+
+                        try:
+                            stock_qty = int(stock_qty_str)
+                        except ValueError:
+                            messages.error(request, 'Invalid quantity value. It should be a number.')
+                            return redirect(request.META['HTTP_REFERER'])
+
+                        if stock_qty <= 0:
+                            messages.error(request, 'Quantity should be greater than 0.')
+                            return redirect(request.META['HTTP_REFERER'])
+                        elif stock_qty > stock_qty_available:
+                            error_message = (
+                                f'Quantity should be less than or equal to available stock: '
+                                f'{stock_purchase_num}. Available quantity: {stock_qty_available}.'
+                            )
+                            messages.error(request, error_message)
+                        else:
+                            # Stock quantity is valid, proceed to save
+                            form.save()
+                            messages.success(request, 'Stock Updated Successfully')
+
+                    except PkstockpurchasesInfo.DoesNotExist:
+                        # Stock purchase number not found, but still save the record
+                        messages.warning(request, 'Stock Purchase Number not found, but record saved.')
+                        form.save()
+
                 else:
+                    # No stock purchase number provided, still save the record
                     form.save()
-                    messages.success(request, 'Stock Updated Successfully')
-                    return redirect('/SMS/costing_insert/')
+                    messages.success(request, 'Record Saved Successfully')
+
             else:
+                # If cost type is not stock-related, save the record
                 form.save()
-                messages.success(request, 'Stock Updated Successfully')
-                return redirect('/SMS/costing_insert/')
+                messages.success(request, 'Record Saved Successfully')
+
+            return redirect('/SMS/costing_insert/')
+
         else:
-            print("Costing Form is Not Valid")
+            print("Costing form is not valid.")
+            messages.error(request, 'Record Not Updated Successfully')
+
+            # Display form errors
             for field, errors in form.errors.items():
                 for error in errors:
                     print(f"Error in {field}: {error}")
                     messages.error(request, f"Error in {field}: {error}")
-            messages.error(request, 'Record Not Updated Successfully')
 
         return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
 

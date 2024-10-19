@@ -64,13 +64,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field form.ct_stock_type id="ct_stock_type" class="form-control disable_a_href" %}
+									{% render_field form.ct_stock_type id="ct_stock_type" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Description</span>
 									</div>
-									{% render_field form.ct_stock_description id="ct_stock_description" class="form-control disable_a_href" %}
+									{% render_field form.ct_stock_description id="ct_stock_description" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -302,59 +302,11 @@
             }
 
         change_cost_type();
+        pk_store_na_dimension_id();
         $("#search_wood").on("click", function() {
                 search_wood();
             });
         });
-</script>
-
-<script>
-	$("#ct_stock_type").change(function () {
-       var url = $("#costing_add").attr("data-stock_description-url");
-       var stock_type = $(this).val();
-       if (stock_type == 1 || stock_type == 4)
-       {
-         $('#ct_item').removeClass('disable_a_href');
-         $('#ct_width_req').removeClass('disable_a_href');
-         $('#ct_height_req').removeClass('disable_a_href');
-         $('#ct_length_req').removeClass('disable_a_href');
-         $('#ct_quantity_req').removeClass('disable_a_href');
-       }
-       else if (stock_type == 2){
-         $('#ct_item').addClass('disable_a_href');
-         $('#ct_width_req').addClass('disable_a_href');
-         $('#ct_height_req').addClass('disable_a_href');
-         $('#ct_length_req').addClass('disable_a_href');
-         $('#ct_quantity_req').removeClass('disable_a_href');
-       }
-       else
-       {
-           $('#ct_item').addClass('disable_a_href');
-           $('#ct_width_req').addClass('disable_a_href');
-         $('#ct_height_req').addClass('disable_a_href');
-         $('#ct_length_req').addClass('disable_a_href');
-         $('#ct_quantity_req').addClass('disable_a_href');
-       }
-       $.ajax({
-         url: url,
-         data: {
-           'stock_type': stock_type,
-         },
-         success: function (data) {
-             console.log(data);
-             $('#ct_stock_description').removeClass('disable_a_href');
-             $("#ct_stock_description").empty();
-             $('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
-             var ct_stock_description_name=JSON.parse(data)["stock_description"];
-             var ct_stock_description_id=JSON.parse(data)["stock_description_id"];
-             var len = (ct_stock_description_id).length;
-             $('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
-             for( var i = 0; i<len; i++){
-                 $("#ct_stock_description").append("<option value='"+ct_stock_description_id[i]+"'>"+ct_stock_description_name[i]+"</option>");
-             }
-         }
-       });
-     });
 </script>
 
 <script>
@@ -365,17 +317,12 @@
                 document.getElementById("ct_stock_status").value=1
                 $('#ct_stock_type').removeClass('disable_a_href');
                 var jn1=document.getElementById("ct_stock_type").value
-                if ( jn1==1)
+                if (jn1==1)
                 {
                     $('#ct_stock_description').removeClass('disable_a_href');
-    <!--				$('#ct_length').removeClass('disable_a_href');-->
-    <!--				$('#ct_width').removeClass('disable_a_href');-->
-    <!--				$('#ct_height').removeClass('disable_a_href');-->
                     $('#ct_uom').addClass('disable_a_href');
                     $('#ct_quantity').removeClass('disable_a_href');
                     $('#ct_sqrt_req').addClass('disable_a_href');
-    <!--				$('#ct_size').addClass('disable_a_href');-->
-    <!--				document.getElementById("ct_size").value=parseFloat(0.0)-->
                     $('#ct_days').addClass('disable_a_href');
                     document.getElementById("ct_days").value=0;
 
@@ -400,18 +347,14 @@
                     var totalboxCost = totalCost * na_quantity;
                     document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
                 }
-                else if ( jn1==4)
+                else if (jn1==4)
                 {
+                    $('#ct_item').addClass('disable_a_href');
+          			$('#ct_itemdescription').addClass('disable_a_href');
                     $('#ct_stock_description').removeClass('disable_a_href');
-    <!--				$('#ct_length').removeClass('disable_a_href');-->
-    <!--				$('#ct_width').removeClass('disable_a_href');-->
-    <!--				$('#ct_height').removeClass('disable_a_href');-->
                     $('#ct_uom').addClass('disable_a_href');
                     $('#ct_quantity').removeClass('disable_a_href');
                     $('#ct_sqrt_req').addClass('disable_a_href');
-                    $('#ct_height_req').addClass('disable_a_href');
-    <!--				$('#ct_size').addClass('disable_a_href');-->
-    <!--				document.getElementById("ct_size").value=parseFloat(0.0)-->
                     $('#ct_days').addClass('disable_a_href');
                     document.getElementById("ct_days").value=0;
 
@@ -420,13 +363,13 @@
                     var width = parseFloat(document.getElementById("ct_width").value) || 0;
                     var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
                     var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-                    var cft = (length*height*width/144)*quantity;
+                    var cft = (length*width)*quantity;
                     document.getElementById("ct_cft").value=cft.toFixed(2)
 
                     var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
                     var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
                     var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
-                    var cft_req = (length_req*width_req*height_req/144)*quantity_req;
+                    var cft_req = (length_req*width_req)*quantity_req;
                     document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
 
                     var totalCost = rate * cft_req;
@@ -438,14 +381,15 @@
 
                 else if (jn1==2)
                 {
+                	$('#ct_quantity_req').removeClass('disable_a_href');
+                	$('#ct_item').addClass('disable_a_href');
+                    $('#ct_itemdescription').addClass('disable_a_href');
                     $('#ct_stock_description').removeClass('disable_a_href');
                     $('#ct_length').addClass('disable_a_href');
                     $('#ct_width').addClass('disable_a_href');
                     $('#ct_height').addClass('disable_a_href');
-    <!--				$('#ct_uom').removeClass('disable_a_href');-->
-                    $('#ct_quantity_req').removeClass('disable_a_href');
+                    $('#ct_quantity').removeClass('disable_a_href');
                     $('#ct_sqrt_req').addClass('disable_a_href');
-    <!--				$('#ct_size').removeClass('disable_a_href');-->
                     $('#ct_cft').addClass('disable_a_href');
                     document.getElementById("ct_cft").value=0;
                     document.getElementById("ct_length").value=0;
@@ -455,6 +399,7 @@
                     $('#ct_days').addClass('disable_a_href');
                     var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
                     var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+
                     var totalCost = rate  * quantity;
                     document.getElementById("ct_total_cost").value=totalCost.toFixed(2);
                     var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
@@ -526,9 +471,7 @@
                 $('#ct_height').addClass('disable_a_href');
                 $('#ct_days').removeClass('disable_a_href');
                 $('#ct_uom').addClass('disable_a_href');
-    <!--			$('#ct_size').addClass('disable_a_href');-->
                 document.getElementById("ct_uom").value="";
-    <!--			document.getElementById("ct_size").value=0;-->
                 var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
                 var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
                 var days = parseInt(document.getElementById("ct_days").value) || 0;
@@ -539,7 +482,7 @@
                 var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
                 var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
                 var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
-                var cft_req = (length_req*width_req*height_req/144)*quantity_req;
+                var cft_req = (length_req*width_req)*quantity_req;
                 document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
 
             }
@@ -554,10 +497,8 @@
                 $('#ct_height').addClass('disable_a_href');
                 $('#ct_days').addClass('disable_a_href');
                 $('#ct_uom').addClass('disable_a_href');
-    <!--			$('#ct_size').addClass('disable_a_href');-->
                 document.getElementById("ct_days").value=0;
                 document.getElementById("ct_uom").value="";
-    <!--			document.getElementById("ct_size").value=0;-->
                 var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
                 var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
                 var totalCost = rate * quantity;
@@ -577,9 +518,7 @@
                 $('#ct_height').addClass('disable_a_href');
                 $('#ct_days').addClass('disable_a_href');
                 $('#ct_uom').addClass('disable_a_href');
-    <!--			$('#ct_size').addClass('disable_a_href');-->
                 document.getElementById("ct_uom").value="";
-    <!--			document.getElementById("ct_size").value=0;-->
                 document.getElementById("ct_days").value=0;
                 var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
                 var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
@@ -602,12 +541,10 @@
                 $('#ct_quantity').addClass('disable_a_href');
                 $('#ct_cft').addClass('disable_a_href');
                 $('#ct_uom').addClass('disable_a_href');
-    <!--			$('#ct_size').addClass('disable_a_href');-->
                 document.getElementById("ct_days").value=0;
                 document.getElementById("ct_quantity").value=0;
                 document.getElementById("ct_cft").value=0;
                 document.getElementById("ct_uom").value="";
-    <!--			document.getElementById("ct_size").value=0;-->
                 var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
                 var totalCost = rate;
                 document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
@@ -617,7 +554,6 @@
             }
             else
             {
-<!--                document.getElementById("ct_stock_status").value=6-->
                 $('#ct_stock_type').addClass('disable_a_href');
                 $('#ct_stock_description').addClass('disable_a_href');
                 document.getElementById("ct_stock_type").value=""
@@ -628,9 +564,7 @@
                 $('#ct_days').removeClass('disable_a_href');
                 $('#ct_cft').addClass('disable_a_href');
                 $('#ct_uom').addClass('disable_a_href');
-    <!--			$('#ct_size').addClass('disable_a_href');-->
                 document.getElementById("ct_uom").value="";
-    <!--			document.getElementById("ct_size").value=0;-->
                 document.getElementById("ct_cft").value=0;
                 var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
                 var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
@@ -645,18 +579,72 @@
 </script>
 
 <script>
+	$("#ct_stock_type").change(function () {
+       var url = $("#costing_add").attr("data-stock_description-url");
+       var stock_type = $(this).val();
+       if (stock_type == 1)
+       {
+         $('#ct_item').removeClass('disable_a_href');
+         $('#ct_itemdescription').removeClass('disable_a_href');
+         $('#ct_width_req').removeClass('disable_a_href');
+         $('#ct_height_req').removeClass('disable_a_href');
+         $('#ct_length_req').removeClass('disable_a_href');
+         $('#ct_quantity_req').removeClass('disable_a_href');
+       }
+       else if (stock_type == 4)
+       {
+         $('#ct_item').addClass('disable_a_href');
+         $('#ct_itemdescription').addClass('disable_a_href');
+         $('#ct_width_req').removeClass('disable_a_href');
+         $('#ct_height_req').removeClass('disable_a_href');
+         $('#ct_length_req').removeClass('disable_a_href');
+         $('#ct_quantity_req').removeClass('disable_a_href');
+       }
+       else if (stock_type == 2){
+         $('#ct_item').addClass('disable_a_href');
+         $('#ct_width_req').addClass('disable_a_href');
+         $('#ct_height_req').addClass('disable_a_href');
+         $('#ct_length_req').addClass('disable_a_href');
+         $('#ct_quantity_req').removeClass('disable_a_href');
+       }
+       else
+       {
+         $('#ct_item').addClass('disable_a_href');
+         $('#ct_width_req').addClass('disable_a_href');
+         $('#ct_height_req').addClass('disable_a_href');
+         $('#ct_length_req').addClass('disable_a_href');
+         $('#ct_quantity_req').addClass('disable_a_href');
+       }
+       $.ajax({
+         url: url,
+         data: {
+           'stock_type': stock_type,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#ct_stock_description').removeClass('disable_a_href');
+             $("#ct_stock_description").empty();
+             $('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
+             var ct_stock_description_name=JSON.parse(data)["stock_description"];
+             var ct_stock_description_id=JSON.parse(data)["stock_description_id"];
+             var len = (ct_stock_description_id).length;
+             $('#ct_stock_description').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#ct_stock_description").append("<option value='"+ct_stock_description_id[i]+"'>"+ct_stock_description_name[i]+"</option>");
+             }
+         }
+       });
+     });
+</script>
+
+<script>
 	function change_charge_type() {
         var jn=document.getElementById("ct_stock_type").value
         if ( jn==1)
         {
             $('#ct_stock_description').removeClass('disable_a_href');
-    <!--		$('#ct_length').removeClass('disable_a_href');-->
-    <!--		$('#ct_width').removeClass('disable_a_href');-->
-    <!--		$('#ct_height').removeClass('disable_a_href');-->
             $('#ct_uom').addClass('disable_a_href');
             $('#ct_quantity').removeClass('disable_a_href');
-    <!--		$('#ct_size').addClass('disable_a_href');-->
-    <!--		document.getElementById("ct_size").value=parseFloat(0.0)-->
             $('#ct_days').addClass('disable_a_href');
             document.getElementById("ct_days").value=0;
 
@@ -678,9 +666,7 @@
             $('#ct_length').addClass('disable_a_href');
             $('#ct_width').addClass('disable_a_href');
             $('#ct_height').addClass('disable_a_href');
-    <!--		$('#ct_uom').removeClass('disable_a_href');-->
             $('#ct_quantity').removeClass('disable_a_href');
-    <!--		$('#ct_size').removeClass('disable_a_href');-->
             $('#ct_cft').addClass('disable_a_href');
             document.getElementById("ct_cft").value=0;
             document.getElementById("ct_length").value=0;
@@ -700,7 +686,6 @@
 <script>
 	function search_wood()
         {
-    <!--		var stock_description = $(this).val();-->
             var stock_description = $("#ct_stock_description").val();
             var stock_type = $("#ct_stock_type").val();
             var length_req = $("#ct_length_req").val();
@@ -848,22 +833,6 @@
     });
 }
 </script>
-
-<!--<script>-->
-<!--	function pk_store_na_dimension_id() {-->
-<!--    var ct_requirement_id = $('#ct_requirement').val();-->
-<!--    $.ajax({-->
-<!--        url: '{% url 'pk_store_po_dimension_id' %}',-->
-<!--        type: 'GET',-->
-<!--        data: {'ct_requirement_id': ct_requirement_id},-->
-<!--        dataType: 'json',-->
-<!--        success: function(data) {-->
-<!--        	var po_dimension_box_val=data.po_dimension_box_val;-->
-<!--        	document.getElementById("ct_requirement_size").value=po_dimension_box_val;-->
-<!--        }-->
-<!--    });-->
-<!--}-->
-<!--</script>-->
 <script>
 	function pk_store_na_dimension_id() {
         var ct_requirement_id = $('#ct_requirement').val();
@@ -889,6 +858,8 @@
                 document.getElementById("pkqt_w").value = w;
                 var h = parseFloat(data.na_height);
                 document.getElementById("pkqt_h").value = h;
+                var na_quantity = parseFloat(data.na_quantity);
+                document.getElementById("ct_na_quantity").value = na_quantity;
                 calculateDimensions(na_uom_id_val,l,w,h);
             }
         });

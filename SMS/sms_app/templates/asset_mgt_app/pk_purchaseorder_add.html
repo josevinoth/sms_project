@@ -74,26 +74,26 @@
 									</div>
 									{% render_field form.po_payment_terms id="po_payment_terms"  class="form-control " %}
 								</div>
+								<div class="input-group input-group-sm mb-3 bg-dark block">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Attachment</span>
+									</div>
+									{% render_field form.po_attach id="po_attach"  class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3 bg-dark block">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Status</span>
+									</div>
+									{% render_field form.po_status id="po_status"  class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3 bg-dark block">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Comment Box</span>
+									</div>
+									{% render_field form.po_comments_box id="po_comments_box" class="form-control"   %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
 								{% render_field form.po_updated_by id="po_updated_by" hidden="True" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3 bg-dark block">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Attachment</span>
-								</div>
-								{% render_field form.po_attach id="po_attach"  class="form-control " %}
-							</div>
-							<div class="input-group input-group-sm mb-3 bg-dark block">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Status</span>
-								</div>
-								{% render_field form.po_status id="po_status"  class="form-control " %}
-							</div>
-							<div class="input-group input-group-sm mb-3 bg-dark block">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Comment Box</span>
-								</div>
-								{% render_field form.po_comments_box id="po_comments_box" class="form-control"   %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 							</div>
 						</div>
 						<div class="row">
