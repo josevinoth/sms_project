@@ -187,7 +187,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Job Type Quantity</span>
 									</div>
-									{% render_field form.ct_na_quantity id="ct_na_quantity" readonly="True" class="form-control" %}
+									{% render_field form.ct_na_quantity id="ct_na_quantity" readonly="True" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -382,11 +382,11 @@
             if ( jn==8)
             {
                 document.getElementById("ct_stock_status").value=1
-                $('#ct_stock_type').removeClass('disable_a_href');
+                $('#ct_stock_type').addClass('disable_a_href');
                 var jn1=document.getElementById("ct_stock_type").value
                 if (jn1==1)
                 {
-                    $('#ct_stock_description').removeClass('disable_a_href');
+                    $('#ct_stock_description').addClass('disable_a_href');
                     $('#ct_uom').addClass('disable_a_href');
                     $('#ct_quantity').removeClass('disable_a_href');
                     $('#ct_sqrt_req').addClass('disable_a_href');
@@ -418,7 +418,7 @@
                 {
                     $('#ct_item').addClass('disable_a_href');
           			$('#ct_itemdescription').addClass('disable_a_href');
-                    $('#ct_stock_description').removeClass('disable_a_href');
+                    $('#ct_stock_description').addClass('disable_a_href');
                     $('#ct_uom').addClass('disable_a_href');
                     $('#ct_quantity').removeClass('disable_a_href');
                     $('#ct_sqrt_req').addClass('disable_a_href');
@@ -448,10 +448,10 @@
 
                 else if (jn1==2)
                 {
-                	$('#ct_quantity_req').removeClass('disable_a_href');
+                	$('#ct_quantity_req').addClass('disable_a_href');
                 	$('#ct_item').addClass('disable_a_href');
                     $('#ct_itemdescription').addClass('disable_a_href');
-                    $('#ct_stock_description').removeClass('disable_a_href');
+                    $('#ct_stock_description').addClass('disable_a_href');
                     $('#ct_length').addClass('disable_a_href');
                     $('#ct_width').addClass('disable_a_href');
                     $('#ct_height').addClass('disable_a_href');
