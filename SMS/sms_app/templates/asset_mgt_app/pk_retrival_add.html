@@ -154,7 +154,7 @@
 										<div class="input-group-prepend">
 											<span class="input-group-text">Quantity</span>
 										</div>
-										{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control disable_a_href " %}
+										{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
@@ -166,7 +166,7 @@
 										<div class="input-group-prepend">
 											<span class="input-group-text">Rate/Qty (CFT)</span>
 										</div>
-										{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
@@ -187,7 +187,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Job Type Quantity</span>
 									</div>
-									{% render_field form.ct_na_quantity id="ct_na_quantity" readonly="True" class="form-control disable_a_href" %}
+									{% render_field form.ct_na_quantity id="ct_na_quantity" readonly="True" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -274,7 +274,6 @@
 	function search_wood()
         {
             var stock_description = $("#ct_stock_description").val();
-            alert(stock_description)
             var stock_type = $("#ct_stock_type").val();
             var length_req = $("#ct_length_req").val();
             var width_req = $("#ct_width_req").val();
@@ -370,5 +369,279 @@
             });
         }
 </script>
+<script>
+	function change_cost_type() {
+			var CFT_Sqft_Req_unit = parseFloat(document.getElementById("ct_sqrt_req").value);
+			var job_type_qty = parseFloat(document.getElementById("ct_na_quantity").value);
+			var CFT_Sqft_Req_total = parseFloat(CFT_Sqft_Req_unit * job_type_qty);
 
+			// Set the calculated value to the span
+			document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total;
+
+            var jn=document.getElementById("ct_cost_type").value
+            if ( jn==8)
+            {
+                document.getElementById("ct_stock_status").value=1
+                $('#ct_stock_type').removeClass('disable_a_href');
+                var jn1=document.getElementById("ct_stock_type").value
+                if (jn1==1)
+                {
+                    $('#ct_stock_description').removeClass('disable_a_href');
+                    $('#ct_uom').addClass('disable_a_href');
+                    $('#ct_quantity').removeClass('disable_a_href');
+                    $('#ct_sqrt_req').addClass('disable_a_href');
+                    $('#ct_days').addClass('disable_a_href');
+                    document.getElementById("ct_days").value=0;
+
+                    var length = parseFloat(document.getElementById("ct_length").value) || 0;
+                    var height = parseFloat(document.getElementById("ct_height").value) || 0;
+                    var width = parseFloat(document.getElementById("ct_width").value) || 0;
+                    var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                    var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                    var cft = (length*height*width/144)*quantity;
+                    document.getElementById("ct_cft").value=cft.toFixed(2)
+
+                    var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
+                    var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
+                    var height_req = parseFloat(document.getElementById("ct_height_req").value) || 0;
+                    var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+                    var cft_req = (length_req*width_req*height_req/144)*quantity_req;
+                    document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
+
+					var totalCost = rate * cft_req;
+                    document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+                    var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    var totalboxCost = totalCost * na_quantity;
+                    document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+                }
+                else if (jn1==4)
+                {
+                    $('#ct_item').addClass('disable_a_href');
+          			$('#ct_itemdescription').addClass('disable_a_href');
+                    $('#ct_stock_description').removeClass('disable_a_href');
+                    $('#ct_uom').addClass('disable_a_href');
+                    $('#ct_quantity').removeClass('disable_a_href');
+                    $('#ct_sqrt_req').addClass('disable_a_href');
+                    $('#ct_days').addClass('disable_a_href');
+                    document.getElementById("ct_days").value=0;
+
+                    var length = parseFloat(document.getElementById("ct_length").value) || 0;
+                    var height = parseFloat(document.getElementById("ct_height").value) || 0;
+                    var width = parseFloat(document.getElementById("ct_width").value) || 0;
+                    var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                    var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                    var cft = (length*width)*quantity;
+                    document.getElementById("ct_cft").value=cft.toFixed(2)
+
+                    var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
+                    var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
+                    var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+                    var cft_req = (length_req*width_req)*quantity_req;
+                    document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
+
+                    var totalCost = rate * cft_req;
+                    document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+                    var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    var totalboxCost = totalCost * na_quantity;
+                    document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+                }
+
+                else if (jn1==2)
+                {
+                	$('#ct_quantity_req').removeClass('disable_a_href');
+                	$('#ct_item').addClass('disable_a_href');
+                    $('#ct_itemdescription').addClass('disable_a_href');
+                    $('#ct_stock_description').removeClass('disable_a_href');
+                    $('#ct_length').addClass('disable_a_href');
+                    $('#ct_width').addClass('disable_a_href');
+                    $('#ct_height').addClass('disable_a_href');
+                    $('#ct_quantity').removeClass('disable_a_href');
+                    $('#ct_sqrt_req').addClass('disable_a_href');
+                    $('#ct_cft').addClass('disable_a_href');
+                    document.getElementById("ct_cft").value=0;
+                    document.getElementById("ct_length").value=0;
+                    document.getElementById("ct_width").value=0;
+                    document.getElementById("ct_height").value=0;
+                    $('#ct_rate').removeClass('disable_a_href');
+                    $('#ct_days').addClass('disable_a_href');
+                    var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                    var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+
+                    var totalCost = rate  * quantity;
+                    document.getElementById("ct_total_cost").value=totalCost.toFixed(2);
+                    var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    var totalboxCost = totalCost * na_quantity;
+                    document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+
+                    var stock_desc = document.getElementById("ct_stock_description").value;
+					if (stock_desc == 14 || stock_desc == 15 || stock_desc == 23 || stock_desc == 38 || stock_desc == 39 || stock_desc == 44 || stock_desc == 45 || stock_desc == 46) {
+						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
+						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
+						var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+
+						var sqft = ((len_ft * wid_ft * 2) + (wid_ft * heig_ft * 2) + (len_ft * heig_ft * 2)) * quantity_req;
+						document.getElementById("ct_sqrt_req").value = sqft.toFixed(2);
+
+						var totalCost = rate * sqft;
+						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    	var totalboxCost = totalCost * na_quantity;
+                    	document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+					}
+					else if (stock_desc == 35) {
+						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
+						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+
+						var sqft = len_ft * wid_ft * 2;
+						document.getElementById("ct_sqrt_req").value = sqft.toFixed(2);
+
+						var totalCost = rate  * sqft;
+                    	document.getElementById("ct_total_cost").value=totalCost.toFixed(2);
+                    	var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    	var totalboxCost = totalCost * na_quantity;
+                    	document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+					}
+					else if (stock_desc == 6 || stock_desc == 47) {
+						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
+						var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+
+						var sqft = (wid_ft * 2 + heig_ft * 2) * quantity_req;
+						document.getElementById("ct_sqrt_req").value = sqft.toFixed(2);
+
+						var totalCost = rate * sqft;
+						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    	var totalboxCost = totalCost * na_quantity;
+                    	document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+						}
+					else{
+						var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+						var totalCost = rate * quantity_req;
+						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    	var totalboxCost = totalCost * na_quantity;
+                    	document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+					}
+
+                }
+            }
+            else if (jn==4)
+            {
+                $('#ct_stock_type').addClass('disable_a_href');
+                $('#ct_stock_description').addClass('disable_a_href');
+                document.getElementById("ct_stock_type").value=""
+                document.getElementById("ct_stock_description").value=""
+                $('#ct_length').addClass('disable_a_href');
+                $('#ct_width').addClass('disable_a_href');
+                $('#ct_height').addClass('disable_a_href');
+                $('#ct_days').removeClass('disable_a_href');
+                $('#ct_uom').addClass('disable_a_href');
+                document.getElementById("ct_uom").value="";
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                var days = parseInt(document.getElementById("ct_days").value) || 0;
+                var totalCost = rate  * days * quantity;
+                document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+				var totalboxCost = totalCost * quantity;
+                document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+                var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
+                var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
+                var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+                var cft_req = (length_req*width_req)*quantity_req;
+                document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
+
+            }
+            else if (jn==5)
+            {
+                $('#ct_stock_type').addClass('disable_a_href');
+                $('#ct_stock_description').addClass('disable_a_href');
+                document.getElementById("ct_stock_type").value=""
+                document.getElementById("ct_stock_description").value=""
+                $('#ct_length').addClass('disable_a_href');
+                $('#ct_width').addClass('disable_a_href');
+                $('#ct_height').addClass('disable_a_href');
+                $('#ct_days').addClass('disable_a_href');
+                $('#ct_uom').addClass('disable_a_href');
+                document.getElementById("ct_days").value=0;
+                document.getElementById("ct_uom").value="";
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                var totalCost = rate * quantity;
+                document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+                var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                var totalboxCost = totalCost * na_quantity;
+                document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+            }
+            else if (jn==6)
+            {
+                $('#ct_stock_type').addClass('disable_a_href');
+                $('#ct_stock_description').addClass('disable_a_href');
+                document.getElementById("ct_stock_type").value=""
+                document.getElementById("ct_stock_description").value=""
+                $('#ct_length').addClass('disable_a_href');
+                $('#ct_width').addClass('disable_a_href');
+                $('#ct_height').addClass('disable_a_href');
+                $('#ct_days').addClass('disable_a_href');
+                $('#ct_uom').addClass('disable_a_href');
+                document.getElementById("ct_uom").value="";
+                document.getElementById("ct_days").value=0;
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                var totalCost = rate * quantity;
+                document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+               var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+               var totalboxCost = totalCost * na_quantity;
+               document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+            }
+            else if (jn==7)
+            {
+                $('#ct_stock_type').addClass('disable_a_href');
+                $('#ct_stock_description').addClass('disable_a_href');
+                document.getElementById("ct_stock_type").value=""
+                document.getElementById("ct_stock_description").value=""
+                $('#ct_length').addClass('disable_a_href');
+                $('#ct_width').addClass('disable_a_href');
+                $('#ct_height').addClass('disable_a_href');
+                $('#ct_days').addClass('disable_a_href');
+                $('#ct_quantity').addClass('disable_a_href');
+                $('#ct_cft').addClass('disable_a_href');
+                $('#ct_uom').addClass('disable_a_href');
+                document.getElementById("ct_days").value=0;
+                document.getElementById("ct_quantity").value=0;
+                document.getElementById("ct_cft").value=0;
+                document.getElementById("ct_uom").value="";
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var totalCost = rate;
+                document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+               var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+               var totalboxCost = totalCost * na_quantity;
+               document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+            }
+            else
+            {
+                $('#ct_stock_type').addClass('disable_a_href');
+                $('#ct_stock_description').addClass('disable_a_href');
+                document.getElementById("ct_stock_type").value=""
+                document.getElementById("ct_stock_description").value=""
+                $('#ct_length').addClass('disable_a_href');
+                $('#ct_width').addClass('disable_a_href');
+                $('#ct_height').addClass('disable_a_href');
+                $('#ct_days').removeClass('disable_a_href');
+                $('#ct_cft').addClass('disable_a_href');
+                $('#ct_uom').addClass('disable_a_href');
+                document.getElementById("ct_uom").value="";
+                document.getElementById("ct_cft").value=0;
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
+                var days = parseInt(document.getElementById("ct_days").value) || 0;
+                var totalCost = rate  * days * quantity;
+                document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+				var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+              	var totalboxCost = totalCost * na_quantity;
+           	    document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+            }
+        }
+</script>
 {% endblock content %}
