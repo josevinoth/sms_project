@@ -53,8 +53,6 @@ def pk_quotation_add(request,quotation_id=0):
 
                 if int(cost_type_id) == 8:  # For stock-related cost types
                     stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
-                    print('stock_purchase_num_id:', stock_purchase_num_id)
-
                     stock_purchase_num = None  # Initialize as None in case it's not found
 
                     if stock_purchase_num_id:

@@ -203,15 +203,22 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
         k=i.id
         qty=i.nad_quantity
         total_cost_wom=PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id,pkqt_requirement=i).aggregate(total_cost=Sum('pkqt_total_cost'))['total_cost'] or 0
+        print('total_cost_wom',total_cost_wom)
         total_cost=total_cost_wom+(total_cost_wom*margin/100)
-        Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost,2))
         try:
-            Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost*qty,2))
+            Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost,2))
         except:
             Nadimension.objects.filter(pk=k).update(nad_cost_unit=0)
-        total_sum=round((total_sum+total_cost),2)
-    gst=round(total_sum*gst_val/100,2)
-    final_cost=round((total_sum+gst),2)
+        try:
+            Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost*qty,2))
+        except:
+            Nadimension.objects.filter(pk=k).update(nad_cost_total=0)
+        # total_sum=round((total_sum+total_cost),2)
+    totalbox_cost = Nadimension.objects.filter(nad_assess_num=needassessment_id).aggregate(totalbox_cost=Sum('nad_cost_total'))['totalbox_cost'] or 0
+
+    print('totalbox_cost',totalbox_cost)
+    gst=round(totalbox_cost*gst_val/100,2)
+    final_cost=round((totalbox_cost+gst),2)
     today = datetime.now()
     formatted_date = today.strftime("%d-%b-%Y")
     context = {
@@ -222,7 +229,7 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
         'client_scope': client_scope,
         'bvm_scope': bvm_scope,
         'quotation': quotation,
-        'total_sum': total_sum,
+        'total_sum': totalbox_cost,
         'gst': gst,
         'gst_val': gst_val,
         'final_cost': final_cost,
@@ -346,6 +353,7 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
                             ct_customer_po=pkqt_customer_po,
                             ct_updated_by=request.user,
                             ct_na_quantity=quotation.pkqt_na_quantity,
+                            ct_totalbox_cost=quotation.pkqt_totalbox_cost,
                         )
                     messages.success(request, 'Quotation data saved to costing info successfully.')
                 else:

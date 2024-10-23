@@ -44,7 +44,11 @@ def pk_retrival_add(request,retrival_id=0):
                 form.save()
                 last_id = retrival_id
                 stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
-                stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
+                try:
+                    stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
+                except:
+                    messages.error(request, 'Please select a stock with purchase number')
+                    return redirect(request.META['HTTP_REFERER'])
                 stock_status = (PkcostingInfo.objects.get(id=retrival_id)).ct_stock_status.id
                 if stock_status ==2:
                     messages.success(request, 'Stock Successfully Retrieved & Supplied')

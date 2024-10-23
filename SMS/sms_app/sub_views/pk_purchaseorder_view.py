@@ -65,7 +65,9 @@ def purchaseorder_add(request,purchaseorder_id=0):
             else:
                 print("Duplicate customer PO found")
                 messages.error(request, 'Please enter a Unique PO Number.')
-            return redirect(request.META['HTTP_REFERER'])
+            last_id = PkpurchaseorderInfo.objects.order_by('-id').values_list('id', flat=True).first()
+            # return redirect(request.META['HTTP_REFERER'])
+            return redirect('/SMS/purchaseorder_update/' + str(last_id))
         else:
             print("PkpurchaseorderInfo Form is Not Valid")
             messages.error(request, 'Record Not Updated Successfully')

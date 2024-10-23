@@ -105,8 +105,16 @@
 <header>
   <img src="media/Company_Logo.png" alt="home" class="centered-image">
   <h3>BVM Storage Solutions Pvt Ltd</h3>
-  <p>Address 70, Adam Nagar Road Nagalkeni, Chrompet Chennai 600 044</p>
+  {% if wh_location == "BVM Chennai" %}
+    <p>Address 70, Adam Nagar Road Nagalkeni | Chrompet | Chennai - 600 044</p>
+  {% elif wh_location == "BVM Benguluru" %}
+    <p>42/9, 42/10, Meenakunte Hosur | Doddajala Gate & Post | New Airport Road | Bangalore - 562 157</p>
+    <p>GST NUMBER: 29AAECB5186B1ZQ</p>
+  {% else %}
+    <p>Default Address or Location not specified</p>
+  {% endif %}
 </header>
+
 <hr class="report_hrItem"/>
 {% block content %}
 

@@ -42,7 +42,7 @@ def costingsummary_add(request,costingsummary_id=0):
             request.session['ses_customer_po_id'] = customer_po_id
             request.session['ses_costing_summary_id'] = costingsummary_id
             form = PkcostingsummaryForm(instance=costingsummary)
-            costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id)
+            costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_customer_po=customer_po_id)
             # wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_cost_type=8,ct_stock_type=1,ct_stock_type=4).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
             wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_stock_type__in=[1, 4],ct_cost_type=8).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
             if wood_cost is not None:
