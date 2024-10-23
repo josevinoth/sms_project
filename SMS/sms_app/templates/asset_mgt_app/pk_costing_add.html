@@ -88,58 +88,65 @@
 									<div class="col-9">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Height_requested (inch)</span>
+												<span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
 											</div>
 											{% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Width_requested (inch)</span>
+												<span class="input-group-text">Width Req (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
 											</div>
 											{% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Length_requested (Ft)</span>
+												<span class="input-group-text">Length Req (ft) </span>
 											</div>
 											{% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Quantity_requested</span>
+												<span class="input-group-text">Quantity Req</span>
 											</div>
 											{% render_field form.ct_quantity_req id="ct_quantity_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">CFT/Sqft_requested<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
+												<span class="input-group-text">CFT/Sqft Req <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
 											</div>
 											{% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Days/Hours</span>
+											</div>
+											{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control " %}
+										</div>
 									</div>
 									<div class="col-3 d-flex align-items-center justify-content-center">
-										<button id="search_wood" type="button" class="btn btn-warning btn-lg"><i class="fas fa-search"></i> Search Item</button>
+										<button id="search_wood" type="button" class="btn btn-primary btn-lg"><i class="fas fa-search"></i> Search Item</button>
 									</div>
 								</div>
 
 							</div>
 							<div class="col-6">
-								<div class="company-side border border-2 border-danger rounded p-3">
+								<div class="border border-2 border-danger rounded p-3">
+									<h3 class="text-dark text-center align-middle rounded bg-info p-1">Available Stock</h3>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Height_available (inch)</span>
+											<span class="input-group-text">Height (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
 										</div>
 										{% render_field form.ct_height id="ct_height" class="form-control disable_a_href" %}
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Width_available (inch)</span>
+											<span class="input-group-text">Width (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
 										</div>
 										{% render_field form.ct_width id="ct_width" class="form-control disable_a_href" %}
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Length_available (Ft)</span>
+											<span class="input-group-text">Length (Ft)</span>
 										</div>
 										{% render_field form.ct_length id="ct_length" class="form-control disable_a_href" %}
 									</div>
@@ -163,7 +170,7 @@
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Total CFT</span>
+											<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
 										</div>
 										{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
 									</div>
@@ -183,12 +190,6 @@
 								<br>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Days/Hours</span>
-									</div>
-									{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Unit Cost</span>
 									</div>
 									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
@@ -198,6 +199,12 @@
 										<span class="input-group-text">Job Type Quantity</span>
 									</div>
 									{% render_field form.ct_na_quantity id="ct_na_quantity" readonly="True" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total CFT/SQFT Required</span>
+									</div>
+									<span id="ct_cft_sqft_req" class="form-control disable_a_href"></span>
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -212,7 +219,6 @@
 									{% render_field form.ct_stock_status id="ct_stock_status" class="form-control disable_a_href" %}
 								</div>
 								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
-
 							</div>
 						</div>
 						<div class="row">
@@ -310,6 +316,13 @@
 
 <script>
 	function change_cost_type() {
+			var CFT_Sqft_Req_unit = parseFloat(document.getElementById("ct_sqrt_req").value);
+			var job_type_qty = parseFloat(document.getElementById("ct_na_quantity").value);
+			var CFT_Sqft_Req_total = parseFloat(CFT_Sqft_Req_unit * job_type_qty);
+
+			// Set the calculated value to the span
+			document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total;
+
             var jn=document.getElementById("ct_cost_type").value
             if ( jn==8)
             {
@@ -634,52 +647,6 @@
          }
        });
      });
-</script>
-
-<script>
-	function change_charge_type() {
-        var jn=document.getElementById("ct_stock_type").value
-        if ( jn==1)
-        {
-            $('#ct_stock_description').removeClass('disable_a_href');
-            $('#ct_uom').addClass('disable_a_href');
-            $('#ct_quantity').removeClass('disable_a_href');
-            $('#ct_days').addClass('disable_a_href');
-            document.getElementById("ct_days").value=0;
-
-            var length = parseFloat(document.getElementById("ct_length").value) || 0;
-            var height = parseFloat(document.getElementById("ct_height").value) || 0;
-            var width = parseFloat(document.getElementById("ct_width").value) || 0;
-            var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-            var cft = (length*height*width/144)*quantity;
-            document.getElementById("ct_cft").value=cft.toFixed(2)
-            var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
-            var totalboxCost = totalCost * na_quantity;
-            document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
-        }
-
-        else if (jn==2)
-        {
-            $('#ct_stock_description').removeClass('disable_a_href');
-            $('#ct_length').addClass('disable_a_href');
-            $('#ct_width').addClass('disable_a_href');
-            $('#ct_height').addClass('disable_a_href');
-            $('#ct_quantity').removeClass('disable_a_href');
-            $('#ct_cft').addClass('disable_a_href');
-            document.getElementById("ct_cft").value=0;
-            document.getElementById("ct_length").value=0;
-            document.getElementById("ct_width").value=0;
-            document.getElementById("ct_height").value=0;
-            $('#ct_rate').removeClass('disable_a_href');
-            $('#ct_days').addClass('disable_a_href');
-            var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("ct_quantity").value) || 0;
-			var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
-         	var totalboxCost = totalCost * na_quantity;
-            document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
-        }
-    }
 </script>
 
 <script>

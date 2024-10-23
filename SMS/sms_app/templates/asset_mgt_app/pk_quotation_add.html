@@ -85,58 +85,65 @@
 									<div class="col-9">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Height_requested<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood MM. For Plywood Inch"></i></span>
+												<span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
 											</div>
 											{% render_field form.pkqt_height_req id="pkqt_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Width_requested (inch)</span>
+												<span class="input-group-text">Width Req (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
 											</div>
 											{% render_field form.pkqt_width_req id="pkqt_width_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Length_requested<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood Feet. For Plywood Inch"></i></span>
+												<span class="input-group-text">Length Req (ft)</span>
 											</div>
 											{% render_field form.pkqt_length_req id="pkqt_length_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Quantity_requested</span>
+												<span class="input-group-text">Quantity Req</span>
 											</div>
 											{% render_field form.pkqt_quantity_req id="pkqt_quantity_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">CFT/Sqft_requested<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
+												<span class="input-group-text">CFT/Sqft Req <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
 											</div>
 											{% render_field form.pkqt_sqrt_req id="pkqt_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Days/Hours</span>
+											</div>
+											{% render_field form.pkqt_days id="pkqt_days" onchange="change_cost_type()" class="form-control " %}
 										</div>
 
 									</div>
 									<div class="col-3 d-flex align-items-center justify-content-center">
-										<button id="search_wood" type="button" class="btn btn-warning btn-lg"><i class="fas fa-search"></i> Search Item</button>
+										<button id="search_wood" type="button" class="btn btn-lg btn-primary"><i class="fas fa-search"></i> Search Item</button>
 									</div>
 								</div>
 							</div>
 							<div class="col-6">
-								<div class="company-side border border-danger rounded p-3" style="border-width: 225px;">
+								<div class=" border border-danger rounded p-3" >
+									<h3 class="text-dark text-center align-middle rounded bg-info p-1">Available Stock</h3>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Height_available (inch)</span>
+											<span class="input-group-text">Height (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
 										</div>
 										{% render_field form.pkqt_height id="pkqt_height" class="form-control disable_a_href" %}
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Width_available (inch)</span>
+											<span class="input-group-text">Width (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
 										</div>
 										{% render_field form.pkqt_width id="pkqt_width" class="form-control disable_a_href" %}
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Length_available (Ft)</span>
+											<span class="input-group-text">Length (Ft)</span>
 										</div>
 										{% render_field form.pkqt_length id="pkqt_length" class="form-control disable_a_href" %}
 									</div>
@@ -160,13 +167,13 @@
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Total CFT/SQFT (Available)</span>
+											<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
 										</div>
 										{% render_field form.pkqt_cft id="pkqt_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Rate/Qty (CFT)</span>
+											<span class="input-group-text">Rate/(Qty/CFT/SQFT)</span>
 										</div>
 										{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control" %}
 									</div>
@@ -180,13 +187,7 @@
 								<br>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Days/Hours</span>
-									</div>
-									{% render_field form.pkqt_days id="pkqt_days" onchange="change_cost_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unit Cost(INR)</span>
+										<span class="input-group-text">Unit Cost (INR)</span>
 									</div>
 									{% render_field form.pkqt_total_cost id="pkqt_total_cost" readonly="True" class="form-control disable_a_href" %}
 								</div>
@@ -198,7 +199,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost(INR)</span>
+										<span class="input-group-text">Total CFT/SQFT Required</span>
+									</div>
+									<span id="pkqt_cft_sqft_req" class="form-control disable_a_href"></span>
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Cost (INR)</span>
 									</div>
 									{% render_field form.pkqt_totalbox_cost id="pkqt_totalbox_cost" readonly="True" class="form-control disable_a_href" %}
 								</div>
@@ -240,6 +247,7 @@
         var assessment_num=document.getElementById("pkqt_assessment_num").value;
         var customer_name=document.getElementById("pkqt_customer_name").value;
         var user_id=document.getElementById("pkqt_updated_by").value;
+
         if (user_id=="")
         {
             document.getElementById("pkqt_updated_by").value ='{{user_id}}';
@@ -276,6 +284,13 @@
 
 <script>
 	function change_cost_type() {
+			var CFT_Sqft_Req_unit = parseFloat(document.getElementById("pkqt_sqrt_req").value);
+			var job_type_qty = parseFloat(document.getElementById("pkqt_na_quantity").value);
+			var CFT_Sqft_Req_total = parseFloat(CFT_Sqft_Req_unit * job_type_qty);
+
+			// Set the calculated value to the span
+			document.getElementById("pkqt_cft_sqft_req").innerText = CFT_Sqft_Req_total;
+
             var jn=document.getElementById("pkqt_cost_type").value
             if ( jn==8)
             {
@@ -638,52 +653,6 @@
         });
     }
 </script>
-
-<script>
-	function change_charge_type() {
-        var jn=document.getElementById("pkqt_stock_type").value
-        if ( jn==1)
-        {
-            $('#pkqt_stock_description').removeClass('disable_a_href');
-            $('#pkqt_uom').addClass('disable_a_href');
-            $('#pkqt_quantity').removeClass('disable_a_href');
-            $('#pkqt_days').addClass('disable_a_href');
-            document.getElementById("pkqt_days").value=0;
-
-            var length = parseFloat(document.getElementById("pkqt_length").value) || 0;
-            var height = parseFloat(document.getElementById("pkqt_height").value) || 0;
-            var width = parseFloat(document.getElementById("pkqt_width").value) || 0;
-            var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-            var cft = (length*height*width/144)*quantity;
-            document.getElementById("pkqt_cft").value=cft.toFixed(2)
-            var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-            var totalboxCost = totalCost * na_quantity;
-            document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
-        }
-
-        else if (jn==2)
-        {
-            $('#pkqt_stock_description').removeClass('disable_a_href');
-            $('#pkqt_length').addClass('disable_a_href');
-            $('#pkqt_width').addClass('disable_a_href');
-            $('#pkqt_height').addClass('disable_a_href');
-            $('#pkqt_quantity').removeClass('disable_a_href');
-            $('#pkqt_cft').addClass('disable_a_href');
-            document.getElementById("pkqt_cft").value=0;
-            document.getElementById("pkqt_length").value=0;
-            document.getElementById("pkqt_width").value=0;
-            document.getElementById("pkqt_height").value=0;
-            $('#pkqt_rate').removeClass('disable_a_href');
-            $('#pkqt_days').addClass('disable_a_href');
-            var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("pkqt_quantity").value) || 0;
-			var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
-            var totalboxCost = totalCost * na_quantity;
-            document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)        }
-    }
-</script>
-
 <script>
 	function search_wood() {
     var stock_description = $("#pkqt_stock_description").val();

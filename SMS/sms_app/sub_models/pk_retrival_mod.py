@@ -13,7 +13,7 @@ class PkretrivalInfo(models.Model):
     pret_created_at = models.DateField(null=True, auto_now_add=True)
     pret_updated_at = models.DateField(null=True, auto_now=True)
     pret_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='pret_updated_by',db_column='pret_updated_by', null=True)
-    pret_quantity= models.IntegerField(blank=True, null=True,default=0)
+    pret_quantity= models.FloatField(blank=True, null=True,default=0.0)
     pret_size=models.FloatField(blank=True, null=True,default=0.0)
     pret_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='',blank=True, null=True)
     pret_assessment_num=models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='',blank=True, null=True)
