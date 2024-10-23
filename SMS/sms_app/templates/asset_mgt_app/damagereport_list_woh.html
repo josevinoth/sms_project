@@ -1,39 +1,74 @@
+{% load widget_tweaks %}
 {% block content %}
 <br>
 <hr>
-<!--<div class="col-md-2">-->
-<!--    &lt;!&ndash; Button to open the modal &ndash;&gt;-->
-<!--    <button id="open-camera-btn" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target="#pictureModal">-->
-<!--        <i class="fas fa-camera"></i> Capture Image-->
-<!--    </button>-->
-<!--</div>-->
 
-<!-- Include the modal here or load via AJAX -->
-
-
-
-
-
-
+<!-- Button to open the modal -->
 <div class="container-fluid row">
-<!--    <div class="col-md-1">-->
-<!--        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-<!--            <i class="fas fa-arrow-left"></i> Back-->
-<!--        </a>-->
-<!--    </div>-->
     <div class="col-md-2">
-        <a href="{% url 'picture_add' %}"  class="btn btn-warning btn-block btn-lg">
+        <button id="open-camera-btn" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target="#pictureModal">
             <i class="fas fa-camera"></i> Capture Image
-        </a>
+        </button>
     </div>
-
-<!--    <div class="col-md-2">-->
-<!--        <a href="" class="btn btn-warning btn-block btn-lg">-->
-<!--            <i class="fas fa-check"></i> Select All-->
-<!--        </a>-->
-<!--    </div>-->
 </div>
 <br>
+<!-- Modal for capturing image and selecting image type -->
+<div class="modal fade" id="pictureModal" tabindex="-1" role="dialog" aria-labelledby="pictureModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pictureModalLabel">Capture Image</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="" id="picture_add" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- Image Type Field -->
+                    <div class="row">
+                        <div class="col">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Select Image Type</span>
+                                </div>
+                                <select id="pi_image_type" name="pi_image_type" class="form-control" required>
+                                    <option value="" disabled selected>Select an Image Type</option>
+                                    {% for picture in pictures %}
+                                    <option value="{{ picture.id }}">{{ picture.dimt_name }}</option>
+                                    {% empty %}
+                                    <option value="" disabled>No image types available</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Hidden Reference ID field -->
+                            <input type="hidden" id="pi_reference" name="pi_reference" value="{{ damagereport_id }}">
+                        </div>
+                    </div>
+                    <!-- Webcam video stream -->
+                    <video id="video" width="" height="" autoplay></video>
+                    <br>
+                    <button id="capture-btn" class="btn btn-primary mt-2" type="button">Capture</button>
+
+                    <!-- Hidden canvas for drawing the captured image -->
+                    <canvas id="canvas" width="770" height="500" style="display:none;"></canvas>
+                    <img id="captured-image" src="" alt="Captured Image" style="display:none;"/>
+
+                    <!-- Hidden input to store base64 image data -->
+                    <input type="hidden" id="image-data" name="image-data">
+
+                    <!-- Modal footer with submit and cancel buttons -->
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Submit</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="container-fluid">
     <table id="picture_list" class="table table-striped table-bordered">
@@ -43,6 +78,7 @@
             <th>Reference ID</th>
             <th>Image</th>
             <th>Image Type</th>
+            <th>Updated On</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
@@ -54,10 +90,13 @@
             <td>{{ Picture.pi_reference }}</td>
             <td>
                 {% if Picture.pi_image %}
-                <img src="{{ Picture.pi_image.url }}" alt="Captured Image" width="150">
+                <a href="{{ Picture.pi_image.url }}" download="image_{{ Picture.id }}">
+                    <img src="{{ Picture.pi_image.url }}" alt="Captured Image" width="300" onclick="downloadImage('{{ Picture.pi_image.url }}', 'image_{{ Picture.id }}')">
+                </a>
                 {% endif %}
             </td>
             <td>{{ Picture.pi_image_type }}</td>
+            <td>{{ Picture.pi_timestamp }}</td>
             <td>
                 <a class="btn btn-primary" href="{% url 'picture_add' Picture.id %}">
                     <i class="far fa-edit"></i>
@@ -78,13 +117,65 @@
 </div>
 
 <script>
+    function downloadImage(imageUrl, imageName) {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = imageName;
+        link.click();
+    }
+</script>
+
+<script>
     $(document).ready(function() {
+        // Initialize DataTables
         $('#picture_list').DataTable({
             order: [0, 'desc'],
             dom: 'lBfrtip',
             buttons: [
                 'copy', 'csv', 'excel', 'print'
             ]
+        });
+
+        // Set the damagereport_id to the hidden reference field when modal is opened
+        $('#pictureModal').on('show.bs.modal', function () {
+            document.getElementById("pi_reference").value = '{{ damagereport_id }}';
+        });
+
+        let stream;
+
+        // Access the user's webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(s => {
+                stream = s;
+                document.getElementById('video').srcObject = stream;
+            })
+            .catch(err => {
+                console.log("Error accessing webcam: ", err);
+            });
+
+        // Capture the image from the webcam when the button is clicked
+        document.getElementById('capture-btn').addEventListener('click', function() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            const capturedImage = document.getElementById('captured-image');
+            const imageDataInput = document.getElementById('image-data');
+
+            // Draw the current video frame onto the canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert the canvas image to a Base64 string (jpeg format)
+            const dataUrl = canvas.toDataURL('image/jpeg');
+
+            // Display the captured image in the img tag
+            capturedImage.src = dataUrl;
+            capturedImage.style.display = 'block';
+
+            // Set the hidden input field value with the base64 image data
+            imageDataInput.value = dataUrl;
+
+            // Stop the webcam stream after capturing the image
+            stream.getTracks().forEach(track => track.stop());
         });
     });
 </script>

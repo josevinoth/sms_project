@@ -19,7 +19,7 @@
                                     </div>
                                     {% render_field form.pi_image_type class="form-control" %}
                                 </div>
-
+                                <!-- Hidden Reference ID field -->
                                 <input type="hidden" id="pi_reference" name="pi_reference" value="{{ damagereport_id }}">
                             </div>
                         </div>
@@ -28,7 +28,7 @@
                         <button id="capture-btn" class="btn btn-primary mt-2" type="button">Capture</button>
 
                         <!-- Hidden canvas for drawing the captured image -->
-                        <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+                        <canvas id="canvas" width="1280" height="960" style="display:none;"></canvas>
                         <img id="captured-image" src="" alt="Captured Image" style="display:none;"/>
 
                         <!-- Hidden input to store base64 image data -->

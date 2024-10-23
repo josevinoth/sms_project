@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from ..forms import DamagereportaddForm,DamagereportImagesForm
-from ..models import PictureImage,Location_info,DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages
+from ..models import PictureImage,Location_info,DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages,damage_image_type_info
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from ..models import User_extInfo
@@ -92,7 +92,7 @@ def damagereport_add(request,damagereport_id=0):
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.FILES, instance=damagereportimg_info)
             picture_list = PictureImage.objects.filter(pi_reference=damagereport_id)  # Fetch all the pictures
-
+            pictures = damage_image_type_info.objects.all()
             context = {
                 'damagereport_form': damagereport_form,
                 'damagereportimg_form':damagereportimg_form,
@@ -109,6 +109,7 @@ def damagereport_add(request,damagereport_id=0):
                 'warehousein_status': warehousein_status,
                 'picture_list': picture_list,
                 'damagereport_id': damagereport_id,
+                'pictures' : pictures,
             }
         return render(request, "asset_mgt_app/damagereport_add.html", context)
     else:

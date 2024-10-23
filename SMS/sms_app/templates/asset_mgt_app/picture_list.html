@@ -38,6 +38,7 @@
             <th>Reference ID</th>
             <th>Image</th>
             <th>Image Type</th>
+            <th>Updated On</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
@@ -49,10 +50,14 @@
             <td>{{ Picture.pi_reference }}</td>
             <td>
                 {% if Picture.pi_image %}
-                <img src="{{ Picture.pi_image.url }}" alt="Captured Image" width="150">
+                <a href="{{ Picture.pi_image.url }}" download="image_{{ Picture.id }}">
+                    <img src="{{ Picture.pi_image.url }}" alt="Captured Image" width="150" onclick="downloadImage('{{ Picture.pi_image.url }}', 'image_{{ Picture.id }}')">
+                </a>
                 {% endif %}
+
             </td>
             <td>{{ Picture.pi_image_type }}</td>
+            <td>{{ Picture.pi_timestamp }}</td>
             <td>
                 <a class="btn btn-primary" href="{% url 'picture_add' Picture.id %}">
                     <i class="far fa-edit"></i>
@@ -71,6 +76,17 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    function downloadImage(imageUrl, imageName) {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = imageName;
+        link.click();
+    }
+</script>
+
+
 
 <script>
     $(document).ready(function() {
