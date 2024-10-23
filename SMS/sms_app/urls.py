@@ -474,6 +474,7 @@ urlpatterns = [
     path('iou_update/<int:iou_id>', views.iou_add, name='iou_update'),  # update IOU
     path('iou_delete/<int:iou_id>', views.iou_delete, name='iou_delete'),  # delete IOU
     path('modify_dimensions_view/', views.modify_dimensions_view, name='modify_dimensions_view'),  # modify_dimensions_view
+    path('pk_return_list/', views.pk_return_list, name='pk_return_list'),  # List retrival
     path('pk_retrival_list/', views.pk_retrival_list, name='pk_retrival_list'),  # List retrival
     path('pk_retrival_insert/', views.pk_retrival_add, name='pk_retrival_insert'),  # Add retrival
     path('pk_retrival_update/<int:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),# update retrival

@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.utils import timezone
-from ..models import RequirementsInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
+from ..models import RequirementsInfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
 from django.shortcuts import render, redirect
 from django.db.models import Sum, Q
 from datetime import timedelta
@@ -26,6 +26,7 @@ def home_page(request):
     wh_check_in_jobs_2 = (Loadingbay_Info.objects.filter(lb_validity_date__lte=(timezone.now())+timedelta(days=1),lb_job_no__in=wh_check_in_jobs_1)).distinct()
     wh_job_count=len(wh_check_in_jobs_2)
     open_requirements=len(RequirementsInfo.objects.filter(Q(req_status=2) | Q(req_status=6)))
+    count_return=len(PkstockpurchasesInfo.objects.filter(Q(sp_status=2) ))
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
@@ -47,6 +48,7 @@ def home_page(request):
                'wh_job_count': wh_job_count,
                'wh_check_in_jobs_2': wh_check_in_jobs_2,
                'open_requirements': open_requirements,
+               'count_return': count_return,
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 
