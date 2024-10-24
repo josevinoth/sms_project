@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.utils import timezone
-from ..models import RequirementsInfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
+from ..models import PkcostingInfo,RequirementsInfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
 from django.shortcuts import render, redirect
 from django.db.models import Sum, Q
 from datetime import timedelta
@@ -27,6 +27,8 @@ def home_page(request):
     wh_job_count=len(wh_check_in_jobs_2)
     open_requirements=len(RequirementsInfo.objects.filter(Q(req_status=2) | Q(req_status=6)))
     count_return=len(PkstockpurchasesInfo.objects.filter(Q(sp_status=2) ))
+    count_retrival=len(PkcostingInfo.objects.filter(Q(ct_cost_type=8) | Q(ct_stock_status__in=[1, 3]) ))
+
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
@@ -49,6 +51,7 @@ def home_page(request):
                'wh_check_in_jobs_2': wh_check_in_jobs_2,
                'open_requirements': open_requirements,
                'count_return': count_return,
+               'count_retrival': count_retrival,
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 
