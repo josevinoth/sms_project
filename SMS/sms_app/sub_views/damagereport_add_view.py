@@ -181,20 +181,6 @@ def damagereport_add(request,damagereport_id=0):
             # url = 'damagereport_update/' + str(damagereport_id)
             # return redirect(url)
 
-
-
-def save_captured_image(request):
-    if request.method == "POST" and request.FILES.get('image'):
-        image_file = request.FILES['image']
-        # You can save the image to your model here
-        damagereport_img = DamagereportImages(damimage_file=image_file)  # Adjust field name based on your model
-        damagereport_img.save()
-
-        return JsonResponse({'success': True})
-
-    return JsonResponse({'success': False, 'message': 'No image found'}, status=400)
-
-
 # List damagereport
 @login_required(login_url='login_page')
 def damagereport_list(request):
@@ -209,3 +195,4 @@ def damagereport_list(request):
 #
 #     damagereport.delete()
 #     return redirect('/SMS/damagereport_list')
+
