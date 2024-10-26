@@ -3,6 +3,7 @@ from datetime import timedelta, date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.db.models.aggregates import Sum
 from django.http import HttpResponse
 from ..forms import LocationmasteraddForm
@@ -126,8 +127,7 @@ def warehousevolme_area_calc(request):
         unit = LocationmasterInfo.objects.get(pk=i).lm_wh_unit
         bay = LocationmasterInfo.objects.get(pk=i).lm_areaside
         volume_occupied = Warehouse_goods_info.objects.filter(wh_branch=branch, wh_unit=unit, wh_bay=bay,wh_check_in_out=1).aggregate(Sum('wh_goods_volume_weight'))['wh_goods_volume_weight__sum']
-        area_occupied = Warehouse_goods_info.objects.filter(wh_branch=branch, wh_unit=unit, wh_bay=bay, wh_check_in_out=1,wh_stack_layer=1).aggregate(Sum('wh_goods_area'))['wh_goods_area__sum']
-
+        area_occupied = Warehouse_goods_info.objects.filter(wh_branch=branch,wh_unit=unit,wh_bay=bay,wh_check_in_out=1,).filter(Q(wh_stack_layer=1) | Q(wh_stack_layer=2)).aggregate(Sum('wh_goods_area'))['wh_goods_area__sum']
         if volume_occupied==None:
             volume_occupied_val=0
         else:
