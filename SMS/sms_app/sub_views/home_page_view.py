@@ -27,7 +27,8 @@ def home_page(request):
     wh_job_count=len(wh_check_in_jobs_2)
     open_requirements=len(RequirementsInfo.objects.filter(Q(req_status=2) | Q(req_status=6)))
     count_return=len(PkstockpurchasesInfo.objects.filter(Q(sp_status=2) ))
-    count_retrival=len(PkcostingInfo.objects.filter(Q(ct_cost_type=8) | Q(ct_stock_status__in=[1, 3]) ))
+    count_retrival=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status__in=[1, 3]))
+    count_acceptance=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2))
 
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
@@ -52,6 +53,7 @@ def home_page(request):
                'open_requirements': open_requirements,
                'count_return': count_return,
                'count_retrival': count_retrival,
+               'count_acceptance': count_acceptance,
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 
