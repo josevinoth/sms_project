@@ -354,5 +354,3 @@ def pk_store_po_dimension_id(request):
         'po_dimension_box_val': po_dimension_box_str,
     }
     return JsonResponse(data)
-
-

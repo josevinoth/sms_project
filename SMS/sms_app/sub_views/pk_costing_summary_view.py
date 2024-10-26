@@ -378,3 +378,63 @@ def pk_store_na_dimension_id(request):
         'na_height': na_height,
     }
     return JsonResponse(data)
+
+@login_required(login_url='login_page')
+def export_cost_assessment_to_excel(request):
+        # Create a workbook and select the active worksheet
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Cost Assessment Report"
+
+        # Create the header row
+        headers = [
+            'ID', 'Created On', 'Stock Purchase Number', 'Assessment Number', 'Customer Name',
+            'Customer PO', 'Job Type', 'Cost Type', 'Stock Type', 'Stock Description',
+            'Width (in)', 'Height (in)', 'Length (ft)', 'Job Type Quantity', 'Size', 'UOM',
+            'Total CFT', 'Rate/QTY (CFT)', 'Days', 'Unit Cost',
+            'Total Cost', 'Stock Status', 'Updated at', 'Updated By'
+        ]
+        ws.append(headers)  # Append header row
+
+        # Query the data from your database and filter by ct_cost_type=8
+        costing_list = PkcostingInfo.objects.filter(ct_cost_type=8)
+
+        # Write data rows
+        for costinginfo in costing_list:
+            ws.append([
+                costinginfo.id,
+                costinginfo.ct_created_at.strftime('%Y-%m-%d') if costinginfo.ct_created_at else '',
+                str(costinginfo.ct_stock_purchase_number) if costinginfo.ct_stock_purchase_number else '',
+                costinginfo.ct_assessment_num.id if costinginfo.ct_assessment_num else '',
+                str(costinginfo.ct_customer_name) if costinginfo.ct_customer_name else '',
+                str(costinginfo.ct_customer_po) if costinginfo.ct_customer_po else '',
+                str(costinginfo.ct_requirement) if costinginfo.ct_requirement else '',
+                str(costinginfo.ct_cost_type) if costinginfo.ct_cost_type else '',
+                str(costinginfo.ct_stock_type) if costinginfo.ct_stock_type else '',
+                str(costinginfo.ct_stock_description) if costinginfo.ct_stock_description else '',
+                costinginfo.ct_width_req,
+                costinginfo.ct_height_req,
+                costinginfo.ct_length_req,
+                costinginfo.ct_quantity,
+                costinginfo.ct_size,
+                str(costinginfo.ct_uom) if costinginfo.ct_uom else '',
+                costinginfo.ct_cft,
+                costinginfo.ct_rate,
+                costinginfo.ct_days,
+                costinginfo.ct_total_cost,
+                costinginfo.ct_totalbox_cost,
+                str(costinginfo.ct_stock_status) if costinginfo.ct_stock_status else '',
+                costinginfo.ct_updated_at.strftime('%Y-%m-%d') if costinginfo.ct_updated_at else '',
+                str(costinginfo.ct_updated_by) if costinginfo.ct_updated_by else ''
+            ])
+
+        # Prepare the response
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=Cost_Assessment_Report_{}.xlsx'.format(
+            datetime.now().strftime('%Y%m%d_%H%M%S')
+        )
+
+        # Save the workbook to the response
+        wb.save(response)
+
+        return response
