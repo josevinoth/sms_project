@@ -381,23 +381,17 @@ def pk_store_na_dimension_id(request):
 
 @login_required(login_url='login_page')
 def export_cost_assessment_to_excel(request):
-    # Retrieve filter parameters
-    assessment_number = request.GET.get('assessment_number')
-    customer_po = request.GET.get('customer_po')
+    # Retrieve filter parameters from the request
+    assessment_number = request.session.get('na_assessment_id')
+    customer_po = request.session.get('ses_customer_po_id')
 
-    # Query data and apply filters
-    costing_list = PkcostingInfo.objects.filter(ct_cost_type=8)
-    if assessment_number:
-        costing_list = costing_list.filter(ct_assessment_num__id=assessment_number)
-    if customer_po:
-        costing_list = costing_list.filter(ct_customer_po=customer_po)
+    costing_list = PkcostingInfo.objects.filter(ct_assessment_num=assessment_number, ct_customer_po=customer_po , ct_cost_type=8)
 
-    # Create a workbook and worksheet
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Cost Assessment Report"
 
-    # Header row
+    # Define headers for the columns in the report
     headers = [
         'ID', 'Created On', 'Stock Purchase Number', 'Assessment Number', 'Customer Name',
         'Customer PO', 'Job Type', 'Cost Type', 'Stock Type', 'Stock Description',
@@ -407,13 +401,13 @@ def export_cost_assessment_to_excel(request):
     ]
     ws.append(headers)
 
-    # Write data rows
+    # Populate the worksheet with data from the filtered queryset
     for costinginfo in costing_list:
         ws.append([
             costinginfo.id,
             costinginfo.ct_created_at.strftime('%Y-%m-%d') if costinginfo.ct_created_at else '',
             str(costinginfo.ct_stock_purchase_number) if costinginfo.ct_stock_purchase_number else '',
-            costinginfo.ct_assessment_num.id if costinginfo.ct_assessment_num else '',
+            str(costinginfo.ct_assessment_num) if costinginfo.ct_customer_name else '',
             str(costinginfo.ct_customer_name) if costinginfo.ct_customer_name else '',
             str(costinginfo.ct_customer_po) if costinginfo.ct_customer_po else '',
             str(costinginfo.ct_requirement) if costinginfo.ct_requirement else '',
@@ -436,13 +430,13 @@ def export_cost_assessment_to_excel(request):
             str(costinginfo.ct_updated_by) if costinginfo.ct_updated_by else ''
         ])
 
-    # Prepare the response
+    # Set up the response for file download with appropriate headers
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=Cost_Assessment_Report_{}.xlsx'.format(
         datetime.now().strftime('%Y%m%d_%H%M%S')
     )
 
-    # Save the workbook to the response
+    # Save the workbook directly to the response object
     wb.save(response)
 
     return response
