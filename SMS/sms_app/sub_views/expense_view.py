@@ -23,7 +23,7 @@ def expense_add(request, expense_id=0):
                 expense_form = ExpenseaddForm(instance=expense)
             except ExpenseInfo.DoesNotExist:
                 messages.error(request, "Expense not found.")
-                return redirect('expense_list')  # or handle as needed
+                return redirect('expense_list')
 
         context = {
             'expense_form': expense_form,
@@ -44,28 +44,31 @@ def expense_add(request, expense_id=0):
                 return redirect('expense_list')
 
         if expense_form.is_valid():
-            expense_form.save()
+            saved_expense = expense_form.save()
 
-            # Generate the expense number
-            try:
-                last_expense = ExpenseInfo.objects.latest('id')
-                expense_num = 1000000 + last_expense.id
-            except ObjectDoesNotExist:
-                expense_num = 100000
+            # Generate the expense number for new expenses
+            if expense_id == 0:
+                try:
+                    last_expense_id = saved_expense.id
+                    expense_num = 1000000 + last_expense_id
+                except ObjectDoesNotExist:
+                    expense_num = 100000
 
-            expense_category_id = last_expense.exp_category.id
-            prefix = 'C_' if expense_category_id == 1 else 'B_'
-            expense_num = f'{prefix}{expense_num}'
+                # Set prefix based on category
+                expense_category_id = saved_expense.exp_category.id
+                prefix = 'C_' if expense_category_id == 1 else 'B_'
+                expense_num = f'{prefix}{expense_num}'
 
-            # Update the expense with the generated number
-            last_expense.exp_number = expense_num
-            last_expense.save()
+                # Update the expense with the generated number
+                saved_expense.exp_number = expense_num
+                saved_expense.save()
 
             messages.success(request, 'Record Updated Successfully')
+            return redirect('/SMS/expense_update/' + str(saved_expense.id))
         else:
             messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
-
-        return redirect('/SMS/expense_update/' + str(last_expense.id))
+            # return redirect('expense_list')
+            return redirect(request.META['HTTP_REFERER'])
 
 
 @login_required(login_url='login_page')

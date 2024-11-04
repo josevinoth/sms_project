@@ -38,7 +38,7 @@
             <th>Updated at</th>
             <th>Updated By</th>
             <th>Edit</th>
-            <th>Delete</th>
+<!--            <th>Delete</th>-->
         </thead>
         <tbody>
         {% for pk_retrivalinfo in pk_retrival_list %}
@@ -59,14 +59,14 @@
                     <i class="far fa-edit"></i>
                 </a>
             </td>
-            <td>
-                <form action="{% url 'pk_retrival_delete' pk_retrivalinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
+<!--            <td>-->
+<!--                <form action="{% url 'pk_retrival_delete' pk_retrivalinfo.id %}" method="post" onclick="return confirm('Are you sure?');">-->
+<!--                    {% csrf_token %}-->
+<!--                    <button type="submit" class="btn btn-danger">-->
+<!--                        <i class="fas fa-trash-alt"></i>-->
+<!--                    </button>-->
+<!--                </form>-->
+<!--            </td>-->
         </tr>
         {% endfor %}
         </tbody>

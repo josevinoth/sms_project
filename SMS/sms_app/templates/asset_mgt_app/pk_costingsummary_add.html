@@ -20,8 +20,7 @@
 <!--								</a>-->
 							</div>
 							<div class="col-2">
-								<a href="{% url 'pk_bvm_invoice_pdf' %}" class="btn btn-warning btn-block" id="invoice_report_btn"><i class="fa fa-download" aria-hidden="true"> Invoice</i>
-								</a>
+								<a href="{% url 'pk_bvm_invoice_pdf' %}" class="btn btn-warning btn-block" id="invoice_report_btn"><i class="fa fa-download" aria-hidden="true"> Invoice</i> </a>
 							</div>
 						</div>
 					</div>
@@ -269,6 +268,12 @@
 	</div>
 </div>
 <hr>
+<div class="col-2">
+      <a id="EBOM" href="{% url 'export_costingreport' %}" class="btn btn-warning btn-block btn-lg" >
+        <i class="fas fa-file-csv"></i> EBOM
+      </a>
+    </div>
+<br>
 <div class="container-fluid">
 	<table  id="costing_list" class="table table-striped table-bordered">
 		<thead class="thead-dark">

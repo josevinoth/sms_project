@@ -386,6 +386,7 @@ urlpatterns = [
     path('quotes_insert/', views.quotes_add, name='quotes_insert'),  # Add quotes
     path('quotes_update/<int:quotes_id>', views.quotes_add, name='quotes_update'),# update quotes
     path('quotes_delete/<int:quotes_id>', views.quotes_delete, name='quotes_delete'),# delete quotes
+    path('export_costingreport/', views.export_cost_assessment_to_excel, name='export_costingreport'),# export stock value report
     path('costing_list/', views.costing_list, name='costing_list'),  # List costing
     path('costing_insert/', views.costing_add, name='costing_insert'),  # Add costing
     path('costing_update/<int:costing_id>', views.costing_add, name='costing_update'),  # update costing

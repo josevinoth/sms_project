@@ -6,7 +6,7 @@ def picture_upload_path(instance, filename):
     ext = filename.split('.')[-1]
     image_type_name = instance.pi_image_type
     filename = f"{image_type_name}_{instance.pi_reference.id}.{ext}"
-    return f"DamagereportPictures/{instance.pi_reference}/{filename}"
+    return f"DamagereportImages/{instance.pi_reference}/{filename}"
 
 class PictureImage(models.Model):
     pi_reference = models.ForeignKey(DamagereportInfo,on_delete=models.CASCADE)
