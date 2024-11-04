@@ -1,0 +1,84 @@
+{% extends "asset_mgt_app/report_header_potrait.html" %}
+{% block content %}
+<!--<div class="report_title">-->
+<!--  Dispatch Number ({{dispatch_detail.dispatch_num}})-->
+<!--</div>-->
+<div>
+    <table class='report_details'>
+        <tr>
+            <th>Staff Name</th>
+            <td>{{ gate.gp_s_name }}</td>
+        </tr>
+        <tr>
+            <th>Employee ID</th>
+            <td>{{ gate.gp_employee }}</td>
+        </tr>
+        <tr>
+            <th>Customer Name</th>
+            <td>{{ gate.gp_customer_name }}</td>
+        </tr>
+        <tr>
+            <th>Sales Order Ref. No.</th>
+            <td>{{ gate.gp_sales_order_po }}</td>
+        </tr>
+    </table>
+    <hr class="report_hrItem"/>
+    <table class='report_details'>
+        <tr>
+            <th>DESCRIPTION</th>
+            <th>UOM</th>
+            <th>QTY</th>
+
+        </tr>
+        <tr>
+            <td>{{ gate.gp_description }}</td>
+            <td>{{ gate.gp_uom }}</td>
+            <td>{{ gate.gp_quantity }}</td>
+        </tr>
+    </table>
+    <br><br>
+
+    <table class='report_details'>
+        <tr>
+            <th></th>
+            <th>NAME</th>
+            <th>SIGN</th>
+            <th>DATE</th>
+        </tr>
+        <tr>
+            <th>PREPARED BY</th>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <th>CHECKED BY</th>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <th>APPROVED BY</th>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <th>GOODS OUTWARD REF.</th>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+
+    <div class="right-group">
+        <p>Super Verification</p>
+    </div>
+     <div class="center-group">
+        <p>THANK YOU FOR YOUR BUSINESS!</p>
+    </div>
+
+</div>
+{% endblock content %}
+
+

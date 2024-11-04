@@ -526,4 +526,10 @@ urlpatterns = [
     path('picture_list/', views.picture_list, name='picture_list'),
     path('picture_update/<int:picture_id>/', views.picture_add, name='picture_add'),
     path('picture_delete/<int:picture_id>/', views.picture_delete, name='picture_delete'),
+    path('packing_gate/', views.gate_return_add, name='packing_gate'),
+    path('packing_gate_list/', views.gate_return_list, name='packing_gate_list'),
+    path('packing_gate_update/<int:gate_id>/', views.gate_return_add, name='packing_gate_update'),
+    path('packing_gate_delete/<int:gate_id>/', views.gate_return_delete, name='packing_gate_delete'),
+    path('packing_gate_pdf/<int:gate_id>', views.gate_return_pdf, name='packing_gate_pdf'),
+
 ]

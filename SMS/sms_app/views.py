@@ -117,3 +117,4 @@ from .sub_views.task_add_view import task_add,task_list,task_delete,get_requirem
 from .sub_views.timesheet_add_view import timesheet_add,timesheet_list,timesheet_delete,timesheet_nav
 from .sub_views.ml_category_view import create_product,ml_product_list,ml_product_delete
 from .sub_views.businessrevenue_view import business_revenue_add,business_revenue_list,business_revenue_delete
+from .sub_views.pk_gate_pass_returnable_view import gate_return_add,gate_return_list,gate_return_delete,gate_return_pdf
