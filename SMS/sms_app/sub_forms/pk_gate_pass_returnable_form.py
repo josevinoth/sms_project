@@ -12,3 +12,4 @@ class GatepassreturnForm(forms.ModelForm):
         self.fields['gp_sales_order_po'].empty_label = "--Select--"
         self.fields['gp_s_name'].empty_label = "--Select--"
         self.fields['gp_uom'].empty_label = "--Select--"
+        self.fields['gp_description'].empty_label = "--Select--"

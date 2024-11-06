@@ -1,8 +1,11 @@
 {% extends "asset_mgt_app/report_header_potrait.html" %}
 {% block content %}
-<!--<div class="report_title">-->
-<!--  Dispatch Number ({{dispatch_detail.dispatch_num}})-->
+<!--<h3 style="text-align:center;">Gate Pass (Returnable)</h3>-->
+<!--<div style="padding-left:570px;">-->
+<!--    <p>Gate Pass No:</p>-->
+<!--    <p>Date:</p>-->
 <!--</div>-->
+<!--    <p>GSTIN:</p>-->
 <div>
     <table class='report_details'>
         <tr>
@@ -28,7 +31,6 @@
             <th>DESCRIPTION</th>
             <th>UOM</th>
             <th>QTY</th>
-
         </tr>
         <tr>
             <td>{{ gate.gp_description }}</td>
@@ -36,8 +38,7 @@
             <td>{{ gate.gp_quantity }}</td>
         </tr>
     </table>
-    <br><br>
-
+    <hr class="report_hrItem"/>
     <table class='report_details'>
         <tr>
             <th></th>

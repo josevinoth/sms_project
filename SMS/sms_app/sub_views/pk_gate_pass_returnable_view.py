@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from ..forms import GatepassreturnForm
-from ..models import PackingGateReturn
+from ..models import PackingGateReturn,Warehouse_goods_info
 from django.contrib import messages
 from django.http import HttpResponse
 from django.template.loader import get_template
@@ -55,35 +55,41 @@ def gate_return_delete(request,gate_id):
 
 @login_required(login_url='login_page')
 def gate_return_pdf(request, gate_id):
-    # Use .objects to access the manager for querying
+    # Retrieve the PackingGateReturn record
     gate = PackingGateReturn.objects.filter(id=gate_id).first()
 
     if not gate:
         messages.error(request, "Record not found.")
         return redirect('/SMS/packing_gate_list')
 
+    # Find warehouse location based on `gate` data
+    wh_location = None
+    if gate.gp_sales_order_po:  # Assuming `gp_sales_order_po` is a unique reference number
+        wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=gate.gp_sales_order_po).values_list(
+            'wh_branch__loc_name', flat=True).order_by('id').first()
+
+    print("Warehouse Location:", wh_location)  # Add this line for debugging
+
+    if not wh_location:
+        wh_location = "BVM Chennai"
+
     context = {
         'gate': gate,
+        'wh_location': wh_location,
     }
 
-    # Generate the file name for the PDF
     file_name = f"Gate_Pass_{gate_id}.pdf"
     template_path = 'asset_mgt_app/pk_gate_pass_return.html'
 
-    # Set up the PDF response
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{file_name}"'
 
-    # Load and render the template with context
     template = get_template(template_path)
     html = template.render(context)
 
-    # Create the PDF
     pisa_status = pisa.CreatePDF(html, dest=response)
 
-    # Check for errors
     if pisa_status.err:
         return HttpResponse('We encountered an error while generating the PDF.')
 
-    # Return the PDF response
     return response
