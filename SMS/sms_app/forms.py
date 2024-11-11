@@ -109,3 +109,4 @@ from .sub_forms.warehouse_email_form import warehouse_EmailForm
 from .sub_forms.picture_form import pictureForm
 from .sub_forms.pkreturnform import PkreturnForm
 from .sub_forms.pk_gate_pass_returnable_form import GatepassreturnForm
+from .sub_forms.customerattach_form import CustomerattachForm

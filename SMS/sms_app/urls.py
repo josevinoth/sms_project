@@ -532,5 +532,9 @@ urlpatterns = [
     path('packing_gate_update/<int:gate_id>/', views.gate_return_add, name='packing_gate_update'),
     path('packing_gate_delete/<int:gate_id>/', views.gate_return_delete, name='packing_gate_delete'),
     path('packing_gate_pdf/<int:gate_id>', views.gate_return_pdf, name='packing_gate_pdf'),
-
+    path('customer_attachment_add/', views.customer_attach_add, name='customer_attachment_add'),
+    path('customer_attachment_list/', views.customer_attach_list, name='customer_attachment_list'),
+    path('customer_attachment_update/<int:attach_id>/', views.customer_attach_add, name='customer_attachment_update'),
+    path('customer_attachment_delete/<int:attach_id>/', views.customer_attach_delete, name='customer_attachment_delete'),
+    path('customer_attachment_cancel/', views.customer_attach_cancel, name='customer_attachment_cancel'),
 ]
