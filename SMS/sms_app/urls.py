@@ -537,4 +537,6 @@ urlpatterns = [
     path('customer_attachment_update/<int:attach_id>/', views.customer_attach_add, name='customer_attachment_update'),
     path('customer_attachment_delete/<int:attach_id>/', views.customer_attach_delete, name='customer_attachment_delete'),
     path('customer_attachment_cancel/', views.customer_attach_cancel, name='customer_attachment_cancel'),
+    path('customer_contract_rate_dues_list/', views.customer_contract_rate_dues_list, name='customer_contract_rate_dues_list'),
+    path('customer_contract_rate_due_days/', views.customer_contract_rate_due_days, name='customer_contract_rate_due_days'),
 ]

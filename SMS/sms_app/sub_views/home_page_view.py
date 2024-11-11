@@ -1,7 +1,9 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.messages.context_processors import messages
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.utils import timezone
-from ..models import PkcostingInfo,RequirementsInfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
+from ..models import Customerattach,PkcostingInfo,RequirementsInfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
 from django.shortcuts import render, redirect
 from django.db.models import Sum, Q
 from datetime import timedelta
@@ -29,6 +31,8 @@ def home_page(request):
     count_return=len(PkstockpurchasesInfo.objects.filter(Q(sp_status=2) ))
     count_retrival=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status__in=[1, 3]))
     count_acceptance=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2))
+    customer_contract_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30))
+    customer_rate_due_count = len(Customerattach.objects.filter(ca_rate_due_days__lte=30))
 
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
@@ -54,6 +58,8 @@ def home_page(request):
                'count_return': count_return,
                'count_retrival': count_retrival,
                'count_acceptance': count_acceptance,
+               'customer_contract_due_count': customer_contract_due_count,
+               'customer_rate_due_count': customer_rate_due_count,
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 
@@ -87,3 +93,41 @@ def open_requirements_list(request):
         'page_obj': page_obj,
     }
     return render(request, "asset_mgt_app/requirements_list.html", context)
+
+
+@login_required(login_url='login_page')
+def customer_contract_rate_due_days(request):
+    first_name = request.session.get('first_name')
+    customer_attach_list = Customerattach.objects.all()
+
+    for i in customer_attach_list:
+        customer_attach_id = i.id
+        ca_contract_end_date_val = i.ca_contract_end_date
+        ca_rate_due_days_val = i.ca_rate_end_date
+
+        if ca_contract_end_date_val:
+            try:
+                ca_contract_due_days = (ca_contract_end_date_val - timezone.now().date()).days
+                Customerattach.objects.filter(pk=customer_attach_id).update(ca_contract_due_days=ca_contract_due_days)
+            except Exception as e:
+                print("Error calculating ca_contract_due_days:", e)
+
+        if ca_rate_due_days_val:
+            try:
+                ca_rate_due_days = (ca_rate_due_days_val - timezone.now().date()).days
+                Customerattach.objects.filter(pk=customer_attach_id).update(ca_rate_due_days=ca_rate_due_days)
+            except Exception as e:
+                print("Error calculating ca_rate_due_days:", e)
+
+    # Return an empty HTTP response
+    return HttpResponse(status=204)
+
+@login_required(login_url='login_page')
+def customer_contract_rate_dues_list(request):
+    first_name = request.session.get('first_name')
+    customer_attach_list = Customerattach.objects.filter(Q(ca_contract_due_days__lte=30) | Q(ca_rate_due_days__lte=30))
+    context = {
+        'customer_attach_list': customer_attach_list,
+        'first_name': first_name,
+    }
+    return render(request, "asset_mgt_app/customer_contract_rate_due_days_list.html", context)

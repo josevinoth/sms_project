@@ -17,7 +17,7 @@ class Customerattach(models.Model):
     ca_comments_box = models.TextField(blank=True,null=True)
     ca_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE,blank=True,null=True)
     ca_created_at = models.DateTimeField(null=True, auto_now_add=True)
-    ca_cotract_due_days=models.IntegerField(null=True, blank=True)
+    ca_contract_due_days=models.IntegerField(null=True, blank=True)
     ca_rate_due_days=models.IntegerField(null=True, blank=True)
 
     def __str__(self):
