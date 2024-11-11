@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 def capture_image(request, image_id=0):
     if request.method == 'GET':
         damagereport_id = request.session.get('ses_damagereport_id')
+        print(damagereport_id)
         image_types = damage_image_type_info.objects.all()  # Fetch all image types to display in the dropdown
         print('Fetched image types:', list(image_types))  # Convert queryset to list for easier debugging
         return render(request, 'asset_mgt_app/capture.html', {

@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import PkpurchaseorderInfo,Unitofmeasure,Natypeofreq,Pkstocktype,Stockdescription,PkneedassessmentInfo,MyUser
+from ..models import Nadimension,Nadimensiontype,PkpurchaseorderInfo,Unitofmeasure,Natypeofreq,Pkstocktype,Stockdescription,PkneedassessmentInfo,MyUser
 
 class POdimension(models.Model):
     pod_assess_num = models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='')
@@ -21,6 +21,10 @@ class POdimension(models.Model):
     pod_item=models.CharField(max_length=100)
     pod_po_num = models.ForeignKey(PkpurchaseorderInfo, on_delete=models.CASCADE, blank=True,null=True)
     pod_delivery_schedule_date = models.DateField(blank=True, null=True)
+    pod_dimension_type = models.ForeignKey(Nadimensiontype,on_delete=models.CASCADE,default=1)
+    pod_clearance = models.FloatField(max_length=100,null=True,blank=True, default=2)
+    pod_nad = models.ForeignKey(Nadimension,on_delete=models.CASCADE,blank=True,null=True)
+
     class Meta:
         ordering = ["pod_assess_num"]
 

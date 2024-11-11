@@ -19,7 +19,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Customer Name</span>
                                     </div>
-                                    {% render_field form.ca_customer_name id="ca_customer_name" class="form-control" %}
+                                    {% render_field form.ca_customer_name id="ca_customer_name" class="form-control disable_a_href" %}
                                 </div>
 
                                 <!-- Contract Attachment Field -->
@@ -96,12 +96,7 @@
                                     {% render_field form.ca_rate_end_date id="ca_rate_end_date" type="date" class="form-control" %}
                                 </div>
 
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Updated By</span>
-                                    </div>
-                                {% render_field form.ca_updated_by id="ca_updated_by" type="hidden" class="form-control" %}
-                                </div>
+                                {% render_field form.ca_updated_by id="ca_updated_by" hidden="True" class="form-control" %}
 
                                 <!-- Comment Box Field -->
                                 <div class="input-group input-group-sm mb-3">
@@ -116,16 +111,16 @@
 
                         <!-- Message Display Section -->
                         <div class="row">
-                            <div class="col-1"></div>
-                            <div class="col-10">
-                                <div class="message text-center">
-                                    {% for message in messages %}
-                                        <div class="alert alert-info">{{ message }}</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="col-1"></div>
-                        </div>
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
 
                         <!-- Submit and Cancel Buttons -->
                         <button type="submit" class="btn btn-success" id="save-btn">
@@ -141,4 +136,32 @@
         <div class="col-2"></div>
     </div>
 </form>
+
+<script>
+	$(document).ready(function() {
+            {
+                var customer_id = document.getElementById("ca_customer_name").value
+                if (customer_id == "")
+                {
+                    document.getElementById("ca_customer_name").value='{{customer_id}}'
+                }
+                else
+                {
+                    document.getElementById("ca_customer_name").value=customer_id;
+                }
+            }
+
+            {
+                var updated_by = document.getElementById("ca_updated_by").value
+                if (updated_by == "")
+                {
+                    document.getElementById("ca_updated_by").value='{{user_id}}'
+                }
+                else
+                {
+                    document.getElementById("ca_updated_by").value=updated_by;
+                }
+            }
+        });
+</script>
 {% endblock content %}

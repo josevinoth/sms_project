@@ -199,9 +199,11 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
     gst_val = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_gst
     total_sum=0
     for i in na_req:
-        j=i.nad_item
         k=i.id
         qty=i.nad_quantity
+        print('i', i)
+        print('k', k)
+        print('qty', qty)
         total_cost_wom=PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id,pkqt_requirement=i).aggregate(total_cost=Sum('pkqt_total_cost'))['total_cost'] or 0
         print('total_cost_wom',total_cost_wom)
         total_cost=total_cost_wom+(total_cost_wom*margin/100)

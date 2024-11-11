@@ -14,8 +14,11 @@ class Customerattach(models.Model):
     ca_rate_attach = models.FileField(upload_to=customer_attach_path, null=True, blank=True)
     ca_rate_start_date = models.DateField(blank=True, null=True)
     ca_rate_end_date = models.DateField(blank=True, null=True)
-    ca_comments_box = models.TextField(default="")
-    ca_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE)
+    ca_comments_box = models.TextField(blank=True,null=True)
+    ca_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE,blank=True,null=True)
+    ca_created_at = models.DateTimeField(null=True, auto_now_add=True)
+    ca_cotract_due_days=models.IntegerField(null=True, blank=True)
+    ca_rate_due_days=models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"gate pass at {self.ca_customer_name}"

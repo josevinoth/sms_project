@@ -17,6 +17,7 @@
                 <th>Rate Start Date</th>
                 <th>Rate End Date</th>
                 <th>Updated By</th>
+                <th>Updated On</th>
                 <th>Edit</th>
                 <th>Delete</th>
             </tr>
@@ -31,6 +32,7 @@
                     <td>{{ attach.ca_rate_start_date }}</td>
                     <td>{{ attach.ca_rate_end_date }}</td>
                     <td>{{ attach.ca_updated_by }}</td>
+                    <td>{{ attach.ca_created_at }}</td>
                     <td>
                         <a class="btn btn-primary" href="{% url 'customer_attachment_update' attach.id %}">
                             <i class="far fa-edit"></i>

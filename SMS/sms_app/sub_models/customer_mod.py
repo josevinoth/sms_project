@@ -30,9 +30,6 @@ class CustomerInfo(models.Model):
     cu_created_at = models.DateTimeField(null=True, auto_now_add=True)
     cu_updated_at = models.DateTimeField(null=True, auto_now=True)
     cu_business_sol = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE,blank=True,null=True)
-    cu_contract_validity_from = models.DateTimeField(blank=True,null=True)
-    cu_contract_validity_to = models.DateTimeField(blank=True,null=True)
-    cu_contract = models.FileField(upload_to=customercontractinfo_directory_path, blank=True,null=True)
     cu_industry_type = models.ForeignKey(Industrytype, blank=True, null=True, on_delete=models.CASCADE, default='')
     class Meta:
         ordering = ["cu_name"]

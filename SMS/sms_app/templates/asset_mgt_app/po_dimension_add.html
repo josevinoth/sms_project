@@ -14,15 +14,21 @@
 							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Item Number</span>
-									</div>
-									{% render_field form.pod_item class="form-control" id="pod_item"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
 									{% render_field form.pod_assess_num id="pod_assess_num" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quotation Item Number</span>
+									</div>
+									{% render_field form.pod_nad id="pod_nad" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Item Number</span>
+									</div>
+									{% render_field form.pod_item class="form-control" id="pod_item"%}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -53,6 +59,12 @@
 										<span class="input-group-text">Wood Description</span>
 									</div>
 									{% render_field form.pod_wood_description id="pod_wood_description" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dimension Type</span>
+									</div>
+									{% render_field form.pod_dimension_type id="pod_dimension_type" class="form-control" %}
 								</div>
 							</div>
 							<div class="col-6">
@@ -97,6 +109,12 @@
 										<span class="input-group-text">Quantity</span>
 									</div>
 									{% render_field form.pod_quantity id="pod_quantity" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Clearance</span>
+									</div>
+									{% render_field form.pod_clearance id="pod_clearance" class="form-control" %}
 								</div>
 								{% render_field form.pod_updated_by id="pod_updated_by" hidden="True" class="form-control " %}
 							</div>
@@ -184,8 +202,8 @@ function plywood_thickness() {
   else
 	{
 		$('#pod_plywood_thickness').addClass('disable_a_href');
+		document.getElementById("pod_plywood_thickness").value=0;
   	}
-  endif
 }
 </script>
 {% endblock content %}

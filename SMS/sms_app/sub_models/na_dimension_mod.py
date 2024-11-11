@@ -20,7 +20,7 @@ class Nadimension(models.Model):
     nad_cost_total=models.FloatField(default=0.0,null=True,blank=True)
     nad_item=models.CharField(max_length=100,null=True,blank=True)
     nad_dimension_type = models.ForeignKey(Nadimensiontype,on_delete=models.CASCADE,default='')
-    na_clearance = models.CharField(max_length=100,null=True,blank=True, default='')
+    nad_clearance = models.FloatField(max_length=100,null=True,blank=True, default=2)
 
     class Meta:
         ordering = ["nad_assess_num"]
