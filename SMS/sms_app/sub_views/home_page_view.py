@@ -31,8 +31,8 @@ def home_page(request):
     count_return=len(PkstockpurchasesInfo.objects.filter(Q(sp_status=2) ))
     count_retrival=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status__in=[1, 3]))
     count_acceptance=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2))
-    customer_contract_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30))
-    customer_rate_due_count = len(Customerattach.objects.filter(ca_rate_due_days__lte=30))
+    customer_contract_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30,ca_status=1))
+    customer_rate_due_count = len(Customerattach.objects.filter(ca_rate_due_days__lte=30,ca_status=1))
 
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),

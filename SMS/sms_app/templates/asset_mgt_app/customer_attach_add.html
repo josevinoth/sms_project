@@ -95,7 +95,12 @@
                                     </div>
                                     {% render_field form.ca_rate_end_date id="ca_rate_end_date" type="date" class="form-control" %}
                                 </div>
-
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Status</span>
+                                    </div>
+                                    {% render_field form.ca_status id="ca_status" class="form-control" %}
+                                </div>
                                 {% render_field form.ca_updated_by id="ca_updated_by" hidden="True" class="form-control" %}
 
                                 <!-- Comment Box Field -->

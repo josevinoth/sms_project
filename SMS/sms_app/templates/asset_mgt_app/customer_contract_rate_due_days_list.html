@@ -31,7 +31,9 @@
         {% for list in customer_attach_list %}
         <tr>
             <td> {{list.id}}</td>
-            <td> {{list.ca_customer_name}}</td>
+            <td>
+                <a href="{% url 'customer_attachment_update' list.id %}">{{ list.ca_customer_name }}</a>
+            </td>
             <td> {{list.ca_contract_due_days}}</td>
             <td> {{list.ca_rate_due_days}}</td>
         </tr>

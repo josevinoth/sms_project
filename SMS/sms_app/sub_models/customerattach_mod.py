@@ -1,5 +1,7 @@
+from email.policy import default
+
 from django.db import models
-from ..models import CustomerInfo,MyUser
+from ..models import CustomerInfo,MyUser,ActiveinactiveInfo
 
 def customer_attach_path(instance, filename):
     return 'customerattachfiles/{0}/{1}'.format(instance.ca_customer_name, filename)
@@ -19,6 +21,7 @@ class Customerattach(models.Model):
     ca_created_at = models.DateTimeField(null=True, auto_now_add=True)
     ca_contract_due_days=models.IntegerField(null=True, blank=True)
     ca_rate_due_days=models.IntegerField(null=True, blank=True)
+    ca_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.CASCADE,blank=True,null=True,default=1)
 
     def __str__(self):
         return f"gate pass at {self.ca_customer_name}"

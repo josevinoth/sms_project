@@ -10,3 +10,4 @@ class CustomerattachForm(forms.ModelForm):
         super(CustomerattachForm,self).__init__(*args, **kwargs)
         self.fields['ca_customer_name'].empty_label = "--Select--"
         self.fields['ca_updated_by'].empty_label = "--Select--"
+        self.fields['ca_status'].empty_label = "--Select--"

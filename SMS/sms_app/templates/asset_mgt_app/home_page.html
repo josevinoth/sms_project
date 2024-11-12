@@ -56,8 +56,8 @@
     <button id="customer"  type="button" class="collapsible" onclick="window.location.href='{% url 'customer_contract_rate_due_days' %}'"><i class="fa fa-life-ring" aria-hidden="true"></i> Customer Management System (CMS) </button>
     <div class="content" >
         <a href="{% url 'customer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer List</a>
-        <a href=""><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Dues <a href="{% url 'customer_contract_rate_dues_list' %}"><span class="badge bg-danger p-2 blink">{{ customer_contract_due_count }}</span></a></a>
-        <a href=""><i class="fa fa-arrow-right" aria-hidden="true"></i> Rate Sheet Dues <a href="{% url 'customer_contract_rate_dues_list' %}"><span class="badge bg-danger p-2 blink">{{ customer_rate_due_count }}</span></a> </a>
+        <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Dues <span class="badge bg-danger p-2 blink">{{ customer_contract_due_count }}</span></a>
+        <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Rate Sheet Dues <span class="badge bg-danger p-2 blink">{{ customer_rate_due_count }}</span></a>
         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> CMS Misc</button>
         <div class="content">
             <a href="{% url 'crcountfrom_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Credit Count Type</a>
