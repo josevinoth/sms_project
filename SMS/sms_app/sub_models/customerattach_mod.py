@@ -1,5 +1,3 @@
-from email.policy import default
-
 from django.db import models
 from ..models import CustomerInfo,MyUser,ActiveinactiveInfo
 
@@ -24,4 +22,4 @@ class Customerattach(models.Model):
     ca_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.CASCADE,blank=True,null=True,default=1)
 
     def __str__(self):
-        return f"gate pass at {self.ca_customer_name}"
+        return self.ca_customer_name
