@@ -32,7 +32,7 @@ def invoice_add(request,invoice_id=0):
             count_stocks=len(list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num)))
 
             # check whether shipper details added
-            if count_stocks==0:
+            if count_stocks<0:
                 messages.error(request, 'Add Shipper Invoice!')
                 return redirect(request.META['HTTP_REFERER'])
             else:
