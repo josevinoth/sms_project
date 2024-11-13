@@ -53,8 +53,6 @@ def pk_quotation_add(request,quotation_id=0):
 
                 if int(cost_type_id) == 8:  # For stock-related cost types
                     stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
-                    stock_purchase_num = None  # Initialize as None in case it's not found
-
                     if stock_purchase_num_id:
                         try:
                             # Try fetching the stock purchase record based on the given ID
@@ -74,29 +72,32 @@ def pk_quotation_add(request,quotation_id=0):
                                 messages.error(request, 'Invalid quantity value. It should be a number.')
                                 return redirect(request.META['HTTP_REFERER'])
 
-                            # Validate the stock quantity
-                            if stock_qty <= 0:
-                                messages.error(request, 'Quantity should be greater than 0.')
-                                return redirect(request.META['HTTP_REFERER'])
-                            elif stock_qty > stock_qty_available:
-                                error_message = (
-                                    f'Quantity should be less than or equal to available stock: '
-                                    f'{stock_purchase_num}. Available quantity: {stock_qty_available}.'
-                                )
-                                messages.error(request, error_message)
-                                return redirect(request.META['HTTP_REFERER'])
-                            else:
-                                # Save the form and process the stock update
-                                form.save()
-                                print("Quotation form is valid and stock updated.")
-                                messages.success(request, 'Stock Updated Successfully')
-
+                            # # Validate the stock quantity
+                            # if stock_qty <= 0:
+                            #     messages.error(request, 'Quantity should be greater than 0.')
+                            #     return redirect(request.META['HTTP_REFERER'])
+                            # elif stock_qty > stock_qty_available:
+                            #     error_message = (
+                            #         f'Quantity should be less than or equal to available stock: '
+                            #         f'{stock_purchase_num}. Available quantity: {stock_qty_available}.'
+                            #     )
+                            #     messages.error(request, error_message)
+                            #     return redirect(request.META['HTTP_REFERER'])
+                            # else:
+                            #     # Save the form and process the stock update
+                            #     form.save()
+                            #     print("Quotation form is valid and stock updated.")
+                            #     messages.success(request, 'Stock Updated Successfully')
+                            form.save()
+                            print("Quotation form is valid and stock updated.")
+                            messages.success(request, 'Stock Updated Successfully')
                         except PkstockpurchasesInfo.DoesNotExist:
                             # If stock purchase number is not found, pass silently
                             pass
-
-                    # Save the form regardless of whether the stock purchase number exists
-                    form.save()
+                    else:
+                        # Save the form regardless of whether the stock purchase number exists
+                        form.save()
+                        messages.warning(request, 'Stock saved without Stock Purchase Number')
                 else:
                     # If the cost type is not stock-related, simply save the form
                     form.save()
@@ -120,26 +121,41 @@ def pk_quotation_add(request,quotation_id=0):
                 cost_type_id = PkquotationInfo.objects.get(pk=quotation_id).pkqt_cost_type.id
                 if int(cost_type_id) == 8:
                     stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
-                    stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
-                    stock_qty = request.POST.get('pkqt_quantity')
-                    stock_qty_available = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_quantity_reduced
-                    if float(stock_qty) <= 0:
-                        messages.error(request, 'Quantity should be greater than 0')
-                        return redirect(request.META['HTTP_REFERER'])
-                    elif float(stock_qty) > stock_qty_available:
-                        error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
-                        messages.error(request, error_message)
-                        return redirect(request.META['HTTP_REFERER'])
+                    if stock_purchase_num_id:
+                        try:
+                            # Try fetching the stock purchase record based on the given ID
+                            stock_purchase = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
+                            stock_purchase_num = stock_purchase.sp_purchase_num
+                            stock_qty_available = stock_purchase.sp_quantity_reduced
+                            stock_qty = request.POST.get('pkqt_quantity')
+
+                            # if float(stock_qty) <= 0:
+                            #     messages.error(request, 'Quantity should be greater than 0')
+                            #     return redirect(request.META['HTTP_REFERER'])
+                            # elif float(stock_qty) > stock_qty_available:
+                            #     error_message = f'Quantity should be less than or equal to available stock {stock_purchase_num} quantity {stock_qty_available}'
+                            #     messages.error(request, error_message)
+                            #     return redirect(request.META['HTTP_REFERER'])
+                            # else:
+                            #     form.save()
+                            #     messages.success(request, 'Stock Updated Successfully')
+
+                            form.save()
+                            messages.success(request, 'Stock Updated Successfully')
+                        except PkstockpurchasesInfo.DoesNotExist:
+                            # If stock purchase number is not found, pass silently
+                            pass
                     else:
+                        # Save the form regardless of whether the stock purchase number exists
                         form.save()
-                        messages.success(request, 'Stock Updated Successfully')
+                        messages.warning(request, 'Stock saved without Stock Purchase Number')
                 else:
                     form.save()
                     messages.success(request, 'Stock Updated Successfully')
             else:
                 print("quotation Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
-            return redirect(request.META['HTTP_REFERER'])
+        return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/requirements_list')
 
 # List quotation
