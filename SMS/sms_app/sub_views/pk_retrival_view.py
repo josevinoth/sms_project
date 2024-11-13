@@ -41,25 +41,32 @@ def pk_retrival_add(request,retrival_id=0):
             retrival = PkcostingInfo.objects.get(pk=retrival_id)
             form = PkretrivalForm(request.POST,instance=retrival)
             if form.is_valid():
-                form.save()
                 last_id = retrival_id
                 stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
-                try:
+                if stock_purchase_num_id:
                     stock_purchase_num = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id).sp_purchase_num
-                except:
+                    requested_qty = request.POST.get('ct_quantity_req')
+                    available_qty = request.POST.get('ct_quantity')
+
+                    if requested_qty > available_qty:
+                        messages.error(request, 'Available quantity is less than requested quantity')
+                        return redirect(request.META['HTTP_REFERER'])
+                    else:
+                        stock_status = (PkcostingInfo.objects.get(id=retrival_id)).ct_stock_status.id
+                        if stock_status == 1:
+                            form.save()
+                            messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                            update_reduced_dimensions(stock_purchase_num, last_id)
+                        else:
+                            messages.success(request, 'Stock Not Retrieved')
+                else:
                     messages.error(request, 'Please select a stock with purchase number')
                     return redirect(request.META['HTTP_REFERER'])
-                stock_status = (PkcostingInfo.objects.get(id=retrival_id)).ct_stock_status.id
-                if stock_status ==2:
-                    messages.success(request, 'Stock Successfully Retrieved & Supplied')
-                    update_reduced_dimensions(stock_purchase_num,last_id)
-                else:
-                    messages.success(request, 'Stock Not Retrieved')
             else:
                 print("retrival Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
-            # return redirect(request.META['HTTP_REFERER'])
-        return redirect('/SMS/pk_retrival_list')
+            return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/pk_retrival_list')
 
 # List retrival
 @login_required(login_url='login_page')
