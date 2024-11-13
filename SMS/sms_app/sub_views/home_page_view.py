@@ -33,7 +33,7 @@ def home_page(request):
     count_acceptance=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2))
     customer_contract_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30,ca_status=1))
     customer_rate_due_count = len(Customerattach.objects.filter(ca_rate_due_days__lte=30,ca_status=1))
-
+    total_dues = customer_contract_due_count + customer_rate_due_count
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
@@ -60,6 +60,7 @@ def home_page(request):
                'count_acceptance': count_acceptance,
                'customer_contract_due_count': customer_contract_due_count,
                'customer_rate_due_count': customer_rate_due_count,
+               'total_dues': total_dues
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 

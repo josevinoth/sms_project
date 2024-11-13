@@ -53,7 +53,7 @@
         </div>
     </div>
     <hr class="hr_style">
-    <button id="customer"  type="button" class="collapsible" onclick="window.location.href='{% url 'customer_contract_rate_due_days' %}'"><i class="fa fa-life-ring" aria-hidden="true"></i> Customer Management System (CMS) </button>
+    <button  id="customer" type="button" class="collapsible d-flex align-items-center" onclick="window.location.href='{% url 'customer_contract_rate_due_days' %}'"><i class="fa fa-life-ring" aria-hidden="true"></i> Customer Management System (CMS) <a href="{% url 'customer_contract_rate_dues_list' %}"><span class="badge bg-danger p-2 blink">{{ total_dues }}</span></a> </button>
     <div class="content" >
         <a href="{% url 'customer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer List</a>
         <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Dues <span class="badge bg-danger p-2 blink">{{ customer_contract_due_count }}</span></a>

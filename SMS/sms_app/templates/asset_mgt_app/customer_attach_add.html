@@ -43,7 +43,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Contract End Date</span>
                                     </div>
-                                    {% render_field form.ca_contract_end_date id="ca_contract_end_date" type="date" class="form-control" %}
+                                    {% render_field form.ca_contract_end_date id="ca_contract_end_date" type="date" class="form-control" onchange="validateEndDate()" %}
                                 </div>
 
                                 <!-- SOP Attachment Field -->
@@ -169,4 +169,18 @@
             }
         });
 </script>
+
+<script>
+        function validateEndDate() {
+            const startDate = document.getElementById('ca_contract_start_date').value;
+            const endDate = document.getElementById('ca_contract_end_date').value;
+
+            if (endDate < startDate) {
+                alert("End date should be greater than start date");
+                document.getElementById('ca_contract_end_date').value = '';
+            }
+        }
+</script>
+
+
 {% endblock content %}
