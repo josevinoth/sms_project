@@ -91,7 +91,6 @@ def invoice_add(request,invoice_id=0):
                     else:
                         # Handle the case when one or both values are None
                         max_storage_days = 0  # or set an appropriate default value
-                    max_storage_days = ((max_check_out_time - min_check_in_time).days) + 1
 
                     invoices = list((Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_gate_injob_no_id', flat=True)).distinct())
                     for inv in invoices:
@@ -133,7 +132,6 @@ def invoice_add(request,invoice_id=0):
                     else:
                         # Handle the case when one or both values are None
                         max_storage_days = 0  # or set an appropriate default value
-                    max_storage_days = ((max_check_out_time - min_check_in_time).days) + 1
 
                     invoices = list((Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_gate_injob_no_id', flat=True)).distinct())
                     for inv in invoices:
