@@ -534,7 +534,8 @@ def shipper_invoice_list(request,voucher_id):
     if customer_type_id>1:
         print("Inside Exclusive Loop")
         try:
-            invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_checkin_time__gte=billing_start_date,wh_check_in_out=2,wh_checkin_time__lte=billing_end_date,wh_voucher_num=None)
+            # invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_checkin_time__gte=billing_start_date,wh_check_in_out=2,wh_checkin_time__lte=billing_end_date,wh_voucher_num=None)
+            invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_checkin_time__gte=billing_start_date,wh_checkin_time__lte=billing_end_date,wh_voucher_num=None)
         except ValueError:
             messages.error(request, 'Check Billing Start & End Date!')
             return redirect(request.META['HTTP_REFERER'])
