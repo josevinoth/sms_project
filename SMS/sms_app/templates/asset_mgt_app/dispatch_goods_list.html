@@ -1,7 +1,12 @@
 {% block content %}
+<div class="col-md-2">
+    <a href="{% url 'dispatch_goods_list' %}" class="btn btn-warning btn-block btn-lg">
+        <i class="fas fa-plus"></i> Add Stocks
+    </a>
+</div>
 <hr>
 <div class="container-fluid">
-    <table  id="dispatch_goods_list" class="table table-striped table-bordered">
+    <table  id="dispatch_goods_list_new" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
             <th>WH Job Number</th>
@@ -43,7 +48,7 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#dispatch_goods_list').DataTable();
+    $('#dispatch_goods_list_new').DataTable();
 } );
 </script>
 {% endblock content %}
