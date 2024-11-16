@@ -48,7 +48,16 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#dispatch_goods_list_new').DataTable();
+    $('#dispatch_goods_list_new').DataTable({
+<!--        scrollY: "500px",-->
+        scrollX: true,
+<!--        scrollCollapse: true,-->
+        order: [1, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
 } );
 </script>
 {% endblock content %}
