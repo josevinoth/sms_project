@@ -79,7 +79,7 @@ def expense_list(request):
 
     # expense_list_val = ExpenseInfo.objects.filter(exp_business=organisation_id).order_by('-id')
     expense_list_val = ExpenseInfo.objects.all().order_by('-id')
-    paginator = Paginator(expense_list_val, 50)  # Adjust the pagination size if needed
+    paginator = Paginator(expense_list_val, 50000)  # Adjust the pagination size if needed
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
