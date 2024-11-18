@@ -36,9 +36,12 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             quotationsummary = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
             needassessment_num = quotationsummary.qs_assessment_num
             needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
-            customer_name_id = quotationsummary.qs_customer_name_2.id
+            customer_name_id = quotationsummary.qs_customer_name_2.id if quotationsummary.qs_customer_name_2 else None
+            customer_new_name_id = quotationsummary.pkqt_customer_new_name if quotationsummary.pkqt_customer_new_name else ""
+
             request.session['na_assessment_id'] = needassessment_id
             request.session['na_customer_name_id'] = customer_name_id
+            request.session['na_customer_new_name'] = customer_new_name_id
             form = PkquotationsummaryForm(instance=quotationsummary)
             quotation_list = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id)
 
@@ -169,17 +172,30 @@ def pk_quotationsummary_delete(request,pk_quotationsummary_id):
 
     return redirect('/SMS/pk_quotationsummary_list')
 
+
 @login_required(login_url='login_page')
 def pk_quotation_summary_check_unique_field(request):
     qs_assessment_num = request.GET.get('qs_assessment_num')
-    customer_name_id=PkneedassessmentInfo.objects.get(id=qs_assessment_num).na_customer_name.id
+
+    try:
+        need_assessment = PkneedassessmentInfo.objects.get(id=qs_assessment_num)
+
+        # Safely access fields, handling possible None values
+        customer_name_id = need_assessment.na_customer_name.id if need_assessment.na_customer_name else None
+        customer_new_name = need_assessment.na_customer_new_name if need_assessment.na_customer_new_name else ""
+
+    except ObjectDoesNotExist:
+        # Return an error if the specified assessment does not exist
+        return JsonResponse({'error': 'Assessment not found'}, status=404)
+
+    # Check if the assessment number already exists in the PkquotationsummaryInfo table
     exists = PkquotationsummaryInfo.objects.filter(qs_assessment_num=qs_assessment_num).exists()
-    return JsonResponse(
-        {
-            'exists': exists,
-            'customer_name_id':customer_name_id,
-        }
-    )
+
+    return JsonResponse({
+        'exists': exists,
+        'customer_name_id': customer_name_id,
+        'customer_new_name': customer_new_name,
+    })
 
 @login_required(login_url='login_page')
 def pk_bvm_quotation_pdf(request,quotation_id=0):
@@ -286,6 +302,7 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
             'cs_client_scope': quotationsummary.qs_client_scope,
             'cs_bvm_scope': quotationsummary.qs_bvm_scope,
             'cs_customer_name': quotationsummary.qs_customer_name_2,
+            'cs_customer_new_name': quotationsummary.pkqt_customer_new_name,
             'cs_gst': quotationsummary.qs_gst,
             'cs_final_cost': quotationsummary.qs_final_cost,
             'cs_estimation_type': 1,
@@ -350,8 +367,11 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
                             ct_width_req=quotation.pkqt_width_req,
                             ct_height_req=quotation.pkqt_height_req,
                             ct_length_req=quotation.pkqt_length_req,
+                            ct_quantity_req=quotation.pkqt_quantity_req,
+                            ct_sqrt_req=quotation.pkqt_sqrt_req,
                             ct_stock_status=stock_status_instance,
                             ct_customer_name=quotation.pkqt_customer_name,
+                            ct_customer_new_name=quotation.pkqt_customer_new_name2,
                             ct_customer_po=pkqt_customer_po,
                             ct_updated_by=request.user,
                             ct_na_quantity=quotation.pkqt_na_quantity,

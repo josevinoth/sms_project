@@ -12,6 +12,7 @@ def costing_add(request, costing_id=0):
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
     na_customer_name_id = request.session.get('na_customer_name_id')
+    na_customer_new_name_id = request.session.get('na_customer_new_name')
     ses_customer_po_id = request.session.get('ses_customer_po_id')
     print('ses_customer_po_id', ses_customer_po_id)
 
@@ -28,6 +29,7 @@ def costing_add(request, costing_id=0):
             'user_id': user_id,
             'na_assessment_num_id': na_assessment_num_id,
             'na_customer_name_id': na_customer_name_id,
+            'na_customer_new_name_id': na_customer_new_name_id,
             'ses_customer_po_id': ses_customer_po_id,
             'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id, ct_customer_po=ses_customer_po_id),
         }

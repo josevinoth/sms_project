@@ -57,6 +57,12 @@ def needassessment_add(request,needassessment_id=0):
             else:
                 print("needassessment Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
+
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        print(f"Error in {field}: {error}")
+                        messages.error(request, f"Error in {field}: {error}")
+
                 return redirect(request.META['HTTP_REFERER'])
         else:
             needassessment = PkneedassessmentInfo.objects.get(pk=needassessment_id)

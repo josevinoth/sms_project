@@ -27,6 +27,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Customer New Name</span>
+									</div>
+									{% render_field form.po_customer_new_name id="po_customer_new_name" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Quotation Number</span>
 									</div>
 									{% render_field form.po_quotation_num id="po_quotation_num" class="form-control disable_a_href" %}
@@ -189,21 +195,45 @@
 </script>
 
 <script>
-	$("#po_assessment_num").change(function () {
-       var assessment_num = $(this).val();
-       $.ajax({
-         url: '{% url 'pk_get_customer' %}',
-         data: {
-           'assessment_num': assessment_num,
-         },
-         success: function (data) {
-             console.log(data);
-             document.getElementById("po_customer_name").value =data.customer_id
-             document.getElementById("po_quotation_num").value =data.quotation_num_id
-         }
-       });
+    $(document).ready(function () {
+        $("#po_assessment_num").change(function () {
+            var assessment_num = $(this).val().trim(); // Ensure no leading/trailing spaces
+
+            if (!assessment_num) {
+                console.warn("Assessment number is empty or invalid.");
+                return; // Exit if input is invalid
+            }
+
+            // Perform AJAX request
+            $.ajax({
+                url: '{% url "pk_get_customer" %}',
+                data: {
+                    'assessment_num': assessment_num,
+                },
+                dataType: 'json', // Expect JSON response
+                success: function (data) {
+                    console.log(data); // Log response for debugging
+
+                    if (data.error) {
+                        console.error("Server Error: " + data.error);
+                        alert("Assessment not found or invalid."); // Notify user
+                        return;
+                    }
+
+                    // Safely update the fields with data
+                    document.getElementById("po_customer_name").value = data.customer_id || '';
+                    document.getElementById("po_customer_new_name").value = data.customer_new_name || '';
+                    document.getElementById("po_quotation_num").value = data.quotation_num_id || '';
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX Error: " + status + " - " + error);
+                    alert("An error occurred while fetching the customer details. Please try again.");
+                }
+            });
+        });
     });
 </script>
+
 <script>
 	function calculateTotal() {
         var value = parseFloat(document.getElementById('po_value').value) || 0;
