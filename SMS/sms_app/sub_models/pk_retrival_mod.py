@@ -19,6 +19,7 @@ class PkretrivalInfo(models.Model):
     pret_assessment_num=models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='',blank=True, null=True)
     pret_length = models.FloatField(blank=True, null=True, default=0.0)
     pret_stock_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE, blank=True, null=True)
+    pret_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
 
     class Meta:
         ordering = ["pret_cost_type"]
