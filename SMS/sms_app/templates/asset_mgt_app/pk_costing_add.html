@@ -38,6 +38,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Customer New Name</span>
+									</div>
+									{% render_field form.ct_customer_new_name id="ct_customer_new_name"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Customer PO</span>
 									</div>
 									{% render_field form.ct_customer_po id="ct_customer_po"  class="form-control disable_a_href" %}
@@ -268,6 +274,7 @@
         var stock_status=document.getElementById("ct_stock_status").value;
         var assessment_num=document.getElementById("ct_assessment_num").value;
         var customer_name=document.getElementById("ct_customer_name").value;
+        var customer_new_name=document.getElementById("ct_customer_new_name").value;
         var customer_po=document.getElementById("ct_customer_po").value;
         if (stock_status==2)
             {
@@ -309,6 +316,14 @@
         else
             {
                 document.getElementById("ct_customer_name").value = customer_name;
+            }
+            if (customer_new_name=="")
+            {
+                document.getElementById("ct_customer_new_name").value ='{{na_customer_new_name_id}}';
+            }
+        else
+            {
+                document.getElementById("ct_customer_new_name").value = customer_new_name;
             }
 
         pk_store_na_dimension_id();
