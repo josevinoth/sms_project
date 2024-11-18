@@ -30,7 +30,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Name</span>
 									</div>
-									{% render_field form.na_customer_name id="na_customer_name" class="form-control " %}
+									{% render_field form.na_customer_name id="na_customer_name" class="form-control " onchange="package_type_change()" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >New Customer Name</span>
+									</div>
+									{% render_field form.na_customer_new_name class="form-control disable_a_href" id="na_customer_new_name"%}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -42,7 +48,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Type Of Packing</span>
 									</div>
-									{% render_field form.na_type_of_pack id="na_type_of_pack" class="form-control " onchange="package_type_change()" %}
+									{% render_field form.na_type_of_pack1 id="na_type_of_pack1" class="form-control " onchange="package_type_change()" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -227,6 +233,12 @@
     }
 } );
 </script>
+<script>
+    $("#na_customer_name").select2({
+        width: '68%'
+    });
+
+</script>
 
 <script>
 	$(document).ready(function() {
@@ -252,13 +264,22 @@
 
 <script>
 	function package_type_change() {
-        var type_packing = document.getElementById("na_type_of_pack").value;
+        var type_packing = document.getElementById("na_type_of_pack1").value;
         if (type_packing == 7) {
             $('#na_others_type_pack').removeClass('disable_a_href');
         } else {
             $('#na_others_type_pack').addClass('disable_a_href');
              document.getElementById("na_others_type_pack").value =" ";
         }
+        var type_packing = document.getElementById("na_customer_name").value;
+        if (type_packing == 210) {
+            $('#na_customer_new_name').removeClass('disable_a_href');
+        } else {
+            $('#na_customer_new_name').addClass('disable_a_href');
+             document.getElementById("na_customer_new_name").value =" ";
+        }
+
+
     }
 </script>
 
@@ -322,5 +343,24 @@
             dropUp: false
         });
     });
+</script>
+<script>
+	function cusnewexist_enabler() {
+      var jn5=document.getElementById("na_customer_new").value
+      if (jn5==2)
+        {
+            $('#na_customer_name').removeClass('disable_a_href');
+            $('#na_customer_new_name').addClass('disable_a_href');
+            $('#na_customer_type').addClass('disable_a_href');
+            document.getElementById("na_customer_new_name").value=""
+        }
+      else
+          {
+            $('#na_customer_name').addClass('disable_a_href');
+            $('#na_customer_new_name').removeClass('disable_a_href');
+            $('#na_customer_type').removeClass('disable_a_href');
+            document.getElementById("na_customer_name").value=""
+        }
+    }
 </script>
 {% endblock content %}

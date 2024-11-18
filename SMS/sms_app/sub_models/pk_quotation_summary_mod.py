@@ -33,6 +33,7 @@ class PkquotationsummaryInfo(models.Model):
                                            db_column='qs_status', blank=True, null=True,default=6)
     qs_gst = models.FloatField(blank=True, null=True, default=0.0)
     qs_final_cost = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
 
     class Meta:
         ordering = ["id"]

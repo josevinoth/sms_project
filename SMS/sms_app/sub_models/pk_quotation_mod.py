@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo,Nadimensiontype
+from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,Cusnewexist,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo,Nadimensiontype
 
 class PkquotationInfo(models.Model):
     pkqt_cost_type = models.ForeignKey(Costtype, on_delete=models.CASCADE, default='')
@@ -8,7 +8,7 @@ class PkquotationInfo(models.Model):
     pkqt_height = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_cft = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_rate = models.FloatField(blank=True, null=True, default=0.0)
-    pkqt_days = models.IntegerField(blank=True, null=True, default=0)
+    pkqt_days = models.FloatField(blank=True, null=True, default=0)
     pkqt_total_cost = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_created_at = models.DateTimeField(null=True, auto_now_add=True)
     pkqt_updated_at = models.DateTimeField(null=True, auto_now=True)
@@ -51,7 +51,7 @@ class PkquotationInfo(models.Model):
     pkqt_cft_req = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_totalbox_cost = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_na_quantity = models.FloatField(blank=True, null=True, default=0.0)
-
+    pkqt_customer_new_name2 = models.CharField(blank=True, null=True, max_length=500)
 
     class Meta:
         ordering = ["pkqt_cost_type"]

@@ -33,6 +33,8 @@ class PkcostingsummaryInfo(models.Model):
                                        db_column='cs_status', default=6)
     cs_gst = models.FloatField(blank=True, null=True, default=0.0)
     cs_final_cost = models.FloatField(blank=True, null=True, default=0.0)
+    cs_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
+
     class Meta:
         ordering = ["id"]
 

@@ -38,7 +38,7 @@ class PkcostingInfo(models.Model):
     ct_sqrt_req = models.FloatField(blank=True, null=True, default=0.0)
     ct_totalbox_cost = models.FloatField(blank=True, null=True, default=0.0)
     ct_na_quantity = models.FloatField(blank=True, null=True, default=0.0)
-
+    ct_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
     class Meta:
         ordering = ["ct_cost_type"]
 

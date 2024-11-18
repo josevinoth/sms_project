@@ -12,6 +12,7 @@ def pk_quotation_add(request,quotation_id=0):
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
     na_customer_name_id = request.session.get('na_customer_name_id')
+    na_customer_new_name_id = request.session.get('na_customer_new_name')
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id = User_extInfo.objects.get(user=user_id).emp_role.id
     if request.method == "GET":
@@ -24,6 +25,7 @@ def pk_quotation_add(request,quotation_id=0):
                 'user_id': user_id,
                 'na_assessment_num_id': na_assessment_num_id,
                 'na_customer_name_id': na_customer_name_id,
+                'na_customer_new_name_id': na_customer_new_name_id,
                 'role': role,
                 'role_id': role_id,
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
