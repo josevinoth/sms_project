@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import SalesInfo,StatusList,CustomerInfo,MyUser,TrbusinesstypeInfo
+from ..models import Business_Sol_info,StatusList,CustomerInfo,MyUser,TrbusinesstypeInfo
 
 
 class BilingInfo(models.Model):
@@ -42,6 +42,7 @@ class BilingInfo(models.Model):
     bill_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,related_name='bill_updated_by',db_column='bill_updated_by')
     bill_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, null=True,default=6)
     bill_sale_person = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,blank=True,related_name='bill_sale_person',db_column='bill_sale_person')
+    bill_business = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, default=1)
 
     class Meta:
         ordering = ["-bill_invoice_ref"]

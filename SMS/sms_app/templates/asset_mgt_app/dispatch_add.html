@@ -167,30 +167,62 @@
 		<div class="col-2"></div>
 	</div>
 </form>
-{% include "asset_mgt_app/dispatch_goods_list.html" %}
+
+<div class="row">
+	<div class="col-1"></div>
+	<div class="col-10" >
+		<div id="accordion" class="container-fluid">
+			<div class="card">
+				<div class="card-header bg-info" id="headingTwo">
+					<h5 class="mb-0">
+						<button class="btn btn-danger text-white" id="add_edit_stocks" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+							<i class="fas fa-chevron-down"></i>
+						</button>
+					</h5>
+				</div>
+				<div id="collapseTwo"  aria-labelledby="headingTwo" data-parent="#accordion">
+					<div class="card-body">
+						<div class="card-body">
+							<div id="dispatch_goods_list">
+								{% include "asset_mgt_app/dispatch_goods_list.html" %}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-1"></div>
+</div>
 
 <script>
-$(document).ready(function() {
-	document.getElementById("dispatch_updated_by").value='{{user_id}}';
-  });
+	$(document).ready(function() {
+        document.getElementById("dispatch_updated_by").value='{{user_id}}';
+        var dispatch_id='{{dispatch_id}}';
+		if (dispatch_id >0)
+		{
+			$('#dispatch_goods_list').removeClass('disable_a_href');
+		}
+		else
+		{
+			$('#dispatch_goods_list').addClass('disable_a_href');
+		}
+      });
 </script>
 <script>
-    $("#dispatch_customer").change(function () {
+	$("#dispatch_customer").change(function () {
       var url = $("#gate_in").attr("data-load_customer_model-url");
-
       var gatein_customer_id = $(this).find(":selected").text();
-
       $.ajax({
         url: url,
         data: {
           'lm_customer_name_id': gatein_customer_id
         },
-		success: function (data) {
-			$("#dispatch_customer_type").val(data);
+        success: function (data) {
+            $("#dispatch_customer_type").val(data);
 
         }
       });
-
     });
-  </script>
+</script>
 {% endblock content %}

@@ -20,6 +20,13 @@
 							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Business</span>
+									</div>
+									{% render_field invoice_form.bill_business id="bill_business" class="form-control disable_a_href" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Invoice Date</span>
 									</div>
 									{% render_field invoice_form.bill_invoice_date type="date" id="bill_invoice_date" class="form-control" %}

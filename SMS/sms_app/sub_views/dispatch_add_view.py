@@ -44,6 +44,7 @@ def dispatch_add(request, dispatch_id=0):
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
                 'dispatch_list':dispatch_list,
                 'user_id': user_id,
+                'dispatch_id': dispatch_id,
             }
         else:
             print("I am inside get edit Dispatch")
@@ -52,12 +53,15 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_list = Dispatch_info.objects.all()
             dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
             dispatch_goods_list= Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
+            request.session['ses_dispatch_id'] = dispatch_info.id
+
             context = {
                 'dispatch_form': dispatch_form,
                 'first_name': first_name,
                 'dispatch_list':dispatch_list,
                 'user_id':user_id,
                 'dispatch_goods_list':dispatch_goods_list,
+                'dispatch_id':dispatch_id,
             }
         return render(request, "asset_mgt_app/dispatch_add.html", context)
     else:
@@ -134,12 +138,12 @@ def dispatch_delete(request,dispatch_id):
     # return redirect('/SMS/dispatch_list')
 
 @login_required(login_url='login_page')
-def dispatch_goods_list(request,dispatch_id):
+def dispatch_goods_list(request):
     # wh_job_id = request.session.get('ses_gatein_id_nam')
     first_name = request.session.get('first_name')
+    dispatch_id = request.session.get('ses_dispatch_id')
     dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
     dispatch_customer = Dispatch_info.objects.get(pk=dispatch_id).dispatch_customer
-    print('dispatch_customer',dispatch_customer)
     request.session['ses_dispatch_num_val'] = dispatch_num_val
     request.session['ses_dispatch_id_val'] = dispatch_id
     # # dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
@@ -340,3 +344,8 @@ def dispatch_gatepass_pdf(request,dispatch_id=0):
         return HttpResponse('We has some error <pre>' + html + '</pre>')
     return response
 
+@login_required(login_url='login_page')
+def dispatch_goods_back(request):
+    dispatch_id = request.session.get('ses_dispatch_id')
+
+    return redirect('/SMS/dispatch_update/' + str(dispatch_id))

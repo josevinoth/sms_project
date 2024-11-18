@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container-fluid row">
     <div class="col-md-1">
-        <a href="{% url 'dispatch_search' %}" class="btn btn-primary btn-block btn-lg">
+        <a href="{% url 'dispatch_goods_back' %}" class="btn btn-primary btn-block btn-lg">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
@@ -40,7 +40,7 @@
             <th>WH Stock Number</th>
             <th>Number Of Pieces</th>
             <th>Dispatch Number</th>
-             <th>Truck Type Billing</th>
+            <th>Truck Type Billing</th>
             <th>Shipper Invoice</th>
             <th>Customer Name</th>
             <th>Consigner</th>
@@ -61,7 +61,7 @@
             <td> {{goodsinfo.wh_qr_rand_num}}</td>
             <td> {{goodsinfo.wh_goods_pieces}}</td>
             <td> {{goodsinfo.wh_dispatch_num}}</td>
-             <td> {{goodsinfo.wh_dispatch_id.dispatch_billing_truck_type}}</td>
+            <td> {{goodsinfo.wh_dispatch_id.dispatch_billing_truck_type}}</td>
             <td> {{goodsinfo.wh_goods_invoice}}</td>
             <td> {{goodsinfo.wh_customer_name}}</td>
             <td> {{goodsinfo.wh_consigner}}</td>
@@ -83,71 +83,71 @@
     {% include "asset_mgt_app/dispatch_list_master_WOH.html" %}
 </div>
 <script>
-$(document).ready(function (){
-      var table=new DataTable('#dispatch_goods_list', {
-        columnDefs: [
-            {
-                orderable: false,
-                className: 'select-checkbox',
-                targets: 0
-            }
-        ],
-        select: {
-            style: 'os',
-            selector: 'td:first-child'
-      },
-        order: [[1, 'asc']],
-        dom: 'lBfrtip',
-<!--        scrollY: "300px",-->
-        scrollX: true,
-});
+    $(document).ready(function (){
+          var table=new DataTable('#dispatch_goods_list', {
+            columnDefs: [
+                {
+                    orderable: false,
+                    className: 'select-checkbox',
+                    targets: 0
+                }
+            ],
+            select: {
+                style: 'os',
+                selector: 'td:first-child'
+          },
+            order: [[1, 'asc']],
+            dom: 'lBfrtip',
+    <!--        scrollY: "300px",-->
+            scrollX: true,
+    });
 
-   // Handle form submission event
-   $('#remove_btn').on('click', function(){
-      	var rows_selected = table.column(0).selected();
-      	let selectedValues = table.rows( { selected: true } ).data();
-      	var len1=( selectedValues ).length;
-      	console.log( len1 );
-      	var len=( selectedValues[0] ).length;
-      	console.log( selectedValues );
-      	console.log( selectedValues[0] );
-      	console.log( len );
-      	var elements = [];
-      	for (var i = 0; i < len1; i++) {
-				console.log(selectedValues[i][2]);
-				elements.push(selectedValues[i][2]);
-			}
-		var elements_list=elements;
-   $.ajax({
-        url: '{% url 'dispatch_remove_goods' %}',
-        type: 'GET',
-        data: {
-            'myList[]': elements_list,  // This will encode the list as URL parameters
-        },
-        success: function(response) {
-            // Handle the response from the Django view
-        },
-   });
+       // Handle form submission event
+       $('#remove_btn').on('click', function(){
+              var rows_selected = table.column(0).selected();
+              let selectedValues = table.rows( { selected: true } ).data();
+              var len1=( selectedValues ).length;
+              console.log( len1 );
+              var len=( selectedValues[0] ).length;
+              console.log( selectedValues );
+              console.log( selectedValues[0] );
+              console.log( len );
+              var elements = [];
+              for (var i = 0; i < len1; i++) {
+                    console.log(selectedValues[i][2]);
+                    elements.push(selectedValues[i][2]);
+                }
+            var elements_list=elements;
+       $.ajax({
+            url: '{% url 'dispatch_remove_goods' %}',
+            type: 'GET',
+            data: {
+                'myList[]': elements_list,  // This will encode the list as URL parameters
+            },
+            success: function(response) {
+                // Handle the response from the Django view
+            },
+       });
 
-   });
-});
+       });
+    });
 </script>
 <script>
-  function editRow(button) {
-    // Get the row of the clicked button
-    var row = button.parentNode.parentNode;
+    function editRow(button) {
+      // Get the row of the clicked button
+      var row = button.parentNode.parentNode;
 
-    // Get the name and age cells
-    var nameCell = row.cells[5];
-    var ageCell = row.cells[6];
+      // Get the name and age cells
+      var nameCell = row.cells[5];
+      var ageCell = row.cells[6];
 
-    // Get the new values from the user (you can use prompt, input fields, etc.)
-    var newName = prompt("Enter new name", nameCell.innerText);
-    var newAge = prompt("Enter new age", ageCell.innerText);
+      // Get the new values from the user (you can use prompt, input fields, etc.)
+      var newName = prompt("Enter new name", nameCell.innerText);
+      var newAge = prompt("Enter new age", ageCell.innerText);
 
-    // Update the cell values
-    nameCell.innerText = newName;
-    ageCell.innerText = newAge;
-  }
+      // Update the cell values
+      nameCell.innerText = newName;
+      ageCell.innerText = newAge;
+    }
 </script>
 {% endblock content %}
