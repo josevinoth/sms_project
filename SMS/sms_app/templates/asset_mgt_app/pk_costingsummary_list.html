@@ -16,11 +16,11 @@
         </a>
     </div>
 
-<!--    <div class="col-md-1">-->
-<!--        <a href="{% url 'costingsummary_insert' %}" class="btn btn-success btn-block btn-lg">-->
-<!--            <i class="fas fa-plus"></i> Add-->
-<!--        </a>-->
-<!--    </div>-->
+    <!--    <div class="col-md-1">-->
+    <!--        <a href="{% url 'costingsummary_insert' %}" class="btn btn-success btn-block btn-lg">-->
+    <!--            <i class="fas fa-plus"></i> Add-->
+    <!--        </a>-->
+    <!--    </div>-->
 </div>
 <hr>
 <div class="container-fluid">
@@ -44,49 +44,50 @@
             <th>Total Cost(With Margin)</th>
             <th>Total CFT</th>
             <th>Rate Per CFT</th>
+            <th>Status</th>
             <th>Updated at</th>
             <th>Updated By</th>
-            <th>Status</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
         </thead>
         <tbody>
-        {% for costingsummaryinfo in costingsummary_list %}
+        {% for costingsummaryinfo, costinginfo in combined_list %}
         <tr>
-            <td> {{costingsummaryinfo.cs_created_at}}</td>
-            <td> {{costingsummaryinfo.cs_assessment_num}}</td>
-            <td> {{costingsummaryinfo.cs_customer_name}}</td>
-            <td> {{costingsummaryinfo.cs_customer_po}}</td>
-            <td> {{costingsummaryinfo.cs_wood_cost}}</td>
-            <td> {{costingsummaryinfo.cs_engineer_cost}}</td>
-            <td> {{costingsummaryinfo.cs_labour_cost}}</td>
-            <td> {{costingsummaryinfo.cs_crane_cost}}</td>
-            <td> {{costingsummaryinfo.cs_ht_cost}}</td>
-            <td> {{costingsummaryinfo.cs_management_cost}}</td>
-            <td> {{costingsummaryinfo.cs_material_cost}}</td>
-            <td> {{costingsummaryinfo.cs_transport_cost}}</td>
-            <td> {{costingsummaryinfo.cs_total_cost_wom}}</td>
-            <td> {{costingsummaryinfo.cs_margin}}</td>
-            <td> {{costingsummaryinfo.cs_total_cost_wm}}</td>
-            <td> {{costingsummaryinfo.cs_total_cft}}</td>
-            <td> {{costingsummaryinfo.cs_rate_per_cft}}</td>
-            <td> {{costingsummaryinfo.cs_updated_at}}</td>
-            <td> {{costingsummaryinfo.cs_updated_by}}</td>
-            <td> {{costingsummaryinfo.cs_status}}</td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'costingsummary_update' costingsummaryinfo.id %}">
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
-            <td>
-                <form action="{% url 'costingsummary_delete' costingsummaryinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
+            <td>{{ costingsummaryinfo.cs_created_at }}</td>
+            <td>{{ costingsummaryinfo.cs_assessment_num }}</td>
+            <td>{{ costingsummaryinfo.cs_customer_name }}</td>
+            <td>{{ costingsummaryinfo.cs_customer_po }}</td>
+            <td>{{ costingsummaryinfo.cs_wood_cost }}</td>
+            <td>{{ costingsummaryinfo.cs_engineer_cost }}</td>
+            <td>{{ costingsummaryinfo.cs_labour_cost }}</td>
+            <td>{{ costingsummaryinfo.cs_crane_cost }}</td>
+            <td>{{ costingsummaryinfo.cs_ht_cost }}</td>
+            <td>{{ costingsummaryinfo.cs_management_cost }}</td>
+            <td>{{ costingsummaryinfo.cs_material_cost }}</td>
+            <td>{{ costingsummaryinfo.cs_transport_cost }}</td>
+            <td>{{ costingsummaryinfo.cs_total_cost_wom }}</td>
+            <td>{{ costingsummaryinfo.cs_margin }}</td>
+            <td>{{ costingsummaryinfo.cs_total_cost_wm }}</td>
+            <td>{{ costingsummaryinfo.cs_total_cft }}</td>
+            <td>{{ costingsummaryinfo.cs_rate_per_cft }}</td>
+            <td>{{ costinginfo.ct_stock_status }}</td>
+            <td>{{ costingsummaryinfo.cs_updated_at }}</td>
+            <td>{{ costingsummaryinfo.cs_updated_by }}</td>
+
+        <td>
+        <a class="btn btn-primary" href="{% url 'costingsummary_update' costingsummaryinfo.id %}">
+            <i class="far fa-edit"></i>
+        </a>
+        </td>
+        <td>
+            <form action="{% url 'costingsummary_delete' costingsummaryinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </form>
+        </td>
         </tr>
         {% endfor %}
         </tbody>

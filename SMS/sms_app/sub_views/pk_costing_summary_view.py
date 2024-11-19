@@ -175,8 +175,18 @@ def costingsummary_add(request,costingsummary_id=0):
 @login_required(login_url='login_page')
 def costingsummary_list(request):
     first_name = request.session.get('first_name')
-    context = {'costingsummary_list' : PkcostingsummaryInfo.objects.all(),'first_name': first_name}
-    return render(request,"asset_mgt_app/pk_costingsummary_list.html",context)
+    costingsummary_list = PkcostingsummaryInfo.objects.all()
+    costing_list = PkcostingInfo.objects.all()
+
+    # Combine the two lists
+    combined_list = zip(costingsummary_list, costing_list)
+
+    context = {
+        'combined_list': combined_list,
+        'first_name': first_name,
+    }
+    return render(request, "asset_mgt_app/pk_costingsummary_list.html", context)
+
 
 #Delete costingsummary
 @login_required(login_url='login_page')
