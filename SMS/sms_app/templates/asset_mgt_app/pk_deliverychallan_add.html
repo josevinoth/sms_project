@@ -1,0 +1,187 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<form method="POST" action="" id="delivery_challan_add" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-2"></div>
+        <div class="col-8">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center">
+                        <h3>Add/Update Delivery Challan</h3>
+                    </div>
+                    <div class="card-body bg-light">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Assessment Number</span>
+                                    </div>
+                                    {% render_field form.dc_assessment_num id="dc_assessment_num" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer Name</span>
+                                    </div>
+                                    {% render_field form.dc_customer_name id="dc_customer_name" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer Address</span>
+                                    </div>
+                                    {% render_field form.dc_customer_address id="dc_customer_address" class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer GSTIN</span>
+                                    </div>
+                                    {% render_field form.dc_customer_gstin id="dc_customer_gstin" class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer PO</span>
+                                    </div>
+                                    {% render_field form.dc_customer_po id="dc_customer_po" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">E-WAY Bill No</span>
+                                    </div>
+                                    {% render_field form.dc_eway_billno id="dc_eway_billno" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">E-WAY Bill Date</span>
+                                    </div>
+                                    {% render_field form.dc_eway_date id="dc_eway_date" type="date" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">GRN Ref</span>
+                                    </div>
+                                    {% render_field form.dc_grn id="dc_grn" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Sales Order</span>
+                                    </div>
+                                    {% render_field form.dc_sales_order_po id="dc_sales_order_po" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Stock Register</span>
+                                    </div>
+                                    {% render_field form.dc_stock_register id="dc_stock_register" class="form-control" %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Transport Name</span>
+                                    </div>
+                                    {% render_field form.dc_transporter_name id="dc_transporter_name" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Consignment Note</span>
+                                    </div>
+                                    {% render_field form.dc_consignment_note id="dc_consignment_note" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Date</span>
+                                    </div>
+                                    {% render_field form.dc_date id="dc_date" type="date" class="form-control" %}
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Vehicle No</span>
+                                    </div>
+                                    {% render_field form.dc_vehicle_no id="dc_vehicle_no" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Driver Name</span>
+                                    </div>
+                                    {% render_field form.dc_driver_name id="dc_driver_name" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Driver Mobile No</span>
+                                    </div>
+                                    {% render_field form.dc_driver_mobile_num id="dc_driver_mobile_num" class="form-control" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% if messages %}
+                                    <ul class="messages">
+                                        {% for message in messages %}
+                                            <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                        {% endfor %}
+                                    </ul>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Submit
+                        </button>
+                        <a href="{% url 'packing_delivery_list' %}" class="btn btn-danger float-right">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-3"></div>
+    </div>
+</form>
+{% include "asset_mgt_app/pk_delivery_challan_list_WOH.html" %}
+
+
+<script>
+    $(document).ready(function() {
+        $('#dc_assessment_num').on('change', function() {
+            var dc_assessment_num = document.getElementById("dc_assessment_num").value;
+            // Send an AJAX request to check if the value exists in the database
+            $.ajax({
+                url: '{% url "pk_costing_get_customer" %}',
+                data: {
+                    'cs_assessment_num': dc_assessment_num,
+                },
+                dataType: 'json',
+                success: function(data) {
+                var customer_name_id=data.customer_name_id
+                document.getElementById("dc_customer_name").value=customer_name_id
+   				$('#dc_customer_po').removeClass('disable_a_href');
+				$("#dc_customer_po").empty();
+				var customer_po_id=data.customer_po_id;
+
+				var customer_po_name=data.customer_po_name;
+				var len1 = (customer_po_id).length;
+				$("#dc_customer_po").empty();
+				$('#dc_customer_po').empty().append("<option value='0'>--Select--</option>");
+				for( var j = 0; j<len1; j++)
+				{
+					$("#dc_customer_po").append("<option value='"+customer_po_id[j]+"'>"+customer_po_name[j]+"</option>");
+				}
+				$('#dc_customer_address').val(data.customer_address);
+                $('#dc_customer_gstin').val(data.customer_gstin);
+            }
+            });
+        });
+    });
+</script>
+
+
+{% endblock content %}

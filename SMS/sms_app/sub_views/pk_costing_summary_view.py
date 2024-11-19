@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from ..forms import PkcostingsummaryForm
-from ..models import User_extInfo,PkpurchaseorderInfo,POdimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo
+from ..models import User_extInfo,PkpurchaseorderInfo,POdimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo,CustomerInfo
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
@@ -200,11 +200,15 @@ def pk_costing_get_customer(request):
     print('customer_po',customer_po_qs)
     customer_po_name = list(customer_po_qs.values_list('po_num', flat=True))
     customer_po_id = list(customer_po_qs.values_list('id', flat=True))
+    customer = CustomerInfo.objects.get(id=customer_name_id)
+
     return JsonResponse(
         {
             'customer_name_id':customer_name_id,
             'customer_po_id':customer_po_id,
             'customer_po_name':customer_po_name,
+            'customer_address': customer.cu_address,
+            'customer_gstin': customer.cu_gst,
         }
     )
 

@@ -1,0 +1,44 @@
+{% block content %}
+<hr>
+<div class="container-fluid">
+    <table  id="dispatch_goods_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Assessment Number</th>
+            <th>Customer PO</th>
+            <th>Description</th>
+            <th>UOM</th>
+            <th>Quantity</th>
+            <th>HSN Code</th>
+            <th>Item Code</th>
+            <th>Base Value</th>
+            <th>GST Rate</th>
+            <th>GST Amount</th>
+            <th>Total Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for challan in deliverychallan_list %}
+        <tr>
+            <td>{{ challan.pod_assess_num }}</td>
+            <td>{{ challan.pod_po_num }}</td>
+            <td>{{ challan.pod_type_of_req }}</td>
+            <td>{{ challan.pod_uom }}</td>
+            <td>{{ challan.pod_quantity }}</td>
+            <td></td>
+            <td>{{ challan.pod_item }}</td>
+            <td>{{ challan.pod_cost_unit }}</td>
+            <td></td>
+            <td></td>
+            <td>{{ challan.pod_cost_total }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#dispatch_goods_list').DataTable();
+} );
+</script>
+{% endblock content %}
