@@ -32,7 +32,7 @@ def invoice_add(request,invoice_id=0):
             count_stocks=len(list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num)))
 
             # check whether shipper details added
-            if count_stocks==0:
+            if count_stocks<0:
                 messages.error(request, 'Add Shipper Invoice!')
                 return redirect(request.META['HTTP_REFERER'])
             else:
@@ -86,7 +86,11 @@ def invoice_add(request,invoice_id=0):
                     storage_cost_total = round((warehouse_charge_1), 2)
                     min_check_in_time = BilingInfo.objects.get(pk=invoice_id).bill_start_date
                     max_check_out_time = BilingInfo.objects.get(pk=invoice_id).bill_end_date
-                    max_storage_days = ((max_check_out_time - min_check_in_time).days) + 1
+                    if max_check_out_time is not None and min_check_in_time is not None:
+                        max_storage_days = (max_check_out_time - min_check_in_time).days + 1
+                    else:
+                        # Handle the case when one or both values are None
+                        max_storage_days = 0  # or set an appropriate default value
 
                     invoices = list((Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_gate_injob_no_id', flat=True)).distinct())
                     for inv in invoices:
@@ -123,7 +127,11 @@ def invoice_add(request,invoice_id=0):
                     storage_cost_total = round((warehouse_charge_1), 2)
                     min_check_in_time = BilingInfo.objects.get(pk=invoice_id).bill_start_date
                     max_check_out_time = BilingInfo.objects.get(pk=invoice_id).bill_end_date
-                    max_storage_days = ((max_check_out_time - min_check_in_time).days) + 1
+                    if max_check_out_time is not None and min_check_in_time is not None:
+                        max_storage_days = (max_check_out_time - min_check_in_time).days + 1
+                    else:
+                        # Handle the case when one or both values are None
+                        max_storage_days = 0  # or set an appropriate default value
 
                     invoices = list((Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_gate_injob_no_id', flat=True)).distinct())
                     for inv in invoices:
@@ -527,6 +535,7 @@ def shipper_invoice_list(request,voucher_id):
         print("Inside Exclusive Loop")
         try:
             invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_checkin_time__gte=billing_start_date,wh_check_in_out=2,wh_checkin_time__lte=billing_end_date,wh_voucher_num=None)
+            # invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_checkin_time__gte=billing_start_date,wh_checkin_time__lte=billing_end_date,wh_voucher_num=None)
         except ValueError:
             messages.error(request, 'Check Billing Start & End Date!')
             return redirect(request.META['HTTP_REFERER'])

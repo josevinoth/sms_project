@@ -12,6 +12,7 @@ def costing_add(request, costing_id=0):
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
     na_customer_name_id = request.session.get('na_customer_name_id')
+    na_customer_new_name_id = request.session.get('na_customer_new_name')
     ses_customer_po_id = request.session.get('ses_customer_po_id')
     print('ses_customer_po_id', ses_customer_po_id)
 
@@ -28,6 +29,7 @@ def costing_add(request, costing_id=0):
             'user_id': user_id,
             'na_assessment_num_id': na_assessment_num_id,
             'na_customer_name_id': na_customer_name_id,
+            'na_customer_new_name_id': na_customer_new_name_id,
             'ses_customer_po_id': ses_customer_po_id,
             'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id, ct_customer_po=ses_customer_po_id),
         }
@@ -35,6 +37,7 @@ def costing_add(request, costing_id=0):
 
     else:
         if costing_id == 0:
+            print("Inside PK Costing post add")
             form = PkcostingForm(request.POST)
         else:
             costing = get_object_or_404(PkcostingInfo, pk=costing_id)
@@ -46,8 +49,7 @@ def costing_add(request, costing_id=0):
 
             if int(cost_type_id) == 8:  # For stock-related cost types
                 stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
-                stock_purchase_num = None
-
+                print('stock_purchase_num_id',stock_purchase_num_id)
                 if stock_purchase_num_id:
                     try:
                         # Fetch stock purchase record
@@ -67,30 +69,29 @@ def costing_add(request, costing_id=0):
                             messages.error(request, 'Invalid quantity value. It should be a number.')
                             return redirect(request.META['HTTP_REFERER'])
 
-                        if stock_qty <= 0:
-                            messages.error(request, 'Quantity should be greater than 0.')
-                            return redirect(request.META['HTTP_REFERER'])
-                        elif stock_qty > stock_qty_available:
-                            error_message = (
-                                f'Quantity should be less than or equal to available stock: '
-                                f'{stock_purchase_num}. Available quantity: {stock_qty_available}.'
-                            )
-                            messages.error(request, error_message)
-                        else:
-                            # Stock quantity is valid, proceed to save
-                            form.save()
-                            messages.success(request, 'Stock Updated Successfully')
-
-                    except PkstockpurchasesInfo.DoesNotExist:
-                        # Stock purchase number not found, but still save the record
-                        messages.warning(request, 'Stock Purchase Number not found, but record saved.')
+                        # if stock_qty <= 0:
+                        #     messages.error(request, 'Quantity should be greater than 0.')
+                        #     return redirect(request.META['HTTP_REFERER'])
+                        # elif stock_qty > stock_qty_available:
+                        #     error_message = (
+                        #         f'Quantity should be less than or equal to available stock: '
+                        #         f'{stock_purchase_num}. Available quantity: {stock_qty_available}.'
+                        #     )
+                        #     messages.error(request, error_message)
+                        # else:
+                        #     # Stock quantity is valid, proceed to save
+                        #     form.save()
+                        #     messages.success(request, 'Stock Updated Successfully')
                         form.save()
+                        print("Costing form is valid and stock updated.")
+                        messages.success(request, 'Stock Updated Successfully')
+                    except PkstockpurchasesInfo.DoesNotExist:
+                        pass
 
                 else:
                     # No stock purchase number provided, still save the record
                     form.save()
                     messages.success(request, 'Record Saved Successfully')
-
             else:
                 # If cost type is not stock-related, save the record
                 form.save()
@@ -111,12 +112,12 @@ def costing_add(request, costing_id=0):
         return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
 
 def update_reduced_dimensions(stock_purchase_num,last_id):
-    qty = PkcostingInfo.objects.get(pk=last_id).ct_quantity
-    cft = PkcostingInfo.objects.get(pk=last_id).ct_cft
+    requested_qty = PkcostingInfo.objects.get(pk=last_id).ct_quantity_req
+    requested_cft = PkcostingInfo.objects.get(pk=last_id).ct_sqrt_req
     prev_qty = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_quantity_reduced
     prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft_reduced
-    current_qty = prev_qty - qty
-    current_cft = prev_cft - cft
+    current_qty = prev_qty - requested_qty
+    current_cft = prev_cft - requested_cft
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=round(current_cft,2))
 
@@ -198,11 +199,6 @@ def pk_item_search_page_costing(request):
     width_req = request.GET.get('width_req')
     height_req = request.GET.get('height_req')
 
-    # Print statements for debugging
-    print('length_req:', length_req)
-    print('width_req:', width_req)
-    print('height_req:', height_req)
-
     # Query the database
     queryset = PkstockpurchasesInfo.objects.filter(
         sp_quantity_reduced__gt=0,
@@ -241,7 +237,6 @@ def pk_item_search_page_costing(request):
     # Apply date formatting to the results
     for result in results:
         result['sp_stock_in_date'] = format_date(result['sp_stock_in_date'])
-
     return JsonResponse(results, safe=False)
 
 @login_required(login_url='login_page')
@@ -293,6 +288,7 @@ def pk_get_item_description(request):
     item_description_id = []
     item_description_val = []
     item_id = request.GET.get('item_id')
+    print('item_id',item_id)
     # Fetch item_description Details
     item_descriptions = pk_itemdescriptionInfo.objects.filter(id_item_name=int(item_id)).order_by('id_item_description')
     # Extract id and id_item_description attributes from queryset

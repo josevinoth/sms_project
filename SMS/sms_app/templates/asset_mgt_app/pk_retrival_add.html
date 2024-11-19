@@ -20,6 +20,18 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field form.ct_customer_name id="ct_customer_name"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer New Name</span>
+									</div>
+									{% render_field form.ct_customer_new_name id="ct_customer_new_name"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Customer PO</span>
 									</div>
 									{% render_field form.ct_customer_po id="ct_customer_po"  class="form-control disable_a_href" %}
@@ -32,15 +44,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Cost Type</span>
-									</div>
-									{% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Job Type</span>
 									</div>
 									{% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_na_dimension_id()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Job Type Quantity</span>
+									</div>
+									{% render_field form.ct_na_quantity id="ct_na_quantity" readonly="True" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -118,8 +130,8 @@
 
 							</div>
 							<div class="col-6">
-								<div class="border border-2 border-danger rounded p-3">
-									<h3 class="text-dark text-center align-middle rounded bg-info p-1">Available Stock</h3>
+								<div class="bg-warning border border-2 border-warning rounded p-3">
+									<h3 class="text-light text-center align-middle rounded bg-info p-1">Available Stock</h3>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Height (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
@@ -182,12 +194,6 @@
 										<span class="input-group-text">Unit Cost</span>
 									</div>
 									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Job Type Quantity</span>
-									</div>
-									{% render_field form.ct_na_quantity id="ct_na_quantity" readonly="True" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">

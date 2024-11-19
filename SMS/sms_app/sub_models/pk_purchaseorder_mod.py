@@ -23,6 +23,8 @@ class PkpurchaseorderInfo(models.Model):
     po_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, related_name='po_status',
                                   db_column='po_status', blank=True, null=True, default=6)
     po_comments_box = models.TextField(default="")
+    po_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
+
     class Meta:
         ordering = ["po_num"]
 

@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import StatusList, MyUser, Natypeofwork, Nadeliverytype, Naspecialrequirements, Napackingfield, Natypeofpack, CustomerInfo, Nawoodtreatmentreq, Nabvmcustomer, Nawoodnorms, VehicletypeInfo, Natypeofaccess, Stockdescription
+from ..models import StatusList, MyUser,Packreuqirementinfo,Cusnewexist, Natypeofwork, Nadeliverytype, Naspecialrequirements, Napackingfield, Natypeofpack, CustomerInfo, Nawoodtreatmentreq, Nabvmcustomer, Nawoodnorms, VehicletypeInfo, Natypeofaccess, Stockdescription
 
 # Function to handle file upload path
 def Pkneedassessment_directory_path(instance, filename):
@@ -11,7 +11,7 @@ class PkneedassessmentInfo(models.Model):
     na_date = models.DateField(blank=True, null=True)
     na_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
     na_type_of_work = models.ForeignKey(Natypeofwork, on_delete=models.CASCADE, default='')
-    na_type_of_pack = models.ForeignKey(Natypeofpack, on_delete=models.CASCADE, default='')
+    na_type_of_pack1 = models.ForeignKey(Packreuqirementinfo, on_delete=models.CASCADE, null=True, blank=True)
     na_wood_treatment_req = models.ForeignKey(Nawoodtreatmentreq, on_delete=models.CASCADE, default='')
     na_unloading = models.ForeignKey(Nabvmcustomer, on_delete=models.CASCADE, related_name='na_unloading', db_column='na_unloading', default='')
     na_wood_norms = models.ManyToManyField(Nawoodnorms,blank=True)
@@ -32,7 +32,7 @@ class PkneedassessmentInfo(models.Model):
     na_packing_field = models.ForeignKey(Napackingfield, on_delete=models.CASCADE, blank=True, null=True, default='')
     na_special_requirements = models.ManyToManyField(Naspecialrequirements,blank=True)
     na_delivery_location = models.CharField(max_length=100, null=True, blank=True, default='')
-
+    na_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
     class Meta:
         ordering = ["na_assessment_num"]
 

@@ -11,4 +11,6 @@ class Sales_target_info(models.Model):
     st_updated_at = models.DateTimeField(null=True, auto_now=True)
     st_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     st_remarks = models.TextField(null=False, blank=True)
-    st_target_customer_calls = models.IntegerField(null=True, blank=True, default=0)
+    st_target_calls_new_customer = models.FloatField(null=True, blank=True, default=0.0)
+    st_target_calls_existing_customer = models.FloatField(null=True, blank=True, default=0.0)
+    st_target_calls_review = models.FloatField(null=True, blank=True, default=0.0)

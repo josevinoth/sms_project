@@ -19,7 +19,7 @@ class Customerattach(models.Model):
     ca_created_at = models.DateTimeField(null=True, auto_now_add=True)
     ca_contract_due_days=models.IntegerField(null=True, blank=True)
     ca_rate_due_days=models.IntegerField(null=True, blank=True)
-    ca_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.CASCADE,blank=True,null=True,default=1)
+    ca_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.CASCADE,default=1)
 
     def __str__(self):
         return self.ca_customer_name

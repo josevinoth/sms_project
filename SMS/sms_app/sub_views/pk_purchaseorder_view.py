@@ -100,30 +100,39 @@ def purchaseorder_delete(request,purchaseorder_id):
 
     return redirect('/SMS/purchaseorder_list')
 
+
 @login_required(login_url='login_page')
 def pk_get_customer(request):
-    customer_id = []
-    customer_name = []
-    assessment_id = request.GET.get('assessment_num')
-    print('assessment_id',assessment_id)
-    # Fetch item_description Details
-    customer_id = PkneedassessmentInfo.objects.get(pk=assessment_id).na_customer_name.id
-    customer_name = PkneedassessmentInfo.objects.get(pk=assessment_id).na_customer_name.cu_name
-    print('customer_id',customer_id)
-    # Fetch Quotation Number
-    try:
-        quotation_num_id=PkquotationsummaryInfo.objects.get(qs_assessment_num=assessment_id,qs_status=5).id
-    except ObjectDoesNotExist:
-        quotation_num_id=""
-    # Create JSON response data
+    assessment_id = request.GET.get('assessment_num')  # Get the assessment ID from the request
+
+    # Fetch the assessment record (returns None if not found)
+    need_assessment = PkneedassessmentInfo.objects.filter(pk=assessment_id).first()
+
+    if not need_assessment:
+        # Return error if the assessment ID is invalid
+        return JsonResponse({'error': 'Assessment not found'}, status=404)
+
+    # Safely retrieve customer-related details
+    customer_id = need_assessment.na_customer_name.id if need_assessment.na_customer_name else None
+    customer_name = need_assessment.na_customer_name.cu_name if need_assessment.na_customer_name else None
+    customer_new_name = need_assessment.na_customer_new_name if need_assessment.na_customer_new_name else None
+
+    # Fetch the Quotation Number (returns None if not found)
+    quotation_num = PkquotationsummaryInfo.objects.filter(
+        qs_assessment_num=assessment_id, qs_status=5
+    ).first()
+    quotation_num_id = quotation_num.id if quotation_num else ""
+
+    # Prepare the JSON response data
     data = {
         'customer_name': customer_name,
+        'customer_new_name': customer_new_name,
         'customer_id': customer_id,
         'quotation_num_id': quotation_num_id,
     }
 
-    # Return JSON response
     return JsonResponse(data)
+
 
 @login_required(login_url='login_page')
 def po_dimension_cancel(request,needassessment_id=0):

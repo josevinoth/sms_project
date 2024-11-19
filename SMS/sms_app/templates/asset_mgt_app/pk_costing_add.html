@@ -38,6 +38,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Customer New Name</span>
+									</div>
+									{% render_field form.ct_customer_new_name id="ct_customer_new_name"  class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Customer PO</span>
 									</div>
 									{% render_field form.ct_customer_po id="ct_customer_po"  class="form-control disable_a_href" %}
@@ -53,6 +59,12 @@
 										<span class="input-group-text">Job Type</span>
 									</div>
 									{% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_na_dimension_id()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Job Type Quantity</span>
+									</div>
+									{% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -130,8 +142,8 @@
 
 							</div>
 							<div class="col-6">
-								<div class="border border-2 border-danger rounded p-3">
-									<h3 class="text-dark text-center align-middle rounded bg-info p-1">Available Stock</h3>
+								<div class="bg-warning border border-2 border-warning rounded p-3">
+									<h3 class="text-white text-center align-middle rounded bg-info p-1">Available Stock</h3>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Height (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
@@ -176,7 +188,7 @@
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Rate/Qty (CFT)</span>
+											<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
 										</div>
 										{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
 									</div>
@@ -193,12 +205,6 @@
 										<span class="input-group-text">Unit Cost</span>
 									</div>
 									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Job Type Quantity</span>
-									</div>
-									{% render_field form.ct_na_quantity id="ct_na_quantity" readonly="True" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -268,12 +274,17 @@
         var stock_status=document.getElementById("ct_stock_status").value;
         var assessment_num=document.getElementById("ct_assessment_num").value;
         var customer_name=document.getElementById("ct_customer_name").value;
+        var customer_new_name=document.getElementById("ct_customer_new_name").value;
         var customer_po=document.getElementById("ct_customer_po").value;
-
         if (stock_status==2)
             {
                 $('#costing_form').addClass('disable_a_href');
                 alert("User Cannot edit the form since stock is supplied")
+            }
+        else if (stock_status==4)
+            {
+                $('#costing_form').addClass('disable_a_href');
+                alert("User Cannot edit the form since stock is received")
             }
         else
             {
@@ -305,6 +316,14 @@
         else
             {
                 document.getElementById("ct_customer_name").value = customer_name;
+            }
+            if (customer_new_name=="")
+            {
+                document.getElementById("ct_customer_new_name").value ='{{na_customer_new_name_id}}';
+            }
+        else
+            {
+                document.getElementById("ct_customer_new_name").value = customer_new_name;
             }
 
         pk_store_na_dimension_id();
