@@ -150,16 +150,18 @@ def pK_quotation_cancel(request):
 def pk_get_pk_requirement_type(request):
     requirement_type_id = []
     requirement_type_val = []
+    requirement_type = []
     ct_assessment_num_id = request.GET.get('ct_assessment_num_id')
     print('ct_assessment_num_id',ct_assessment_num_id)
     na_dimension_id = Nadimension.objects.filter(nad_assess_num=ct_assessment_num_id)
     for a in na_dimension_id:
         requirement_type_id.append(a.id)
         requirement_type_val.append(str(a.nad_item)+str(' (')+str(a.nad_type_of_req)+str(' ')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
-
+        requirement_type= str(a.nad_item)
     data = {
         'requirement_type_val': requirement_type_val,
         'requirement_type_id': requirement_type_id,
+        'requirement_type': requirement_type,
     }
     return JsonResponse(data)
 

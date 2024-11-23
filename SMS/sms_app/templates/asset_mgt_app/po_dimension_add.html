@@ -22,11 +22,11 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quotation Item Number</span>
 									</div>
-									{% render_field form.pod_nad id="pod_nad" class="form-control" %}
+									{% render_field form.pod_nad id="pod_nad"  class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Item Number</span>
+										<span class="input-group-text">PO Item Number</span>
 									</div>
 									{% render_field form.pod_item class="form-control" id="pod_item"%}
 								</div>
@@ -109,12 +109,6 @@
 										<span class="input-group-text">Quantity</span>
 									</div>
 									{% render_field form.pod_quantity id="pod_quantity" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Clearance</span>
-									</div>
-									{% render_field form.pod_clearance id="pod_clearance" class="form-control" %}
 								</div>
 								{% render_field form.pod_updated_by id="pod_updated_by" hidden="True" class="form-control " %}
 							</div>
@@ -205,5 +199,46 @@ function plywood_thickness() {
 		document.getElementById("pod_plywood_thickness").value=0;
   	}
 }
+</script>
+<script>
+function load_pk_requirement_type() {
+		var pod_assess_num = $('#pod_assess_num').val();    $.ajax({
+       	url: '{% url "pk_get_pk_requirement_type" %}', // URL of the Django view
+        type: 'GET',
+        data: {'ct_assessment_num_id': pod_assess_num},
+        dataType: 'json',
+        success: function(data) {
+        	$('#pod_nad').empty().append("<option value='0'>--Select--</option>");
+
+                var pkqt_requirement_name = data.requirement_type_val;
+                for (var i = 0; i < pkqt_requirement_name.length; i++) {
+                    $('#pod_nad').append(
+                        "<option value='" + pkqt_requirement_name[i] + "'>" + pkqt_requirement_name[i] + "</option>"
+                    );
+                }
+            },
+        });
+}
+function updatePodItem() {
+    // Get the selected value from the Quotation Item Number dropdown
+    var selectedValue = $('#pod_nad').val();
+
+    // Update the PO Item Number input field
+    $('#pod_item').val(selectedValue);
+}
+
+// Document Ready
+$(document).ready(function() {
+    load_pk_requirement_type();
+
+    $('#pod_assess_num').change(function() {
+        load_pk_requirement_type();
+    });
+
+    $('#pod_nad').change(function() {
+        updatePodItem();
+    });
+});
+
 </script>
 {% endblock content %}

@@ -23,7 +23,9 @@ class POdimension(models.Model):
     pod_delivery_schedule_date = models.DateField(blank=True, null=True)
     pod_dimension_type = models.ForeignKey(Nadimensiontype,on_delete=models.CASCADE,default=1)
     pod_clearance = models.FloatField(max_length=100,null=True,blank=True, default=2)
-    pod_nad = models.ForeignKey(Nadimension,on_delete=models.CASCADE,blank=True,null=True)
+    pod_nad = models.ForeignKey(Nadimension, on_delete=models.CASCADE, blank=True, null=True,
+                                       related_name='pod_nad', db_column='pod_nad', )
+    pod_nad1 = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         ordering = ["pod_assess_num"]

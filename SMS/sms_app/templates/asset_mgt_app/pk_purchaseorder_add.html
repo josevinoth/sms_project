@@ -17,7 +17,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
-									{% render_field form.po_assessment_num id="po_assessment_num" class="form-control " %}
+									{% render_field form.po_assessment_num id="po_assessment_num" class="form-control"  %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -195,7 +195,7 @@
 </script>
 
 <script>
-    $(document).ready(function () {
+	$(document).ready(function () {
         $("#po_assessment_num").change(function () {
             var assessment_num = $(this).val().trim(); // Ensure no leading/trailing spaces
 
@@ -233,7 +233,6 @@
         });
     });
 </script>
-
 <script>
 	function calculateTotal() {
         var value = parseFloat(document.getElementById('po_value').value) || 0;

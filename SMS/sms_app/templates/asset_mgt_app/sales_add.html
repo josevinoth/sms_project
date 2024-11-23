@@ -35,16 +35,9 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Existing Customer or New</span>
-									</div>
-									{% render_field form.s_customer_new class="form-control" id="s_customer_new" onchange="cusnewexist_enabler()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text" >Customer Name</span>
 									</div>
-									{% render_field form.s_customer_name class="form-control disable_a_href" id="s_customer_name"%}
+									{% render_field form.s_customer_name class="form-control " id="s_customer_name" onchange="cusnewexist_enabler()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -637,6 +630,7 @@
         Buswonnot_enabler()
         decmaker_enabler()
         cusnewexist_enabler()
+        package_type_change()
         buss_days_calc()
         buss_not_won_reason_chanage()
         enable_customer_code()
@@ -700,24 +694,37 @@
 </script>
 <script>
 	function cusnewexist_enabler() {
-      var jn5=document.getElementById("s_customer_new").value
-      if (jn5==2)
+      var jn5=document.getElementById("s_customer_name").value
+      if (jn5==210)
         {
-            $('#s_customer_name').removeClass('disable_a_href');
-            $('#s_customer_new_name').addClass('disable_a_href');
-            $('#s_customer_type').addClass('disable_a_href');
+            $('#s_customer_new_name').removeClass('disable_a_href');
+            $('#s_customer_type').removeClass('disable_a_href');
             document.getElementById("s_customer_new_name").value=""
         }
       else
           {
-            $('#s_customer_name').addClass('disable_a_href');
-            $('#s_customer_new_name').removeClass('disable_a_href');
-            $('#s_customer_type').removeClass('disable_a_href');
-            document.getElementById("s_customer_name").value=""
+
+            $('#s_customer_new_name').addClass('disable_a_href');
+            $('#s_customer_type').addClass('disable_a_href');
         }
     }
 </script>
+<script>
+	function package_type_change() {
 
+        var type_packing = document.getElementById("s_customer_name").value;
+        if (type_packing == 210) {
+            $('#s_customer_new_name').removeClass('disable_a_href');
+        } else {
+            $('#s_customer_new_name').addClass('disable_a_href');
+             document.getElementById("na_customer_new_name").value =" ";
+        }
+
+
+    }
+</script>
+
+</script>
 <script>
 	function decmaker_enabler() {
       var jn6=document.getElementById("s_decision_maker").value
