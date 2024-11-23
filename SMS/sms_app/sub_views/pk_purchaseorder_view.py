@@ -170,8 +170,10 @@ def po_dimension_add(request, po_dimension_id=0):
         if po_dimension_id == 0:
             form = POdimensionForm(request.POST)
         else:
-            dimension = POdimension.objects.get(pk=po_dimension_id)
+            dimension = get_object_or_404(POdimension, pk=po_dimension_id)
             form = POdimensionForm(request.POST, instance=dimension)
+
+            # Check if form is valid
         if form.is_valid():
             form.save()
             if po_dimension_id == 0:
@@ -179,13 +181,15 @@ def po_dimension_add(request, po_dimension_id=0):
             else:
                 messages.success(request, 'Record Updated Successfully')
         else:
+            # Debug errors and show to the user
             messages.error(request, 'Error: Please correct the errors below.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"Error in {field}: {error}")
+                    messages.error(request, f"Error in {field}: {error}")
 
-        for field, errors in form.errors.items():
-            for error in errors:
-                print(f"Error in {field}: {error}")
-                messages.error(request, f"Error in {field}: {error}")
-        return redirect(request.META['HTTP_REFERER'])
+            # Redirect back to the previous page
+        return redirect(request.META.get('HTTP_REFERER', '/'))
         # return redirect('/SMS/needassessment_list')
 @login_required(login_url='login_page')
 def po_dimension_list(request):

@@ -22,7 +22,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quotation Item Number</span>
 									</div>
-									{% render_field form.pod_nad id="pod_nad"  class="form-control" %}
+									{% render_field form.pod_nad id="pod_nad" onchange="updatePodItem()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -158,6 +158,8 @@ $(document).ready(function() {
 		document.getElementById("pod_po_num").value=purchaseorder_id_val
 	}
 
+load_pk_requirement_type();
+    updatePodItem();
 	plywood_thickness()
 	});
 </script>
@@ -202,43 +204,34 @@ function plywood_thickness() {
 </script>
 <script>
 function load_pk_requirement_type() {
-		var pod_assess_num = $('#pod_assess_num').val();    $.ajax({
+		var pod_assess_num = $('#pod_assess_num').val();
+		$.ajax({
        	url: '{% url "pk_get_pk_requirement_type" %}', // URL of the Django view
         type: 'GET',
         data: {'ct_assessment_num_id': pod_assess_num},
         dataType: 'json',
         success: function(data) {
-        	$('#pod_nad').empty().append("<option value='0'>--Select--</option>");
-
+                $('#pod_nad').empty();
+        		$('#pod_nad').empty().append("<option value='0'>--Select--</option>");
                 var pkqt_requirement_name = data.requirement_type_val;
-                for (var i = 0; i < pkqt_requirement_name.length; i++) {
-                    $('#pod_nad').append(
-                        "<option value='" + pkqt_requirement_name[i] + "'>" + pkqt_requirement_name[i] + "</option>"
-                    );
-                }
+                var pkqt_requirement_id=data.requirement_type_id;
+                var len = (pkqt_requirement_id).length;
+
+        		for( var i = 0; i<len; i++){
+        		$("#pod_nad").append("<option value='"+pkqt_requirement_id[i]+"'>"+pkqt_requirement_name[i]+"</option>");
+			}
             },
         });
 }
+</script>
+<script>
 function updatePodItem() {
-    // Get the selected value from the Quotation Item Number dropdown
-    var selectedValue = $('#pod_nad').val();
+    // Get the text of the selected option in the #pod_nad dropdown
+    var selectedText = $('#pod_nad option:selected').text();
 
-    // Update the PO Item Number input field
-    $('#pod_item').val(selectedValue);
+    // Update the PO Item Number input field with the selected text
+    $('#pod_item').val(selectedText);
 }
-
-// Document Ready
-$(document).ready(function() {
-    load_pk_requirement_type();
-
-    $('#pod_assess_num').change(function() {
-        load_pk_requirement_type();
-    });
-
-    $('#pod_nad').change(function() {
-        updatePodItem();
-    });
-});
 
 </script>
 {% endblock content %}
