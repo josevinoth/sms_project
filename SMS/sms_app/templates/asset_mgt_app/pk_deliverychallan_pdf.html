@@ -1,0 +1,140 @@
+{% extends "asset_mgt_app/report_header_potrait.html" %}
+{% block content %}
+<h3 style="text-align:center;">DELIVERY CHALLAN (NON RETURNABLE)</h3>
+<!--<div style="padding-left:570px;">-->
+<!--    <p>Gate Pass No:</p>-->
+<!--    <p>Date:</p>-->
+<!--</div>-->
+<div>
+    <table class='report_details'>
+        <tr>
+            <th>Assessment Number</th>
+            <td>{{ delivery.dc_assessment_num }}</td>
+        </tr>
+        <tr>
+            <th>Customer PO</th>
+            <td>{{ delivery.dc_customer_po }}</td>
+        </tr>
+        <tr>
+            <th>Customer Name</th>
+            <td>{{ delivery.dc_customer_name }}</td>
+        </tr>
+        <tr>
+            <th>Customer Address</th>
+            <td>{{ delivery.dc_customer_address }}</td>
+        </tr>
+        <tr>
+            <th>Customer GSTIN</th>
+            <td>{{ delivery.dc_customer_gstin }}</td>
+        </tr>
+        <tr>
+            <th>E-WAY Bill no</th>
+            <td>{{ delivery.dc_eway_billno }}</td>
+        </tr>
+        <tr>
+            <th>E-WAY Bill Date</th>
+            <td>{{ delivery.dc_eway_date }}</td>
+        </tr>
+        <tr>
+            <th>GRN</th>
+            <td>{{ delivery.dc_grn }}</td>
+        </tr>
+        <tr>
+            <th>Sales Order</th>
+            <td>{{ delivery.dc_sales_order_po }}</td>
+        </tr>
+        <tr>
+            <th>Stock Register</th>
+            <td>{{ delivery.dc_stock_register }}</td>
+        </tr>
+        <tr>
+            <th>Transport Name</th>
+            <td>{{ delivery.dc_transporter_name }}</td>
+        </tr>
+        <tr>
+            <th>Consignment Note</th>
+            <td>{{ delivery.dc_consignment_note }}</td>
+        </tr>
+        <tr>
+            <th>Date</th>
+            <td>{{ delivery.dc_date }}</td>
+        </tr>
+        <tr>
+            <th>Vehicle No</th>
+            <td>{{ delivery.dc_vehicle_no }}</td>
+        </tr>
+        <tr>
+            <th>Driver Name</th>
+            <td>{{ delivery.dc_driver_name }}</td>
+        </tr>
+        <tr>
+            <th>Driver Mobile No</th>
+            <td>{{ delivery.dc_driver_mobile_num }}</td>
+        </tr>
+    </table>
+    <hr class="report_hrItem"/>
+    <table class='report_details'>
+        <tr>
+            <th>DESCRIPTION</th>
+            <th>UOM</th>
+            <th>QTY</th>
+            <th>HSN CODE</th>
+            <th>ITEM CODE</th>
+            <th>BASE VALUE</th>
+            <th>GST RATE</th>
+            <th>GST AMOUNT</th>
+            <th>TOTAL VALUE</th>
+        </tr>
+        {% for challan in challan_list %}
+        <tr>
+            <td>{{ challan.pod_type_of_req }}</td>
+            <td>{{ challan.pod_uom }}</td>
+            <td>{{ challan.pod_quantity }}</td>
+            <td></td>
+            <td>{{ challan.pod_item }}</td>
+            <td>{{ challan.pod_cost_unit }}</td>
+            <td></td>
+            <td></td>
+            <td>{{ challan.pod_cost_total }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <hr class="report_hrItem"/>
+    <table class='report_details'>
+        <tr>
+            <th></th>
+            <th>NAME</th>
+            <th>SIGN</th>
+            <th>DATE</th>
+        </tr>
+        <tr>
+            <th>PREPARED BY</th>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <th>APPROVED BY</th>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <th>GOODS OUTWARD REF.</th>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+
+    <div class="right-group">
+        <p>Super Verification</p>
+    </div>
+     <div class="center-group">
+        <p>THANK YOU FOR YOUR BUSINESS!</p>
+    </div>
+
+</div>
+{% endblock content %}
+
+

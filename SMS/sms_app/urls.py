@@ -541,4 +541,11 @@ urlpatterns = [
     path('customer_attachment_cancel/', views.customer_attach_cancel, name='customer_attachment_cancel'),
     path('customer_contract_rate_dues_list/', views.customer_contract_rate_dues_list, name='customer_contract_rate_dues_list'),
     path('customer_contract_rate_due_days/', views.customer_contract_rate_due_days, name='customer_contract_rate_due_days'),
+    path('packing_delivery/', views.delivery_challan_add, name='packing_delivery'),
+    path('packing_delivery_list/', views.delivery_challan_list, name='packing_delivery_list'),
+    path('packing_delivery_update/<int:delivery_id>/', views.delivery_challan_add, name='packing_delivery_update'),
+    path('packing_delivery_delete/<int:delivery_id>/', views.delivery_challan_delete, name='packing_delivery_delete'),
+    path('packing_delivery_pdf/<int:delivery_id>', views.delivery_challan_pdf, name='packing_delivery_pdf'),
+
+
 ]
