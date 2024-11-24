@@ -546,6 +546,10 @@ urlpatterns = [
     path('packing_delivery_update/<int:delivery_id>/', views.delivery_challan_add, name='packing_delivery_update'),
     path('packing_delivery_delete/<int:delivery_id>/', views.delivery_challan_delete, name='packing_delivery_delete'),
     path('packing_delivery_pdf/<int:delivery_id>', views.delivery_challan_pdf, name='packing_delivery_pdf'),
-
+    path('budget_form/', views.budgetform_add, name='budget_form'),
+    path('budget_form_list/', views.budgetform_list, name='budget_form_list'),
+    path('budget_form_update/<int:budget_id>/', views.budgetform_add, name='budget_form_update'),
+    path('budget_form_delete/<int:budget_id>/', views.budgetform_delete, name='budget_form_delete'),
+    path('budget_form_clone/<int:budget_id>/', views.budgetform_clone, name='budget_form_clone'),
 
 ]

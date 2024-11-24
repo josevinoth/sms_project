@@ -1,0 +1,237 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Budget Form List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'budget_form' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+    <div class="col-md-1.5">
+        <a href="{% url 'budget_form_list' %}" class="btn btn-warning btn-block btn-lg">
+            <i class="fa fa-eye" aria-hidden="true"></i> Show All
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table id="delivery_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>ID</th>
+            <th>Clone</th>
+            <th>Airport Handling Charges</th>
+            <th>Crane Handling Charges</th>
+            <th>Forklift Handling Charges</th>
+            <th>Handling Charges</th>
+            <th>Packing Charges</th>
+<!--            <th>Warehouse Handling Charges</th>-->
+<!--            <th>Warehouse Loading Charges</th>-->
+<!--            <th>Warehouse Storage Charges</th>-->
+<!--            <th>Warehouse Unloading Charges</th>-->
+<!--            <th>Audit Fees</th>-->
+<!--            <th>Bad Debts</th>-->
+<!--            <th>Bank Charges</th>-->
+<!--            <th>Celebration Expenses</th>-->
+<!--            <th>Consultancy Charges</th>-->
+<!--            <th>Directors Remuneration</th>-->
+<!--            <th>Insurance Car</th>-->
+<!--            <th>Interest on Statutory Dues</th>-->
+<!--            <th>Professional & Legal Charges</th>-->
+<!--            <th>Subscription & Membership</th>-->
+<!--            <th>Corp Staff</th>-->
+<!--            <th>Bonus Corp Staff</th>-->
+<!--            <th>EDLI Contribution corp staff</th>-->
+<!--            <th>Employer Contribution to ESI Corp Staff</th>-->
+<!--            <th>Employer Contribution to PF Corp Staff</th>-->
+<!--            <th>EPF Admin Charges corp staff</th>-->
+<!--            <th>Gratuity Corp Staff</th>-->
+<!--            <th>Salaries & Wages corp Staff</th>-->
+<!--            <th>Dept Staff</th>-->
+<!--            <th>Bonus Staff</th>-->
+<!--            <th>EDLI Contribution Staff</th>-->
+<!--            <th>Employer Contribution to ESI Corp Staff</th>-->
+<!--            <th>Employer Contribution to PF Corp Staff</th>-->
+<!--            <th>EPF Admin Charges corp staff</th>-->
+<!--            <th>Gratuity Corp Staff</th>-->
+<!--            <th>Salaries & Wages corp Staff</th>-->
+<!--            <th>Interest on Borrowings</th>-->
+<!--            <th>Interest on Other Loans</th>-->
+<!--            <th>Fixed</th>-->
+<!--            <th>Depreciation</th>-->
+<!--            <th>Software AMC Charges</th>-->
+<!--            <th>Insurance Warehouse</th>-->
+<!--            <th>Rates & Taxes</th>-->
+<!--            <th>Rent Premises</th>-->
+<!--            <th>Security Service Charges</th>-->
+<!--            <th>Manpower Supply Expenses</th>-->
+<!--            <th>Variable</th>-->
+<!--            <th>Crane Handling Expenses</th>-->
+<!--            <th>Diesel Expenses Forklift</th>-->
+<!--            <th>Forklift Handling Expenses</th>-->
+<!--            <th>Fumigation Expenses</th>-->
+<!--            <th>Fixed</th>-->
+<!--            <th>Housekeeping Salary</th>-->
+<!--            <th>Insurance-Corp Staff</th>-->
+<!--            <th>Insurance-Staff</th>-->
+<!--            <th>Internet & Data Card Expenses</th>-->
+<!--            <th>Rent Plant & Machinery</th>-->
+<!--            <th>System AMC</th>-->
+<!--            <th>Variable</th>-->
+<!--            <th>Advertisement & Business Promotion</th>-->
+<!--            <th>Conveyance Expenses</th>-->
+<!--            <th>Diesel Expenses Genset</th>-->
+<!--            <th>Handling Expenses</th>-->
+<!--            <th>Hotel Boarding & Lodging Expenses</th>-->
+<!--            <th>Office Repairs & Maintenance</th>-->
+<!--            <th>Office Supplies & General Expenses</th>-->
+<!--            <th>Postage & Courier</th>-->
+<!--            <th>Power & Fuel</th>-->
+<!--            <th>Printing & Stationery</th>-->
+<!--            <th>Service & Maintenance Expenses</th>-->
+<!--            <th>Staff Welfare - Staff</th>-->
+<!--            <th>Telephone & Mobile Expenses</th>-->
+<!--            <th>Training Expenses</th>-->
+<!--            <th>Travelling Expenses</th>-->
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Updated On</th>
+            <th>Updated By</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for budget in budget_list %}
+        <tr>
+            <td>{{ budget.id }}</td>
+            <td>
+                <a href="{% url 'budget_form_clone' budget.id %}" class="btn btn-warning" onclick="return confirm('Would you like to make a copy of this record as Costing Summary?');">
+                    <i class="fas fa-clone"></i>
+                </a>
+            </td>
+            <td>{{ budget.bf_Airport_Handling_Charges }}</td>
+            <td>{{ budget.bf_Crane_Handling_Charges }}</td>
+            <td>{{ budget.bf_Forklift_Handling_Charges }}</td>
+            <td>{{ budget.bf_Handling_Charges }}</td>
+            <td>{{ budget.bf_Packing_Charges }}</td>
+<!--            <td>{{ budget.bf_Warehouse_Handling_Charges }}</td>-->
+<!--            <td>{{ budget.bf_Warehouse_Loading_Charges }}</td>-->
+<!--            <td>{{ budget.bf_Warehouse_Storage_Charges }}</td>-->
+<!--            <td>{{ budget.bf_Warehouse_Unloading_Charges }}</td>-->
+<!--            <td>{{ budget.bf_audit_fees }}</td>-->
+<!--            <td>{{ budget.bf_bad_debts }}</td>-->
+<!--            <td>{{ budget.bf_bank_charges }}</td>-->
+<!--            <td>{{ budget.bf_celebration_expenses }}</td>-->
+<!--            <td>{{ budget.bf_consultancy_charges }}</td>-->
+<!--            <td>{{ budget.bf_directors_remuneration }}</td>-->
+<!--            <td>{{ budget.bf_insurance_car }}</td>-->
+<!--            <td>{{ budget.bf_interest_on_statutory_dues }}</td>-->
+<!--            <td>{{ budget.bf_professional_legal_charges }}</td>-->
+<!--            <td>{{ budget.bf_subscription_membership }}</td>-->
+<!--            <td>{{ budget.bf_corp_staff }}</td>-->
+<!--            <td>{{ budget.bf_bonus_corp_staff }}</td>-->
+<!--            <td>{{ budget.bf_EDLI_contribution_corp_staff }}</td>-->
+<!--            <td>{{ budget.bf_employer_contribution_to_ESI_corp_staff }}</td>-->
+<!--            <td>{{ budget.bf_employer_contribution_to_PF_corp_staff }}</td>-->
+<!--            <td>{{ budget.bf_EPF_admin_charges_corp_staff }}</td>-->
+<!--            <td>{{ budget.bf_gratuity_corp_staff }}</td>-->
+<!--            <td>{{ budget.bf_salaries_wages_corp_staff }}</td>-->
+<!--            <td>{{ budget.bf_dept_staff }}</td>-->
+<!--            <td>{{ budget.bf_bonus_staff }}</td>-->
+<!--            <td>{{ budget.bf_EDLI_contribution_staff }}</td>-->
+<!--            <td>{{ budget.bf_employer_contribution_to_ESI_staff }}</td>-->
+<!--            <td>{{ budget.bf_employer_contribution_to_PF_staff }}</td>-->
+<!--            <td>{{ budget.bf_EPF_admin_charges_staff }}</td>-->
+<!--            <td>{{ budget.bf_gratuity_staff }}</td>-->
+<!--            <td>{{ budget.bf_salaries_wages_staff }}</td>-->
+<!--            <td>{{ budget.bf_interest_on_borrowings }}</td>-->
+<!--            <td>{{ budget.bf_interest_on_other_loans }}</td>-->
+<!--            <td>{{ budget.bf_fixed }}</td>-->
+<!--            <td>{{ budget.bf_depreciation }}</td>-->
+<!--            <td>{{ budget.bf_software_AMC_charges }}</td>-->
+<!--            <td>{{ budget.bf_insurance_warehouse }}</td>-->
+<!--            <td>{{ budget.bf_rates_taxes }}</td>-->
+<!--            <td>{{ budget.bf_rent_premises }}</td>-->
+<!--            <td>{{ budget.bf_security_service_charges }}</td>-->
+<!--            <td>{{ budget.bf_manpower_supply_expenses }}</td>-->
+<!--            <td>{{ budget.bf_variable }}</td>-->
+<!--            <td>{{ budget.bf_crane_handling_expenses }}</td>-->
+<!--            <td>{{ budget.bf_diesel_expenses_forklift }}</td>-->
+<!--            <td>{{ budget.bf_forklift_handling_expenses }}</td>-->
+<!--            <td>{{ budget.bf_fumigation_expenses }}</td>-->
+<!--            <td>{{ budget.bf_oe_Fixed }}</td>-->
+<!--            <td>{{ budget.bf_housekeeping_salary }}</td>-->
+<!--            <td>{{ budget.bf_insurance_corp_staff }}</td>-->
+<!--            <td>{{ budget.bf_insurance_staff }}</td>-->
+<!--            <td>{{ budget.bf_internet_data_card_expenses }}</td>-->
+<!--            <td>{{ budget.bf_rent_plant_machinery }}</td>-->
+<!--            <td>{{ budget.bf_system_amc }}</td>-->
+<!--            <td>{{ budget.bf_oe_variable }}</td>-->
+<!--            <td>{{ budget.bf_advertisement_business_promotion }}</td>-->
+<!--            <td>{{ budget.bf_conveyance_expenses }}</td>-->
+<!--            <td>{{ budget.bf_diesel_expenses_gense }}</td>-->
+<!--            <td>{{ budget.bf_handling_expenses }}</td>-->
+<!--            <td>{{ budget.bf_hotel_boarding_lodging_expenses }}</td>-->
+<!--            <td>{{ budget.bf_office_repairs_maintenance }}</td>-->
+<!--            <td>{{ budget.bf_office_supplies_general_expenses }}</td>-->
+<!--            <td>{{ budget.bf_postage_courier }}</td>-->
+<!--            <td>{{ budget.bf_power_fuel }}</td>-->
+<!--            <td>{{ budget.bf_printing_stationery }}</td>-->
+<!--            <td>{{ budget.bf_service_maintenance_expenses }}</td>-->
+<!--            <td>{{ budget.bf_staff_welfare_staff }}</td>-->
+<!--            <td>{{ budget.bf_telephone_mobile_expenses }}</td>-->
+<!--            <td>{{ budget.bf_training_expenses }}</td>-->
+<!--            <td>{{ budget.bf_travelling_expenses }}</td>-->
+            <td>{{ budget.bf_start_date }}</td>
+            <td>{{ budget.bf_end_date }}</td>
+            <td>{{ budget.bf_updated_at }}</td>
+            <td>{{ budget.bf_updated_by }}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'budget_form_update' budget.id %}">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'budget_form_delete' budget.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function() {
+    $('#delivery_list').DataTable({
+        order: [0, 'desc' ],
+<!--        scrollY: "600px",-->
+        scrollX: true,
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ],
+    });
+} );
+</script>
+
+{% endblock content %}
