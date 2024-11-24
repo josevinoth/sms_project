@@ -1,5 +1,5 @@
 from django import forms
-from ..models import POdimension
+from ..models import POdimension,Nadimension
 
 class POdimensionForm(forms.ModelForm):
     class Meta:
@@ -14,3 +14,4 @@ class POdimensionForm(forms.ModelForm):
         self.fields['pod_plywood_thickness'].empty_label = "--Select--"
         self.fields['pod_wood_type'].empty_label = "--Select--"
         self.fields['pod_wood_description'].empty_label = "--Select--"
+        self.fields['pod_nad'].empty_label = "--Select--"

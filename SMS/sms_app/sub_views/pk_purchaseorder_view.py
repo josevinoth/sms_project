@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import User_extInfo,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo
+from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete
@@ -169,32 +169,28 @@ def po_dimension_add(request, po_dimension_id=0):
     else:
         if po_dimension_id == 0:
             form = POdimensionForm(request.POST)
-            if form.is_valid():
-                form.save()
-                # try:
-                #     last_id = POdimension.objects.latest('id').id
-                #     po_item_num_next = str('Item_') + str(int(1000000 + last_id))
-                # except ObjectDoesNotExist:
-                #     po_item_num_next = str('Item_') + str(1000000)
-                # last_id = POdimension.objects.latest('id').id
-                # POdimension.objects.filter(id=last_id).update(nad_item=po_item_num_next)
-                print("Main Form Saved")
-                messages.success(request, "Record Updated Successfully")
-            else:
-                print("Main form not saved")
-                messages.error(request, "Record Not Updated Successfully")
         else:
-            po_dimensioninfo = POdimension.objects.get(pk=po_dimension_id)
-            form = POdimensionForm(request.POST, instance=po_dimensioninfo)
-            if form.is_valid():
-                form.save()
-                print("Main Form Saved")
-                messages.success(request,"Record Updated Successfully")
+            dimension = get_object_or_404(POdimension, pk=po_dimension_id)
+            form = POdimensionForm(request.POST, instance=dimension)
+
+            # Check if form is valid
+        if form.is_valid():
+            form.save()
+            if po_dimension_id == 0:
+                messages.success(request, 'Record Saved Successfully')
             else:
-                print("Main form not saved")
-                messages.error(request,"Record Not Updated Successfully")
+                messages.success(request, 'Record Updated Successfully')
+        else:
+            # Debug errors and show to the user
+            messages.error(request, 'Error: Please correct the errors below.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"Error in {field}: {error}")
+                    messages.error(request, f"Error in {field}: {error}")
+
+            # Redirect back to the previous page
+        return redirect(request.META.get('HTTP_REFERER', '/'))
         # return redirect('/SMS/needassessment_list')
-        return redirect(request.META['HTTP_REFERER'])
 @login_required(login_url='login_page')
 def po_dimension_list(request):
     first_name = request.session.get('first_name')
@@ -212,3 +208,23 @@ def po_dimension_delete(request, po_dimension_id):
     po_dimensioninfo.delete()
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/sales_list')
+@login_required(login_url='login_page')
+def pk_get_po_requirement_type(request):
+    requirement_type_val = []
+    ct_assessment_num_id = request.GET.get('ct_assessment_num')
+    print('Assessment Number received:', ct_assessment_num_id)  # Debug log
+
+    # Query Nadimension and ensure it fetches correct data
+    na_dimension_id = Nadimension.objects.filter(nad_assess_num=ct_assessment_num_id)
+    if na_dimension_id.exists():
+        for a in na_dimension_id:
+            requirement_type_val.append(str(a.nad_item))  # Collect nad_item values
+    else:
+        print('No records found for assessment number:', ct_assessment_num_id)
+
+    # Return JSON response
+    data = {
+        'requirement_type_val': requirement_type_val,
+    }
+    print('Response data:', data)  # Log response data for debugging
+    return JsonResponse(data)
