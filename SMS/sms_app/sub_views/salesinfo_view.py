@@ -45,6 +45,7 @@ def sales_add(request, sales_id=0):
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id = User_extInfo.objects.get(user=user_id).emp_role.id
     if request.method == "GET":
+
         if sales_id == 0:
             form = SalesinfoaddForm()
             created_by=user_id
@@ -79,8 +80,10 @@ def sales_add(request, sales_id=0):
             }
             return render(request, "asset_mgt_app/sales_add.html", context)
     else:
+        print("im inside post function")
         if sales_id == 0:
-            form = SalesinfoaddForm(request.POST, request.FILES)
+            print("im inside post add")
+            form = SalesinfoaddForm(request.POST,request.FILES)
             if form.is_valid():
                 form.save()
                 print("Sales Form Saved")
@@ -103,6 +106,7 @@ def sales_add(request, sales_id=0):
             else:
                 print("Sales Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+
                 return redirect(request.META['HTTP_REFERER'])
         else:
             sale_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
@@ -116,6 +120,7 @@ def sales_add(request, sales_id=0):
             else:
                 print("Sales Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/sales_list')
 

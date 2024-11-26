@@ -131,5 +131,3 @@ def expense_search(request):
         'role': request.session.get('ses_role'),
     }
     return render(request, "asset_mgt_app/expense_list.html", context)
-
-
