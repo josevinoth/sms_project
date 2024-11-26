@@ -10,6 +10,7 @@ class SalesinfoaddForm(forms.ModelForm):
         super(SalesinfoaddForm,self).__init__(*args, **kwargs)
         self.fields['s_customer_name'].empty_label = "--Select--"
         self.fields['s_customer_type'].empty_label = "--Select--"
+        # self.fields['s_customer_new'].empty_label = "--Select--"
         self.fields['s_industry_type'].empty_label = "--Select--"
         self.fields['s_wh_requirement'].empty_label = "--Select--"
         self.fields['s_trans_requirement'].empty_label = "--Select--"
