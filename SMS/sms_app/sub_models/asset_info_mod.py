@@ -1,6 +1,9 @@
 from django.db import models
 from ..models import Product_info,assign_status_info,MyUser,Location_info,Vendor_info,Insurance_Info,UnitInfo
 
+def asset_attach_path(instance, filename):
+    return 'assetattachfiles/{0}/{1}'.format(instance.asset_number, filename)
+
 class AssetInfo(models.Model):
     asset_number = models.CharField(max_length=50,null=True,blank=True)
     asset_product = models.ForeignKey(Product_info, on_delete=models.CASCADE, default='')
@@ -24,5 +27,6 @@ class AssetInfo(models.Model):
     asset_audit_date = models.DateTimeField(null=True, blank=True)
     asset_assign_status = models.ForeignKey(assign_status_info, on_delete=models.CASCADE, null=True,blank=True,related_name='asset_assign_status',
                                          db_column='asset_assign_status')
+    asset_attach = models.FileField(upload_to=asset_attach_path, null=True, blank=True)
     def __str__(self):
         return self.asset_number

@@ -82,7 +82,7 @@ def assetinfo_add(request, asset_id=0):
     else:
         if asset_id == 0:
             print("Inside Post Asset Add")
-            form = AssetinfoaddForm(request.POST)
+            form = AssetinfoaddForm(request.POST,request.FILES)
             if form.is_valid():
                 form.save()
                 try:
@@ -119,7 +119,7 @@ def assetinfo_add(request, asset_id=0):
         else:
             print("Inside Post Asset Edit")
             assetinfo = AssetInfo.objects.get(pk=asset_id)
-            form = AssetinfoaddForm(request.POST, instance=assetinfo)
+            form = AssetinfoaddForm(request.POST, request.FILES, instance=assetinfo)
             if form.is_valid():
                 form.save()
                 print("Form is Valid")
