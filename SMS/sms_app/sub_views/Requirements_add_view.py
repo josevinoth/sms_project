@@ -58,7 +58,8 @@ def requirements_add(request,requirements_id=0):
             if form.is_valid():
                 form.save()
                 print("Requirement Form is Valid")
-                requirements_email(raised_by)
+                req_id=requirements_id
+                requirements_email(req_id)
                 messages.success(request, 'Record Updated Successfully')
             else:
                 print("Requirement Form is Not Valid")
