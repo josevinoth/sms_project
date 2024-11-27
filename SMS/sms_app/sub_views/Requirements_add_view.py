@@ -6,7 +6,7 @@ from django.db.models import Q
 from ..forms import RequirementForm
 from ..models import RequirementsInfo
 from django.shortcuts import render, redirect
-from random import randint
+from ..views import send_department_email
 from django.contrib import messages
 
 @login_required(login_url='login_page')
@@ -26,6 +26,7 @@ def requirements_add(request,requirements_id=0):
                 }
         return render(request, "asset_mgt_app/requirements_add.html", context)
     else:
+        raised_by = request.POST.get('req_owner')
         if requirements_id == 0:
             form = RequirementForm(request.POST,request.FILES)
             if form.is_valid():
@@ -45,6 +46,7 @@ def requirements_add(request,requirements_id=0):
                 RequirementsInfo.objects.filter(id=last_id).update(req_number=req_num_next)
                 req_id = RequirementsInfo.objects.get(req_number=req_num_next).id
                 messages.success(request, 'Record Updated Successfully')
+                requirements_email(req_id)
                 return redirect('/SMS/requirements_update/'+ str(req_id))
             else:
                 print("Requirement Form is Not Valid")
@@ -56,12 +58,50 @@ def requirements_add(request,requirements_id=0):
             if form.is_valid():
                 form.save()
                 print("Requirement Form is Valid")
+                requirements_email(raised_by)
                 messages.success(request, 'Record Updated Successfully')
             else:
                 print("Requirement Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
             return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/requirements_list')
+
+def requirements_email(req_id):
+ # send email
+    recipients = 'josevinoth.w@r2techsolutions.in, udhayakumar.d@r2techsolutions.in,poojitha.b@r2techsolutions.in,hariharasudhan.m@r2techsolutions.in'
+    req_num=RequirementsInfo.objects.get(pk=req_id).req_number
+    raised_by=RequirementsInfo.objects.get(pk=req_id).req_owner
+    raised_by_email=RequirementsInfo.objects.get(pk=req_id).req_owner.email
+    raised_on=RequirementsInfo.objects.get(pk=req_id).req_raisedon
+    backlog=RequirementsInfo.objects.get(pk=req_id).req_backlogs
+    module=RequirementsInfo.objects.get(pk=req_id).req_module
+    bug_improvement=RequirementsInfo.objects.get(pk=req_id).req_bugimprove
+    assigned_to=RequirementsInfo.objects.get(pk=req_id).req_implementedby
+    implmented_on=RequirementsInfo.objects.get(pk=req_id).req_implementedon
+    remarks=RequirementsInfo.objects.get(pk=req_id).req_remarks
+    status=RequirementsInfo.objects.get(pk=req_id).req_status
+    subject = f"{req_num}_Update"
+    message = f"""
+<html>
+<body>
+    <p>Dear User,</p>
+    <p>Please find below updates:</p>
+
+    <p><b>Requirement:</b> {backlog}</p>
+    <p><b>Module:</b> {module}</p>
+    <p><b>Raised By:</b> {raised_by}</p>
+    <p><b>Raised On:</b> {raised_on}</p>
+    <p><b>Bug/Improvement:</b> {bug_improvement}</p>
+    <p><b>Assigned To:</b> {assigned_to}</p>
+    <p><b>Implemented On:</b> {implmented_on}</p>
+    <p><b>Status:</b> {status}</p>
+    <p><b>Remarks:</b>{remarks} </p>
+</body>
+</html>
+"""
+    recipient_list = [email.strip() for email in recipients.split(',')]
+    recipient_list.append(raised_by_email)
+    send_department_email('support', subject, message, recipient_list)
 
 # List requirements
 @login_required(login_url='login_page')
