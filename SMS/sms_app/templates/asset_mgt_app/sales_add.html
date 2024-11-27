@@ -402,7 +402,7 @@
 														<div class="input-group-prepend">
 															<span class="input-group-text">If No, Reason?</span>
 														</div>
-														{% render_field form.s_not_reason class="form-control disable_a_href" id="s_not_reason" onchange="buss_not_won_reason_chanage()" %}
+														{% render_field form.s_not_reason class="form-control disable_a_href" id="s_not_reason" onchange="buss_not_won_reason_change()" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 													<div class="input-group input-group-sm mb-3">
@@ -500,9 +500,9 @@
 							{% render_field form.s_remarks id="s_remarks" class="form-control" id="s_bus_won_not" onchange="Buswonnot_enabler()" %}
 							<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 						</div>
-						{% render_field form.s_updated_by id="s_updated_by" hidden="True" class="form-control" %}
-						{% render_field form.s_created_by id="s_created_by" hidden="True" class="form-control" %}
-						{% render_field form.s_business_start_days id="s_business_start_days" hidden="True" class="form-control" %}
+						{% render_field form.s_updated_by id="s_updated_by"  hidden="true" class="form-control" %}
+						{% render_field form.s_created_by id="s_created_by"  hidden="true" class="form-control" %}
+						{% render_field form.s_business_start_days id="s_business_start_days" hidden="true" class="form-control" %}
 
 						<div class="row">
 							<div class="col-6">
@@ -630,9 +630,8 @@
         Buswonnot_enabler()
         decmaker_enabler()
         cusnewexist_enabler()
-        package_type_change()
         buss_days_calc()
-        buss_not_won_reason_chanage()
+        buss_not_won_reason_change()
         enable_customer_code()
         enable_sales()
         hc_enabler()
@@ -640,7 +639,7 @@
 </script>
 
 <script>
-	function buss_not_won_reason_chanage() {
+	function buss_not_won_reason_change() {
         var business_not_won_reason=document.getElementById("s_not_reason").value
 
         if (business_not_won_reason==1)
@@ -657,11 +656,22 @@
 
 <script>
 	function buss_days_calc() {
-        var bus_start_date=new Date(document.getElementById("s_yesdate_business").value)
-        var bus_quote_date=new Date(document.getElementById("s_yesdate_quote").value)
-        days=bus_start_date-bus_quote_date
-        var res = Math.abs(bus_start_date - bus_quote_date) / (1000*86400);
-        document.getElementById("s_business_start_days").value=res
+        // Retrieve input values and create Date objects
+		var bus_start_date = document.getElementById("s_yesdate_business").value;
+		var bus_quote_date = document.getElementById("s_yesdate_quote").value;
+		// Check if both values are provided
+		if (bus_start_date && bus_quote_date) {
+			var startDate = new Date(bus_start_date);
+			var quoteDate = new Date(bus_quote_date);
+
+			// Calculate the absolute difference in days
+			var res = Math.abs(startDate - quoteDate) / (1000 * 86400);
+			document.getElementById("s_business_start_days").value = res;
+		} else {
+			// If either value is missing, set the result to 0
+			var res =0;
+			document.getElementById("s_business_start_days").value = res;
+		}
     }
 </script>
 
@@ -699,32 +709,17 @@
         {
             $('#s_customer_new_name').removeClass('disable_a_href');
             $('#s_customer_type').removeClass('disable_a_href');
-            document.getElementById("s_customer_new_name").value=""
         }
       else
           {
 
             $('#s_customer_new_name').addClass('disable_a_href');
             $('#s_customer_type').addClass('disable_a_href');
+            document.getElementById("s_customer_new_name").value=""
         }
     }
 </script>
-<script>
-	function package_type_change() {
 
-        var type_packing = document.getElementById("s_customer_name").value;
-        if (type_packing == 210) {
-            $('#s_customer_new_name').removeClass('disable_a_href');
-        } else {
-            $('#s_customer_new_name').addClass('disable_a_href');
-             document.getElementById("na_customer_new_name").value =" ";
-        }
-
-
-    }
-</script>
-
-</script>
 <script>
 	function decmaker_enabler() {
       var jn6=document.getElementById("s_decision_maker").value
