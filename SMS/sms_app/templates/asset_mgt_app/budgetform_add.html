@@ -17,9 +17,9 @@
                             <div class="col-6">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Start Date</span>
+                                        <span class="input-group-text">Budget Form Month /Year</span>
                                     </div>
-                                    {% render_field form.bf_start_date id="bf_start_date" type="date" class="form-control" %}
+                                    {% render_field form.bf_start_date_year id="bf_start_date_year" type="date" class="form-control" %}
                                 </div>
                                 <div id="accordion" class="container-fluid">
 									<div class="card">
@@ -273,12 +273,6 @@
 								</div>
                             </div>
                             <div class="col-6">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">End Date</span>
-                                    </div>
-                                    {% render_field form.bf_end_date id="bf_end_date" type="date" class="form-control" %}
-                                </div>
                                 <div id="accordion_1" class="container-fluid mb-3">
 									<div class="card">
 										<div class="card-header bg-info" id="headingFour">
