@@ -131,7 +131,7 @@ def customer_attach_delete(request, attach_id):
     attach = Customerattach.objects.get(pk=attach_id)
     attach.delete()
     messages.success(request, 'Attachment deleted successfully')
-    return redirect('/SMS/customer_attachment_list')
+    return redirect(request.META['HTTP_REFERER'])
 
 
 @login_required(login_url='login_page')
