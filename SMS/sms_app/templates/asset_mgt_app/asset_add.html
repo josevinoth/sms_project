@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
-<form method="POST" action="" id="asset_add" data-branches-url="{% url 'load_units' %}">
+<form method="POST" action="" id="asset_add" data-branches-url="{% url 'load_units' %}" enctype="multipart/form-data">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col-2"></div>
@@ -93,7 +93,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Order Number</span>
+										<span class="input-group-text" >Invoice Number</span>
 									</div>
 									{% render_field form.asset_order_number class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -125,6 +125,13 @@
 										<span class="input-group-text" >Audit Date</span>
 									</div>
 									{% render_field form.asset_audit_date type='Datetime-local' class="form-control" %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Attachment</span>
+									</div>
+									{% render_field form.asset_attach class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								{% render_field form.asset_updated_by id="asset_updated_by"  hidden="True" class="form-control" %}

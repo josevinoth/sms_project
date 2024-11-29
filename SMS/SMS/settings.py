@@ -159,11 +159,11 @@ DEPARTMENT_EMAILS = {
         'EMAIL_HOST_PASSWORD': 'sales-password'
     },
     'support': {
-        'EMAIL_HOST' :'smtp.gmail.com',
+        'EMAIL_HOST' :'smtp.office365.com',
         'EMAIL_PORT' :587,
         'EMAIL_USE_TLS' :True,
-        'EMAIL_HOST_USER' :'josevinoth83@gmail.com',
-        'EMAIL_HOST_PASSWORD' :'oygs mlgf bmxf tqoi',
+        'EMAIL_HOST_USER' :'erpwarehouse@bvmstorage.com',
+        'EMAIL_HOST_PASSWORD' :'V#387577871721ow',
     },
     'warehouse': {
         'EMAIL_HOST' : 'smtp.office365.com',

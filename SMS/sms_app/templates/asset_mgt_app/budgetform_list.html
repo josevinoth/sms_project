@@ -107,8 +107,8 @@
 <!--            <th>Telephone & Mobile Expenses</th>-->
 <!--            <th>Training Expenses</th>-->
 <!--            <th>Travelling Expenses</th>-->
-            <th>Start Date</th>
-            <th>End Date</th>
+            <th>Budget Form Month & Year</th>
+<!--            <th>End Date</th>-->
             <th>Updated On</th>
             <th>Updated By</th>
             <th>Edit</th>
@@ -197,8 +197,8 @@
 <!--            <td>{{ budget.bf_telephone_mobile_expenses }}</td>-->
 <!--            <td>{{ budget.bf_training_expenses }}</td>-->
 <!--            <td>{{ budget.bf_travelling_expenses }}</td>-->
-            <td>{{ budget.bf_start_date }}</td>
-            <td>{{ budget.bf_end_date }}</td>
+            <td>{{ budget.bf_start_date_year }}</td>
+<!--            <td>{{ budget.bf_end_date }}</td>-->
             <td>{{ budget.bf_updated_at }}</td>
             <td>{{ budget.bf_updated_by }}</td>
             <td>
@@ -224,8 +224,6 @@
     $(document).ready(function() {
     $('#delivery_list').DataTable({
         order: [0, 'desc' ],
-<!--        scrollY: "600px",-->
-        scrollX: true,
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'

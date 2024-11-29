@@ -18,7 +18,7 @@ def send_department_email(department, subject, message, recipient_list):
             message,
             settings.EMAIL_HOST_USER,
             recipient_list,
-            fail_silently=False,
+            fail_silently=False,html_message=message
         )
     else:
         print(f"Email settings for department '{department}' not found.")
