@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db.models import Q
 
+# from ..models import ExpenseInfo, ExpenseExtinfo
 from ..models import ExpenseInfo, ExpenseExtinfo
 from django.shortcuts import render, redirect
 from ..forms import ExpenseaddForm,ExpenseextaddForm
@@ -22,7 +23,7 @@ def expense_add(request, expense_id=0):
             try:
                 expense = ExpenseInfo.objects.get(pk=expense_id)
                 expense_form = ExpenseaddForm(instance=expense)
-                expense_ext_list = ExpenseExtinfo.objects.filter(expense_number=expense_id)
+                expense_ext_list = ExpenseExtinfo.objects.filter(exp_ext_expense_number=expense_id)
                 request.session['ses_expense_id'] = expense_id
             except ExpenseInfo.DoesNotExist:
                 messages.error(request, "Expense not found.")
@@ -176,7 +177,7 @@ def expense_ext_add(request, expense_ext_id=0):
                 expense_id = request.session.get('ses_expense_id')
 
                 expense_ext_id = max(
-                    ExpenseExtinfo.objects.filter(expense_number=expense_id).values_list('id', flat=True))
+                    ExpenseExtinfo.objects.filter(exp_ext_expense_number=expense_id).values_list('id', flat=True))
 
                 messages.success(request, 'Saved successfully.')
 

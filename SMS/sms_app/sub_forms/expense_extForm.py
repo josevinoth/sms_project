@@ -8,6 +8,6 @@ class ExpenseextaddForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ExpenseextaddForm, self).__init__(*args, **kwargs)
-        self.fields['expense_number'].empty_label = "--Select--"
+        self.fields['exp_ext_expense_number'].empty_label = "--Select--"
         self.fields['exp_ext_branch'].empty_label = "--Select--"
         self.fields['exp_ext_unit'].empty_label = "--Select--"

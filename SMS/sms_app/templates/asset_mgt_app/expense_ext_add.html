@@ -16,7 +16,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Expense Number</span>
                                     </div>
-                                    {% render_field form.expense_number id="expense_number" class="form-control disable_a_href"  %}
+                                    {% render_field form.exp_ext_expense_number id="exp_ext_expense_number" class="form-control disable_a_href"  %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -36,7 +36,7 @@
                                     </div>
                                     {% render_field form.exp_ext_amount id="exp_ext_amount" class="form-control" %}
                                 </div>
-                                {% render_field form.updated_by id="updated_by" hidden="True" class="form-control" %}
+                                {% render_field form.exp_ext_updated_by id="exp_ext_updated_by" hidden="True" class="form-control" %}
                             </div>
                         </div>
                         <div class="row">
@@ -67,26 +67,26 @@
 <script>
 	$(document).ready(function() {
             {
-                var expense_id = document.getElementById("expense_number").value
+                var expense_id = document.getElementById("exp_ext_expense_number").value
                 if (expense_id == "")
                 {
-                    document.getElementById("expense_number").value='{{expense_id}}'
+                    document.getElementById("exp_ext_expense_number").value='{{expense_id}}'
                 }
                 else
                 {
-                    document.getElementById("expense_number").value=expense_id;
+                    document.getElementById("exp_ext_expense_number").value=expense_id;
                 }
             }
 
             {
-                var updated_by = document.getElementById("updated_by").value
+                var updated_by = document.getElementById("exp_ext_updated_by").value
                 if (updated_by == "")
                 {
-                    document.getElementById("updated_by").value='{{user_id}}'
+                    document.getElementById("exp_ext_updated_by").value='{{user_id}}'
                 }
                 else
                 {
-                    document.getElementById("updated_by").value=updated_by;
+                    document.getElementById("exp_ext_updated_by").value=updated_by;
                 }
             }
         });

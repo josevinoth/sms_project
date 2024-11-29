@@ -37,12 +37,12 @@
             {% for expenseextinfo in expense_ext_list %}
                 <tr>
                     <td>{{ expenseextinfo.id }}</td>
-                    <td>{{ expenseextinfo.expense_number }}</td>
+                    <td>{{ expenseextinfo.exp_ext_expense_number }}</td>
                     <td>{{ expenseextinfo.exp_ext_branch }}</td>
                     <td>{{ expenseextinfo.exp_ext_unit }}</td>
-                    <td>{{ expenseextinfo.exp_ext_amount }}</td>
-                    <td>{{ expenseextinfo.updated_by }}</td>
-                    <td>{{ expenseextinfo.updated_on }}</td>
+                    <td>{{ expenseextinfo.exp_ext_amount}}</td>
+                    <td>{{ expenseextinfo.exp_ext_updated_by}}</td>
+                    <td>{{ expenseextinfo.exp_ext_updated_on}}</td>
                     <td>
                         <a class="btn btn-primary" href="{% url 'expense_ext_update' expenseextinfo.id %}">
                             <i class="far fa-edit"></i>
