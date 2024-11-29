@@ -13,7 +13,7 @@ from ..forms import ExpenseaddForm,ExpenseextaddForm
 def expense_add(request, expense_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    expense_ext_list = ExpenseExtinfo.objects.filter(expense_number=expense_id)
+    expense_ext_list = ExpenseExtinfo.objects.all()
 
     if request.method == "GET":
         if expense_id == 0:
@@ -22,6 +22,7 @@ def expense_add(request, expense_id=0):
             try:
                 expense = ExpenseInfo.objects.get(pk=expense_id)
                 expense_form = ExpenseaddForm(instance=expense)
+                expense_ext_list = ExpenseExtinfo.objects.filter(expense_number=expense_id)
                 request.session['ses_expense_id'] = expense_id
             except ExpenseInfo.DoesNotExist:
                 messages.error(request, "Expense not found.")
@@ -177,7 +178,7 @@ def expense_ext_add(request, expense_ext_id=0):
                 expense_ext_id = max(
                     ExpenseExtinfo.objects.filter(expense_number=expense_id).values_list('id', flat=True))
 
-                messages.success(request, 'Attachment saved successfully.')
+                messages.success(request, 'Saved successfully.')
 
                 return redirect(f'/SMS/expense_ext_update/{expense_ext_id}')
 
@@ -207,7 +208,7 @@ def expense_ext_add(request, expense_ext_id=0):
 
                 form.save()
 
-                messages.success(request, 'Attachment saved successfully.')
+                messages.success(request, 'Saved successfully.')
 
                 return redirect(request.META['HTTP_REFERER'])
 
@@ -239,7 +240,7 @@ def expense_ext_delete(request, expense_ext_id):
         expense = ExpenseExtinfo.objects.get(pk=expense_ext_id)
         expense.delete()
         messages.success(request, 'Expense deleted successfully.')
-        return redirect('/SMS/expense_ext_list')
+        return redirect(request.META['HTTP_REFERER'])
 
 
 # Cancel and return to the expense update page
