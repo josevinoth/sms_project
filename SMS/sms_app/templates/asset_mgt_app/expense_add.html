@@ -186,6 +186,48 @@
 		<div class="col-2"></div>
 	</div>
 </form>
+<hr>
+<div class="row">
+	<div class="col-1"></div>
+	<div class="col-10" id="customer_order_attach">
+		<div id="accordion" class="container-fluid">
+			<div class="card">
+				<div class="card-header bg-info" id="headingTwo">
+					<h5 class="mb-0">
+						<button class="btn btn-warning text-white collapsed" id="add_edit" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+							Add/Edit Expense Attachment
+						</button>
+					</h5>
+				</div>
+				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+					<div class="card-body">
+						<div class="card-body">
+							<div id="customer_attach_list_WOH">
+								{% include "asset_mgt_app/expense_ext_list_WOH.html" %}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-1"></div>
+</div>
+<script>
+	$(document).ready(function() {
+            {
+                var expense_name = document.getElementById("exp_number").value
+                if (expense_name == "")
+                {
+                    $('#add_edit').addClass('disable_a_href');
+                }
+                else
+                {
+                    $('#add_edit').removeClass('disable_a_href');
+                }
+            }
+        });
+</script>
 
 <script>
 	$(document).ready(function() {
