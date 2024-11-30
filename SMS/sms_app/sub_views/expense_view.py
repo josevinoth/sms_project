@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 # from ..models import ExpenseInfo, ExpenseExtinfo
 from ..models import ExpenseInfo, ExpenseExtinfo
@@ -250,4 +250,13 @@ def expense_ext_cancel(request, expense_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     expense_ext_id = request.session.get('ses_expense_id')
+    total_amount = ExpenseExtinfo.objects.filter(
+        exp_ext_expense_number=expense_ext_id
+    ).aggregate(total=Sum('exp_ext_amount'))['total']
+
+    # If you want to handle the case where total might be None:
+    total_amount = total_amount or 0
+    print(total_amount)
+    ExpenseInfo.objects.filter(pk=expense_ext_id).update(exp_rate=total_amount)
+    print(expense_ext_id)
     return redirect(f'/SMS/expense_update/{expense_ext_id}')
