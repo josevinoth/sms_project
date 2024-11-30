@@ -3,8 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
-
-# from ..models import ExpenseInfo, ExpenseExtinfo
 from ..models import ExpenseInfo, ExpenseExtinfo
 from django.shortcuts import render, redirect
 from ..forms import ExpenseaddForm,ExpenseextaddForm
@@ -14,11 +12,15 @@ from ..forms import ExpenseaddForm,ExpenseextaddForm
 def expense_add(request, expense_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    expense_ext_list = ExpenseExtinfo.objects.all()
 
     if request.method == "GET":
         if expense_id == 0:
             expense_form = ExpenseaddForm()
+            context = {
+                'expense_form': expense_form,
+                'first_name': first_name,
+                'user_id': user_id,
+            }
         else:
             try:
                 expense = ExpenseInfo.objects.get(pk=expense_id)
@@ -28,13 +30,12 @@ def expense_add(request, expense_id=0):
             except ExpenseInfo.DoesNotExist:
                 messages.error(request, "Expense not found.")
                 return redirect('expense_list')
-
-        context = {
-            'expense_form': expense_form,
-            'first_name': first_name,
-            'user_id': user_id,
-            'expense_ext_list': expense_ext_list,  # Ensure this is populated correctly
-        }
+            context = {
+                'expense_form': expense_form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'expense_ext_list': expense_ext_list,  # Ensure this is populated correctly
+            }
         return render(request, "asset_mgt_app/expense_add.html", context)
 
     else:
@@ -256,7 +257,5 @@ def expense_ext_cancel(request, expense_id=0):
 
     # If you want to handle the case where total might be None:
     total_amount = total_amount or 0
-    print(total_amount)
     ExpenseInfo.objects.filter(pk=expense_ext_id).update(exp_rate=total_amount)
-    print(expense_ext_id)
     return redirect(f'/SMS/expense_update/{expense_ext_id}')
