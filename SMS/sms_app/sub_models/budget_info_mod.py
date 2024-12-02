@@ -12,7 +12,7 @@ class BudgetInfo(models.Model):
     bf_Warehouse_Storage_Charges = models.FloatField(blank=True, null=True, default=0.0)
     bf_Warehouse_Unloading_Charges = models.FloatField(blank=True, null=True, default=0.0)
     bf_updated_by = models.ForeignKey(MyUser,blank=True, null=True, on_delete=models.CASCADE)
-    bf_start_date_year = models.DateField()
+    bf_start_date_year = models.DateField(default='2024-01-01')
     bf_audit_fees = models.FloatField(blank=True, null=True, default=0.0)
     bf_bad_debts = models.FloatField(blank=True, null=True, default=0.0)
     bf_bank_charges = models.FloatField(blank=True, null=True, default=0.0)

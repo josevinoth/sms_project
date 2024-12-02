@@ -22,13 +22,13 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Branch</span>
                                     </div>
-                                    {% render_field form.exp_ext_branch id="exp_ext_branch" onchange="change_Branch()" class="form-control" %}
+                                    {% render_field form.exp_ext_branch id="exp_ext_branch"  class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Unit</span>
                                     </div>
-                                    {% render_field form.exp_ext_unit class="form-control" id="exp_ext_unit" %}
+                                    {% render_field form.exp_ext_unit id="exp_ext_unit" class="form-control disable_a_href" id="exp_ext_unit" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -91,56 +91,31 @@
             }
         });
 </script>
+
 <script>
-    $(document).ready(function() {
-    // Initially disable the unit dropdown
-    $('#exp_ext_unit').prop('disabled', true);
-});
-
-function change_Branch() {
-    var branchId = document.getElementById("exp_ext_branch").value;
-    if (branchId != "0") {
-        $('#exp_ext_unit').prop('disabled', false); // Enable the unit dropdown
-        fetchUnitsByBranch(branchId); // Fetch units based on the selected branch
-    } else {
-        $('#exp_ext_unit').prop('disabled', true); // Disable the unit dropdown if no branch is selected
-        $('#exp_ext_unit').html("<option value='0'>--Select--</option>"); // Reset the unit dropdown
-    }
-}
-
-function fetchUnitsByBranch(branchId) {
-    $.ajax({
-        url: '{% url "load_units_origin" %}', // Ensure the URL is correct
-        data: {
-            'branchId': branchId,
-        },
-        success: function (data) {
-            console.log(data); // Debugging: log the received data
-
-            // Clear previous options and add the default option
-            $('#exp_ext_unit').html("<option value='0'>--Select--</option>");
-
-            var unitData = JSON.parse(data);
-            var unit_name = unitData["unit_name_list"];
-            var unit_id = unitData["unit_id"];
-
-            // Check if unit data is available
-            if (unit_name && unit_id) {
-                var len = unit_name.length;
-                for (var i = 0; i < len; i++) {
-                    $("#exp_ext_unit").append("<option value='" + unit_id[i] + "'>" + unit_name[i] + "</option>");
-                }
-            } else {
-                console.warn('No unit data available for the selected branch.'); // Debugging message
-            }
-        },
-        error: function (error) {
-            console.error('Error fetching units:', error);
-            alert('Error fetching units. Please try again.');
-        }
-    });
-}
-
+	$("#exp_ext_branch").change(function () {
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#exp_ext_unit').removeClass('disable_a_href');
+             $("#exp_ext_unit").empty();
+             $('#wh_bay').empty().append("<option value='0'>--Select--</option>");
+             $("#wh_stack_layer").val($("#selectBox option:first").val());
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#exp_ext_unit').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#exp_ext_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
 </script>
 
 {% endblock content %}
