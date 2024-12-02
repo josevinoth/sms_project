@@ -32,7 +32,7 @@ class ExpenseInfo(models.Model):
     exp_business = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, null=True)
 
     class Meta:
-        ordering = ["exp_amount_payable"]
+        ordering = ["exp_number"]
 
     def __str__(self):
-        return self.exp_amount_payable
+        return self.exp_number if self.exp_number else 'No Expense Number'

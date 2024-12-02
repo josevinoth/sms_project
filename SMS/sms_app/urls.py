@@ -551,6 +551,11 @@ urlpatterns = [
     path('budget_form_update/<int:budget_id>/', views.budgetform_add, name='budget_form_update'),
     path('budget_form_delete/<int:budget_id>/', views.budgetform_delete, name='budget_form_delete'),
     path('budget_form_clone/<int:budget_id>/', views.budgetform_clone, name='budget_form_clone'),
+    path('expense_ext_add/', views.expense_ext_add, name='expense_ext_add'),
+    path('expense_ext_list/', views.expense_ext_list, name='expense_ext_list'),
+    path('expense_ext_update/<int:expense_ext_id>/', views.expense_ext_add, name='expense_ext_update'),
+    path('expense_ext_delete/<int:expense_ext_id>/', views.expense_ext_delete, name='expense_ext_delete'),
+    path('expense_ext_cancel/', views.expense_ext_cancel, name='expense_ext_cancel'),
     path('gate_return_employee_id/', views.gate_return_employee_id, name='gate_return_employee_id'),
 
 ]

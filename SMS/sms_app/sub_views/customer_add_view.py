@@ -141,7 +141,3 @@ def customer_attach_cancel(request, customer_id=0):
     attach_id = request.session.get('attach_id')
     customer_id = request.session.get('ses_customer_id')
     return redirect(f'/SMS/customer_update/{customer_id}')
-
-
-
-

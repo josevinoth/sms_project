@@ -78,6 +78,7 @@ def requirements_email(req_id):
     module=RequirementsInfo.objects.get(pk=req_id).req_module
     bug_improvement=RequirementsInfo.objects.get(pk=req_id).req_bugimprove
     assigned_to=RequirementsInfo.objects.get(pk=req_id).req_implementedby
+    assigned_to_email=RequirementsInfo.objects.get(pk=req_id).req_implementedby.email
     implmented_on=RequirementsInfo.objects.get(pk=req_id).req_implementedon
     remarks=RequirementsInfo.objects.get(pk=req_id).req_remarks
     status=RequirementsInfo.objects.get(pk=req_id).req_status
@@ -102,6 +103,7 @@ def requirements_email(req_id):
 """
     recipient_list = [email.strip() for email in recipients.split(',')]
     recipient_list.append(raised_by_email)
+    recipient_list.append(assigned_to_email)
     send_department_email('support', subject, message, recipient_list)
 
 # List requirements
