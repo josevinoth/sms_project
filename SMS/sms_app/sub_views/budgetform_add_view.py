@@ -3,6 +3,7 @@ from ..forms import BudgetForm
 from ..models import BudgetInfo
 from django.contrib import messages
 from django.shortcuts import render, redirect,get_object_or_404
+from django.core.paginator import Paginator
 
 
 @login_required(login_url='login_page')
@@ -159,10 +160,11 @@ def budgetform_clone(request, budget_id):
         form = BudgetForm(request.POST)
         if form.is_valid():
             unique_start_date = form.cleaned_data['bf_start_date_year']
-            existing_budget = BudgetInfo.objects.filter(bf_start_date_year=unique_start_date).exists()
-
+            year = unique_start_date.year
+            month = unique_start_date.month
+            existing_budget = BudgetInfo.objects.filter(bf_start_date_year__year=year,bf_start_date_year__month=month).exists()
             if existing_budget:
-                messages.error(request, 'A budget record with the same month & Year already exists.')
+                messages.error(request, f'A budget record for {unique_start_date.strftime("%B %Y")} already exists.')
             else:
                 cloned_budget = form.save(commit=False)
                 cloned_budget.created_by = request.user
