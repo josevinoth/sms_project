@@ -14,7 +14,6 @@ from ..forms import ExpenseaddForm,ExpenseextaddForm
 def expense_add(request, expense_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    expense_ext_list = ExpenseExtinfo.objects.all()
 
     if request.method == "GET":
         if expense_id == 0:
@@ -67,6 +66,7 @@ def expense_add(request, expense_id=0):
                 # Update the expense with the generated number
                 saved_expense.exp_number = expense_num
                 saved_expense.save()
+
 
             messages.success(request, 'Record Updated Successfully')
             return redirect('/SMS/expense_update/' + str(saved_expense.id))
