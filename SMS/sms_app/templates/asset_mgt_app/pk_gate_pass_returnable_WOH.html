@@ -1,0 +1,32 @@
+{% block content %}
+<hr>
+<div class="container-fluid">
+    <table  id="dispatch_goods_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Assessment Number</th>
+            <th>Customer PO</th>
+            <th>Description</th>
+            <th>UOM</th>
+            <th>Quantity</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for gatepassreturn in gatepassreturn_list %}
+        <tr>
+            <td>{{ gatepassreturn.pod_assess_num }}</td>
+            <td>{{ gatepassreturn.pod_po_num }}</td>
+            <td>{{ gatepassreturn.pod_type_of_req }}</td>
+            <td>{{ gatepassreturn.pod_uom }}</td>
+            <td>{{ gatepassreturn.pod_quantity }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#dispatch_goods_list').DataTable();
+} );
+</script>
+{% endblock content %}
