@@ -1,31 +1,44 @@
 from django.contrib.auth.decorators import login_required
 from ..forms import GatepassreturnForm
-from ..models import PackingGateReturn,Warehouse_goods_info
+from ..models import PackingGateReturn,Warehouse_goods_info,POdimension,User
 from django.contrib import messages
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 
 @login_required(login_url='login_page')
 def gate_return_add(request, gate_id=0):
     first_name = request.session.get('first_name')
+    gate_list = PackingGateReturn.objects.all()
     if request.method == "GET":
         if gate_id == 0:
+            print("I am inside Get add dispatch")
             form = GatepassreturnForm()
+            context = {
+                'form':form,
+                'first_name': first_name,
+                'gate_list': gate_list,
+            }
         else:
+            print("I am inside get edit Dispatch")
             gate = PackingGateReturn.objects.get(pk=gate_id)
             form = GatepassreturnForm(instance=gate)
-        return render(request, "asset_mgt_app/pk_gate_pass_return_add.html", {
-            'form': form,
-            'first_name': first_name
-        })
+            gatepassreturn_list = POdimension.objects.filter(pod_assess_num=gate.gp_assessment_num,pod_po_num=gate.gp_customer_po)
+            context = {
+                'form':form,
+                'gatepassreturn_list': gatepassreturn_list,
+                'first_name': first_name,
+            }
+        return render(request, "asset_mgt_app/pk_gate_pass_return_add.html", context)
+
     else:
         if gate_id == 0:
             form = GatepassreturnForm(request.POST)
         else:
-            gate = PackingGateReturn.objects.get(pk=gate_id)
-            form = GatepassreturnForm(request.POST, instance=gate)
+            delivery = PackingGateReturn.objects.get(pk=gate_id)
+            form = GatepassreturnForm(request.POST, instance=delivery)
         if form.is_valid():
             form.save()
             if gate_id == 0:
@@ -34,7 +47,12 @@ def gate_return_add(request, gate_id=0):
                 messages.success(request, 'Record Updated Successfully')
         else:
             messages.error(request, 'Error: Please correct the errors below.')
-        return redirect('/SMS/packing_gate_list')
+
+        for field, errors in form.errors.items():
+            for error in errors:
+                print(f"Error in {field}: {error}")
+                messages.error(request, f"Error in {field}: {error}")
+        return redirect(request.META['HTTP_REFERER'])
 
 
 # List gatepass
@@ -55,35 +73,32 @@ def gate_return_delete(request,gate_id):
 
 @login_required(login_url='login_page')
 def gate_return_pdf(request, gate_id):
-    # Retrieve the PackingGateReturn record
     gate = PackingGateReturn.objects.filter(id=gate_id).first()
-
+    gatepass_list = POdimension.objects.filter(pod_assess_num=gate.gp_assessment_num,pod_po_num=gate.gp_customer_po)
     if not gate:
         messages.error(request, "Record not found.")
         return redirect('/SMS/packing_gate_list')
 
-    # Find warehouse location based on `gate` data
     wh_location = None
-    if gate.gp_sales_order_po:  # Assuming `gp_sales_order_po` is a unique reference number
-        wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=gate.gp_sales_order_po).values_list(
+    if gate.gp_assessment_num:
+        wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=gate.gp_assessment_num).values_list(
             'wh_branch__loc_name', flat=True).order_by('id').first()
 
-    print("Warehouse Location:", wh_location)  # Add this line for debugging
+    print("Warehouse Location:", wh_location)
 
     if not wh_location:
         wh_location = "BVM Chennai"
 
     context = {
         'gate': gate,
+        'gatepass_list': gatepass_list,
         'wh_location': wh_location,
     }
 
-    file_name = f"Gate_Pass_{gate_id}.pdf"
+    file_name = f"Gate Pass{gate_id}.pdf"
     template_path = 'asset_mgt_app/pk_gate_pass_return.html'
-
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{file_name}"'
-
     template = get_template(template_path)
     html = template.render(context)
 
@@ -93,3 +108,15 @@ def gate_return_pdf(request, gate_id):
         return HttpResponse('We encountered an error while generating the PDF.')
 
     return response
+
+@login_required(login_url='login_page')
+def gate_return_employee_id(request):
+    user_id = request.GET.get('id', None)
+    print("user_id", user_id)
+    if user_id:
+        user = User.objects.filter(id=user_id).first()
+        data = {
+            'employee': user.username if user else ''
+        }
+        return JsonResponse(data)
+    return JsonResponse({'employee': ''})

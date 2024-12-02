@@ -1,5 +1,6 @@
 {% extends "asset_mgt_app/report_header_potrait.html" %}
 {% block content %}
+<h3 style="text-align:center;">GATE PASS (RETURNABLE)</h3>
 <!--<h3 style="text-align:center;">Gate Pass (Returnable)</h3>-->
 <!--<div style="padding-left:570px;">-->
 <!--    <p>Gate Pass No:</p>-->
@@ -9,16 +10,29 @@
 <div>
     <table class='report_details'>
         <tr>
-            <th>Staff Name</th>
-            <td>{{ gate.gp_s_name }}</td>
+            <th>Assessment Number</th>
+            <td>{{ gate.gp_assessment_num }}</td>
         </tr>
         <tr>
-            <th>Employee ID</th>
-            <td>{{ gate.gp_employee }}</td>
+            <th>Customer Po</th>
+            <td>{{ gate.gp_customer_po }}</td>
         </tr>
         <tr>
             <th>Customer Name</th>
             <td>{{ gate.gp_customer_name }}</td>
+        </tr>
+        <tr>
+            <th>GSTIN</th>
+            <td>{{ gate.gp_customer_gstin }}</td>
+        </tr>
+        <tr>
+            <th>Staff Name</th>
+            <td>{{ gate.gp_s_name }}</td>
+        </tr>
+
+        <tr>
+            <th>Employee ID</th>
+            <td>{{ gate.gp_employee }}</td>
         </tr>
         <tr>
             <th>Sales Order Ref. No.</th>
@@ -28,15 +42,21 @@
     <hr class="report_hrItem"/>
     <table class='report_details'>
         <tr>
+            <th>ASSESSMENT NUMBER</th>
+            <th>CUSTOMER PO</th>
             <th>DESCRIPTION</th>
             <th>UOM</th>
             <th>QTY</th>
         </tr>
+        {% for gatepass in gatepass_list %}
         <tr>
-            <td>{{ gate.gp_description }}</td>
-            <td>{{ gate.gp_uom }}</td>
-            <td>{{ gate.gp_quantity }}</td>
+            <td>{{ gatepass.pod_assess_num }}</td>
+            <td>{{ gatepass.pod_po_num }}</td>
+            <td>{{ gatepass.pod_type_of_req }}</td>
+            <td>{{ gatepass.pod_uom }}</td>
+            <td>{{ gatepass.pod_quantity }}</td>
         </tr>
+        {% endfor %}
     </table>
     <hr class="report_hrItem"/>
     <table class='report_details'>

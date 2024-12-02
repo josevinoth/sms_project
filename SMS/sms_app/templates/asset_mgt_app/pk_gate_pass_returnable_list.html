@@ -33,13 +33,13 @@
         <thead class="thead-dark">
         <tr>
             <th>ID</th>
+            <th>Assessment Number</th>
+            <th>Customer Po</th>
+            <th>Customer Name</th>
+            <th>GSTIN</th>
             <th>Staff Name</th>
             <th>Employee ID</th>
-            <th>Customer Name</th>
             <th>Sales Order</th>
-            <th>Description</th>
-            <th>UOM</th>
-            <th>Quantity</th>
             <th>Gate Pass</th>
             <th>Edit</th>
             <th>Delete</th>
@@ -49,13 +49,13 @@
         {% for gate in gate_list %}
         <tr>
             <td>{{ gate.id }}</td>
+            <td>{{ gate.gp_assessment_num }}</td>
+            <td>{{ gate.gp_customer_po }}</td>
+            <td>{{ gate.gp_customer_name }}</td>
+            <td>{{ gate.gp_customer_gstin }}</td>
             <td>{{ gate.gp_s_name }}</td>
             <td>{{ gate.gp_employee }}</td>
-            <td>{{ gate.gp_customer_name }}</td>
             <td>{{ gate.gp_sales_order_po }}</td>
-            <td>{{ gate.gp_description }}</td>
-            <td>{{ gate.gp_uom }}</td>
-            <td>{{ gate.gp_quantity }}</td>
             <td>
                 <a class="btn btn-warning" href="{% url 'packing_gate_pdf' gate.id %}" >
                     <i class="fas fa-luggage-cart"></i>
