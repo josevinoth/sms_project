@@ -34,7 +34,7 @@ def expense_add(request, expense_id=0):
                 'expense_form': expense_form,
                 'first_name': first_name,
                 'user_id': user_id,
-                'expense_ext_list': expense_ext_list,  # Ensure this is populated correctly
+                'expense_ext_list': expense_ext_list,
             }
         return render(request, "asset_mgt_app/expense_add.html", context)
 
@@ -68,6 +68,7 @@ def expense_add(request, expense_id=0):
                 # Update the expense with the generated number
                 saved_expense.exp_number = expense_num
                 saved_expense.save()
+
 
             messages.success(request, 'Record Updated Successfully')
             return redirect('/SMS/expense_update/' + str(saved_expense.id))
