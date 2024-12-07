@@ -1,0 +1,231 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-2"></div>
+        <div class="col-8">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center">
+                        <h3>Add/Update High Value Check</h3>
+                    </div>
+                    <div class="card-body bg-light">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Location</span>
+                                    </div>
+                                    {% render_field form.hc_location id="hc_location" class="form-control " %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Unit Reference</span>
+                                    </div>
+                                    {% render_field form.hc_unit_reference id="hc_unit_reference" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Date</span>
+                                    </div>
+                                    {% render_field form.hc_date id="hc_date" type="date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer</span>
+                                    </div>
+                                    {% render_field form.hc_customer id="hc_customer" class="form-control" onchange="validateEndDate()" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Shipper</span>
+                                    </div>
+                                    {% render_field form.hc_shipper id="hc_shipper" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer Reference Number</span>
+                                    </div>
+                                    {% render_field form.hc_customer_reference_number id="hc_customer_reference_number" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Invoice Ref</span>
+                                    </div>
+                                    {% render_field form.hc_invoice_ref id="hc_invoice_ref" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Commodity</span>
+                                    </div>
+                                    {% render_field form.hc_commodity id="hc_commodity" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Value</span>
+                                    </div>
+                                    {% render_field form.hc_value id="hc_value" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">No Of Pcs</span>
+                                    </div>
+                                    {% render_field form.hc_no_of_pcs id="hc_no_of_pcs" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend" style="width:55%;">
+                                        <span class="input-group-text" style="width:100%;">Condition Of Cargo Received</span>
+                                    </div>
+                                    {% render_field form.hc_condition_cargo_received id="hc_condition_cargo_received" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend" style="width:57%;">
+                                        <span class="input-group-text" style="width:100%;">Watch Sensor Available Or Not</span>
+                                    </div>
+                                    {% render_field form.hc_tilt_watch_sensor_available id="hc_tilt_watch_sensor_available" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Storage Location</span>
+                                    </div>
+                                    {% render_field form.hc_storage_location id="hc_storage_location" class="form-control" %}
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Job Category</span>
+                                    </div>
+                                    {% render_field form.hc_storage_cross_docking_labelling id="hc_storage_cross_docking_labelling" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">CCTV Coverage</span>
+                                    </div>
+                                    {% render_field form.hc_cctv_coverage id="hc_cctv_coverage" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Driver Validation Received</span>
+                                    </div>
+                                    {% render_field form.hc_driver_validation_received id="hc_driver_validation_received" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Truck Validation Received</span>
+                                    </div>
+                                    {% render_field form.hc_truck_validation id="hc_truck_validation" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend" style="width:60%;">
+                                        <span class="input-group-text" style="width:100%;">Shipment Information Received</span>
+                                    </div>
+                                    {% render_field form.hc_shipment_information id="hc_shipment_information" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend" style="width:78%;">
+                                        <span class="input-group-text" style="width:100%;">Customer Information On Receipt Of Cargo</span>
+                                    </div>
+                                    {% render_field form.hc_customer_informed id="hc_customer_informed" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Handling Instruction If Any</span>
+                                    </div>
+                                    {% render_field form.hc_handling_instruction id="hc_handling_instruction" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Expected Days Of Storage</span>
+                                    </div>
+                                    {% render_field form.hc_expected_days id="hc_expected_days" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Weight</span>
+                                    </div>
+                                    {% render_field form.hc_weight id="hc_weight" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Unit of Measure</span>
+                                    </div>
+                                    {% render_field form.hc_unit_of_measure id="hc_unit_of_measure" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Dimension</span>
+                                    </div>
+                                    {% render_field form.hc_dimension id="hc_dimension" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">MHE Required To Handle</span>
+                                    </div>
+                                    {% render_field form.hc_mhe_required_handle id="hc_mhe_required_handle" class="form-control" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">BVM Scope Of Work</span>
+                            </div>
+                            {% render_field form.hc_bvm_scope_work id="hc_bvm_scope_work" class="form-control" %}
+                        </div>
+
+                        <div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+
+                        <!-- Submit and Cancel Buttons -->
+                        <button type="submit" class="btn btn-success" id="save-btn">
+                            <i class="fas fa-check"></i> Submit
+                        </button>
+                        <a href="{% url 'high_value_cancel' %}" class="btn btn-danger float-right">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-2"></div>
+    </div>
+</form>
+
+<script>
+	$("#hc_location").change(function () {
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#hc_unit_reference').removeClass('disable_a_href');
+             $("#hc_unit_reference").empty();
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#hc_unit_reference').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#hc_unit_reference").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
+</script>
+
+
+{% endblock content %}

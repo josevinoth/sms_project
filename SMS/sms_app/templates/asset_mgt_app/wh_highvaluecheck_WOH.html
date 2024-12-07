@@ -1,0 +1,90 @@
+<div class="container-fluid row">
+    <div class="col-md-1.5">
+        <a href="{% url 'high_value_add' %}" id="add_dim_btn" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Insert
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table id="highvalue_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Location</th>
+                <th>Unit Reference</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Shipper</th>
+<!--                <th>Customer Reference Number</th>-->
+<!--                <th>Invoice Ref</th>-->
+<!--                <th>Commodity</th>-->
+<!--                <th>Value</th>-->
+<!--                <th>No Of Pcs</th>-->
+<!--                <th>Condition Of Cargo Received</th>-->
+<!--                <th>Watch Sensor Available Or Not</th>-->
+<!--                <th>Storage Location</th>-->
+<!--                <th>Storage Or Cross Docking Or Labelling</th>-->
+<!--                <th>CCTV Coverage</th>-->
+<!--                <th>Driver Validation Received</th>-->
+<!--                <th>Truck Validation Received</th>-->
+<!--                <th>Shipment Information Received</th>-->
+<!--                <th>Customer Information Receipt Of Cargo</th>-->
+<!--                <th>Handling Instruction If Any</th>-->
+<!--                <th>Expected Days Of Storage</th>-->
+<!--                <th>BVM Scope Of Work</th>-->
+<!--                <th>Weight</th>-->
+<!--                <th>Dimension</th>-->
+<!--                <th>MHE Required To Handle</th>-->
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for high in high_list %}
+            <tr>
+                <td>{{ high.id }}</td>
+                <td>{{ high.hc_location }}</td>
+                <td>{{ high.hc_unit_reference }}</td>
+                <td>{{ high.hc_date }}</td>
+                <td>{{ high.hc_customer }}</td>
+                <td>{{ high.hc_shipper }}</td>
+<!--                <td>{{ high.hc_customer_reference_number }}</td>-->
+<!--                <td>{{ high.hc_invoice_ref }}</td>-->
+<!--                <td>{{ high.hc_commodity }}</td>-->
+<!--                <td>{{ high.hc_value }}</td>-->
+<!--                <td>{{ high.hc_no_of_pcs }}</td>-->
+<!--                <td>{{ high.hc_condition_cargo_received }}</td>-->
+<!--                <td>{{ high.hc_tilt_watch_sensor_available }}</td>-->
+<!--                <td>{{ high.hc_storage_location }}</td>-->
+<!--                <td>{{ high.hc_storage_cross_docking_labelling }}</td>-->
+<!--                <td>{{ high.hc_cctv_coverage }}</td>-->
+<!--                <td>{{ high.hc_driver_validation_received }}</td>-->
+<!--                <td>{{ high.hc_truck_validation }}</td>-->
+<!--                <td>{{ high.hc_shipment_information }}</td>-->
+<!--                <td>{{ high.hc_customer_informed }}</td>-->
+<!--                <td>{{ high.hc_handling_instruction }}</td>-->
+<!--                <td>{{ high.hc_expected_days }}</td>-->
+<!--                <td>{{ high.hc_bvm_scope_work }}</td>-->
+<!--                <td>{{ high.hc_weight }}</td>-->
+<!--                <td>{{ high.hc_dimension }}</td>-->
+<!--                <td>{{ high.hc_mhe_required_handle }}</td>-->
+                <td>
+                    <a class="btn btn-primary" href="{% url 'high_value_update' high.id %}">
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'high_value_delete' high.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+

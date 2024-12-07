@@ -557,5 +557,10 @@ urlpatterns = [
     path('expense_ext_delete/<int:expense_ext_id>/', views.expense_ext_delete, name='expense_ext_delete'),
     path('expense_ext_cancel/', views.expense_ext_cancel, name='expense_ext_cancel'),
     path('gate_return_employee_id/', views.gate_return_employee_id, name='gate_return_employee_id'),
+    path('high_value_add/', views.highvalue_add, name='high_value_add'),
+    path('high_value_list/', views.highvalue_list, name='high_value_list'),
+    path('high_value_update/<int:high_value_id>/', views.highvalue_add, name='high_value_update'),
+    path('high_value_delete/<int:high_value_id>/', views.highvalue_delete, name='high_value_delete'),
+    path('high_value_cancel/', views.highvalue_cancel, name='high_value_cancel'),
 
 ]
