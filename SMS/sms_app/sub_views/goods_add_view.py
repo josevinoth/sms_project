@@ -3,10 +3,14 @@ from django.db import transaction
 from django.db.models.aggregates import Sum
 from django.contrib import messages
 from ..forms import GoodsaddForm,warehouse_EmailForm
-from ..models import CustomerInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info
+from ..models import wh_excess_stock_email_status,Gatein_info,DamagereportInfo,Loadingbay_Info
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from ..views import warehousevolme_area_calc
+from ..models import Warehouse_goods_info
+from ..views import send_department_email
+from num2words import num2words  # Import the num2words library to convert numbers to words
+from django.utils.timezone import now
 
 # List goods
 @login_required(login_url='login_page')
@@ -205,6 +209,7 @@ def goods_add(request, goods_id=0):
                 # wh_stock_num = last_id + 1
                 last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
                 Warehouse_goods_info.objects.filter(id=last_id).update(wh_qr_rand_num=wh_stock_num)
+                wh_excess_stock_email(request)
             else:
                 print("Goods Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
@@ -251,6 +256,7 @@ def goods_add(request, goods_id=0):
                     # transaction.set_rollback(True)
                 else:
                     messages.success(request, 'Record Updated Successfully')
+                wh_excess_stock_email(request)
             else:
                 print("Form is not Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
@@ -320,3 +326,92 @@ def goods_update(request):
         pass
     warehousevolme_area_calc(request)
 
+
+def to_camel_case(text):
+    words = text.split()
+    return ' '.join([word.capitalize() for word in words])
+
+
+def wh_excess_stock_email(self, *args, **kwargs):
+    current_date = now().date()
+    current_time = now()
+    stock_values = {}
+    stock_values_in_words = {}
+
+    # Stock value calculations
+    warehouses = {
+        "maa": 2,
+        "blr": 1,
+        "hyd": 4,
+        "pny": 3,
+    }
+
+    for name, branch in warehouses.items():
+        in_stock = Warehouse_goods_info.objects.filter(
+            wh_branch=branch, wh_check_in_out=1, wh_checkin_time__lte=current_time
+        ).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum'] or 0
+        stock_values[name] = round(in_stock, 0)  # Use 'name' as the key
+        stock_values_in_words[name] = to_camel_case(
+            num2words(in_stock, to='currency', lang='en_IN')).replace("Euro", "Rupees").replace("Cents", "Paise")
+
+    total_stock_value = sum(stock_values.values())  # Calculate the total stock value
+
+    # Loop through each branch to check for excess stock and send email for exceeding branches
+    for name, value in stock_values.items():
+        # Check if stock exceeds 20 crores for the branch
+        if value > 200000000:  # If stock value exceeds 20 crores
+            # Check if the email has already been sent for this branch today
+            email_status = wh_excess_stock_email_status.objects.filter(date=current_date, branch=name).first()
+
+            if not email_status or email_status.email_sent is False:
+                # Compose the email
+                subject = f"{name.upper()} Warehouse Excess Stock Report"
+
+                # Compose HTML email content showing only the branch that exceeds the limit
+                message = f"""
+                <html>
+                <body>
+                    <p>Hi All,</p>
+                    <p>Please find below Warehouse Excess Stock Report for {name.upper()}.</p>
+                    <table border="1" cellpadding="5">
+                        <tr>
+                            <th>Branch</th>
+                            <th>Stock Value (INR)</th>
+                            <th>Amount in Words</th>
+                        </tr>
+                        <tr>
+                            <td>{name.upper()}</td>
+                            <td>{stock_values[name]}</td>  <!-- Accessing the correct key -->
+                            <td>{stock_values_in_words[name]}</td>  <!-- Accessing the correct key -->
+                        </tr>
+                    </table>
+                    <br>
+                    <p>Regards,</p>
+                    <p>Warehouse Admin</p>
+                </body>
+                </html>
+                """
+
+                # recipient_list = ["josevinoth.w@r2techsolutions.in,sony@thebvmgroup.com,deepa@thebvmgroup.com"]  # Replace with actual recipients
+                recipient_list = ["josevinoth.w@r2techsolutions.in", "josevinoth83@gmail.com"]
+
+                send_department_email('warehouse', subject, message, recipient_list)
+
+                # Record that the email has been sent for this branch
+                if email_status:
+                    email_status.email_sent = True
+                    email_status.stock_value = value  # Store the stock value for the branch
+                    email_status.save()
+                else:
+                    wh_excess_stock_email_status.objects.create(
+                        date=current_date, email_sent=True, branch=name, stock_value=value
+                    )
+
+    # If total stock value drops below 20 crores, reset the email sent status for the respective branches
+    for name, value in stock_values.items():
+        if value < 200000000:
+            # Reset the email sent status for the branch if its stock value is below 20 crores
+            email_status = wh_excess_stock_email_status.objects.filter(date=current_date, branch=name).first()
+            if email_status and email_status.email_sent:
+                email_status.email_sent = False
+                email_status.save()
