@@ -450,6 +450,7 @@ urlpatterns = [
     path('pregateintruck_insert/', views.pregateintruck_add, name='pregateintruck_insert'),  # Add pregateintruck
     path('pregateintruck_update/<int:pregateintruck_id>', views.pregateintruck_add, name='pregateintruck_update'),  # update pregateintruck
     path('pregateintruck_delete/<int:pregateintruck_id>', views.pregateintruck_delete, name='pregateintruck_delete'),  # delete pregateintruck
+    path('pregateintruck_cancel/', views.pregateintruck_cancel, name='pregateintruck_cancel'),  # cancel pregateintruck
     path('dispatch_gatepass_pdf/<int:dispatch_id>', views.dispatch_gatepass_pdf, name='dispatch_gatepass_pdf'),  # dispatch_gatepass_pdf
     path('revenue_report/', views.revenue_report, name='revenue_report'), #Revenue Report
     path('expense_report/', views.expense_report, name='expense_report'), #Expense Report

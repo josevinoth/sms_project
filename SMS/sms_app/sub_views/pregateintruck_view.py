@@ -82,5 +82,12 @@ def pregateintruck_delete(request,pregateintruck_id):
     pregateintruck.delete()
     gatein_num_id = request.session['gatein_num_id']
     pregateintruckdetails_list(request,gatein_num_id)
-    return redirect(request.META['HTTP_REFERER'])
+    return (redirect(request.META['HTTP_REFERER'])
+
+# Cancel pregateintruck
+@login_required(login_url='login_page'))
+def pregateintruck_cancel(request):
+    gatein_num_id = request.session['gatein_num_id']
+    return redirect('/SMS/gatein_pre_update/' + str(gatein_num_id))
+
 
