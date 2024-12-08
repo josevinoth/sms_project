@@ -20,7 +20,7 @@ class Pregateintruckinfo(models.Model):
     pregatein_otl_check = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, related_name='pregatein_otl_check',db_column='pregatein_otl_check', default=1)
     pregatein_offload_acceptance = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,related_name='pregatein_offload_acceptance', db_column='pregatein_offload_acceptance',default=1)
     pregatein_qty = models.IntegerField(default=0)
-    pregatein_high_value = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE, related_name='pregatein_high_value',db_column='pregatein_high_value',default=1)
+    pregatein_high_value = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE, related_name='pregatein_high_value',db_column='pregatein_high_value',default=2)
 
     class Meta:
         ordering = ["pregatein_truck_number"]
