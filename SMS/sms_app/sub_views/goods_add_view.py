@@ -392,8 +392,7 @@ def wh_excess_stock_email(self, *args, **kwargs):
                 </html>
                 """
 
-                # recipient_list = ["josevinoth.w@r2techsolutions.in,sony@thebvmgroup.com,deepa@thebvmgroup.com"]  # Replace with actual recipients
-                recipient_list = ["josevinoth.w@r2techsolutions.in", "josevinoth83@gmail.com"]
+                recipient_list = ["prakash@bvmstorage.com","venkat@bvmstorage.com","sony@thebvmgroup.com","deepa@thebvmgroup.com"]  # Replace with actual recipients
 
                 send_department_email('warehouse', subject, message, recipient_list)
 
