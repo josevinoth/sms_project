@@ -1,7 +1,7 @@
 from django.db import models
 from django.urls import reverse
 
-from ..models import Pkstockpurchasetype,MyUser,Vendor_info
+from ..models import PkneedassessmentInfo,Pkstockpurchasetype,PkpurchaseorderInfo,MyUser,Vendor_info,CustomerInfo
 
 class PkstockvebdorInfo(models.Model):
     spv_stock_Purchasetype = models.ForeignKey(Pkstockpurchasetype, on_delete=models.CASCADE)
