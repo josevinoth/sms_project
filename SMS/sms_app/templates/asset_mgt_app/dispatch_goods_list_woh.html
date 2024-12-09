@@ -13,17 +13,20 @@
     <!--    </div>-->
 </div>
 <br>
-<div class="row">
-    <div class="col-4">
-        <h3><span class="badge bg-info ">Dispatch Stock List</span></h3>
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        {% if messages %}
+        <ul class="list-unstyled">
+            {% for message in messages %}
+            <li class="alert {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No notifications at the moment.</p>
+        {% endif %}
     </div>
-    <div class="col-4 message text-center">
-        {% for message in messages %}
-        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-        {% endfor %}
-    </div>
-    <div class="col-4"></div>
 </div>
+
 <hr>
 <div class="col-md-1.5">
     <a href="" id='remove_btn' class="btn btn-success" onclick="return confirm('Are you sure to Re-Check-In this stock?');">

@@ -12,6 +12,7 @@ def pregateintruck_add(request,pregateintruck_id=0):
     gatein_num_id = request.session['gatein_num_id']
     high_list = HighvalueInfo.objects.all()
     if request.method == "GET":
+        high_value_check = None
         if pregateintruck_id == 0:
             form = PregateintruckForm()
         else:
