@@ -184,3 +184,4 @@ from .sub_models.customerattach_mod import Customerattach
 from .sub_models.pk_delivery_challan_mod import Pkdeliverychallan
 from .sub_models.budget_info_mod import BudgetInfo
 from .sub_models.expense_ext_mod import ExpenseExtinfo
+from .sub_models.excess_mod import ExcessStock
