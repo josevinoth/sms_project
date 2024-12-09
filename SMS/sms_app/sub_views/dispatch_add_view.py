@@ -14,7 +14,7 @@ from xhtml2pdf import pisa
 
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Warehouse_goods_info,Dispatch_info
+from ..models import Warehouse_goods_info,Dispatch_info,Customerattach
 from django.contrib import messages
 import cv2
 import numpy as np
@@ -180,6 +180,16 @@ def dispatch_remove_goods(request):
     # return redirect('/SMS/dispatch_goods_list')
     return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
 
+def dispatch_stock_list(request):
+    myList = request.GET.getlist('myList[]')
+    # Return a response, for example, a JSON response
+    response_data = {
+        'result': 'success',
+        'data': myList,
+    }
+    return JsonResponse(response_data)
+
+
 @login_required(login_url='login_page')
 def dispatch_add_goods(request):
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
@@ -192,6 +202,9 @@ def dispatch_add_goods(request):
     for i in selected_stocks:
         fumigation_action = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_fumigation_action
         fumigation_date = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_fumigation_date
+        customer_name = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_customer_name
+        customer_name_id = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_customer_name.id
+
         if str(fumigation_action) == 'BVM' and fumigation_date == None:
             messages.error(request, 'Fumigation Date not entered for this Stock')
             return redirect(request.META['HTTP_REFERER'])
@@ -219,22 +232,6 @@ def dispatch_add_goods(request):
     warehousevolme_area_calc(request)
     print("Inside dispatch_add_goods end")
 
-    # context = {
-    #             'first_name': first_name,
-    #             'dispatch_goods_list':dispatch_goods_list,
-    #            }
-    # return redirect(request.META['HTTP_REFERER'])
-    return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
-    # return redirect('/SMS/dispatch_goods_list')
-def dispatch_stock_list(request):
-    myList = request.GET.getlist('myList[]')
-    print(myList)
-    # Return a response, for example, a JSON response
-    response_data = {
-        'result': 'success',
-        'data': myList,
-    }
-    return JsonResponse(response_data)
 def dispatch_invoice_job_update(dispatch_num_val):
     print("Inside dispatch_invoice_job_update")
     dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice',flat=True).distinct())

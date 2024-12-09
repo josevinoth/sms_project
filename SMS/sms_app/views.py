@@ -31,7 +31,7 @@ from .sub_views.damage_add_view import damage_add,damage_list,damage_delete
 from .sub_views.picture_view import picture_add,picture_list,picture_delete
 from .sub_views.damagereport_add_view import damagereport_add,damagereport_list
 from .sub_views.locationmaster_add_view import locationmaster_add,locationmaster_list,locationmaster_delete,load_customer_model,warehousevolme_area_calc
-from .sub_views.goods_add_view import goods_add,goods_list,goods_delete,goods_update
+from .sub_views.goods_add_view import goods_add,goods_list,goods_delete,goods_update,wh_excess_stock_email
 from .sub_views.employee_add_view import emp_add,emp_list,emp_delete,emp_registration_page
 from .sub_views.unit_add_view import unit_add,unit_list,unit_delete
 from .sub_views.Bay_add_view import bay_add,bay_list,bay_delete
@@ -78,7 +78,7 @@ from .sub_views.warehouse_add_view import warehousein_add,load_units,load_bays,l
 from .sub_views.storage_add_view import storage_list
 from .sub_views.dispatch_add_view import dispatch_list,dispatch_delete,dispatch_add,dispatch_goods_list,dispatch_remove_goods,dispatch_add_goods,qr_dispatch_decoder,dispatch_search,dispatch_invoice_job_update,dispatch_stock_list,dispatch_gatepass_pdf,dispatch_goods_back
 from .sub_views.message_test import message_test
-from .sub_views.pregateintruck_view import pregateintruck_add,pregateintruck_list,pregateintruck_delete,pregateintruckdetails_list
+from .sub_views.pregateintruck_view import pregateintruck_add,pregateintruck_list,pregateintruck_delete,pregateintruckdetails_list,pregateintruck_cancel
 from .sub_views.gatein_pre_add_view import gatein_pre_add,gatein_pre_list,gatein_pre_delete,pre_gatein_search
 from .sub_views.invoice_view import invoice_list,invoice_add,invoice_delete,shipper_invoice_list,shipper_invoice_goods_add,shipper_invoice_goods_remove,load_whrate_model,case_to_case_invoice_list_open,dedicated_invoice_list_open,exclusive_invoice_list_open,invoice_report
 from .sub_views.expense_view import expense_add,expense_list,expense_delete,expense_search, expense_ext_add, expense_ext_list, expense_ext_delete, expense_ext_cancel
@@ -121,3 +121,4 @@ from .sub_views.pk_gate_pass_returnable_view import gate_return_add,gate_return_
 from .sub_views.pk_deliverychallan_add_view import delivery_challan_add,delivery_challan_list,delivery_challan_delete,delivery_challan_pdf
 from .sub_views.budgetform_add_view import budgetform_add,budgetform_list,budgetform_delete,budgetform_clone
 from .sub_views.pk_Excess_Stock_view import pk_excess_stock_add,pk_excess_stock_list
+from .sub_views.wh_highvaluecheck_add_view import highvalue_add,highvalue_list,highvalue_delete,highvalue_cancel

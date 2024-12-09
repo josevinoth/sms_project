@@ -104,6 +104,12 @@
 									</div>
 									{% render_field form.pregatein_offload_acceptance id="pregatein_offload_acceptance" class="form-control" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">High Value Check List</span>
+									</div>
+									{% render_field form.pregatein_high_value id="pregatein_high_value" class="form-control" onchange="hc_enabler()" %}
+								</div>
 								{% render_field form.pregatein_updated_by id="pregatein_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>
@@ -119,7 +125,7 @@
 							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success" ><i class="fas fa-check"></i> Save</button>
-						<a href="{% url 'pre_gatein_search' %}" class="btn btn-danger float-right">
+						<a href="{% url 'pregateintruck_cancel' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</div>
@@ -128,8 +134,34 @@
 		</div>
 	</div>
 	<div class="col-3"></div>
-	</div>
 </form>
+<hr>
+<div class="row" id="highvalue">
+	<div class="col-1"></div>
+	<div class="col-12" id="customer_order_high">
+		<div id="accordion" class="container-fluid">
+			<div class="card">
+				<div class="card-header bg-info" id="headingTwo">
+					<h5 class="mb-0">
+						<button class="btn btn-warning text-white collapsed" id="add_edit_high" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+							Add/Edit High Value Check
+						</button>
+					</h5>
+				</div>
+				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+					<div class="card-body">
+						<div class="card-body">
+							<div id="wh_highvaluecheck_WOH">
+								{% include "asset_mgt_app/wh_highvaluecheck_WOH.html" %}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-1"></div>
+</div>
 <script>
 $(document).ready(function() {
 	document.getElementById("pregatein_updated_by").value ='{{user_id}}';
@@ -142,6 +174,22 @@ $(document).ready(function() {
 	{
 		document.getElementById("pregatein_number").value = pregateintruck_num_id_val;
 	}
+	hc_enabler()
   });
 </script>
+
+<script>
+	function hc_enabler() {
+      var jn9='{{high_value_check}}'
+      if (jn9==1)
+        {
+            $('#highvalue').removeClass('disable_a_href');
+        }
+      else
+          {
+            $('#highvalue').addClass('disable_a_href');
+        }
+    }
+</script>
+
 {% endblock content %}

@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from ..forms import PregateintruckForm
-from ..models import Pregateintruckinfo,Gatein_pre_info
+from ..models import Pregateintruckinfo,Gatein_pre_info,HighvalueInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
@@ -10,17 +10,23 @@ def pregateintruck_add(request,pregateintruck_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     gatein_num_id = request.session['gatein_num_id']
+    high_list = HighvalueInfo.objects.all()
     if request.method == "GET":
+        high_value_check = None
         if pregateintruck_id == 0:
             form = PregateintruckForm()
         else:
             pregateintruck=Pregateintruckinfo.objects.get(pk=pregateintruck_id)
             form = PregateintruckForm(instance=pregateintruck)
+            request.session['ses_pregateintruck_id'] = pregateintruck_id
+            high_value_check=Pregateintruckinfo.objects.get(pk=pregateintruck_id).pregatein_high_value.id
         context={
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
                 'gatein_num_id': gatein_num_id,
+                'high_list':high_list,
+                'high_value_check':high_value_check,
                 }
         return render(request, "asset_mgt_app/pregateintruck_add.html", context)
     else:
@@ -79,5 +85,12 @@ def pregateintruck_delete(request,pregateintruck_id):
     pregateintruck.delete()
     gatein_num_id = request.session['gatein_num_id']
     pregateintruckdetails_list(request,gatein_num_id)
-    return redirect(request.META['HTTP_REFERER'])
+    return (redirect(request.META['HTTP_REFERER'])
+
+# Cancel pregateintruck
+@login_required(login_url='login_page'))
+def pregateintruck_cancel(request):
+    gatein_num_id = request.session['gatein_num_id']
+    return redirect('/SMS/gatein_pre_update/' + str(gatein_num_id))
+
 

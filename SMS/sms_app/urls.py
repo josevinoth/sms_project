@@ -450,6 +450,7 @@ urlpatterns = [
     path('pregateintruck_insert/', views.pregateintruck_add, name='pregateintruck_insert'),  # Add pregateintruck
     path('pregateintruck_update/<int:pregateintruck_id>', views.pregateintruck_add, name='pregateintruck_update'),  # update pregateintruck
     path('pregateintruck_delete/<int:pregateintruck_id>', views.pregateintruck_delete, name='pregateintruck_delete'),  # delete pregateintruck
+    path('pregateintruck_cancel/', views.pregateintruck_cancel, name='pregateintruck_cancel'),  # cancel pregateintruck
     path('dispatch_gatepass_pdf/<int:dispatch_id>', views.dispatch_gatepass_pdf, name='dispatch_gatepass_pdf'),  # dispatch_gatepass_pdf
     path('revenue_report/', views.revenue_report, name='revenue_report'), #Revenue Report
     path('expense_report/', views.expense_report, name='expense_report'), #Expense Report
@@ -560,5 +561,10 @@ urlpatterns = [
     path('costing_excess_insert/', views.pk_excess_stock_add, name='costing_excess_insert'),  # Add costing
     path('costing_excess_update/<int:costing_id>', views.pk_excess_stock_add, name='costing_excess_update'),
     path('pk_excess_stock_list/', views.pk_excess_stock_list, name='pk_excess_stock_list'),  # Ensure this name matches
+    path('high_value_add/', views.highvalue_add, name='high_value_add'),
+    path('high_value_list/', views.highvalue_list, name='high_value_list'),
+    path('high_value_update/<int:high_value_id>/', views.highvalue_add, name='high_value_update'),
+    path('high_value_delete/<int:high_value_id>/', views.highvalue_delete, name='high_value_delete'),
+    path('high_value_cancel/', views.highvalue_cancel, name='high_value_cancel'),
 
 ]
