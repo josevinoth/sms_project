@@ -39,45 +39,50 @@ def pk_stock_vendor_add(request,stock_vendor_id=0):
         psv_form = PkstockvendorForm(request.POST)
 
         if psv_form.is_valid():
-            # Check for duplicates before saving
+            psv_form.save()  # Save the new record
+            # Extract the vendor bill and purchase type
             spv_vendor_bill = psv_form.cleaned_data['spv_vendor_bill']
-            if not PkstockvebdorInfo.objects.filter(spv_vendor_bill=spv_vendor_bill).exclude(id=stock_vendor_id).exists():
-                if stock_vendor_id == 0:
-                    new_place = psv_form.save()
-                    print("psv_form saved")
-                    try:
-                        last_id = (PkstockvebdorInfo.objects.latest('id')).id
-                        rand_number=int(1000000+last_id)
-                    except ObjectDoesNotExist:
-                        rand_number=1000000
-                    print('last_id',last_id)
-                    print('rand_number',rand_number)
-                    purchase_type=(PkstockvebdorInfo.objects.get(id=last_id).spv_stock_Purchasetype).id
-                    print('purchase_type',purchase_type)
-                    if purchase_type==2:
-                        vendor_bill_num=str('Prod_Ret')+str(rand_number)
-                        PkstockvebdorInfo.objects.filter(id=last_id).update(spv_vendor_bill=vendor_bill_num)
-                    elif purchase_type==3:
-                        vendor_bill_num = str('New_Order') + str(rand_number)
-                        PkstockvebdorInfo.objects.filter(id=last_id).update(spv_vendor_bill=vendor_bill_num)
-                    messages.success(request, 'Record Updated Successfully')
-                    url = new_place.get_absolute_url_pk_stock_vendor()
-                    return redirect(url)
-                else:
-                    pk_stock_vendor = PkstockvebdorInfo.objects.get(pk=stock_vendor_id)
-                    psv_form = PkstockvendorForm(request.POST, instance=pk_stock_vendor)
-                    psv_form.save()
-                    print("psv_form saved")
-                    messages.success(request, 'Record Updated Successfully')
-                    return redirect(request.META['HTTP_REFERER'])
-            else:
-                print("Data not saved - Duplicate Vendor Bill found")
+            purchase_type = psv_form.cleaned_data['spv_stock_Purchasetype'].id
+
+            if purchase_type == 3 and PkstockvebdorInfo.objects.filter(spv_vendor_bill=spv_vendor_bill).exclude(id=stock_vendor_id).exists():
+                print("Data not saved - Duplicate Vendor Bill found for purchase_type=3")
                 messages.error(request, 'Duplicate Found. Please enter a Unique Vendor Bill.')
+                return redirect(request.META['HTTP_REFERER'])
+
+            if stock_vendor_id == 0:
+                new_place = psv_form.save()
+                print("psv_form saved")
+                try:
+                    last_id = PkstockvebdorInfo.objects.latest('id').id
+                    rand_number = int(1000000 + last_id)
+                except ObjectDoesNotExist:
+                    rand_number = 1000000
+
+                print('last_id', last_id)
+                print('rand_number', rand_number)
+
+                if purchase_type == 2:
+                    vendor_bill_num = str('Prod_Ret') + str(rand_number)
+                    PkstockvebdorInfo.objects.filter(id=last_id).update(spv_vendor_bill=vendor_bill_num)
+                elif purchase_type == 3:
+                    vendor_bill_num = str('New_Order') + str(rand_number)
+                    PkstockvebdorInfo.objects.filter(id=last_id).update(spv_vendor_bill=vendor_bill_num)
+
+                messages.success(request, 'Record Saved Successfully')
+                url = new_place.get_absolute_url_pk_stock_vendor()
+                return redirect(url)
+            else:
+                pk_stock_vendor = PkstockvebdorInfo.objects.get(pk=stock_vendor_id)
+                psv_form = PkstockvendorForm(request.POST, instance=pk_stock_vendor)
+                psv_form.save()
+                print("psv_form saved")
+                messages.success(request, 'Record Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
         else:
             print("Location psv_form not saved")
             messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
             return redirect(request.META['HTTP_REFERER'])
+
 
 # List places
 @login_required(login_url='login_page')

@@ -32,6 +32,7 @@ def costing_add(request, costing_id=0):
             'na_customer_new_name_id': na_customer_new_name_id,
             'ses_customer_po_id': ses_customer_po_id,
             'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id, ct_customer_po=ses_customer_po_id),
+            'excess_costing_list': PkcostingInfo.objects.all(),
         }
         return render(request, "asset_mgt_app/pk_costing_add.html", context)
 
@@ -150,7 +151,9 @@ def append_reduced_dimensions(stock_purchase_num,costing_id):
 @login_required(login_url='login_page')
 def costing_list(request):
     first_name = request.session.get('first_name')
-    context = {'costing_list' : PkcostingInfo.objects.all(),'first_name': first_name}
+    context = {'costing_list' : PkcostingInfo.objects.all(),
+                           'excess_costing_list': PkcostingInfo.objects.filter(ct_stock_status=4),
+'first_name': first_name}
     return render(request,"asset_mgt_app/pk_costing_list.html",context)
 
 #Delete costing
@@ -188,7 +191,7 @@ def load_stock_description(request):
 def costing_cancel(request):
     assessment_num_val = request.session.get('na_assessment_id')
     # costing_summary_id=PkcostingsummaryInfo.objects.get(cs_assessment_num=assessment_num_val).id
-    costing_summary_id=request.session.get('ses_costing_summary_id') 
+    costing_summary_id = request.session.get('ses_costing_summary_id')
     return redirect('/SMS/costingsummary_update/' + str(costing_summary_id))
 
 @login_required(login_url='login_page')

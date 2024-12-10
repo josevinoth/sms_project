@@ -1,4 +1,6 @@
 from django.db import models
+
+from .excess_mod import ExcessStock
 from ..models import PkpurchaseorderInfo,CustomerInfo,Nadimension,pk_stock_statusinfo,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
 
 class PkcostingInfo(models.Model):
@@ -39,6 +41,10 @@ class PkcostingInfo(models.Model):
     ct_totalbox_cost = models.FloatField(blank=True, null=True, default=0.0)
     ct_na_quantity = models.FloatField(blank=True, null=True, default=0.0)
     ct_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
+    ct_excess_status = models.ForeignKey(ExcessStock, on_delete=models.CASCADE, blank=True, null=True)
+    ct_grn = models.ForeignKey(PkstockpurchasesInfo, on_delete=models.CASCADE, blank=True, null=True,
+                               related_name='grn')
+
     class Meta:
         ordering = ["ct_cost_type"]
 
