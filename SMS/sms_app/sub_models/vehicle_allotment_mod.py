@@ -2,8 +2,8 @@ from django.db import models
 from ..models import EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo
 
 class Vehicle_allotmentInfo(models.Model):
-    va_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE, default='')
-    va_consignmentnumber = models.ForeignKey(ConsignmentdetailInfo, on_delete=models.CASCADE, default='')
+    va_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE)
+    va_consignmentnumber = models.ForeignKey(ConsignmentdetailInfo, on_delete=models.CASCADE)
     va_vehiclesource = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE)
     va_vehicletype = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE,related_name='va_vehicletype', db_column='va_vehicletype')
     va_vehicletype_placed = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE,related_name='va_vehicletype_placed', db_column='va_vehicletype_placed')
@@ -18,6 +18,7 @@ class Vehicle_allotmentInfo(models.Model):
     va_created_at = models.DateTimeField(null=True, auto_now_add=True)
     va_updated_by = models.ForeignKey(MyUser, related_name='va_updated_by', db_column='va_updated_by',on_delete=models.CASCADE, null=True)
     va_remarks=models.TextField(max_length=300,blank=True, null=True)
+    va_vendor_name=models.CharField(max_length=100,blank=True, null=True)
 
     def __str__(self):
         return self.va_vehiclenumber

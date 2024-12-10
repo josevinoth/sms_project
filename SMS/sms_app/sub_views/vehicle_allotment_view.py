@@ -114,6 +114,11 @@ def vehicle_allotment_add(request,vehicle_allotment_id=0):
                 vehicle_numbers.append(str(VehiclemasterInfo.objects.get(id=i).vm_registrationnumber))
             EnquirynoteInfo.objects.filter(id=enquiry_num_id).update(en_vehicle_allotment=vehicle_numbers)
             messages.success(request, 'Record Updated Successfully')
+
+            for field, errors in vehicle_allotment_form.errors.items():
+                for error in errors:
+                    print(f"Error in {field}: {error}")
+                    messages.error(request, f"Error in {field}: {error}")
         else:
             print("Main Form is not Valid")
             messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
@@ -149,44 +154,58 @@ def vehicle_allotment_delete(request,vehicle_allotment_id):
 @login_required(login_url='login_page')
 def load_vehicle_source(request):
     vehicletype_placed = request.GET.get('vehicletype_placed')
-    vehicle_source_name_list=[]
-    vehicle_source_id_list=[]
+    vehicle_source_name_list = []
+    vehicle_source_id_list = []
 
-    # Fetch vehicle alloted in a trip
-    vehicle_alloted_list=list(TripdetailInfo.objects.filter(tc_financestatus=1).values_list('tr_vehiclenumber',flat=True))
-    vehicle_master_list=list(VehiclemasterInfo.objects.all().values_list('id',flat=True))
+    # Fetch vehicles allotted in a trip
+    vehicle_allotted_list = list(TripdetailInfo.objects.filter(tc_financestatus=1).values_list('tr_vehiclenumber', flat=True))
+    vehicle_master_list = list(VehiclemasterInfo.objects.all().values_list('id', flat=True))
 
-    # Fetch vehicle Source
-    vehicle_available_list = []
-    for element in vehicle_master_list:
-        if element not in vehicle_alloted_list:
-            vehicle_available_list.append(element)
-    for i in vehicle_available_list:
-        vehicle_type_available=VehiclemasterInfo.objects.get(pk=i).vm_vehicletype.id
-        if (vehicle_type_available==int(vehicletype_placed)):
-            vehicle_source = VehiclemasterInfo.objects.get(pk=i).vm_ownership.id
-            vehicle_source_id=OwnershipInfo.objects.get(pk=vehicle_source).id
-            vehicle_source_name=OwnershipInfo.objects.get(pk=vehicle_source).ow_ownership
+    # Fetch available vehicles not allotted in any trip
+    vehicle_available_list = [element for element in vehicle_master_list if element not in vehicle_allotted_list]
 
-            if vehicle_source_id not in vehicle_source_id_list:
-                vehicle_source_id_list.append(vehicle_source_id)
-            if vehicle_source_name not in vehicle_source_name_list:
-                vehicle_source_name_list.append(vehicle_source_name)
-        else:
-            pass
+    # Filter available vehicles by vehicle type
+    matching_vehicles = [
+        vehicle_id for vehicle_id in vehicle_available_list
+        if VehiclemasterInfo.objects.get(pk=vehicle_id).vm_vehicletype.id == int(vehicletype_placed)
+    ]
+
+    for i in matching_vehicles:
+        vehicle_source = VehiclemasterInfo.objects.get(pk=i).vm_ownership.id
+        vehicle_source_id = OwnershipInfo.objects.get(pk=vehicle_source).id
+        vehicle_source_name = OwnershipInfo.objects.get(pk=vehicle_source).ow_ownership
+
+        if vehicle_source_id not in vehicle_source_id_list:
+            vehicle_source_id_list.append(vehicle_source_id)
+        if vehicle_source_name not in vehicle_source_name_list:
+            vehicle_source_name_list.append(vehicle_source_name)
+
+    # Handle case when no matching vehicles are found
+    if not matching_vehicles:
+        vehicle_source_name = OwnershipInfo.objects.get(pk=3).ow_ownership
+        vehicle_source_id = OwnershipInfo.objects.get(pk=3).id
+        if vehicle_source_id not in vehicle_source_id_list:
+            vehicle_source_id_list.append(vehicle_source_id)
+        if vehicle_source_name not in vehicle_source_name_list:
+            vehicle_source_name_list.append(vehicle_source_name)
+
     data = {
-        'vehicle_source_name':vehicle_source_name_list,
-        'vehicle_source_id':vehicle_source_id_list,
+        'vehicle_source_name': vehicle_source_name_list,
+        'vehicle_source_id': vehicle_source_id_list,
     }
     return HttpResponse(json.dumps(data))
+
 @login_required(login_url='login_page')
 def load_vehicle_number(request):
     vehicletype_placed = request.GET.get('vehicletype_placed')
     vehicletype_source = request.GET.get('vehicletype_source')
-    vehicle_number_list=list(VehiclemasterInfo.objects.filter(vm_vehicletype=vehicletype_placed,vm_ownership=vehicletype_source).values_list('vm_registrationnumber',flat=True))
-    vehicle_number_list_id=[]
-    for i in vehicle_number_list:
-        vehicle_number_list_id.append(VehiclemasterInfo.objects.get(vm_registrationnumber=i).id)
+    vehicle_data = VehiclemasterInfo.objects.filter(
+        vm_vehicletype=vehicletype_placed,
+        vm_ownership=vehicletype_source
+    ).values_list('vm_registrationnumber', 'id')
+
+    vehicle_number_list = [data[0] for data in vehicle_data]
+    vehicle_number_list_id = [data[1] for data in vehicle_data]
     data = {
         'vehicle_number_list': vehicle_number_list,
         'vehicle_number_list_id': vehicle_number_list_id,
