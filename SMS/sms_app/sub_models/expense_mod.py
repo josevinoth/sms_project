@@ -1,10 +1,8 @@
 from django.db import models
-from ..models import Business_Sol_info,ExpenseCategoryInfo,MyUser,Location_info,UnitInfo,Vendor_info,ExpenseTypeInfo,ExpenseUOMInfo
+from ..models import Business_Sol_info,ExpenseCategoryInfo,MyUser,Vendor_info,ExpenseTypeInfo,ExpenseUOMInfo
 
 
 class ExpenseInfo(models.Model):
-    exp_branch = models.ForeignKey(Location_info, on_delete=models.CASCADE,blank=True, null=True)
-    exp_unit = models.ManyToManyField(UnitInfo)
     exp_vendor = models.ForeignKey(Vendor_info, on_delete=models.CASCADE,blank=True, null=True)
     exp_vendor_bill=models.CharField(max_length=20,default = '',blank=True, null=True)
     exp_vendor_bill_date=models.DateTimeField(blank=True, null=True)
