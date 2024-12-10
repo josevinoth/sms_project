@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Business_Sol_info,ExpenseCategoryInfo,MyUser,Vendor_info,ExpenseTypeInfo,ExpenseUOMInfo
+from ..models import iou_info,Business_Sol_info,ExpenseCategoryInfo,MyUser,Vendor_info,ExpenseTypeInfo,ExpenseUOMInfo
 
 
 class ExpenseInfo(models.Model):
@@ -12,7 +12,7 @@ class ExpenseInfo(models.Model):
     exp_uom = models.ForeignKey(ExpenseUOMInfo, on_delete=models.CASCADE, blank=True, null=True)
     exp_rate=models.FloatField(default=0.0,blank=True,null=True)
     exp_remarks=models.TextField(max_length=300,blank=True,null=True)
-    exp_quantity=models.IntegerField(blank=True,null=True,default=0)
+    exp_quantity=models.IntegerField(blank=True,null=True,default=1)
     exp_amount=models.FloatField(blank=True,null=True,default=0.0)
     exp_gst_rate=models.FloatField(blank=True,null=True,default=18.0)
     exp_gst_amount=models.FloatField(blank=True,null=True,default=0.0)
@@ -28,6 +28,7 @@ class ExpenseInfo(models.Model):
     exp_category= models.ForeignKey(ExpenseCategoryInfo, on_delete=models.CASCADE, null=True)
     exp_number= models.CharField(blank=True,null=True,max_length=20)
     exp_business = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, null=True)
+    exp_iou = models.ForeignKey(iou_info, on_delete=models.CASCADE, null=True,blank=True)
 
     class Meta:
         ordering = ["exp_number"]
