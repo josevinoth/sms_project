@@ -154,41 +154,48 @@ def vehicle_allotment_delete(request,vehicle_allotment_id):
 @login_required(login_url='login_page')
 def load_vehicle_source(request):
     vehicletype_placed = request.GET.get('vehicletype_placed')
+    if not vehicletype_placed:
+        return HttpResponse(json.dumps({'error': 'Vehicle type not provided'}), status=400)
+
     vehicle_source_name_list = []
     vehicle_source_id_list = []
 
     # Fetch vehicles allotted in a trip
-    vehicle_allotted_list = list(TripdetailInfo.objects.filter(tc_financestatus=1).values_list('tr_vehiclenumber', flat=True))
-    vehicle_master_list = list(VehiclemasterInfo.objects.all().values_list('id', flat=True))
+    vehicle_allotted_list = list(
+        TripdetailInfo.objects.filter(tc_financestatus=1).values_list('tr_vehiclenumber', flat=True)
+    )
 
-    # Fetch available vehicles not allotted in any trip
-    vehicle_available_list = [element for element in vehicle_master_list if element not in vehicle_allotted_list]
+    # Fetch all vehicle master records, avoiding repetitive queries
+    vehicle_master_queryset = VehiclemasterInfo.objects.exclude(id__in=vehicle_allotted_list).select_related('vm_vehicletype', 'vm_ownership')
 
     # Filter available vehicles by vehicle type
     matching_vehicles = [
-        vehicle_id for vehicle_id in vehicle_available_list
-        if VehiclemasterInfo.objects.get(pk=vehicle_id).vm_vehicletype.id == int(vehicletype_placed)
+        vehicle for vehicle in vehicle_master_queryset
+        if vehicle.vm_vehicletype and vehicle.vm_vehicletype.id == int(vehicletype_placed)
     ]
 
-    for i in matching_vehicles:
-        vehicle_source = VehiclemasterInfo.objects.get(pk=i).vm_ownership.id
-        vehicle_source_id = OwnershipInfo.objects.get(pk=vehicle_source).id
-        vehicle_source_name = OwnershipInfo.objects.get(pk=vehicle_source).ow_ownership
-
-        if vehicle_source_id not in vehicle_source_id_list:
-            vehicle_source_id_list.append(vehicle_source_id)
-        if vehicle_source_name not in vehicle_source_name_list:
-            vehicle_source_name_list.append(vehicle_source_name)
+    # Prepare ownership information
+    ownership_cache = {}  # Cache ownership info to avoid duplicate queries
+    for vehicle in matching_vehicles:
+        ownership = vehicle.vm_ownership
+        if ownership:
+            if ownership.id not in ownership_cache:
+                ownership_cache[ownership.id] = ownership.ow_ownership
+            if ownership.id not in vehicle_source_id_list:
+                vehicle_source_id_list.append(ownership.id)
+            if ownership_cache[ownership.id] not in vehicle_source_name_list:
+                vehicle_source_name_list.append(ownership_cache[ownership.id])
 
     # Handle case when no matching vehicles are found
     if not matching_vehicles:
-        vehicle_source_name = OwnershipInfo.objects.get(pk=3).ow_ownership
-        vehicle_source_id = OwnershipInfo.objects.get(pk=3).id
-        if vehicle_source_id not in vehicle_source_id_list:
-            vehicle_source_id_list.append(vehicle_source_id)
-        if vehicle_source_name not in vehicle_source_name_list:
-            vehicle_source_name_list.append(vehicle_source_name)
+        fallback_ownership = OwnershipInfo.objects.filter(pk=3).first()
+        if fallback_ownership:
+            if fallback_ownership.id not in vehicle_source_id_list:
+                vehicle_source_id_list.append(fallback_ownership.id)
+            if fallback_ownership.ow_ownership not in vehicle_source_name_list:
+                vehicle_source_name_list.append(fallback_ownership.ow_ownership)
 
+    # Prepare and return response
     data = {
         'vehicle_source_name': vehicle_source_name_list,
         'vehicle_source_id': vehicle_source_id_list,
