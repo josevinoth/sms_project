@@ -75,6 +75,9 @@ def budgetform_clone(request, budget_id):
     if request.method == "GET":
         form = BudgetForm(initial={
             'bf_start_date_year': budget.bf_start_date_year,
+            'bf_company': budget.bf_company,
+            'bf_location': budget.bf_location,
+            'bf_unit_reference': budget.bf_unit_reference,
             'bf_Airport_Handling_Charges': budget.bf_Airport_Handling_Charges,
             'bf_Crane_Handling_Charges': budget.bf_Crane_Handling_Charges,
             'bf_Forklift_Handling_Charges': budget.bf_Forklift_Handling_Charges,
@@ -162,9 +165,15 @@ def budgetform_clone(request, budget_id):
             unique_start_date = form.cleaned_data['bf_start_date_year']
             year = unique_start_date.year
             month = unique_start_date.month
-            existing_budget = BudgetInfo.objects.filter(bf_start_date_year__year=year,bf_start_date_year__month=month).exists()
+            existing_budget = BudgetInfo.objects.filter(
+                bf_start_date_year__year=year,
+                bf_start_date_year__month=month,
+                bf_company=form.cleaned_data['bf_company'],
+                bf_location=form.cleaned_data['bf_location'],
+                bf_unit_reference=form.cleaned_data['bf_unit_reference'] ).exists()
+
             if existing_budget:
-                messages.error(request, f'A budget record for {unique_start_date.strftime("%B %Y")} already exists.')
+                messages.error(request, f'A budget record for {unique_start_date.strftime("%B %Y")} in the selected company, branch, and unit already exists.')
             else:
                 cloned_budget = form.save(commit=False)
                 cloned_budget.created_by = request.user

@@ -34,6 +34,9 @@
         <tr>
             <th>ID</th>
             <th>Clone</th>
+            <th>Company</th>
+            <th>Branch</th>
+            <th>Unit</th>
             <th>Airport Handling Charges</th>
             <th>Crane Handling Charges</th>
             <th>Forklift Handling Charges</th>
@@ -124,6 +127,9 @@
                     <i class="fas fa-clone"></i>
                 </a>
             </td>
+            <td>{{ budget.bf_company }}</td>
+            <td>{{ budget.bf_location }}</td>
+            <td>{{ budget.bf_unit_reference }}</td>
             <td>{{ budget.bf_Airport_Handling_Charges }}</td>
             <td>{{ budget.bf_Crane_Handling_Charges }}</td>
             <td>{{ budget.bf_Forklift_Handling_Charges }}</td>

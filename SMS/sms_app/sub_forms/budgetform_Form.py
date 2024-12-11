@@ -9,3 +9,6 @@ class BudgetForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BudgetForm,self).__init__(*args, **kwargs)
         self.fields['bf_updated_by'].empty_label = "--Select--"
+        self.fields['bf_location'].empty_label = "--Select--"
+        self.fields['bf_unit_reference'].empty_label = "--Select--"
+        self.fields['bf_company'].empty_label = "--Select--"
