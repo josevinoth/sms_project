@@ -37,6 +37,30 @@
                                     </div>
                                     {% render_field psv_form.spv_vendor_bill_date type="Date" class="form-control" %}
                                 </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Assessment Number</span>
+                                    </div>
+                                    {% render_field psv_form.spv_assessment_num id="spv_assessment_num" onchange="sp_assessment_num_change()"  class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer Name</span>
+                                    </div>
+                                    {% render_field psv_form.spv_customer_name id="spv_customer_name"  class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer New Name</span>
+                                    </div>
+                                    {% render_field psv_form.spv_customer_new_name id="spv_customer_new_name" class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer PO</span>
+                                    </div>
+                                    {% render_field psv_form.spv_customer_po id="spv_customer_po"  class="form-control disable_a_href" %}
+                                </div>
                                 {% render_field psv_form.spv_updated_by id="spv_updated_by" hidden="True" class="form-control" %}
                             </div>
                         </div>
@@ -45,7 +69,7 @@
                             <div class="col-10">
                                 <div class="message text-center">
                                     {% for message in messages %}
-                                        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -74,127 +98,206 @@
     <div class="container-fluid">
         <table id="stockpurchases_list" class="table table-striped table-bordered">
             <thead class="thead-dark">
-                <tr>
-                    <th>Created On</th>
-                    <th>Bill/Return/New Order Number</th>
-                    <th>Stock Purchases Number</th>
-                    <th>Category</th>
-                    <th>Stock Type</th>
-                    <th>Stock Description</th>
-                    <th>Source</th>
-                    <th>Thick/Height</th>
-                    <th>Width</th>
-                    <th>Length</th>
-                    <th>CFT</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>UOM</th>
-                    <th>Size</th>
-                    <th>Stock Purchase Type</th>
-                    <th>Updated at</th>
-                    <th>Updated By</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
-                </tr>
+            <tr>
+                <th>Created On</th>
+                <th>Bill/Return/New Order Number</th>
+                <th>Stock Purchases Number</th>
+                <th>Category</th>
+                <th>Stock Type</th>
+                <th>Stock Description</th>
+                <th>Source</th>
+                <th>Thick/Height</th>
+                <th>Width</th>
+                <th>Length</th>
+                <th>CFT</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>UOM</th>
+                <th>Size</th>
+                <th>Stock Purchase Type</th>
+                <th>Updated at</th>
+                <th>Updated By</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
             </thead>
-        <tbody>
-        {% for stockpurchasesinfo in stockpurchases_list %}
-        <tr>
-            <td> {{stockpurchasesinfo.sp_created_at}}</td>
-            <td> {{stockpurchasesinfo.sp_vendor_bill}}</td>
-            <td> {{stockpurchasesinfo.sp_purchase_num}}</td>
-            <td> {{stockpurchasesinfo.sp_category}}</td>
-            <td> {{stockpurchasesinfo.sp_stock_type}}</td>
-            <td> {{stockpurchasesinfo.sp_stock_description}}</td>
-            <td> {{stockpurchasesinfo.sp_source}}</td>
-            <td> {{stockpurchasesinfo.sp_thick_height}}</td>
-            <td> {{stockpurchasesinfo.sp_width}}</td>
-            <td> {{stockpurchasesinfo.sp_length}}</td>
-            <td> {{stockpurchasesinfo.sp_cft}}</td>
-            <td> {{stockpurchasesinfo.sp_price}}</td>
-            <td> {{stockpurchasesinfo.sp_quantity}}</td>
-            <td> {{stockpurchasesinfo.sp_uom}}</td>
-            <td> {{stockpurchasesinfo.sp_size}}</td>
-            <td> {{stockpurchasesinfo.sp_status}}</td>
-            <td> {{stockpurchasesinfo.sp_updated_at}}</td>
-            <td> {{stockpurchasesinfo.sp_updated_by}}</td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'stockpurchases_update' stockpurchasesinfo.id %}" class="btn btn-primary">
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
-            <td>
-                <form action="{% url 'stockpurchases_delete' stockpurchasesinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
+            <tbody>
+            {% for stockpurchasesinfo in stockpurchases_list %}
+            <tr>
+                <td> {{stockpurchasesinfo.sp_created_at}}</td>
+                <td> {{stockpurchasesinfo.sp_vendor_bill}}</td>
+                <td> {{stockpurchasesinfo.sp_purchase_num}}</td>
+                <td> {{stockpurchasesinfo.sp_category}}</td>
+                <td> {{stockpurchasesinfo.sp_stock_type}}</td>
+                <td> {{stockpurchasesinfo.sp_stock_description}}</td>
+                <td> {{stockpurchasesinfo.sp_source}}</td>
+                <td> {{stockpurchasesinfo.sp_thick_height}}</td>
+                <td> {{stockpurchasesinfo.sp_width}}</td>
+                <td> {{stockpurchasesinfo.sp_length}}</td>
+                <td> {{stockpurchasesinfo.sp_cft}}</td>
+                <td> {{stockpurchasesinfo.sp_price}}</td>
+                <td> {{stockpurchasesinfo.sp_quantity}}</td>
+                <td> {{stockpurchasesinfo.sp_uom}}</td>
+                <td> {{stockpurchasesinfo.sp_size}}</td>
+                <td> {{stockpurchasesinfo.sp_status}}</td>
+                <td> {{stockpurchasesinfo.sp_updated_at}}</td>
+                <td> {{stockpurchasesinfo.sp_updated_by}}</td>
+                <td>
+                    <a class="btn btn-primary" href="{% url 'stockpurchases_update' stockpurchasesinfo.id %}" class="btn btn-primary">
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'stockpurchases_delete' stockpurchasesinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
         </table>
     </div>
 </form>
 
 <script>
-$(document).ready(function() {
-    document.getElementById("spv_updated_by").value ='{{user_id}}';
-    var vendor_bill=document.getElementById("spv_vendor_bill").value
-    if (vendor_bill=="") {
-        $('#stock_purchase_item_add').addClass('disable_a_href');
-    } else {
-        $('#stock_purchase_item_add').removeClass('disable_a_href');
-    }
-    spv_stock_Purchasetype_change();
-});
-</script>
-
-<script>
-$(document).ready(function() {
-    $('#stockpurchases_list').DataTable({
-        order: [0, 'asc'],
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ],
-    });
-});
-</script>
-
-<script>
-$("#ct_stock_type").change(function () {
-    var url = $("#costing_add").attr("data-stock_description-url");
-    var stock_type = $(this).val();
-    $.ajax({
-        url: url,
-        data: {'stock_type': stock_type},
-        success: function (data) {
-            $('#ct_stock_description').removeClass('disable_a_href');
-            $("#ct_stock_description").empty().append("<option value='0'>--Select--</option>");
-            var ct_stock_description_name = JSON.parse(data)["stock_description"];
-            var ct_stock_description_id = JSON.parse(data)["stock_description_id"];
-            var len = ct_stock_description_id.length;
-            for (var i = 0; i < len; i++) {
-                $("#ct_stock_description").append("<option value='"+ct_stock_description_id[i]+"'>"+ct_stock_description_name[i]+"</option>");
-            }
+    $(document).ready(function() {
+        document.getElementById("spv_updated_by").value ='{{user_id}}';
+        var vendor_bill=document.getElementById("spv_vendor_bill").value
+        if (vendor_bill=="") {
+            $('#stock_purchase_item_add').addClass('disable_a_href');
+        } else {
+            $('#stock_purchase_item_add').removeClass('disable_a_href');
         }
+        spv_stock_Purchasetype_change();
     });
-});
 </script>
 
 <script>
-function spv_stock_Purchasetype_change() {
-    var jn = document.getElementById("spv_stock_Purchasetype").value;
-    if (jn == 1) {
-        $('#spv_vendor_name').removeClass('disable_a_href');
-        $('#spv_vendor_bill').removeClass('disable_a_href');
-    } else {
-        $('#spv_vendor_name').addClass('disable_a_href');
-        $('#spv_vendor_bill').addClass('disable_a_href');
-    }
-}
+    $(document).ready(function() {
+        $('#stockpurchases_list').DataTable({
+            order: [0, 'asc'],
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ],
+        });
+    });
 </script>
+
+<script>
+    $("#ct_stock_type").change(function () {
+        var url = $("#costing_add").attr("data-stock_description-url");
+        var stock_type = $(this).val();
+        $.ajax({
+            url: url,
+            data: {'stock_type': stock_type},
+            success: function (data) {
+                $('#ct_stock_description').removeClass('disable_a_href');
+                $("#ct_stock_description").empty().append("<option value='0'>--Select--</option>");
+                var ct_stock_description_name = JSON.parse(data)["stock_description"];
+                var ct_stock_description_id = JSON.parse(data)["stock_description_id"];
+                var len = ct_stock_description_id.length;
+                for (var i = 0; i < len; i++) {
+                    $("#ct_stock_description").append("<option value='"+ct_stock_description_id[i]+"'>"+ct_stock_description_name[i]+"</option>");
+                }
+            }
+        });
+    });
+</script>
+
+<script>
+    function spv_stock_Purchasetype_change() {
+        var jn = document.getElementById("spv_stock_Purchasetype").value;
+        if (jn == 1) {
+            $('#spv_vendor_name').removeClass('disable_a_href');
+            $('#spv_vendor_bill').removeClass('disable_a_href');
+            $('#spv_assessment_num').addClass('disable_a_href');
+            $('#spv_customer_po').addClass('disable_a_href');
+        } else {
+            $('#spv_vendor_name').addClass('disable_a_href');
+            $('#spv_vendor_bill').addClass('disable_a_href');
+            $('#spv_assessment_num').removeClass('disable_a_href');
+            $('#spv_customer_po').removeClass('disable_a_href');
+        }
+    }
+</script>
+<script>
+
+    $(document).ready(function () {
+        $("#spv_assessment_num").change(function () {
+            var assessment_num = $(this).val().trim(); // Ensure no leading/trailing spaces
+
+            if (!assessment_num) {
+                console.warn("Assessment number is empty or invalid.");
+                return; // Exit if input is invalid
+            }
+
+            // Perform AJAX request
+            $.ajax({
+                url: '{% url "pk_get_customer" %}',
+                data: {
+                    'assessment_num': assessment_num,
+                },
+                dataType: 'json', // Expect JSON response
+                success: function (data) {
+                    console.log(data); // Log response for debugging
+
+                    if (data.error) {
+                        console.error("Server Error: " + data.error);
+                        alert("Assessment not found or invalid."); // Notify user
+                        return;
+                    }
+
+                    // Safely update the fields with data
+                    document.getElementById("spv_customer_name").value = data.customer_id || '';
+                    document.getElementById("spv_customer_new_name").value = data.customer_new_name || '';
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX Error: " + status + " - " + error);
+                    alert("An error occurred while fetching the customer details. Please try again.");
+                }
+            });
+        });
+    });
+
+</script>
+<script>
+    function sp_assessment_num_change()
+    {
+        var cs_assessment_num = document.getElementById("spv_assessment_num").value;
+        $.ajax
+        ({
+            url: '{% url "pk_costing_get_customer" %}',
+            data: {
+                    'cs_assessment_num': cs_assessment_num
+                },
+            dataType: 'json',
+            success: function(data)
+            {
+                var customer_name_id=data.customer_name_id
+                document.getElementById("spv_customer_name").value=customer_name_id
+                   $('#spv_customer_po').removeClass('disable_a_href');
+                $("#spv_customer_po").empty();
+                var customer_po_id=data.customer_po_id;
+                if (customer_po_id=="")
+                {
+                    $('#unique_field_error').text('Customer PO not available for the selected Assessment Number.');
+                }
+                var customer_po_name=data.customer_po_name;
+                var len1 = (customer_po_id).length;
+                $("#spv_customer_po").empty();
+                $('#spv_customer_po').empty().append("<option value='0'>--Select--</option>");
+                for( var j = 0; j<len1; j++)
+                {
+                    $("#spv_customer_po").append("<option value='"+customer_po_id[j]+"'>"+customer_po_name[j]+"</option>");
+                }
+            }
+        });
+    }
+</script>
+
 
 {% endblock %}

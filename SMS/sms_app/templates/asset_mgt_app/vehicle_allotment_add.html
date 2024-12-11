@@ -71,37 +71,43 @@
 									</div>
 									{% render_field vehicle_allotment_form.va_vehiclesource id="va_vehiclesource" class="form-control disable_a_href" %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number</span>
 									</div>
 									{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor Name</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_vendor_name id="va_vendor_name" class="form-control disable_a_href" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Name</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control disable_a_href" %}
+									{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Number</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" class="form-control disable_a_href" %}
+									{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver License</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control disable_a_href" %}
+									{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">License Expiry</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_driver_lic_expiry id="va_driver_lic_expiry" type="Date" class="form-control disable_a_href" %}
+									{% render_field vehicle_allotment_form.va_driver_lic_expiry id="va_driver_lic_expiry" type="Date" class="form-control " %}
 								</div>
 								{% render_field vehicle_allotment_form.va_updated_by id="va_updated_by" hidden="True" class="form-control" %}
 							</div>
@@ -194,9 +200,18 @@ $(document).ready(function() {
           'vehicletype_source': vehicletype_source,
         },
 		success: function (data) {
-			$('#va_vehiclenumber').removeClass('disable_a_href');
 			var vehicle_number=JSON.parse(data)["vehicle_number_list"]
 			var vehicle_number_id=JSON.parse(data)["vehicle_number_list_id"]
+			if (vehicle_number_id!="")
+			{
+				$('#va_vehiclenumber').removeClass('disable_a_href');
+				$('#va_vendor_name').addClass('disable_a_href');
+			}
+			else
+			{
+				$('#va_vehiclenumber').addClass('disable_a_href');
+				$('#va_vendor_name').removeClass('disable_a_href');
+			}
 			var len1 = (vehicle_number).length;
         	$("#va_vehiclenumber").empty();
         	$('#va_vehiclenumber').empty().append("<option value='0'>--Select--</option>");
@@ -222,10 +237,6 @@ $(document).ready(function() {
           'vehicle_number': vehicle_number,
         },
 		success: function (data) {
-			$('#va_drivername').removeClass('disable_a_href');
-			$('#va_drivernumber').removeClass('disable_a_href');
-			$('#va_driver_lic').removeClass('disable_a_href');
-			$('#va_driver_lic_expiry').removeClass('disable_a_href');
 			var driver_name=JSON.parse(data)["driver_name"]
 			var driver_number=JSON.parse(data)["driver_number"]
 			var driver_license=JSON.parse(data)["driver_license"]

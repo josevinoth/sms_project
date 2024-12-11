@@ -125,7 +125,7 @@
 							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success" ><i class="fas fa-check"></i> Save</button>
-						<a href="{% url 'pre_gatein_search' %}" class="btn btn-danger float-right">
+						<a href="{% url 'pregateintruck_cancel' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</div>
@@ -177,24 +177,10 @@ $(document).ready(function() {
 	hc_enabler()
   });
 </script>
-<script>
-	$(document).ready(function() {
-            {
-                var pregatein_truck_type = document.getElementById("pregatein_truck_type").value
-                if (pregatein_truck_type == "")
-                {
-                    $('#add_edit_high').addClass('disable_a_href');
-                }
-                else
-                {
-                    $('#add_edit_high').removeClass('disable_a_href');
-                }
-            }
-        });
-</script>
+
 <script>
 	function hc_enabler() {
-      var jn9=document.getElementById("pregatein_high_value").value
+      var jn9='{{high_value_check}}'
       if (jn9==1)
         {
             $('#highvalue').removeClass('disable_a_href');

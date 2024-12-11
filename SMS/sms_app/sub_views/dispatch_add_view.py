@@ -180,6 +180,16 @@ def dispatch_remove_goods(request):
     # return redirect('/SMS/dispatch_goods_list')
     return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
 
+def dispatch_stock_list(request):
+    myList = request.GET.getlist('myList[]')
+    # Return a response, for example, a JSON response
+    response_data = {
+        'result': 'success',
+        'data': myList,
+    }
+    return JsonResponse(response_data)
+
+
 @login_required(login_url='login_page')
 def dispatch_add_goods(request):
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
@@ -192,70 +202,36 @@ def dispatch_add_goods(request):
     for i in selected_stocks:
         fumigation_action = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_fumigation_action
         fumigation_date = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_fumigation_date
-        customer_name = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_customer_name.id
-        print('customer_name',customer_name)
-        contract_due_date = Customerattach.objects.get(ca_customer_name=customer_name).ca_contract_due_days
-        print('contract_due_date', contract_due_date)
-        rate_due_date = Customerattach.objects.get(ca_customer_name=customer_name).ca_rate_due_days
-        print('rate_due_date', rate_due_date)
+        customer_name = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_customer_name
+        customer_name_id = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_customer_name.id
 
-    if contract_due_date:
-        if rate_due_date:
-            if (contract_due_date < 0 or rate_due_date < 0):
-                messages.error(request, 'Contract is over due by %d days', contract_due_date)
-                messages.error(request, ' rate is over due by %d days', rate_due_date)
-                return redirect(request.META['HTTP_REFERER'])
-            else:
-                messages.error(request, 'Contract is over due by %d days', contract_due_date)
-                messages.error(request, ' rate is over due by %d days', rate_due_date)
-                if str(fumigation_action) == 'BVM' and fumigation_date == None:
-                    messages.error(request, 'Fumigation Date not entered for this Stock')
-                    return redirect(request.META['HTTP_REFERER'])
-                else:
-                    Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=2)
-                    Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=dispatch_num_val)
-                    Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_checkout_time=current_date)
-                    Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_truck_type=vehicle_type)
-                    check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
-                    check_out_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkout_time)
-                    date_diff = (check_out_date - check_in_date)  # Differnce between dates
-                    date_diff_days = (date_diff.days)
-                    duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
-                    storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
-                    # storage_days = (check_out_date - check_in_date).days  # In days
-                    storage_days = float(round(storage_hours / 24, 2))  # In days
-                    Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
-                    print("warehouseoutinfo is Valid")
-                    try:
-                        dispatch_num_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).id
-                        Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_num_id)
-                    except ObjectDoesNotExist:
-                        pass
-            dispatch_invoice_job_update(dispatch_num_val)
-            warehousevolme_area_calc(request)
-            print("Inside dispatch_add_goods end")
-        else:
-            messages.error(request, 'Customer rate not found')
+        if str(fumigation_action) == 'BVM' and fumigation_date == None:
+            messages.error(request, 'Fumigation Date not entered for this Stock')
             return redirect(request.META['HTTP_REFERER'])
-    else:
-        messages.error(request, 'Customer contract not found')
-        return redirect(request.META['HTTP_REFERER'])
-    # context = {
-    #             'first_name': first_name,
-    #             'dispatch_goods_list':dispatch_goods_list,
-    #            }
-    # return redirect(request.META['HTTP_REFERER'])
-    return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
-    # return redirect('/SMS/dispatch_goods_list')
-def dispatch_stock_list(request):
-    myList = request.GET.getlist('myList[]')
-    print(myList)
-    # Return a response, for example, a JSON response
-    response_data = {
-        'result': 'success',
-        'data': myList,
-    }
-    return JsonResponse(response_data)
+        else:
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=2)
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=dispatch_num_val)
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_checkout_time=current_date)
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_truck_type=vehicle_type)
+            check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
+            check_out_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkout_time)
+            date_diff = (check_out_date - check_in_date)  # Differnce between dates
+            date_diff_days = (date_diff.days)
+            duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
+            storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
+            # storage_days = (check_out_date - check_in_date).days  # In days
+            storage_days = float(round(storage_hours / 24, 2))  # In days
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
+            print("warehouseoutinfo is Valid")
+            try:
+                dispatch_num_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).id
+                Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_num_id)
+            except ObjectDoesNotExist:
+                pass
+    dispatch_invoice_job_update(dispatch_num_val)
+    warehousevolme_area_calc(request)
+    print("Inside dispatch_add_goods end")
+
 def dispatch_invoice_job_update(dispatch_num_val):
     print("Inside dispatch_invoice_job_update")
     dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice',flat=True).distinct())

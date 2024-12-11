@@ -1,0 +1,153 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Excess Stock</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <!--    <div class="col-md-1">-->
+    <!--        <a href="{% url 'costing_insert' %}" class="btn btn-success btn-block btn-lg">-->
+    <!--            <i class="fas fa-plus"></i> Add-->
+    <!--        </a>-->
+    <!--    </div>-->
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="costing_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th rowspan="2">Created On</th>
+            <th rowspan="2">Assessment Number</th>
+            <th rowspan="2">Customer Name</th>
+            <th rowspan="2">Customer PO</th>
+            <th rowspan="2">GRN Number</th>
+            <th colspan="5" class="text-center">Available</th> <!-- Grouped header with colspan -->
+            <th colspan="5" class="text-center">Requested</th> <!-- Grouped header with colspan -->
+            <th colspan="5" class="text-center"><b>Excess</b></th> <!-- Grouped header with colspan -->
+            <th rowspan="2">Status</th>
+            <th rowspan="2">Excess Status</th>
+            <th rowspan="2">Edit</th>
+            <th rowspan="2">Delete</th>
+        </tr>
+        <tr>
+            <th>Length</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Quantity</th>
+            <th>CFT/SQFT</th>
+            <th>Length</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Quantity</th>
+            <th>CFT/SQFT</th>
+            <th>Length</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Quantity</th>
+            <th>CFT/SQFT</th>
+        </tr>
+        </tr>
+
+        </thead>
+        <tbody>
+        {% for costinginfo in excess_costing_list %}
+        <tr>
+            <td> {{costinginfo.ct_created_at}}</td>
+            <td> {{costinginfo.ct_assessment_num}}</td>
+            <td> {{costinginfo.ct_customer_name}}</td>
+            <td> {{costinginfo.ct_customer_po}}</td>
+            <td> {{costinginfo.ct_grn}}</td>
+            <td> {{costinginfo.ct_length}}</td>
+            <td> {{costinginfo.ct_width}}</td>
+            <td> {{costinginfo.ct_height}}</td>
+            <td> {{costinginfo.ct_quantity}}</td>
+            <td> {{costinginfo.ct_cft}}</td>
+            <td> {{costinginfo.ct_length_req}}</td>
+            <td> {{costinginfo.ct_width_req}}</td>
+            <td> {{costinginfo.ct_height_req}}</td>
+            <td> {{costinginfo.ct_quantity_req}}</td>
+            <td> {{costinginfo.ct_sqrt_req}}</td>
+            <td><input type="text" class="form-control excess-length" readonly></td>
+            <td><input type="text" class="form-control excess-width" readonly></td>
+            <td><input type="text" class="form-control excess-height" readonly></td>
+            <td><input type="text" class="form-control excess-quantity" readonly></td>
+            <td><input type="text" class="form-control excess-cft" readonly></td>
+            <td> {{costinginfo.ct_stock_status}}</td>
+            <td> {{costinginfo.ct_excess_status}}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'costing_excess_update' costinginfo.id %}" class="btn btn-primary">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'costing_delete' costinginfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#costing_list').DataTable({
+         order: [0, 'asc' ],
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ],
+    });
+} );
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach((row) => {
+        // Fetch Available values (Indices corrected)
+        const lengthAvailable = parseFloat(row.children[5].innerText) || 0;
+        const widthAvailable = parseFloat(row.children[6].innerText) || 0;
+        const heightAvailable = parseFloat(row.children[7].innerText) || 0;
+        const quantityAvailable = parseFloat(row.children[8].innerText) || 0;
+        const cftAvailable = parseFloat(row.children[9].innerText) || 0;
+
+        // Fetch Requested values (Indices corrected)
+        const lengthRequested = parseFloat(row.children[10].innerText) || 0;
+        const widthRequested = parseFloat(row.children[11].innerText) || 0;
+        const heightRequested = parseFloat(row.children[12].innerText) || 0;
+        const quantityRequested = parseFloat(row.children[13].innerText) || 0;
+        const cftRequested = parseFloat(row.children[14].innerText) || 0;
+
+        // Calculate Excess
+        const lengthExcess = lengthAvailable - lengthRequested;
+        const widthExcess = widthAvailable - widthRequested;
+        const heightExcess = heightAvailable - heightRequested;
+        const quantityExcess = quantityAvailable - quantityRequested;
+        const cftExcess = cftAvailable - cftRequested;
+
+        // Populate the Excess fields
+        row.querySelector(".excess-length").value = lengthExcess.toFixed(2);
+        row.querySelector(".excess-width").value = widthExcess.toFixed(2);
+        row.querySelector(".excess-height").value = heightExcess.toFixed(2);
+        row.querySelector(".excess-quantity").value = quantityExcess.toFixed(2);
+        row.querySelector(".excess-cft").value = cftExcess.toFixed(2);
+    });
+});
+</script>
+
+
+{% endblock content %}
