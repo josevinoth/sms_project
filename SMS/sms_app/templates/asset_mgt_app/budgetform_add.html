@@ -16,11 +16,31 @@
                         <div class="row">
                             <div class="col-6">
                                 <div class="input-group input-group-sm mb-3" style="width:96%;">
-                                <div class="input-group-prepend" style="padding-left:4%;">
-                                    <span class="input-group-text">Budget For Month / Year</span>
+                                    <div class="input-group-prepend" style="padding-left:4%;">
+                                        <span class="input-group-text">Budget For Month / Year</span>
+                                    </div>
+                                    {% render_field form.bf_start_date_year id="bf_start_date_year" type="date" class="form-control" %}
                                 </div>
-                                {% render_field form.bf_start_date_year id="bf_start_date_year" type="date" class="form-control" %}
+                                <div class="input-group input-group-sm mb-3" style="width:96%;">
+                                    <div class="input-group-prepend" style="padding-left:4%;">
+                                        <span class="input-group-text">Company</span>
+                                    </div>
+                                    {% render_field form.bf_company id="bf_company" class="form-control" %}
+                                </div>
                             </div>
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3" style="width:96%;">
+                                    <div class="input-group-prepend" style="padding-left:4%;">
+                                        <span class="input-group-text">Branch</span>
+                                    </div>
+                                    {% render_field form.bf_location id="bf_location" type="date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3" style="width:96%;">
+                                    <div class="input-group-prepend" style="padding-left:4%;">
+                                        <span class="input-group-text">Unit</span>
+                                    </div>
+                                    {% render_field form.bf_unit_reference id="bf_unit_reference" type="date" class="form-control" %}
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -597,5 +617,29 @@ $(document).ready(function() {
             }
         });
 </script>
+<script>
+	$("#bf_location").change(function () {
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#bf_unit_reference').removeClass('disable_a_href');
+             $("#bf_unit_reference").empty();
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#bf_unit_reference').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#bf_unit_reference").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
+</script>
+
 
 {% endblock content %}
