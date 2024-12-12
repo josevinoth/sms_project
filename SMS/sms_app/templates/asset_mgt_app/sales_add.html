@@ -30,7 +30,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Handling Branch</span>
 									</div>
-									{% render_field form.s_location class="form-control" %}
+									{% render_field form.s_location id="s_location" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -147,7 +147,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text" >Facility management Requirement</span>
+										<span class="input-group-text" style="width:250px" >Facility management Requirement</span>
 									</div>
 									{% render_field form.s_fac_mgmt_requirement class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -815,7 +815,10 @@
         			}
         		else
         			{
-            			$('#add_sales_info').removeClass('disable_a_href');
+            			$('#s_company').addClass('disable_a_href');
+            			$('#s_customer_name').addClass('disable_a_href');
+            			$('#s_customer_new_name').addClass('disable_a_href');
+            			$('#s_location').addClass('disable_a_href');
             		}
         	}
 
