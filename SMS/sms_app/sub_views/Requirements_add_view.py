@@ -104,7 +104,7 @@ def requirements_email(req_id):
     recipient_list = [email.strip() for email in recipients.split(',')]
     recipient_list.append(raised_by_email)
     recipient_list.append(assigned_to_email)
-    send_department_email('support', subject, message, recipient_list)
+    send_department_email('itadmin', subject, message, recipient_list)
 
 # List requirements
 @login_required(login_url='login_page')
