@@ -1,0 +1,257 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% load currency_format %}
+{% load static %}
+{% block content %}
+
+<!-- Loader container -->
+<!--    <div id="loader">-->
+<!--        <img src="{% static 'loaders_gifs/Earth_animated.gif' %}" alt="Loading...">-->
+<!--    </div>-->
+
+<div class="container-fluid" style="padding:15px;" >
+  <div class="row">
+    <div class="col-5"></div>
+    <div class="col-2 rounded text-center bg-info">
+      <h3>DSR Value Report</h3>
+    </div>
+    <div class="col-1"></div>
+    <div class="col-4"></div>
+  </div>
+  <br>
+
+  <form method="POST" action="{% url 'dsr_reports' %}">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-6">
+        <div class="input-group input-group-sm mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Customer</span>
+          </div>
+          {% render_field form.ds_customer id="ds_customer" class="form-control" value=customer_name %}
+        </div>
+      </div>
+      <div class="col-1">
+        <button type="submit" class="btn btn-success">Filter</button>
+      </div>
+    </div>
+  </form>
+  <br>
+  <br>
+  <div class="row">
+    <div class="col-1">
+      <a href="{% url 'warehouse_reports' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+    <div class="col-3">
+      <!-- Trigger Button to Open Modal -->
+      <button type="button" onclick="email_message_fn()" class="btn btn-warning" data-toggle="modal" data-target=".bd-example-modal-lg">
+        <i class="fas fa-envelope-square"></i> Email To Customer <span class="badge badge-danger">{{email_count}}</span>  <!-- Add the badge here -->
+      </button>
+      <!-- Modal Structure -->
+      <div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header bg-info">
+              <h5 class="modal-title text-center" id="sendEmailModalLabel">Send Email</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body text-dark">
+              <!-- Email Form -->
+              <form method="post" action="{% url 'dsr_send_email' %}">
+                {% csrf_token %}
+                <!-- To Email Field -->
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="to_emails">To</span>
+                  </div>
+                  {{ form_dsr_email.recipient|add_class:"form-control" }}
+                  <input type="text" id="recipient" class="form-control" value="{{ form_dsr_email.recipient }}">
+                </div>
+                <!-- Subject Field -->
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">Subject</span>
+                  </div>
+                  <!-- Add the class using `|add_class`, and set the id manually -->
+                  {{ form_dsr_email.subject|add_class:"form-control" }}
+                  <input type="text" id="subject" class="form-control" value="{{ form_dsr_email.subject }}">
+                </div>
+
+                <!-- Message Field -->
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">Message</span>
+                  </div>
+                  <!-- Add the class using `|add_class`, and set the id manually -->
+                  {{ form_dsr_email.message|add_class:"form-control" }}
+                  <input type="text" id="message" class="form-control" value="{{ form_dsr_email.message }}">
+                </div>
+                <!-- Submit Button -->
+                <div class="form-group text-center">
+                  <button type="submit" class="btn btn-primary"><i class="fas fa-envelope-square"></i> Send Email</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr>
+  <div class="container-fluid">
+    <table  id="dsr_value_report" class="table "  >
+      <thead class="thead-dark">
+      <tr>
+        <th>Job Number</th>
+        <th>Stock Number</th>
+        <th>Customer</th>
+        <th>Date Of Arrival</th>
+        <th>Unloading Start Time</th>
+        <th>Unloading End Time</th>
+        <th>Transporter</th>
+        <th>Truck Number</th>
+        <th>Consigner</th>
+        <th>Consignee</th>
+        <th>Docs Received</th>
+        <th>HAWB</th>
+        <th>Destination</th>
+        <th>Invoice Number</th>
+        <th>Case Number</th>
+        <th>Invoice Qty</th>
+        <th>Invoice Weight (kg)</th>
+        <th>Checkin Weight (kg)</th>
+        <th>UOM</th>
+        <th>Length</th>
+        <th>Width</th>
+        <th>Height</th>
+        <th>Dims Qty</th>
+        <th>Package Type</th>
+        <th>Volume Weight</th>
+        <th>CBM</th>
+        <th>Invoice Value</th>
+        <th>Invoice Currency</th>
+        <th>Invoice (INR)</th>
+        <th>E-Way Bill#</th>
+        <th>E-Way Bill Validity</th>
+        <th>Fumigation Status</th>
+        <th>Check In-Out?</th>
+        <th>Branch</th>
+        <th>Unit</th>
+        <th>Bay</th>
+        <th>Storage Days</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for stock_value in page_obj %}
+      <tr>
+        <td> {{stock_value.wh_job_no}}</td>
+        <td> {{stock_value.wh_qr_rand_num}}</td>
+        <td> {{stock_value.wh_customer_name}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_arrival_date}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_transporter}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_truck_number}}</td>
+        <td> {{stock_value.wh_consigner}}</td>
+        <td> {{stock_value.wh_consignee}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_packing_list}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_hawb}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_destination}}</td>
+        <td> {{stock_value.wh_gate_injob_no_id.gatein_invoice}}</td>
+        <td> {{stock_value.wh_po_num}}</td>
+        <td> {{stock_value.wh_total_qty}}</td>
+        <td> {{stock_value.wh_gross_weight}}</td>
+        <td> {{stock_value.wh_invoice_weight_unit}}</td>
+        <td> {{stock_value.wh_uom}}</td>
+        <td> {{stock_value.wh_goods_length}}</td>
+        <td> {{stock_value.wh_goods_width}}</td>
+        <td> {{stock_value.wh_goods_height}}</td>
+        <td> {{stock_value.wh_goods_pieces}}</td>
+        <td> {{stock_value.wh_goods_package_type}}</td>
+        <td> {{stock_value.wh_chargeable_weight}}</td>
+        <td> {{stock_value.wh_cbm}}</td>
+        <td> {{stock_value.wh_invoice_value}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_stock_invoice_currency}}</td>
+        <td> {{stock_value.wh_invoice_amount_inr}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_eway_bill}}</td>
+        <td> {{stock_value.wh_lb_job_no_id.lb_validity_date}}</td>
+        <td> {{stock_value.wh_fumigation_process}}</td>
+        <td> {{stock_value.wh_check_in_out}}</td>
+        <td> {{stock_value.wh_branch}}</td>
+        <td> {{stock_value.wh_unit}}</td>
+        <td> {{stock_value.wh_bay}}</td>
+        <td> {{stock_value.wh_storage_time }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a class="btn btn-warning" href="?page=1">First</a>
+            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+        {% endif %}
+    </span>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+  $('#dsr_value_report').DataTable( {
+      order: [3, 'desc' ],
+<!--        scrollY: 800,-->
+      scrollX: true,
+      dom: 'lBfrtip',
+      buttons: [
+          'copy', 'csv', 'excel','print'
+      ]
+  });
+} );
+</script>
+<script>
+  function email_message_fn() {
+  // Assign Django template variables to JavaScript variables
+  var shipper_invoice = '{{ shipper_invoice|escapejs }}';
+  var invoice_count = '{{ gatein_no_of_pkg_val|escapejs }}';
+  var invoice_weight = '{{ gatein_weight_val|escapejs }}';
+  var checkin_count = '{{ goods_checkin_count|escapejs }}';
+  var checkin_weight = '{{ goods_checkin_weight|escapejs }}';
+  var consigner = document.getElementById("ds_customer").value; // Use correct field ID
+  var consignee = document.getElementById("ds_customer").value; // Use correct field ID
+
+  var message = "Dear Customer,\n\n\n" +
+      "Please be advised that the following goods have arrived at our warehouse and have been stored.\n\n" +
+      "Shipper Invoice: " + shipper_invoice + "\n" +
+      "Consigner: " + consigner + "\n" +
+      "Consignee: " + consignee + "\n" +
+      "Invoice Qty: " + invoice_count + "\n" +
+      "Invoice Weight: " + invoice_weight + "\n" +
+      "Check-in Qty: " + checkin_count + "\n" +
+      "Check-in Weight: " + checkin_weight + "\n\n" +
+      "Regards,\n" +
+      "BVM Warehouse Team";
+
+  // Set values to form fields
+  document.getElementById("message").value = message;
+
+  var subject = "Goods Received: " + shipper_invoice;
+  document.getElementById("subject").value = subject;
+}
+
+</script>
+{% endblock content %}
+
