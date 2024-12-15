@@ -1,21 +1,13 @@
-from django.core.validators import validate_email
 from django import forms
-from django.core.exceptions import ValidationError
+from ..models import CustomerInfo
 
 class dsr_EmailForm(forms.Form):
-    recipient = forms.CharField(
-        label='Recipient',
-        widget=forms.TextInput(attrs={'placeholder': 'Enter multiple emails separated by commas'})
-    )
-    subject = forms.CharField(widget=forms.TextInput(attrs={'id': 'subject'}), required=True)
-    message = forms.CharField(widget=forms.Textarea(attrs={'id': 'message'}), required=True)
-
-    def clean_recipient(self):
-        emails = self.cleaned_data['recipient']
-        email_list = [email.strip() for email in emails.split(',')]
-        for email in email_list:
-            try:
-                validate_email(email)
-            except ValidationError:
-                raise forms.ValidationError(f"{email} is not a valid email address")
-        return emails
+    class Meta:
+        model = CustomerInfo
+        fields = ['cu_name']  # Include all fields from the model
+        widgets = {
+            'customer': forms.Select(attrs={'class': 'form-control'}),
+            'recipient': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Recipient emails'}),
+            'subject': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Subject'}),
+            'message': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter email message'}),
+        }

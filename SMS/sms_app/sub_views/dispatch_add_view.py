@@ -1,27 +1,25 @@
 import time
 from datetime import datetime
-
 from django.db.models.aggregates import Sum
 from django.http import JsonResponse
 from django.template.loader import get_template
-from django.utils import timezone
+import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
+from django.utils.timezone import now
 from xhtml2pdf import pisa
-
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Warehouse_goods_info,Dispatch_info,Customerattach
+from ..models import Check_in_out,Warehouse_goods_info,Dispatch_info,Customerattach
 from django.contrib import messages
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
 from ..views import warehousevolme_area_calc
 from django.http import HttpResponse
-from reportlab.pdfgen import canvas
 
 # Add Dispatch Job
 @transaction.atomic
@@ -189,48 +187,71 @@ def dispatch_stock_list(request):
     }
     return JsonResponse(response_data)
 
-
 @login_required(login_url='login_page')
 def dispatch_add_goods(request):
-    dispatch_num_val=request.session.get('ses_dispatch_num_val')
-    dispatch_id_val=request.session.get('ses_dispatch_id_val')
+    dispatch_num_val = request.session.get('ses_dispatch_num_val')
+    dispatch_id_val = request.session.get('ses_dispatch_id_val')
     selected_stocks = request.GET.getlist('myList[]')
-    vehicle_type = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).dispatch_truck_type
-    first_name = request.session.get('first_name')
-    # current_date=(timezone.now()).astimezone(timezone.get_current_timezone())
-    current_date=(timezone.now())
-    for i in selected_stocks:
-        fumigation_action = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_fumigation_action
-        fumigation_date = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_fumigation_date
-        customer_name = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_customer_name
-        customer_name_id = Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_customer_name.id
+    current_date = now()
 
-        if str(fumigation_action) == 'BVM' and fumigation_date == None:
-            messages.error(request, 'Fumigation Date not entered for this Stock')
-            return redirect(request.META['HTTP_REFERER'])
-        else:
-            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=2)
-            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=dispatch_num_val)
-            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_checkout_time=current_date)
-            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_truck_type=vehicle_type)
-            check_in_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkin_time)
-            check_out_date = datetime.date(Warehouse_goods_info.objects.get(wh_qr_rand_num=i).wh_checkout_time)
-            date_diff = (check_out_date - check_in_date)  # Differnce between dates
-            date_diff_days = (date_diff.days)
-            duration_in_s = date_diff.total_seconds()  # Total number of seconds between dates
-            storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
-            # storage_days = (check_out_date - check_in_date).days  # In days
-            storage_days = float(round(storage_hours / 24, 2))  # In days
-            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=date_diff_days)
-            print("warehouseoutinfo is Valid")
-            try:
-                dispatch_num_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_val).id
-                Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_num_id)
-            except ObjectDoesNotExist:
-                pass
+    try:
+        dispatch_info = Dispatch_info.objects.get(dispatch_num=dispatch_num_val)
+        vehicle_type = dispatch_info.dispatch_truck_type
+    except Dispatch_info.DoesNotExist:
+        messages.error(request, 'Dispatch information not found.')
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    # Get the Check_in_out instance for value 2
+    try:
+        check_in_out_instance = Check_in_out.objects.get(id=2)
+    except Check_in_out.DoesNotExist:
+        messages.error(request, 'Check_in_out instance with id=2 not found.')
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    goods_to_update = []
+    for stock in selected_stocks:
+        try:
+            goods_info = Warehouse_goods_info.objects.get(wh_qr_rand_num=stock)
+        except Warehouse_goods_info.DoesNotExist:
+            messages.error(request, f'Stock with QR {stock} not found.')
+            continue
+
+        fumigation_action = goods_info.wh_fumigation_action
+        fumigation_date = goods_info.wh_fumigation_date
+
+        if str(fumigation_action) == 'BVM' and not fumigation_date:
+            messages.error(request, f'Fumigation Date not entered for stock {stock}.')
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
+        # Prepare goods for bulk update
+        goods_info.wh_check_in_out = check_in_out_instance  # Assign the Check_in_out instance
+        goods_info.wh_dispatch_num = dispatch_num_val
+        goods_info.wh_checkout_time = current_date
+        goods_info.wh_truck_type = vehicle_type
+
+        check_in_date = goods_info.wh_checkin_time.date()
+        check_out_date = current_date.date()
+        date_diff = (check_out_date - check_in_date).days
+        goods_info.wh_storage_time = date_diff
+
+        goods_to_update.append(goods_info)
+
+    # Bulk update all modified goods
+    Warehouse_goods_info.objects.bulk_update(
+        goods_to_update,
+        ['wh_check_in_out', 'wh_dispatch_num', 'wh_checkout_time', 'wh_truck_type', 'wh_storage_time']
+    )
+
+    # Update dispatch ID for all goods
+    Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_info.id)
+
+    # Additional tasks
     dispatch_invoice_job_update(dispatch_num_val)
     warehousevolme_area_calc(request)
+
     print("Inside dispatch_add_goods end")
+    # return HttpResponseRedirect(f'/SMS/dispatch_goods_list/{dispatch_id_val}?refresh=1')
+    return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
 
 def dispatch_invoice_job_update(dispatch_num_val):
     print("Inside dispatch_invoice_job_update")
