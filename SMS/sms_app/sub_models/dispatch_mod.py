@@ -30,3 +30,4 @@ class Dispatch_info(models.Model):
     dispatch_billing_truck_type = models.ForeignKey(Check_in_out, on_delete=models.CASCADE, default=3,
                                                     related_name='dispatch_billing_truck_type',
                                                     db_column='dispatch_billing_truck_type', null=True, blank=True)
+    dispatch_email_count = models.IntegerField(null=True,blank=True,default=0)

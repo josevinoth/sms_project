@@ -44,8 +44,6 @@
             <th>Expense Category</th>
             <th>Expense Number</th>
             <th>Created On</th>
-            <th>Branch</th>
-            <th style="width: 100px;">Unit</th>
             <th>Vendor</th>
             <th>Bill No</th>
             <th>Bill Date</th>
@@ -67,19 +65,6 @@
             <td> {{expenseinfo.exp_category}}</td>
             <td> {{expenseinfo.exp_number}}</td>
             <td> {{expenseinfo.exp_created_on}}</td>
-            <td> {{expenseinfo.exp_branch}}</td>
-
-            <td style="width: 100px;">
-                {% if expenseinfo.exp_unit.exists %}
-                <ul>
-                    {% for category in expenseinfo.exp_unit.all %}
-                    <li>{{ category }}</li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                No categories
-                {% endif %}
-            </td>
             <td> {{expenseinfo.exp_vendor}}</td>
             <td> {{expenseinfo.exp_vendor_bill}}</td>
             <td> {{expenseinfo.exp_vendor_bill_date}}</td>
