@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 
-from ..forms import PkExcessstockForm
+from ..forms import PkexcessForm
 from ..models import PkcostingInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -16,7 +16,6 @@ from ..models import PkstockpurchasesInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
-from ..sub_forms.pk_costingForm_form import PkcostingForm
 
 
 @login_required(login_url='login_page')
@@ -31,10 +30,10 @@ def pk_excess_stock_add(request, costing_id=0):
 
         if request.method == "GET":
             if costing_id == 0:
-                form = PkcostingForm()
+                form = PkexcessForm()
             else:
                 costing = get_object_or_404(PkcostingInfo, pk=costing_id)
-                form = PkcostingForm(instance=costing)
+                form = PkexcessForm(instance=costing)
 
             context = {
                 'form': form,
@@ -53,10 +52,10 @@ def pk_excess_stock_add(request, costing_id=0):
         else:
             if costing_id == 0:
                 print("Inside PK Costing post add")
-                form = PkcostingForm(request.POST)
+                form = PkexcessForm(request.POST)
             else:
                 costing = get_object_or_404(PkcostingInfo, pk=costing_id)
-                form = PkcostingForm(request.POST, instance=costing)
+                form = PkexcessForm(request.POST, instance=costing)
 
             if form.is_valid():
                 print('Form is valid')
@@ -111,7 +110,7 @@ def pk_excess_stock_add(request, costing_id=0):
 @login_required(login_url='login_page')
 def pk_excess_stock_list(request):
     first_name = request.session.get('first_name')
-    excess_costing_list = PkcostingInfo.objects.filter(ct_stock_status=4)
+    excess_costing_list = PkcostingInfo.objects.filter(ct_stock_status=4, ct_excess_status=3)
 
     context = {
         'excess_costing_list': excess_costing_list,

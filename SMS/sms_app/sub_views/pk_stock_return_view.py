@@ -2,17 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..forms import PkreturnForm
-from ..models import PkstockpurchasesInfo
-from django.shortcuts import render, redirect
-from django.contrib import messages
-
-
-# Stock Purchases List - Only display where sp_status = 2
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ObjectDoesNotExist
-
-from ..forms import PkreturnForm
-from ..models import PkstockpurchasesInfo
+from ..models import PkstockpurchasesInfo,PkcostingInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
@@ -89,7 +79,7 @@ def stockpurchases_add(request, stockpurchases_id=0):
 def pk_return_list(request):
     first_name = request.session.get('first_name')
     # Filtering records where sp_status=2
-    return_list = PkstockpurchasesInfo.objects.filter(sp_status=2).order_by('-id')
+    return_list = PkcostingInfo.objects.filter( ct_excess_status=1)
 
     context = {
         'return_list': return_list,

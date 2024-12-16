@@ -42,6 +42,14 @@ def costingsummary_add(request,costingsummary_id=0):
             request.session['ses_costing_summary_id'] = costingsummary_id
             form = PkcostingsummaryForm(instance=costingsummary)
             costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_customer_po=customer_po_id)
+            excess_stock = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_num,
+                                                        ct_customer_po=customer_po_id).values_list('ct_excess_status',
+                                                                                                   flat=True)
+            if all(status in [4, 5] for status in excess_stock) and len(excess_stock) > 0:
+                output = 1
+            else:
+                output = 0
+
             # wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_cost_type=8,ct_stock_type=1,ct_stock_type=4).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
             wood_cost = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_stock_type__in=[1, 4],ct_cost_type=8).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
             if wood_cost is not None:
@@ -140,6 +148,7 @@ def costingsummary_add(request,costingsummary_id=0):
                     'transport_cost': transport_cost,
                     'role': role,
                     'role_id': role_id,
+                    'output': output,
                     }
         return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
     else:

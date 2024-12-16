@@ -351,11 +351,19 @@ $(document).ready(function() {
 <!--	document.getElementById("cs_material_cost").value ='{{material_cost}}';-->
 <!--	document.getElementById("cs_transport_cost").value ='{{transport_cost}}';-->
 
+	var excess_stock_status='{{output}}'
+	if (excess_stock_status==1)
+	{
+		$('#invoice_report_btn').removeClass('disable_a_href');
+	}
+	else{
+	    $('#invoice_report_btn').addClass('disable_a_href');
+	}
+
 	var user_role='{{role_id}}'
 	var status=document.getElementById("cs_status").value
 	if (status==5)
 	{
-		$('#invoice_report_btn').removeClass('disable_a_href');
 		if (user_role==2)
 		{
 			alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
@@ -373,7 +381,6 @@ $(document).ready(function() {
 	}
 	else
 	{
-		$('#invoice_report_btn').addClass('disable_a_href');
 		var assessment_num = document.getElementById("cs_assessment_num").value
 		if (assessment_num =="")
 		{
@@ -428,7 +435,6 @@ var rate_per_cft=total_cost/total_cft
 document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
 }
 </script>
-
 <script>
 	function cs_assessment_num_change()
 	{

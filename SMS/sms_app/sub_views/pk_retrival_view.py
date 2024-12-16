@@ -48,7 +48,7 @@ def pk_retrival_add(request,retrival_id=0):
                     requested_qty = request.POST.get('ct_quantity_req')
                     available_qty = request.POST.get('ct_quantity')
 
-                    if requested_qty > available_qty:
+                    if float(requested_qty) > float(available_qty):
                         messages.error(request, 'Available quantity is less than requested quantity')
                         return redirect(request.META['HTTP_REFERER'])
                     else:
