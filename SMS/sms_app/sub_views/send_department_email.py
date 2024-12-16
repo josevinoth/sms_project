@@ -3,7 +3,7 @@ from io import BytesIO
 from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 
-def send_department_email(department, subject, message, recipient_list,wb=None,file_name=None):
+def send_department_email(department, subject, message, recipient_list,attachment=None, attachment_type=None, file_name=None):
     department_email_settings = settings.DEPARTMENT_EMAILS.get(department)
 
     if department_email_settings:
@@ -22,16 +22,12 @@ def send_department_email(department, subject, message, recipient_list,wb=None,f
             to=recipient_list,
         )
 
-        # If a workbook is provided, attach it
-        if wb:
-            print("Inside email")
-            excel_file = BytesIO()
-            wb.save(excel_file)
-            excel_file.seek(0)
+        if attachment:
+            if isinstance(attachment, bytes):  # Check if the attachment is a bytes object
+                attachment = BytesIO(attachment)  # Wrap the bytes in a BytesIO object
 
-            # Attach the Excel file to the email
-            email.attach(file_name, excel_file.read(),
-                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            attachment.seek(0)  # Ensure the pointer is at the beginning
+            email.attach(file_name, attachment.read(), attachment_type)
 
         # Send the email
         email.send(fail_silently=False)

@@ -11,15 +11,18 @@ from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.utils.timezone import now
 from xhtml2pdf import pisa
+
+from .send_department_email import send_department_email
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Check_in_out,Warehouse_goods_info,Dispatch_info,Customerattach
+from ..models import Check_in_out,Warehouse_goods_info,Dispatch_info
 from django.contrib import messages
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
 from ..views import warehousevolme_area_calc
 from django.http import HttpResponse
+from io import BytesIO
 
 # Add Dispatch Job
 @transaction.atomic
@@ -335,35 +338,65 @@ def dispatch_search(request):
         }
     return render(request, "asset_mgt_app/dispatch_list.html", context)
 @login_required(login_url='login_page')
-def dispatch_gatepass_pdf(request,dispatch_id=0):
-    dispatch_num=Dispatch_info.objects.get(id=dispatch_id).dispatch_num
-    wh_dispatch_details = (Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num)).order_by('id')
-    dispatch_details = (Dispatch_info.objects.filter(dispatch_num=dispatch_num)).order_by('-id')
-    wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name',flat=True).order_by('id').first()
-    print(wh_location)
+def dispatch_gatepass_pdf(request, dispatch_id=0):
+    dispatch_num = Dispatch_info.objects.get(id=dispatch_id).dispatch_num
+    wh_dispatch_details = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).order_by('id')
+    dispatch_details = Dispatch_info.objects.filter(dispatch_num=dispatch_num).order_by('-id')
+    wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name',
+                                                                                                flat=True).order_by(
+        'id').first()
+
     context = {
         'dispatch_details': dispatch_details,
         'wh_dispatch_details': wh_dispatch_details,
         'wh_location': wh_location,
     }
-    dispatch_invoice_job_update(dispatch_num)
-    file_name=str("WH_Gate_Pass_")+str(dispatch_num)+str(".pdf")
-    template_path = 'asset_mgt_app/wh_gate_pass.html'
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename={file_name}'
 
+    dispatch_invoice_job_update(dispatch_num)
+    file_name = f"WH_Gate_Pass_{dispatch_num}.pdf"
+    template_path = 'asset_mgt_app/wh_gate_pass.html'
+
+    # Render HTML
     template = get_template(template_path)
     html = template.render(context)
 
-    # Create PDF
-    pisa_status = pisa.CreatePDF(html, dest=response)
+    # Generate PDF
+    pdf_buffer = BytesIO()
+    pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
 
     if pisa_status.err:
-        return HttpResponse('We has some error <pre>' + html + '</pre>')
-    return response
+        raise ValueError('Error generating PDF')
+
+    # Get PDF data
+    pdf_buffer.seek(0)
+    pdf_data = pdf_buffer.read()
+    pdf_buffer.close()
+
+    return pdf_data, file_name
 
 @login_required(login_url='login_page')
 def dispatch_goods_back(request):
     dispatch_id = request.session.get('ses_dispatch_id')
 
     return redirect('/SMS/dispatch_update/' + str(dispatch_id))
+
+@login_required(login_url='login_page')
+def gate_out_email(request, dispatch_id=0):
+    if request.method == 'POST':
+        recipient = request.POST.get('recipient')
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        recipient_list = [email.strip() for email in recipient.split(',')]
+        dispatch_id=request.session.get('ses_dispatch_id')
+        # Call dispatch_gatepass_pdf to get the PDF and its filename
+        pdf_data, file_name = dispatch_gatepass_pdf(request, dispatch_id)
+        dispatch_number=Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
+        subject=str(dispatch_number)+str("_")+str(subject)
+        # Send the email with the PDF attachment
+        send_department_email('warehouse', subject, message, recipient_list, pdf_data, 'application/pdf', file_name)
+
+        # Redirect back to the previous page
+        return redirect(request.META['HTTP_REFERER'])
+    else:
+        messages.error(request, 'Invalid input in the email form.')
+    return redirect(request.META['HTTP_REFERER'])

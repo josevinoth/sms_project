@@ -172,15 +172,13 @@ def dsr_send_email_view(request):
                     pass
             adjusted_width = (max_length + 2)
             sheet.column_dimensions[column].width = 20  # Set column width to 20
-        send_department_email('warehouse', subject, message, recipient_list,wb,file_name)
+        attachment = excel_file
+        attachment_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        send_department_email('warehouse', subject, message, recipient_list,attachment,attachment_type,file_name)
 
         # Redirect back to the previous page
         return redirect(request.META['HTTP_REFERER'])
     else:
         messages.error(request, 'Invalid input in the email form.')
-    form_dsr_email = dsr_EmailForm(request.POST)
-    context={
-        'form_dsr_email': form_dsr_email,
-        }
-    # return redirect(request.META['HTTP_REFERER'])
-    return render(request, "asset_mgt_app/dsr_send_email.html", context)
+    return redirect(request.META['HTTP_REFERER'])
+    # return render(request, "asset_mgt_app/dsr_send_email.html", context)
