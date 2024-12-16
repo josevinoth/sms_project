@@ -21,7 +21,6 @@ import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
 from ..views import warehousevolme_area_calc
-from django.http import HttpResponse
 from io import BytesIO
 
 # Add Dispatch Job
@@ -55,7 +54,7 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
             dispatch_goods_list= Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
             request.session['ses_dispatch_id'] = dispatch_info.id
-
+            gate_out_email_count=Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
             context = {
                 'dispatch_form': dispatch_form,
                 'first_name': first_name,
@@ -63,6 +62,7 @@ def dispatch_add(request, dispatch_id=0):
                 'user_id':user_id,
                 'dispatch_goods_list':dispatch_goods_list,
                 'dispatch_id':dispatch_id,
+                'gate_out_email_count':gate_out_email_count,
             }
         return render(request, "asset_mgt_app/dispatch_add.html", context)
     else:
@@ -392,9 +392,12 @@ def gate_out_email(request, dispatch_id=0):
         pdf_data, file_name = dispatch_gatepass_pdf(request, dispatch_id)
         dispatch_number=Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
         subject=str(dispatch_number)+str("_")+str(subject)
+        gate_out_email_count = Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
+
         # Send the email with the PDF attachment
         send_department_email('warehouse', subject, message, recipient_list, pdf_data, 'application/pdf', file_name)
-
+        gate_out_email_count=gate_out_email_count+1
+        Dispatch_info.objects.filter(pk=dispatch_id).update(dispatch_email_count=gate_out_email_count)
         # Redirect back to the previous page
         return redirect(request.META['HTTP_REFERER'])
     else:

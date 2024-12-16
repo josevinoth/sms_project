@@ -16,14 +16,14 @@
 						<div class="col-2"></div>
 						<div class="col-2">
 							<button id="email_alert" type="button" onclick="email_message_fn()" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target=".bd-example-modal-lg">
-								<i class="fas fa-envelope-square"></i> Email Alert<!-- Add the badge here -->
+								<i class="fas fa-envelope-square"></i> Email Alert <span class="badge badge-danger">{{gate_out_email_count}}</span>
 							</button>
 							<!-- Modal Structure -->
 							<div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
 								<div class="modal-dialog modal-lg" role="document">
 									<div class="modal-content">
 										<div class="modal-header bg-info">
-											<h5 class="modal-title text-center" id="sendEmailModalLabel">Send Email</h5>
+											<h5 class="modal-title text-center" id="sendEmailModalLabel">Email Alert </h5>
 											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 												<span aria-hidden="true">&times;</span>
 											</button>
