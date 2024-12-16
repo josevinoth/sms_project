@@ -384,14 +384,13 @@ def dispatch_goods_back(request):
 def gate_out_email(request, dispatch_id=0):
     if request.method == 'POST':
         recipient = request.POST.get('recipient')
-        subject = request.POST.get('subject')
         message = request.POST.get('message')
         recipient_list = [email.strip() for email in recipient.split(',')]
         dispatch_id=request.session.get('ses_dispatch_id')
         # Call dispatch_gatepass_pdf to get the PDF and its filename
         pdf_data, file_name = dispatch_gatepass_pdf(request, dispatch_id)
         dispatch_number=Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-        subject=str(dispatch_number)+str("_")+str(subject)
+        subject=str(dispatch_number)+str("_Gate Out Alert")
         gate_out_email_count = Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
 
         # Send the email with the PDF attachment
