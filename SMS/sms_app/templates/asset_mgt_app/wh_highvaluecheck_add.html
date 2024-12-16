@@ -74,6 +74,9 @@
                                     </div>
                                     {% render_field form.hc_no_of_pcs id="hc_no_of_pcs" class="form-control" %}
                                 </div>
+                            </div>
+
+                            <div class="col-6">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend" style="width:35%;">
                                         <span class="input-group-text" style="width:100%;">Condition Of Cargo Received</span>
@@ -85,21 +88,6 @@
                                         <span class="input-group-text" style="width:100%;">Watch Sensor Available Or Not</span>
                                     </div>
                                     {% render_field form.hc_tilt_watch_sensor_available id="hc_tilt_watch_sensor_available" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Storage Location</span>
-                                    </div>
-                                    {% render_field form.hc_storage_location id="hc_storage_location" class="form-control" %}
-                                </div>
-                            </div>
-
-                            <div class="col-6">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Job Category</span>
-                                    </div>
-                                    {% render_field form.hc_storage_cross_docking_labelling id="hc_storage_cross_docking_labelling" class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -143,35 +131,11 @@
                                     </div>
                                     {% render_field form.hc_expected_days id="hc_expected_days" class="form-control" %}
                                 </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Weight</span>
-                                    </div>
-                                    {% render_field form.hc_weight id="hc_weight" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Unit of Measure</span>
-                                    </div>
-                                    {% render_field form.hc_unit_of_measure id="hc_unit_of_measure" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Dimension</span>
-                                    </div>
-                                    {% render_field form.hc_dimension id="hc_dimension" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">MHE Required To Handle</span>
-                                    </div>
-                                    {% render_field form.hc_mhe_required_handle id="hc_mhe_required_handle" class="form-control" %}
-                                </div>
                             </div>
                         </div>
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text">BVM Scope Of Work</span>
+                                <span class="input-group-text">Remarks</span>
                             </div>
                             {% render_field form.hc_bvm_scope_work id="hc_bvm_scope_work" class="form-control" %}
                         </div>
