@@ -4,18 +4,12 @@
 {% load static %}
 {% block content %}
 
-<!-- Loader container -->
-<!--    <div id="loader">-->
-<!--        <img src="{% static 'loaders_gifs/Earth_animated.gif' %}" alt="Loading...">-->
-<!--    </div>-->
-
 <div class="container-fluid" style="padding:15px;" >
   <div class="row">
-    <div class="col-5"></div>
-    <div class="col-2 rounded text-center bg-info">
-      <h3>DSR Value Report</h3>
+    <div class="col-4"></div>
+    <div class="col-4 rounded text-center bg-info">
+      <h3>DSR Report- Customerwise</h3>
     </div>
-    <div class="col-1"></div>
     <div class="col-4"></div>
   </div>
   <br>
@@ -23,13 +17,8 @@
   <form method="POST" action="{% url 'dsr_reports' %}">
     {% csrf_token %}
     <div class="row">
-      <div class="col-6">
-        <div class="input-group input-group-sm mb-3">
-          <div class="input-group-prepend">
-            <span class="input-group-text">Customer</span>
-          </div>
-          {% render_field form.ds_customer id="ds_customer" class="form-control" value=customer_name %}
-        </div>
+      <div class="col-3">
+        {% render_field form.ds_customer id="ds_customer" class="form-control" value=customer_name %}
       </div>
       <div class="col-1">
         <button type="submit" class="btn btn-success">Filter</button>
@@ -44,10 +33,10 @@
         <i class="fas fa-arrow-left"></i> Back
       </a>
     </div>
-    <div class="col-3">
+    <div class="col-1.5">
       <!-- Trigger Button to Open Modal -->
-      <button type="button" onclick="email_message_fn()" class="btn btn-warning" data-toggle="modal" data-target=".bd-example-modal-lg">
-        <i class="fas fa-envelope-square"></i> Email To Customer <span class="badge badge-danger">{{email_count}}</span>  <!-- Add the badge here -->
+      <button type="button" onclick="email_message_fn()" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target=".bd-example-modal-lg">
+        <i class="fas fa-envelope-square"></i> Email To Customer <!-- Add the badge here -->
       </button>
       <!-- Modal Structure -->
       <div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
@@ -60,41 +49,7 @@
               </button>
             </div>
             <div class="modal-body text-dark">
-              <!-- Email Form -->
-              <form method="post" action="{% url 'dsr_send_email' %}">
-                {% csrf_token %}
-                <!-- To Email Field -->
-                <div class="input-group mb-3">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text" id="to_emails">To</span>
-                  </div>
-                  {{ form_dsr_email.recipient|add_class:"form-control" }}
-                  <input type="text" id="recipient" class="form-control" value="{{ form_dsr_email.recipient }}">
-                </div>
-                <!-- Subject Field -->
-                <div class="input-group mb-3">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">Subject</span>
-                  </div>
-                  <!-- Add the class using `|add_class`, and set the id manually -->
-                  {{ form_dsr_email.subject|add_class:"form-control" }}
-                  <input type="text" id="subject" class="form-control" value="{{ form_dsr_email.subject }}">
-                </div>
-
-                <!-- Message Field -->
-                <div class="input-group mb-3">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">Message</span>
-                  </div>
-                  <!-- Add the class using `|add_class`, and set the id manually -->
-                  {{ form_dsr_email.message|add_class:"form-control" }}
-                  <input type="text" id="message" class="form-control" value="{{ form_dsr_email.message }}">
-                </div>
-                <!-- Submit Button -->
-                <div class="form-group text-center">
-                  <button type="submit" class="btn btn-primary"><i class="fas fa-envelope-square"></i> Send Email</button>
-                </div>
-              </form>
+              {% include "asset_mgt_app/dsr_send_email.html" %}
             </div>
           </div>
         </div>
@@ -103,15 +58,15 @@
   </div>
   <hr>
   <div class="container-fluid">
-    <table  id="dsr_value_report" class="table "  >
+    <table  id="dsr_value_report" class="table table-striped table-bordered "  >
       <thead class="thead-dark">
       <tr>
         <th>Job Number</th>
         <th>Stock Number</th>
         <th>Customer</th>
-        <th>Date Of Arrival</th>
-        <th>Unloading Start Time</th>
-        <th>Unloading End Time</th>
+        <th style="width:200px">Date Of Arrival</th>
+        <th style="width:200px">Unloading Start Time</th>
+        <th style="width:200px">Unloading End Time</th>
         <th>Transporter</th>
         <th>Truck Number</th>
         <th>Consigner</th>
@@ -136,7 +91,7 @@
         <th>Invoice Currency</th>
         <th>Invoice (INR)</th>
         <th>E-Way Bill#</th>
-        <th>E-Way Bill Validity</th>
+        <th style="width:200px">E-Way Bill Validity</th>
         <th>Fumigation Status</th>
         <th>Check In-Out?</th>
         <th>Branch</th>
@@ -222,36 +177,6 @@
   });
 } );
 </script>
-<script>
-  function email_message_fn() {
-  // Assign Django template variables to JavaScript variables
-  var shipper_invoice = '{{ shipper_invoice|escapejs }}';
-  var invoice_count = '{{ gatein_no_of_pkg_val|escapejs }}';
-  var invoice_weight = '{{ gatein_weight_val|escapejs }}';
-  var checkin_count = '{{ goods_checkin_count|escapejs }}';
-  var checkin_weight = '{{ goods_checkin_weight|escapejs }}';
-  var consigner = document.getElementById("ds_customer").value; // Use correct field ID
-  var consignee = document.getElementById("ds_customer").value; // Use correct field ID
 
-  var message = "Dear Customer,\n\n\n" +
-      "Please be advised that the following goods have arrived at our warehouse and have been stored.\n\n" +
-      "Shipper Invoice: " + shipper_invoice + "\n" +
-      "Consigner: " + consigner + "\n" +
-      "Consignee: " + consignee + "\n" +
-      "Invoice Qty: " + invoice_count + "\n" +
-      "Invoice Weight: " + invoice_weight + "\n" +
-      "Check-in Qty: " + checkin_count + "\n" +
-      "Check-in Weight: " + checkin_weight + "\n\n" +
-      "Regards,\n" +
-      "BVM Warehouse Team";
-
-  // Set values to form fields
-  document.getElementById("message").value = message;
-
-  var subject = "Goods Received: " + shipper_invoice;
-  document.getElementById("subject").value = subject;
-}
-
-</script>
 {% endblock content %}
 

@@ -8,4 +8,4 @@ class DsrForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DsrForm,self).__init__(*args, **kwargs)
-        self.fields['ds_customer'].empty_label = "--Select--"
+        self.fields['ds_customer'].empty_label = "--Select Customer--"

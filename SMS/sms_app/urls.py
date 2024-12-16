@@ -568,4 +568,5 @@ urlpatterns = [
     path('high_value_cancel/', views.highvalue_cancel, name='high_value_cancel'),
     path('dsr_reports/', views.dsr_reports, name='dsr_reports'),
     path('dsr_send_email/', views.dsr_send_email_view, name='dsr_send_email'),
+    path('gate_out_send_email/', views.gate_out_email, name='gate_out_send_email'),
 ]

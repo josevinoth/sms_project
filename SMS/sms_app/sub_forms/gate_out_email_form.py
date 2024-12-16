@@ -1,10 +1,7 @@
 from django import forms
 from ..models import DsrInfo
 
-class dsr_EmailForm(forms.Form):
-    class Meta:
-        model = DsrInfo
-        fields = '__all__'
+class gate_out_Form(forms.ModelForm):
         widgets = {
             'customer': forms.Select(attrs={'class': 'form-control'}),
             'recipient': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Recipient emails'}),
