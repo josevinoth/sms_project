@@ -11,6 +11,7 @@ from ..forms import dsr_EmailForm
 import openpyxl
 from io import BytesIO
 
+from ..sub_models.gatein_mod import Gatein_info
 
 
 @login_required(login_url='login_page')
@@ -32,8 +33,8 @@ def dsr_reports(request):
         'customer_name': customer_name,
     }
     return render(request, "asset_mgt_app/dsr_report.html", context)
-
-def dsr_send_email_view(request):
+@login_required(login_url='login_page')
+def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None):
     print('Entering dsr_send_email_view')
     if request.method == 'POST':
         recipient = request.POST.get('recipient')
@@ -57,8 +58,27 @@ def dsr_send_email_view(request):
             'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days'
         ]
         ws.append(headers)
-        if customer_name:
-            stock_values = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name)
+
+        # Fetch the IDs from Gatein_info
+        gate_in_ids = Gatein_info.objects.filter(gatein_pre_id=pre_gatein_id).values_list('id', flat=True)
+
+        # Initialize query to none
+        stock_values = Warehouse_goods_info.objects.none()
+
+        # Build query conditions dynamically
+        if customer_name and gate_in_ids.exists():
+            stock_values = Warehouse_goods_info.objects.filter(
+                wh_customer_name=customer_name,
+                wh_gate_injob_no_id__in=list(gate_in_ids)
+            )
+        elif customer_name:
+            stock_values = Warehouse_goods_info.objects.filter(
+                wh_customer_name=customer_name
+            )
+        elif gate_in_ids.exists():
+            stock_values = Warehouse_goods_info.objects.filter(
+                wh_gate_injob_no_id__in=list(gate_in_ids)
+            )
         # Write data rows
             for stock_value in stock_values:
                 row = [
@@ -126,10 +146,7 @@ def dsr_send_email_view(request):
 
                 ws.append(row)  # Append the row to the worksheet
 
-        # Save the workbook to a BytesIO object
-        excel_file = BytesIO()
-        wb.save(excel_file)
-        excel_file.seek(0)
+
         sheet = wb.active
 
         # Format the first row (Header)
@@ -171,7 +188,11 @@ def dsr_send_email_view(request):
                 except:
                     pass
             adjusted_width = (max_length + 2)
-            sheet.column_dimensions[column].width = 20  # Set column width to 20
+            sheet.column_dimensions[column].width =adjusted_width  # Set column width to 20
+            # Save the workbook to a BytesIO object
+        excel_file = BytesIO()
+        wb.save(excel_file)
+        excel_file.seek(0)
         attachment = excel_file
         attachment_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         send_department_email('warehouse', subject, message, recipient_list,attachment,attachment_type,file_name)

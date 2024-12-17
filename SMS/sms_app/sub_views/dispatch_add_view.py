@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 from django.db.models.aggregates import Sum
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.template.loader import get_template
 import datetime
 from django.core.exceptions import ObjectDoesNotExist
@@ -338,13 +338,11 @@ def dispatch_search(request):
         }
     return render(request, "asset_mgt_app/dispatch_list.html", context)
 @login_required(login_url='login_page')
-def dispatch_gatepass_pdf(request, dispatch_id=0):
+def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
     dispatch_num = Dispatch_info.objects.get(id=dispatch_id).dispatch_num
     wh_dispatch_details = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).order_by('id')
     dispatch_details = Dispatch_info.objects.filter(dispatch_num=dispatch_num).order_by('-id')
-    wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name',
-                                                                                                flat=True).order_by(
-        'id').first()
+    wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name', flat=True).order_by('id').first()
 
     context = {
         'dispatch_details': dispatch_details,
@@ -353,26 +351,35 @@ def dispatch_gatepass_pdf(request, dispatch_id=0):
     }
 
     dispatch_invoice_job_update(dispatch_num)
-    file_name = f"WH_Gate_Pass_{dispatch_num}.pdf"
     template_path = 'asset_mgt_app/wh_gate_pass.html'
 
     # Render HTML
     template = get_template(template_path)
     html = template.render(context)
 
-    # Generate PDF
+    # Generate PDF in memory
     pdf_buffer = BytesIO()
     pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
 
     if pisa_status.err:
         raise ValueError('Error generating PDF')
 
-    # Get PDF data
-    pdf_buffer.seek(0)
+    # Get the PDF data as bytes
+    pdf_buffer.seek(0)  # Move the pointer to the beginning
     pdf_data = pdf_buffer.read()
     pdf_buffer.close()
 
-    return pdf_data, file_name
+    if download:
+        # Return the PDF as a downloadable file in the HTTP response
+        response = HttpResponse(pdf_data, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="WH_Gate_Pass_{dispatch_num}.pdf"'
+        return response
+
+    return pdf_data  # Return raw PDF data for use in email attachment
+
+@login_required(login_url='login_page')
+def dispatch_gatepass_pdf_download(request, dispatch_id):
+    return dispatch_gatepass_pdf(request, dispatch_id, download=True)
 
 @login_required(login_url='login_page')
 def dispatch_goods_back(request):
@@ -388,11 +395,11 @@ def gate_out_email(request, dispatch_id=0):
         recipient_list = [email.strip() for email in recipient.split(',')]
         dispatch_id=request.session.get('ses_dispatch_id')
         # Call dispatch_gatepass_pdf to get the PDF and its filename
-        pdf_data, file_name = dispatch_gatepass_pdf(request, dispatch_id)
+        pdf_data = dispatch_gatepass_pdf(request, dispatch_id)
         dispatch_number=Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-        subject=str(dispatch_number)+str("_Gate Out Alert")
+        subject = f"{dispatch_number}_Gate Out Alert"
         gate_out_email_count = Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
-
+        file_name = f"WH_Gate_Pass_{dispatch_number}.pdf"
         # Send the email with the PDF attachment
         send_department_email('warehouse', subject, message, recipient_list, pdf_data, 'application/pdf', file_name)
         gate_out_email_count=gate_out_email_count+1

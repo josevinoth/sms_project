@@ -1,14 +1,16 @@
-from random import randint
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
+
+from ..views import dsr_send_email_view
 from ..forms import Gatein_preaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import Pregateintruckinfo,Gatein_pre_info
 from ..models import User_extInfo,Location_info
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
+
 # Add WH Job
 @transaction.atomic
 @login_required(login_url='login_page')
@@ -70,7 +72,7 @@ def gatein_pre_add(request, gatein_pre_id=0):
             print("I am inside post edit Pre Gatein")
             gatein_pre_info = Gatein_pre_info.objects.get(pk=gatein_pre_id)
             gatein_pre_form = Gatein_preaddForm(request.POST,request.FILES,instance=gatein_pre_info)
-
+            request.session['ses_gatein_id'] = gatein_pre_id
             if gatein_pre_form.is_valid():
                 print("Main Form is Valid")
                 gatein_pre_form.save()
@@ -128,4 +130,8 @@ def pre_gatein_search(request):
         }
     return render(request, "asset_mgt_app/gatein_pre_list.html", context)
 
-
+@login_required(login_url='login_page')
+def gate_in_email(request):
+    print('Gate In email')
+    pre_gatein_id = request.session.get('ses_gatein_id')
+    dsr_send_email_view(request,pre_gatein_id=pre_gatein_id)
