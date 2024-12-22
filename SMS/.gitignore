@@ -6,12 +6,17 @@
 # Ignore IDE-related files
 .idea/
 
-# Ignore everything in Requirements folder
+# Ignore everything in Requirements folder except Python files
 Requirements/*
-
-# But do not ignore Python files in the Requirements folder
 !Requirements/*.py
-/sms_app/migrations/
-/media/
-# Ignore all __init__.py files
-**/__init__.py
+
+# Ignore compiled Python files and cache in migrations
+/sms_app/migrations/*.pyc
+/sms_app/migrations/**/__pycache__/
+
+# Ignore media files but allow metadata
+/media/*
+!/media/metadata_example.txt
+
+# Do not ignore __init__.py files
+# (No rule here to ignore __init__.py)
