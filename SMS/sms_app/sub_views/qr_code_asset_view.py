@@ -1,39 +1,44 @@
 import qrcode
 import qrcode.image.svg
 from io import BytesIO
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from ..models import AssetInfo
 
+from django.shortcuts import render, get_object_or_404
+import qrcode
+from io import BytesIO
+import base64
+
 def qr_code_asset(request, asset_qr_id):
-    # Fetch asset data once
-    asset = AssetInfo.objects.get(pk=asset_qr_id)
-    first_name = request.session.get('first_name')
+    # Fetch asset data or return 404 if not found
+    asset = get_object_or_404(AssetInfo, pk=asset_qr_id)
 
-    # Format data for the QR code
+    # Generate QR code with asset details
     qr_data = f"""
-            Asset Number: {asset.asset_number}
-            Assigned To: {asset.asset_assignedto}
-            Location: {asset.asset_location}
-            Product: {asset.asset_product}
-            Asset ID: {asset.asset_Id}"""
+        Asset Number: {asset.asset_number}
+        Assigned To: {asset.asset_assignedto}
+        Location: {asset.asset_location}
+        Product: {asset.asset_product}
+        Asset ID: {asset.asset_Id}
+    """
+    qr = qrcode.QRCode(box_size=3, border=1)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
 
-    # Generate the QR code as SVG
-    factory = qrcode.image.svg.SvgImage
-    qr_img = qrcode.make(qr_data, image_factory=factory, box_size=8)
+    # Save QR code to a PNG image in base64 format
+    buffer = BytesIO()
+    qr.make_image(fill_color="black", back_color="white").save(buffer)
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
 
-    # Save QR code to a stream
-    stream = BytesIO()
-    qr_img.save(stream)
-
-    # Prepare context for the template
+    # Pass asset details and QR code to the template
     context = {
-        'svg': stream.getvalue().decode(),  # QR code in SVG format
-        'Asset_Number': asset.asset_number,
-        'Asset_Assigned_To': asset.asset_assignedto,
-        'Asset_Location': asset.asset_location,
-        'Asset_Product': asset.asset_product,
-        'Asset_ID': asset.asset_Id,
-        'first_name': first_name,
+        "qr_code": f"data:image/png;base64,{qr_code_base64}",
+        "Asset_Number": asset.asset_number,
+        "Asset_Assigned_To": asset.asset_assignedto,
+        "Asset_Location": asset.asset_location,
+        "Asset_Product": asset.asset_product,
+        "Asset_ID": asset.asset_Id,
     }
-    return render(request, "asset_mgt_app/qr_code.html", context=context)
+    return render(request, "asset_mgt_app/qr_code.html", context)
+
 
