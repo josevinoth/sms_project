@@ -1,16 +1,21 @@
 import csv
 from itertools import chain
+from io import BytesIO
+from django.http import StreamingHttpResponse
+from django.contrib import messages
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, ExpressionWrapper, fields, F, DurationField, Func, Value, CharField
+from django.db.models import Q, ExpressionWrapper, fields, F, DurationField, Func, Value, CharField, DateField
 from django.db.models.functions import Cast, Extract
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.template.loader import get_template
 from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.timezone import make_naive
 from xhtml2pdf import pisa
 from ..models import ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
-from datetime import date, datetime,timedelta
+from datetime import date,timedelta
+import datetime
 from django.db.models import Count, Sum
 import openpyxl
 from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
@@ -64,7 +69,7 @@ def stock_value_reports(request):
     page_obj = paginator.get_page(page_number)
 
 
-    current_date = datetime.now()
+    current_date = datetime.datetime.now()
 
     maa_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=1,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if maa_in_stock_value_cud is not None:
@@ -239,7 +244,7 @@ def damage_report_pdf(request):
 def export_stockreport_to_csv(request):
     four_months_ago = timezone.now() - timedelta(days=120)
 
-    # Get relevant data
+    # Query data
     data = Warehouse_goods_info.objects.filter(
         Q(wh_check_in_out=1) | (Q(wh_check_in_out=2, wh_checkout_time__gte=four_months_ago))
     ).annotate(
@@ -255,9 +260,7 @@ def export_stockreport_to_csv(request):
                                          output_field=fields.DateTimeField()),
     ).order_by('-arrival_date').values_list(
         'wh_job_no', 'wh_qr_rand_num', 'wh_customer_name__cu_name',
-        Func('arrival_date', Value('YYYY-MM-DD HH24:MI:SS'), function='to_char', output_field=CharField()),
-        Func('unloading_start_time', Value('YYYY-MM-DD HH24:MI:SS'), function='to_char', output_field=CharField()),
-        Func('unloading_end_time', Value('YYYY-MM-DD HH24:MI:SS'), function='to_char', output_field=CharField()),
+        'arrival_date', 'unloading_start_time', 'unloading_end_time',
         'wh_gate_injob_no_id__gatein_transporter',
         'wh_gate_injob_no_id__gatein_truck_number',
         'wh_consigner', 'wh_consignee', 'wh_lb_job_no_id__lb_packing_list__ge_gstexcepmtion',
@@ -267,63 +270,91 @@ def export_stockreport_to_csv(request):
         'wh_goods_width', 'wh_goods_height', 'wh_goods_pieces',
         'wh_goods_package_type__package_type', 'wh_chargeable_weight', 'wh_cbm', 'wh_invoice_value',
         'wh_lb_job_no_id__lb_stock_invoice_currency__currency_type', 'wh_invoice_amount_inr',
-        'wh_lb_job_no_id__lb_eway_bill',
-        Func('eway_bill_validity', Value('YYYY-MM-DD HH24:MI:SS'), function='to_char', output_field=CharField()),
+        'wh_lb_job_no_id__lb_eway_bill', 'eway_bill_validity',
         'wh_fumigation_process__ge_gstexcepmtion', 'wh_check_in_out__check_in_out_name', 'wh_branch__loc_name',
         'wh_unit__unit_name',
         'wh_bay__bay_bayname', 'wh_storage_time', 'wh_dispatch_id__dispatch_truck_number',
-        'wh_dispatch_id__dispatch_truck_type__vt_vehicletype',
-        Func('departure_time', Value('YYYY-MM-DD HH24:MI:SS'), function='to_char', output_field=CharField()),
+        'wh_dispatch_id__dispatch_truck_type__vt_vehicletype','departure_time',
         'wh_dispatch_id__dispatch_sticker_pasted_bvm__lp_name', 'wh_dispatch_id__dispatch_mawb',
         'wh_dispatch_id__dispatch_num'
     )
 
-    # Create an Excel workbook and sheet
-    workbook = openpyxl.Workbook()
-    sheet = workbook.active
-    sheet.title = "Stock Report"
-
-    # Write the header row with styling
+    # Header row
     headers = [
-        'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival',
-        'Unloading Start Time', 'Unloading End Time', 'Transporter',
-        'Truck Number', 'Consigner', 'Consignee', 'Docs Received', 'HAWB',
-        'Destination', 'Invoice Number', 'Case Number', 'Invoice Qty',
-        'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
-        'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight',
-        'CBM', 'Invoice Value', 'Invoice Currency', 'Invoice (INR)',
-        'E-Way Bill#', 'E-Way Bill Validity', 'Fumigation Status',
-        'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days',
-        'Truck_Number(Out)', 'Truck_Type(Out)', 'Truck_Depature_Time(Out)',
-        'Labels_Pasted_By', 'MAWB', 'Dispatch_Number'
+         'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival',
+            'Unloading Start Time', 'Unloading End Time', 'Transporter',
+            'Truck Number', 'Consigner', 'Consignee', 'Docs Received', 'HAWB',
+            'Destination', 'Invoice Number', 'Case Number', 'Invoice Qty',
+            'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
+            'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight',
+            'CBM', 'Invoice Value', 'Invoice Currency', 'Invoice (INR)',
+            'E-Way Bill#', 'E-Way Bill Validity', 'Fumigation Status',
+            'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days',
+            'Truck_Number(Out)', 'Truck_Type(Out)', 'Truck_Depature_Time(Out)',
+            'Labels_Pasted_By', 'MAWB', 'Dispatch_Number'
     ]
-    for col_num, header in enumerate(headers, 1):
-        cell = sheet.cell(row=1, column=col_num, value=header)
-        cell.font = Font(name='Bookman Old Style', size=10, bold=True, color="000000")
-        cell.fill = PatternFill(start_color="FFCC00", end_color="FFCC00", fill_type="solid")
-        cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # Write data rows and style them
-    for row_num, row_data in enumerate(data, 2):
-        for col_num, value in enumerate(row_data, 1):
-            cell = sheet.cell(row=row_num, column=col_num, value=value)
-            cell.font = Font(name='Bookman Old Style', size=9)
+    def generate_streamed_excel():
+        # Create an in-memory buffer
+        output = BytesIO()
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet.title = "Stock Report"
 
-    # Apply borders to all cells
-    thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
-    for row in sheet.iter_rows(min_row=1, max_row=sheet.max_row, min_col=1, max_col=len(headers)):
-        for cell in row:
-            cell.border = thin_border
+        # Write headers
+        for col_num, header in enumerate(headers, 1):
+            cell = sheet.cell(row=1, column=col_num, value=header)
+            cell.font = Font(name='Bookman Old Style', size=10, bold=True, color="000000")
+            cell.fill = PatternFill(start_color="FFCC00", end_color="FFCC00", fill_type="solid")
+            cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # Set all column widths to 25
-    for col in sheet.columns:
-        col_letter = col[0].column_letter  # Get the column letter (e.g., A, B, C)
-        sheet.column_dimensions[col_letter].width = 25
+        # Write data rows
+        for row_num, row_data in enumerate(data, 2):
+            for col_num, value in enumerate(row_data, 1):
+                # Convert timezone-aware datetime to naive
+                if isinstance(value, (datetime.date, datetime.datetime)) and value.tzinfo is not None:
+                    value = make_naive(value)  # Convert to naive datetime in the local timezone
+                cell = sheet.cell(row=row_num, column=col_num, value=value)
 
-    # Create the HTTP response with the Excel file
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="Stock_Report.xlsx"'
-    workbook.save(response)
+        # Get the last row and column with data
+        max_row = sheet.max_row
+        max_col = sheet.max_column
+
+        # Define a thin border
+        thin_border = Border(left=Side(style='thin'),
+                             right=Side(style='thin'),
+                             top=Side(style='thin'),
+                             bottom=Side(style='thin'))
+
+        # Apply the border to all cells from A1 to the bottom-right cell
+        for row in sheet.iter_rows(min_row=1, max_row=max_row, min_col=1, max_col=max_col):
+            for cell in row:
+                cell.border = thin_border
+
+        # Set all column widths to 25
+        for col in sheet.columns:
+            col_letter = col[0].column_letter  # Get the column letter (e.g., A, B, C)
+            sheet.column_dimensions[col_letter].width = 25
+
+        # Save workbook to buffer
+        workbook.save(output)
+        output.seek(0)  # Reset buffer pointer
+        yield output.read()  # Yield content of buffer
+        output.close()
+
+    # Return streaming response
+    response = StreamingHttpResponse(
+        generate_streamed_excel(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    # Get the current time in UTC and then convert to IST (UTC + 5:30)
+    ist_time = timezone.now() + timedelta(hours=5, minutes=30)
+
+    # Format the time with an underscore between the date and time
+    filename = f'Stock_Report_{ist_time.strftime("%Y%m%d_%H%M")}.xlsx'
+
+    # Set the Content-Disposition header with the formatted filename
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
 
 @login_required(login_url='login_page')

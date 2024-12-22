@@ -1,5 +1,8 @@
 import time
 from datetime import datetime
+from itertools import groupby
+from operator import attrgetter
+
 from django.db.models.aggregates import Sum
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import get_template
@@ -340,12 +343,34 @@ def dispatch_search(request):
 @login_required(login_url='login_page')
 def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
     dispatch_num = Dispatch_info.objects.get(id=dispatch_id).dispatch_num
-    wh_dispatch_details = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).order_by('id')
+    # Fetch data from the database
+    wh_dispatch_details = Warehouse_goods_info.objects.filter(
+        wh_dispatch_num=dispatch_num
+    ).order_by('wh_goods_invoice', 'id')
+
+    # Group by `wh_goods_invoice` and calculate totals
+    grouped_details = []
+    for invoice, items in groupby(wh_dispatch_details, key=attrgetter('wh_goods_invoice')):
+        items_list = list(items)  # Convert group iterator to list
+        total_pieces = sum(item.wh_goods_pieces for item in items_list)
+        total_weight = sum(item.wh_goods_weight for item in items_list)
+        first_item = items_list[0]  # Use the first item for non-aggregated fields
+
+        grouped_details.append({
+            'wh_consigner': first_item.wh_consigner,
+            'wh_goods_invoice': invoice,
+            'total_pieces': total_pieces,
+            'total_weight': total_weight,
+            'gatein_destination': first_item.wh_gate_injob_no_id.gatein_destination,
+            'gatein_hawb': first_item.wh_gate_injob_no_id.gatein_hawb,
+        })
+
     dispatch_details = Dispatch_info.objects.filter(dispatch_num=dispatch_num).order_by('-id')
     wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name', flat=True).order_by('id').first()
 
     context = {
         'dispatch_details': dispatch_details,
+        'grouped_dispatch_details': grouped_details,
         'wh_dispatch_details': wh_dispatch_details,
         'wh_location': wh_location,
     }
@@ -397,7 +422,7 @@ def gate_out_email(request, dispatch_id=0):
         # Call dispatch_gatepass_pdf to get the PDF and its filename
         pdf_data = dispatch_gatepass_pdf(request, dispatch_id)
         dispatch_number=Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-        subject = f"{dispatch_number}_Gate Out Alert"
+        subject = f"{dispatch_number}_Gate-Out Alert"
         gate_out_email_count = Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
         file_name = f"WH_Gate_Pass_{dispatch_number}.pdf"
         # Send the email with the PDF attachment

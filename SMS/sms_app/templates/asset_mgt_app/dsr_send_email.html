@@ -18,12 +18,6 @@
     </div>
     <div class="input-group mb-2 mr-sm-2">
         <div class="input-group-prepend">
-            <div class="input-group-text">Subject</div>
-        </div>
-        <input type="text" id="subject"  name="subject" class="form-control" value="{{ form_dsr_email.subject.value }}" placeholder="Enter Subject">
-    </div>
-    <div class="input-group mb-2 mr-sm-2">
-        <div class="input-group-prepend">
             <div class="input-group-text">Message</div>
         </div>
         <textarea id="message" name="message" class="form-control" rows="6" placeholder="Enter email message">{{ form_dsr_email.message.value }}</textarea>
@@ -55,10 +49,6 @@
 
         // Set the consolidated message as the value of the form field with id 'message'
         document.getElementById("message").value = message;
-
-           var subject = "DSR Report";
-        document.getElementById("subject").value = subject;
-
     }
 </script>
 {% endblock content %}

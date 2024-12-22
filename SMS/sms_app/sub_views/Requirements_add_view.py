@@ -83,21 +83,27 @@ def requirements_email(req_id):
     remarks=RequirementsInfo.objects.get(pk=req_id).req_remarks
     status=RequirementsInfo.objects.get(pk=req_id).req_status
     subject = f"{req_num}_Update"
+
+
     message = f"""
     Dear User,
 
     Please find below updates:
 
-    Requirement: {backlog}
-    Module: {module}
-    Raised By: {raised_by}
-    Raised On: {raised_on}
+    Requirement    : {backlog}
+    Module         : {module}
+    Raised By      : {raised_by}
+    Raised On      : {raised_on}
     Bug/Improvement: {bug_improvement}
-    Assigned To: {assigned_to}
-    Implemented On: {implmented_on}
-    Status: {status}
-    Remarks: {remarks}
+    Assigned To    : {assigned_to}
+    Implemented On : {implmented_on}
+    Status         : {status}
+    Remarks        : {remarks}
+    
+    Regards,                        
+    IT Team                         
     """
+
     recipient_list = [email.strip() for email in recipients.split(',')]
     recipient_list.append(raised_by_email)
     recipient_list.append(assigned_to_email)
