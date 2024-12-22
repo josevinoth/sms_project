@@ -3,88 +3,51 @@
 {% block content %}
 {% load crispy_forms_tags %}
 <div class="container-fluid row">
-  <div class="col-md-1">
-    <a href="{% url 'assign_asset_search' %}" class="btn btn-primary btn-block btn-lg">
-      <i class="fas fa-arrow-left"></i> Back
-    </a>
-  </div>
-  <!--  <div class="col-md-1">-->
-  <!--      <a href="{% url 'print_pdf' %}" class="btn btn-warning btn-block btn-lg">-->
-  <!--        <i class="fas fa-file-pdf"></i>-->
-  <!--      </a>-->
-  <!--    </div>-->
+    <div class="col-md-1">
+      <a href="{% url 'assign_asset_search' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+<!--  <div class="col-md-1">-->
+<!--      <a href="{% url 'print_pdf' %}" class="btn btn-warning btn-block btn-lg">-->
+<!--        <i class="fas fa-file-pdf"></i>-->
+<!--      </a>-->
+<!--    </div>-->
 </div>
 <hr>
+<a onclick="printDiv('printableArea')" id="printableArea" >
+  <div class="container shadow btn btn-warning btn-block" style="width: 470px; margin-top: 1em; padding: 1px">
 
+    <form method="post">
+      {% csrf_token %}
+    </form>
 
-<button onclick="printDiv()" style="width=384px;height:100px" class="btn btn-warning">
-  <div id="print" style="
-  width: 384px;  /* Full width for 58mm thermal printer */
-  height: 100px; /* Approx. 25mm height */
-  font-family: Arial, sans-serif; /* Simple font for clarity */
-  font-size: 14px; /* Optimal size for readability */
-  font-weight: bold; /* Darker text for better visibility */
-  line-height: 1.2; /* Adjust line spacing */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 5px;
-  box-sizing: border-box;
-">
-  <div style="text-align: center; width: 100%; margin-bottom: 5px;">
-    {{ svg|safe }} <!-- Ensure the SVG fits the width -->
+      <div class="row">
+        <div class="col-5">
+          {{ svg|safe }}
+        </div>
+        <div class="col-7" style="text-align: left">
+          <br>
+          <span>Asset Number: {{Asset_Number}}</span>
+          <br>
+          <span>Assigned To: {{Asset_Assigned_To}}</span>
+          <br>
+          <span>Location: {{Asset_Location}}</span>
+          <br>
+          <span>Product: {{Asset_Product}}</span>
+          <br>
+          <span>Asset ID: {{Asset_ID}}</span>
+        </div>
+      </div>
   </div>
-  <div style="width: 100%; text-align: left;">
-    <span>Asset Number: {{ Asset_Number }}</span><br>
-    <span>Assigned To: {{ Asset_Assigned_To }}</span><br>
-    <span>Location: {{ Asset_Location }}</span><br>
-    <span>Product: {{ Asset_Product }}</span><br>
-    <span>Asset ID: {{ Asset_ID }}</span>
-  </div>
-</div></button>
-
+  </a>
 <script>
-  function printDiv() {
-    var content = document.getElementById('print').innerHTML;
-
-    var printWindow = window.open('', '', 'width=384,height=100');
-    printWindow.document.write('<html><head><title>Print</title>');
-    printWindow.document.write(`
-      <style>
-        body {
-          margin: 0;
-          padding: 0;
-          width: 384px; /* Full printer width */
-          height: 100px; /* Approx. sticker height */
-          font-family: Arial, sans-serif;
-          font-size: 14px;
-          font-weight: bold;
-          line-height: 1.2;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: flex-start;
-        }
-        #print {
-          width: 384px;
-          height: 100px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          padding: 5px;
-          box-sizing: border-box;
-        }
-      </style>
-    `);
-    printWindow.document.write('</head><body>');
-    printWindow.document.write(content);
-    printWindow.document.write('</body></html>');
-
-    printWindow.document.close();
-    printWindow.print();
-    printWindow.close();
-  }
+function printDiv(divName) {
+     var printContents = document.getElementById(divName).innerHTML;
+     var originalContents = document.body.innerHTML;
+     document.body.innerHTML = printContents;
+     window.print();
+     document.body.innerHTML = originalContents;
+}
 </script>
-
 {% endblock content %}
