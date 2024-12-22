@@ -28,7 +28,8 @@ def home_page(request):
     wh_check_in_jobs_2 = (Loadingbay_Info.objects.filter(lb_validity_date__lte=(timezone.now())+timedelta(days=1),lb_job_no__in=wh_check_in_jobs_1)).distinct()
     wh_job_count=len(wh_check_in_jobs_2)
     open_requirements=len(RequirementsInfo.objects.filter(Q(req_status=2) | Q(req_status=6)))
-    count_return=len(PkstockpurchasesInfo.objects.filter(Q(sp_status=2) ))
+    count_return=len(PkcostingInfo.objects.filter(ct_excess_status=1))
+    excess_count=len(PkcostingInfo.objects.filter(ct_excess_status=3))
     count_retrival=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status__in=[1, 3]))
     count_acceptance=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2))
     customer_contract_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30,ca_status=1))
@@ -56,6 +57,7 @@ def home_page(request):
                'wh_check_in_jobs_2': wh_check_in_jobs_2,
                'open_requirements': open_requirements,
                'count_return': count_return,
+               'excess_count': excess_count,
                'count_retrival': count_retrival,
                'count_acceptance': count_acceptance,
                'customer_contract_due_count': customer_contract_due_count,

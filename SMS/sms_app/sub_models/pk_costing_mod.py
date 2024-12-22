@@ -44,6 +44,12 @@ class PkcostingInfo(models.Model):
     ct_excess_status = models.ForeignKey(ExcessStock, on_delete=models.CASCADE, blank=True, null=True)
     ct_grn = models.ForeignKey(PkstockpurchasesInfo, on_delete=models.CASCADE, blank=True, null=True,
                                related_name='grn')
+    ct_exe_width_req = models.FloatField(blank=True, null=True, default=0.0)
+    ct_exe_height_req = models.FloatField(blank=True, null=True, default=0.0)
+    ct_exe_length_req = models.FloatField(blank=True, null=True, default=0.0)
+    ct_exe_quantity_req = models.FloatField(blank=True, null=True, default=0.0)
+    ct_exe_sqrt_req = models.FloatField(blank=True, null=True, default=0.0)
+    ct_exe_value = models.FloatField(blank=True, null=True, default=0.0)
 
     class Meta:
         ordering = ["ct_cost_type"]

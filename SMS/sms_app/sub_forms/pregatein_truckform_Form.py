@@ -14,3 +14,4 @@ class PregateintruckForm(forms.ModelForm):
         self.fields['pregatein_otl_check'].empty_label = "--Select--"
         self.fields['pregatein_offload_acceptance'].empty_label = "--Select--"
         self.fields['pregatein_otl_type'].empty_label = "--Select--"
+        self.fields['pregatein_job_category'].empty_label = "--Select--"

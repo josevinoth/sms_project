@@ -214,6 +214,7 @@
 									</div>
 									{% render_field form.ct_stock_status id="ct_stock_status" class="form-control " %}
 								</div>
+								{% render_field form.ct_excess_status id="ct_excess_status" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
 
 							</div>
@@ -255,7 +256,7 @@
 		var CFT_Sqft_Req_total = parseFloat(CFT_Sqft_Req_unit * job_type_qty);
 
 		// Set the calculated value to the span
-		document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total;
+		document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total.toFixed(2);
 
         if (stock_status==1)
         {
@@ -382,7 +383,7 @@
 			var CFT_Sqft_Req_total = parseFloat(CFT_Sqft_Req_unit * job_type_qty);
 
 			// Set the calculated value to the span
-			document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total;
+			document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total.toFixed(2);
 
             var jn=document.getElementById("ct_cost_type").value
             if ( jn==8)
@@ -648,6 +649,41 @@
               	var totalboxCost = totalCost * na_quantity;
            	    document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
             }
+            calculateExcess()
         }
+</script>
+<script>
+	function calculateExcess() {
+		var length = parseFloat(document.getElementById("ct_length").value) || 0;
+		var width = parseFloat(document.getElementById("ct_width").value) || 0;
+		var height = parseFloat(document.getElementById("ct_height").value) || 0;
+		var quantity = parseFloat(document.getElementById("ct_quantity").value) || 0;
+		var cft = parseFloat(document.getElementById("ct_cft").value) || 0;
+
+		var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
+		var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
+		var height_req = parseFloat(document.getElementById("ct_height_req").value) || 0;
+		var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+		var cft_req = parseFloat(document.getElementById("ct_sqrt_req").value) || 0;
+
+		var excess_length = length - length_req;
+		var excess_width = width - width_req;
+		var excess_height = height - height_req;
+		var excess_quantity = quantity - quantity_req;
+		var excess_cft = cft - cft_req;
+
+		document.getElementById("ct_exe_length_req").value = excess_length.toFixed(2);
+		document.getElementById("ct_exe_width_req").value = excess_width.toFixed(2);
+		document.getElementById("ct_exe_height_req").value = excess_height.toFixed(2);
+		document.getElementById("ct_exe_quantity_req").value = excess_quantity.toFixed(2);
+		document.getElementById("ct_exe_sqrt_req").value = excess_cft.toFixed(2);
+
+		 if (excess_length > 0 || excess_width > 0 || excess_height > 0 || excess_quantity > 0 || excess_cft > 0) {
+            document.getElementById("ct_excess_status").value = "3";
+        }
+        else {
+            document.getElementById("ct_excess_status").value = "5";
+        }
+}
 </script>
 {% endblock content %}
