@@ -91,13 +91,21 @@ def requirements_email(req_id):
     Please find below updates:
 
     Requirement    : {backlog}
+    
     Module         : {module}
+    
     Raised By      : {raised_by}
+    
     Raised On      : {raised_on}
+    
     Bug/Improvement: {bug_improvement}
+    
     Assigned To    : {assigned_to}
+    
     Implemented On : {implmented_on}
+    
     Status         : {status}
+    
     Remarks        : {remarks}
     
     Regards,                        
