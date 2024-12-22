@@ -21,7 +21,7 @@ def qr_code_asset(request, asset_qr_id):
         Product: {asset.asset_product}
         Asset ID: {asset.asset_Id}
     """
-    qr = qrcode.QRCode(box_size=3, border=1)
+    qr = qrcode.QRCode(box_size=4, border=2)
     qr.add_data(qr_data)
     qr.make(fit=True)
 
