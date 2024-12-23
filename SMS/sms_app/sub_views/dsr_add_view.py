@@ -40,7 +40,12 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
         recipient = request.POST.get('recipient')
         # subject = request.POST.get('subject')
         message = request.POST.get('message')
-        # customer_name = request.POST.get('ds_customer')
+        customer_name_1=customer_name
+        print(customer_name_1)
+        if customer_name_1==None:
+            customer_name = request.POST.get('ds_customer')
+        else:
+            customer_name=customer_name
         recipient_list = [email.strip() for email in recipient.split(',')]
 
         wb = openpyxl.Workbook()
