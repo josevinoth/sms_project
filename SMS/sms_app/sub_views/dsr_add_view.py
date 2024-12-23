@@ -225,7 +225,10 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
         excel_file.seek(0)
         attachment = excel_file
         attachment_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        # subject = f"{customer_name}_DSR Report"
+        if subject==None:
+            subject = f"{customer_name}_DSR Report"
+        else:
+            subject = subject
         pre_gatein_id = request.session.get('ses_pre_gatein_id')
         send_department_email('warehouse', subject, message, recipient_list,attachment,attachment_type,file_name)
         # Redirect back to the previous page
