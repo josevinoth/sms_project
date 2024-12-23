@@ -9,6 +9,8 @@ class PkcostingForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(PkcostingForm,self).__init__(*args, **kwargs)
+        self.fields['ct_customer_name'].empty_label = "--Select--"
+        self.fields['ct_customer_po'].empty_label = "--Select--"
         self.fields['ct_cost_type'].empty_label = "--Select--"
         self.fields['ct_stock_type'].empty_label = "--Select--"
         self.fields['ct_stock_description'].empty_label = "--Select--"
