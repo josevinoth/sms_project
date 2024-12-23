@@ -2,7 +2,7 @@
 {% block content %}
 {% for dispatch_detail in dispatch_details %}
 <div class="report_title">
-  Dispatch Number ({{dispatch_detail.dispatch_num}})
+    Dispatch Number ({{dispatch_detail.dispatch_num}})
 </div>
 <div>
     <table class='report_details'>
@@ -70,14 +70,14 @@
             <th>Destination</th>
             <th>HAWB</th>
         </tr>
-        {% for wh_dispatch_detail in wh_dispatch_details %}
+        {% for detail in grouped_dispatch_details %}
         <tr>
-            <td>{{wh_dispatch_detail.wh_consigner}}</td>
-            <td>{{wh_dispatch_detail.wh_goods_invoice}}</td>
-            <td>{{wh_dispatch_detail.wh_goods_pieces}}</td>
-            <td>{{wh_dispatch_detail.wh_goods_weight}}</td>
-            <td>{{wh_dispatch_detail.wh_gate_injob_no_id.gatein_destination}}</td>
-            <td>{{wh_dispatch_detail.wh_gate_injob_no_id.gatein_hawb}}</td>
+            <td>{{ detail.wh_consigner }}</td>
+            <td>{{ detail.wh_goods_invoice }}</td>
+            <td>{{ detail.total_pieces }}</td>
+            <td>{{ detail.total_weight }}</td>
+            <td>{{ detail.gatein_destination }}</td>
+            <td>{{ detail.gatein_hawb }}</td>
         </tr>
         {% endfor %}
     </table>
@@ -88,7 +88,7 @@
     <div class="right-group">
         <p>Super Verification</p>
     </div>
-     <div class="center-group">
+    <div class="center-group">
         <p>THANK YOU FOR YOUR BUSINESS!</p>
     </div>
 

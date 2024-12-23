@@ -1,26 +1,19 @@
 {% load widget_tweaks %}
 {% block content %}
 <!-- Email Form -->
-<form method="post" action="{% url 'dsr_send_email' %}">
+<form method="post" action="{% url 'gate_in_send_email' %}">
     {% csrf_token %}
-    <div class="input-group mb-2 mr-sm-2">
-        <div class="input-group-prepend">
-            <div class="input-group-text">Customer</div>
-        </div>
-        {% render_field form.ds_customer id="ds_customer" class="form-control" value=customer_name %}
-    </div>
-
-    <div class="input-group mb-2 mr-sm-2">
+        <div class="input-group mb-2 mr-sm-2">
         <div class="input-group-prepend">
             <div class="input-group-text">To</div>
         </div>
-        <input type="text" id="recipient" name="recipient" class="form-control" value="{{ form_dsr_email.recipient.value }}" placeholder="Recipient emails">
+        <input type="text" id="recipient" name="recipient" class="form-control"  placeholder="Recipient emails" required>
     </div>
     <div class="input-group mb-2 mr-sm-2">
         <div class="input-group-prepend">
             <div class="input-group-text">Message</div>
         </div>
-        <textarea id="message" name="message" class="form-control" rows="6" placeholder="Enter email message">{{ form_dsr_email.message.value }}</textarea>
+        <textarea id="message" name="message" class="form-control" rows="8" placeholder="Enter email message"></textarea>
     </div>
     <div class="row">
         <div class="col-1"></div>
@@ -43,12 +36,16 @@
     function email_message_fn() {
      // Assign Django template variables to JavaScript variables
        var message = 	"Dear Customer,\n\n" +
-                "Please find the DSR report attached.\n\n" +
+                "Please find the Gate-In report attached.\n\n" +
                   "Regards,\n" +
                   "BVM Warehouse Team";
 
         // Set the consolidated message as the value of the form field with id 'message'
         document.getElementById("message").value = message;
+
+        var subject = "Gate Out Alert";
+        document.getElementById("subject").value = subject;
+
     }
 </script>
 {% endblock content %}
