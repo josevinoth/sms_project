@@ -573,4 +573,8 @@ urlpatterns = [
 
     path('gate_in_send_email/', views.gate_in_email, name='gate_in_send_email'),
     path('dispatch_gatepass_pdf_download/<int:dispatch_id>', views.dispatch_gatepass_pdf_download, name='dispatch_gatepass_pdf_download'),
+    path('sales_reports/', views.sales_reports, name='sales_reports'),
+    path('sales_call_report/', views.sales_call_report, name='sales_call_report'),
+    path('sales_targets_view/', views.sales_targets_view, name='sales_targets_view'),
+
 ]
