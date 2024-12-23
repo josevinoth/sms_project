@@ -15,6 +15,11 @@ def task_add(request,task_id=0):
     if request.method == "GET":
         if task_id == 0:
             form = taskaddForm()
+            context = {
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+            }
         else:
             task=task_Info.objects.get(pk=task_id)
             requirement_status=task_Info.objects.get(pk=task_id).t_requirement_id.req_status.id
