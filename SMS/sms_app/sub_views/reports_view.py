@@ -2,22 +2,19 @@ import csv
 from itertools import chain
 from io import BytesIO
 from django.http import StreamingHttpResponse
-from django.contrib import messages
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, ExpressionWrapper, fields, F, DurationField, Func, Value, CharField, DateField
+from django.db.models import Q, ExpressionWrapper, fields, F, DurationField
 from django.db.models.functions import Cast, Extract
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.template.loader import get_template
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.timezone import make_naive
 from xhtml2pdf import pisa
-from ..models import ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
+from ..models import ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo
 from datetime import date,timedelta
 import datetime
-from ..models import BudgetInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo
-from datetime import date, datetime,timedelta
 from django.db.models import Count, Sum
 import openpyxl
 from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
@@ -74,7 +71,7 @@ def stock_value_reports(request):
     page_obj = paginator.get_page(page_number)
 
 
-    current_date = datetime.datetime.now()
+    current_date = datetime.date.today()
 
     maa_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=1,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if maa_in_stock_value_cud is not None:
@@ -352,9 +349,10 @@ def export_stockreport_to_csv(request):
         for row_num, row_data in enumerate(data, 2):
             for col_num, value in enumerate(row_data, 1):
                 # Convert timezone-aware datetime to naive
-                if isinstance(value, (datetime.date, datetime.datetime)) and value.tzinfo is not None:
+                if isinstance(value, (datetime.date, datetime.datetime)) and hasattr(value,'tzinfo') and value.tzinfo is not None:
                     value = make_naive(value)  # Convert to naive datetime in the local timezone
                 cell = sheet.cell(row=row_num, column=col_num, value=value)
+                cell.font = Font(name='Bookman Old Style', size=9, bold=False, color="000000")
 
         # Get the last row and column with data
         max_row = sheet.max_row
