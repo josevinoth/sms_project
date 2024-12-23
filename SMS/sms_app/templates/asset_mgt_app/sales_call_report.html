@@ -1,0 +1,112 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Sales Call Report</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'sales_call_report' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <button id="clear-filters" class="btn btn-secondary mb-3">Clear All Filters</button>
+    <table id="sales_call_report" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr class="filter">
+                <th></th>
+                <th><input type="text" placeholder="Filter Date" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Name" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Customer" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Type" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Person" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Designation" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Nature" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Comments" class="column-filter"></th>
+            </tr>
+            <tr>
+                <th>Sr No</th>
+                <th>Date of Call</th>
+                <th>Sales Person Name</th>
+                <th>Name of Customer</th>
+                <th>Customer Type</th>
+                <th>Person Met</th>
+                <th>Designation</th>
+                <th>Nature of Call</th>
+                <th>Comments</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in sales_reports %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ report.sc_date_of_call }}</td>
+                <td>{{ report.sc_sales_number.s_created_by }}</td>
+                <td>{{ report.sc_sales_number.s_customer_new_name }}</td>
+                <td>{{ report.sc_sales_number.s_customer_name }}</td>
+                <td>{{ report.sc_sales_number.s_Person_name }}</td>
+                <td>{{ report.sc_sales_number.s_designation }}</td>
+                <td>{{ report.sc_call_nature }}</td>
+                <td>{{ report.sc_comments }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Initialize DataTable
+        var table = $('#sales_call_report').DataTable({
+            scrollY: "600px",
+            scrollCollapse: true,
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+        });
+
+        // Attach event listeners to filter inputs
+        $('.filter .column-filter').on('keyup change', function () {
+            var columnIndex = $(this).closest('th').index(); // Get column index
+            table.column(columnIndex).search(this.value).draw(); // Apply search
+        });
+
+        // Clear All Filters button functionality
+        $('#clear-filters').on('click', function () {
+            $('.filter .column-filter').each(function () {
+                $(this).val(''); // Clear the input value
+                var columnIndex = $(this).closest('th').index(); // Get column index
+                table.column(columnIndex).search(''); // Clear column filter
+            });
+            table.draw(); // Redraw the table
+        });
+
+        // Prevent sorting when clicking filter inputs
+        $('#sales_call_report thead input').on('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+</script>
+
+<style>
+    .column-filter {
+        width: 120px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    #clear-filters {
+        float: right;
+    }
+</style>
+
+
+{% endblock content %}
