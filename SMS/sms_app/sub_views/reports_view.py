@@ -16,9 +16,14 @@ from xhtml2pdf import pisa
 from ..models import ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info
 from datetime import date,timedelta
 import datetime
+from ..models import BudgetInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo
+from datetime import date, datetime,timedelta
 from django.db.models import Count, Sum
 import openpyxl
 from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
+
+
+from itertools import zip_longest
 
 
 @login_required(login_url='login_page')
@@ -199,16 +204,51 @@ def revenue_report(request):
                 }
     return render(request,"asset_mgt_app/revenue_report.html",context)
 
+
 @login_required(login_url='login_page')
 def profit_loss_report(request):
     first_name = request.session.get('first_name')
-    expense_list=ExpenseInfo.objects.all()
+    warehouse_data = Warehouse_goods_info.objects.exclude(wh_voucher_num__isnull=True)
+    expense_data = ExpenseExtinfo.objects.all()
+
+    branch_unit_results = {}
+
+    for warehouse in warehouse_data:
+        branch_unit_key = (warehouse.wh_branch, warehouse.wh_unit)
+        revenue = float(warehouse.wh_total_invoice_cost or 0)
+        total_expense = 0.0
+        for expense in expense_data:
+            if expense.exp_ext_branch == warehouse.wh_branch and expense.exp_ext_unit == warehouse.wh_unit:
+                total_expense += float(expense.exp_ext_amount or 0)
+        if branch_unit_key not in branch_unit_results:
+            branch_unit_results[branch_unit_key] = {'revenue': 0.0, 'expense': 0.0}
+        branch_unit_results[branch_unit_key]['revenue'] += revenue
+        branch_unit_results[branch_unit_key]['expense'] += total_expense
+
+    result_list = []
+    for (branch, unit), totals in branch_unit_results.items():
+        revenue = totals['revenue']
+        expense = totals['expense']
+        profit_loss = revenue - expense
+        profit_loss_percentage = (profit_loss / expense) * 100 if expense > 0 else 0.0
+
+        result_list.append({
+            'branch': branch,
+            'unit': unit,
+            'date': warehouse.wh_checkin_time,
+            'revenue': round(revenue, 2),
+            'expense': round(expense, 2),
+            'profit_loss': round(profit_loss, 2),
+            'profit_loss_percentage': round(profit_loss_percentage, 2),
+        })
 
     context = {
-                'expense_list': expense_list,
-                'first_name': first_name,
-                }
-    return render(request,"asset_mgt_app/expense_report.html",context)
+        'result_list': result_list,
+        'first_name': first_name,
+    }
+
+    return render(request, "asset_mgt_app/profit_loss_report.html", context)
+
 
 @login_required(login_url='login_page')
 def expense_report(request):

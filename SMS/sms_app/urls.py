@@ -569,6 +569,8 @@ urlpatterns = [
     path('dsr_reports/', views.dsr_reports, name='dsr_reports'),
     path('dsr_send_email/', views.dsr_send_email_view, name='dsr_send_email'),
     path('gate_out_send_email/', views.gate_out_email, name='gate_out_send_email'),
+    path('profit_loss_report/', views.profit_loss_report, name='profit_loss_report'),
+
     path('gate_in_send_email/', views.gate_in_email, name='gate_in_send_email'),
     path('dispatch_gatepass_pdf_download/<int:dispatch_id>', views.dispatch_gatepass_pdf_download, name='dispatch_gatepass_pdf_download'),
 ]
