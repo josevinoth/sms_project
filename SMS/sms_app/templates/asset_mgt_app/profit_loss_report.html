@@ -1,0 +1,94 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Profit & Loss Report</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'warehouse_reports' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+<hr>
+
+<div class="container-fluid">
+    <table id="profit_report" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>Branch<br>
+                <input type="text" placeholder="Filter Branch" class="column-filter"></th>
+                <th>Unit<br>
+                <input type="text" placeholder="Filter Unit" class="column-filter"></th>
+                <th>Date</th>
+                <th>Revenue</th>
+                <th>Expense</th>
+                <th>Profit & Loss</th>
+                <th>Profit & Loss %</th>
+            </tr>
+
+        </thead>
+        <tbody>
+        {% for profit in result_list %}
+        <tr>
+            <td>{{ profit.branch }}</td>
+            <td>{{ profit.unit }}</td>
+            <td>{{ profit.date }}</td>
+            <td>{{ profit.revenue }}</td>
+            <td>{{ profit.expense }}</td>
+            <td>{{ profit.profit_loss }}</td>
+            <td>{{ profit.profit_loss_percentage }}%</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center">No data available</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        var table = $('#profit_report').DataTable({
+            scrollY: "600px",
+            scrollCollapse: true,
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+            initComplete: function () {
+                // Add input filters to each header
+                this.api().columns().every(function () {
+                    var column = this;
+                    $('input', column.header()).on('keyup change', function () {
+                        if (column.search() !== this.value) {
+                            column.search(this.value).draw();
+                        }
+                    });
+                });
+            }
+        });
+
+        // Prevent filter inputs from sorting when clicked
+        $('#profit_report thead input').on('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+</script>
+
+<style>
+    .column-filter {
+        width: 120px; /* Adjusted width */
+        height: 30px; /* Adjusted height */
+        font-size: 12px; /* Adjusted font size */
+    }
+</style>
+
+{% endblock content %}

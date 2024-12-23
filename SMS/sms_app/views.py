@@ -124,3 +124,4 @@ from .sub_views.pk_Excess_Stock_view import pk_excess_stock_add,pk_excess_stock_
 from .sub_views.wh_highvaluecheck_add_view import highvalue_add,highvalue_list,highvalue_delete,highvalue_cancel
 from .sub_views.dsr_add_view import dsr_reports,dsr_send_email_view
 from .sub_views.dispatch_add_view import gate_out_email
+from .sub_views.reports_view import profit_loss_report
