@@ -1,0 +1,91 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Target vs Actuals</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'sales_targets_view' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table id="salestarget_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th rowspan="2">Sr. No</th>
+            <th colspan="2">Date Range</th>
+            <th rowspan="2">Sales Person Name</th>
+            <th colspan="2">No. of Customers</th>
+            <th colspan="2">No. of Sales Calls</th>
+            <th colspan="2">No. of Sales Calls Existing Customers</th>
+            <th colspan="2">No. of Sales Calls New Customers</th>
+            <th colspan="2">No. of Sales Calls Reviews</th>
+        </tr>
+        <tr>
+            <th>From</th>
+            <th>To</th>
+            <th>Target</th>
+            <th>Actual</th>
+            <th>Target</th>
+            <th>Actual</th>
+            <th>Target</th>
+            <th>Actual</th>
+            <th>Target</th>
+            <th>Actual</th>
+            <th>Target</th>
+            <th>Actual</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for target in sales_targets %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ target.st_start_date }}</td> #sc_updated_at
+                <td>{{ target.st_end_date }}</td>
+                <td>{{ target.s_created_by }}</td>
+                <td>{{ target.st_target_customer }}</td>
+                <td>{{ actual.s_customer_name }}</td>
+                <td>{{ target.st_target_revenue }}</td>
+                <td>{{ actual.s_expected_revenue }}</td>
+                <td>{{ target.st_target_calls_existing_customer }}</td>
+                <td>{{ actual.s_calls_existing }}</td>
+                <td>{{ target.st_target_calls_new_customer }}</td>
+                <td>{{ actual.s_calls_new }}</td>
+                <td>{{ target.st_target_calls_review }}</td>
+                <td>{{ actual.s_calls_review }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#salestarget_list').DataTable({
+            order: [[0, 'asc']],  // Default sort by first column
+            pageLength: 10,       // Display 10 rows per page
+            lengthMenu: [10, 25, 50, 100], // Page length options
+        });
+    });
+</script>
+
+<style>
+    td {
+        word-wrap: break-word;
+        max-width: 150px; /* Prevent overly wide cells */
+        overflow: hidden;
+        text-overflow: ellipsis; /* Add ellipsis for overflow */
+    }
+</style>
+
+{% endblock content %}
