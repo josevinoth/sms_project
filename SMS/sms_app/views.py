@@ -124,3 +124,4 @@ from .sub_views.budgetform_add_view import budgetform_add,budgetform_list,budget
 from .sub_views.pk_Excess_Stock_view import pk_excess_stock_add,pk_excess_stock_list
 from .sub_views.wh_highvaluecheck_add_view import highvalue_add,highvalue_list,highvalue_delete,highvalue_cancel
 from .sub_views.dispatch_add_view import gate_out_email
+from .sub_views.salesperson_chart_view import salesperson_chart

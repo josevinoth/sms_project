@@ -1,0 +1,93 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<body>
+    <h1 style="color:black;">Sales Count Per Salesperson</h1>
+
+    <!-- Filters Section -->
+    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+        <!-- Dropdown for Salesperson Filter -->
+        <label for="salesperson-filter"><b>Salesperson:</b></label>
+        <select id="salesperson-filter" name="salesperson">
+            <option value="">All</option>
+            {% for salesperson in salespersons %}
+                <option value="{{ salesperson }}"
+                    {% if salesperson == selected_salesperson %} selected {% endif %}>
+                    {{ salesperson }}
+                </option>
+            {% endfor %}
+        </select>
+
+
+        <label for="from-date">From:</label>
+        <input type="date" id="from-date" name="from_date" value="{{ from_date }}">
+
+        <label for="to-date">To:</label>
+        <input type="date" id="to-date" name="to_date" value="{{ to_date }}">
+    </div>
+
+    <canvas id="salesChart" width="300" height="100"></canvas>
+
+    <script>
+        const labels = {{ labels|safe }};
+        const data = {{ data|safe }};
+
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,  // X-axis labels
+                datasets: [{
+                    label: 'Sales Count',
+                    data: data,    // Y-axis data
+                    backgroundColor: 'rgba(43, 37, 245, 0.8)',  // Bar color
+                    borderColor: 'rgba(43, 37, 245, 0.8)',         // Bar border color
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+        document.getElementById('from-date').addEventListener('change', updateFilters);
+        document.getElementById('to-date').addEventListener('change', updateFilters);
+
+        function updateFilters() {
+            const salesperson = document.getElementById('salesperson-filter').value;
+            const fromDate = document.getElementById('from-date').value;
+            const toDate = document.getElementById('to-date').value;
+            const url = new URL(window.location.href);
+
+
+            if (salesperson) {
+                url.searchParams.set('salesperson', salesperson);
+            } else {
+                url.searchParams.delete('salesperson');
+            }
+
+
+            if (fromDate) {
+                url.searchParams.set('from_date', fromDate);
+            } else {
+                url.searchParams.delete('from_date');
+            }
+
+            if (toDate) {
+                url.searchParams.set('to_date', toDate);
+            } else {
+                url.searchParams.delete('to_date');
+            }
+
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+{% endblock content %}
