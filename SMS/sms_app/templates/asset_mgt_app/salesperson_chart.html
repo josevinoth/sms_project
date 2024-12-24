@@ -4,8 +4,10 @@
 {% load crispy_forms_tags %}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
 <body>
-    <h1 style="color:black;">Sales Count Per Salesperson</h1>
+    <h1 style="color:black;">Sales Calls Per Salesperson</h1>
 
     <!-- Filters Section -->
     <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
@@ -31,6 +33,24 @@
 
     <canvas id="salesChart" width="300" height="100"></canvas>
 
+    <h2 style="color:black;">Salesperson-Sales Calls Table</h2>
+    <table border="2" style="width: 50%; border-collapse: collapse; margin-top: 20px; background-color: white;">
+        <thead>
+            <tr style="background-color: red;">
+                <th style="padding: 10px; text-align: center;">Salesperson Name</th>
+                <th style="padding: 10px; text-align: center;">Sales Calls</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for label, count in table_data %}
+            <tr>
+                <td style="padding: 10px;">{{ label }}</td>
+                <td style="padding: 10px;">{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
     <script>
         const labels = {{ labels|safe }};
         const data = {{ data|safe }};
@@ -49,13 +69,28 @@
                 }]
             },
             options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+            plugins: {
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: (value) => value, // Display the value
+                    font: {
+                        size: 12,
+                        weight: 'bold'
+                    },
+                    color: '#000', // Label color
+                }
+            },
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
+        },
+        plugins: [ChartDataLabels] // Enable the DataLabels plugin
+    });
+
         document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
         document.getElementById('from-date').addEventListener('change', updateFilters);
         document.getElementById('to-date').addEventListener('change', updateFilters);
