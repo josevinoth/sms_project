@@ -10,4 +10,5 @@ class PkacceptanceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PkacceptanceForm,self).__init__(*args, **kwargs)
         self.fields['ct_stock_status'].empty_label = "--Select--"
+        self.fields['ct_excess_status'].empty_label = "--Select--"
         self.fields['ct_stock_status'].queryset = pk_stock_statusinfo.objects.filter(id__in=[4])

@@ -8,6 +8,5 @@ class dsr_EmailForm(forms.Form):
         widgets = {
             'customer': forms.Select(attrs={'class': 'form-control'}),
             'recipient': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Recipient emails'}),
-            'subject': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Subject'}),
             'message': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter email message'}),
         }

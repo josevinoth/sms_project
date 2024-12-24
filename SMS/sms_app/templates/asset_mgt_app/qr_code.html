@@ -2,52 +2,75 @@
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
-<div class="container-fluid row">
-    <div class="col-md-1">
-      <a href="{% url 'assign_asset_search' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i> Back
-      </a>
+<!-- Content Container -->
+<div id="content" class="bg-warning" style="width: 550px; margin: auto; padding: 1px; border: 4px solid black; text-align: left; font-family: Arial, sans-serif;">
+    <div style="display: flex; align-items: center;">
+        <!-- QR Code Section -->
+        <div style="flex: 1; text-align: center;">
+            <img src="{{ qr_code }}" alt="QR Code" style="width: 150px; height: 150px;">
+        </div>
+        <!-- Asset Information Section -->
+        <div style="flex: 2; padding-left: 10px; font-size: 16px; line-height: 1.3;">
+            <p style="margin: 0;"><strong>{{ Asset_Number }}</strong></p>
+            <p style="margin: 0;"><strong>{{ Asset_Assigned_To }}</strong></p>
+            <p style="margin: 0;"><strong>{{ Asset_Location }}</strong></p>
+            <p style="margin: 0;"><strong>{{ Asset_Product }}</strong></p>
+            <p style="margin: 0;"><strong>{{ Asset_ID }}</strong></p>
+        </div>
     </div>
-<!--  <div class="col-md-1">-->
-<!--      <a href="{% url 'print_pdf' %}" class="btn btn-warning btn-block btn-lg">-->
-<!--        <i class="fas fa-file-pdf"></i>-->
-<!--      </a>-->
-<!--    </div>-->
 </div>
-<hr>
-<a onclick="printDiv('printableArea')" id="printableArea" >
-  <div class="container shadow btn btn-warning btn-block" style="width: 470px; margin-top: 2em; padding: 1em">
 
-    <form method="post">
-      {% csrf_token %}
-    </form>
+<!-- Print Button -->
+<div style="text-align: center; margin-top: 10px;">
+    <button onclick="printDiv()" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        Print Asset Info
+    </button>
+</div>
 
-      <div class="row">
-        <div class="col-5">
-          {{ svg|safe }}
-        </div>
-        <div class="col-7" style="text-align: left">
-          <br>
-          <span>Asset Number: {{Asset_Number}}</span>
-          <br>
-          <span>Assigned To: {{Asset_Assigned_To}}</span>
-          <br>
-          <span>Location: {{Asset_Location}}</span>
-          <br>
-          <span>Product: {{Asset_Product}}</span>
-          <br>
-          <span>Asset ID: {{Asset_ID}}</span>
-        </div>
-      </div>
-  </div>
-  </a>
+<!-- Print Function -->
 <script>
-function printDiv(divName) {
-     var printContents = document.getElementById(divName).innerHTML;
-     var originalContents = document.body.innerHTML;
-     document.body.innerHTML = printContents;
-     window.print();
-     document.body.innerHTML = originalContents;
+function printDiv() {
+    const content = document.getElementById("content").outerHTML;
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Print</title>
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 0;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        background-color: white;
+                    }
+                    #content {
+                        width: 350px;
+                        padding: 2px;
+                        border: 3px solid black;
+                        background-color: #add8e6;
+                        font-family: Arial, sans-serif;
+                        font-size: 30px;
+                        line-height: 1.6;
+                        display: flex;
+                        flex-wrap: wrap; /* Ensure content wraps if needed */
+                        gap: 10px; /* Add spacing between elements */
+                    }
+                    img {
+                        width: 150px;
+                        height: 150px;
+                        margin-bottom: 2px; /* Add bottom margin to space out images */
+                    }
+                </style>
+            </head>
+            <body>${content}</body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
 }
 </script>
+
 {% endblock content %}

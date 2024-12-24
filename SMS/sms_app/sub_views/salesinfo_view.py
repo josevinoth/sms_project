@@ -265,3 +265,11 @@ def sales_comments_search(request):
         'page_obj': page_obj,
         }
     return render(request, "asset_mgt_app/sales_comments_list.html", context)
+
+@login_required(login_url='login_page')
+def sales_reports(request):
+    first_name = request.session.get('first_name')
+    context = {
+               'first_name': first_name
+               }
+    return render(request,"asset_mgt_app/sales_reports.html",context)

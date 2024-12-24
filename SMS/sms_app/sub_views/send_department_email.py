@@ -4,6 +4,7 @@ from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 
 def send_department_email(department, subject, message, recipient_list,attachment=None, attachment_type=None, file_name=None):
+    print('Email sending..')
     department_email_settings = settings.DEPARTMENT_EMAILS.get(department)
 
     if department_email_settings:
@@ -21,8 +22,8 @@ def send_department_email(department, subject, message, recipient_list,attachmen
             from_email=settings.EMAIL_HOST_USER,
             to=recipient_list,
         )
-        # Set the content subtype to 'html' to send HTML email
-        email.content_subtype = 'html'
+        # # Set the content subtype to 'html' to send HTML email
+        # email.content_subtype = 'html'
 
         if attachment:
             if isinstance(attachment, bytes):  # Check if the attachment is a bytes object

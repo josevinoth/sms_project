@@ -60,14 +60,14 @@
 									</div>
 									{% render_field form.pregatein_dl_exp_date type="date" class="form-control" %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Qty</span>
 									</div>
 									{% render_field form.pregatein_qty id="pregatein_qty" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Arrival Date & Time</span>
@@ -110,6 +110,12 @@
 									</div>
 									{% render_field form.pregatein_high_value id="pregatein_high_value" class="form-control" onchange="hc_enabler()" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Job Category</span>
+                                    </div>
+                                    {% render_field form.pregatein_job_category id="pregatein_job_category" class="form-control" onchange="highvalue_enabler()" %}
+                                </div>
 								{% render_field form.pregatein_updated_by id="pregatein_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>
@@ -175,21 +181,35 @@ $(document).ready(function() {
 		document.getElementById("pregatein_number").value = pregateintruck_num_id_val;
 	}
 	hc_enabler()
+	highvalue_enabler()
   });
 </script>
 
 <script>
 	function hc_enabler() {
-      var jn9='{{high_value_check}}'
-      if (jn9==1)
+      var jn3=document.getElementById("pregatein_high_value").value
+      if (jn3==1)
         {
-            $('#highvalue').removeClass('disable_a_href');
+            $('#pregatein_job_category').removeClass('disable_a_href');
         }
       else
           {
+            $('#pregatein_job_category').addClass('disable_a_href');
             $('#highvalue').addClass('disable_a_href');
         }
     }
 </script>
+<script>
+	function highvalue_enabler() {
+    var jn7 = document.getElementById("pregatein_job_category").value;
+    if (jn7 ==2 || jn7 ==3) {
+        $("#highvalue").removeClass('disable_a_href');
+    } else {
+        $("#highvalue").addClass('disable_a_href');
+    }
+}
+</script>
+
+
 
 {% endblock content %}

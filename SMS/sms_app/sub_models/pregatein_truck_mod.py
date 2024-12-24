@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import TypeofotlInfo,VehicletypeInfo,MyUser,GstexcemptionInfo,Gatein_pre_info,YesNoInfo
+from ..models import storagecrosslabelInfo,TypeofotlInfo,VehicletypeInfo,MyUser,GstexcemptionInfo,Gatein_pre_info,YesNoInfo
 
 class Pregateintruckinfo(models.Model):
     pregatein_number = models.ForeignKey(Gatein_pre_info, null=True,on_delete=models.CASCADE, default='')
@@ -21,6 +21,7 @@ class Pregateintruckinfo(models.Model):
     pregatein_offload_acceptance = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,related_name='pregatein_offload_acceptance', db_column='pregatein_offload_acceptance',default=1)
     pregatein_qty = models.IntegerField(default=0)
     pregatein_high_value = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE, related_name='pregatein_high_value',db_column='pregatein_high_value',default=2)
+    pregatein_job_category = models.ForeignKey(storagecrosslabelInfo, on_delete=models.CASCADE,default=1)
 
     class Meta:
         ordering = ["pregatein_truck_number"]

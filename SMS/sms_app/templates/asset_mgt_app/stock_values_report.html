@@ -2,10 +2,6 @@
 {% block content %}
 {% load currency_format %}
 {% load static %}
-<!-- Loader container -->
-<!--    <div id="loader">-->
-<!--        <img src="{% static 'loaders_gifs/Earth_animated.gif' %}" alt="Loading...">-->
-<!--    </div>-->
 
 <div class="container-fluid" style="padding:15px;" >
   <div class="row">
@@ -61,9 +57,10 @@
       </a>
     </div>
     <div class="col-2">
-      <a id="stockReportButton" href="{% url 'export_stockreport' %}" class="btn btn-warning btn-block btn-lg" >
+        <a id="stockReportButton" href="{% url 'export_stockreport' %}" class="btn btn-warning btn-block btn-lg">
         <i class="fas fa-file-csv"></i> Stock Report
       </a>
+
     </div>
   </div>
   <hr>
@@ -188,32 +185,19 @@
   </div>
 </div>
 <script>
-    $(document).ready(function() {
-    $('#stock_value_report').DataTable( {
-        order: [3, 'desc' ],
+  $(document).ready(function() {
+  $('#stock_value_report').DataTable( {
+      order: [3, 'desc' ],
 <!--        scrollY: 800,-->
-        scrollX: true,
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
-    });
+      scrollX: true,
+      dom: 'lBfrtip',
+      buttons: [
+          'copy', 'csv', 'excel','print'
+      ]
+  });
 } );
 </script>
-<!--<script>-->
-<!--        document.getElementById("stockReportButton").addEventListener("click", function() {-->
-<!--            document.getElementById("loader").style.display = "flex";-->
 
-<!--            // Add logic here to trigger the stock report generation-->
-<!--            // For demonstration purposes, we'll simulate a delay with setTimeout-->
-<!--            setTimeout(function() {-->
-<!--                // Simulate the completion of stock report generation-->
-<!--                document.getElementById("loader").style.display = "none";-->
-<!--            }, 250000); // Adjust the timeout as needed-->
-<!--        });-->
 
-<!--        window.onload = function() {-->
-<!--            document.getElementById("loader").style.display = "none";-->
-<!--        };-->
-<!--    </script>-->
+
 {% endblock content %}
