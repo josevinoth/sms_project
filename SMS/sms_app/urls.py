@@ -577,4 +577,6 @@ urlpatterns = [
     path('sales_call_report/', views.sales_call_report, name='sales_call_report'),
     path('sales_targets_view/', views.sales_targets_view, name='sales_targets_view'),
 
+    path('salesperson-chart/', views.salesperson_chart, name='salesperson_chart'),
+    path('monthly-summary/', views.monthly_summary, name='monthly_summary'),
 ]

@@ -126,3 +126,5 @@ from .sub_views.wh_highvaluecheck_add_view import highvalue_add,highvalue_list,h
 from .sub_views.dispatch_add_view import gate_out_email
 from .sub_views.reports_view import profit_loss_report
 from .sub_views.sales_reports_view import sales_call_report,sales_targets_view
+from .sub_views.salesperson_chart_view import salesperson_chart
+from .sub_views.salesperson_chart_view import monthly_summary

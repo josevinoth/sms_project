@@ -1,0 +1,128 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+<body>
+    <h1 style="color:black;">Sales Calls Per Salesperson</h1>
+
+    <!-- Filters Section -->
+    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+        <!-- Dropdown for Salesperson Filter -->
+        <label for="salesperson-filter"><b>Salesperson:</b></label>
+        <select id="salesperson-filter" name="salesperson">
+            <option value="">All</option>
+            {% for salesperson in salespersons %}
+                <option value="{{ salesperson }}"
+                    {% if salesperson == selected_salesperson %} selected {% endif %}>
+                    {{ salesperson }}
+                </option>
+            {% endfor %}
+        </select>
+
+
+        <label for="from-date">From:</label>
+        <input type="date" id="from-date" name="from_date" value="{{ from_date }}">
+
+        <label for="to-date">To:</label>
+        <input type="date" id="to-date" name="to_date" value="{{ to_date }}">
+    </div>
+
+    <canvas id="salesChart" width="300" height="100"></canvas>
+
+    <h2 style="color:black;">Salesperson-Sales Calls Table</h2>
+    <table border="2" style="width: 50%; border-collapse: collapse; margin-top: 20px; background-color: white;">
+        <thead>
+            <tr style="background-color: red;">
+                <th style="padding: 10px; text-align: center;">Salesperson Name</th>
+                <th style="padding: 10px; text-align: center;">Sales Calls</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for label, count in table_data %}
+            <tr>
+                <td style="padding: 10px;">{{ label }}</td>
+                <td style="padding: 10px;">{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        const labels = {{ labels|safe }};
+        const data = {{ data|safe }};
+
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,  // X-axis labels
+                datasets: [{
+                    label: 'Sales Count',
+                    data: data,    // Y-axis data
+                    backgroundColor: 'rgba(43, 37, 245, 0.8)',  // Bar color
+                    borderColor: 'rgba(43, 37, 245, 0.8)',         // Bar border color
+                    borderWidth: 1
+                }]
+            },
+            options: {
+            plugins: {
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: (value) => value, // Display the value
+                    font: {
+                        size: 12,
+                        weight: 'bold'
+                    },
+                    color: '#000', // Label color
+                }
+            },
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        },
+        plugins: [ChartDataLabels] // Enable the DataLabels plugin
+    });
+
+        document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+        document.getElementById('from-date').addEventListener('change', updateFilters);
+        document.getElementById('to-date').addEventListener('change', updateFilters);
+
+        function updateFilters() {
+            const salesperson = document.getElementById('salesperson-filter').value;
+            const fromDate = document.getElementById('from-date').value;
+            const toDate = document.getElementById('to-date').value;
+            const url = new URL(window.location.href);
+
+
+            if (salesperson) {
+                url.searchParams.set('salesperson', salesperson);
+            } else {
+                url.searchParams.delete('salesperson');
+            }
+
+
+            if (fromDate) {
+                url.searchParams.set('from_date', fromDate);
+            } else {
+                url.searchParams.delete('from_date');
+            }
+
+            if (toDate) {
+                url.searchParams.set('to_date', toDate);
+            } else {
+                url.searchParams.delete('to_date');
+            }
+
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+{% endblock content %}
