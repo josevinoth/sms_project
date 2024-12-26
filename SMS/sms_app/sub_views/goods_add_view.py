@@ -392,9 +392,10 @@ def wh_excess_stock_email(self, *args, **kwargs):
                 </html>
                 """
 
-                recipient_list = ["prakash@bvmstorage.com","venkat@bvmstorage.com","sony@thebvmgroup.com","deepa@thebvmgroup.com"]  # Replace with actual recipients
+                # recipient_list = ["prakash@bvmstorage.com","venkat@bvmstorage.com","sony@thebvmgroup.com","deepa@thebvmgroup.com"]  # Replace with actual recipients
+                recipient_list = ["josevinoth83@gmail.com"]  # Replace with actual recipients
 
-                send_department_email('warehouse', subject, message, recipient_list)
+                send_department_email('warehouse', subject, message, recipient_list,email_type=1)
 
                 # Record that the email has been sent for this branch
                 if email_status:

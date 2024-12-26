@@ -68,54 +68,103 @@ def requirements_add(request,requirements_id=0):
         # return redirect('/SMS/requirements_list')
 
 def requirements_email(req_id):
- # send email
-    recipients = 'josevinoth.w@r2techsolutions.in, udhayakumar.d@r2techsolutions.in,poojitha.b@r2techsolutions.in,hariharasudhan.m@r2techsolutions.in'
-    req_num=RequirementsInfo.objects.get(pk=req_id).req_number
-    raised_by=RequirementsInfo.objects.get(pk=req_id).req_owner
-    raised_by_email=RequirementsInfo.objects.get(pk=req_id).req_owner.email
-    raised_on=RequirementsInfo.objects.get(pk=req_id).req_raisedon
-    backlog=RequirementsInfo.objects.get(pk=req_id).req_backlogs
-    module=RequirementsInfo.objects.get(pk=req_id).req_module
-    bug_improvement=RequirementsInfo.objects.get(pk=req_id).req_bugimprove
-    assigned_to=RequirementsInfo.objects.get(pk=req_id).req_implementedby
-    assigned_to_email=RequirementsInfo.objects.get(pk=req_id).req_implementedby.email
-    implmented_on=RequirementsInfo.objects.get(pk=req_id).req_implementedon
-    remarks=RequirementsInfo.objects.get(pk=req_id).req_remarks
-    status=RequirementsInfo.objects.get(pk=req_id).req_status
+    # send email
+    #    recipients = 'josevinoth.w@r2techsolutions.in, udhayakumar.d@r2techsolutions.in,poojitha.b@r2techsolutions.in,hariharasudhan.m@r2techsolutions.in'
+    recipients = 'josevinoth.w@r2techsolutions.in'
+    req = RequirementsInfo.objects.get(pk=req_id)
+    req_num = req.req_number
+    raised_by = req.req_owner
+    raised_by_email = req.req_owner.email
+    raised_on = req.req_raisedon
+    backlog = req.req_backlogs
+    module = req.req_module
+    bug_improvement = req.req_bugimprove
+    assigned_to = req.req_implementedby
+    assigned_to_email = req.req_implementedby.email
+    implmented_on = req.req_implementedon
+    remarks = req.req_remarks
+    status = req.req_status
+
     subject = f"{req_num}_Update"
 
-
     message = f"""
-    Dear User,
-
-    Please find below updates:
-
-    Requirement    : {backlog}
-    
-    Module         : {module}
-    
-    Raised By      : {raised_by}
-    
-    Raised On      : {raised_on}
-    
-    Bug/Improvement: {bug_improvement}
-    
-    Assigned To    : {assigned_to}
-    
-    Implemented On : {implmented_on}
-    
-    Status         : {status}
-    
-    Remarks        : {remarks}
-    
-    Regards,                        
-    IT Team                         
-    """
-
+        <html>
+            <head>
+                <style>
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-family: Arial, sans-serif;
+                        font-size: 14px;
+                    }}
+                    th, td {{
+                        border: 1px solid #ddd;
+                        padding: 10px;
+                    }}
+                    th {{
+                        background-color: #f4f4f4;
+                        color: #333;
+                        text-align: left;
+                    }}
+                    td {{
+                        vertical-align: top;
+                    }}
+                    .remarks div {{
+                        margin-bottom: 10px;
+                    }}
+                </style>
+            </head>
+            <body>
+                <p>Dear {raised_by},</p>
+                <p>Please find below the details:</p>
+                <table>
+                    <tr>
+                        <th>Requirement</th>
+                        <td>{backlog}</td>
+                    </tr>
+                    <tr>
+                        <th>Module</th>
+                        <td>{module}</td>
+                    </tr>
+                    <tr>
+                        <th>Raised By</th>
+                        <td>{raised_by}</td>
+                    </tr>
+                    <tr>
+                        <th>Raised On</th>
+                        <td>{raised_on}</td>
+                    </tr>
+                    <tr>
+                        <th>Bug/Improvement</th>
+                        <td>{bug_improvement}</td>
+                    </tr>
+                    <tr>
+                        <th>Assigned To</th>
+                        <td>{assigned_to}</td>
+                    </tr>
+                    <tr>
+                        <th>Implemented On</th>
+                        <td>{implmented_on}</td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>{status}</td>
+                    </tr>
+                    <tr>
+                        <th>Remarks</th>
+                        <td class="remarks">
+                            {''.join(f'<div>{remark}</div>' for remark in remarks.splitlines())}
+                        </td>
+                    </tr>
+                </table>
+                <p>Regards,<br>IT Admin</p>
+            </body>
+        </html>
+        """
     recipient_list = [email.strip() for email in recipients.split(',')]
     recipient_list.append(raised_by_email)
     recipient_list.append(assigned_to_email)
-    send_department_email('itadmin', subject, message, recipient_list)
+    send_department_email('itadmin', subject, message, recipient_list,email_type=1)
 
 # List requirements
 @login_required(login_url='login_page')
