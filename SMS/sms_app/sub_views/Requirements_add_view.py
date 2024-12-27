@@ -69,8 +69,8 @@ def requirements_add(request,requirements_id=0):
 
 def requirements_email(req_id):
     # send email
-    #    recipients = 'josevinoth.w@r2techsolutions.in, udhayakumar.d@r2techsolutions.in,poojitha.b@r2techsolutions.in,hariharasudhan.m@r2techsolutions.in'
-    recipients = 'josevinoth.w@r2techsolutions.in'
+    recipients = 'josevinoth.w@r2techsolutions.in, udhayakumar.d@r2techsolutions.in,poojitha.b@r2techsolutions.in,hariharasudhan.m@r2techsolutions.in'
+    # recipients = 'josevinoth.w@r2techsolutions.in'
     req = RequirementsInfo.objects.get(pk=req_id)
     req_num = req.req_number
     raised_by = req.req_owner
