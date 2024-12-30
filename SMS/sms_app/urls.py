@@ -579,4 +579,5 @@ urlpatterns = [
 
     path('salesperson-chart/', views.salesperson_chart, name='salesperson_chart'),
     path('monthly-summary/', views.monthly_summary, name='monthly_summary'),
+    path('salesperson_productivity_performance/', views.salesperson_productivity_performance, name='salesperson_productivity_performance'),
 ]
