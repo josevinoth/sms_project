@@ -4,74 +4,75 @@
 {% load crispy_forms_tags %}
 
 <body>
-    <h1 class="chart-title">Sales Count Per Salesperson</h1>
+<div class="col-md-1">
+    <a href="{% url 'sales_reports' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+<br>
+<h2 style="color:black;">Sales Vs Salesperson</h2>
 
-    <br>
-<div class="container-fluid row align-items-center" style="margin-bottom: 20px;">
-    <div class="col-md-1">
-        <a href="{% url 'sales_reports' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
+<hr>
+<br>
 
+<div class="container-fluid row align-items-center">
     <div class="col-md-11">
-
         <label for="salesperson-filter"><b>Salesperson:</b></label>
-        <select id="salesperson-filter" name="salesperson" class="box-shadow" style="margin-right: 20px;">
+        <select id="salesperson-filter" name="salesperson" class="box-shadow rounded m-1" >
             <option value="">All</option>
             {% for salesperson in salespersons %}
-                <option value="{{ salesperson }}"
+            <option value="{{ salesperson }}"
                     {% if salesperson == selected_salesperson %} selected {% endif %}>
-                    {{ salesperson }}
-                </option>
+                {{ salesperson }}
+            </option>
             {% endfor %}
         </select>
 
         <label for="from-date"><b> From:</b></label>
-        <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="box-shadow" style=" margin-right: 20px;">
+        <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="box-shadow">
 
         <label for="to-date"><b> To:</b></label>
         <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="box-shadow" >
     </div>
 </div>
- <canvas id="salesChart" width="300" height="100"></canvas>
-     <br>
-    <hr>
-    <h2 style="color:black;">Salesperson Data Table</h2>
-   <table id="monthly_summary_table" class="table table-striped table-bordered" border="2" style="width: 50%; border-collapse: collapse; ">
-       <thead class="thead-dark">
-        <tr>
-            <th>Salesperson</th>
-            <th>Total Sales Calls</th>
-            <th> Target Calls-New Customer</th>
-            <th>New Customer Calls</th>
-             <th>Target Calls-Existing Customer </th>
-            <th>Existing Customer Calls</th>
-            <th>Target Revenue</th>
-            <th>Actual Revenue</th>
-            <th>Performance %</th>
-             <th>Productivity %</th>
-        </tr>
+<br>
+<canvas id="salesChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
+<br>
+<hr>
+<table id="monthly_summary_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+    <tr>
+        <th>Salesperson</th>
+        <th>Total Sales Calls</th>
+        <th> Target Calls-New Customer</th>
+        <th>New Customer Calls</th>
+        <th>Target Calls-Existing Customer </th>
+        <th>Existing Customer Calls</th>
+        <th>Target Revenue</th>
+        <th>Actual Revenue</th>
+        <th>Performance %</th>
+        <th>Productivity %</th>
+    </tr>
     </thead>
     <tbody>
-        {% for row in sales_data %}
-        <tr>
-            <td>{{ row.salesperson }}</td>
-            <td>{{ row.total_sales }}</td>
-            <td>{{ row.target_new_customer_calls }}</td>
-            <td>{{ row.new_customer_calls }}</td>
-             <td>{{ row.target_existing_customer_calls }}</td>
-            <td>{{ row.existing_customer_calls }}</td>
-            <td>{{ row.target_revenue }}</td>
-            <td>{{ row.actual_revenue }}</td>
-             <td>{{ row.performance_percentage }}%</td>
-            <td>{{ row.productivity_percentage }}%</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="4" style="text-align: center;">No data available.</td>
-        </tr>
-        {% endfor %}
+    {% for row in sales_data %}
+    <tr>
+        <td>{{ row.salesperson }}</td>
+        <td>{{ row.total_sales }}</td>
+        <td>{{ row.target_new_customer_calls }}</td>
+        <td>{{ row.new_customer_calls }}</td>
+        <td>{{ row.target_existing_customer_calls }}</td>
+        <td>{{ row.existing_customer_calls }}</td>
+        <td>{{ row.target_revenue }}</td>
+        <td>{{ row.actual_revenue }}</td>
+        <td>{{ row.performance_percentage }}%</td>
+        <td>{{ row.productivity_percentage }}%</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="4" style="text-align: center;">No data available.</td>
+    </tr>
+    {% endfor %}
     </tbody>
 </table>
 
@@ -91,134 +92,127 @@
 } );
 </script>
 
-    <script>
-       const labels = {{ labels|safe }}; // Salesperson names
-        const newCustomerCalls = {{ new_customer_calls|safe }}; // New customer call counts
-        const existingCustomerCalls = {{ existing_customer_calls|safe }}; // Existing customer call counts
+<script>
+    const labels = {{ labels|safe }}; // Salesperson names
+     const newCustomerCalls = {{ new_customer_calls|safe }}; // New customer call counts
+     const existingCustomerCalls = {{ existing_customer_calls|safe }}; // Existing customer call counts
 
 
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        const salesChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,  // X-axis labels
-                datasets: [
-                {
-                        label: 'New Customer Calls',
-                        data: newCustomerCalls,
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)', // Blue
-                        borderColor: 'rgb(54, 162, 235)',
-                        borderWidth: 1,
-                        barThickness: 50, // Fixed bar width
-                        maxBarThickness: 50 //
-                    },
-                    {
-                        label: 'Existing Customer Calls',
-                        data: existingCustomerCalls,
-                        backgroundColor: 'rgba(255, 99, 132, 0.5)', // Red
-                        borderColor: 'rgb(255, 99, 132)',
-                        borderWidth: 1,
-                        barThickness: 50, // Fixed bar width
-            maxBarThickness: 50 //
-                    }
-                ]
-            },
-             options: {
-                plugins: {
-                legend: {
-        display: true,
-        position: 'top',
-        labels: {
-            font: {
-                size: 14, // Font size for legend labels
-                weight: 'bold' // Bold legend labels
-            },
-            color: '#000' // Color of legend labels
-        }
-    },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        formatter: (value) => value, // Display the value
-                        font: {
-                            size: 12,
-                            weight: 'bold'
-                        },
-                        color: '#000', // Label color
-                        backgroundColor: 'rgba(235, 233, 234, 0.8)',
-                borderRadius: 4,
-                padding: 5,
-                borderWidth: 1,
-                borderColor: '#000'
-                    }
-                },
-                responsive: true,
-                scales: {
-                     x: {
-                ticks: {
-                    font: {
-                        size: 12, // Font size for x-axis labels
-                        weight: 'bold' // Bold x-axis labels
-                    },
-                    color: '#000' // Black color for x-axis labels
-                }
-                    },
-                   y: {
-        beginAtZero: true,
-        title: {
-            display: true,
-            text: 'Number of Calls',
-            font: {
-                size: 16, // Font size for y-axis title
-                weight: 'bold' // Bold y-axis title
-            },
-            color: '#000' // Color of y-axis title
-        },
-        ticks: {
-            font: {
-                size: 10, // Font size for y-axis labels
-                weight: 'bold' // Bold y-axis labels
-            },
-            color: '#000' // Color of y-axis labels
-        }
-    }
-                }
-            },
-            plugins: [ChartDataLabels] // Enable the DataLabels plugin
-        });
+     const ctx = document.getElementById('salesChart').getContext('2d');
+     const salesChart = new Chart(ctx, {
+         type: 'bar',
+         data: {
+             labels: labels,  // X-axis labels
+             datasets: [
+             {
+                     data: newCustomerCalls,
+                     label: 'New Customer Calls',
+                     ...commonChartStyles.bar_chart_1, // Reuse style
+                 },
+                 {
+                     label: 'Existing Customer Calls',
+                     data: existingCustomerCalls,
+                     ...commonChartStyles.bar_chart_2, // Reuse style
 
-        document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
-        document.getElementById('from-date').addEventListener('change', updateFilters);
-        document.getElementById('to-date').addEventListener('change', updateFilters);
+                 }
+             ]
+         },
+          options: {
+             plugins: {
+             legend: {
+     display: true,
+     position: 'top',
+     labels: {
+         font: {
+             size: 14, // Font size for legend labels
+             weight: 'bold' // Bold legend labels
+         },
+         color: '#000' // Color of legend labels
+     }
+ },
+                 datalabels: {
+                     anchor: 'end',
+                     align: 'top',
+                     formatter: (value) => value, // Display the value
+                     font: {
+                         size: 12,
+                         weight: 'bold'
+                     },
+                     color: '#000', // Label color
+                     backgroundColor: 'rgba(235, 233, 234, 0.8)',
+             borderRadius: 4,
+             padding: 5,
+             borderWidth: 1,
+             borderColor: '#000'
+                 }
+             },
+             responsive: true,
+             scales: {
+                  x: {
+             ticks: {
+                 font: {
+                     size: 12, // Font size for x-axis labels
+                     weight: 'bold' // Bold x-axis labels
+                 },
+                 color: '#000' // Black color for x-axis labels
+             }
+                 },
+                y: {
+     beginAtZero: true,
+     title: {
+         display: true,
+         text: 'Number of Calls',
+         font: {
+             size: 16, // Font size for y-axis title
+             weight: 'bold' // Bold y-axis title
+         },
+         color: '#000' // Color of y-axis title
+     },
+     ticks: {
+         font: {
+             size: 10, // Font size for y-axis labels
+             weight: 'bold' // Bold y-axis labels
+         },
+         color: '#000' // Color of y-axis labels
+     }
+ }
+             }
+         },
+         plugins: [ChartDataLabels] // Enable the DataLabels plugin
+     });
 
-        function updateFilters() {
-            const salesperson = document.getElementById('salesperson-filter').value;
-            const fromDate = document.getElementById('from-date').value;
-            const toDate = document.getElementById('to-date').value;
-            const url = new URL(window.location.href);
+     document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+     document.getElementById('from-date').addEventListener('change', updateFilters);
+     document.getElementById('to-date').addEventListener('change', updateFilters);
+
+     function updateFilters() {
+         const salesperson = document.getElementById('salesperson-filter').value;
+         const fromDate = document.getElementById('from-date').value;
+         const toDate = document.getElementById('to-date').value;
+         const url = new URL(window.location.href);
 
 
-            if (salesperson) {
-                url.searchParams.set('salesperson', salesperson);
-            } else {
-                url.searchParams.delete('salesperson');
-            }
+         if (salesperson) {
+             url.searchParams.set('salesperson', salesperson);
+         } else {
+             url.searchParams.delete('salesperson');
+         }
 
 
-            if (fromDate) {
-                url.searchParams.set('from_date', fromDate);
-            } else {
-                url.searchParams.delete('from_date');
-            }
+         if (fromDate) {
+             url.searchParams.set('from_date', fromDate);
+         } else {
+             url.searchParams.delete('from_date');
+         }
 
-            if (toDate) {
-                url.searchParams.set('to_date', toDate);
-            } else {
-                url.searchParams.delete('to_date');
-            }
+         if (toDate) {
+             url.searchParams.set('to_date', toDate);
+         } else {
+             url.searchParams.delete('to_date');
+         }
 
-            window.location.href = url.toString();
-        }
-    </script>
+         window.location.href = url.toString();
+     }
+</script>
 </body>
 {% endblock content %}

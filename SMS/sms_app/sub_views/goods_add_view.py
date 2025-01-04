@@ -350,7 +350,7 @@ def wh_excess_stock_email(self, *args, **kwargs):
         in_stock = Warehouse_goods_info.objects.filter(
             wh_branch=branch, wh_check_in_out=1, wh_checkin_time__lte=current_time
         ).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum'] or 0
-        stock_values[name] = round(in_stock, 0)  # Use 'name' as the key
+        stock_values[name] = round(in_stock, 2)  # Use 'name' as the key
         stock_values_in_words[name] = to_camel_case(
             num2words(in_stock, to='currency', lang='en_IN')).replace("Euro", "Rupees").replace("Cents", "Paise")
 
@@ -358,8 +358,11 @@ def wh_excess_stock_email(self, *args, **kwargs):
 
     # Loop through each branch to check for excess stock and send email for exceeding branches
     for name, value in stock_values.items():
-        # Check if stock exceeds 20 crores for the branch
-        if value > 200000000:  # If stock value exceeds 20 crores
+        # Set the threshold for each branch
+        threshold = 350000000 if name == "maa" else 200000000
+
+        # Check if stock exceeds the threshold for the branch
+        if value > threshold:
             # Check if the email has already been sent for this branch today
             email_status = wh_excess_stock_email_status.objects.filter(date=current_date, branch=name).first()
 
@@ -381,8 +384,8 @@ def wh_excess_stock_email(self, *args, **kwargs):
                         </tr>
                         <tr>
                             <td>{name.upper()}</td>
-                            <td>{stock_values[name]}</td>  <!-- Accessing the correct key -->
-                            <td>{stock_values_in_words[name]}</td>  <!-- Accessing the correct key -->
+                            <td>{stock_values[name]}</td>
+                            <td>{stock_values_in_words[name]}</td>
                         </tr>
                     </table>
                     <br>
@@ -392,25 +395,32 @@ def wh_excess_stock_email(self, *args, **kwargs):
                 </html>
                 """
 
-                recipient_list = ["prakash@bvmstorage.com","venkat@bvmstorage.com","sony@thebvmgroup.com","deepa@thebvmgroup.com"]  # Replace with actual recipients
-                # recipient_list = ["josevinoth83@gmail.com"]  # Replace with actual recipients
+                recipient_list = [
+                    "prakash@bvmstorage.com", "venkat@bvmstorage.com",
+                    "sony@thebvmgroup.com", "deepa@thebvmgroup.com",
+                    "niranjankumar@bvmstorage.com", "vinoth@bvmstorage.com"
+                ]
+                # recipient_list = [
+                #     "josevinoth83@gmail.com"
+                # ]
 
-                send_department_email('warehouse', subject, message, recipient_list,email_type=1)
+                send_department_email('warehouse', subject, message, recipient_list, email_type=1)
 
                 # Record that the email has been sent for this branch
                 if email_status:
                     email_status.email_sent = True
-                    email_status.stock_value = value  # Store the stock value for the branch
+                    email_status.stock_value = value
                     email_status.save()
                 else:
                     wh_excess_stock_email_status.objects.create(
                         date=current_date, email_sent=True, branch=name, stock_value=value
                     )
 
-    # If total stock value drops below 20 crores, reset the email sent status for the respective branches
+    # If total stock value drops below the threshold, reset the email sent status for the respective branches
     for name, value in stock_values.items():
-        if value < 200000000:
-            # Reset the email sent status for the branch if its stock value is below 20 crores
+        threshold = 350000000 if name == "maa" else 200000000
+
+        if value < threshold:
             email_status = wh_excess_stock_email_status.objects.filter(date=current_date, branch=name).first()
             if email_status and email_status.email_sent:
                 email_status.email_sent = False

@@ -1,12 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator
-from django.db.models.aggregates import Sum, Max, Min
+from django.db.models.aggregates import Sum, Max
 from django.http import HttpResponse
 import json
 from django.contrib import messages
 from ..forms import InvoiceaddForm
-from ..models import Gatein_pre_info,Gatein_info,VehicletypeInfo,Dispatch_info,Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
+from ..models import VehicletypeInfo,Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
 from django.shortcuts import render, redirect
 from datetime import date, datetime
 
