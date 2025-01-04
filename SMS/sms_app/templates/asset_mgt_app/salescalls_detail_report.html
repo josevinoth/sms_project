@@ -1,0 +1,146 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+
+<body>
+    <h1 class="chart-title">Sales Calls Details</h1>
+
+    <!-- Filters -->
+    <div class="container-fluid row align-items-center" style="margin-bottom: 20px;">
+        <div class="col-md-1">
+            <a href="{% url 'sales_reports' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+
+        <div class="col-md-11">
+            <label for="salesperson-filter"><b>Salesperson:</b></label>
+            <select id="salesperson-filter" name="salesperson" class="box-shadow" style=" margin-right: 20px;">
+                <option value="">All</option>
+                {% for salesperson in salespersons %}
+                    <option value="{{ salesperson }}"
+                        {% if salesperson == selected_salesperson %} selected {% endif %}>
+                        {{ salesperson }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="from-date"><b> From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="box-shadow" style="margin-right: 20px;">
+
+            <label for="to-date"><b> To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="box-shadow">
+        </div>
+    </div>
+
+    <!-- Table for Call Types -->
+    <h1 class="chart-title">Call Type</h1>
+    <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>Sr No</th>
+                <th>Salesperson</th>
+                {% for call_type in call_types %}
+                    <th>{{ call_type }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in table_data_types %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ row.0 }}</td>
+                {% for value in row|slice:"1:" %}
+                    <td>{{ value }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Table for Call Purposes -->
+     <h1 class="chart-title">Call Purpose</h1>
+    <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>Sr No</th>
+                <th>Salesperson</th>
+                {% for call_purpose in call_purposes %}
+                    <th>{{ call_purpose }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in table_data_purposes %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ row.0 }}</td>
+                {% for value in row|slice:"1:" %}
+                    <td>{{ value }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Table for Call Natures -->
+     <h1 class="chart-title">Call Nature</h1>
+    <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>Sr No</th>
+                <th>Salesperson</th>
+                {% for call_nature in call_natures %}
+                    <th>{{ call_nature }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in table_data_natures %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ row.0 }}</td>
+                {% for value in row|slice:"1:" %}
+                    <td>{{ value }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<script>
+document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+document.getElementById('from-date').addEventListener('change', updateFilters);
+document.getElementById('to-date').addEventListener('change', updateFilters);
+
+function updateFilters() {
+    const salesperson = document.getElementById('salesperson-filter').value;
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const url = new URL(window.location.href);
+
+    // Set or remove query parameters based on user selection
+    if (salesperson) {
+        url.searchParams.set('salesperson', salesperson);
+    } else {
+        url.searchParams.delete('salesperson');
+    }
+
+    if (fromDate) {
+        url.searchParams.set('from_date', fromDate);
+    } else {
+        url.searchParams.delete('from_date');
+    }
+
+    if (toDate) {
+        url.searchParams.set('to_date', toDate);
+    } else {
+        url.searchParams.delete('to_date');
+    }
+
+    // Reload the page with the new query parameters
+    window.location.href = url.toString();
+}
+</script>
+
+</body>
+
+{% endblock %}

@@ -78,7 +78,7 @@
         <!-- Bar Chart -->
         <div style="flex: 1; margin-right: 10px;">
             <h2 style="color:black;">Sales Count Per Salesperson</h2>
-            <canvas id="salesChart" width="300" height="300"></canvas>
+            <canvas id="salesChart" width="100" height="100"></canvas>
         </div>
 
         <!-- Productivity Donut Chart -->
@@ -101,38 +101,95 @@
         const performancePercentages = {{ performance_percentages|safe }}; // Performance data
         const productivityPercentages = {{ productivity_percentages|safe }}; // Productivity data
 
-        // Sales Chart (Bar)
+
         const ctx = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctx, {
+        const salesChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: labels,  // X-axis labels
                 datasets: [
-                    {
+                {
                         label: 'New Customer Calls',
                         data: newCustomerCalls,
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)', // Blue
                         borderColor: 'rgb(54, 162, 235)',
-                        borderWidth: 1
+                        borderWidth: 1,
+                        barThickness: 8, // Fixed bar width
+                        maxBarThickness: 8 //
                     },
                     {
                         label: 'Existing Customer Calls',
                         data: existingCustomerCalls,
-                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)', // Red
                         borderColor: 'rgb(255, 99, 132)',
-                        borderWidth: 1
+                        borderWidth: 1,
+                        barThickness: 8, // Fixed bar width
+            maxBarThickness: 8 //
                     }
                 ]
             },
-            options: {
-                responsive: true,
+             options: {
                 plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
+                legend: {
+        display: true,
+        position: 'top',
+        labels: {
+            font: {
+                size: 14, // Font size for legend labels
+                weight: 'bold' // Bold legend labels
+            },
+            color: '#000' // Color of legend labels
+        }
+    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: (value) => value, // Display the value
+                        font: {
+                            size: 8,
+                            weight: 'bold'
+                        },
+                        color: '#000', // Label color
+                    backgroundColor: 'rgba(235, 233, 234, 0.8)',
+                borderRadius: 4,
+                padding: 5,
+                borderWidth: 1,
+                borderColor: '#000'
                     }
+                },
+                responsive: true,
+                scales: {
+                     x: {
+                ticks: {
+                    font: {
+                        size: 8, // Font size for x-axis labels
+                        weight: 'bold' // Bold x-axis labels
+                    },
+                    color: '#000' // Black color for x-axis labels
                 }
-            }
+                    },
+                   y: {
+        beginAtZero: true,
+        title: {
+            display: true,
+            text: 'Number of Calls',
+            font: {
+                size: 10, // Font size for y-axis title
+                weight: 'bold' // Bold y-axis title
+            },
+            color: '#000' // Color of y-axis title
+        },
+        ticks: {
+            font: {
+                size: 10, // Font size for y-axis labels
+                weight: 'bold' // Bold y-axis labels
+            },
+            color: '#000' // Color of y-axis labels
+        }
+    }
+                }
+            },
+            plugins: [ChartDataLabels] // Enable the DataLabels plugin
         });
 
         // Productivity Donut Chart
@@ -164,6 +221,39 @@
                 }]
             }
         });
+
+         document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+        document.getElementById('from-date').addEventListener('change', updateFilters);
+        document.getElementById('to-date').addEventListener('change', updateFilters);
+
+        function updateFilters() {
+            const salesperson = document.getElementById('salesperson-filter').value;
+            const fromDate = document.getElementById('from-date').value;
+            const toDate = document.getElementById('to-date').value;
+            const url = new URL(window.location.href);
+
+
+            if (salesperson) {
+                url.searchParams.set('salesperson', salesperson);
+            } else {
+                url.searchParams.delete('salesperson');
+            }
+
+
+            if (fromDate) {
+                url.searchParams.set('from_date', fromDate);
+            } else {
+                url.searchParams.delete('from_date');
+            }
+
+            if (toDate) {
+                url.searchParams.set('to_date', toDate);
+            } else {
+                url.searchParams.delete('to_date');
+            }
+
+            window.location.href = url.toString();
+        }
     </script>
 </body>
 {% endblock content %}

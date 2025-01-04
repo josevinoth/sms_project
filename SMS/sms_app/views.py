@@ -129,3 +129,5 @@ from .sub_views.sales_reports_view import sales_call_report,sales_targets_view
 from .sub_views.salesperson_chart_view import salesperson_chart
 from .sub_views.salesperson_chart_view import monthly_summary
 from .sub_views.salesperson_chart_view import salesperson_productivity_performance
+from .sub_views.salesperson_chart_view import salescalls_details
+from .sub_views.salesperson_chart_view import targets_actuals
