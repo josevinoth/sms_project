@@ -41,4 +41,45 @@ const commonChartStyles = {
             color: '#000',
         },
     },
+
 };
+function createDonutChart(ctx, labels, data, labelText, colors) {
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: labelText,
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'right',
+                    labels: {
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        color: '#000'
+                    }
+                },
+                datalabels: { // Data Labels configuration
+                    color: '#000', // Text color
+                    font: {
+                        size: 12,
+                        weight: 'bold'
+                    },
+                    formatter: (value) => `${value}%`
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: true // Prevent resizing issues
+        },
+        plugins: [ChartDataLabels] // Register the plugin
+    });
+}

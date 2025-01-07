@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from django.db.models import Count, Q,Sum
+from django.db.models import Count, Q,Sum,Count, Case, When, Value, CharField
 from django.db.models import F, Subquery, OuterRef
-from ..models import Sales_Comments_Info, MyUser,SalesInfo,Sales_target_info,BusinessrevenueInfo,Calltype,Callpurpose,Callnature,User_extInfo
+from ..models import Sales_Comments_Info, MyUser,SalesInfo,Sales_target_info,BusinessrevenueInfo,Calltype,Callpurpose,Callnature,User_extInfo,CustomerInfo
 
 def salesperson_chart(request):
 
@@ -216,6 +216,7 @@ def salesperson_productivity_performance(request):
     for item in sales_data_query:
         total_sales = item['total_sales']
         total_quotes = item['total_quotes']
+        won_business_count = item['won_business_count']  # Ensure this is captured
         performance_percentage = round(
             (item['unique_customers'] / total_sales) * 100, 2
         ) if total_sales > 0 else 0.0
@@ -232,6 +233,8 @@ def salesperson_productivity_performance(request):
             "total_sales": total_sales,
             "new_customer_calls": item['new_customer_calls'],
             "existing_customer_calls": item['existing_customer_calls'],
+            "won_business_count": won_business_count,
+            "total_quotes": total_quotes,  # Ensure total quotes is included
             "target_existing_customer_calls": item['target_existing_customer_calls'] or 0,
             "target_new_customer_calls": item['target_new_customer_calls'] or 0,
             "target_revenue": item['target_revenue'] or 0,
@@ -482,3 +485,94 @@ def targets_actuals(request):
         'from_date': from_date,
         'to_date': to_date
     })
+
+def sales_call_report(request):
+    # Query SalesInfo and related Sales_Comments_Info
+    sales_reports = Sales_Comments_Info.objects.select_related(
+        'sc_sales_number',
+        'sc_updated_by'
+    ).all()
+
+    context = {
+        'sales_reports': sales_reports
+    }
+    return render(request,"asset_mgt_app/sales_call_report.html",context)
+
+from django.db.models import Count, Case, When, Value, CharField
+
+def business_won_loss(request):
+    selected_salesperson = request.GET.get('salesperson', None)
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+
+    # Fetch salespersons (filtered by Sales department)
+    salespersons = MyUser.objects.select_related('user_extinfo').filter(
+        user_extinfo__department__dept_name="Sales"
+    ).distinct().values_list('first_name', flat=True)
+
+    # Query to calculate chart data
+    sales_data_query = SalesInfo.objects.select_related(
+        's_updated_by',
+        's_customer_name',
+        's_bus_won_not'
+    )
+
+    # Apply filters for salesperson and date range
+    if selected_salesperson:
+        sales_data_query = sales_data_query.filter(s_updated_by__first_name=selected_salesperson)
+    if from_date:
+        sales_data_query = sales_data_query.filter(s_updated_at__date__gte=from_date)
+    if to_date:
+        sales_data_query = sales_data_query.filter(s_updated_at__date__lte=to_date)
+
+    # Annotate customer type and group data for the chart
+    chart_data_query = sales_data_query.annotate(
+        customer_type=Case(
+            When(s_customer_name__id=210, then=Value('New')),
+            default=Value('Existing'),
+            output_field=CharField()
+        )
+    ).values(
+        'customer_type',  # New or Existing
+        's_bus_won_not'  # Business status (Yes/No)
+    ).annotate(count=Count('id'))
+
+    # Prepare data for chart
+    categories = ['New', 'Existing']
+    business_status = list(set(item['s_bus_won_not'] for item in chart_data_query))
+    chart_data = {status: [0] * len(categories) for status in business_status}
+
+    for item in chart_data_query:
+        customer_type_index = categories.index(item['customer_type'])
+        chart_data[item['s_bus_won_not']][customer_type_index] = item['count']
+
+    # Prepare data for table
+    table_data = []
+    for item in sales_data_query:
+        salesperson = item.s_updated_by.first_name if item.s_updated_by else 'N/A'
+        customer_name = item.s_customer_name.cu_nameshort if item.s_customer_name else 'N/A'
+        new_customer_name = item.s_customer_new_name if item.s_customer_new_name else 'N/A'
+        business_status = item.s_bus_won_not if item.s_bus_won_not else 'N/A'
+        remarks = item.s_remarks if item.s_remarks else 'N/A'
+
+        table_data.append({
+            'salesperson': salesperson,
+            'customer_name': customer_name,
+            'new_customer_name': new_customer_name,
+            'business_status': business_status,
+            'remarks': remarks,
+        })
+
+    # Context for the template
+    context = {
+        'categories': categories,
+        'chart_data': chart_data,
+        'business_status': business_status,
+        'table_data': table_data,
+        'salespersons': salespersons,
+        'selected_salesperson': selected_salesperson,
+        'from_date': from_date,
+        'to_date': to_date
+    }
+
+    return render(request, "asset_mgt_app/business_won_loss.html", context)

@@ -98,88 +98,62 @@
      const existingCustomerCalls = {{ existing_customer_calls|safe }}; // Existing customer call counts
 
 
-     const ctx = document.getElementById('salesChart').getContext('2d');
-     const salesChart = new Chart(ctx, {
-         type: 'bar',
-         data: {
-             labels: labels,  // X-axis labels
-             datasets: [
-             {
-                     data: newCustomerCalls,
-                     label: 'New Customer Calls',
-                     ...commonChartStyles.bar_chart_1, // Reuse style
-                 },
-                 {
-                     label: 'Existing Customer Calls',
-                     data: existingCustomerCalls,
-                     ...commonChartStyles.bar_chart_2, // Reuse style
+   const ctxSales = document.getElementById('salesChart').getContext('2d');
+new Chart(ctxSales, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'New Customer Calls',
+            data: newCustomerCalls,
+            ...commonChartStyles.bar_chart_1,
 
-                 }
-             ]
-         },
-          options: {
-             plugins: {
-             legend: {
-     display: true,
-     position: 'top',
-     labels: {
-         font: {
-             size: 14, // Font size for legend labels
-             weight: 'bold' // Bold legend labels
-         },
-         color: '#000' // Color of legend labels
-     }
- },
-                 datalabels: {
-                     anchor: 'end',
-                     align: 'top',
-                     formatter: (value) => value, // Display the value
-                     font: {
-                         size: 12,
-                         weight: 'bold'
-                     },
-                     color: '#000', // Label color
-                     backgroundColor: 'rgba(235, 233, 234, 0.8)',
-             borderRadius: 4,
-             padding: 5,
-             borderWidth: 1,
-             borderColor: '#000'
-                 }
-             },
-             responsive: true,
-             scales: {
-                  x: {
-             ticks: {
-                 font: {
-                     size: 12, // Font size for x-axis labels
-                     weight: 'bold' // Bold x-axis labels
-                 },
-                 color: '#000' // Black color for x-axis labels
-             }
-                 },
-                y: {
-     beginAtZero: true,
-     title: {
-         display: true,
-         text: 'Number of Calls',
-         font: {
-             size: 16, // Font size for y-axis title
-             weight: 'bold' // Bold y-axis title
-         },
-         color: '#000' // Color of y-axis title
-     },
-     ticks: {
-         font: {
-             size: 10, // Font size for y-axis labels
-             weight: 'bold' // Bold y-axis labels
-         },
-         color: '#000' // Color of y-axis labels
-     }
- }
-             }
-         },
-         plugins: [ChartDataLabels] // Enable the DataLabels plugin
-     });
+        }, {
+            label: 'Existing Customer Calls',
+            data: existingCustomerCalls,
+            ...commonChartStyles.bar_chart_2,
+
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            datalabels: {
+                anchor: 'end', // Position of the label (above the bar)
+                align: 'top',  // Position the label above the bar
+                formatter: (value) => value, // Show the value in the label
+                font: {
+                    size: 12,
+                    weight: 'bold',
+                },
+                color: '#000', // Label text color
+                backgroundColor: 'rgba(235, 233, 234, 0.8)', // Background color for the label
+                borderRadius: 4,
+                padding: 5,
+                borderWidth: 1,
+                borderColor: '#000', // Border around the label
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 12, weight: 'bold' },
+                    color: '#000',
+                },
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 12, weight: 'bold' },
+                    color: '#000',
+                },
+            }
+        }
+    },
+    plugins: [ChartDataLabels] // Enable the ChartDataLabels plugin
+});
+
 
      document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
      document.getElementById('from-date').addEventListener('change', updateFilters);
