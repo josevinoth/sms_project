@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300&display=swap');
-/* Base Styles (Desktop Default) */
+/*font-family: 'Yaldevi', sans-serif;*/
+
 .sidenav {
   font-family: 'Heebo', sans-serif;
   height: 100%;
@@ -12,11 +13,12 @@
   background-color: #111;
   overflow-x: hidden;
   padding-top: 12px;
-  padding-left: 10px;
+  padding-left:10px;
 }
 
-.sidenav a, p {
+.sidenav a,p {
   padding: 10px;
+ /*  padding: 8px 8px 8px 32px;*/
   text-decoration: none;
   font-size: 16px;
   color: #ffffff;
@@ -24,10 +26,12 @@
 }
 
 .sidenav a:hover {
-  color: #8de4e9;
+  color:#8de4e9;
   font-weight: bold;
 }
 
+/*Collapsible List*/
+/* Style the button that is used to open and close the collapsible content */
 .collapsible {
   background-color: #111;
   color: #ffffff;
@@ -40,149 +44,396 @@
   font-size: 16px;
 }
 
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active, .collapsible:hover {
+  color: #8de4e9;
+  font-weight: bold;
+}
+
+.content a:hover {
+  color: #8de4e9;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Style the collapsible content. Note: hidden by default */
 .content {
   padding: 10px;
-  font-size: 16px;
+  font-size: 20px;
   display: none;
   overflow: hidden;
-  background-color: #111;
+  background-color:  #111;
+  font-size: 16px;
+}
+
+.collapsible:after {
+  content: '\02795'; /* Unicode character for "plus" sign (+) */
+  font-size: 13px;
+  color: white;
+  float: right;
+  margin-left: 5px;
+}
+
+.active:after {
+  content: "\2796"; /* Unicode character for "minus" sign (-) */
 }
 
 .main {
-  margin-left: 390px;
+  margin-left: 380px; /* Same as the width of the sidenav */
+/*  font-size: 10px; *//* Increased text to enable scrolling */
   padding: 0px 10px;
 }
 
-input, select {
-  font-weight: bold !important;
-  font-size: 15px !important;
-  background-color: #f5f5f0 !important;
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
 }
 
-.table {
-  font-family: 'Heebo', sans-serif;
-  background-color: white;
-  border-color: black;
+/*other tags*/
+hr {
+    background-color:black;
+    border:none;
+    height:5px;
+    margin-left:10px;
+    margin-right:10px;
+    display: block;
+
 }
 
-/* Header Style */
-.header_style {
-  background-color: #111;
-  border-bottom: 5px solid #3366ff;
-  text-align: center;
+td {
+    text-align: center; /* Or right or left */
 }
 
-/* Side Nav Separator Style */
-.hr_style {
-  border-bottom: 2px solid #3366ff;
+h1, h2{
+    font-family: 'Heebo', sans-serif;
+    color:#8de4e9;
+    font-weight: bold;
+    margin-left:10px;
 }
 
-/* Nav Header Style */
-.nav_header_style {
-  border-bottom: 5px solid #3366ff;
-  color: white;
-}
-input, select {
-  font-weight: bold !important;
-  font-size: 15px !important;
-  background-color: #f5f5f0 !important;
-}
+h4{
+    font-family: 'Heebo', sans-serif;
+    font-weight: bold;
+    }
+/*Login Page*/
 
-.input-group-prepend span {
-  width: 190px;
-  background-color: #8de4e9;
-  color: black;
-  font-weight: bold;
-  font-size: 14px !important;
-  font-family: 'Heebo:wght@400', sans-serif;
-}
-
-
-
-.card-header, .input-group-text, .form-control, .btn {
-  font-family: 'Heebo', sans-serif;
-  font-weight: bold;
-}
-
-/* General Button Style */
-#add_enquiry {
-  display: block; /* Ensures proper alignment in columns */
-  margin: 10px auto; /* Center the button horizontally */
-  width: auto; /* Default width for desktops */
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 5px;
-}
-
-
-/* Laptops and Desktops */
 @media (min-width: 1025px) {
-  .sidenav {
-    width: 390px;
+  .h-custom-2 {
+    height: 100%;
   }
+}
+input,select{
+    font-weight: bold!important;
+    font-size:15px!important;
+    background-color: #f5f5f0!important;
+}
 
-  .main {
-    margin-left: 400px;
-  }
+.input-group-prepend span{
+width: 190px;
+background-color: #8de4e9;
+font-color: black;
+font-weight: bold ;
+font-size:14px!important;
+color:black;
 
-  .sidenav a, p {
-    font-size: 16px;
-  }
+ font-family: 'Heebo:wght@400', sans-serif;
+}
 
-  .collapsible {
-    font-size: 16px;
-    padding: 10px;
-  }
+.card-body{
+margin: 2px;
+padding:20px;
+align:center;
+}
 
-  .content {
-    font-size: 16px;
-    padding: 10px;
-  }
+.card-header,.input-group-text,.form-control,.btn {
+font-family: 'Heebo', sans-serif;
+font-weight: bold;
+}
 
-  input, select {
-    font-size: 15px !important;
-  }
+.message{
+color:black;
+/*background:#f0ad4e;*/
+font-family: 'Heebo', sans-serif;
+font-weight: bold;
+font-size:30px;
+}
+
+/*Data Table*/
+.table{
+font-family: 'Heebo', sans-serif;
+background-color:white;
+border-color:black;
+}
+
+.table.dataTable thead tr th {
+  color: white;
+  text-align:center;
+}
+
+.badge a{
+font-size:16px;
+font-weight: bold;
+}
+
+/*header*/
+
+.header_style{
+background-color: #111;
+border-bottom:5px solid #3366ff;
+text-align: center;
+}
 
 
-  .table {
-    font-size: 16px;
-  }
+/*side nav separator style*/
+.hr_style{
+border-bottom:2px solid #3366ff;
+}
 
-  .header_style {
-    border-bottom: 5px solid #3366ff;
-    font-size: 24px;
-  }
+/*nav header*/
 
-  .hr_style {
-    border-bottom: 2px solid #3366ff;
-  }
+.nav_header_style{
+border-bottom:5px solid #3366ff;
+color:white;
+}
 
-  .nav_header_style {
-    border-bottom: 5px solid #3366ff;
-    font-size: 18px;
-  }
 
-  h1, h2 {
-    font-size: 32px;
-    margin-left: 10px;
-  }
+/*warehouse cycle*/
+#svg_form_time {
+  height: 15px;
+  max-width: 80%;
+  margin: 40px auto 20px;
+  display: block;
+}
 
-  h4 {
-    font-size: 22px;
-    margin-left: 10px;
-  }
+#svg_form_time circle,
+#svg_form_time rect {
+  fill: white;
+}
 
-  .button {
-    padding: 15px 25px;
-    font-size: 18px;
-  }
+.button {
+  background: rgb(237, 40, 70);
+  border-radius: 5px;
+  padding: 15px 25px;
+  display: inline-block;
+  margin: 10px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  box-shadow:0px 2px 5px rgb(0,0,0,0.5);
+}
 
-  nav > div a.nav-item.nav-link {
+.disabled {
+  display:none;
+}
+
+section {
+  padding: 50px ;
+  max-width: 300px;
+  margin: 30px auto;
+  background:white;
+  background:rgba(255,255,255,0.9);
+  backdrop-filter:blur(10px);
+  box-shadow:0px 2px 10px rgba(0,0,0,0.3);
+  border-radius:5px;
+  transition:transform 0.2s ease-in-out;
+}
+
+input {
+  width: 100%;
+  'margin: 7px 0px;
+  display: inline-block;
+  padding: 12px 25px;
+  box-sizing: border-box;
+  border-radius: 5px;
+  border: 1px solid lightgrey;
+  font-size: 1em;
+  font-family:inherit;
+  background:white;
+}
+
+p{
+  text-align:justify;
+margin-top:0;
+}
+
+/*Tab CSS*/
+
+nav > .nav.nav-tabs{
+  border: none;
+    color:#fff;
+    background:#272e38;
+    border-radius:0;
+
+}
+nav > div a.nav-item.nav-link,
+nav > div a.nav-item.nav-link.active
+{
+  border: none;
     padding: 18px 25px;
-    font-size: 16px;
-  }
+    color:#fff;
+    background:#272e38;
+    border-radius:0;
+}
 
-  .card-body {
-    padding: 20px;
+nav > div a.nav-item.nav-link.active:after
+ {
+  content: "";
+  position: relative;
+  bottom: -60px;
+  left: -10%;
+  border: 15px solid transparent;
+  border-top-color: #5bc0de ;
+}
+.tab-content{
+    background: #fdfdfd;
+    line-height: 25px;
+    border: 1px solid #ddd;
+    border-top:5px solid #5bc0de;
+    border-bottom:5px solid #5bc0de;
+    padding:30px 25px;
+}
+
+nav > div a.nav-item.nav-link:hover,
+nav > div a.nav-item.nav-link:focus
+{
+  border: none;
+    background: #5bc0de ;
+    color:#fff;
+    border-radius:0;
+    transition:background 0.20s linear;
+}
+
+/*Disable anchor*/
+.disable_a_href{
+    pointer-events: none;
+    background:#c0c0c0 !important;
+    color:#000000 !important;
+}
+
+/*Disable anchor*/
+.disable_a_href_list{
+    pointer-events: none;
+    background:yellow !important;
+    color:red !important;
+}
+
+/*Enable anchor*/
+.enable_a_href{
+    pointer-events: 1;
+}
+
+/*page Loader*/
+#loader {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#loader img {
+    width: 100px; /* Adjust the width as needed */
+    height: 100px; /* Adjust the height as needed */
+    display: block; /* Ensure the image is a block element */
+    margin: 0 auto; /* Center the image horizontally */
+}
+
+/*blink text*/
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
   }
+  50% {
+    opacity: 0;
+  }
+}
+
+.blink {
+  animation: blink 1s infinite;
+}
+
+/*light border for custom multiselect dropdown*/
+    .custom-multiselect-button {
+        border: 1px solid #cccccc;  /* Light gray border */
+        border-radius: 5px;         /* Optional: Rounded corners */
+        padding: 5px 10px;          /* Padding for better appearance */
+        background-color: #f9f9f9;  /* Optional: Light background color */
+        color: #333;                /* Optional: Darker text for contrast */
+    }
+
+/*Multi select dropdown style
+
+/* Style the multiselect container and list items */
+.multiselect-container {
+      max-width: 1000px !important;  /* Set your desired max width for the dropdown */
+      min-width: 375px;              /* Ensure a minimum width */
+      width: 100% !important;        /* Ensure it fills the width of the button */
+      box-sizing: border-box;
+ }
+
+.multiselect-container li {
+    display: flex;
+    align-items: center;
+    white-space: nowrap; /* Ensure the text doesn't break */
+    padding: 5px; /* Add padding for spacing */
+}
+
+/* Align checkbox and label properly */
+.multiselect-container li a label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 5px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.multiselect-container li a label input[type="checkbox"] {
+    margin-right: 10px; /* Add space between checkbox and label */
+}
+
+/* Fix for the search input box width */
+.multiselect-container input[type="text"] {
+    width: 50%; /* Make the search box fill the container width */
+    margin-bottom: 10px; /* Add space below the search box */
+    padding: 5px;
+}
+
+/* Align the "Select All" text */
+.multiselect-container .multiselect-all {
+    margin-left: 5px;
+}
+
+/* chart-styles.css */
+.chart-container {
+    background: white;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.chart-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+.legend-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #000;
+}
+
+.box-shadow {
+box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.4);
+width: 200px;
+padding: 5px;
+font-size: 12px;
 }

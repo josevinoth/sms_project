@@ -1,4 +1,4 @@
-from .sub_views.send_department_email import send_department_email
+from .sub_views.send_department_email import send_department_email,send_department_email_html
 from .sub_views.warehouse_email_view import warehouse_send_email_view
 from .sub_views.assetinfo_view import assetinfo_add,asset_list,asset_delete,asset_search,un_assigned_asset_list
 from .sub_views.assign_asset_add_view import assign_asset_add,assign_asset_delete,assign_asset_list_new
@@ -126,3 +126,9 @@ from .sub_views.wh_highvaluecheck_add_view import highvalue_add,highvalue_list,h
 from .sub_views.dispatch_add_view import gate_out_email
 from .sub_views.reports_view import profit_loss_report
 from .sub_views.sales_reports_view import sales_call_report,sales_targets_view
+from .sub_views.salesperson_chart_view import salesperson_chart
+from .sub_views.salesperson_chart_view import monthly_summary
+from .sub_views.salesperson_chart_view import salesperson_productivity_performance
+from .sub_views.salesperson_chart_view import salescalls_details
+from .sub_views.salesperson_chart_view import targets_actuals
+from .sub_views.salesperson_chart_view import business_won_loss

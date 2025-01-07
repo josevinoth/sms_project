@@ -1,0 +1,192 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+<body>
+<div class="col-md-1">
+    <a href="{% url 'sales_reports' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+<br>
+<h2 style="color:black;">Sales Vs Salesperson</h2>
+
+<hr>
+<br>
+
+<div class="container-fluid row align-items-center">
+    <div class="col-md-11">
+        <label for="salesperson-filter"><b>Salesperson:</b></label>
+        <select id="salesperson-filter" name="salesperson" class="box-shadow rounded m-1" >
+            <option value="">All</option>
+            {% for salesperson in salespersons %}
+            <option value="{{ salesperson }}"
+                    {% if salesperson == selected_salesperson %} selected {% endif %}>
+                {{ salesperson }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="from-date"><b> From:</b></label>
+        <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="box-shadow">
+
+        <label for="to-date"><b> To:</b></label>
+        <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="box-shadow" >
+    </div>
+</div>
+<br>
+<canvas id="salesChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
+<br>
+<hr>
+<table id="monthly_summary_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+    <tr>
+        <th>Salesperson</th>
+        <th>Total Sales Calls</th>
+        <th> Target Calls-New Customer</th>
+        <th>New Customer Calls</th>
+        <th>Target Calls-Existing Customer </th>
+        <th>Existing Customer Calls</th>
+        <th>Target Revenue</th>
+        <th>Actual Revenue</th>
+        <th>Performance %</th>
+        <th>Productivity %</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for row in sales_data %}
+    <tr>
+        <td>{{ row.salesperson }}</td>
+        <td>{{ row.total_sales }}</td>
+        <td>{{ row.target_new_customer_calls }}</td>
+        <td>{{ row.new_customer_calls }}</td>
+        <td>{{ row.target_existing_customer_calls }}</td>
+        <td>{{ row.existing_customer_calls }}</td>
+        <td>{{ row.target_revenue }}</td>
+        <td>{{ row.actual_revenue }}</td>
+        <td>{{ row.performance_percentage }}%</td>
+        <td>{{ row.productivity_percentage }}%</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="4" style="text-align: center;">No data available.</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    $(document).ready(function() {
+    $('#monthly_summary_table').DataTable(
+        {
+        scrollY: "600px",
+<!--        scrollX: true,-->
+        scrollCollapse: true,
+        order: [1, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    } );
+} );
+</script>
+
+<script>
+    const labels = {{ labels|safe }}; // Salesperson names
+     const newCustomerCalls = {{ new_customer_calls|safe }}; // New customer call counts
+     const existingCustomerCalls = {{ existing_customer_calls|safe }}; // Existing customer call counts
+
+
+   const ctxSales = document.getElementById('salesChart').getContext('2d');
+new Chart(ctxSales, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'New Customer Calls',
+            data: newCustomerCalls,
+            ...commonChartStyles.bar_chart_1,
+
+        }, {
+            label: 'Existing Customer Calls',
+            data: existingCustomerCalls,
+            ...commonChartStyles.bar_chart_2,
+
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            datalabels: {
+                anchor: 'end', // Position of the label (above the bar)
+                align: 'top',  // Position the label above the bar
+                formatter: (value) => value, // Show the value in the label
+                font: {
+                    size: 12,
+                    weight: 'bold',
+                },
+                color: '#000', // Label text color
+                backgroundColor: 'rgba(235, 233, 234, 0.8)', // Background color for the label
+                borderRadius: 4,
+                padding: 5,
+                borderWidth: 1,
+                borderColor: '#000', // Border around the label
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 12, weight: 'bold' },
+                    color: '#000',
+                },
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 12, weight: 'bold' },
+                    color: '#000',
+                },
+            }
+        }
+    },
+    plugins: [ChartDataLabels] // Enable the ChartDataLabels plugin
+});
+
+
+     document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+     document.getElementById('from-date').addEventListener('change', updateFilters);
+     document.getElementById('to-date').addEventListener('change', updateFilters);
+
+     function updateFilters() {
+         const salesperson = document.getElementById('salesperson-filter').value;
+         const fromDate = document.getElementById('from-date').value;
+         const toDate = document.getElementById('to-date').value;
+         const url = new URL(window.location.href);
+
+
+         if (salesperson) {
+             url.searchParams.set('salesperson', salesperson);
+         } else {
+             url.searchParams.delete('salesperson');
+         }
+
+
+         if (fromDate) {
+             url.searchParams.set('from_date', fromDate);
+         } else {
+             url.searchParams.delete('from_date');
+         }
+
+         if (toDate) {
+             url.searchParams.set('to_date', toDate);
+         } else {
+             url.searchParams.delete('to_date');
+         }
+
+         window.location.href = url.toString();
+     }
+</script>
+</body>
+{% endblock content %}

@@ -12,7 +12,7 @@
 
 <div class="container-fluid row">
     <div class="col-md-1">
-        <a href="{% url 'sales_targets_view' %}" class="btn btn-primary btn-block btn-lg">
+        <a href="{% url 'sales_reports' %}" class="btn btn-primary btn-block btn-lg">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
@@ -50,7 +50,7 @@
             {% for target in sales_targets %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ target.st_start_date }}</td> #sc_updated_at
+                <td>{{ target.st_start_date }}</td>
                 <td>{{ target.st_end_date }}</td>
                 <td>{{ target.s_created_by }}</td>
                 <td>{{ target.st_target_customer }}</td>

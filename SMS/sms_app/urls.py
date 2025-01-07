@@ -570,11 +570,15 @@ urlpatterns = [
     path('dsr_send_email/', views.dsr_send_email_view, name='dsr_send_email'),
     path('gate_out_send_email/', views.gate_out_email, name='gate_out_send_email'),
     path('profit_loss_report/', views.profit_loss_report, name='profit_loss_report'),
-
     path('gate_in_send_email/', views.gate_in_email, name='gate_in_send_email'),
     path('dispatch_gatepass_pdf_download/<int:dispatch_id>', views.dispatch_gatepass_pdf_download, name='dispatch_gatepass_pdf_download'),
     path('sales_reports/', views.sales_reports, name='sales_reports'),
     path('sales_call_report/', views.sales_call_report, name='sales_call_report'),
     path('sales_targets_view/', views.sales_targets_view, name='sales_targets_view'),
-
+    path('salesperson_chart/', views.salesperson_chart, name='salesperson_chart'),
+    path('monthly_summary/', views.monthly_summary, name='monthly_summary'),
+    path('salesperson_productivity_performance/', views.salesperson_productivity_performance, name='salesperson_productivity_performance'),
+    path('salescalls_details/', views.salescalls_details, name='salescalls_details'),
+    path('target_actuals/', views.targets_actuals, name='targets_actuals'),
+    path('business_won_loss/', views.business_won_loss, name='business_won_loss'),
 ]
