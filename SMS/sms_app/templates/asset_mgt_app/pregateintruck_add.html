@@ -3,143 +3,141 @@
 {% block content %}
 <form method="POST" action="" enctype="multipart/form-data">
 	{% csrf_token %}
-	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Truck Details</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Pre Gate-In ID</span>
-									</div>
-									{% render_field form.pregatein_number id="pregatein_number" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Transporter</span>
-									</div>
-									{% render_field form.pregatein_transporter class="form-control" id="gatein_pre_transporter" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Truck Number</span>
-									</div>
-									{% render_field form.pregatein_truck_number class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Truck Type</span>
-									</div>
-									{% render_field form.pregatein_truck_type id="pregatein_truck_type" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver Name</span>
-									</div>
-									{% render_field form.pregatein_driver id="pregatein_driver" class="form-control"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver Number</span>
-									</div>
-									{% render_field form.pregatein_contact_number class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver DL Number</span>
-									</div>
-									{% render_field form.pregatein_dl_number class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver DL Expiry Date</span>
-									</div>
-									{% render_field form.pregatein_dl_exp_date type="date" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Qty</span>
-									</div>
-									{% render_field form.pregatein_qty id="pregatein_qty" class="form-control " %}
-								</div>
+	<div class="container-fluid">
+		<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+			<div class="card-header text-center"><h3>Add/Update Truck Details</h3></div>
+			<div class="card-body bg-light" >
+				<div class="row">
+					<div class="col-3">
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Pre Gate-In ID</span>
 							</div>
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Arrival Date & Time</span>
-									</div>
-									{% render_field form.pregatein_arrival_date_time type="datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Dock-In Date & Time</span>
-									</div>
-									{% render_field form.pregatein_dock_in_date_time id="pregatein_dock_in_date_time" type="datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">OTL Type</span>
-									</div>
-									{% render_field form.pregatein_otl_type id="pregatein_otl_type" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">OTL Number</span>
-									</div>
-									{% render_field form.pregatein_otl class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">OTL Check Acceptance</span>
-									</div>
-									{% render_field form.pregatein_otl_check id="pregatein_otl_check" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Offload Acceptance</span>
-									</div>
-									{% render_field form.pregatein_offload_acceptance id="pregatein_offload_acceptance" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">High Value Check List</span>
-									</div>
-									{% render_field form.pregatein_high_value id="pregatein_high_value" class="form-control" onchange="hc_enabler()" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Job Category</span>
-                                    </div>
-                                    {% render_field form.pregatein_job_category id="pregatein_job_category" class="form-control" onchange="highvalue_enabler()" %}
-                                </div>
-								{% render_field form.pregatein_updated_by id="pregatein_updated_by" hidden="True" class="form-control" %}
-							</div>
+							{% render_field form.pregatein_number id="pregatein_number" class="form-control disable_a_href" %}
 						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Transporter</span>
 							</div>
-							<div class="col-1"></div>
+							{% render_field form.pregatein_transporter class="form-control" id="gatein_pre_transporter" %}
 						</div>
-						<button type="submit" class="btn btn-success" ><i class="fas fa-check"></i> Save</button>
-						<a href="{% url 'pregateintruck_cancel' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Truck Number</span>
+							</div>
+							{% render_field form.pregatein_truck_number class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Truck Type</span>
+							</div>
+							{% render_field form.pregatein_truck_type id="pregatein_truck_type" class="form-control" %}
+						</div>
+					</div>
+					<div class="col-3">
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Driver Name</span>
+							</div>
+							{% render_field form.pregatein_driver id="pregatein_driver" class="form-control"%}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Driver Number</span>
+							</div>
+							{% render_field form.pregatein_contact_number class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Driver DL Number</span>
+							</div>
+							{% render_field form.pregatein_dl_number class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Driver DL Expiry Date</span>
+							</div>
+							{% render_field form.pregatein_dl_exp_date type="date" class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Qty</span>
+							</div>
+							{% render_field form.pregatein_qty id="pregatein_qty" class="form-control " %}
+						</div>
+					</div>
+					<div class="col-3">
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Arrival Date & Time</span>
+							</div>
+							{% render_field form.pregatein_arrival_date_time type="datetime-local" class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Dock-In Date & Time</span>
+							</div>
+							{% render_field form.pregatein_dock_in_date_time id="pregatein_dock_in_date_time" type="datetime-local" class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">OTL Type</span>
+							</div>
+							{% render_field form.pregatein_otl_type id="pregatein_otl_type" class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">OTL Number</span>
+							</div>
+							{% render_field form.pregatein_otl class="form-control" %}
+						</div>
+					</div>
+					<div class="col-3">
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">OTL Check Acceptance</span>
+							</div>
+							{% render_field form.pregatein_otl_check id="pregatein_otl_check" class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Offload Acceptance</span>
+							</div>
+							{% render_field form.pregatein_offload_acceptance id="pregatein_offload_acceptance" class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">High Value Check List</span>
+							</div>
+							{% render_field form.pregatein_high_value id="pregatein_high_value" class="form-control" onchange="hc_enabler()" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Job Category</span>
+							</div>
+							{% render_field form.pregatein_job_category id="pregatein_job_category" class="form-control" onchange="highvalue_enabler()" %}
+						</div>
+						{% render_field form.pregatein_updated_by id="pregatein_updated_by" hidden="True" class="form-control" %}
 					</div>
 				</div>
+				<div class="row">
+					<div class="col-1"></div>
+					<div class="col-10">
+						<div class="message text-center">
+							{% for message in messages %}
+							<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+							{% endfor %}
+						</div>
+					</div>
+					<div class="col-1"></div>
+				</div>
+				<button type="submit" class="btn btn-success" ><i class="fas fa-check"></i> Save</button>
+				<a href="{% url 'pregateintruck_cancel' %}" class="btn btn-danger float-right">
+					<i class="fas fa-times"></i> Cancel
+				</a>
 			</div>
 		</div>
 	</div>
-	<div class="col-3"></div>
 </form>
 <hr>
 <div class="row" id="highvalue">
@@ -169,20 +167,20 @@
 	<div class="col-1"></div>
 </div>
 <script>
-$(document).ready(function() {
-	document.getElementById("pregatein_updated_by").value ='{{user_id}}';
-	var pregateintruck_num_id_val = document.getElementById("pregatein_number").value
-	if (pregateintruck_num_id_val=="")
-	{
-		document.getElementById("pregatein_number").value ='{{gatein_num_id}}';
-	}
-	else
-	{
-		document.getElementById("pregatein_number").value = pregateintruck_num_id_val;
-	}
-	hc_enabler()
-	highvalue_enabler()
-  });
+	$(document).ready(function() {
+        document.getElementById("pregatein_updated_by").value ='{{user_id}}';
+        var pregateintruck_num_id_val = document.getElementById("pregatein_number").value
+        if (pregateintruck_num_id_val=="")
+        {
+            document.getElementById("pregatein_number").value ='{{gatein_num_id}}';
+        }
+        else
+        {
+            document.getElementById("pregatein_number").value = pregateintruck_num_id_val;
+        }
+        hc_enabler()
+        highvalue_enabler()
+      });
 </script>
 
 <script>
