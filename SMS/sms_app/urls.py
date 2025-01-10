@@ -582,4 +582,5 @@ urlpatterns = [
     path('target_actuals/', views.targets_actuals, name='targets_actuals'),
     path('business_won_loss/', views.business_won_loss, name='business_won_loss'),
     path('warehouse_jobs_add/', views.warehouse_jobs_add, name='warehouse_jobs_add'),
+    path('save_goods_data/', views.save_goods_data, name='save_goods_data'),
 ]

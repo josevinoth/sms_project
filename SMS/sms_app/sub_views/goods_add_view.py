@@ -2,8 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models.aggregates import Sum
 from django.contrib import messages
-from ..forms import GoodsaddForm,warehouse_EmailForm
-from ..models import wh_excess_stock_email_status,Gatein_info,DamagereportInfo,Loadingbay_Info
+from ..forms import GoodsaddForm,warehouse_EmailForm,WarehousegoodsnewForm
+from ..models import wh_excess_stock_email_status,Gatein_info,DamagereportInfo,Loadingbay_Info,Warehouse_goods_new_info
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from ..views import warehousevolme_area_calc
@@ -11,6 +11,9 @@ from ..models import Warehouse_goods_info
 from ..views import send_department_email
 from num2words import num2words  # Import the num2words library to convert numbers to words
 from django.utils.timezone import now
+from django.http import JsonResponse
+
+
 
 # List goods
 @login_required(login_url='login_page')
@@ -425,3 +428,40 @@ def wh_excess_stock_email(self, *args, **kwargs):
             if email_status and email_status.email_sent:
                 email_status.email_sent = False
                 email_status.save()
+
+
+def save_goods_data(request):
+    if request.method == 'POST':
+        # Get the posted form data
+        wh_job_no = request.POST.getlist('wh_job_no[]')
+        wh_stock_no = request.POST.getlist('wh_stock_no[]')
+        pieces = request.POST.getlist('pieces[]')
+        length = request.POST.getlist('length[]')
+        width = request.POST.getlist('width[]')
+        height = request.POST.getlist('height[]')
+        weight = request.POST.getlist('weight[]')
+        checkin_time = request.POST.getlist('checkin_time[]')
+        goods_status = request.POST.getlist('goods_status[]')
+        checkout_time = request.POST.getlist('checkout_time[]')
+        job_status = request.POST.getlist('job_status[]')
+
+        # Loop over the lists and create Warehouse_goods_new_info objects
+        for i in range(len(wh_job_no)):
+            Warehouse_goods_new_info.objects.create(
+                wh_new_job_no=wh_job_no[i],
+                wh_new_qr_rand_num=wh_stock_no[i],
+                wh_new_goods_pieces=pieces[i],
+                wh_new_goods_length=length[i],
+                wh_new_goods_width=width[i],
+                wh_new_goods_height=height[i],
+                wh_new_goods_weight=weight[i],
+                wh_new_checkin_time=checkin_time[i],
+                wh_new_check_in_out=goods_status[i],
+                wh_new_checkout_time=checkout_time[i] if checkout_time[i] else None,
+                wh_new_goods_status=job_status[i]
+            )
+
+        return redirect('save_goods_data')  # Redirect to a success page or back to the form
+
+    return render(request, "asset_mgt_app/goods_add_new_list.html")
+
