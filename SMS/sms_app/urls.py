@@ -580,5 +580,6 @@ urlpatterns = [
     path('salesperson_productivity_performance/', views.salesperson_productivity_performance, name='salesperson_productivity_performance'),
     path('salescalls_details/', views.salescalls_details, name='salescalls_details'),
     path('target_actuals/', views.targets_actuals, name='targets_actuals'),
-    path('business_won_loss/', views.business_won_loss, name='business_won_loss'),
+    path('salesperson_wise_chart/', views.salesperson_wise_chart, name='salesperson_wise_chart'),
+    path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
 ]
