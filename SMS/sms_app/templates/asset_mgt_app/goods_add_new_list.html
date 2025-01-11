@@ -1,0 +1,182 @@
+{% block content %}
+<div class="container-fluid row"></div>
+<hr>
+<div class="container-fluid">
+    <form id="goodsForm" method="POST" action="{% url 'save_goods_data' %}">
+        {% csrf_token %}
+        <table id="goods_new_list" class="table table-striped table-bordered">
+            <thead class="thead-dark">
+            <tr>
+                <th>WH Job Number</th>
+                <th>WH Stock Number</th>
+                <th>Number of Pieces</th>
+                <th>Length</th>
+                <th>Width</th>
+                <th>Height</th>
+                <th>Weight</th>
+                <th>Check-In Date/Time</th>
+                <th>Goods Status</th>
+                <th>Check-Out Date/Time</th>
+                <th>JOB Status</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for goods in goods_list %}
+            <tr>
+                <td><input type="text" name="wh_job_no[]" class="form-control" value="{{ goods.wh_new_job_no }}" required></td>
+                <td><input type="text" name="wh_stock_no[]" class="form-control" value="{{ goods.wh_new_qr_rand_num }}" required></td>
+                <td><input type="number" name="pieces[]" class="form-control" value="{{ goods.wh_new_goods_pieces }}" required></td>
+                <td><input type="number" name="length[]" class="form-control" value="{{ goods.wh_new_goods_length }}" required></td>
+                <td><input type="number" name="width[]" class="form-control" value="{{ goods.wh_new_goods_width }}" required></td>
+                <td><input type="number" name="height[]" class="form-control" value="{{ goods.wh_new_goods_height }}" required></td>
+                <td><input type="number" name="weight[]" class="form-control" value="{{ goods.wh_new_goods_weight }}" required></td>
+                <td><input type="datetime-local" name="checkin_time[]" class="form-control" value="{{ goods.wh_new_checkin_time|date:'Y-m-d\TH:i' }}" required></td>
+                <td>
+                    <select name="goods_status[]" class="form-control" required>
+                        <option value="Checked-In" {% if goods.wh_new_check_in_out == "Checked-In" %}selected{% endif %}>Checked-In</option>
+                        <option value="Checked-Out" {% if goods.wh_new_check_in_out == "Checked-Out" %}selected{% endif %}>Checked-Out</option>
+                    </select>
+                </td>
+                <td><input type="datetime-local" name="checkout_time[]" class="form-control" value="{{ goods.wh_new_checkout_time|date:'Y-m-d\TH:i' }}"></td>
+                <td>
+                    <select name="job_status[]" class="form-control" required>
+                        <option value="Cancelled" {% if goods.wh_new_goods_status == "Cancelled" %}selected{% endif %}>Cancelled</option>
+                        <option value="Completed" {% if goods.wh_new_goods_status == "Completed" %}selected{% endif %}>Completed</option>
+                        <option value="Hold" {% if goods.wh_new_goods_status == "Hold" %}selected{% endif %}>Hold</option>
+                        <option value="Work in Progress" {% if goods.wh_new_goods_status == "Work in Progress" %}selected{% endif %}>Work in Progress</option>
+                        <option value="YTS" {% if goods.wh_new_goods_status == "YTS" %}selected{% endif %}>YTS</option>
+                    </select>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger deleteRow">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <button id="addRow" type="button" class="btn btn-success mt-3">
+            <i class="fas fa-plus"></i> Add Row
+        </button>
+        <button id="saveAll" type="submit" class="btn btn-primary mt-3">
+            <i class="fas fa-save"></i> Save All
+        </button>
+    </form>
+
+</div>
+
+<script>
+    $(document).ready(function () {
+        const tableBody = $('#goods_new_list tbody');
+
+        // Add a new row
+        $('#addRow').on('click', function () {
+            const newRow = `
+                <tr>
+                    <td><input type="text" name="wh_job_no[]" class="form-control" required></td>
+                    <td><input type="text" name="wh_stock_no[]" class="form-control" required></td>
+                    <td><input type="number" name="pieces[]" class="form-control" required></td>
+                    <td><input type="number" name="length[]" class="form-control" required></td>
+                    <td><input type="number" name="width[]" class="form-control" required></td>
+                    <td><input type="number" name="height[]" class="form-control" required></td>
+                    <td><input type="number" name="weight[]" class="form-control" required></td>
+                    <td><input type="datetime-local" name="checkin_time[]" class="form-control" required></td>
+                    <td>
+                        <select name="goods_status[]" class="form-control" required>
+                            <option value="Checked-In">Checked-In</option>
+                            <option value="Checked-Out">Checked-Out</option>
+                        </select>
+                    </td>
+                    <td><input type="datetime-local" name="checkout_time[]" class="form-control"></td>
+                    <td>
+                        <select name="job_status[]" class="form-control" required>
+                            <option value="Cancelled">Cancelled</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Hold">Hold</option>
+                            <option value="Work in Progress">Work in Progress</option>
+                            <option value="YTS">YTS</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger deleteRow">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            tableBody.append(newRow);
+        });
+
+        // Delete a row
+        $(document).on('click', '.deleteRow', function () {
+            if (confirm('Are you sure you want to delete this row?')) {
+                $(this).closest('tr').remove();
+            }
+        });
+
+        // Save rows to localStorage on form submit
+        $('#goodsForm').on('submit', function () {
+            const rowsData = tableBody.find('tr').map(function () {
+                const $row = $(this);
+                return {
+                    wh_job_no: $row.find('input[name="wh_job_no[]"]').val(),
+                    wh_stock_no: $row.find('input[name="wh_stock_no[]"]').val(),
+                    pieces: $row.find('input[name="pieces[]"]').val(),
+                    length: $row.find('input[name="length[]"]').val(),
+                    width: $row.find('input[name="width[]"]').val(),
+                    height: $row.find('input[name="height[]"]').val(),
+                    weight: $row.find('input[name="weight[]"]').val(),
+                    checkin_time: $row.find('input[name="checkin_time[]"]').val(),
+                    goods_status: $row.find('select[name="goods_status[]"]').val(),
+                    checkout_time: $row.find('input[name="checkout_time[]"]').val(),
+                    job_status: $row.find('select[name="job_status[]"]').val(),
+                };
+            }).get();
+            localStorage.setItem('goodsFormData', JSON.stringify(rowsData));
+        });
+
+        // Reload rows from localStorage
+        const storedData = localStorage.getItem('goodsFormData');
+        if (storedData) {
+            const rowsData = JSON.parse(storedData);
+            rowsData.forEach(data => {
+                const newRow = `
+                    <tr>
+                        <td><input type="text" name="wh_job_no[]" class="form-control" value="${data.wh_job_no}" required></td>
+                        <td><input type="text" name="wh_stock_no[]" class="form-control" value="${data.wh_stock_no}" required></td>
+                        <td><input type="number" name="pieces[]" class="form-control" value="${data.pieces}" required></td>
+                        <td><input type="number" name="length[]" class="form-control" value="${data.length}" required></td>
+                        <td><input type="number" name="width[]" class="form-control" value="${data.width}" required></td>
+                        <td><input type="number" name="height[]" class="form-control" value="${data.height}" required></td>
+                        <td><input type="number" name="weight[]" class="form-control" value="${data.weight}" required></td>
+                        <td><input type="datetime-local" name="checkin_time[]" class="form-control" value="${data.checkin_time}" required></td>
+                        <td>
+                            <select name="goods_status[]" class="form-control" required>
+                                <option value="Checked-In" ${data.goods_status === 'Checked-In' ? 'selected' : ''}>Checked-In</option>
+                                <option value="Checked-Out" ${data.goods_status === 'Checked-Out' ? 'selected' : ''}>Checked-Out</option>
+                            </select>
+                        </td>
+                        <td><input type="datetime-local" name="checkout_time[]" class="form-control" value="${data.checkout_time}"></td>
+                        <td>
+                            <select name="job_status[]" class="form-control" required>
+                                <option value="Cancelled" ${data.job_status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                <option value="Completed" ${data.job_status === 'Completed' ? 'selected' : ''}>Completed</option>
+                                <option value="Hold" ${data.job_status === 'Hold' ? 'selected' : ''}>Hold</option>
+                                <option value="Work in Progress" ${data.job_status === 'Work in Progress' ? 'selected' : ''}>Work in Progress</option>
+                                <option value="YTS" ${data.job_status === 'YTS' ? 'selected' : ''}>YTS</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger deleteRow">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                tableBody.append(newRow);
+            });
+        }
+    });
+</script>
+
+{% endblock content %}
