@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from django.db.models import Count, Q,Sum,Count, Case, When, Value, CharField
+from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F
 from django.db.models import F, Subquery, OuterRef
-from ..models import Sales_Comments_Info, MyUser,SalesInfo,Sales_target_info,BusinessrevenueInfo,Calltype,Callpurpose,Callnature,User_extInfo,CustomerInfo
+from ..models import Sales_Comments_Info, MyUser,SalesInfo,Sales_target_info,BusinessrevenueInfo,Calltype,Callpurpose,Callnature,User_extInfo,CustomerInfo,YesNoInfo,Business_Sol_info,Location_info
 
 def salesperson_chart(request):
 
@@ -273,10 +273,6 @@ def salesperson_productivity_performance(request):
     return render(request, "asset_mgt_app/donut_chart.html", context)
 
 
-
-
-from django.db.models import Count, Case, When
-
 def salescalls_details(request):
     selected_salesperson = request.GET.get('salesperson', None)
     from_date = request.GET.get('from_date', None)
@@ -327,6 +323,24 @@ def salescalls_details(request):
     sales_data_purposes = sales_data_query.values('sc_updated_by__first_name').annotate(**call_purpose_aggregation)
     sales_data_natures = sales_data_query.values('sc_updated_by__first_name').annotate(**call_nature_aggregation)
 
+    # Prepare the data for the chart
+    call_type_labels = list(call_types)
+    call_type_counts = [
+        sum(salesperson.get(sanitize_key(call_type), 0) for salesperson in sales_data_types)
+        for call_type in call_types
+    ]
+    call_purpose_labels = list(call_purposes)  # Should return a list of purposes
+    call_purpose_counts = [
+        sum(salesperson.get(sanitize_key(call_purpose), 0) for salesperson in sales_data_purposes)
+        for call_purpose in call_purposes
+    ]
+
+    call_nature_labels = list(call_natures)
+    call_nature_counts = [
+        sum(salesperson.get(sanitize_key(call_nature), 0) for salesperson in sales_data_natures)
+        for call_nature in call_natures
+    ]
+
     # Prepare table data for each aggregation
     def prepare_table_data(sales_data, fields):
         table_data = []
@@ -353,6 +367,13 @@ def salescalls_details(request):
         'table_data_types': table_data_types,
         'table_data_purposes': table_data_purposes,
         'table_data_natures': table_data_natures,
+        'call_type_labels': call_type_labels,  # Labels for the chart
+        'call_type_counts': call_type_counts,  # Data for the chart
+        'call_purpose_labels': call_purpose_labels,  # Labels for the chart
+        'call_purpose_counts': call_purpose_counts,
+        'call_nature_labels': call_nature_labels,  # Labels for the chart
+        'call_nature_counts': call_nature_counts,
+
     }
     return render(request, "asset_mgt_app/salescalls_detail_report.html", context)
 
@@ -415,8 +436,8 @@ def targets_actuals(request):
         's_updated_by__id', 's_updated_by__first_name'
     ).annotate(
         total_actual_customers=Count('s_customer_name', distinct=True),
-        total_new_customers=Count('s_customer_name', filter=Q(s_customer_name_id=210), distinct=True),
-        total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name_id=210), distinct=True)
+        total_new_customers=Count('s_customer_new_name', distinct=True),
+        total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True)
     )
 
     sales_calls = Sales_Comments_Info.objects.filter(calls_filter).values(
@@ -498,61 +519,119 @@ def sales_call_report(request):
     }
     return render(request,"asset_mgt_app/sales_call_report.html",context)
 
-from django.db.models import Count, Case, When, Value, CharField
-
-def business_won_loss(request):
+def businesswon_chart(request):
     selected_salesperson = request.GET.get('salesperson', None)
+    selected_company = request.GET.get('company', None)
+    selected_branch = request.GET.get('branch', None)
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
 
-    # Fetch salespersons (filtered by Sales department)
-    salespersons = MyUser.objects.select_related('user_extinfo').filter(
+    # Filter salespersons
+    salespersons = MyUser.objects.filter(
         user_extinfo__department__dept_name="Sales"
     ).distinct().values_list('first_name', flat=True)
 
-    # Query to calculate chart data
+    company_name = Business_Sol_info.objects.filter(
+        id__in=SalesInfo.objects.values_list('s_company', flat=True)
+    ).distinct().values_list('bvm_business', flat=True)
+
+    branch_name = Location_info.objects.filter(
+        id__in=SalesInfo.objects.values_list('s_location', flat=True)
+    ).distinct().values_list('loc_name', flat=True)
+
+    # Base query with annotated CustomerType
     sales_data_query = SalesInfo.objects.select_related(
-        's_updated_by',
-        's_customer_name',
-        's_bus_won_not'
+        's_updated_by', 's_bus_won_not', 's_customer_name'
+    ).annotate(
+        CustomerType=Case(
+            When(s_customer_name__id=210, then=Value("New Customer")),
+            default=Value("Existing Customer"),
+            output_field=CharField()
+        )
     )
 
-    # Apply filters for salesperson and date range
+    # Apply filters
     if selected_salesperson:
         sales_data_query = sales_data_query.filter(s_updated_by__first_name=selected_salesperson)
     if from_date:
         sales_data_query = sales_data_query.filter(s_updated_at__date__gte=from_date)
     if to_date:
         sales_data_query = sales_data_query.filter(s_updated_at__date__lte=to_date)
+    if selected_company:
+        sales_data_query = sales_data_query.filter(s_company__bvm_business=selected_company)
+    if selected_branch:
+        sales_data_query = sales_data_query.filter(s_location__loc_name=selected_branch)
 
-    # Annotate customer type and group data for the chart
-    chart_data_query = sales_data_query.annotate(
-        customer_type=Case(
-            When(s_customer_name__id=210, then=Value('New')),
-            default=Value('Existing'),
-            output_field=CharField()
-        )
-    ).values(
-        'customer_type',  # New or Existing
-        's_bus_won_not'  # Business status (Yes/No)
-    ).annotate(count=Count('id'))
+    # Aggregate data for business won by customer type
+    aggregated_data = sales_data_query.values(
+        's_bus_won_not__yesno_name', 'CustomerType'
+    ).annotate(
+        count_bus_won=Count('s_bus_won_not')
+    )
 
-    # Prepare data for chart
-    categories = ['New', 'Existing']
-    business_status = list(set(item['s_bus_won_not'] for item in chart_data_query))
-    chart_data = {status: [0] * len(categories) for status in business_status}
+    # Prepare the data for the chart
+    customer_types = ["New Customer", "Existing Customer"]
+    yes_no_names = sorted(set(
+        (name if name is not None else "Unknown")
+        for name in aggregated_data.values_list('s_bus_won_not__yesno_name', flat=True)
+    ))
 
-    for item in chart_data_query:
-        customer_type_index = categories.index(item['customer_type'])
-        chart_data[item['s_bus_won_not']][customer_type_index] = item['count']
+    data_dict = {name: {"New Customer": 0, "Existing Customer": 0} for name in yes_no_names}
 
-    # Prepare data for table
+    for item in aggregated_data:
+        yes_no_name = item['s_bus_won_not__yesno_name'] if item['s_bus_won_not__yesno_name'] is not None else "Unknown"
+        data_dict[yes_no_name][item['CustomerType']] = item['count_bus_won']
+
+    datasets = []
+    for customer_type in customer_types:
+        dataset = {
+            'label': customer_type,
+            'data': [data_dict[name][customer_type] for name in yes_no_names],
+            'backgroundColor': 'rgba(245, 131, 39, 0.5)' if customer_type == "New Customer" else 'rgba(149, 145, 142, 0.5)',
+            'borderColor': 'rgb(245, 131, 39)' if customer_type == "New Customer" else 'rgb(149, 145, 142)',
+            'borderWidth': 1
+        }
+        datasets.append(dataset)
+
+    # Data for donut chart (distribution of 'Yes' and 'No' values for all customer types)
+    yes_count = sum([data_dict[name]["New Customer"] + data_dict[name]["Existing Customer"] for name in yes_no_names if name == "Yes"])
+    no_count = sum([data_dict[name]["New Customer"] + data_dict[name]["Existing Customer"] for name in yes_no_names if name == "No"])
+
+    donut_data = {
+        'labels': ['Yes', 'No'],
+        'datasets': [{
+            'data': [yes_count, no_count],
+        }]
+    }
+
+    # Step 1: Aggregate business won count by salesperson
+    salesperson_data = sales_data_query.filter(s_bus_won_not__yesno_name="Yes").values(
+        's_updated_by__first_name'
+    ).annotate(
+        count_bus_won=Count('s_bus_won_not')
+    )
+
+    # Step 2: Prepare the data for the salesperson-wise donut chart
+    salesperson_names = sorted(set(
+        item['s_updated_by__first_name'] for item in salesperson_data
+    ))
+    salesperson_counts = [next(
+        (item['count_bus_won'] for item in salesperson_data if item['s_updated_by__first_name'] == name), 0
+    ) for name in salesperson_names]
+
+    # Step 3: Prepare the data for the new donut chart
+    salesperson_donut_data = {
+        'labels': salesperson_names,
+        'datasets': [{
+            'data': salesperson_counts
+        }]
+    }
     table_data = []
     for item in sales_data_query:
         salesperson = item.s_updated_by.first_name if item.s_updated_by else 'N/A'
         customer_name = item.s_customer_name.cu_nameshort if item.s_customer_name else 'N/A'
         new_customer_name = item.s_customer_new_name if item.s_customer_new_name else 'N/A'
-        business_status = item.s_bus_won_not if item.s_bus_won_not else 'N/A'
+        business_status = item.s_bus_won_not.yesno_name.strip().capitalize() if item.s_bus_won_not else 'N/A'
         remarks = item.s_remarks if item.s_remarks else 'N/A'
 
         table_data.append({
@@ -563,16 +642,148 @@ def business_won_loss(request):
             'remarks': remarks,
         })
 
-    # Context for the template
     context = {
-        'categories': categories,
-        'chart_data': chart_data,
-        'business_status': business_status,
-        'table_data': table_data,
+        'labels': yes_no_names,
+        'datasets': datasets,
         'salespersons': salespersons,
+        'company_name': company_name,
+        'branch_name': branch_name,
         'selected_salesperson': selected_salesperson,
+        'selected_company': selected_company,
+        'selected_branch': selected_branch,
         'from_date': from_date,
-        'to_date': to_date
+        'to_date': to_date,
+        'table_data': table_data,
+        'donut_data': donut_data,
+        'salesperson_donut_data': salesperson_donut_data
     }
 
-    return render(request, "asset_mgt_app/business_won_loss.html", context)
+    return render(request, "asset_mgt_app/business_won_chart.html", context)
+
+
+def salesperson_wise_chart(request):
+    selected_salesperson = request.GET.get('salesperson', None)
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+
+    # Fetch salespersons
+    salespersons = MyUser.objects.select_related('user_extinfo').filter(
+        user_extinfo__department__dept_name="Sales"
+    ).distinct().values_list('first_name', flat=True)
+
+    sales_summary = Sales_Comments_Info.objects.all()
+
+    if selected_salesperson:
+        sales_data_query = sales_summary.filter(sc_updated_by__first_name=selected_salesperson)
+
+    if from_date:
+        sales_data_query = sales_summary.filter(sc_updated_at__date__gte=from_date)
+
+    if to_date:
+        sales_data_query = sales_summary.filter(sc_updated_at__date__lte=to_date)
+    sales_summary = Sales_Comments_Info.objects.values(
+        'sc_sales_number__s_updated_by__first_name',  # Access salesperson's first name via sc_sales_number
+    ).annotate(
+        total_customers=Count('sc_sales_number__s_customer_name', distinct=False),
+        new_customers=Count(
+            'sc_sales_number__s_customer_new_name', filter=Q(sc_sales_number__s_customer_name=210),distinct=False),
+        existing_customers=Count(
+            'sc_sales_number__s_customer_name',
+            filter=~Q(sc_sales_number__s_customer_name=210),distinct=False),
+        total_sales_calls=Count('id'),
+        new_customer_calls=Count(
+            'id',
+            filter=Q(sc_sales_number__s_customer_name=210)
+        ),
+        existing_customer_calls=Count(
+            'id',
+            filter=~Q(sc_sales_number__s_customer_name=210)
+        ),
+        total_quotes=Count('sc_sales_number__s_quote_ref', distinct=True),
+        won_count=Count(
+            'sc_sales_number__s_bus_won_not',
+            filter=Q(sc_sales_number__s_bus_won_not=1)
+        ),
+
+        performance_percentage=Case(
+            When(total_sales_calls__gt=0, then=(F('total_customers') / F('total_sales_calls')) * 100),
+            default=Value(0.0),
+            output_field=FloatField()
+        ),
+        # Using Case and When to calculate productivity percentage
+        productivity_percentage=Case(
+            When(total_quotes__gt=0, then=(F('won_count') / F('total_quotes')) * 100),
+            default=Value(0.0),
+            output_field=FloatField()
+        )
+    )
+
+    # Now add target data with a proper subquery for each salesperson.
+    sales_summary = sales_summary.annotate(
+        # Subquery to get the target revenue, ensuring a single result with OuterRef
+        target_revenue=Subquery(
+            Sales_target_info.objects.filter(
+                st_sales_person=OuterRef('sc_sales_number__s_updated_by')
+            ).values('st_target_revenue')[:1]  # Limiting to the first match
+        ),
+        target_customers=Subquery(
+            Sales_target_info.objects.filter(
+                st_sales_person=OuterRef('sc_sales_number__s_updated_by')
+            ).values('st_target_customer')[:1]  # Limiting to the first match
+        ),
+        target_calls_new_customer=Subquery(
+            Sales_target_info.objects.filter(
+                st_sales_person=OuterRef('sc_sales_number__s_updated_by')
+            ).values('st_target_calls_new_customer')[:1]  # Limiting to the first match
+        ),
+        target_calls_existing_customer=Subquery(
+            Sales_target_info.objects.filter(
+                st_sales_person=OuterRef('sc_sales_number__s_updated_by')
+            ).values('st_target_calls_existing_customer')[:1]  # Limiting to the first match
+        ),
+    )
+
+    sales_summary = sales_summary.annotate(
+        # Subquery to get the sum of br_revenue_1 for each salesperson
+        total_revenue=Subquery(
+            BusinessrevenueInfo.objects.filter(
+                br_sale_person=OuterRef('sc_sales_number__s_updated_by')  # Match the salesperson
+            ).values('br_sale_person')  # Group by salesperson
+            .annotate(total=Sum('br_revenue_1'))  # Calculate the sum of br_revenue_1
+            .values('total')[:1]  # Extract the total revenue
+        )
+    )
+
+    # Count for unique Call Types
+    call_type_summary = Sales_Comments_Info.objects.values(
+        'sc_call_type__call_type'
+    ).annotate(
+        call_type_count=Count('sc_call_type')
+    )
+
+    # Count for unique Call Natures
+    call_nature_summary = Sales_Comments_Info.objects.values(
+        'sc_call_nature__call_nature'
+    ).annotate(
+        call_nature_count=Count('sc_call_nature')
+    )
+
+    # Count for unique Call Purposes
+    call_purpose_summary = Sales_Comments_Info.objects.values(
+        'sc_call_purpose__call_purpose'
+    ).annotate(
+        call_purpose_count=Count('sc_call_purpose')
+    )
+
+    # Return all the summaries
+    context = {
+        'selected_salesperson': selected_salesperson,
+        'salespersons': salespersons,
+        'from_date': from_date,
+        'to_date': to_date,
+        'sales_summary': sales_summary,
+        'call_type_summary': call_type_summary,
+        'call_nature_summary': call_nature_summary,
+        'call_purpose_summary': call_purpose_summary,
+    }
+    return render(request, "asset_mgt_app/salesperson_wise_chart.html", context)

@@ -131,4 +131,5 @@ from .sub_views.salesperson_chart_view import monthly_summary
 from .sub_views.salesperson_chart_view import salesperson_productivity_performance
 from .sub_views.salesperson_chart_view import salescalls_details
 from .sub_views.salesperson_chart_view import targets_actuals
-from .sub_views.salesperson_chart_view import business_won_loss
+from .sub_views.salesperson_chart_view import salesperson_wise_chart
+from .sub_views.salesperson_chart_view import businesswon_chart
