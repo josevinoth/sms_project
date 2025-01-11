@@ -129,7 +129,7 @@ input,select{
 }
 
 .input-group-prepend span{
-width: 190px;
+/*width: 190px;*/
 background-color: #8de4e9;
 font-color: black;
 font-weight: bold ;

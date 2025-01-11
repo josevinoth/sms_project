@@ -4,12 +4,190 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+
+from .gatein_add_view import gatein_add
 from ..forms import WarehoseinaddForm,WarehoseoutaddForm
 from ..models import Dispatch_info,Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
+
+from ..sub_forms.GateinForm_form import GateinaddForm
+from ..sub_models.gatein_mod_pre import Gatein_pre_info
 from ..views import warehousevolme_area_calc
 # Add goods
+@login_required(login_url='login_page')
+def warehouse_jobs_add(request, gatein_id=0):
+    first_name = request.session.get('first_name')
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+    user_branch_id = Location_info.objects.get(loc_name=user_branch).id
+    ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
+    wh_job_id = ses_gatein_id_nam
+    tot_package = request.POST.get('gatein_no_of_pkg')
+    if request.method == "GET":
+        if gatein_id == 0:
+            print("I am inside Get add Gatein")
+            gatein_form = GateinaddForm()
+            context = {
+                'user_id': user_id,
+                'first_name': first_name,
+                'gatein_form': gatein_form,
+                'loadingbay_list': Loadingbay_Info.objects.filter(lb_job_no=wh_job_id),
+                'damagereport_list': DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id),
+                'gatein_list': Gatein_info.objects.filter(gatein_job_no=wh_job_id),
+                'pre_gatein_list': Gatein_pre_info.objects.all(),
+                'wh_job_id': wh_job_id,
+                'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
+                'user_branch': user_branch,
+            }
+        else:
+            print("I am inside get edit Gatein")
+            wh_job_id = Gatein_info.objects.get(pk=gatein_id).gatein_job_no
+            wh_customer_name = Gatein_info.objects.get(pk=gatein_id).gatein_customer
+            wh_customer_name_id = Gatein_info.objects.get(pk=gatein_id).gatein_customer.id
+            wh_customer_type = Gatein_info.objects.get(pk=gatein_id).gatein_customer_type
+            wh_customer_type_id = Gatein_info.objects.get(pk=gatein_id).gatein_customer_type.id
+            wh_invoice = Gatein_info.objects.get(pk=gatein_id).gatein_invoice
+            wh_total_packages = Gatein_info.objects.get(pk=gatein_id).gatein_no_of_pkg
+            wh_invoice_weight = Gatein_info.objects.get(pk=gatein_id).gatein_weight
+            wh_po_num = Gatein_info.objects.get(pk=gatein_id).gatein_po_num
+            request.session['ses_gatein_id_nam'] = wh_job_id
+            request.session['ses_customer_name'] = str(wh_customer_name)
+            request.session['ses_customer_type'] = str(wh_customer_type)
+            request.session['ses_customer_name_id'] = wh_customer_name_id
+            request.session['ses_customer_type_id'] = wh_customer_type_id
+            request.session['ses_wh_invoice'] = wh_invoice
+            request.session['ses_gatein_no_of_pkg'] = wh_total_packages
+            request.session['ses_gatein_weight'] = wh_invoice_weight
+            request.session['ses_consigner'] = Gatein_info.objects.get(pk=gatein_id).gatein_shipper
+            request.session['ses_consignee'] = Gatein_info.objects.get(pk=gatein_id).gatein_consignee
+            request.session['ses_po_num'] = wh_po_num
+            request.session['ses_wh_gatein_id'] = gatein_id
+            # Gate In Status Check
+            try:
+                gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
+            except ObjectDoesNotExist:
+                gatein_status = "No Status"
+            # Loading Bay Status Check
+            try:
+                loadingbay_status = Loadingbay_Info.objects.get(
+                    lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
+            except ObjectDoesNotExist:
+                loadingbay_status = "No Status"
+            # Damage/Before Status Check
+            try:
+                damage_before_status = DamagereportInfo.objects.get(
+                    dam_wh_job_num=wh_job_id).dam_status  # fetch damage report status
+            except ObjectDoesNotExist:
+                damage_before_status = "No Status"
+            # Damage/After Status Check
+            try:
+                goods_status = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_goods_status',
+                                                                                                    flat=True)  # count records
+                goods_status_list = list(goods_status)
+                if goods_status_list == []:
+                    damage_after_status = "Empty"
+                elif all(element == None for element in (goods_status_list)):
+                    damage_after_status = "None"
+                elif all(element == 5 for element in (goods_status_list)):
+                    damage_after_status = "Completed"  # get goods status
+                else:
+                    damage_after_status = "No Status"  # get goods status
+            except ObjectDoesNotExist:
+                damage_after_status = "No Status"
+
+            # Warehousein Status Check
+            try:
+                warehousein_stack_layer = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list(
+                    'wh_stack_layer', flat=True)  # count records
+
+                warehousein_stack_layer_list = list(warehousein_stack_layer)
+                if warehousein_stack_layer_list == []:
+                    warehousein_status = "Empty"
+                elif all(element == None for element in (warehousein_stack_layer_list)):
+                    warehousein_status = "None"
+                elif None not in warehousein_stack_layer_list:
+                    warehousein_status = "Completed"  # get goods status
+                else:
+                    warehousein_status = "No Status"  # get goods status
+            except ObjectDoesNotExist:
+                warehousein_status = "No Status"
+
+            loadingbay_list = Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
+            damagereport_list = DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id)
+            gatein_list = Gatein_info.objects.filter(gatein_job_no=wh_job_id)
+            goods_list = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
+            gatein_info = Gatein_info.objects.get(pk=gatein_id)
+            gatein_form = GateinaddForm(instance=gatein_info)
+            context = {
+                'user_id': user_id,
+                'gatein_form': gatein_form,
+                'first_name': first_name,
+                'damagereport_list': damagereport_list,
+                'loadingbay_list': loadingbay_list,
+                'gatein_list': gatein_list,
+                'pre_gatein_list': Gatein_pre_info.objects.all(),
+                'goods_list': goods_list,
+                'gatein_status': gatein_status,
+                'loadingbay_status': loadingbay_status,
+                'damage_before_status': damage_before_status,
+                'damage_after_status': damage_after_status,
+                'warehousein_status': warehousein_status,
+            }
+        return render(request, "asset_mgt_app/warehouse_jobs_add.html", context)
+    else:
+        if gatein_id == 0:
+            print("I am inside post add Gatein")
+            gatein_form = GateinaddForm(request.POST)
+            if gatein_form.is_valid():
+                print("Form is Valid")
+                # Generate Random WH_job number
+                if user_branch_id == 1:
+                    branch = 'BLR_WH_Job_'
+                elif user_branch_id == 2:
+                    branch = 'MAA_WH_Job_'
+                elif user_branch_id == 3:
+                    branch = 'PNY_WH_Job_'
+                else:
+                    branch = 'HYD_WH_Job_'
+
+                last_id = Gatein_info.objects.latest('id').id
+                gatein_form.save()
+                # Generate Random requirement number
+                try:
+                    last_id = (Gatein_info.objects.values_list('id', flat=True)).last()
+                    wh_job_num_next = 2000000 + last_id
+                    # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
+                except ObjectDoesNotExist:
+                    wh_job_num_next = 2000000
+                    # req_num_next = str('Req_') + str(randint(10000, 99999))
+                wh_job_num_next = str(branch) + str(wh_job_num_next)
+
+                Gatein_info.objects.filter(id=last_id).update(gatein_job_no=wh_job_num_next)
+                messages.success(request, 'Record Updated Successfully')
+                # job_id = Gatein_info.objects.get(gatein_job_no=wh_job_num_next).id
+                url = 'gatein_update/' + str(last_id)
+                return redirect(url)
+            else:
+                print("Form is In-Valid")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+                return redirect(request.META['HTTP_REFERER'])
+        else:
+            print("I am inside post edit Gatein")
+            gatein_info = Gatein_info.objects.get(pk=gatein_id)
+            gatein_form = GateinaddForm(request.POST, instance=gatein_info)
+            if gatein_form.is_valid():
+                print("Form is Valid")
+                gatein_form.save()
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("Form is In-Valid")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/gatein_list')
+    # return render(request, "asset_mgt_app/warehouse_jobs_add.html",context)
+
 @login_required(login_url='login_page')
 def warehousein_add(request, warehousein_id=0):
     first_name = request.session.get('first_name')

@@ -5,14 +5,13 @@
 <form method="POST" id="enquiry_note" action=""  data-load_customer_model-url="{% url 'load_customer_model' %}">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Enquiry Note</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
@@ -37,6 +36,8 @@
 									</div>
 									{% render_field form.en_business_type id="en_business_type" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Movement Type</span>
@@ -62,7 +63,7 @@
 									{% render_field form.en_vehicletype class="form-control" %}
 								</div>
 							</div>
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assigned To</span>
@@ -87,6 +88,8 @@
 									</div>
 									{% render_field form.en_touchpoint2 class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Touch Point 3</span>
@@ -110,13 +113,13 @@
 									</div>
 									{% render_field form.en_pickupdatetime id="en_pickupdatetime" type="Datetime-local" class="form-control" %}
 								</div>
-								{% render_field form.en_status hidden="true" class="form-control" %}
-								{% render_field form.en_updated_by id="en_updated_by" hidden="True" class="form-control" %}
-								{% render_field form.en_consignmentdetails id="en_consignmentdetails" hidden="True" class="form-control" %}
-								{% render_field form.en_vehicle_allotment id="en_vehicle_allotment" hidden="True" class="form-control" %}
-								{% render_field form.en_tripdetails id="en_tripdetails" hidden="True" class="form-control" %}
-								{% render_field form.en_tripclosure id="en_tripclosure" hidden="True" class="form-control" %}
 							</div>
+							{% render_field form.en_status hidden="true" class="form-control" %}
+							{% render_field form.en_updated_by id="en_updated_by" hidden="True" class="form-control" %}
+							{% render_field form.en_consignmentdetails id="en_consignmentdetails" hidden="True" class="form-control" %}
+							{% render_field form.en_vehicle_allotment id="en_vehicle_allotment" hidden="True" class="form-control" %}
+							{% render_field form.en_tripdetails id="en_tripdetails" hidden="True" class="form-control" %}
+							{% render_field form.en_tripclosure id="en_tripclosure" hidden="True" class="form-control" %}
 						</div>
 						<div class="row">
 							<div class="col-1"></div>
@@ -137,7 +140,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 </form>
 <div class="container-fluid row">
@@ -196,25 +198,25 @@
 	</table>
 </div>
 <script>
-$(document).ready(function() {
-    document.getElementById("en_updated_by").value ='{{user_id}}';
-    $('#enquirynotevehicle_list').DataTable({
-        order: [0, 'asc' ],
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ]
-    });
-    var enquiry_num = document.getElementById("en_enquirynumber").value
-    if (enquiry_num =="")
-	{
-		$('#add_enquiry').addClass('disable_a_href');
-	}
-	else
-	{
-		$('#add_enquiry').removeClass('disable_a_href');
-	}
-	});
+	$(document).ready(function() {
+        document.getElementById("en_updated_by").value ='{{user_id}}';
+        $('#enquirynotevehicle_list').DataTable({
+            order: [0, 'asc' ],
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ]
+        });
+        var enquiry_num = document.getElementById("en_enquirynumber").value
+        if (enquiry_num =="")
+        {
+            $('#add_enquiry').addClass('disable_a_href');
+        }
+        else
+        {
+            $('#add_enquiry').removeClass('disable_a_href');
+        }
+        });
 </script>
 
 {% endblock content %}
