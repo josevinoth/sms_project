@@ -366,6 +366,7 @@ nav > div a.nav-item.nav-link:focus
         color: #333;                /* Optional: Darker text for contrast */
     }
 
+
 /*Multi select dropdown style
 
 /* Style the multiselect container and list items */
@@ -436,4 +437,227 @@ box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.4);
 width: 200px;
 padding: 5px;
 font-size: 12px;
+}
+
+/* Default button layout */
+.btn-block {
+    display: inline-block; /* Ensure buttons are inline */
+    width: 45%; /* Reduce the width to leave space */
+    padding: 10px 55px 10px 5px; /* Add padding for better appearance */
+    margin-right: 10px; /* Add space between buttons */
+}
+
+/* Remove margin-right for the last button */
+
+
+/* For tablets */
+@media (max-width: 1024px) {
+    .btn-block {
+        width: 48%; /* Adjust width for tablets */
+        margin-bottom: 10px; /* Add spacing for stacked layout if needed */
+    }
+}
+
+/* For mobile screens */
+@media (max-width: 767px) {
+    .btn-block {
+        width: 100%; /* Buttons will stack on mobile */
+        margin-right: 0; /* Reset horizontal margin */
+        margin-bottom: 10px; /* Space between stacked buttons */
+    }
+}
+
+
+/* Media Queries for Responsiveness */
+
+/* Smartphones (portrait and landscape) */
+@media (max-width: 767px) {
+  .sidenav {
+    width: 100%;
+    position: relative;
+    height: auto;
+    padding-left: 5px;
+  }
+
+  .sidenav a, p {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .main {
+    margin-left: 0;
+    padding: 10px;
+  }
+
+  .collapsible {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .content {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  input, select {
+    font-size: 14px !important;
+    padding: 8px;
+  }
+
+
+.input-group-prepend span {
+  width: 140px;
+  background-color: #8de4e9;
+  color: black;
+  font-weight: bold;
+  font-size: 14px !important;
+  font-family: 'Heebo:wght@400', sans-serif;
+}
+
+
+
+.card-header, .input-group-text, .form-control, .btn {
+  font-family: 'Heebo', sans-serif;
+  font-weight: bold;
+}
+
+
+  .table {
+    font-size: 12px;
+  }
+
+  .header_style {
+    border-bottom: 3px solid #3366ff;
+    font-size: 18px;
+  }
+
+  .hr_style {
+    border-bottom: 1px solid #3366ff;
+  }
+
+  .nav_header_style {
+    border-bottom: 3px solid #3366ff;
+    font-size: 14px;
+  }
+
+  h1, h2 {
+    font-size: 24px;
+    margin-left: 5px;
+  }
+
+  h4 {
+    font-size: 18px;
+    margin-left: 5px;
+  }
+
+  .button {
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+
+  nav > div a.nav-item.nav-link {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .card-body {
+    padding: 10px;
+  }
+}
+
+/* Tablets (portrait and landscape) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .sidenav {
+    width: 250px;
+    height: 100%;
+  }
+
+  .main {
+    margin-left: 260px;
+    padding: 10px;
+  }
+
+  .sidenav a, p {
+    font-size: 15px;
+  }
+
+  .collapsible {
+    font-size: 15px;
+    padding: 10px;
+  }
+
+  .content {
+    font-size: 15px;
+    padding: 10px;
+  }
+
+  input, select {
+    font-size: 14px !important;
+  }
+
+  .input-group-prepend span {
+  width: 140px;
+  background-color: #8de4e9;
+  color: black;
+  font-weight: bold;
+  font-size: 14px !important;
+  font-family: 'Heebo:wght@400', sans-serif;
+}
+
+ .btn-block {
+        width: 70%; /* Adjust width for tablets */
+    }
+
+ #add_enquiry {
+    width: 70%; /* Adjust button width for tablets */
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+.card-header, .input-group-text, .form-control, .btn {
+  font-family: 'Heebo', sans-serif;
+  font-weight: bold;
+}
+
+  .table {
+    font-size: 14px;
+  }
+
+  .header_style {
+    border-bottom: 4px solid #3366ff;
+    font-size: 22px;
+  }
+
+  .hr_style {
+    border-bottom: 1.5px solid #3366ff;
+  }
+
+  .nav_header_style {
+    border-bottom: 4px solid #3366ff;
+    font-size: 16px;
+  }
+
+  h1, h2 {
+    font-size: 28px;
+    margin-left: 8px;
+  }
+
+  h4 {
+    font-size: 20px;
+    margin-left: 8px;
+  }
+
+  .button {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+
+  nav > div a.nav-item.nav-link {
+    padding: 15px;
+    font-size: 14px;
+  }
+
+  .card-body {
+    padding: 15px;
+  }
 }
