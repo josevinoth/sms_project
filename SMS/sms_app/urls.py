@@ -584,4 +584,5 @@ urlpatterns = [
     path('save_goods_data/', views.save_goods_data, name='save_goods_data'),
     path('salesperson_wise_chart/', views.salesperson_wise_chart, name='salesperson_wise_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
+
 ]
