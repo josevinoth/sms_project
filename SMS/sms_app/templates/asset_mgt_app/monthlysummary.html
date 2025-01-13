@@ -17,8 +17,8 @@
 
 <div class="container-fluid row align-items-center">
     <div class="col-md-11">
-        <label for="salesperson-filter"><b>Salesperson:</b></label>
-        <select id="salesperson-filter" name="salesperson" class="box-shadow rounded m-1" >
+            <select id="salesperson-filter" name="salesperson" class="box-shadow rounded m-1">
+            <option value="" disabled selected hidden>Select Sales Executive</option>
             <option value="">All</option>
             {% for salesperson in salespersons %}
             <option value="{{ salesperson }}"
@@ -29,7 +29,7 @@
         </select>
 
         <label for="from-date"><b> From:</b></label>
-        <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="box-shadow">
+        <input type="date" id="from-date" name="from_date" value="{{ from_date }}" placeholder="From Date" class="box-shadow">
 
         <label for="to-date"><b> To:</b></label>
         <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="box-shadow" >
