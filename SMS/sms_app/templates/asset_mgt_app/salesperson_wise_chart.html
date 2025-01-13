@@ -39,7 +39,7 @@
 <hr>
 
 <!-- Table to display sales data -->
-<table id="business_won_loss_table" class="table table-striped table-bordered">
+<table id="salesperson_wise_table" class="table table-striped table-bordered">
     <thead class="thead-dark">
   <tr>
     <th>Salesperson</th>
@@ -134,18 +134,17 @@
 
 <script>
     $(document).ready(function() {
-    $('#business_won_loss_table').DataTable(
-        {
-        scrollY: "600px",
-<!--        scrollX: true,-->
-        scrollCollapse: true,
-        order: [1, 'desc' ],
-        dom: 'lBfrtip',
+    $('#salesperson_wise_table').DataTable({
+<!--        scrollY: "400px",-->
+        scrollX: true,
+        order: [0, 'asc' ],
+        dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'
-        ]
-    } );
+        ],
+    });
 } );
+
 </script>
 
 <script>

@@ -587,4 +587,5 @@ urlpatterns = [
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
     path('warehouse_goods_add_gatein_insert/', views.warehouse_goods_add_gatein, name='warehouse_goods_add_gatein_insert'),  # Add warehouse_goods_add_gatein
     path('warehouse_goods_add_gatein_update/<int:wh_goods_gatein_id>', views.warehouse_goods_add_gatein, name='warehouse_goods_add_gatein_update'),  # update warehouse_goods_add_gatein
+
 ]
