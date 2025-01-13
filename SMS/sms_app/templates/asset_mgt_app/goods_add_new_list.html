@@ -61,7 +61,7 @@
             <i class="fas fa-plus"></i> Add Row
         </button>
         <button id="saveAll" type="submit" class="btn btn-primary mt-3">
-            <i class="fas fa-save"></i> Save All
+            <i class="fas fa-save"></i> Save Row
         </button>
     </form>
 
@@ -107,15 +107,124 @@
                 </tr>`;
             tableBody.append(newRow);
         });
+        $(document).on('click', '.saveRow', function () {
+            const row = $(this).closest('tr');
+            const rowData = {
+                wh_job_no: row.find('input[name="wh_job_no[]"]').val(),
+                wh_stock_no: row.find('input[name="wh_stock_no[]"]').val(),
+                pieces: row.find('input[name="pieces[]"]').val(),
+                length: row.find('input[name="length[]"]').val(),
+                width: row.find('input[name="width[]"]').val(),
+                height: row.find('input[name="height[]"]').val(),
+                weight: row.find('input[name="weight[]"]').val(),
+                checkin_time: row.find('input[name="checkin_time[]"]').val(),
+                goods_status: row.find('select[name="goods_status[]"]').val(),
+                checkout_time: row.find('input[name="checkout_time[]"]').val(),
+                job_status: row.find('select[name="job_status[]"]').val(),
+                csrfmiddlewaretoken: "{{ csrf_token }}" // CSRF token for security
+            };
 
-        // Delete a row
-        $(document).on('click', '.deleteRow', function () {
+            // Send AJAX request to save the row
+            $.ajax({
+                url: "{% url 'save_goods_data' %}", // Update this to your backend endpoint
+                type: "POST",
+                data: rowData,
+                success: function (response) {
+                    if (response.status === 'success') {
+                        alert('Row saved successfully.');
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function () {
+                    alert('An error occurred while saving the row.');
+                }
+            });
+        });
+                // Save a single row
+                $(document).on('click', '.saveRow', function () {
+                    const row = $(this).closest('tr');
+                    const wh_stock_no = row.find('input[name="wh_stock_no[]"]').val();
+
+                    // Check if the row has already been saved
+                    if (savedRows.has(wh_stock_no)) {
+                        alert('This row has already been saved.');
+                        return;
+                    }
+
+                    const rowData = {
+                        wh_job_no: row.find('input[name="wh_job_no[]"]').val(),
+                        wh_stock_no: wh_stock_no,
+                        pieces: row.find('input[name="pieces[]"]').val(),
+                        length: row.find('input[name="length[]"]').val(),
+                        width: row.find('input[name="width[]"]').val(),
+                        height: row.find('input[name="height[]"]').val(),
+                        weight: row.find('input[name="weight[]"]').val(),
+                        checkin_time: row.find('input[name="checkin_time[]"]').val(),
+                        goods_status: row.find('select[name="goods_status[]"]').val(),
+                        checkout_time: row.find('input[name="checkout_time[]"]').val(),
+                        job_status: row.find('select[name="job_status[]"]').val(),
+                        csrfmiddlewaretoken: "{{ csrf_token }}" // CSRF token for security
+                    };
+
+                    // Send AJAX request to save the row
+                    $.ajax({
+                        url: "{% url 'save_goods_data' %}", // Update this to your backend endpoint
+                        type: "POST",
+                        data: rowData,
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                alert('Row saved successfully.');
+                                savedRows.add(wh_stock_no); // Mark row as saved
+                                row.find('.saveRow').prop('disabled', true); // Disable the save button
+                            } else {
+                                alert('Error: ' + response.message);
+                            }
+                        },
+                        error: function () {
+                            alert('An error occurred while saving the row.');
+                        }
+                    });
+                });
+                // Delete a row
+                $(document).on('click', '.deleteRow', function () {
+            const row = $(this).closest('tr');
+            const wh_stock_no = row.find('input[name="wh_stock_no[]"]').val(); // Use unique identifier
+
             if (confirm('Are you sure you want to delete this row?')) {
-                $(this).closest('tr').remove();
+                // Send AJAX request to delete the record from the server
+                $.ajax({
+                    url: "{% url 'delete_goods_data' %}", // Server-side endpoint to handle deletion
+                    type: "POST",
+                    data: {
+                        wh_stock_no: wh_stock_no, // Pass unique identifier
+                        csrfmiddlewaretoken: "{{ csrf_token }}" // CSRF token for security
+                    },
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            // Remove the row from the table
+                            row.remove();
+
+                            // Update localStorage to exclude the deleted row
+                            const storedData = localStorage.getItem('goodsFormData');
+                            if (storedData) {
+                                const rowsData = JSON.parse(storedData);
+                                const updatedData = rowsData.filter(item => item.wh_stock_no !== wh_stock_no);
+                                localStorage.setItem('goodsFormData', JSON.stringify(updatedData));
+                            }
+
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('An error occurred while deleting the row.');
+                    }
+                });
             }
         });
 
-        // Save rows to localStorage on form submit
+        // Save rows to localStorage on form submit (optional, depends on your needs)
         $('#goodsForm').on('submit', function () {
             const rowsData = tableBody.find('tr').map(function () {
                 const $row = $(this);
@@ -133,10 +242,10 @@
                     job_status: $row.find('select[name="job_status[]"]').val(),
                 };
             }).get();
-            localStorage.setItem('goodsFormData', JSON.stringify(rowsData));
+            localStorage.setItem('goodsFormData', JSON.stringify(rowsData)); // Save data
         });
 
-        // Reload rows from localStorage
+        // Reload rows from localStorage (only if needed)
         const storedData = localStorage.getItem('goodsFormData');
         if (storedData) {
             const rowsData = JSON.parse(storedData);
@@ -178,5 +287,6 @@
         }
     });
 </script>
+
 
 {% endblock content %}
