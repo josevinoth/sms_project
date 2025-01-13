@@ -29,11 +29,25 @@
             <label for="to-date"><b> To:</b></label>
             <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="box-shadow">
         </div>
+<hr>
 
-<br>
+<div class="row">
+    <div class="col-4">
+<canvas id="callTypeChart" width="400" height="200" class="bg-white box-shadow rounded"></canvas>
+</div>
+    <div class="col-4">
+<!-- Bar Chart for Call Purpose -->
+<canvas id="callPurposeChart" width="400" height="200" class="bg-white box-shadow rounded"></canvas>
+</div>
+<div class="col-4">
+    <!-- Bar Chart for Call Nature -->
+<canvas id="callNatureChart" width="400" height="200" class="bg-white box-shadow rounded"></canvas>
+    </div>
+</div>
+<hr>
     <!-- Table for Call Types -->
     <h3>Call Type</h3>
-<hr>
+
     <table id="call_type_table" class="table table-striped table-bordered">
         <thead class="thead-dark">
             <tr>
@@ -157,6 +171,170 @@
 </script>
 
 <script>
+    // Data for Call Type Chart
+    const callTypeLabels = {{ call_type_labels|safe }};
+    const callTypeCounts = {{ call_type_counts|safe }};
+    const callTypeCtx = document.getElementById('callTypeChart').getContext('2d');
+    new Chart(callTypeCtx, {
+        type: 'bar',
+        data: {
+            labels: callTypeLabels,
+            datasets: [{
+                label: 'Call Type Count',
+                data: callTypeCounts,
+                ...commonChartStyles.bar_chart_1,
+            }]
+        },
+         options: {
+        responsive: true,
+        plugins: {
+            datalabels: {
+                anchor: 'end', // Position of the label (above the bar)
+                align: 'top',  // Position the label above the bar
+                formatter: (value) => value, // Show the value in the label
+                font: {
+                    size: 10,
+
+                },
+                color: '#000', // Label text color
+                backgroundColor: 'rgba(235, 233, 234, 0.8)', // Background color for the label
+                borderRadius: 4,
+                padding: 5,
+                borderWidth: 1,
+                borderColor: '#000', // Border around the label
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 10, weight: 'bold' },
+                    color: '#000',
+                },
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 10, weight: 'bold' },
+                    color: '#000',
+                },
+            }
+        }
+    },
+    plugins: [ChartDataLabels] // Enable the ChartDataLabels plugin
+});
+
+
+    // Data for Call Purpose Chart
+    const callPurposeLabels = {{ call_purpose_labels|safe }};
+    const callPurposeCounts = {{ call_purpose_counts|safe }};
+    const callPurposeCtx = document.getElementById('callPurposeChart').getContext('2d');
+    new Chart(callPurposeCtx, {
+        type: 'bar',
+        data: {
+            labels: callPurposeLabels,
+            datasets: [{
+                label: 'Call Purpose Count',
+                data: callPurposeCounts,
+                backgroundColor: 'rgba(255, 102, 255, 0.5)',
+                borderColor: 'rgba(255, 102, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+       options: {
+        responsive: true,
+        plugins: {
+            datalabels: {
+                anchor: 'end', // Position of the label (above the bar)
+                align: 'top',  // Position the label above the bar
+                formatter: (value) => value, // Show the value in the label
+                font: {
+                    size: 10,
+
+                },
+                color: '#000', // Label text color
+                backgroundColor: 'rgba(235, 233, 234, 0.8)', // Background color for the label
+                borderRadius: 4,
+                padding: 5,
+                borderWidth: 1,
+                borderColor: '#000', // Border around the label
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 10, weight: 'bold' },
+                    color: '#000',
+                },
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 10, weight: 'bold' },
+                    color: '#000',
+                },
+            }
+        }
+    },
+    plugins: [ChartDataLabels] // Enable the ChartDataLabels plugin
+});
+
+
+    // Data for Call Nature Chart
+    const callNatureLabels = {{ call_nature_labels|safe }};
+    const callNatureCounts = {{ call_nature_counts|safe }};
+    const callNatureCtx = document.getElementById('callNatureChart').getContext('2d');
+    new Chart(callNatureCtx, {
+        type: 'bar',
+        data: {
+            labels: callNatureLabels,
+            datasets: [{
+                label: 'Call Nature Count',
+                data: callNatureCounts,
+                ...commonChartStyles.bar_chart_2,
+            }]
+        },
+        options: {
+        responsive: true,
+        plugins: {
+            datalabels: {
+                anchor: 'end', // Position of the label (above the bar)
+                align: 'top',  // Position the label above the bar
+                formatter: (value) => value, // Show the value in the label
+                font: {
+                    size: 10,
+
+                },
+                color: '#000', // Label text color
+                backgroundColor: 'rgba(235, 233, 234, 0.8)', // Background color for the label
+                borderRadius: 4,
+                padding: 5,
+                borderWidth: 1,
+                borderColor: '#000', // Border around the label
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 10, weight: 'bold' },
+                    color: '#000',
+                },
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    font: { size: 10, weight: 'bold' },
+                    color: '#000',
+                },
+            }
+        }
+    },
+    plugins: [ChartDataLabels] // Enable the ChartDataLabels plugin
+});
+
+
 document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
 document.getElementById('from-date').addEventListener('change', updateFilters);
 document.getElementById('to-date').addEventListener('change', updateFilters);
