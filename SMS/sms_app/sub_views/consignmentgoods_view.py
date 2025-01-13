@@ -1,8 +1,8 @@
 import json
 from django.contrib.auth.decorators import login_required
 from ..forms import ConsignmentgoodsaddForm
-from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo
-from django.shortcuts import render, redirect
+from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,consignmentsgoods_new_info
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
 @login_required(login_url='login_page')
@@ -106,3 +106,48 @@ def consignmentgoods_back(request):
     enquirynote_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquirynote_num).id
     return redirect('/SMS/consignmentdetail_nav/' + str(enquirynote_id))
     # return redirect('/SMS/consignmentgoods_nav/' + str(consignmentgoods_id_val))
+
+@login_required(login_url='login_page')
+def save_consignment_data(request):
+    consignmentgoods_id_val = request.session.get('ses_consignment_id')
+
+    # Fetch consignment instance based on ID from session
+    consignment_instance = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id_val)
+
+    # Get the consignment number from the instance
+    consignment_number = consignment_instance.cn_consignment_num  # This should be the value you want to pass
+
+    if request.method == 'POST':
+        # Handle POST data logic...
+        consignments_nums = request.POST.getlist('consignments[]')
+        pieces = request.POST.getlist('pieces[]')
+        lengths = request.POST.getlist('length[]')
+        widths = request.POST.getlist('width[]')
+        heights = request.POST.getlist('height[]')
+        weights = request.POST.getlist('weight[]')
+
+        # Save each goods entry
+        for i in range(len(pieces)):
+            consignmentsgoods_new_info.objects.create(
+                cn_consignment_num=consignment_instance,
+                cn_new_goods_pieces=pieces[i],
+                cn_new_goods_length=lengths[i],
+                cn_new_goods_width=widths[i],
+                cn_new_goods_height=heights[i],
+                cn_new_goods_weight=weights[i]
+            )
+
+        messages.success(request, "Goods data saved successfully.")
+        return redirect('save_consignment_data')
+
+    # Fetch existing goods for the consignment
+    consignmentgoods_new_list = consignmentsgoods_new_info.objects.filter(
+        cn_consignment_num=consignment_instance
+    )
+
+    # Pass consignment_number instead of consignmentgoods_id_val to the template
+    return render(request, 'asset_mgt_app/consignmentgoods_new_list.html', {
+        'consignmentgoods_new_list': consignmentgoods_new_list,
+        'consignment_instance': consignment_instance,
+        'consignment_number': consignment_number  # Passing consignment number
+    })

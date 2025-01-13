@@ -1,0 +1,105 @@
+{% block content %}
+<div class="container mt-5">
+    <form id="goodsForm" method="POST" action="{% url 'save_consignment_data' %}">
+        {% csrf_token %}
+        <table id="goodsTable" class="table table-bordered table-striped">
+            <thead class="thead-dark">
+            <tr>
+                <th>Consignment Number</th>
+                <th>No of Pieces</th>
+                <th>Length (cm)</th>
+                <th>Width (cm)</th>
+                <th>Height (cm)</th>
+                <th>Weight (kg)</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for goods in consignmentgoods_new_list %}
+            <tr>
+                <td>
+                    <select name="consignments[]" class="form-control" readonly>
+                        {% for goods in consignments_list %}
+                        <option value="{{ goods.cn_consignment_id }}" {% if goods.cn_consignment_id == selected_id %}selected{% endif %}>
+                            {{ goods.cn_consignment_num }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="pieces[]" class="form-control" value="{{ goods.cn_new_goods_pieces }}" required>
+                </td>
+                <td>
+                    <input type="number" name="length[]" class="form-control" value="{{ goods.cn_new_goods_length }}" required>
+                </td>
+                <td>
+                    <input type="number" name="width[]" class="form-control" value="{{ goods.cn_new_goods_width }}" required>
+                </td>
+                <td>
+                    <input type="number" name="height[]" class="form-control" value="{{ goods.cn_new_goods_height }}" required>
+                </td>
+                <td>
+                    <input type="number" name="weight[]" class="form-control" value="{{ goods.cn_new_goods_weight }}" required>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger deleteRow">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Hidden input for Consignment Number -->
+        <input type="hidden" id="cn_consignment_num" name="cn_consignment_num" value="{{ consignmentgoods_id_val }}">
+
+        <button type="button" id="addRow" class="btn btn-success">
+            <i class="fas fa-plus"></i> Add Row
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Data
+        </button>
+    </form>
+</div>
+
+<!-- Script to handle dynamic row addition -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tableBody = document.querySelector('#goodsTable tbody');
+            const consignmentNumber = "{{ consignmentgoods_id_val}}";  // Correct Consignment Number
+            alert(consignmentNumber);  // Verify the value
+
+            // Add new row with the correct consignment number
+            document.getElementById('addRow').addEventListener('click', () => {
+                const newRow = `
+                    <tr>
+                        <td>
+                            <input type="text" name="consignments[]" class="form-control" value="${consignmentNumber}" readonly>
+                        </td>
+                    <td><input type="number" name="pieces[]" class="form-control" required></td>
+                    <td><input type="number" name="length[]" class="form-control" required></td>
+                    <td><input type="number" name="width[]" class="form-control" required></td>
+                    <td><input type="number" name="height[]" class="form-control" required></td>
+                    <td><input type="number" name="weight[]" class="form-control" required></td>
+                    <td>
+                        <button type="button" class="btn btn-danger deleteRow">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            tableBody.insertAdjacentHTML('beforeend', newRow);
+        });
+
+        // Delete a row
+        tableBody.addEventListener('click', (event) => {
+            if (event.target.closest('.deleteRow')) {
+                const row = event.target.closest('tr');
+                if (confirm('Are you sure you want to delete this row?')) {
+                    row.remove();
+                }
+            }
+        });
+    });
+</script>
+{% endblock content %}

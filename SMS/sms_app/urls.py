@@ -582,6 +582,7 @@ urlpatterns = [
     path('target_actuals/', views.targets_actuals, name='targets_actuals'),
     path('warehouse_jobs_add/', views.warehouse_jobs_add, name='warehouse_jobs_add'),
     path('save_goods_data/', views.save_goods_data, name='save_goods_data'),
+    path('save_consignment_data/', views.save_consignment_data, name='save_consignment_data'),
     path('salesperson_wise_chart/', views.salesperson_wise_chart, name='salesperson_wise_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
 ]

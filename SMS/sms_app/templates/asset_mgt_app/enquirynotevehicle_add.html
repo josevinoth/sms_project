@@ -1,4 +1,3 @@
-{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
@@ -17,27 +16,27 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field form.env_enquirynumber id="env_enquirynumber"  class="form-control disable_a_href" %}
+									{% render_field enquiryvechicle_form.env_enquirynumber id="env_enquirynumber"  class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Type</span>
 									</div>
-									{% render_field form.env_vehicletype id="env_vehicletype" onchange="change_charge_type()" class="form-control" %}
+									{% render_field enquiryvechicle_form.env_vehicletype id="env_vehicletype" onchange="change_charge_type()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Category</span>
 									</div>
-									{% render_field form.env_vehiclecategory id="env_vehiclecategory" class="form-control " %}
+									{% render_field enquiryvechicle_form.env_vehiclecategory id="env_vehiclecategory" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quantity</span>
 									</div>
-									{% render_field form.env_quantity id="env_quantity" class="form-control " %}
+									{% render_field enquiryvechicle_form.env_quantity id="env_quantity" class="form-control " %}
 								</div>
-								{% render_field form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
+								{% render_field enquiryvechicle_form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>
 						<div class="row">
@@ -68,6 +67,7 @@ $(document).ready(function() {
 	var enquiry_num_id_val = document.getElementById("env_enquirynumber").value
 	if (enquiry_num_id_val=="")
 	{
+
 		document.getElementById("env_enquirynumber").value ='{{enquiry_num_id}}';
 	}
 	else

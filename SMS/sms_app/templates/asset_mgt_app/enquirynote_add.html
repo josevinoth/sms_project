@@ -16,13 +16,19 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
-									{% render_field form.en_enquirynumber id="en_enquirynumber" readonly="True" class="form-control" style="background-color: yellow;"%}
+									{% render_field form.en_enquirynumber id="en_enquirynumber" readonly="True" class="form-control bg-secondary text-white" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Name</span>
 									</div>
-									{% render_field form.en_customername id="en_customername" class="form-control" %}
+									{% render_field form.en_customername id="en_customername" class="form-control" onchange="package_type_change()" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer New Name</span>
+									</div>
+									{% render_field form.en_customer_new_name id="en_customer_new_name" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -95,12 +101,13 @@
 										<span class="input-group-text">Touch Point 3</span>
 									</div>
 									{% render_field form.en_touchpoint3 class="form-control" %}
-								</div><div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Touch Point 4</span>
 								</div>
-								{% render_field form.en_touchpoint4 class="form-control" %}
-							</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Touch Point 4</span>
+									</div>
+									{% render_field form.en_touchpoint4 class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">To Location</span>
@@ -142,81 +149,118 @@
 		</div>
 	</div>
 </form>
-<div class="container-fluid row">
-	<!--    <div class="col-md-1">-->
-	<!--        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-	<!--            <i class="fas fa-arrow-left"></i> Back-->
-	<!--        </a>-->
-	<!--    </div>-->
-	<div class="col-md-1">
-		<a href="{% url 'enquirynotevehicle_insert' %}"  id="add_enquiry" class="btn btn-success btn-block btn-lg">
-			<i class="fas fa-plus"></i> Add
-		</a>
+<div class="accordion container-fluid" id="vehicledetails">
+	<div class="card">
+		<div class="card-header bg-info" id="headingOne">
+			<h2 class="mb-0">
+				<button class="btn btn-block text-left text-white " type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+					<h3>Add Vehicle Details</h3>
+				</button>
+			</h2>
+		</div>
+
+		<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#vehicledetails">
+			<div class="card-body">
+				{% include "asset_mgt_app/enquirynotevehicle_add.html" %}
+				<hr>
+				<div class="container-fluid row">
+					<div class="col-md-2">
+						<a href="{% url 'enquirynotevehicle_insert' %}"  id="add_enquiry" class="btn btn-success btn-block ">
+							<i class="fas fa-plus"></i> Add
+						</a>
+					</div>
+				</div>
+				<br>
+				<div class="container-fluid">
+					<table  id="enquirynotevehicle_list" class="table table-striped table-bordered">
+						<thead class="thead-dark">
+						<tr>
+							<th>Created On</th>
+							<th>Enquiry Number</th>
+							<th>Vehicle Type</th>
+							<th>Vehicle Category</th>
+							<th>Quantity</th>
+							<th>Updated at</th>
+							<th>Updated By</th>
+							<th>Edit</th>
+							<th>Delete</th>
+						</thead>
+						<tbody>
+						{% for enquirynotevehicleinfo in enquirynotevehicle_list %}
+						<tr>
+							<td> {{enquirynotevehicleinfo.env_created_at}}</td>
+							<td> {{enquirynotevehicleinfo.env_enquirynumber}}</td>
+							<td> {{enquirynotevehicleinfo.env_vehicletype}}</td>
+							<td> {{enquirynotevehicleinfo.env_vehiclecategory}}</td>
+							<td> {{enquirynotevehicleinfo.env_quantity}}</td>
+							<td> {{enquirynotevehicleinfo.env_updated_at}}</td>
+							<td> {{enquirynotevehicleinfo.env_updated_by}}</td>
+							<td>
+								<a class="btn btn-primary" href="{% url 'enquirynotevehicle_update' enquirynotevehicleinfo.id %}" class="btn btn-primary">
+									<i class="far fa-edit"></i>
+								</a>
+							</td>
+							<td>
+								<form action="{% url 'enquirynotevehicle_delete' enquirynotevehicleinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+									{% csrf_token %}
+									<button type="submit" class="btn btn-danger">
+										<i class="fas fa-trash-alt"></i>
+									</button>
+								</form>
+							</td>
+						</tr>
+						{% endfor %}
+						</tbody>
+					</table>
+				</div>
+
+			</div>
+		</div>
 	</div>
 </div>
-<hr>
-<div class="container-fluid">
-	<table  id="enquirynotevehicle_list" class="table table-striped table-bordered">
-		<thead class="thead-dark">
-		<tr>
-			<th>Created On</th>
-			<th>Enquiry Number</th>
-			<th>Vehicle Type</th>
-			<th>Vehicle Category</th>
-			<th>Quantity</th>
-			<th>Updated at</th>
-			<th>Updated By</th>
-			<th>Edit</th>
-			<th>Delete</th>
-		</thead>
-		<tbody>
-		{% for enquirynotevehicleinfo in enquirynotevehicle_list %}
-		<tr>
-			<td> {{enquirynotevehicleinfo.env_created_at}}</td>
-			<td> {{enquirynotevehicleinfo.env_enquirynumber}}</td>
-			<td> {{enquirynotevehicleinfo.env_vehicletype}}</td>
-			<td> {{enquirynotevehicleinfo.env_vehiclecategory}}</td>
-			<td> {{enquirynotevehicleinfo.env_quantity}}</td>
-			<td> {{enquirynotevehicleinfo.env_updated_at}}</td>
-			<td> {{enquirynotevehicleinfo.env_updated_by}}</td>
-			<td>
-				<a class="btn btn-primary" href="{% url 'enquirynotevehicle_update' enquirynotevehicleinfo.id %}" class="btn btn-primary">
-					<i class="far fa-edit"></i>
-				</a>
-			</td>
-			<td>
-				<form action="{% url 'enquirynotevehicle_delete' enquirynotevehicleinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-					{% csrf_token %}
-					<button type="submit" class="btn btn-danger">
-						<i class="fas fa-trash-alt"></i>
-					</button>
-				</form>
-			</td>
-		</tr>
-		{% endfor %}
-		</tbody>
-	</table>
-</div>
 <script>
-	$(document).ready(function() {
-        document.getElementById("en_updated_by").value ='{{user_id}}';
-        $('#enquirynotevehicle_list').DataTable({
-            order: [0, 'asc' ],
-            dom: 'Bfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'print'
-            ]
-        });
-        var enquiry_num = document.getElementById("en_enquirynumber").value
-        if (enquiry_num =="")
-        {
-            $('#add_enquiry').addClass('disable_a_href');
+	$(document).ready(function () {
+    $('#enquirynotevehicle_list').DataTable({
+        order: [0, 'asc'],
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    });
+
+    document.getElementById("en_updated_by").value = '{{user_id}}';
+
+    var enquiry_num_id_val = document.getElementById("env_enquirynumber").value;
+    var x = '{{enquiry_num_id}}';
+    alert(x);
+
+    if (enquiry_num_id_val == "") {
+        document.getElementById("env_enquirynumber").value = '{{enquiry_num_id}}';
+    } else {
+        document.getElementById("env_enquirynumber").value = enquiry_num_id_val;
+    }
+
+    var enquiry_num = document.getElementById("en_enquirynumber").value;
+    alert(enquiry_num);
+
+    if (enquiry_num == "") {
+        $('#vehicledetails').addClass('disable_a_href');
+    } else {
+        $('#vehicledetails').removeClass('disable_a_href');
+    }
+});
+</script>
+<script>
+    function package_type_change() {
+        var type_packing = document.getElementById("en_customername").value;
+
+        if (type_packing == 210) {
+            $('#en_customer_new_name').removeClass('disable_a_href');
+        } else {
+            $('#en_customer_new_name').addClass('disable_a_href');
+            document.getElementById("en_customer_new_name").value = "";
         }
-        else
-        {
-            $('#add_enquiry').removeClass('disable_a_href');
-        }
-        });
+    }
 </script>
 
 {% endblock content %}
