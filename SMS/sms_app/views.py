@@ -133,3 +133,4 @@ from .sub_views.salesperson_chart_view import salescalls_details
 from .sub_views.salesperson_chart_view import targets_actuals
 from .sub_views.salesperson_chart_view import salesperson_wise_chart
 from .sub_views.salesperson_chart_view import businesswon_chart
+from .sub_views.warehouse_goods_add_new_view import warehouse_goods_add_gatein

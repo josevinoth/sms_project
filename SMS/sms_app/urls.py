@@ -584,4 +584,7 @@ urlpatterns = [
     path('save_goods_data/', views.save_goods_data, name='save_goods_data'),
     path('salesperson_wise_chart/', views.salesperson_wise_chart, name='salesperson_wise_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
+    path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
+    path('warehouse_goods_add_gatein_insert/', views.warehouse_goods_add_gatein, name='warehouse_goods_add_gatein_insert'),  # Add warehouse_goods_add_gatein
+    path('warehouse_goods_add_gatein_update/<int:wh_goods_gatein_id>', views.warehouse_goods_add_gatein, name='warehouse_goods_add_gatein_update'),  # update warehouse_goods_add_gatein
 ]
