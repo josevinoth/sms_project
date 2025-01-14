@@ -431,10 +431,13 @@ def wh_excess_stock_email(self, *args, **kwargs):
                 email_status.email_sent = False
                 email_status.save()
 
-
 def save_goods_data(request):
+    ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
+
+    goods_instance = Warehouse_goods_info.objects.get(pk=ses_gatein_id_nam)
+    goods_number = goods_instance.wh_job_no  # Ensure the correct variable (wh_job_no) is used for the job number
+
     if request.method == 'POST':
-        # Get the posted form data
         wh_job_no = request.POST.getlist('wh_job_no[]')
         wh_stock_no = request.POST.getlist('wh_stock_no[]')
         pieces = request.POST.getlist('pieces[]')
@@ -449,15 +452,12 @@ def save_goods_data(request):
 
         response_data = {'status': 'success', 'message': 'Rows saved successfully.', 'duplicates': []}
 
-        # Loop over the lists and update Warehouse_goods_new_info objects
         for i in range(len(wh_job_no)):
-            # Check if the record exists
             existing_goods = Warehouse_goods_new_info.objects.filter(
                 wh_new_qr_rand_num=wh_stock_no[i]
             ).first()
 
             if existing_goods:
-                # Update the existing record
                 existing_goods.wh_new_job_no = wh_job_no[i]
                 existing_goods.wh_new_goods_pieces = pieces[i]
                 existing_goods.wh_new_goods_length = length[i]
@@ -466,14 +466,21 @@ def save_goods_data(request):
                 existing_goods.wh_new_goods_weight = weight[i]
                 existing_goods.wh_new_checkin_time = checkin_time[i]
                 existing_goods.wh_new_check_in_out = goods_status[i]
-                existing_goods.wh_new_checkout_time = checkout_time[i] if checkout_time[i] else None
+                existing_goods.wh_new_checkout_time = checkout_time[i]
                 existing_goods.wh_new_goods_status = job_status[i]
                 existing_goods.save()
             else:
-                # Create a new entry if it doesn't exist
+                try:
+                    last_id = Warehouse_goods_new_info.objects.values_list('id', flat=True).last()
+                    wh_stock_num = 2000000 + last_id
+                except Warehouse_goods_info.DoesNotExist:
+                    wh_stock_num = 2000000
+
+                wh_stock_num = 'Stock_' + str(wh_stock_num)
+
                 Warehouse_goods_new_info.objects.create(
                     wh_new_job_no=wh_job_no[i],
-                    wh_new_qr_rand_num=wh_stock_no[i],
+                    wh_new_qr_rand_num=wh_stock_num,
                     wh_new_goods_pieces=pieces[i],
                     wh_new_goods_length=length[i],
                     wh_new_goods_width=width[i],
@@ -481,19 +488,27 @@ def save_goods_data(request):
                     wh_new_goods_weight=weight[i],
                     wh_new_checkin_time=checkin_time[i],
                     wh_new_check_in_out=goods_status[i],
-                    wh_new_checkout_time=checkout_time[i] if checkout_time[i] else None,
-                    wh_new_goods_status=job_status[i]
+                    wh_new_checkout_time=checkout_time[i],
+                    wh_new_goods_status=job_status[i],
                 )
+
+                last_id = Warehouse_goods_new_info.objects.values_list('id', flat=True).last()
+                Warehouse_goods_info.objects.filter(id=last_id).update(wh_qr_rand_num=wh_stock_num)
 
         return JsonResponse(response_data)
 
-    return render(request, "asset_mgt_app/goods_add_new_list.html")
+    goods_list = Warehouse_goods_new_info.objects.filter(wh_new_job_no=goods_number)
+
+    return render(request, "asset_mgt_app/goods_add_new_list.html", {
+        'goods_list': goods_list,  # Existing goods data
+        'goods_number': goods_number,  # Pass job number to the template
+    })
+
 @csrf_exempt
 def delete_goods_data(request):
     if request.method == 'POST':
         wh_stock_no = request.POST.get('wh_stock_no')
         try:
-            # Find and delete the record in the database
             Warehouse_goods_new_info.objects.filter(wh_new_qr_rand_num=wh_stock_no).delete()
             return JsonResponse({'status': 'success'}, status=200)
         except Warehouse_goods_new_info.DoesNotExist:

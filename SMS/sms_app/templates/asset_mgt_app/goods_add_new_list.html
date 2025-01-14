@@ -24,8 +24,19 @@
             <tbody>
             {% for goods in goods_list %}
             <tr>
-                <td><input type="text" name="wh_job_no[]" class="form-control" value="{{ goods.wh_new_job_no }}" required></td>
-                <td><input type="text" name="wh_stock_no[]" class="form-control" value="{{ goods.wh_new_qr_rand_num }}" required></td>
+                <td>
+                    <select name="wh_job_no[]" class="form-control" required>
+                        {% if all_job_numbers and all_job_numbers|length > 0 %}
+                        {% for job in all_job_numbers %}
+                        <option value="{{ job.id }}" {% if goods_number == job.wh_job_no %}selected{% endif %}>
+                            {{ job.wh_job_no }}
+                        </option>
+                        {% endfor %}
+                        {% else %}
+                        <option disabled selected>No Job Numbers Available</option>
+                        {% endif %}
+                    </select>
+                </td>                <td><input type="text" name="wh_stock_no[]" class="form-control" value="{{ goods.wh_new_qr_rand_num }}" required></td>
                 <td><input type="number" name="pieces[]" class="form-control" value="{{ goods.wh_new_goods_pieces }}" required></td>
                 <td><input type="number" name="length[]" class="form-control" value="{{ goods.wh_new_goods_length }}" required></td>
                 <td><input type="number" name="width[]" class="form-control" value="{{ goods.wh_new_goods_width }}" required></td>
