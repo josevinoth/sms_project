@@ -1,8 +1,11 @@
 import json
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 from ..forms import ConsignmentgoodsaddForm
-from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo
-from django.shortcuts import render, redirect
+from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,consignmentsgoods_new_info
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
 @login_required(login_url='login_page')
@@ -106,3 +109,83 @@ def consignmentgoods_back(request):
     enquirynote_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquirynote_num).id
     return redirect('/SMS/consignmentdetail_nav/' + str(enquirynote_id))
     # return redirect('/SMS/consignmentgoods_nav/' + str(consignmentgoods_id_val))
+
+
+
+
+def save_consignment_data(request):
+    # Retrieve consignment ID from session
+    consignmentgoods_id_val = request.session.get('ses_consignment_id')
+    consignment_instance = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id_val)
+
+    # Get the consignment number
+    consignment_number = consignment_instance.cn_consignment_num
+
+    if request.method == 'POST':
+        # Retrieve POST data
+        consignments_nums = request.POST.getlist('consignments[]')
+        pieces = request.POST.getlist('pieces[]')
+        lengths = request.POST.getlist('length[]')
+        widths = request.POST.getlist('width[]')
+        heights = request.POST.getlist('height[]')
+        weights = request.POST.getlist('weight[]')
+
+        response_data = {'status': 'success', 'message': 'Rows saved successfully.', 'duplicates': []}
+
+        for i in range(len(consignments_nums)):
+            # Check if the consignment already exists
+            existing_goods = consignmentsgoods_new_info.objects.filter(
+                cn_consignment_num=consignment_instance,
+                cn_new_goods_pieces=pieces[i],
+                cn_new_goods_length=lengths[i],
+                cn_new_goods_width=widths[i],
+                cn_new_goods_height=heights[i],
+                cn_new_goods_weight=weights[i],
+            ).first()
+
+            if existing_goods:
+                # Update the existing record
+                existing_goods.cn_consignment_num = consignment_instance  # No index needed here
+                existing_goods.cn_new_goods_pieces = pieces[i]
+                existing_goods.cn_new_goods_length = lengths[i]
+                existing_goods.cn_new_goods_width = widths[i]
+                existing_goods.cn_new_goods_height = heights[i]
+                existing_goods.cn_new_goods_weight = weights[i]
+                existing_goods.save()
+            else:
+                # Create a new record
+                consignmentsgoods_new_info.objects.create(
+                    cn_consignment_num=consignment_instance,
+                    cn_new_goods_pieces=pieces[i],
+                    cn_new_goods_length=lengths[i],
+                    cn_new_goods_width=widths[i],
+                    cn_new_goods_height=heights[i],
+                    cn_new_goods_weight=weights[i]
+                )
+
+        # Prepare a success message and return
+        messages.success(request, "Consignment data saved successfully.")
+        return redirect('save_consignment_data')
+
+    # Fetch existing consignment goods
+    consignmentgoods_new_list = consignmentsgoods_new_info.objects.filter(
+        cn_consignment_num=consignment_instance
+    )
+
+    # Render the page with the consignment data
+    return render(request, 'asset_mgt_app/consignmentgoods_new_list.html', {
+        'consignmentgoods_new_list': consignmentgoods_new_list,
+        'consignment_number': consignment_number,  # Pass the consignment number to the template
+    })
+
+@csrf_exempt
+def delete_consignment_data(request):
+    if request.method == 'POST':
+        consignment_id = request.POST.get('ses_consignment_id')
+        try:
+            # Delete the record from the database
+            consignmentsgoods_new_info.objects.filter(pk=consignment_id).delete()
+            return JsonResponse({'status': 'success'}, status=200)
+        except consignmentsgoods_new_info.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Record not found'}, status=404)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
