@@ -1,3 +1,4 @@
+
 {% block content %}
 <div class="container-fluid row"></div>
 <hr>
@@ -24,19 +25,8 @@
             <tbody>
             {% for goods in goods_list %}
             <tr>
-                <td>
-                    <select name="wh_job_no[]" class="form-control" required>
-                        {% if all_job_numbers and all_job_numbers|length > 0 %}
-                        {% for job in all_job_numbers %}
-                        <option value="{{ job.id }}" {% if goods_number == job.wh_job_no %}selected{% endif %}>
-                            {{ job.wh_job_no }}
-                        </option>
-                        {% endfor %}
-                        {% else %}
-                        <option disabled selected>No Job Numbers Available</option>
-                        {% endif %}
-                    </select>
-                </td>                <td><input type="text" name="wh_stock_no[]" class="form-control" value="{{ goods.wh_new_qr_rand_num }}" required></td>
+                <td><input type="text" name="wh_job_no[]" class="form-control" value="{{ goods.wh_new_job_no }}" required></td>
+                <td><input type="text" name="wh_stock_no[]" class="form-control" value="{{ goods.wh_new_qr_rand_num }}" required></td>
                 <td><input type="number" name="pieces[]" class="form-control" value="{{ goods.wh_new_goods_pieces }}" required></td>
                 <td><input type="number" name="length[]" class="form-control" value="{{ goods.wh_new_goods_length }}" required></td>
                 <td><input type="number" name="width[]" class="form-control" value="{{ goods.wh_new_goods_width }}" required></td>
@@ -200,7 +190,7 @@
                 // Delete a row
                 $(document).on('click', '.deleteRow', function () {
             const row = $(this).closest('tr');
-            const wh_stock_no = row.find('input[name="wh_stock_no[]"]').val(); // Use unique identifier
+            const wh_job_no = row.find('input[name="wh_job_no[]"]').val(); // Use unique identifier
 
             if (confirm('Are you sure you want to delete this row?')) {
                 // Send AJAX request to delete the record from the server
@@ -208,7 +198,7 @@
                     url: "{% url 'delete_goods_data' %}", // Server-side endpoint to handle deletion
                     type: "POST",
                     data: {
-                        wh_stock_no: wh_stock_no, // Pass unique identifier
+                        wh_job_no: wh_job_no, // Pass unique identifier
                         csrfmiddlewaretoken: "{{ csrf_token }}" // CSRF token for security
                     },
                     success: function (response) {
@@ -220,7 +210,7 @@
                             const storedData = localStorage.getItem('goodsFormData');
                             if (storedData) {
                                 const rowsData = JSON.parse(storedData);
-                                const updatedData = rowsData.filter(item => item.wh_stock_no !== wh_stock_no);
+                                const updatedData = rowsData.filter(item => item.wh_job_no !== wh_job_no);
                                 localStorage.setItem('goodsFormData', JSON.stringify(updatedData));
                             }
 
@@ -298,6 +288,5 @@
         }
     });
 </script>
-
 
 {% endblock content %}
