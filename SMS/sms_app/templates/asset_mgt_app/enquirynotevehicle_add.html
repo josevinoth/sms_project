@@ -4,14 +4,13 @@
 <form method="POST" action="" id="enquirynotevehicle_add"  >
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Enquiry Note Vehicle Details</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-12">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
@@ -24,6 +23,8 @@
 									</div>
 									{% render_field enquiryvechicle_form.env_vehicletype id="env_vehicletype" onchange="change_charge_type()" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Category</span>
@@ -36,8 +37,8 @@
 									</div>
 									{% render_field enquiryvechicle_form.env_quantity id="env_quantity" class="form-control " %}
 								</div>
-								{% render_field enquiryvechicle_form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
 							</div>
+								{% render_field enquiryvechicle_form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
 						</div>
 						<div class="row">
 							<div class="col-1"></div>
@@ -58,7 +59,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-3"></div>
 	</div>
 </form>
 <script>

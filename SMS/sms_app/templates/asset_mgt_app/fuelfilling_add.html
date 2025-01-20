@@ -5,14 +5,13 @@
 <form method="POST" action="" id="fuelfilling_add">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Fuel Filling</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-12">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number</span>
@@ -43,6 +42,8 @@
 									</div>
 									{% render_field form.ff_date id="ff_date" type="Date" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text"> Bunk Name</span>
@@ -67,6 +68,7 @@
 									</div>
 									{% render_field form.ff_odometer_reading id="ff_odometer_reading" class="form-control " %}
 								</div>
+							</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Remarks</span>
@@ -74,7 +76,6 @@
 									{% render_field form.ff_remarks id="ff_remarks"  class="form-control " %}
 								</div>
 								{% render_field form.ff_updated_by id="ff_updated_by" hidden="True" class="form-control" %}
-							</div>
 						</div>
 						<div class="row">
 							<div class="col-1"></div>
@@ -95,7 +96,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 </form>
 <script>

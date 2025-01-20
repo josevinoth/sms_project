@@ -30,14 +30,14 @@
                 <td> {{permittypeinfo.pt_permittype}}</td>
                 <td>
 
-                    <a href="{% url 'permittype_update' permittypeinfo.id %}" >
+                   <a class="btn btn-primary" href="{% url 'permittype_update' permittypeinfo.id %}" >
                         <i class="far fa-edit"></i>
                     </a>
                 </td>
                 <td>
                     <form action="{% url 'permittype_delete' permittypeinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn">
+                        <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </form>

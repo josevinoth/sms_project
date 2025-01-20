@@ -112,7 +112,6 @@ def consignmentgoods_back(request):
 
 
 
-
 def save_consignment_data(request):
     # Retrieve consignment ID from session
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
@@ -168,16 +167,13 @@ def save_consignment_data(request):
         return redirect('save_consignment_data')
 
     # Fetch existing consignment goods
-    consignmentgoods_new_list = consignmentsgoods_new_info.objects.filter(
-        cn_consignment_num=consignment_instance
-    )
-
-    # Render the page with the consignment data
-    return render(request, 'asset_mgt_app/consignmentgoods_new_list.html', {
-        'consignmentgoods_new_list': consignmentgoods_new_list,
-        'consignment_number': consignment_number,  # Pass the consignment number to the template
-    })
-
+    consignmentgoods_new_list = consignmentsgoods_new_info.objects.filter( cn_consignment_num=consignment_instance ) # Fetch all consignment goods for the dropdown list
+    consignments_list = ConsignmentgoodsInfo.objects.all()
+    return render(request, 'asset_mgt_app/consignmentgoods_new_list.html',
+                { 'consignmentgoods_new_list': consignmentgoods_new_list,
+                    'consignments_list': consignments_list, # Update to pass the list
+                    'consignment_number': consignment_number,
+                    'consignment_id': consignmentgoods_id_val, })
 @csrf_exempt
 def delete_consignment_data(request):
     if request.method == 'POST':

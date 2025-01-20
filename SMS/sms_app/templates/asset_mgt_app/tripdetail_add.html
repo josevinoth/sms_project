@@ -4,14 +4,13 @@
 <form method="POST" action="">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Trip Detail</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
@@ -47,11 +46,13 @@
 									</div>
 									{% render_field trip_det_form.tr_vehiclesource id="tr_vehiclesource" class="form-control disable_a_href" %}
 								</div>
+								</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number</span>
 									</div>
-									{% render_field trip_det_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control disable_a_href" %}
+									{% render_field trip_det_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -78,7 +79,7 @@
 									{% render_field trip_det_form.tr_driver_lic id="tr_driver_lic" class="form-control disable_a_href" %}
 								</div>
 							</div>
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Category</span>
@@ -109,6 +110,8 @@
 									</div>
 									{% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="Datetime-local" class="form-control" %}
 								</div>
+								</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Un-Loading Time</span>
@@ -173,7 +176,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-1"></div>
 	</div>
 	{% include "asset_mgt_app/tripdetail_list_woh.html" %}
 </form>

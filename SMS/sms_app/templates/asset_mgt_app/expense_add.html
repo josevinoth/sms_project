@@ -4,14 +4,13 @@
 <form method="POST" id="invoice_add" action="" data-units-url="{% url 'load_whrate_model' %}">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Expense</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row container-fluid">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Business</span>
@@ -28,7 +27,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Expense Number</span>
 									</div>
-									{% render_field expense_form.exp_number id="exp_number" class="form-control disable_a_href" %}
+									{% render_field expense_form.exp_number id="exp_number" class="form-control disable_a_href bg-secondary text-white" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -42,6 +41,8 @@
 									</div>
 									{% render_field expense_form.exp_vendor_bill id="exp_vendor_bill" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vendor Bill Date</span>
@@ -72,14 +73,14 @@
 									</div>
 									{% render_field expense_form.exp_uom id="exp_uom" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">IOU</span>
 									</div>
 									{% render_field expense_form.exp_iou id="exp_iou" class="form-control " %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Expense Rate (INR)</span>
@@ -110,6 +111,8 @@
 									</div>
 									{% render_field expense_form.exp_gst_amount id="exp_gst_amount" onchange="update_rates_fn()" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Amount (INR)</span>
@@ -147,6 +150,7 @@
 									</div>
 									{% render_field expense_form.exp_paid_date id="exp_paid_date" type="datetime-local" class="form-control " id="bill_per_day_wh_charges" %}
 								</div>
+
 								{% render_field expense_form.exp_updated_by id="exp_updated_by"  hidden="True" class="form-control" %}
 								{% render_field expense_form.exp_updated_at id="exp_updated_at" hidden="True" class="form-control" %}
 								{% render_field expense_form.exp_created_on id="exp_created_on" hidden="True" class="form-control" %}
@@ -176,13 +180,11 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 </form>
 <hr>
 <div class="row">
-	<div class="col-1"></div>
-	<div class="col-10" id="customer_order_attach">
+	<div class="col" id="customer_order_attach">
 		<div id="accordion" class="container-fluid">
 			<div class="card">
 				<div class="card-header bg-info" id="headingTwo">
@@ -204,7 +206,6 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-1"></div>
 </div>
 <script>
 	$(document).ready(function() {

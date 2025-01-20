@@ -5,14 +5,13 @@
 <form method="POST" action="" id="ar_add" data-branches-url="{% url 'load_units' %}">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Account Receivable </h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" id="">Company</span>
@@ -55,6 +54,8 @@
 									</div>
 									{% render_field form.ar_invoice_num class="form-control" id="ar_invoice_num"%}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Invoice Date</span>
@@ -97,14 +98,14 @@
 									</div>
 									{% render_field form.ar_sgst class="form-control" id="ar_sgst" onchange="Amt_cal()"%}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">IGST</span>
 									</div>
 									{% render_field form.ar_igst  class="form-control" id="ar_igst" onchange="Amt_cal()"%}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Invoice Sent To</span>
@@ -117,7 +118,6 @@
 									</div>
 									{% render_field form.ar_amount class="form-control disable_a_href" id="ar_amount" onchange="Amt_cal()"%}
 								</div>
-
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Due From Operation Dt</span>
@@ -142,6 +142,8 @@
 									</div>
 									{% render_field form.ar_payment_received_date type="Date" onchange="Amt_cal()" class="form-control" id="ar_payment_received_date"%}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Payment Received Amt</span>
@@ -200,120 +202,119 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 </form>
 {% include "asset_mgt_app/ar_comments_list_WOH.html" %}
 <script>
-$(document).ready(function() {
-	status_update()
-	document.getElementById("ar_updated_by").value ='{{user_id}}';
-});
-</script>
-
-<script>
-function status_update() {
-	var ar_status=document.getElementById("ar_status").value
-	if (ar_status==6)
-		{
-			$('#ar_operation_date').removeClass('disable_a_href');
-			$('#ar_invoice_date').removeClass('disable_a_href');
-			$('#ar_submission_date').removeClass('disable_a_href');
-			$('#ar_payment_received_date').removeClass('disable_a_href');
-			$('#ar_service_value').removeClass('disable_a_href');
-			$('#ar_cgst').removeClass('disable_a_href');
-			$('#ar_sgst').removeClass('disable_a_href');
-			$('#ar_igst').removeClass('disable_a_href');
-			$('#ar_payment_received_amount').removeClass('disable_a_href');
-			$('#ar_tds').removeClass('disable_a_href');
-		}
-	else
-		{
-			$('#ar_operation_date').addClass('disable_a_href');
-			$('#ar_invoice_date').addClass('disable_a_href');
-			$('#ar_submission_date').addClass('disable_a_href');
-			$('#ar_payment_received_date').addClass('disable_a_href');
-			$('#ar_service_value').addClass('disable_a_href');
-			$('#ar_cgst').addClass('disable_a_href');
-			$('#ar_sgst').addClass('disable_a_href');
-			$('#ar_igst').addClass('disable_a_href');
-			$('#ar_payment_received_amount').addClass('disable_a_href');
-			$('#ar_tds').addClass('disable_a_href');
-		}
-}
-</script>
-
-<script>
-function Amt_cal() {
-  var today_date=new Date()
-  var operation_dt=new Date(document.getElementById("ar_operation_date").value)
-  var invoice_dt=new Date(document.getElementById("ar_invoice_date").value)
-  var inv_sub_dt=new Date(document.getElementById("ar_submission_date").value)
-  var payment_rec_dt=new Date(document.getElementById("ar_payment_received_date").value)
-  const due_opr_dt_dif = Math.abs(today_date - operation_dt);
-  const due_opr_dt_days = Math.ceil(due_opr_dt_dif / (1000 * 60 * 60 * 24));
-  document.getElementById("ar_due_from_operation_date").value =due_opr_dt_days;
-
-  const due_inv_dt_dif = Math.abs(today_date - invoice_dt);
-  const due_inv_dt_days = Math.ceil(due_inv_dt_dif / (1000 * 60 * 60 * 24));
-  document.getElementById("ar_due_from_invoice_date").value =due_inv_dt_days;
-
-  const due_inv_sub_dt_dif = Math.abs(today_date - inv_sub_dt);
-  const due_inv_sub_dt_days = Math.ceil(due_inv_sub_dt_dif / (1000 * 60 * 60 * 24));
-  document.getElementById("ar_due_from_submission_date").value =due_inv_sub_dt_days;
-
-  const rec_opr_dt_dif = Math.abs(payment_rec_dt - operation_dt);
-  const rec_opr_dt_days = Math.ceil(rec_opr_dt_dif / (1000 * 60 * 60 * 24));
-  document.getElementById("ar_rec_from_operation_date").value =rec_opr_dt_days;
-
-  const rec_inv_dt_dif = Math.abs(payment_rec_dt - invoice_dt);
-  const rec_inv_dt_days = Math.ceil(rec_inv_dt_dif / (1000 * 60 * 60 * 24));
-  document.getElementById("ar_rec_from_invoice_date").value =rec_inv_dt_days;
-
-  const rec_inv_sub_dt_dif = Math.abs(payment_rec_dt - inv_sub_dt);
-  const rec_inv_sub_dt_days = Math.ceil(rec_inv_sub_dt_dif / (1000 * 60 * 60 * 24));
-  document.getElementById("ar_rec_from_submission_date").value =rec_inv_sub_dt_days;
-
-  var service_value=document.getElementById("ar_service_value").value
-  var cgst=document.getElementById("ar_cgst").value
-  var sgst=document.getElementById("ar_sgst").value
-  var igst=document.getElementById("ar_igst").value
-  var invoice_amount=parseFloat(service_value)+parseFloat(cgst)+parseFloat(sgst)+parseFloat(igst)
-  document.getElementById("ar_amount").value =invoice_amount
-
-  var invoice_amount=document.getElementById("ar_amount").value
-  var payment_received=document.getElementById("ar_payment_received_amount").value
-  var TDS_received=document.getElementById("ar_tds").value
-  var total_payment=parseFloat(payment_received)+parseFloat(TDS_received)
-  var balance_payment=parseFloat(invoice_amount)-parseFloat(total_payment)
-  document.getElementById("ar_total_payment_received_amount").value =total_payment
-  document.getElementById("ar_balance_payment").value =balance_payment
-}
-</script>
-
-<script>
-   $("#ar_branch").change(function () {
-      var url = $("#ar_add").attr("data-branches-url");
-      var branchId = $(this).val();
-      $.ajax({
-        url: url,
-        data: {
-          'branchId': branchId,
-        },
-		success: function (data) {
-			console.log(data);
-			$('#ar_unit').removeClass('disable_a_href');
-			$("#ar_unit").empty();
-        	var unit_name=JSON.parse(data)["unit_name_list"];
-        	var unit_id=JSON.parse(data)["unit_id"];
-        	var len = (unit_name).length;
-        	$('#ar_unit').empty().append("<option value='0'>--Select--</option>");
-        	for( var i = 0; i<len; i++){
-        		$("#ar_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-			}
-        }
-      });
+	$(document).ready(function() {
+        status_update()
+        document.getElementById("ar_updated_by").value ='{{user_id}}';
     });
+</script>
+
+<script>
+	function status_update() {
+        var ar_status=document.getElementById("ar_status").value
+        if (ar_status==6)
+            {
+                $('#ar_operation_date').removeClass('disable_a_href');
+                $('#ar_invoice_date').removeClass('disable_a_href');
+                $('#ar_submission_date').removeClass('disable_a_href');
+                $('#ar_payment_received_date').removeClass('disable_a_href');
+                $('#ar_service_value').removeClass('disable_a_href');
+                $('#ar_cgst').removeClass('disable_a_href');
+                $('#ar_sgst').removeClass('disable_a_href');
+                $('#ar_igst').removeClass('disable_a_href');
+                $('#ar_payment_received_amount').removeClass('disable_a_href');
+                $('#ar_tds').removeClass('disable_a_href');
+            }
+        else
+            {
+                $('#ar_operation_date').addClass('disable_a_href');
+                $('#ar_invoice_date').addClass('disable_a_href');
+                $('#ar_submission_date').addClass('disable_a_href');
+                $('#ar_payment_received_date').addClass('disable_a_href');
+                $('#ar_service_value').addClass('disable_a_href');
+                $('#ar_cgst').addClass('disable_a_href');
+                $('#ar_sgst').addClass('disable_a_href');
+                $('#ar_igst').addClass('disable_a_href');
+                $('#ar_payment_received_amount').addClass('disable_a_href');
+                $('#ar_tds').addClass('disable_a_href');
+            }
+    }
+</script>
+
+<script>
+	function Amt_cal() {
+      var today_date=new Date()
+      var operation_dt=new Date(document.getElementById("ar_operation_date").value)
+      var invoice_dt=new Date(document.getElementById("ar_invoice_date").value)
+      var inv_sub_dt=new Date(document.getElementById("ar_submission_date").value)
+      var payment_rec_dt=new Date(document.getElementById("ar_payment_received_date").value)
+      const due_opr_dt_dif = Math.abs(today_date - operation_dt);
+      const due_opr_dt_days = Math.ceil(due_opr_dt_dif / (1000 * 60 * 60 * 24));
+      document.getElementById("ar_due_from_operation_date").value =due_opr_dt_days;
+
+      const due_inv_dt_dif = Math.abs(today_date - invoice_dt);
+      const due_inv_dt_days = Math.ceil(due_inv_dt_dif / (1000 * 60 * 60 * 24));
+      document.getElementById("ar_due_from_invoice_date").value =due_inv_dt_days;
+
+      const due_inv_sub_dt_dif = Math.abs(today_date - inv_sub_dt);
+      const due_inv_sub_dt_days = Math.ceil(due_inv_sub_dt_dif / (1000 * 60 * 60 * 24));
+      document.getElementById("ar_due_from_submission_date").value =due_inv_sub_dt_days;
+
+      const rec_opr_dt_dif = Math.abs(payment_rec_dt - operation_dt);
+      const rec_opr_dt_days = Math.ceil(rec_opr_dt_dif / (1000 * 60 * 60 * 24));
+      document.getElementById("ar_rec_from_operation_date").value =rec_opr_dt_days;
+
+      const rec_inv_dt_dif = Math.abs(payment_rec_dt - invoice_dt);
+      const rec_inv_dt_days = Math.ceil(rec_inv_dt_dif / (1000 * 60 * 60 * 24));
+      document.getElementById("ar_rec_from_invoice_date").value =rec_inv_dt_days;
+
+      const rec_inv_sub_dt_dif = Math.abs(payment_rec_dt - inv_sub_dt);
+      const rec_inv_sub_dt_days = Math.ceil(rec_inv_sub_dt_dif / (1000 * 60 * 60 * 24));
+      document.getElementById("ar_rec_from_submission_date").value =rec_inv_sub_dt_days;
+
+      var service_value=document.getElementById("ar_service_value").value
+      var cgst=document.getElementById("ar_cgst").value
+      var sgst=document.getElementById("ar_sgst").value
+      var igst=document.getElementById("ar_igst").value
+      var invoice_amount=parseFloat(service_value)+parseFloat(cgst)+parseFloat(sgst)+parseFloat(igst)
+      document.getElementById("ar_amount").value =invoice_amount
+
+      var invoice_amount=document.getElementById("ar_amount").value
+      var payment_received=document.getElementById("ar_payment_received_amount").value
+      var TDS_received=document.getElementById("ar_tds").value
+      var total_payment=parseFloat(payment_received)+parseFloat(TDS_received)
+      var balance_payment=parseFloat(invoice_amount)-parseFloat(total_payment)
+      document.getElementById("ar_total_payment_received_amount").value =total_payment
+      document.getElementById("ar_balance_payment").value =balance_payment
+    }
+</script>
+
+<script>
+	$("#ar_branch").change(function () {
+       var url = $("#ar_add").attr("data-branches-url");
+       var branchId = $(this).val();
+       $.ajax({
+         url: url,
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#ar_unit').removeClass('disable_a_href');
+             $("#ar_unit").empty();
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#ar_unit').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#ar_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
 </script>
 
 {% endblock content %}
