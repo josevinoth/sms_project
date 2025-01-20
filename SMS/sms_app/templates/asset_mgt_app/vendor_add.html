@@ -8,14 +8,13 @@
 	<!--{{form.as_p}}-->
 
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Vendor</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" id="">Name</span>
@@ -36,6 +35,8 @@
 									{% render_field form.vend_contact_per class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Contact #</span>
@@ -52,19 +53,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Address</span>
-									</div>
-									{% render_field form.vend_address class+="form-control" %}
-								</div>
-							</div>
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text" >Email</span>
 									</div>
 									{% render_field form.vend_email class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">GSTIN Number</span>
@@ -93,6 +88,8 @@
 									{% render_field form.vend_start_date id="vend_start_date" type="date" onchange="remaining_days_calc()" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Expiry Date</span>
@@ -125,6 +122,12 @@
 						</div>
 						<div class="input-group input-group-sm mb-3">
 							<div class="input-group-prepend">
+								<span class="input-group-text">Address</span>
+							</div>
+							{% render_field form.vend_address class+="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-3">
+							<div class="input-group-prepend">
 								<span class="input-group-text">Remarks</span>
 							</div>
 							{% render_field form.vend_remarks class+="form-control" %}
@@ -138,23 +141,22 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 </form>
 <script>
-$(document).ready(function() {
-	document.getElementById("vend_updated_by").value ='{{user_id}}';
-	remaining_days_calc()
-  });
+	$(document).ready(function() {
+        document.getElementById("vend_updated_by").value ='{{user_id}}';
+        remaining_days_calc()
+      });
 </script>
 
 <script>
-function remaining_days_calc() {
-	var start_date=new Date(document.getElementById("vend_start_date").value)
-	var expiry_date=new Date(document.getElementById("vend_expiry_date").value)
-	var date_diff=(new Date(expiry_date-start_date))/1000/60/60/24;
-	document.getElementById("vend_validity_remaining").value=date_diff
-}
+	function remaining_days_calc() {
+        var start_date=new Date(document.getElementById("vend_start_date").value)
+        var expiry_date=new Date(document.getElementById("vend_expiry_date").value)
+        var date_diff=(new Date(expiry_date-start_date))/1000/60/60/24;
+        document.getElementById("vend_validity_remaining").value=date_diff
+    }
 </script>
 
 {% endblock content %}

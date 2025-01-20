@@ -6,13 +6,13 @@
 	{% csrf_token %}
 	<div class="row">
 		<!--		<div class="col-1"></div>-->
-		<div class="col p-4">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3"  style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Sales</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row" id="add_sales_info">
-							<div class="col-4">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Sales Number</span>
@@ -62,6 +62,8 @@
 									{% render_field form.s_industry_type id="s_industry_type" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Warehouse Requirement</span>
@@ -73,7 +75,7 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" >WR Volume potential</span>
+												<span class="col input-group-text" >WR Volume<br> potential</span>
 											</div>
 											{% render_field form.s_wh_volume class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -82,7 +84,7 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" >WR Business potential</span>
+												<span class="col input-group-text" >WR Business <br> potential</span>
 											</div>
 											{% render_field form.s_wh_business class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -100,7 +102,7 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" >TR Volume potential</span>
+												<span class="col input-group-text" >TR Volume <br> potential</span>
 											</div>
 											{% render_field form.s_tr_volume class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -109,15 +111,14 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" >TR Business potential</span>
+												<span class="col input-group-text" >TR Business <br> potential</span>
 											</div>
 											{% render_field form.s_tr_business class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
 								</div>
-							</div>
-							<div class="col-4">
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Packing Requirement</span>
@@ -129,7 +130,7 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" >PR Volume potential</span>
+												<span class="col input-group-text" >PR Volume <br> potential</span>
 											</div>
 											{% render_field form.s_pr_volume class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -138,13 +139,15 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" >PR Business potential</span>
+												<span class="col input-group-text" >PR Business <br> potential</span>
 											</div>
 											{% render_field form.s_pr_business class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 										</div>
 									</div>
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" style="width:250px" >Facility management Requirement</span>
@@ -156,7 +159,7 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" >FMR Volume potential</span>
+												<span class="col input-group-text" >FMR Volume <br> potential</span>
 											</div>
 											{% render_field form.s_fmr_volume class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -165,7 +168,7 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" >FMR Business potential</span>
+												<span class="col input-group-text" >FMR Business <br> potential</span>
 											</div>
 											{% render_field form.s_fmr_business class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -183,7 +186,7 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" >OR Volume potential</span>
+												<span class="col input-group-text" >OR Volume <br> potential</span>
 											</div>
 											{% render_field form.s_or_volume class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -192,7 +195,7 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" >OR Business potential</span>
+												<span class="col input-group-text" >OR Business <br> potential</span>
 											</div>
 											{% render_field form.s_or_business class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -210,7 +213,7 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" > Volume potential</span>
+												<span class="col input-group-text" > Volume <br> potential</span>
 											</div>
 											{% render_field form.s_vol_customer class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -219,7 +222,7 @@
 									<div class="col-6">
 										<div class=" mb-3">
 											<div class="input-group-prepend">
-												<span class="col input-group-text" > Business potential</span>
+												<span class="col input-group-text" >Business <br> potential</span>
 											</div>
 											{% render_field form.s_bus_customer class="form-control" %}
 											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
@@ -227,7 +230,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="col-4">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Name of the Person Met</span>
@@ -325,7 +328,7 @@
 									<div id="collapseOne" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
 										<div class="card-body bg-light" >
 											<div class="row">
-												<div class="col-4">
+												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text" > If Yes, Date of Quote</span>
@@ -368,6 +371,8 @@
 														{% render_field form.s_expected_prof class="form-control" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
+												</div>
+												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">Expected Revenue</span>
@@ -375,8 +380,6 @@
 														{% render_field form.s_expected_revenue class="form-control" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
-												</div>
-												<div class="col-4">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">Payment Cycle</span>
@@ -405,13 +408,8 @@
 														{% render_field form.s_not_reason class="form-control disable_a_href" id="s_not_reason" onchange="buss_not_won_reason_change()" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
-													<div class="input-group input-group-sm mb-3">
-														<div class="input-group-prepend">
-															<span class="input-group-text">Not Competitive Remarks</span>
-														</div>
-														{% render_field form.s_not_competitive_remarks id="s_not_competitive_remarks" class="form-control disable_a_href" id="s_bus_won_not" onchange="Buswonnot_enabler()" %}
-														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-													</div>
+												</div>
+												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">KYC</span>
@@ -426,8 +424,6 @@
 														{% render_field form.s_contract class="form-control" id="s_contract" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
-												</div>
-												<div class="col-4">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">SOW</span>
@@ -449,6 +445,8 @@
 														{% render_field form.s_billing_sop class="form-control" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
+												</div>
+												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">Transition and Implement</span>
@@ -482,6 +480,17 @@
 															<span class="input-group-text" >Status</span>
 														</div>
 														{% render_field form.s_status class="form-control" %}
+														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+													</div>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col">
+													<div class="input-group input-group-sm mb-3">
+														<div class="input-group-prepend">
+															<span class="input-group-text">Not Competitive Remarks</span>
+														</div>
+														{% render_field form.s_not_competitive_remarks id="s_not_competitive_remarks" class="form-control disable_a_href" id="s_bus_won_not" onchange="Buswonnot_enabler()" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 												</div>
@@ -840,4 +849,3 @@
 </script>
 
 {% endblock content %}
-
