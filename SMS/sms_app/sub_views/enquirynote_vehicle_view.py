@@ -1,7 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required
-from ..forms import EnquirynotevehicleForm
-from ..models import Costdescription,Enquirynotevehicle
+from ..forms import EnquirynotevehicleForm,EnquirynoteaddForm
+from ..models import Costdescription,Enquirynotevehicle,EnquirynoteInfo
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
@@ -11,19 +11,24 @@ def enquirynotevehicle_add(request,enquirynotevehicle_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     enquiry_num_id = request.session['enquiry_num_id']
+    enquirynote = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+    form = EnquirynoteaddForm(instance=enquirynote)
+    enquirynotevehicle_list = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_num_id)
     if request.method == "GET":
         if enquirynotevehicle_id == 0:
-            form = EnquirynotevehicleForm()
+            enquiryvechicle_form = EnquirynotevehicleForm()
         else:
             enquirynotevehicle=Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
-            form = EnquirynotevehicleForm(instance=enquirynotevehicle)
+            enquiryvechicle_form = EnquirynotevehicleForm(instance=enquirynotevehicle)
         context={
                 'form': form,
+                'enquiryvechicle_form': enquiryvechicle_form,
                 'first_name': first_name,
                 'user_id': user_id,
                 'enquiry_num_id': enquiry_num_id,
+                'enquirynotevehicle_list': enquirynotevehicle_list,
                 }
-        return render(request, "asset_mgt_app/enquirynotevehicle_add.html", context)
+        return render(request, "asset_mgt_app/enquirynote_add.html", context)
     else:
         if enquirynotevehicle_id == 0:
             form = EnquirynotevehicleForm(request.POST)

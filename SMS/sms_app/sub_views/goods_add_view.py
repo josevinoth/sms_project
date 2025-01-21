@@ -12,6 +12,8 @@ from ..views import send_department_email
 from num2words import num2words  # Import the num2words library to convert numbers to words
 from django.utils.timezone import now
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 
 
 
@@ -430,7 +432,13 @@ def wh_excess_stock_email(self, *args, **kwargs):
                 email_status.save()
 
 
+@csrf_exempt
 def save_goods_data(request):
+    # wh_job_no_base = request.session.get('ses_wh_job_no', 'WH_JOB_DEFAULT')
+    #
+    # # Fetch all available job numbers from the database
+    # available_job_nos = Warehouse_goods_new_info.objects.values_list('wh_new_job_no', flat=True).distinct()
+
     if request.method == 'POST':
         # Get the posted form data
         wh_job_no = request.POST.getlist('wh_job_no[]')
@@ -445,23 +453,69 @@ def save_goods_data(request):
         checkout_time = request.POST.getlist('checkout_time[]')
         job_status = request.POST.getlist('job_status[]')
 
-        # Loop over the lists and create Warehouse_goods_new_info objects
+        response_data = {'status': 'success', 'message': 'Rows saved successfully.', 'duplicates': []}
+
+        # Loop over the lists and update Warehouse_goods_new_info objects
         for i in range(len(wh_job_no)):
-            Warehouse_goods_new_info.objects.create(
-                wh_new_job_no=wh_job_no[i],
-                wh_new_qr_rand_num=wh_stock_no[i],
-                wh_new_goods_pieces=pieces[i],
-                wh_new_goods_length=length[i],
-                wh_new_goods_width=width[i],
-                wh_new_goods_height=height[i],
-                wh_new_goods_weight=weight[i],
-                wh_new_checkin_time=checkin_time[i],
-                wh_new_check_in_out=goods_status[i],
-                wh_new_checkout_time=checkout_time[i] if checkout_time[i] else None,
-                wh_new_goods_status=job_status[i]
-            )
+            # wh_job_no = f"{wh_job_no_base}_{i + 1}"
+            # Check if the record exists
+            existing_goods = Warehouse_goods_new_info.objects.filter(
+                wh_new_job_no=wh_job_no[i]
+            ).first()
 
-        return redirect('save_goods_data')  # Redirect to a success page or back to the form
+            if existing_goods:
+                # Update the existing record
+                existing_goods.wh_new_job_no = wh_job_no[i]
+                existing_goods.wh_new_goods_pieces = pieces[i]
+                existing_goods.wh_new_goods_length = length[i]
+                existing_goods.wh_new_goods_width = width[i]
+                existing_goods.wh_new_goods_height = height[i]
+                existing_goods.wh_new_goods_weight = weight[i]
+                existing_goods.wh_new_checkin_time = checkin_time[i]
+                existing_goods.wh_new_check_in_out = goods_status[i]
+                existing_goods.wh_new_checkout_time = checkout_time[i] if checkout_time[i] else None
+                existing_goods.wh_new_goods_status = job_status[i]
+                existing_goods.save()
+            else:
+                # Generate a unique stock number
+                last_entry = Warehouse_goods_new_info.objects.last()
+                last_id = last_entry.id if last_entry else 0
+                wh_stock_num = 2000000 + last_id
+                wh_stock_num = f"Stock_{wh_stock_num}"
 
-    return render(request, "asset_mgt_app/goods_add_new_list.html")
+                # Create a new entry if it doesn't exist
+                Warehouse_goods_new_info.objects.create(
+                    wh_new_job_no=wh_job_no[i],
+                    wh_new_qr_rand_num=wh_stock_num,  # Auto-generated stock number
+                    wh_new_goods_pieces=pieces[i],
+                    wh_new_goods_length=length[i],
+                    wh_new_goods_width=width[i],
+                    wh_new_goods_height=height[i],
+                    wh_new_goods_weight=weight[i],
+                    wh_new_checkin_time=checkin_time[i],
+                    wh_new_check_in_out=goods_status[i],
+                    wh_new_checkout_time=checkout_time[i] if checkout_time[i] else None,
+                    wh_new_goods_status=job_status[i],
+                )
+
+        # Return a success response
+        return JsonResponse(response_data)
+
+    # Render the template with available job numbers
+    return render(request, "asset_mgt_app/goods_add_new_list.html", {
+        # 'wh_job_no_base': wh_job_no_base,  # Pass the WH job number base to the template
+        # 'available_job_nos': available_job_nos,  # Pass available job numbers to the template
+    })
+
+@csrf_exempt
+def delete_goods_data(request):
+    if request.method == 'POST':
+        wh_job_no = request.POST.get('wh_job_no')
+        try:
+            # Find and delete the record in the database
+            Warehouse_goods_new_info.objects.filter(wh_new_job_no=wh_job_no).delete()
+            return JsonResponse({'status': 'success'}, status=200)
+        except Warehouse_goods_new_info.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Record not found'}, status=404)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 

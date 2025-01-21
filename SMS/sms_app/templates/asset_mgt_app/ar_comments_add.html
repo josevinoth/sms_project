@@ -6,17 +6,17 @@
 		<i class="fas fa-arrow-left"></i> Back
 	</a>
 </div>
+<br>
 <form method="POST" action="">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update AR Comments</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Invoice Number</span>
@@ -29,8 +29,10 @@
 									</div>
 									{% render_field Ar_comments_form.arc_customer id="arc_customer" class="form-control" %}
 								</div>
-								{% render_field Ar_comments_form.arc_updated_by id="arc_updated_by" hidden="True" class="form-control" %}
-								{% render_field Ar_comments_form.arc_invoice_list id="arc_invoice_list" hidden="True" class="form-control" %}
+							</div>
+							{% render_field Ar_comments_form.arc_updated_by id="arc_updated_by" hidden="True" class="form-control" %}
+							{% render_field Ar_comments_form.arc_invoice_list id="arc_invoice_list" hidden="True" class="form-control" %}
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Contact Name</span>
@@ -43,12 +45,12 @@
 									</div>
 									{% render_field Ar_comments_form.arc_customer_contact_designation id="arc_customer_contact_designation" class="form-control" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Comments</span>
-									</div>
-									{% render_field Ar_comments_form.arc_comments id="arc_comments" class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Comments</span>
 								</div>
+								{% render_field Ar_comments_form.arc_comments id="arc_comments" class="form-control" %}
 							</div>
 						</div>
 						<div class="row">
@@ -70,7 +72,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-3"></div>
 	</div>
 </form>
 
@@ -97,51 +98,51 @@
 	</table>
 </div>
 <script>
-$(document).ready(function (){
-	document.getElementById("arc_updated_by").value ={{user_id}};
-  var table=new DataTable('#ar_invoice_list', {
-    columnDefs: [
-        {
-            orderable: false,
-            className: 'select-checkbox',
-            targets: 0
-        }
-    ],
-    select: {
-        style: 'os',
-        selector: 'td:first-child'
-    },
-    order: [[1, 'asc']]
-});
+	$(document).ready(function (){
+        document.getElementById("arc_updated_by").value ={{user_id}};
+      var table=new DataTable('#ar_invoice_list', {
+        columnDefs: [
+            {
+                orderable: false,
+                className: 'select-checkbox',
+                targets: 0
+            }
+        ],
+        select: {
+            style: 'os',
+            selector: 'td:first-child'
+        },
+        order: [[1, 'asc']]
+    });
 
-   // Handle form submission event
-   $('#save-btn').on('click', function(){
-      	var rows_selected = table.column(0).selected();
-      	let selectedValues = table.rows( { selected: true } ).data();
-      	var len1=( selectedValues ).length;
-      	console.log( len1 );
-      	var len=( selectedValues[0] ).length;
-      	console.log( selectedValues );
-      	console.log( selectedValues[0] );
-      	console.log( len );
-      	var elements = [];
-      	for (var i = 0; i < len1; i++) {
-				console.log(selectedValues[i][2]);
-				elements.push(selectedValues[i][2]);
-			}
-		document.getElementById("arc_invoice_num").value=elements;
-     });
-	invoice=document.getElementById("arc_invoice_num").value
-	if (invoice=="")
-		{
-			document.getElementById("arc_invoice_num").value =elements;
-		}
-		else
-		{
-			document.getElementById("arc_invoice_num").value =invoice;
-			$('#ar_invoice_list').parents('div.dataTables_wrapper').first().hide();
-		}
-});
+       // Handle form submission event
+       $('#save-btn').on('click', function(){
+              var rows_selected = table.column(0).selected();
+              let selectedValues = table.rows( { selected: true } ).data();
+              var len1=( selectedValues ).length;
+              console.log( len1 );
+              var len=( selectedValues[0] ).length;
+              console.log( selectedValues );
+              console.log( selectedValues[0] );
+              console.log( len );
+              var elements = [];
+              for (var i = 0; i < len1; i++) {
+                    console.log(selectedValues[i][2]);
+                    elements.push(selectedValues[i][2]);
+                }
+            document.getElementById("arc_invoice_num").value=elements;
+         });
+        invoice=document.getElementById("arc_invoice_num").value
+        if (invoice=="")
+            {
+                document.getElementById("arc_invoice_num").value =elements;
+            }
+            else
+            {
+                document.getElementById("arc_invoice_num").value =invoice;
+                $('#ar_invoice_list').parents('div.dataTables_wrapper').first().hide();
+            }
+    });
 </script>
 
 {% endblock content %}

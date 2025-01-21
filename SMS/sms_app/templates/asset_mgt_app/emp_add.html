@@ -5,14 +5,13 @@
 <form method="POST" action="">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h4>User Update</h4></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" id="">Employee ID</span>
@@ -37,6 +36,8 @@
 									</div>
 									{% render_field user_ext_edit_form.emp_DOB type="date" class="form-control"%}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >DOJ</span>
@@ -61,14 +62,14 @@
 									</div>
 									{% render_field form.password type="password" class="form-control" readonly="True" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Must contain at least one  number and one uppercase and lowercase letter, and at least 8 or more characters" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Organisation</span>
 									</div>
 									{% render_field user_ext_edit_form.emp_organisation id="emp_organisation" class="form-control" %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Department</span>
@@ -93,6 +94,8 @@
 									</div>
 									{% render_field user_ext_edit_form.emp_role class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">PAN</span>
@@ -111,6 +114,7 @@
 									</div>
 									{% render_field user_ext_edit_form.emp_esi class="form-control" %}
 								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Aadhaar</span>
@@ -144,7 +148,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 </form>
 

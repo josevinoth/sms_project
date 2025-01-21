@@ -2,8 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 <div class="row">
-	<div class="col-3"></div>
-	<div class="col-6">
+	<div class="col">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 				<div class="card-header text-center">
@@ -41,7 +40,7 @@
 					<form method="POST" action="" enctype="multipart/form-data">
 						{% csrf_token %}
 						<div class="row">
-							<div class="col">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Pre Gate-In ID</span>
@@ -63,6 +62,8 @@
 									</div>
 									{% render_field gatein_pre_form.gatein_pre_shipment_att id="gatein_pre_shipment_att" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Approval</span>
@@ -97,9 +98,8 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-3"></div>
 </div>
-</div>
+
 <div class="container-fluid row">
 	<div class="col-md-1">
 		<a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-success btn-block btn-lg">

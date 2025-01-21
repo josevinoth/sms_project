@@ -1,21 +1,23 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
-from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm
+from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm,EnquirynotevehicleForm
 from ..models import User_extInfo,StatusList,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo,Enquirynotevehicle
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 @login_required(login_url='login_page')
-def enquirynote_add(request,enquirynote_id=0):
+def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     if request.method == "GET":
         if enquirynote_id == 0:
             print("I am inside Get add Enquirynote")
             form = EnquirynoteaddForm()
+            enquiryvechicle_form = EnquirynotevehicleForm()
             context = {
                 'user_id': user_id,
                 'form': form,
+                'enquiryvechicle_form': enquiryvechicle_form,
                 'first_name': first_name,
             }
         else:
@@ -26,12 +28,16 @@ def enquirynote_add(request,enquirynote_id=0):
             tr_enqiury_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
             request.session['ses_enqiury_id'] = tr_enqiury_id
             form = EnquirynoteaddForm(instance=enquirynote)
+            # enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
+            enquiryvechicle_form = EnquirynotevehicleForm()
             enquirynotevehicle_list=Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_num_id)
             context={
                 'user_id': user_id,
                 'form': form,
+                'enquiryvechicle_form': enquiryvechicle_form,
                 'first_name': first_name,
                 'enquirynotevehicle_list': enquirynotevehicle_list,
+                'enquiry_num_id': enquiry_num_id,
             }
         return render(request, "asset_mgt_app/enquirynote_add.html",context)
     else:

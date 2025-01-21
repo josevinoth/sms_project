@@ -5,14 +5,13 @@
 <form method="POST" action="">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-4"></div>
-		<div class="col-4">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update IOU</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">IOU Number </span>
@@ -37,6 +36,8 @@
 									</div>
 									{% render_field form.staff_name id="staff_name" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Transaction Date</span>
@@ -77,7 +78,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-4"></div>
 	</div>
 </form>
 <script>

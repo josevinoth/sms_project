@@ -5,14 +5,13 @@
 <form method="POST" action="">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Sales Comments</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col">
+							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Sales Number</span>
@@ -34,6 +33,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text" >Complaints</span>
+									</div>
+									{% render_field sales_comments_form.sc_complaints id="sc_complaints" class="form-control " %}
+									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text" >Nature of Call</span>
 									</div>
 									{% render_field sales_comments_form.sc_call_nature id="sc_call_nature" class="form-control" %}
@@ -51,14 +59,6 @@
 									<!-- Render the form field for sc_joint_call_name -->
 									{% render_field sales_comments_form.sc_joint_call_name id="sc_joint_call_name" class="form-control" %}
 								</div>
-
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Complaints</span>
-									</div>
-									{% render_field sales_comments_form.sc_complaints id="sc_complaints" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Compliments</span>
@@ -66,15 +66,15 @@
 									{% render_field sales_comments_form.sc_compliments id="sc_compliments" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Comments</span>
-									</div>
-									{% render_field sales_comments_form.sc_comments class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								{% render_field sales_comments_form.sc_updated_by id="sc_updated_by" hidden="True" class="form-control" %}
 							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text" >Comments</span>
+								</div>
+								{% render_field sales_comments_form.sc_comments class="form-control" %}
+								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+							</div>
+							{% render_field sales_comments_form.sc_updated_by id="sc_updated_by" hidden="True" class="form-control" %}
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{{request.META.HTTP_REFERER}}" class="btn btn-danger float-right">
@@ -83,7 +83,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-3"></div>
 	</div>
 </form>
 
@@ -163,4 +162,3 @@
 </script>
 
 {% endblock content %}
-

@@ -4,8 +4,7 @@
 {% block content %}
 
 <div class="row" >
-	<div class="col-2"></div>
-	<div class="col-8">
+	<div class="col">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 				<div class="card-header text-center"><h3>Add/Update Need Assessment</h3></div>
@@ -13,7 +12,7 @@
 					<form method="POST" action="" id="needassessment_add" enctype="multipart/form-data">
 						{% csrf_token %}
 						<div class="row" id="need_assessment_main">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment NO.</span>
@@ -44,6 +43,8 @@
 									</div>
 									{% render_field form.na_type_of_work id="na_type_of_work" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Type Of Packing</span>
@@ -70,12 +71,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Special </span>
+										<span class="input-group-text">Special Requirements</span>
 									</div>
 									{% render_field form.na_special_requirements id="na_special_requirements" class="form-control"  %}
 								</div>
 							</div>
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Norms</span>
@@ -106,6 +107,8 @@
 									</div>
 									{% render_field form.na_vehicle_type id="na_vehicle_type" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Type Of Lifting</span>
@@ -162,12 +165,10 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-2"></div>
 </div>
 <hr>
 <div class="row">
-	<div class="col-1"></div>
-	<div class="col-10">
+	<div class="col">
 		<div id="accordion" class="container-fluid">
 			<div class="card">
 				<div class="card-header bg-info" id="headingOne">
@@ -205,7 +206,6 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-1"></div>
 </div>
 
 
