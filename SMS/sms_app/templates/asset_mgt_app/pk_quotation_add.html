@@ -15,8 +15,7 @@
 	<!--    </div>-->
 </div>
 <div class="row">
-	<div class="col-1"></div>
-	<div class="col-8">
+	<div class="col">
 		<form method="POST" action="" id="quotation_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
 			{% csrf_token %}
 			<div class="container-fluid">
@@ -38,11 +37,11 @@
 									{% render_field form.pkqt_customer_name id="pkqt_customer_name"  class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">New Customer Name</span>
+									<div class="input-group-prepend">
+										<span class="input-group-text">New Customer Name</span>
+									</div>
+									{% render_field form.pkqt_customer_new_name2 id="pkqt_customer_new_name2" class="form-control disable_a_href" %}
 								</div>
-								{% render_field form.pkqt_customer_new_name2 id="pkqt_customer_new_name2" class="form-control disable_a_href" %}
-							</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Cost Type</span>
