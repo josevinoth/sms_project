@@ -5,8 +5,7 @@
 <form method="POST" action="" id="quotationsummary_add"   >
 {% csrf_token %}
 <div class="row">
-	<div class="col-2"></div>
-	<div class="col-8">
+	<div class="col">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 				<div class="card-header text-center">
@@ -23,7 +22,7 @@
 				</div>
 				<div class="card-body bg-light" >
 					<div class="row" id="quotation_summary">
-						<div class="col-6">
+						<div class="col-3">
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Assessment Number</span>
@@ -54,6 +53,8 @@
 								</div>
 								{% render_field form.qs_engineer_cost id="qs_engineer_cost" class="form-control disable_a_href" %}
 							</div>
+						</div>
+						<div class="col-3">
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Labour Cost</span>
@@ -84,6 +85,72 @@
 								</div>
 								{% render_field form.qs_material_cost id="qs_material_cost" class="form-control disable_a_href" %}
 							</div>
+						</div>
+						<div class="col-3">
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Transport Cost</span>
+								</div>
+								{% render_field form.qs_transport_cost id="qs_transport_cost" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Total Cost (W/O Margin)</span>
+								</div>
+								{% render_field form.qs_total_cost_wom id="qs_total_cost_wom"  class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Margin (%)</span>
+								</div>
+								{% render_field form.qs_margin id="qs_margin"  onchange="change_charge_type()" class="form-control " %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Total Cost (With Margin)</span>
+								</div>
+								{% render_field form.qs_total_cost_wm id="qs_total_cost_wm"  class="form-control disable_a_href " %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Total CFT</span>
+								</div>
+								{% render_field form.qs_total_cft id="qs_total_cft"  onchange="change_charge_type()" class="form-control disable_a_href" %}
+							</div>
+						</div>
+						<div class="col-3">
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">GST %</span>
+								</div>
+								{% render_field form.qs_gst id="qs_gst"  onchange="change_charge_type()" class="form-control  " %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Final Cost</span>
+								</div>
+								{% render_field form.qs_final_cost id="qs_final_cost"  class="form-control  disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Rate Per CFT</span>
+								</div>
+								{% render_field form.qs_rate_per_cft id="qs_rate_per_cft"  class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Quotation Status</span>
+								</div>
+								{% render_field form.qs_status id="qs_status"  class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Quotation Number</span>
+								</div>
+								{% render_field form.qs_quotation_number id="qs_quotation_number"  class="form-control disable_a_href" %}
+							</div>
+						</div>
+						<div class="col-6">
 							<div id="accordion" class="container-fluid">
 								<div class="card">
 									<div class="card-header bg-info" id="headingOne">
@@ -129,67 +196,7 @@
 								</div>
 							</div>
 						</div>
-						<div class="col-6">
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Transport Cost</span>
-								</div>
-								{% render_field form.qs_transport_cost id="qs_transport_cost" class="form-control disable_a_href" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Total Cost (W/O Margin)</span>
-								</div>
-								{% render_field form.qs_total_cost_wom id="qs_total_cost_wom"  class="form-control disable_a_href" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Margin (%)</span>
-								</div>
-								{% render_field form.qs_margin id="qs_margin"  onchange="change_charge_type()" class="form-control " %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Total Cost (With Margin)</span>
-								</div>
-								{% render_field form.qs_total_cost_wm id="qs_total_cost_wm"  class="form-control disable_a_href " %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Total CFT</span>
-								</div>
-								{% render_field form.qs_total_cft id="qs_total_cft"  onchange="change_charge_type()" class="form-control disable_a_href" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">GST %</span>
-								</div>
-								{% render_field form.qs_gst id="qs_gst"  onchange="change_charge_type()" class="form-control  " %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Final Cost</span>
-								</div>
-								{% render_field form.qs_final_cost id="qs_final_cost"  class="form-control  disable_a_href" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Rate Per CFT</span>
-								</div>
-								{% render_field form.qs_rate_per_cft id="qs_rate_per_cft"  class="form-control disable_a_href" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Quotation Status</span>
-								</div>
-								{% render_field form.qs_status id="qs_status"  class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Quotation Number</span>
-								</div>
-								{% render_field form.qs_quotation_number id="qs_quotation_number"  class="form-control disable_a_href" %}
-							</div>
+							<div class="col-6">
 							<div id="accordion_1" class="container-fluid mb-3">
 								<div class="card">
 									<div class="card-header bg-info" id="headingFour">

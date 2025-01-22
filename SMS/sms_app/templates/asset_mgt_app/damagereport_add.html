@@ -44,8 +44,7 @@
 	{% csrf_token %}
 	<!--{{form.as_p}}-->
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center">
@@ -68,7 +67,7 @@
 					</div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">WH Job Number</span>
@@ -93,6 +92,8 @@
 									</div>
 									{% render_field damagereport_form.dam_no_of_units_deviation id="dam_no_of_units_deviation" class="form-control"%}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Ratification Process?</span>
@@ -111,8 +112,6 @@
 									</div>
 									{% render_field damagereportimg_form.dam_OTL_pic class="form-control" %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3 bg-dark block">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Documents</span>
@@ -120,6 +119,9 @@
 									{% render_field damagereportimg_form.dam_document name="dam_document" id="dam_document" class="form-control" %}
 								</div>
 								{% render_field damagereportimg_form.damimage_wh_job_num name="damimage_wh_job_num" id="damimage_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control" %}
+
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3 bg-dark block">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Closed Door Pic</span>
@@ -145,6 +147,8 @@
 									</div>
 									{% render_field damagereportimg_form.dam_empty_vehicle class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3 bg-dark block">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Approval</span>
@@ -181,7 +185,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 </form>
 
