@@ -306,7 +306,7 @@ nav > div a.nav-item.nav-link:focus
 /*Disable anchor*/
 .disable_a_href{
     pointer-events: none;
-    background:#c0c0c0 !important;
+    background:#CCFFCC !important;
     color:#000000 !important;
 }
 
