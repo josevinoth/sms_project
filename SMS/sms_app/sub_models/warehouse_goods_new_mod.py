@@ -1,18 +1,14 @@
 from django.db import models
-from ..models import TrbusinesstypeInfo,CustomerInfo,DamagereportInfo,Loadingbay_Info,Gatein_info,Dispatch_info,VehicletypeInfo,Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
+from django.utils.timezone import now
+from ..models import Pregateintruckinfo,Gatein_pre_info,YesNoInfo,MyUser,Stock_type,CustomerdepartmentInfo,TrbusinesstypeInfo,CustomerInfo,DamagereportInfo,Loadingbay_Info,Gatein_info,Dispatch_info,VehicletypeInfo,Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
 
 class warehouse_goodsnew_info(models.Model):
-    whn_job_no = models.CharField(blank=False, null=False, max_length=200, default='')
+    whn_job_no = models.CharField(blank=True, null=True, max_length=200)
     whn_gate_injob_no_id = models.ForeignKey(Gatein_info, on_delete=models.CASCADE, related_name='whn_job_no_id',db_column='whn_job_no_id', null=True, blank=True)
     whn_lb_job_no_id = models.ForeignKey(Loadingbay_Info, on_delete=models.CASCADE, related_name='whn_lb_job_no_id',db_column='whn_lb_job_no_id', null=True, blank=True)
     whn_Dam_rep_job_num_id = models.ForeignKey(DamagereportInfo, on_delete=models.CASCADE,related_name='whn_Dam_rep_job_num_id', db_column='whn_Dam_rep_job_num_id',null=True, blank=True)
-    whn_goods_invoice = models.CharField(blank=True, null=True, max_length=200)
-    whn_goods_pieces = models.FloatField()
-    whn_goods_length = models.FloatField()
-    whn_goods_width = models.FloatField()
-    whn_goods_height = models.FloatField()
-    whn_goods_weight = models.FloatField()
-    whn_goods_package_type = models.ForeignKey(Packagetype_info, on_delete=models.CASCADE, default='')
+    whn_goods_invoice = models.CharField(max_length=200)
+    whn_goods_package_type = models.ForeignKey(Packagetype_info, on_delete=models.CASCADE, default='',blank=True, null=True,)
     whn_goods_volume_weight = models.FloatField(default=0.0)
     whn_goods_status = models.ForeignKey(StatusList, on_delete=models.CASCADE,default=6,null=True,related_name='whn_goods_status',db_column='whn_goods_status')
     whn_weights_deviation = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,null=True,related_name='whn_weights_deviation',db_column='whn_weights_deviation',default=2)
@@ -41,16 +37,16 @@ class warehouse_goodsnew_info(models.Model):
     whn_storage_time = models.FloatField(blank=True, null=True,default=0.0)
     whn_qr_rand_num = models.CharField(blank=True, null=True, max_length=200)
     whn_dispatch_num = models.CharField(blank=True, null=True, max_length=200)
-    whn_consigner = models.CharField(blank=True, null=True, max_length=200)
-    whn_consignee = models.CharField(blank=True, null=True, max_length=200)
+    whn_consigner = models.CharField(max_length=200,default='')
+    whn_consignee = models.CharField(max_length=200,default='')
     whn_comments = models.TextField(blank=True, null=True)
     whn_invoice_value= models.FloatField(blank=True, null=True,default=0.0)
     whn_invoice_amount_inr = models.FloatField(blank=True, null=True,default=0.0)
     whn_voucher_num = models.CharField(blank=True, null=True, max_length=200)
-    whn_po_num = models.CharField(blank=True, null=True, max_length=100)
+    whn_po_num = models.CharField(max_length=100,default="NA")
     whn_invoice_weight_unit = models.FloatField(blank=True, null=True,default=0.0)
     whn_invoice_qty = models.IntegerField(blank=True, null=True)
-    whn_gross_weight = models.FloatField(blank=True, null=True)
+    whn_gross_weight = models.FloatField(default=0.0)
     whn_total_qty = models.IntegerField(blank=True, null=True, default=0)
     whn_loading_charge_unit = models.FloatField(blank=True, null=True, default=0.0)
     whn_total_loading_cost = models.FloatField(blank=True, null=True, default=0.0)
@@ -65,7 +61,22 @@ class warehouse_goodsnew_info(models.Model):
     whn_total_invoice_cost = models.FloatField(blank=True, null=True, default=0.0)
     whn_truck_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, null=True,blank=True)
     whn_dispatch_id= models.ForeignKey(Dispatch_info, on_delete=models.CASCADE, null=True,blank=True)
+    whn_department = models.ForeignKey(CustomerdepartmentInfo,on_delete=models.CASCADE, blank=False, null=False,default="")
+    whn_comodity = models.ForeignKey(Stock_type, on_delete=models.CASCADE,null=True)
+    whn_created_at = models.DateTimeField(null=True, auto_now_add=True)
+    whn_updated_at = models.DateTimeField(null=True, auto_now=True)
+    whn_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+    whn_cargo = models.ForeignKey(YesNoInfo,blank=True, null=True,default='1', on_delete=models.CASCADE)
+    whn_dock_in_date_time = models.DateTimeField(default=now)
+    whn_destination = models.CharField(blank=True, null=True, max_length=100)
+    whn_hawb = models.CharField(max_length=100,default='NA')
+    whn_pre_id = models.ForeignKey(Gatein_pre_info, on_delete=models.CASCADE,default='',null=True)
+    whn_truck_number_n = models.ForeignKey(Pregateintruckinfo, on_delete=models.CASCADE,default='',null=True)
+    whn_gatein_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,null=True)
 
+    class Meta:
+        ordering = ["whn_job_no"]
 
-
+    def __str__(self):
+        return self.whn_job_no
 

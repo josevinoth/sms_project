@@ -15,194 +15,163 @@
 			<div class="card-body">
 				<form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" >
 					{% csrf_token %}
-					<div class="row">
+					<div class="row container-fluid">
 						<div class="col-3">
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">WH Job Number</span>
 								</div>
-								{% render_field gatein_form.gatein_job_no class="form-control" id="job_num" readonly=True %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_job_no class="form-control disable_a_href" id="whn_job_no"  %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Shipper Invoice</span>
 								</div>
-								{% render_field gatein_form.gatein_invoice class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_goods_invoice class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">PO Number</span>
 								</div>
-								{% render_field gatein_form.gatein_po_num class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_po_num class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Customer</span>
 								</div>
-								{% render_field gatein_form.gatein_customer id="gatein_customer" class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_customer_name id="whn_customer_name" class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Customer Model</span>
 								</div>
-								{% render_field gatein_form.gatein_customer_type id="gatein_customer_type" class="form-control disable_a_href" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_customer_type id="whn_customer_type" class="form-control disable_a_href" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Customer Department</span>
 								</div>
-								{% render_field gatein_form.gatein_department class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Commodity</span>
-								</div>
-								{% render_field gatein_form.gatein_comodity class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_department class="form-control" %}
 							</div>
 						</div>
 						<div class="col-3">
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
+									<span class="input-group-text">Commodity</span>
+								</div>
+								{% render_field wh_goods_gatein_form.whn_comodity class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
 									<span class="input-group-text">DG Cargo</span>
 								</div>
-								{% render_field gatein_form.gatein_cargo class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_cargo id="whn_cargo" class="form-control" id="whn_cargo"  %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Dock-In Date & Time</span>
 								</div>
-								{% render_field gatein_form.gatein_arrival_date id='gatein_arrival_date' type="datetime-local" class="form-control " %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_dock_in_date_time type="datetime-local" class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Consignor</span>
+									<span class="input-group-text">Consigner</span>
 								</div>
-								{% render_field gatein_form.gatein_shipper class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_consigner class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Consignee</span>
 								</div>
-								{% render_field gatein_form.gatein_consignee class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_consignee class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Total Packages</span>
 								</div>
-								{% render_field gatein_form.gatein_no_of_pkg id="gatein_no_of_pkg" class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Invoice weight-Gross(Kg)</span>
-								</div>
-								{% render_field gatein_form.gatein_weight class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_total_qty class="form-control" %}
 							</div>
 						</div>
 						<div class="col-3">
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
+									<span class="input-group-text">Invoice Weight-Gross (kg)</span>
+								</div>
+								{% render_field wh_goods_gatein_form.whn_gross_weight class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
 									<span class="input-group-text">Destination</span>
 								</div>
-								{% render_field gatein_form.gatein_destination id="gatein_destination" class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_destination class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">HAWB</span>
 								</div>
-								{% render_field gatein_form.gatein_hawb id="gatein_hawb" class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_hawb id="whn_hawb" class="form-control" id="whn_cargo"  %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Pre-GateIn</span>
+									<span class="input-group-text">Pre-Gatin</span>
 								</div>
-								{% render_field gatein_form.gatein_pre_id class="form-control " id="gatein_pre_id" %}
-							</div>
-
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Pre-GateIn Truck Number</span>
-								</div>
-								{% render_field gatein_form.gatein_truck_number_n id="gatein_truck_number_n" class="form-control disable_a_href" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_pre_id class="form-control" id="whn_pre_id" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Driver Name</span>
+									<span class="input-group-text">Pre-Gatein Truck Number</span>
 								</div>
-								{% render_field gatein_form.gatein_driver id="gatein_driver" class="form-control disable_a_href" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_truck_number_n id="whn_truck_number_n" class="form-control disable_a_href" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Driver Contact</span>
+									<span class="input-group-text">Gate-In Status</span>
 								</div>
-								{% render_field gatein_form.gatein_contact_number id="gatein_contact_number" class="form-control disable_a_href" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								{% render_field wh_goods_gatein_form.whn_gatein_status id="whn_gatein_status" class="form-control disable_a_href" %}
 							</div>
 						</div>
 						<div class="col-3">
-							<div class="input-group input-group-sm mb-3">
+							<div class="input-group input-group-sm mb-3 ">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Driver License</span>
+									<div class="input-group-text">Driver Name</div>
 								</div>
-								{% render_field gatein_form.gatein_dl_number id="gatein_dl_number" class="form-control disable_a_href" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<input type="text" class="form-control disable_a_href" id="driver_name">
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">OTL</span>
+									<div class="input-group-text">Driver Contact</div>
 								</div>
-								{% render_field gatein_form.gatein_otl id="gatein_otl" class="form-control disable_a_href" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<input type="text" class="form-control disable_a_href" id="driver_contact">
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Transporter</span>
+									<div class="input-group-text">Driver License</div>
 								</div>
-								{% render_field gatein_form.gatein_transporter id="gatein_transporter" class="form-control disable_a_href" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<input type="text" class="form-control disable_a_href" id="driver_license">
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Truck Number</span>
+									<div class="input-group-text">OTL</div>
 								</div>
-								{% render_field gatein_form.gatein_truck_number id="gatein_truck_number" class="form-control disable_a_href" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<input type="text" class="form-control disable_a_href" id="otl">
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Truck Type</span>
+									<div class="input-group-text">Transporter</div>
 								</div>
-								{% render_field gatein_form.gatein_truck_type id="gatein_truck_type" class="form-control disable_a_href" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<input type="text" class="form-control disable_a_href" id="transporter">
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Status</span>
+									<div class="input-group-text">Truck Type</div>
 								</div>
-								{% render_field gatein_form.gatein_status class="form-control" id="gatein_status" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<input type="text" class="form-control disable_a_href" id="truck_type">
 							</div>
-							{% render_field gatein_form.gatein_updated_by id="gatein_updated_by"  hidden="True" class="form-control" %}
-							{% render_field gatein_form.gatein_job_status id="gatein_job_status"  hidden="True" class="form-control" %}
 						</div>
+
+						{% render_field wh_goods_gatein_form.whn_updated_by id="whn_updated_by"  hidden="True" class="form-control" %}
 					</div>
-					<div class="row">
+					<div class="row ">
 						<div class="col-1"></div>
 						<div class="col-10">
 							<div class="message text-center">
@@ -213,8 +182,9 @@
 						</div>
 						<div class="col-1"></div>
 					</div>
-					<!--						<button type="submit" class="btn btn-success" onclick="	myjobnum()"><i class="fas fa-check"></i> Save</button>-->
-					<button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Save</button>
+					<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
+					<a href="{% url 'warehouse_goods_gatein_list' %}" class="btn btn-danger float-right">
+						<i class="fas fa-times"></i> Cancel </a>
 				</form>
 			</div>
 		</div>
@@ -262,7 +232,7 @@
 	</div>
 </div>
 <script>
-	$("#gatein_customer").change(function () {
+	$("#whn_customer_name").change(function () {
       var url = $("#gate_in").attr("data-load_customer_model-url");
       var gatein_customer_id = $(this).find(":selected").text();
       $.ajax({
@@ -272,14 +242,13 @@
         },
         success: function (data) {
             var customer_model=JSON.parse(data)["customer_businessmodel_val"];
-            document.getElementById("gatein_customer_type").value =customer_model;
+            document.getElementById("whn_customer_type").value =customer_model;
         }
       });
-
     });
 </script>
 <script>
-	$("#gatein_pre_id").change(function () {
+	$("#whn_pre_id").change(function () {
       var pre_gatein_val = $(this).find(":selected").text();
        $.ajax({
         url: '{% url 'load_pre_gate_in' %}',
@@ -289,22 +258,22 @@
         success: function (data) {
             var truck_numbers=data.truck_numbers;
             var truck_numbers_id=data.truck_numbers_id;
-            $('#gatein_truck_number_n').removeClass('disable_a_href');
-            $('#gatein_truck_number_n').empty();
-            $('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
+            $('#whn_truck_number_n').removeClass('disable_a_href');
+            $('#whn_truck_number_n').empty();
+            $('#whn_truck_number_n').empty().append("<option value='0'>--Select--</option>");
             var len = (truck_numbers).length;
-            $('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
+            $('#whn_truck_number_n').empty().append("<option value='0'>--Select--</option>");
             for( var i = 0; i<len; i++){
-                $("#gatein_truck_number_n").append("<option value='"+truck_numbers_id[i]+"'>"+truck_numbers[i]+"</option>");
+                $("#whn_truck_number_n").append("<option value='"+truck_numbers_id[i]+"'>"+truck_numbers[i]+"</option>");
             }
         }
       });
     });
 </script>
 <script>
-	$("#gatein_truck_number_n").change(function () {
+	$("#whn_truck_number_n").change(function () {
       var gatein_truck_number_val = $(this).find(":selected").text();
-       var pre_gatein_id =document.getElementById("gatein_pre_id").value
+       var pre_gatein_id =document.getElementById("whn_pre_id").value
        $.ajax({
         url: '{% url 'load_pre_gate_in_truck_details' %}',
         data: {
@@ -320,13 +289,12 @@
             var Truck_Number=data.Truck_Number;
             var Truck_Type=data.Truck_Type;
             var dock_in_time=data.dock_in_time;
-            document.getElementById("gatein_transporter").value =Transporter;
-            document.getElementById("gatein_truck_type").value =Truck_Type;
-            document.getElementById("gatein_truck_number").value =Truck_Number;
-            document.getElementById("gatein_otl").value =OTL;
-            document.getElementById("gatein_dl_number").value =Driver_License;
-            document.getElementById("gatein_contact_number").value =Driver_Contact;
-            document.getElementById("gatein_driver").value =Driver_Name;
+            document.getElementById("transporter").value =Transporter;
+            document.getElementById("truck_type").value =Truck_Type;
+            document.getElementById("otl").value =OTL;
+            document.getElementById("driver_license").value =Driver_License;
+            document.getElementById("driver_contact").value =Driver_Contact;
+            document.getElementById("driver_name").value =Driver_Name;
             document.getElementById("gatein_arrival_date").value =dock_in_time;
         }
       });
@@ -339,8 +307,7 @@
             liveSearch: true,
             noneSelectedText: 'Search Pre-GateIn'
         });
-                document.getElementById("gatein_updated_by").value ='{{user_id}}';
-
+        document.getElementById("whn_updated_by").value ='{{user_id}}';
     });
 </script>
 {% endblock content %}
