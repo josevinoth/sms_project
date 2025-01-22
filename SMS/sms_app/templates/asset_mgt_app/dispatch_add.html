@@ -3,8 +3,7 @@
 {% block content %}
 
 <div class="row">
-	<div class="col-2"></div>
-	<div class="col-8">
+	<div class="col">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 				<div class="card-header text-center">
@@ -41,7 +40,7 @@
 					<form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}">
 						{% csrf_token %}
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Dispatch Number</span>
@@ -77,6 +76,8 @@
 									{% render_field dispatch_form.dispatch_billing_truck_type id="dispatch_billing_truck_type" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Name</span>
@@ -105,14 +106,14 @@
 									{% render_field dispatch_form.dispatch_otl class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Transporter</span>
 									</div>
 									{% render_field dispatch_form.dispatch_transporter class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Depature Date & Time</span>
@@ -143,6 +144,8 @@
 									</div>
 									{% render_field dispatch_form.dispatch_total_weight class="form-control disable_a_href"  id="dispatch_total_weight" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Packages</span>
@@ -183,12 +186,10 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-2"></div>
 </div>
 <br>
 <div class="row">
-	<div class="col-1"></div>
-	<div class="col-10" >
+	<div class="col" >
 		<div id="accordion" class="container-fluid">
 			<div class="card">
 				<div class="card-header bg-info" id="headingTwo">
@@ -210,7 +211,6 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-1"></div>
 </div>
 
 <script>
