@@ -4,14 +4,13 @@
 <form method="POST" action="">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update PO Dimension</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
@@ -36,6 +35,8 @@
 									</div>
 									{% render_field form.pod_po_num id="pod_po_num" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Delivery Schedule Date</span>
@@ -60,14 +61,15 @@
 									</div>
 									{% render_field form.pod_wood_description id="pod_wood_description" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Dimension Type</span>
 									</div>
 									{% render_field form.pod_dimension_type id="pod_dimension_type" class="form-control" %}
 								</div>
-							</div>
-							<div class="col-6">
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">UOM</span>
@@ -86,6 +88,8 @@
 									</div>
 									{% render_field form.pod_width id="pod_width" class="form-control" %}
 								</div>
+								</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Height</span>
@@ -132,7 +136,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 </form>
 <script>
