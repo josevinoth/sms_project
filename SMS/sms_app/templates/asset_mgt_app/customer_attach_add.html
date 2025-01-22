@@ -4,8 +4,7 @@
 <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="row">
-        <div class="col-2"></div>
-        <div class="col-8">
+        <div class="col">
             <div class="container-fluid">
                 <div class="card text-white bg-info mb-3" style="max-width: 100%;">
                     <div class="card-header text-center">
@@ -13,7 +12,7 @@
                     </div>
                     <div class="card-body bg-light">
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-3">
                                 <!-- Customer Name Field -->
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -37,7 +36,8 @@
                                     </div>
                                     {% render_field form.ca_contract_start_date id="ca_contract_start_date" type="date" class="form-control" %}
                                 </div>
-
+                            </div>
+                            <div class="col-3">
                                 <!-- Contract End Date Field -->
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -61,7 +61,8 @@
                                     </div>
                                     {% render_field form.ca_sow_attach id="ca_sow_attach" class="form-control" %}
                                 </div>
-
+                            </div>
+                            <div class="col-3">
                                 <!-- KYC Attachment Field -->
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -69,9 +70,6 @@
                                     </div>
                                     {% render_field form.ca_kyc_attach id="ca_kyc_attach" class="form-control" %}
                                 </div>
-                            </div>
-
-                            <div class="col-6">
                                 <!-- Rate Attachment Field -->
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -87,7 +85,8 @@
                                     </div>
                                     {% render_field form.ca_rate_start_date id="ca_rate_start_date" type="date" class="form-control" %}
                                 </div>
-
+                            </div>
+                            <div class="col-3">
                                 <!-- Rate End Date Field -->
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -101,6 +100,8 @@
                                     </div>
                                     {% render_field form.ca_status id="ca_status" class="form-control" %}
                                 </div>
+                            </div>
+
                                 {% render_field form.ca_updated_by id="ca_updated_by" hidden="True" class="form-control" %}
 
                                 <!-- Comment Box Field -->
@@ -110,8 +111,6 @@
                                     </div>
                                     {% render_field form.ca_comments_box id="ca_comments_box" class="form-control" %}
                                 </div>
-
-                            </div>
                         </div>
 
                         <!-- Message Display Section -->
@@ -138,7 +137,6 @@
                 </div>
             </div>
         </div>
-        <div class="col-2"></div>
     </div>
 </form>
 

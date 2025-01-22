@@ -5,14 +5,13 @@
 <form method="POST" id="whratemaster" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" >
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Warehouse Rate Master</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" id="">Customer Name</span>
@@ -25,6 +24,8 @@
 									</div>
 									{% render_field form.whrm_businessmodel id="whrm_businessmodel" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Charge Type</span>
@@ -39,6 +40,8 @@
 									{% render_field form.whrm_vehicle_type id="whrm_vehicle_type" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="row">
 									<div class="col-6">
 										<div class="input-group input-group-sm mb-3">
@@ -79,6 +82,8 @@
 										</div>
 									</div>
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Rate (INR)</span>
@@ -93,29 +98,28 @@
 									{% render_field form.whrm_description id="whrm_description" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								{% render_field form.whrm_updated_by id="whrm_updated_by" hidden="True" class="form-control" %}
-								<div class="row">
-									<div class="col-1"></div>
-									<div class="col-10">
-										<div class="message text-center">
-											{% for message in messages %}
-											<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-											{% endfor %}
-										</div>
+							</div>
+							{% render_field form.whrm_updated_by id="whrm_updated_by" hidden="True" class="form-control" %}
+							<div class="row">
+								<div class="col-1"></div>
+								<div class="col-10">
+									<div class="message text-center">
+										{% for message in messages %}
+										<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+										{% endfor %}
 									</div>
-									<div class="col-1"></div>
 								</div>
-								<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-								<a href="{% url 'whratemaster_list' %}" class="btn btn-danger float-right">
-									<i class="fas fa-times"></i> Cancel
-								</a>
+								<div class="col-1"></div>
 							</div>
 						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'whratemaster_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="col-3"></div>
 	</div>
 </form>
 <script>

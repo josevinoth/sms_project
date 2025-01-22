@@ -41,8 +41,7 @@
 <form method="POST" action="" enctype="multipart/form-data" id="loadingbay_add" data-currency_value-url="{% url 'load_currency_value' %}">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center">
@@ -65,7 +64,7 @@
 					</div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">WH Job Number</span>
@@ -108,6 +107,8 @@
 									</div>
 									{% render_field loadingbay_form.lb_stock_unloading_start_time type="datetime-local" class="form-control" id="lb_stock_unloading_start_time" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unloading End Time</span>
@@ -144,8 +145,6 @@
 									</div>
 									{% render_field loadingbay_form.lb_validity_date type="datetime-local" class="form-control" %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Manual Handling?</span>
@@ -153,6 +152,8 @@
 									{% render_field loadingbay_form.lb_mh_manual class="form-control" %}
 								</div>
 								{% render_field loadingbayimg_form.lbimg_job_no id="lbimg_job_no" value=request.session.ses_gatein_id_nam class="form-control" %}
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Forklift?</span>
@@ -172,7 +173,7 @@
 									{% render_field loadingbay_form.lb_no_of_forklift id="lb_no_of_forklift" class="form-control disable_a_href" %}
 								</div>
 								<div class="row">
-									<div class="col-6">
+									<div class="col-5">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Forklift Charges<2hr</span>
@@ -180,7 +181,7 @@
 											{% render_field loadingbay_form.lb_forklift_charges_std_l2hr id="lb_forklift_charges_std_l2hr" class="form-control disable_a_href" %}
 										</div>
 									</div>
-									<div class="col-6">
+									<div class="col-7">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Forklift Charges<2hr (Mod)</span>
@@ -190,7 +191,7 @@
 									</div>
 								</div>
 								<div class="row">
-									<div class="col-6">
+									<div class="col-5">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Forklift Charges>2hr</span>
@@ -198,7 +199,7 @@
 											{% render_field loadingbay_form.lb_forklift_charges_std_g2hr id="lb_forklift_charges_std_g2hr" class="form-control disable_a_href" %}
 										</div>
 									</div>
-									<div class="col-6">
+									<div class="col-7">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Forklift Charges>2hr (Mod)</span>
@@ -213,6 +214,8 @@
 									</div>
 									{% render_field loadingbay_form.lb_mh_crane id="lb_mh_crane" onchange="lb_crane_forklift_change()" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">No Of Cranes</span>
@@ -226,7 +229,7 @@
 									{% render_field loadingbay_form.lb_crane_time id="lb_crane_time" class="form-control " %}
 								</div>
 								<div class="row">
-									<div class="col-6">
+									<div class="col-5">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Crane Charges<2hr</span>
@@ -234,7 +237,7 @@
 											{% render_field loadingbay_form.lb_crane_charges_std_l2hr id="lb_crane_charges_std_l2hr" class="form-control disable_a_href" %}
 										</div>
 									</div>
-									<div class="col-6">
+									<div class="col-7">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Crane Charges<2hr (Mod)</span>
@@ -244,7 +247,7 @@
 									</div>
 								</div>
 								<div class="row">
-									<div class="col-6">
+									<div class="col-5">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Crane Charges>2hr</span>
@@ -252,7 +255,7 @@
 											{% render_field loadingbay_form.lb_crane_charges_std_g2hr id="lb_crane_charges_std_g2hr" class="form-control disable_a_href" %}
 										</div>
 									</div>
-									<div class="col-6">
+									<div class="col-7">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Crane Charges>2hr (Mod)</span>
@@ -292,235 +295,234 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 </form>
 <script>
-$(document).ready(function() {
-	var gatein_status_id='{{gatein_status}}';
-	var loadingbay_status_id='{{loadingbay_status}}';
-	var damage_before_status_id='{{damage_before_status}}';
-	var damage_after_status_id='{{damage_after_status}}';
-	var warehousein_status_id='{{warehousein_status}}';
-	document.getElementById("lb_invoice").value='{{shipper_invoice}}'
+	$(document).ready(function() {
+        var gatein_status_id='{{gatein_status}}';
+        var loadingbay_status_id='{{loadingbay_status}}';
+        var damage_before_status_id='{{damage_before_status}}';
+        var damage_after_status_id='{{damage_after_status}}';
+        var warehousein_status_id='{{warehousein_status}}';
+        document.getElementById("lb_invoice").value='{{shipper_invoice}}'
 
-	document.getElementById("lb_crane_charges_std_l2hr").value='{{crane_1st_2hr}}'
-	document.getElementById("lb_crane_charges_std_g2hr").value='{{crane_nxt_2hr}}'
-	document.getElementById("lb_forklift_charges_std_l2hr").value='{{forklift_1st_2hr}}'
-	document.getElementById("lb_forklift_charges_std_g2hr").value='{{forklift_nxt_2hr}}'
-	if (gatein_status_id =="Completed")
-	{
-		$('#gatein_btn').removeClass('disable_a_href');
-		$('#gatein_btn1').removeClass('disable_a_href');
-		$('#gatein_btn').addClass('btn-success');
-		$('#gatein_btn1').addClass('btn-success');
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-	}
-	else if (gatein_status_id =="Work In Progress")
-	{
-		$('#gatein_btn').removeClass('disable_a_href');
-		$('#gatein_btn1').removeClass('disable_a_href');
-		$('#gatein_btn').addClass('btn-warning');
-		$('#gatein_btn1').addClass('btn-warning');
-	}
+        document.getElementById("lb_crane_charges_std_l2hr").value='{{crane_1st_2hr}}'
+        document.getElementById("lb_crane_charges_std_g2hr").value='{{crane_nxt_2hr}}'
+        document.getElementById("lb_forklift_charges_std_l2hr").value='{{forklift_1st_2hr}}'
+        document.getElementById("lb_forklift_charges_std_g2hr").value='{{forklift_nxt_2hr}}'
+        if (gatein_status_id =="Completed")
+        {
+            $('#gatein_btn').removeClass('disable_a_href');
+            $('#gatein_btn1').removeClass('disable_a_href');
+            $('#gatein_btn').addClass('btn-success');
+            $('#gatein_btn1').addClass('btn-success');
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+        }
+        else if (gatein_status_id =="Work In Progress")
+        {
+            $('#gatein_btn').removeClass('disable_a_href');
+            $('#gatein_btn1').removeClass('disable_a_href');
+            $('#gatein_btn').addClass('btn-warning');
+            $('#gatein_btn1').addClass('btn-warning');
+        }
 
-	if (loadingbay_status_id =="Completed")
-	{
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		$('#loadingbay_btn').addClass('btn-success');
-		$('#loadingbay_btn1').addClass('btn-success');
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-	}
-	else if (loadingbay_status_id =="Work In Progress")
-	{
-		$('#loadingbay_btn').removeClass('disable_a_href');
-		$('#loadingbay_btn1').removeClass('disable_a_href');
-		$('#loadingbay_btn').addClass('btn-warning');
-		$('#loadingbay_btn1').addClass('btn-warning');
-	}
+        if (loadingbay_status_id =="Completed")
+        {
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+            $('#loadingbay_btn').addClass('btn-success');
+            $('#loadingbay_btn1').addClass('btn-success');
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+        }
+        else if (loadingbay_status_id =="Work In Progress")
+        {
+            $('#loadingbay_btn').removeClass('disable_a_href');
+            $('#loadingbay_btn1').removeClass('disable_a_href');
+            $('#loadingbay_btn').addClass('btn-warning');
+            $('#loadingbay_btn1').addClass('btn-warning');
+        }
 
-	if (damage_before_status_id =="Completed")
-	{
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		$('#damagecheck_before_btn').addClass('btn-success');
-		$('#damagecheck_before_btn1').addClass('btn-success');
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-	}
-	else if (damage_before_status_id =="Work In Progress")
-	{
-		$('#damagecheck_before_btn').removeClass('disable_a_href');
-		$('#damagecheck_before_btn1').removeClass('disable_a_href');
-		$('#damagecheck_before_btn').addClass('btn-warning');
-		$('#damagecheck_before_btn1').addClass('btn-warning');
-	}
-	if (damage_after_status_id =="Completed")
-	{
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-success');
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (damage_after_status_id =="No Status")
-	{
-		$('#damagecheck_after_btn').removeClass('disable_a_href');
-		$('#damagecheck_after_btn').addClass('btn-warning');
-	}
+        if (damage_before_status_id =="Completed")
+        {
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            $('#damagecheck_before_btn').addClass('btn-success');
+            $('#damagecheck_before_btn1').addClass('btn-success');
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+        }
+        else if (damage_before_status_id =="Work In Progress")
+        {
+            $('#damagecheck_before_btn').removeClass('disable_a_href');
+            $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            $('#damagecheck_before_btn').addClass('btn-warning');
+            $('#damagecheck_before_btn1').addClass('btn-warning');
+        }
+        if (damage_after_status_id =="Completed")
+        {
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+            $('#damagecheck_after_btn').addClass('btn-success');
+            $('#warehousein_btn').removeClass('disable_a_href');
+        }
+        else if (damage_after_status_id =="No Status")
+        {
+            $('#damagecheck_after_btn').removeClass('disable_a_href');
+            $('#damagecheck_after_btn').addClass('btn-warning');
+        }
 
-	if (warehousein_status_id =="Completed")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-success');
-		$('#storage_btn').removeClass('disable_a_href');
-		$('#storage_btn').addClass('btn-success');
-	}
-	else if (warehousein_status_id =="None")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-	}
-	else if (warehousein_status_id =="No Status")
-	{
-		$('#warehousein_btn').removeClass('disable_a_href');
-		$('#warehousein_btn').addClass('btn-warning');
-	}
-	lb_crane_forklift_change();
-	lb_status_change();
-	inv_curr_change();
-	challan_damage_btn_active();
-	change_pouch();
-  });
+        if (warehousein_status_id =="Completed")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn').addClass('btn-success');
+            $('#storage_btn').removeClass('disable_a_href');
+            $('#storage_btn').addClass('btn-success');
+        }
+        else if (warehousein_status_id =="None")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+        }
+        else if (warehousein_status_id =="No Status")
+        {
+            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn').addClass('btn-warning');
+        }
+        lb_crane_forklift_change();
+        lb_status_change();
+        inv_curr_change();
+        challan_damage_btn_active();
+        change_pouch();
+      });
 </script>
 <script>
-function challan_damage_btn_active() {
-	var otl_check_val =document.getElementById("lb_otl_check").value;
-	var offload_acceptance_val=document.getElementById("lb_offload_acceptance").value;
-	if ((otl_check_val==2)||(offload_acceptance_val==2))
-	 {
-	 	document.getElementById("lb_status").value=6
-	 	$('#lb_status').addClass('disable_a_href');
-	 	$('#delivery_chalan_btn').removeClass('disable_a_href');
-	 	$('#damage_report_btn').removeClass('disable_a_href');
-	 }
-	 else
-	 {
-	 	$('#lb_status').removeClass('disable_a_href');
-	 	$('#delivery_chalan_btn').addClass('disable_a_href');
-	 	$('#damage_report_btn').addClass('disable_a_href');
-	 }
-}
+	function challan_damage_btn_active() {
+        var otl_check_val =document.getElementById("lb_otl_check").value;
+        var offload_acceptance_val=document.getElementById("lb_offload_acceptance").value;
+        if ((otl_check_val==2)||(offload_acceptance_val==2))
+         {
+             document.getElementById("lb_status").value=6
+             $('#lb_status').addClass('disable_a_href');
+             $('#delivery_chalan_btn').removeClass('disable_a_href');
+             $('#damage_report_btn').removeClass('disable_a_href');
+         }
+         else
+         {
+             $('#lb_status').removeClass('disable_a_href');
+             $('#delivery_chalan_btn').addClass('disable_a_href');
+             $('#damage_report_btn').addClass('disable_a_href');
+         }
+    }
 </script>
 <!--Fetch Units-->
 <script>
-   $("#lb_stock_invoice_currency").change(function () {
-      var url = $("#loadingbay_add").attr("data-currency_value-url");
-      var currency_type = $(this).val();
-      $.ajax({
-        url: url,
-        data: {
-          'currency_type': currency_type,
-        },
-		success: function (data) {
-			conversion_rate_val=JSON.parse(data)["currency_value"]
-			document.getElementById("lb_stock_currency_con").value=conversion_rate_val;
-        	var invoice_value_val=document.getElementById("lb_stock_invoice_value").value;
-        	var amount_INR_val=(invoice_value_val*conversion_rate_val).toFixed(2)
-        	document.getElementById("lb_stock_amount_in").value=amount_INR_val
+	$("#lb_stock_invoice_currency").change(function () {
+       var url = $("#loadingbay_add").attr("data-currency_value-url");
+       var currency_type = $(this).val();
+       $.ajax({
+         url: url,
+         data: {
+           'currency_type': currency_type,
+         },
+         success: function (data) {
+             conversion_rate_val=JSON.parse(data)["currency_value"]
+             document.getElementById("lb_stock_currency_con").value=conversion_rate_val;
+             var invoice_value_val=document.getElementById("lb_stock_invoice_value").value;
+             var amount_INR_val=(invoice_value_val*conversion_rate_val).toFixed(2)
+             document.getElementById("lb_stock_amount_in").value=amount_INR_val
+         }
+       });
+     });
+</script>
+<script>
+	function lb_status_change() {
+        var lb_status_val=document.getElementById("lb_status").value;
+        if (lb_status_val==6){
+                $('#lb_stock_invoice_currency').removeClass('disable_a_href');
+                $('#lb_stock_invoice_value').removeClass('disable_a_href');
+            }
+        else
+            {
+                $('#lb_stock_invoice_currency').addClass('disable_a_href');
+                $('#lb_stock_invoice_value').addClass('disable_a_href');
+            }
+            inv_curr_change();
         }
-      });
-    });
- </script>
-<script>
-function lb_status_change() {
-	var lb_status_val=document.getElementById("lb_status").value;
-	if (lb_status_val==6){
-			$('#lb_stock_invoice_currency').removeClass('disable_a_href');
-			$('#lb_stock_invoice_value').removeClass('disable_a_href');
-		}
-	else
-		{
-			$('#lb_stock_invoice_currency').addClass('disable_a_href');
-			$('#lb_stock_invoice_value').addClass('disable_a_href');
-		}
-		inv_curr_change();
-	}
 </script>
 
 <script>
-function lb_crane_forklift_change() {
-	var lb_crane_status_val=document.getElementById("lb_mh_crane").value;
-	var lb_forklift_status_val=document.getElementById("lb_mh_forklift").value;
-	var lb_forklift_charges_std_l2hr_val=document.getElementById("lb_forklift_charges_std_l2hr").value;
-	var lb_forklift_charges_std_g2hr_val=document.getElementById("lb_forklift_charges_std_g2hr").value;
-	var lb_crane_charges_std_l2hr_val=document.getElementById("lb_crane_charges_std_l2hr").value;
-	var lb_crane_charges_std_g2hr_val=document.getElementById("lb_crane_charges_std_g2hr").value;
-	if (lb_forklift_status_val==1)
-	{
-		$('#lb_forklift_time').removeClass('disable_a_href');
-		$('#lb_forklift_charges_mod_l2h').removeClass('disable_a_href');
-		$('#lb_forklift_charges_mod_g2hr').removeClass('disable_a_href');
-		document.getElementById("lb_forklift_charges_mod_l2h").value=lb_forklift_charges_std_l2hr_val;
-		document.getElementById("lb_forklift_charges_mod_g2hr").value=lb_forklift_charges_std_g2hr_val;
-		$('#lb_no_of_forklift').removeClass('disable_a_href');
-		document.getElementById("lb_forklift_time").value=1;
-		document.getElementById("lb_no_of_forklift").value=1;
-	}
-	else
-	{
-		$('#lb_forklift_time').addClass('disable_a_href');
-		$('#lb_forklift_charges_mod_l2h').addClass('disable_a_href');
-		$('#lb_forklift_charges_mod_g2hr').addClass('disable_a_href');
-		$('#lb_no_of_forklift').addClass('disable_a_href');
-		document.getElementById("lb_forklift_time").value=0.0;
-		document.getElementById("lb_forklift_charges_mod_l2h").value=0.0;
-		document.getElementById("lb_forklift_charges_mod_g2hr").value=0.0;
-		document.getElementById("lb_no_of_forklift").value=0.0;
-		document.getElementById("lb_forklift_time").value=0;
-		document.getElementById("lb_no_of_forklift").value=0;
-	}
+	function lb_crane_forklift_change() {
+        var lb_crane_status_val=document.getElementById("lb_mh_crane").value;
+        var lb_forklift_status_val=document.getElementById("lb_mh_forklift").value;
+        var lb_forklift_charges_std_l2hr_val=document.getElementById("lb_forklift_charges_std_l2hr").value;
+        var lb_forklift_charges_std_g2hr_val=document.getElementById("lb_forklift_charges_std_g2hr").value;
+        var lb_crane_charges_std_l2hr_val=document.getElementById("lb_crane_charges_std_l2hr").value;
+        var lb_crane_charges_std_g2hr_val=document.getElementById("lb_crane_charges_std_g2hr").value;
+        if (lb_forklift_status_val==1)
+        {
+            $('#lb_forklift_time').removeClass('disable_a_href');
+            $('#lb_forklift_charges_mod_l2h').removeClass('disable_a_href');
+            $('#lb_forklift_charges_mod_g2hr').removeClass('disable_a_href');
+            document.getElementById("lb_forklift_charges_mod_l2h").value=lb_forklift_charges_std_l2hr_val;
+            document.getElementById("lb_forklift_charges_mod_g2hr").value=lb_forklift_charges_std_g2hr_val;
+            $('#lb_no_of_forklift').removeClass('disable_a_href');
+            document.getElementById("lb_forklift_time").value=1;
+            document.getElementById("lb_no_of_forklift").value=1;
+        }
+        else
+        {
+            $('#lb_forklift_time').addClass('disable_a_href');
+            $('#lb_forklift_charges_mod_l2h').addClass('disable_a_href');
+            $('#lb_forklift_charges_mod_g2hr').addClass('disable_a_href');
+            $('#lb_no_of_forklift').addClass('disable_a_href');
+            document.getElementById("lb_forklift_time").value=0.0;
+            document.getElementById("lb_forklift_charges_mod_l2h").value=0.0;
+            document.getElementById("lb_forklift_charges_mod_g2hr").value=0.0;
+            document.getElementById("lb_no_of_forklift").value=0.0;
+            document.getElementById("lb_forklift_time").value=0;
+            document.getElementById("lb_no_of_forklift").value=0;
+        }
 
-	if (lb_crane_status_val==1)
-	{
-		$('#lb_crane_time').removeClass('disable_a_href');
-		$('#lb_crane_charges_mod_l2h').removeClass('disable_a_href');
-		$('#lb_crane_charges_mod_g2hr').removeClass('disable_a_href');
-		$('#lb_no_of_crane').removeClass('disable_a_href');
-		document.getElementById("lb_crane_charges_mod_l2h").value=lb_crane_charges_std_l2hr_val;
-		document.getElementById("lb_crane_charges_mod_g2hr").value=lb_crane_charges_std_g2hr_val;
-		document.getElementById("lb_crane_time").value=1;
-		document.getElementById("lb_no_of_crane").value=1;
-	}
-	else
-	{
-		$('#lb_crane_time').addClass('disable_a_href');
-		$('#lb_crane_charges_mod_l2h').addClass('disable_a_href');
-		$('#lb_crane_charges_mod_g2hr').addClass('disable_a_href');
-		$('#lb_no_of_crane').addClass('disable_a_href');
-		document.getElementById("lb_crane_charges_mod_l2h").value=0.0;
-		document.getElementById("lb_crane_charges_mod_g2hr").value=0.0;
-		document.getElementById("lb_crane_time").value=0;
-		document.getElementById("lb_no_of_crane").value=0;
-	}
-}
+        if (lb_crane_status_val==1)
+        {
+            $('#lb_crane_time').removeClass('disable_a_href');
+            $('#lb_crane_charges_mod_l2h').removeClass('disable_a_href');
+            $('#lb_crane_charges_mod_g2hr').removeClass('disable_a_href');
+            $('#lb_no_of_crane').removeClass('disable_a_href');
+            document.getElementById("lb_crane_charges_mod_l2h").value=lb_crane_charges_std_l2hr_val;
+            document.getElementById("lb_crane_charges_mod_g2hr").value=lb_crane_charges_std_g2hr_val;
+            document.getElementById("lb_crane_time").value=1;
+            document.getElementById("lb_no_of_crane").value=1;
+        }
+        else
+        {
+            $('#lb_crane_time').addClass('disable_a_href');
+            $('#lb_crane_charges_mod_l2h').addClass('disable_a_href');
+            $('#lb_crane_charges_mod_g2hr').addClass('disable_a_href');
+            $('#lb_no_of_crane').addClass('disable_a_href');
+            document.getElementById("lb_crane_charges_mod_l2h").value=0.0;
+            document.getElementById("lb_crane_charges_mod_g2hr").value=0.0;
+            document.getElementById("lb_crane_time").value=0;
+            document.getElementById("lb_no_of_crane").value=0;
+        }
+    }
 </script>
 
 <script>
-function change_pouch() {
-	var jn=document.getElementById("lb_packing_list").value
-	if ( jn==1)
-	{
-		$('#lb_pouch_yes').removeClass('disable_a_href');
-	}
-	else
-	{
-		$('#lb_pouch_yes').addClass('disable_a_href');
-		document.getElementById("lb_pouch_yes").value=3
-	}
-}
+	function change_pouch() {
+        var jn=document.getElementById("lb_packing_list").value
+        if ( jn==1)
+        {
+            $('#lb_pouch_yes').removeClass('disable_a_href');
+        }
+        else
+        {
+            $('#lb_pouch_yes').addClass('disable_a_href');
+            document.getElementById("lb_pouch_yes").value=3
+        }
+    }
 </script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+	document.addEventListener("DOMContentLoaded", function() {
         const lb_stock_unloading_start_time = document.getElementById('lb_stock_unloading_start_time');
         const lb_stock_unloading_end_time = document.getElementById('lb_stock_unloading_end_time');
 

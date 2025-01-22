@@ -5,13 +5,13 @@
 <form method="POST" action="">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Route Rate Master</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
+							<div class="col-3">
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Vehicle Type</span>
@@ -30,6 +30,8 @@
 								</div>
 								{% render_field form.ro_fromlocation id="ro_fromlocation"  class="form-control" %}
 							</div>
+							</div>
+							<div class="col-3">
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Touch Point 1</span>
@@ -48,6 +50,8 @@
 								</div>
 								{% render_field form.ro_touchpoint3 id="ro_touchpoint3" class="form-control" %}
 							</div>
+							</div>
+							<div class="col-3">
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Touch Point 4</span>
@@ -66,6 +70,8 @@
 								</div>
 								{% render_field form.ro_customer id="ro_customer" class="form-control" %}
 							</div>
+							</div>
+							<div class="col-3">
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Customer Department</span>
@@ -77,6 +83,7 @@
 									<span class="input-group-text">Rate</span>
 								</div>
 								{% render_field form.ro_rate class="form-control" %}
+							</div>
 							</div>
 							{% render_field form.ro_updated_by id="ro_updated_by" hidden="True" class="form-control" %}
 						</div>
@@ -100,7 +107,6 @@
 			</div>
 		</div>
 	</div>
-	<div class="col-3"></div>
 	</div>
 </form>
 <script>

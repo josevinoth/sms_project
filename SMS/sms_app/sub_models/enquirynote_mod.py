@@ -27,5 +27,7 @@ class EnquirynoteInfo(models.Model):
     en_touchpoint2 = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='en_touchpoint2',db_column='en_touchpoint2', null=True, blank=True)
     en_touchpoint3 = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='en_touchpoint3',db_column='en_touchpoint3', null=True, blank=True)
     en_touchpoint4 = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='en_touchpoint4',db_column='en_touchpoint4', null=True, blank=True)
+    en_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
+
     def __str__(self):
         return self.en_enquirynumber

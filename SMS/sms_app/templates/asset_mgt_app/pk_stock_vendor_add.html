@@ -5,14 +5,13 @@
 <form method="POST" action="">
     {% csrf_token %}
     <div class="row">
-        <div class="col-4"></div>
-        <div class="col-4">
+        <div class="col">
             <div class="container-fluid">
                 <div class="card text-white bg-info mb-3" style="max-width: 100%;">
                     <div class="card-header text-center"><h3>Add/Update Stock Purchases</h3></div>
                     <div class="card-body bg-light">
                         <div class="row">
-                            <div class="col">
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Stock Purchase Type</span>
@@ -25,6 +24,8 @@
                                     </div>
                                     {% render_field psv_form.spv_vendor_name id="spv_vendor_name" class="form-control disable_a_href" %}
                                 </div>
+                            </div>
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Bill/Return/New Order</span>
@@ -37,6 +38,8 @@
                                     </div>
                                     {% render_field psv_form.spv_vendor_bill_date type="Date" class="form-control" %}
                                 </div>
+                            </div>
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Assessment Number</span>
@@ -49,6 +52,8 @@
                                     </div>
                                     {% render_field psv_form.spv_customer_name id="spv_customer_name"  class="form-control disable_a_href" %}
                                 </div>
+                            </div>
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Customer New Name</span>
@@ -83,7 +88,6 @@
                 </div>
             </div>
         </div>
-        <div class="col-4"></div>
     </div>
     <br>
     <!--Stock Item List-->

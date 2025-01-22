@@ -43,14 +43,13 @@
 <form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" >
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Gatein</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">WH Job Number</span>
@@ -93,6 +92,8 @@
 									</div>
 									{% render_field gatein_form.gatein_comodity class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">DG Cargo</span>
@@ -129,14 +130,14 @@
 									</div>
 									{% render_field gatein_form.gatein_weight class="form-control" %}
 								</div>
-							</div>
-							<div class="col-6">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Destination</span>
 									</div>
 									{% render_field gatein_form.gatein_destination id="gatein_destination" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">HAWB</span>
@@ -180,6 +181,8 @@
 									</div>
 									{% render_field gatein_form.gatein_otl id="gatein_otl" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Transporter</span>
@@ -224,7 +227,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 </form>
 
@@ -413,7 +415,7 @@
     });
 </script>
 <script>
-    $(document).ready(function() {
+	$(document).ready(function() {
         $('#gatein_pre_id').selectpicker({
             liveSearch: true,
             noneSelectedText: 'Search Pre-GateIn'

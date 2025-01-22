@@ -5,8 +5,7 @@
 <form method="POST" action="" id="delivery_challan_add" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="row">
-        <div class="col-2"></div>
-        <div class="col-8">
+        <div class="col">
             <div class="container-fluid">
                 <div class="card text-white bg-info mb-3" style="max-width: 100%;">
                     <div class="card-header text-center">
@@ -14,7 +13,7 @@
                     </div>
                     <div class="card-body bg-light">
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Assessment Number</span>
@@ -39,6 +38,8 @@
                                     </div>
                                     {% render_field form.dc_customer_gstin id="dc_customer_gstin" class="form-control disable_a_href" %}
                                 </div>
+                            </div>
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Customer PO</span>
@@ -63,6 +64,8 @@
                                     </div>
                                     {% render_field form.dc_grn id="dc_grn" class="form-control" %}
                                 </div>
+                            </div>
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Sales Order</span>
@@ -75,8 +78,6 @@
                                     </div>
                                     {% render_field form.dc_stock_register id="dc_stock_register" class="form-control" %}
                                 </div>
-                            </div>
-                            <div class="col-6">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Transport Name</span>
@@ -89,6 +90,8 @@
                                     </div>
                                     {% render_field form.dc_consignment_note id="dc_consignment_note" class="form-control" %}
                                 </div>
+                            </div>
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Date</span>
@@ -123,7 +126,7 @@
                                     {% if messages %}
                                     <ul class="messages">
                                         {% for message in messages %}
-                                            <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
                                         {% endfor %}
                                     </ul>
                                     {% endif %}
@@ -143,7 +146,6 @@
                 </div>
             </div>
         </div>
-        <div class="col-3"></div>
     </div>
 </form>
 {% include "asset_mgt_app/pk_delivery_challan_list_WOH.html" %}

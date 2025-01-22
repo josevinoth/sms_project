@@ -14,25 +14,61 @@
 <hr>
 <br>
 
-        <div class="col-md-11">
+        <div class="container-fluid">
+    <div class="row align-items-center">
+        <!-- Salesperson Filter -->
+        <div class="col-md-2">
             <label for="salesperson-filter"><b>Salesperson:</b></label>
-            <select id="salesperson-filter" name="salesperson" class="box-shadow rounded m-1">
+            <select id="salesperson-filter" name="salesperson" class="form-control box-shadow rounded">
                 <option value="">All</option>
                 {% for salesperson in salespersons %}
-                    <option value="{{ salesperson }}"
-                        {% if salesperson == selected_salesperson %} selected {% endif %}>
-                        {{ salesperson }}
-                    </option>
+                <option value="{{ salesperson }}" {% if salesperson == selected_salesperson %} selected {% endif %}>
+                    {{ salesperson }}
+                </option>
                 {% endfor %}
             </select>
-
-            <label for="from-date"><b> From:</b></label>
-            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="box-shadow" style=" margin-right: 20px;">
-
-            <label for="to-date"><b> To:</b></label>
-            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="box-shadow">
         </div>
 
+        <!-- Company Filter -->
+        <div class="col-md-2">
+            <label for="company-filter"><b>Company:</b></label>
+            <select id="company-filter" name="company" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for company in company_name %}
+                <option value="{{ company }}" {% if company == selected_company %} selected {% endif %}>
+                    {{ company }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Branch Filter -->
+        <div class="col-md-2">
+            <label for="branch-filter"><b>Branch:</b></label>
+            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for branch in branch_name %}
+                <option value="{{ branch }}" {% if branch == selected_branch %} selected {% endif %}>
+                    {{ branch }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- From Date -->
+        <div class="col-md-2">
+            <label for="from-date"><b>From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+        </div>
+
+        <!-- To Date -->
+        <div class="col-md-3">
+            <label for="to-date"><b>To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+        </div>
+    </div>
+</div>
+<hr>
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
         <!-- Bar Chart -->
         <div style="flex: 1; margin-right: 10px;">
@@ -205,38 +241,53 @@ createDonutChart(
 
 
 
-         document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
-        document.getElementById('from-date').addEventListener('change', updateFilters);
+          document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+         document.getElementById('from-date').addEventListener('change', updateFilters);
         document.getElementById('to-date').addEventListener('change', updateFilters);
+            document.getElementById('company-filter').addEventListener('change', updateFilters);
+document.getElementById('branch-filter').addEventListener('change', updateFilters);
 
-        function updateFilters() {
-            const salesperson = document.getElementById('salesperson-filter').value;
-            const fromDate = document.getElementById('from-date').value;
-            const toDate = document.getElementById('to-date').value;
-            const url = new URL(window.location.href);
+function updateFilters() {
+    const salesperson = document.getElementById('salesperson-filter').value;
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const company = document.getElementById('company-filter').value;
+    const branch = document.getElementById('branch-filter').value;
+    const url = new URL(window.location.href);
 
+    if (salesperson) {
+        url.searchParams.set('salesperson', salesperson);
+    } else {
+        url.searchParams.delete('salesperson');
+    }
 
-            if (salesperson) {
-                url.searchParams.set('salesperson', salesperson);
-            } else {
-                url.searchParams.delete('salesperson');
-            }
+    if (fromDate) {
+        url.searchParams.set('from_date', fromDate);
+    } else {
+        url.searchParams.delete('from_date');
+    }
 
+    if (toDate) {
+        url.searchParams.set('to_date', toDate);
+    } else {
+        url.searchParams.delete('to_date');
+    }
 
-            if (fromDate) {
-                url.searchParams.set('from_date', fromDate);
-            } else {
-                url.searchParams.delete('from_date');
-            }
+    if (company) {
+        url.searchParams.set('company', company);
+    } else {
+        url.searchParams.delete('company');
+    }
 
-            if (toDate) {
-                url.searchParams.set('to_date', toDate);
-            } else {
-                url.searchParams.delete('to_date');
-            }
+    if (branch) {
+        url.searchParams.set('branch', branch);
+    } else {
+        url.searchParams.delete('branch');
+    }
 
-            window.location.href = url.toString();
-        }
+    window.location.href = url.toString();
+}
+
     </script>
 </body>
 {% endblock content %}

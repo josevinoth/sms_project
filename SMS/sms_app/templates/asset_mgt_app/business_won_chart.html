@@ -10,7 +10,7 @@
         </a>
     </div>
     <br>
-    <h2 style="color:black;">Business Won/Loss With Reasons</h2>
+    <h2 style="color:black;">Business Won/Loss </h2>
     <hr>
 
     <div class="container-fluid">
@@ -142,15 +142,14 @@
                     {
                         label: 'New Customers',
                         data: {{ new_customer_counts|safe }},
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(243, 165, 78, 0.8)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
                         borderWidth: 1
                     },
                     {
                         label: 'Existing Customers',
                         data: {{ existing_customer_counts|safe }},
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(132, 129, 126, 0.8)',
                         borderWidth: 1
                     }
                 ]

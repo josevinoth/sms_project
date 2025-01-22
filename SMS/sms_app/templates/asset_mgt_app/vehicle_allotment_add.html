@@ -4,14 +4,13 @@
 <form method="POST" action="" id="vehicle_allotment" data-vehicle_source-url="{% url 'load_vehicle_source' %}">
 	{% csrf_token %}
 	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
+		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Vehicle Allotment</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row">
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
@@ -47,6 +46,8 @@
 										</div>
 									</div>
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="row">
 									<div class="col-10">
 										<div class="input-group input-group-sm mb-3">
@@ -77,8 +78,8 @@
 									</div>
 									{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control disable_a_href" %}
 								</div>
-							</div>
-							<div class="col-6">
+						</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vendor Name</span>
@@ -97,6 +98,8 @@
 									</div>
 									{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver License</span>
@@ -110,7 +113,7 @@
 									{% render_field vehicle_allotment_form.va_driver_lic_expiry id="va_driver_lic_expiry" type="Date" class="form-control " %}
 								</div>
 								{% render_field vehicle_allotment_form.va_updated_by id="va_updated_by" hidden="True" class="form-control" %}
-							</div>
+					</div>
 							<div class="input-group input-group-sm mb-3 container-fluid">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Remarks</span>
@@ -137,7 +140,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-2"></div>
 	</div>
 	{% include "asset_mgt_app/vehicle_allotment_list_woh.html" %}
 </form>

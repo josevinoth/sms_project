@@ -24,17 +24,17 @@
     </div>
 
     <div class="col-2">
-        <div class="card text-white bg-secondary mb-3 text-center" >
+        <div class="card text-white bg-primary mb-3 text-center" >
             <div class="card-header">Target vs Actuals</div>
             <div class="card-body text-center">
-                <h2><a href="{% url 'sales_targets_view' %}" class="badge badge-secondary">
+                <h2><a href="{% url 'targets_actuals' %}" class="badge badge-secondary">
                     <i class="fas fa-user-secret"></i></a></h2>
             </div>
         </div>
     </div>
 
     <div class="col-2">
-        <div class="card text-white bg-success mb-3 text-center" >
+        <div class="card text-white bg-primary mb-3 text-center" >
             <div class="card-header">Sales Call Details</div>
             <div class="card-body text-center">
                 <h2><a href="{% url 'salescalls_details' %}" class="badge badge-success">
@@ -44,7 +44,7 @@
     </div>
 
     <div class="col-2">
-        <div class="card text-white bg-danger mb-3 text-center" >
+        <div class="card text-white bg-primary mb-3 text-center" >
             <div class="card-header">Sales person wise</div>
             <div class="card-body text-center">
                 <h2><a href="{% url 'salesperson_wise_chart' %}" class="badge badge-danger">
@@ -57,8 +57,8 @@
 <div class="row">
     <div class="col-2"></div>
     <div class="col-2">
-        <div class="card text-white bg-success mb-3 text-center" >
-            <div class="card-header">Business Won  & Lost with reasons</div>
+        <div class="card text-white bg-primary mb-3 text-center" >
+            <div class="card-header">Business Won/Lost </div>
             <div class="card-body text-center">
                 <h2><a href="{% url 'businesswon_chart' %}" class="badge badge-success">
                     <i class="fas fa-rupee-sign"></i></a></h2>
@@ -66,11 +66,20 @@
         </div>
     </div>
     <div class="col-2">
-        <div class="card text-white bg-info mb-3 text-center" >
+        <div class="card text-white bg-primary mb-3 text-center" >
             <div class="card-header">Monthly Summary</div>
             <div class="card-body text-center">
                 <h2><a href="{% url 'monthly_summary' %}" class="badge badge-info">
                     <i class="fas fa-wallet"></i></a></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card text-white bg-primary mb-3 text-center">
+            <div class="card-header">Productivity_Performance</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'salesperson_productivity_performance' %}" class="badge badge-primary">
+                    <i class="fas fa-arrows-alt"></i></a></h2>
             </div>
         </div>
     </div>
@@ -85,29 +94,5 @@
     </div>
     <div class="col-2"></div>
 </div>
-<div class="row">
-    <div class="col-2"></div>
-    <div class="col-2">
-        <div class="card text-white bg-primary mb-3 text-center">
-            <div class="card-header">Productivity_Performance</div>
-            <div class="card-body text-center">
-                <h2><a href="{% url 'salesperson_productivity_performance' %}" class="badge badge-primary">
-                    <i class="fas fa-arrows-alt"></i></a></h2>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-2">
-        <div class="card text-white bg-secondary mb-3 text-center" >
-            <div class="card-header">Target vs Actuals</div>
-            <div class="card-body text-center">
-                <h2><a href="{% url 'targets_actuals' %}" class="badge badge-secondary">
-                    <i class="fas fa-user-secret"></i></a></h2>
-            </div>
-        </div>
-    </div>
-
-
-    <div class="col-2"></div>
-</div>
 {% endblock content %}

@@ -4,8 +4,7 @@
 <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="row">
-        <div class="col-2"></div>
-        <div class="col-8">
+        <div class="col">
             <div class="container-fluid">
                 <div class="card text-white bg-info mb-3" style="max-width: 100%;">
                     <div class="card-header text-center">
@@ -13,7 +12,7 @@
                     </div>
                     <div class="card-body bg-light">
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Location</span>
@@ -44,6 +43,8 @@
                                     </div>
                                     {% render_field form.hc_shipper id="hc_shipper" class="form-control" %}
                                 </div>
+                            </div>
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Customer Reference Number</span>
@@ -75,8 +76,7 @@
                                     {% render_field form.hc_no_of_pcs id="hc_no_of_pcs" class="form-control" %}
                                 </div>
                             </div>
-
-                            <div class="col-6">
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend" style="width:35%;">
                                         <span class="input-group-text" style="width:100%;">Condition Of Cargo Received</span>
@@ -107,6 +107,8 @@
                                     </div>
                                     {% render_field form.hc_truck_validation id="hc_truck_validation" class="form-control" %}
                                 </div>
+                            </div>
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend" style="width:40%;">
                                         <span class="input-group-text" style="width:100%;">Shipment Information Received</span>
@@ -141,16 +143,16 @@
                         </div>
 
                         <div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
 
                         <!-- Submit and Cancel Buttons -->
                         <button type="submit" class="btn btn-success" id="save-btn">
@@ -163,12 +165,11 @@
                 </div>
             </div>
         </div>
-        <div class="col-2"></div>
     </div>
 </form>
 
 <script>
-	$("#hc_location").change(function () {
+    $("#hc_location").change(function () {
        var branchId = $(this).val();
        $.ajax({
          url: '{% url 'load_units' %}',
