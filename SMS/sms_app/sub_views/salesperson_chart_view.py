@@ -1,21 +1,27 @@
 from django.shortcuts import render
+from django.contrib.auth.models import User
 from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F
 from django.db.models import F, Subquery, OuterRef
+from django.db.models.functions import Coalesce,Round
+from django.utils.dateparse import parse_date
+from django.utils import timezone
+from datetime import datetime
 from ..models import Sales_Comments_Info, MyUser,SalesInfo,Sales_target_info,BusinessrevenueInfo,Calltype,Callpurpose,Callnature,User_extInfo,CustomerInfo,YesNoInfo,Business_Sol_info,Location_info
+from ..models import Warehouse_goods_info,ExpenseExtinfo,Location_info,UnitInfo
+
 
 def salesperson_chart(request):
-
+    first_name = request.session.get('first_name')
     selected_salesperson = request.GET.get('salesperson', None)
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
 
-
-    salespersons = MyUser.objects.filter(
-        sc_added_by__isnull=False
+    salespersons = MyUser.objects.select_related('user_extinfo').filter(
+        user_extinfo__department__dept_name="Sales",is_active=True
     ).distinct().values_list('first_name', flat=True)
 
     sales_data_query = Sales_Comments_Info.objects.filter(
-        sc_updated_by__user_extinfo__department__dept_name="Sales"
+        sc_updated_by__user_extinfo__department__dept_name="Sales",sc_updated_by__is_active=True
     )
 
     if selected_salesperson:
@@ -35,6 +41,7 @@ def salesperson_chart(request):
     table_data = zip(labels, data)
 
     context = {
+        'first_name': first_name,
         'labels': labels,
         'data': data,
         'table_data': table_data,
@@ -45,37 +52,35 @@ def salesperson_chart(request):
     }
     return render(request, "asset_mgt_app/salesperson_chart.html", context)
 
+
 def monthly_summary(request):
-    # Get filters from query parameters
+    first_name = request.session.get('first_name')
     selected_salesperson = request.GET.get('salesperson', None)
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
 
-    # Get all distinct salespersons
-    salespersons = MyUser.objects.filter(
-        sc_added_by__isnull=False
+    salespersons = MyUser.objects.select_related('user_extinfo').filter(
+        user_extinfo__department__dept_name="Sales", is_active=True
     ).distinct().values_list('first_name', flat=True)
 
-    # Define Subqueries for target calls
     target_existing_customers_subquery = Sales_target_info.objects.filter(
-        st_sales_person__first_name=OuterRef('sc_updated_by__first_name')  # Adjust field name if needed
-    ).values('st_target_calls_existing_customer')[:1]  # Replace with correct field in `Sales_target_info`
+        st_sales_person__first_name=OuterRef('sc_updated_by__first_name')
+    ).values('st_target_calls_existing_customer')[:1]
 
     target_new_customers_subquery = Sales_target_info.objects.filter(
-        st_sales_person__first_name=OuterRef('sc_updated_by__first_name')  # Adjust field name if needed
-    ).values('st_target_calls_new_customer')[:1]  # Replace with correct field in `Sales_target_info`
+        st_sales_person__first_name=OuterRef('sc_updated_by__first_name')
+    ).values('st_target_calls_new_customer')[:1]
 
     target_revenue_subquery = Sales_target_info.objects.filter(
-        st_sales_person__first_name=OuterRef('sc_updated_by__first_name')  # Adjust field name if needed
-    ).values('st_target_revenue')[:1]  # Replace with correct field in `Sales_target_info`
+        st_sales_person__first_name=OuterRef('sc_updated_by__first_name')
+    ).values('st_target_revenue')[:1]
 
     actual_revenue_subquery = BusinessrevenueInfo.objects.filter(
-        br_sale_person__first_name=OuterRef('sc_updated_by__first_name')  # Adjust field name if needed
-     ).values('br_revenue_1')[:1]  # Replace with correct field in `Sales_target_info`
+        br_sale_person__first_name=OuterRef('sc_updated_by__first_name')
+     ).values('br_revenue_1')[:1]
 
-    # Filter the data based on filters
     sales_data_query = Sales_Comments_Info.objects.filter(
-        sc_updated_by__user_extinfo__department__dept_name="Sales"
+        sc_updated_by__user_extinfo__department__dept_name="Sales",sc_updated_by__is_active=True
     )
 
     if selected_salesperson:
@@ -87,7 +92,6 @@ def monthly_summary(request):
     if to_date:
         sales_data_query = sales_data_query.filter(sc_updated_at__date__lte=to_date)
 
-    # Annotate the sales count and group by salesperson
     sales_data_query = sales_data_query.values('sc_updated_by__first_name').annotate(
         total_sales=Count('id'),
         new_customer_calls=Count('id', filter=Q(sc_sales_number__s_customer_name_id=210)),
@@ -136,6 +140,7 @@ def monthly_summary(request):
 
     # Context for the template
     context = {
+        'first_name': first_name,
         'labels': labels,
         'new_customer_calls': new_customer_calls,
         'existing_customer_calls': existing_customer_calls,
@@ -152,18 +157,27 @@ def monthly_summary(request):
 
     return render(request, "asset_mgt_app/monthlysummary.html", context)
 
+
 def salesperson_productivity_performance(request):
-    # Fetch data from the database
+    first_name = request.session.get('first_name')
     selected_salesperson = request.GET.get('salesperson', None)
+    selected_company = request.GET.get('company', None)
+    selected_branch = request.GET.get('branch', None)
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
 
-    # Get all distinct salespersons
-    salespersons = MyUser.objects.filter(
-        sc_added_by__isnull=False
+    salespersons = MyUser.objects.select_related('user_extinfo').filter(
+        user_extinfo__department__dept_name="Sales", is_active=True
     ).distinct().values_list('first_name', flat=True)
 
-    # Define Subqueries for target calls
+    company_name = Business_Sol_info.objects.filter(
+        id__in=SalesInfo.objects.values_list('s_company', flat=True)
+    ).distinct().values_list('bvm_business', flat=True)
+
+    branch_name = Location_info.objects.filter(
+        id__in=SalesInfo.objects.values_list('s_location', flat=True)
+    ).distinct().values_list('loc_name', flat=True)
+
     target_existing_customers_subquery = Sales_target_info.objects.filter(
         st_sales_person__first_name=OuterRef('sc_updated_by__first_name')  # Adjust field name if needed
     ).values('st_target_calls_existing_customer')[:1]
@@ -180,9 +194,8 @@ def salesperson_productivity_performance(request):
         br_sale_person__first_name=OuterRef('sc_updated_by__first_name')  # Adjust field name if needed
     ).values('br_revenue_1')[:1]
 
-    # Filter the data based on filters
     sales_data_query = Sales_Comments_Info.objects.filter(
-        sc_updated_by__user_extinfo__department__dept_name="Sales"
+        sc_updated_by__user_extinfo__department__dept_name="Sales",sc_updated_by__is_active=True
     )
 
     if selected_salesperson:
@@ -194,7 +207,12 @@ def salesperson_productivity_performance(request):
     if to_date:
         sales_data_query = sales_data_query.filter(sc_updated_at__date__lte=to_date)
 
-    # Annotate the sales count and group by salesperson
+    if selected_company:
+        sales_data_query = sales_data_query.filter(sc_sales_number__s_company__bvm_business=selected_company)
+
+    if selected_branch:
+        sales_data_query = sales_data_query.filter(sc_sales_number__s_location__loc_name=selected_branch)
+
     sales_data_query = sales_data_query.values('sc_updated_by__first_name').annotate(
         total_sales=Count('id'),
         new_customer_calls=Count('id', filter=Q(sc_sales_number__s_customer_name_id=210)),
@@ -211,7 +229,6 @@ def salesperson_productivity_performance(request):
         actual_revenue=Subquery(actual_revenue_subquery),
     )
 
-    # Prepare data for the template
     sales_data = []
     performance_percentages = []
     productivity_percentages = []
@@ -255,8 +272,8 @@ def salesperson_productivity_performance(request):
     target_revenue = [item['target_revenue'] for item in sales_data]
     actual_revenue = [item['actual_revenue'] for item in sales_data]
 
-    # Context for the template
     context = {
+        'first_name': first_name,
         'labels': labels,
         'new_customer_calls': new_customer_calls,
         'existing_customer_calls': existing_customer_calls,
@@ -269,6 +286,10 @@ def salesperson_productivity_performance(request):
         "sales_data": sales_data,
         'salespersons': salespersons,
         'selected_salesperson': selected_salesperson,
+        'company_name': company_name,
+        'branch_name': branch_name,
+        'selected_company': selected_company,
+        'selected_branch': selected_branch,
         'from_date': from_date,
         'to_date': to_date,
     }
@@ -277,23 +298,22 @@ def salesperson_productivity_performance(request):
 
 
 def salescalls_details(request):
+    first_name = request.session.get('first_name')
     selected_salesperson = request.GET.get('salesperson', None)
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
 
     # Fetch salespersons
     salespersons = MyUser.objects.select_related('user_extinfo').filter(
-        user_extinfo__department__dept_name ="Sales"
+        user_extinfo__department__dept_name="Sales", is_active=True
     ).distinct().values_list('first_name', flat=True)
 
-    # Fetch distinct call types, purposes, and natures
     call_types = Calltype.objects.values_list('call_type', flat=True)
     call_purposes = Callpurpose.objects.values_list('call_purpose', flat=True)
     call_natures = Callnature.objects.values_list('call_nature', flat=True)
 
-    # Query sales data
     sales_data_query = Sales_Comments_Info.objects.filter(
-        sc_updated_by__user_extinfo__department__dept_name="Sales"
+        sc_updated_by__user_extinfo__department__dept_name="Sales",sc_updated_by__is_active=True
     )
 
     if selected_salesperson:
@@ -305,7 +325,6 @@ def salescalls_details(request):
     if to_date:
         sales_data_query = sales_data_query.filter(sc_updated_at__date__lte=to_date)
 
-    # Helper to sanitize keys
     def sanitize_key(key):
         return key.replace(" ", "_").replace("-", "_").replace("/", "_")
 
@@ -346,7 +365,6 @@ def salescalls_details(request):
         for call_nature in call_natures
     ]
 
-    # Prepare table data for each aggregation
     def prepare_table_data(sales_data, fields):
         table_data = []
         for salesperson in sales_data:
@@ -362,6 +380,7 @@ def salescalls_details(request):
     table_data_natures = prepare_table_data(sales_data_natures, call_natures)
 
     context = {
+        'first_name': first_name,
         'salespersons': salespersons,
         'selected_salesperson': selected_salesperson,
         'from_date': from_date,
@@ -383,18 +402,16 @@ def salescalls_details(request):
     return render(request, "asset_mgt_app/salescalls_detail_report.html", context)
 
 
-
 def targets_actuals(request):
+    first_name = request.session.get('first_name')
     selected_salesperson = request.GET.get('salesperson', None)
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
 
-    # Fetch salespersons
     salespersons = MyUser.objects.select_related('user_extinfo').filter(
-        user_extinfo__department__dept_name="Sales"
+        user_extinfo__department__dept_name="Sales", is_active=True
     ).distinct().values_list('first_name', flat=True)
 
-    # Build individual filter criteria for each model
     target_filter = Q()
     if selected_salesperson:
         target_filter &= Q(st_sales_person__first_name=selected_salesperson)
@@ -428,7 +445,7 @@ def targets_actuals(request):
         revenue_filter &= Q(br_updated_on__lte=to_date)
 
     # Apply filters to each dataset
-    target_data = Sales_target_info.objects.filter(target_filter).values(
+    target_data = Sales_target_info.objects.filter(target_filter, st_sales_person__is_active=True).values(
         'st_sales_person__id', 'st_sales_person__first_name'
     ).annotate(
         total_target_customers=Sum('st_target_customer'),
@@ -437,15 +454,15 @@ def targets_actuals(request):
         target_revenue=Sum('st_target_revenue')
     )
 
-    actual_data = SalesInfo.objects.filter(actual_filter).values(
+    actual_data = SalesInfo.objects.filter(actual_filter, s_updated_by__user_extinfo__department__dept_name="Sales",s_updated_by__is_active=True).values(
         's_updated_by__id', 's_updated_by__first_name'
     ).annotate(
-        total_actual_customers=Count('s_customer_name', distinct=True),
-        total_new_customers=Count('s_customer_new_name', distinct=True),
-        total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True)
+        total_actual_customers=Count('s_customer_name', distinct=False),
+        total_new_customers=Count('s_customer_new_name', distinct=False),
+        total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=False)
     )
 
-    sales_calls = Sales_Comments_Info.objects.filter(calls_filter).values(
+    sales_calls = Sales_Comments_Info.objects.filter(calls_filter, sc_updated_by__user_extinfo__department__dept_name="Sales",sc_updated_by__is_active=True).values(
         'sc_updated_by__id', 'sc_updated_by__first_name'
     ).annotate(
         total_sales_calls=Count('id'),
@@ -459,7 +476,6 @@ def targets_actuals(request):
         actual_revenue=Sum('br_revenue_1')
     )
 
-    # Combine data into a single structure
     summary = []
     salesperson_ids = set(
         list(target['st_sales_person__id'] for target in target_data) +
@@ -506,11 +522,13 @@ def targets_actuals(request):
 
     return render(request, "asset_mgt_app/target_actuals_report.html", {
         'summary': summary,
+        'first_name': first_name,
         'salespersons': salespersons,
         'selected_salesperson': selected_salesperson,
         'from_date': from_date,
         'to_date': to_date
     })
+
 
 def sales_call_report(request):
     # Query SalesInfo and related Sales_Comments_Info
@@ -524,17 +542,17 @@ def sales_call_report(request):
     }
     return render(request,"asset_mgt_app/sales_call_report.html",context)
 
-def businesswon_chart(request):
 
+def businesswon_chart(request):
+    first_name = request.session.get('first_name')
     selected_salesperson = request.GET.get('salesperson', None)
     selected_company = request.GET.get('company', None)
     selected_branch = request.GET.get('branch', None)
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
 
-    # Filter salespersons
-    salespersons = MyUser.objects.filter(
-        user_extinfo__department__dept_name="Sales"
+    salespersons = MyUser.objects.select_related('user_extinfo').filter(
+        user_extinfo__department__dept_name="Sales", is_active=True
     ).distinct().values_list('first_name', flat=True)
 
     company_name = Business_Sol_info.objects.filter(
@@ -545,13 +563,11 @@ def businesswon_chart(request):
         id__in=SalesInfo.objects.values_list('s_location', flat=True)
     ).distinct().values_list('loc_name', flat=True)
 
-    # Fetch data for yesno names
     yesno_names = YesNoInfo.objects.values_list('yesno_name', flat=True)
 
-    # Query sales data
     sales_data_query = SalesInfo.objects.all()
     sales_data_query = SalesInfo.objects.filter(
-        s_updated_by__user_extinfo__department__dept_name="Sales"
+        s_updated_by__user_extinfo__department__dept_name="Sales",s_updated_by__is_active=True
     )
 
     if selected_salesperson:
@@ -565,11 +581,9 @@ def businesswon_chart(request):
     if selected_branch:
         sales_data_query = sales_data_query.filter(s_location__loc_name=selected_branch)
 
-    # Helper to sanitize keys
     def sanitize_key(key):
         return key.replace(" ", "_").replace("-", "_").replace("/", "_")
 
-    # Bar chart data
     bus_won_aggregation = {
         "new_customer": Count(Case(When(s_customer_name="210", then=1))),
         "existing_customer": Count(Case(When(~Q(s_customer_name="210"), then=1))),
@@ -609,7 +623,7 @@ def businesswon_chart(request):
         f"Existing Customers ({yesno})" for yesno in yesno_labels
     ]
 
-    # Salesperson-wise business_won count (bus_won_not=1)
+
     salesperson_data = (
         sales_data_query.filter(s_bus_won_not=1)  # Filter for bus_won_not=1
         .values('s_updated_by__first_name')  # Get the first name of the salesperson
@@ -622,7 +636,7 @@ def businesswon_chart(request):
     salesperson_counts = [
         entry['business_won_count'] for entry in salesperson_data
     ]
-    # Table data
+
     table_data = sales_data_query.values(
         's_updated_by__first_name',
         's_customer_name__cu_nameshort',
@@ -631,6 +645,7 @@ def businesswon_chart(request):
         's_remarks'
     )
     context = {
+        'first_name': first_name,
         'salespersons': salespersons,
         'company_name': company_name,
         'branch_name': branch_name,
@@ -650,38 +665,34 @@ def businesswon_chart(request):
     }
     return render(request, "asset_mgt_app/business_won_chart.html", context)
 
+
 def salesperson_wise_chart(request):
+    first_name = request.session.get('first_name')
     selected_salesperson = request.GET.get('salesperson', None)
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
 
-    # Fetch salespersons
     salespersons = MyUser.objects.select_related('user_extinfo').filter(
-        user_extinfo__department__dept_name="Sales"
+        user_extinfo__department__dept_name="Sales", is_active=True
     ).distinct().values_list('first_name', flat=True)
 
-    # Start with the base queryset for sales summary
     sales_summary = Sales_Comments_Info.objects.filter(
-        sc_updated_by__user_extinfo__department__dept_name="Sales"
+        sc_updated_by__user_extinfo__department__dept_name="Sales",sc_updated_by__is_active=True
     )
 
-    # Apply salesperson filter
     if selected_salesperson:
         sales_summary = sales_summary.filter(sc_updated_by__first_name=selected_salesperson)
-
-    # Apply date filters
     if from_date:
         sales_summary = sales_summary.filter(sc_updated_at__date__gte=from_date)
     if to_date:
         sales_summary = sales_summary.filter(sc_updated_at__date__lte=to_date)
 
-    # Aggregate data
     sales_summary = sales_summary.values(
-        'sc_sales_number__s_updated_by__first_name',  # Access salesperson's first name via sc_sales_number
+        'sc_updated_by__first_name'  # Salesperson's first name
     ).annotate(
         total_customers=Count('sc_sales_number__s_customer_name', distinct=False),
         new_customers=Count(
-            'sc_sales_number__s_customer_new_name',
+            'sc_sales_number__s_customer_name',
             filter=Q(sc_sales_number__s_customer_name=210),
             distinct=False,
         ),
@@ -714,64 +725,64 @@ def salesperson_wise_chart(request):
             default=Value(0.0),
             output_field=FloatField(),
         ),
-    )
-
-    # Add target data
-    sales_summary = sales_summary.annotate(
         target_revenue=Subquery(
             Sales_target_info.objects.filter(
-                st_sales_person=OuterRef('sc_sales_number__s_updated_by')
+                st_sales_person=OuterRef('sc_updated_by'),
+                **({'st_start_date__gte': from_date} if from_date else {}),
+                **({'st_start_date__lte': to_date} if to_date else {}),
             ).values('st_target_revenue')[:1]
         ),
         target_customers=Subquery(
             Sales_target_info.objects.filter(
-                st_sales_person=OuterRef('sc_sales_number__s_updated_by')
+                st_sales_person=OuterRef('sc_updated_by'),
+                **({'st_start_date__gte': from_date} if from_date else {}),
+                **({'st_start_date__lte': to_date} if to_date else {}),
             ).values('st_target_customer')[:1]
         ),
         target_calls_new_customer=Subquery(
             Sales_target_info.objects.filter(
-                st_sales_person=OuterRef('sc_sales_number__s_updated_by')
+                st_sales_person=OuterRef('sc_updated_by'),
+                **({'st_start_date__gte': from_date} if from_date else {}),
+                **({'st_start_date__lte': to_date} if to_date else {}),
             ).values('st_target_calls_new_customer')[:1]
         ),
         target_calls_existing_customer=Subquery(
             Sales_target_info.objects.filter(
-                st_sales_person=OuterRef('sc_sales_number__s_updated_by')
+                st_sales_person=OuterRef('sc_updated_by'),
+                **({'st_start_date__gte': from_date} if from_date else {}),
+                **({'st_start_date__lte': to_date} if to_date else {}),
             ).values('st_target_calls_existing_customer')[:1]
         ),
-    )
-
-    # Add total revenue
-    sales_summary = sales_summary.annotate(
         total_revenue=Subquery(
             BusinessrevenueInfo.objects.filter(
-                br_sale_person=OuterRef('sc_sales_number__s_updated_by')
+                br_sale_person=OuterRef('sc_updated_by'),
+                **({'br_from_date__gte': from_date} if from_date else {}),
+                **({'br_from_date__lte': to_date} if to_date else {}),
             ).values('br_sale_person')
             .annotate(total=Sum('br_revenue_1'))
             .values('total')[:1]
         )
     )
 
-    # Aggregate call type, nature, and purpose
-    call_type_summary = Sales_Comments_Info.objects.values(
+    call_type_summary = sales_summary.values(
         'sc_call_type__call_type'
     ).annotate(
         call_type_count=Count('sc_call_type')
     )
 
-    call_nature_summary = Sales_Comments_Info.objects.values(
+    call_nature_summary = sales_summary.values(
         'sc_call_nature__call_nature'
     ).annotate(
         call_nature_count=Count('sc_call_nature')
     )
 
-    call_purpose_summary = Sales_Comments_Info.objects.values(
+    call_purpose_summary = sales_summary.values(
         'sc_call_purpose__call_purpose'
     ).annotate(
         call_purpose_count=Count('sc_call_purpose')
     )
-
-    # Return context to the template
     context = {
+        'first_name': first_name,
         'selected_salesperson': selected_salesperson,
         'salespersons': salespersons,
         'from_date': from_date,
@@ -783,3 +794,231 @@ def salesperson_wise_chart(request):
     }
     return render(request, "asset_mgt_app/salesperson_wise_chart.html", context)
 
+
+
+def targets_actuals_table(request):
+    first_name = request.session.get('first_name')
+    selected_salesperson = request.GET.get('salesperson')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+
+    # Fetch salespersons for the filter dropdown
+    salespersons = MyUser.objects.select_related('user_extinfo').filter(
+        user_extinfo__department__dept_name="Sales", is_active=True
+    ).distinct().values_list('first_name', flat=True)
+
+    # Prepare filters for Sales_target_info
+    sales_target_filters = {}
+    if selected_salesperson:
+        sales_target_filters['st_sales_person__first_name'] = selected_salesperson
+    if from_date:
+        sales_target_filters['st_updated_at__date__gte'] = from_date
+    if to_date:
+        sales_target_filters['st_updated_at__date__lte'] = to_date
+
+    # Apply filters to Sales_target_info
+    sales_summary = Sales_target_info.objects.filter(**sales_target_filters)
+
+    targets_actuals = Sales_target_info.objects.filter(**sales_target_filters).annotate(
+        # Target data from the Sales_target_info model itself
+        total_target_customers=Sum('st_target_customer'),
+        target_new_customer_calls=Sum('st_target_calls_new_customer'),
+        target_existing_customer_calls=Sum('st_target_calls_existing_customer'),
+        target_revenue=Sum('st_target_revenue'),
+
+        # Actual data from related SalesInfo
+        total_actual_customers=Count('st_sales_person__s_updated_by__s_customer_name', distinct=True),
+        total_new_customers=Count('st_sales_person__s_updated_by__s_customer_new_name', distinct=True),
+
+        # Calls data from related SalesCommentsInfo
+        total_sales_calls=Count('st_sales_person__sc_added_by', distinct=True),
+        actual_new_customer_calls=Count(
+            'st_sales_person__sc_added_by',
+            filter=Q(st_sales_person__sc_added_by__sc_sales_number__s_customer_new_name__isnull=False),
+            distinct=True
+        ),
+        actual_existing_customer_calls=Count(
+            'st_sales_person__sc_added_by',
+            filter=Q(st_sales_person__sc_added_by__sc_sales_number__s_customer_new_name__isnull=True),
+            distinct=True
+        ),
+
+        # Revenue data from related BusinessRevenueInfo
+        actual_revenue=Sum('st_sales_person__br_sale_person__br_revenue_1', distinct=True),
+    ).distinct()
+
+    # Return the context to render the template
+    context = {
+        'targets_actuals': targets_actuals,
+        'from_date': from_date,
+        'to_date': to_date,
+        'selected_salesperson': selected_salesperson,
+        'salespersons': salespersons,
+    }
+
+    return render(request, "asset_mgt_app/Reports_example.html", context)
+
+
+def branch_profit_loss(request):
+    selected_branch = request.GET.get('branch', '')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+
+    if from_date:
+        from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
+    if to_date:
+        to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
+
+    invoice_filters = Q()
+    expense_filters = Q()
+
+    if from_date:
+        invoice_filters &= Q(warehouse_goods_info__wh_checkin_time__gte=from_date)
+        expense_filters &= Q(expenseextinfo__exp_ext_updated_on__gte=from_date)
+    if to_date:
+        invoice_filters &= Q(warehouse_goods_info__wh_checkin_time__lte=to_date)
+        expense_filters &= Q(expenseextinfo__exp_ext_updated_on__lte=to_date)
+
+    # Prepare the base queryset
+    queryset = Location_info.objects.annotate(
+        total_invoice_amount=Round(
+            Coalesce(
+                Sum('warehouse_goods_info__wh_total_invoice_cost',distinct=True, filter=invoice_filters, output_field=FloatField()),
+                Value(0, output_field=FloatField())
+            ),
+            2
+        ),
+        total_expense_amount=Round(
+            Coalesce(
+                Sum('expenseextinfo__exp_ext_amount',distinct=True, filter=expense_filters, output_field=FloatField()),
+                Value(0, output_field=FloatField())
+            ),
+            2
+        ),
+        profit_loss=F('total_invoice_amount') - F('total_expense_amount')
+    )
+
+    if selected_branch:
+        queryset = queryset.filter(loc_name=selected_branch)
+
+    data = queryset.values(
+        'loc_name', 'total_invoice_amount', 'total_expense_amount', 'profit_loss'
+    ).order_by('loc_name')
+    branches = Location_info.objects.all()
+
+    context = {
+        'data': data,
+        'branches': branches,
+        'selected_branch': selected_branch,
+        'from_date': from_date.strftime('%Y-%m-%d') if from_date else '',
+        'to_date': to_date.strftime('%Y-%m-%d') if to_date else '',
+    }
+
+    return render(request, "asset_mgt_app/fin_branch_PL_report.html", context)
+
+
+def branch_unit_profit_loss(request):
+    branches = Location_info.objects.all()
+    units = UnitInfo.objects.all().distinct()
+
+    selected_branch = request.GET.get('branch', '')
+    selected_unit = request.GET.get('unit', '')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+
+    if from_date:
+        from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
+
+    if to_date:
+        to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
+
+    if selected_branch:
+        # Filter units by the selected branch and remove duplicates
+        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).distinct('unit_name')
+    else:
+        # Fetch all units if no branch is selected
+        units = UnitInfo.objects.all().distinct('unit_name')
+
+    # Prepare filters for expenses and invoices
+    expenses_filter = {}
+    invoices_filter = {}
+
+    # Only apply branch filter if it's not "All" (empty string)
+    if selected_branch:
+        expenses_filter['exp_ext_branch__loc_name'] = selected_branch  # Adjust to match the loc_name field.
+        invoices_filter['wh_branch__loc_name'] = selected_branch
+
+    if selected_unit:
+        expenses_filter['exp_ext_unit__unit_name'] = selected_unit
+        invoices_filter['wh_unit__unit_name'] = selected_unit
+
+    # Apply date filters if provided
+    if from_date:
+        expenses_filter['exp_ext_updated_on__gte'] = from_date
+        invoices_filter['wh_checkin_time__gte'] = from_date
+
+    if to_date:
+        expenses_filter['exp_ext_updated_on__lte'] = to_date
+        invoices_filter['wh_checkin_time__lte'] = to_date
+
+    # Fetch and aggregate data for expenses
+    expenses_data = (
+        ExpenseExtinfo.objects.filter(**expenses_filter)
+        .values('exp_ext_branch', 'exp_ext_unit', 'exp_ext_branch__loc_name', 'exp_ext_unit__unit_name')
+        .annotate(total_expense=Sum('exp_ext_amount'))
+    )
+
+    # Fetch and aggregate data for invoices
+    invoice_data = (
+        Warehouse_goods_info.objects.filter(**invoices_filter)
+        .values('wh_branch', 'wh_unit', 'wh_branch__loc_name', 'wh_unit__unit_name')
+        .annotate(total_invoice_cost=Sum('wh_total_invoice_cost'))
+    )
+
+    # Prepare combined data for summary
+    combined_data = {}
+
+    # Process expenses data
+    for expense in expenses_data:
+        key = (expense['exp_ext_branch'], expense['exp_ext_unit'])
+        combined_data[key] = {
+            'branch': expense['exp_ext_branch__loc_name'],
+            'unit': expense['exp_ext_unit__unit_name'],
+            'total_expense': expense['total_expense'],
+            'total_invoice_cost': 0.0,
+            'profit_loss': -expense['total_expense'],
+        }
+
+    # Process invoice data and combine with expenses data
+    for invoice in invoice_data:
+        key = (invoice['wh_branch'], invoice['wh_unit'])
+        if key in combined_data:
+            combined_data[key]['total_invoice_cost'] = invoice['total_invoice_cost']
+            combined_data[key]['profit_loss'] += invoice['total_invoice_cost']
+        else:
+            combined_data[key] = {
+                'branch': invoice['wh_branch__loc_name'],
+                'unit': invoice['wh_unit__unit_name'],
+                'total_expense': 0.0,
+                'total_invoice_cost': invoice['total_invoice_cost'],
+                'profit_loss': invoice['total_invoice_cost'],
+            }
+
+    # Remove entries with zero expenses and invoice cost (if necessary)
+    summary_data = [
+        row for row in combined_data.values()
+        if row['total_expense'] != 0.0 or row['total_invoice_cost'] != 0.0
+    ]
+
+    # Pass the data to the template
+    context = {
+        'summary_data': summary_data,
+        'branches': branches,
+        'units': units,
+        'selected_branch': selected_branch,
+        'selected_unit': selected_unit,
+        'from_date': from_date,
+        'to_date': to_date,
+    }
+
+    return render(request, "asset_mgt_app/fin_unit_PL_report.html", context)
