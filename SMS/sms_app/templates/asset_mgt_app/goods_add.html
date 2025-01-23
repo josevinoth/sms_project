@@ -63,7 +63,7 @@
 			<span class="sr-only">unread messages</span>
 		</button>
 	</div>
-	<div class="col-8">
+	<div class="col-10">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 				<div class="card-header text-center">
@@ -134,7 +134,7 @@
 					<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" >
 						{% csrf_token %}
 						<div class="row">
-							<div class="col-4">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >WH Job Number</span>
@@ -190,7 +190,8 @@
 									{% render_field goods_form.wh_uom id="uom" class="form-control" onchange="chargeable_weight_fn()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Number of Pieces</span>
@@ -226,8 +227,6 @@
 									{% render_field goods_form.wh_goods_weight id="weight" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-4">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Package Type</span>
@@ -256,6 +255,8 @@
 									{% render_field goods_form.wh_chargeable_weight id="chargeable_weight" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >CBM</span>
@@ -320,7 +321,7 @@
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
-							<div class="col-4">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text " >Warehouse Branch</span>
