@@ -93,7 +93,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Delivery Type</span>
 									</div>
-									{% render_field form.na_delivery_type id="na_delivery_type" class="form-control " %}
+									{% render_field form.na_delivery_type id="na_delivery_type" class="form-control " onchange="deliver_type()" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -105,7 +105,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Type</span>
 									</div>
-									{% render_field form.na_vehicle_type id="na_vehicle_type" class="form-control " %}
+									{% render_field form.na_vehicle_type id="na_vehicle_type" class="form-control disable_a_href" %}
 								</div>
 							</div>
 							<div class="col-3">
@@ -279,7 +279,6 @@
              document.getElementById("na_customer_new_name").value =" ";
         }
 
-
     }
 </script>
 
@@ -343,6 +342,16 @@
             dropUp: false
         });
     });
+</script>
+<script>
+	function deliver_type() {
+      var na_delivery_type = document.getElementById("na_delivery_type").value;
+        if (na_delivery_type == 2) {
+            $('#na_vehicle_type').removeClass('disable_a_href');
+        } else {
+            $('#na_vehicle_type').addClass('disable_a_href');
+        }
+    }
 </script>
 <script>
 	function cusnewexist_enabler() {
