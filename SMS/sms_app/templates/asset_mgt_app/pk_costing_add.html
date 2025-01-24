@@ -15,7 +15,7 @@
 </div>
 <br>
 <div class="row">
-	<div class="col">
+	<div class="col-9">
 		<form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
 			{% csrf_token %}
 			<div class="container-fluid">
@@ -23,7 +23,7 @@
 					<div class="card-header text-center"><h3>Add/Update Costing</h3></div>
 					<div class="card-body bg-light" id="costing_form">
 						<div class="row" >
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
@@ -84,6 +84,8 @@
 									</div>
 									{% render_field form.ct_stock_description id="ct_stock_description" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Item</span>
@@ -134,143 +136,154 @@
 											</div>
 											{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control " %}
 										</div>
-									</div>
-									<div class="col-3 d-flex align-items-center justify-content-center">
-										<button id="search_wood" type="button" class="btn btn-primary btn-lg"><i class="fas fa-search"></i> Search Item</button>
+
+										<div class="col d-flex align-items-center justify-content-center">
+											<button id="search_wood" type="button" class="btn btn-primary btn-lg"><i class="fas fa-search"></i> Search Item</button>
+										</div>
 									</div>
 								</div>
-
 							</div>
 							<div class="col-6">
 								<div class="bg-warning border border-2 border-warning rounded p-3">
 									<h3 class="text-white text-center align-middle rounded bg-info p-1">Available Stock</h3>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Height (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
+									<div class="row">
+										<div class="col-6">									<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Height (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
+											</div>
+											{% render_field form.ct_height id="ct_height" class="form-control disable_a_href" %}
 										</div>
-										{% render_field form.ct_height id="ct_height" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Width (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Width (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
+												</div>
+												{% render_field form.ct_width id="ct_width" class="form-control disable_a_href" %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Length (Ft)</span>
+												</div>
+												{% render_field form.ct_length id="ct_length" class="form-control disable_a_href" %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">UOM</span>
+												</div>
+												{% render_field form.ct_uom id="ct_uom" class="form-control " %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Size</span>
+												</div>
+												{% render_field form.ct_size id="ct_size" class="form-control disable_a_href" %}
+											</div>
 										</div>
-										{% render_field form.ct_width id="ct_width" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Length (Ft)</span>
+										<div class="col-6">
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Quantity</span>
+												</div>
+												{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
+												</div>
+												{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
+												</div>
+												{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Stock Purchase Number</span>
+												</div>
+												{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
+											</div>
 										</div>
-										{% render_field form.ct_length id="ct_length" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">UOM</span>
-										</div>
-										{% render_field form.ct_uom id="ct_uom" class="form-control " %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Size</span>
-										</div>
-										{% render_field form.ct_size id="ct_size" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Quantity</span>
-										</div>
-										{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
-										</div>
-										{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
-										</div>
-										{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Stock Purchase Number</span>
-										</div>
-										{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
 									</div>
 								</div>
 								<br>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unit Cost</span>
+								<div class="row">
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Unit Cost</span>
+											</div>
+											{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Total CFT/SQFT Required</span>
+											</div>
+											<span id="ct_cft_sqft_req" class="form-control disable_a_href"></span>
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Total Cost</span>
+											</div>
+											{% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control disable_a_href" %}
+										</div>
 									</div>
-									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total CFT/SQFT Required</span>
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Stock Status</span>
+											</div>
+											{% render_field form.ct_stock_status id="ct_stock_status" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Excess Value</span>
+											</div>
+											{% render_field form.ct_exe_value id="ct_exe_value" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Excess Stock Status</span>
+											</div>
+											{% render_field form.ct_excess_status id="ct_excess_status" class="form-control disable_a_href" %}
+										</div>
+										{% render_field form.ct_exe_height_req id="ct_exe_height_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_exe_width_req id="ct_exe_width_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_exe_length_req id="ct_exe_length_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_exe_quantity_req id="ct_exe_quantity_req"  hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_exe_sqrt_req id="ct_exe_sqrt_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
 									</div>
-									<span id="ct_cft_sqft_req" class="form-control disable_a_href"></span>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost</span>
-									</div>
-									{% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Status</span>
-									</div>
-									{% render_field form.ct_stock_status id="ct_stock_status" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Excess Value</span>
-									</div>
-									{% render_field form.ct_exe_value id="ct_exe_value" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Excess Stock Status</span>
-									</div>
-									{% render_field form.ct_excess_status id="ct_excess_status" class="form-control disable_a_href" %}
-								</div>
-								{% render_field form.ct_exe_height_req id="ct_exe_height_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								{% render_field form.ct_exe_width_req id="ct_exe_width_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								{% render_field form.ct_exe_length_req id="ct_exe_length_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								{% render_field form.ct_exe_quantity_req id="ct_exe_quantity_req"  hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								{% render_field form.ct_exe_sqrt_req id="ct_exe_sqrt_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
+								<div class="row">
+									<div class="col-1"></div>
+									<div class="col-10">
+										<div class="message text-center">
+											{% for message in messages %}
+											<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+											{% endfor %}
+										</div>
+									</div>
+									<div class="col-1"></div>
 								</div>
+								{% if form.errors %}
+								<div class="alert alert-danger">
+									<ul>
+										{% for field, errors in form.errors.items %}
+										<li>{{ field }}: {{ errors|join:", " }}</li>
+										{% endfor %}
+									</ul>
+								</div>
+								{% endif %}
+								<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+								<a href="{% url 'costing_cancel' %}" class="btn btn-danger float-right">
+									<i class="fas fa-times"></i> Cancel
+								</a>
 							</div>
-							<div class="col-1"></div>
 						</div>
-						{% if form.errors %}
-						<div class="alert alert-danger">
-							<ul>
-								{% for field, errors in form.errors.items %}
-								<li>{{ field }}: {{ errors|join:", " }}</li>
-								{% endfor %}
-							</ul>
-						</div>
-						{% endif %}
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'costing_cancel' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
 					</div>
-				</div>
-			</div>
 		</form>
 	</div>
 	<div class="col-3">
