@@ -590,4 +590,7 @@ urlpatterns = [
     path('target_actual_table/', views.targets_actuals_table, name='targets_actuals_table'),
     path('branch_profit_loss/', views.branch_profit_loss, name='branch_profit_loss'),
     path('branch_unit_profit_loss/', views.branch_unit_profit_loss, name='branch_unit_profit_loss'),
+    path('finance_reports/', views.finance_reports, name='finance_reports'),
+    path('businessmodel_PL/', views.businessmodel_PL, name='businessmodel_PL'),
+    path('customerwise_PL/', views.customerwise_PL, name='customerwise_PL'),
 ]
