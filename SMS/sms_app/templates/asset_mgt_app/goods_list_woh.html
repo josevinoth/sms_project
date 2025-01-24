@@ -80,7 +80,18 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#goods_list').DataTable();
+    $('#goods_list').DataTable(
+        {
+        scrollY: "600px",
+        scrollX: true,
+        scrollCollapse: true,
+        dom: 'lBfrtip',
+        order: [0, 'desc' ],
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    } );
 } );
 </script>
 {% endblock content %}
+

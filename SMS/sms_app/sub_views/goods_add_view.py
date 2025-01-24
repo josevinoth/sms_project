@@ -485,7 +485,7 @@ def save_goods_data(request):
 
                 # Create a new entry if it doesn't exist
                 Warehouse_goods_new_info.objects.create(
-                    wh_new_job_no=wh_job_no[i],
+                    wh_new_job_no=wh_job_no,
                     wh_new_qr_rand_num=wh_stock_num,  # Auto-generated stock number
                     wh_new_goods_pieces=pieces[i],
                     wh_new_goods_length=length[i],

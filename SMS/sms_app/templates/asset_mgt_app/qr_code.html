@@ -29,48 +29,62 @@
 
 <!-- Print Function -->
 <script>
-function printDiv() {
-    const content = document.getElementById("content").outerHTML;
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(`
-        <html>
-            <head>
-                <title>Print</title>
-                <style>
-                    body {
-                        margin: 0;
-                        padding: 0;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        height: 100vh;
-                        background-color: white;
-                    }
-                    #content {
-                        width: 350px;
-                        padding: 2px;
-                        border: 3px solid black;
-                        background-color: #add8e6;
-                        font-family: Arial, sans-serif;
-                        font-size: 30px;
-                        line-height: 1.6;
-                        display: flex;
-                        flex-wrap: wrap; /* Ensure content wraps if needed */
-                        gap: 10px; /* Add spacing between elements */
-                    }
-                    img {
-                        width: 150px;
-                        height: 150px;
-                        margin-bottom: 2px; /* Add bottom margin to space out images */
-                    }
-                </style>
-            </head>
-            <body>${content}</body>
-        </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
-}
+    function printDiv() {
+        const content = document.getElementById("content").outerHTML;
+        const printWindow = window.open("", "_blank");
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Print</title>
+                    <style>
+    @media print {
+        body {
+            margin: 0;
+            padding: 0;
+            width: 48mm;
+            height: 25mm;
+            background-color: white;
+        }
+        #content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2mm; /* Add padding to prevent overflow */
+            border: 3px solid black;
+            border-radius: 3.2mm;
+            background-color: #add8e6;
+            box-sizing: border-box; /* Include padding in width/height calculations */
+            font-family: Arial, sans-serif;
+            font-size: 4mm; /* Adjusted for readability */
+            text-align: left;
+        }
+        .qr-container {
+            display: flex;
+            align-items: center;
+            gap: 2mm;
+        }
+        .qr-container img {
+            width: 12mm; /* Ensure the QR code fits properly */
+            height: 12mm;
+        }
+        .text-container {
+            max-width: calc(100% - 14mm); /* Prevent overflow */
+            line-height: 1.2;
+            word-wrap: break-word;
+        }
+    }
+</style>
+
+                </head>
+                <body>${content}</body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    }
 </script>
+
 
 {% endblock content %}

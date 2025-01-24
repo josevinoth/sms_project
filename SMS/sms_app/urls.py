@@ -587,6 +587,11 @@ urlpatterns = [
 
     path('salesperson_wise_chart/', views.salesperson_wise_chart, name='salesperson_wise_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
+    path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
+    path('warehouse_goods_add_gatein_insert/', views.warehouse_goods_add_gatein, name='warehouse_goods_add_gatein_insert'),  # Add warehouse_goods_add_gatein
+    path('warehouse_goods_add_gatein_update/<int:wh_goods_gatein_id>', views.warehouse_goods_add_gatein, name='warehouse_goods_add_gatein_update'),  # update warehouse_goods_add_gatein
+    path('warehouse_goods_gatein_delete/<int:wh_goods_gatein_id>/', views.warehouse_goods_gatein_delete, name='warehouse_goods_gatein_delete'),
+    path('warehouse_goods_gatein_list/', views.warehouse_goods_gatein_list, name='warehouse_goods_gatein_list'),
     path('target_actual_table/', views.targets_actuals_table, name='targets_actuals_table'),
     path('branch_profit_loss/', views.branch_profit_loss, name='branch_profit_loss'),
     path('branch_unit_profit_loss/', views.branch_unit_profit_loss, name='branch_unit_profit_loss'),

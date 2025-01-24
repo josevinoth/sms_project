@@ -14,8 +14,9 @@
 	<!--        </a>-->
 	<!--    </div>-->
 </div>
+<br>
 <div class="row">
-	<div class="col">
+	<div class="col-9">
 		<form method="POST" action="" id="quotation_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
 			{% csrf_token %}
 			<div class="container-fluid">
@@ -23,7 +24,7 @@
 					<div class="card-header text-center"><h3>Add/Update Quotation</h3></div>
 					<div class="card-body bg-light" id="quotation_form">
 						<div class="row" >
-							<div class="col-6">
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
@@ -78,6 +79,8 @@
 									</div>
 									{% render_field form.pkqt_stock_description id="pkqt_stock_description" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Item name</span>
@@ -131,68 +134,75 @@
 											{% render_field form.pkqt_days id="pkqt_days" onchange="change_cost_type()" class="form-control " %}
 										</div>
 
-									</div>
-									<div class="col-3 d-flex align-items-center justify-content-center">
-										<button id="search_wood" type="button" class="btn btn-lg btn-primary"><i class="fas fa-search"></i> Search Item</button>
+
+										<div class="col d-flex align-items-center justify-content-center">
+											<button id="search_wood" type="button" class="btn btn-lg btn-primary"><i class="fas fa-search"></i> Search Item</button>
+										</div>
 									</div>
 								</div>
 							</div>
 							<div class="col-6">
 								<div class=" bg-warning border border-warning rounded p-3" >
 									<h3 class="text-light text-center align-middle rounded bg-info p-1">Available Stock</h3>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Height (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
+									<div class="row">
+										<div class="col-6">
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Height (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
+												</div>
+												{% render_field form.pkqt_height id="pkqt_height" class="form-control disable_a_href" %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Width (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
+												</div>
+												{% render_field form.pkqt_width id="pkqt_width" class="form-control disable_a_href" %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Length (Ft)</span>
+												</div>
+												{% render_field form.pkqt_length id="pkqt_length" class="form-control disable_a_href" %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">UOM</span>
+												</div>
+												{% render_field form.pkqt_uom id="pkqt_uom" class="form-control " %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Size</span>
+												</div>
+												{% render_field form.pkqt_size id="pkqt_size" class="form-control disable_a_href" %}
+											</div>
 										</div>
-										{% render_field form.pkqt_height id="pkqt_height" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Width (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
+										<div class="col-6">
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Quantity</span>
+												</div>
+												{% render_field form.pkqt_quantity id="pkqt_quantity" onchange="change_cost_type()" class="form-control " %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
+												</div>
+												{% render_field form.pkqt_cft id="pkqt_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
+												</div>
+												{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control" %}
+											</div>
+											<div class="input-group input-group-sm mb-3">
+												<div class="input-group-prepend">
+													<span class="input-group-text">Stock Purchase Number</span>
+												</div>
+												{% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control disable_a_href" %}
+											</div>
 										</div>
-										{% render_field form.pkqt_width id="pkqt_width" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Length (Ft)</span>
-										</div>
-										{% render_field form.pkqt_length id="pkqt_length" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">UOM</span>
-										</div>
-										{% render_field form.pkqt_uom id="pkqt_uom" class="form-control " %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Size</span>
-										</div>
-										{% render_field form.pkqt_size id="pkqt_size" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Quantity</span>
-										</div>
-										{% render_field form.pkqt_quantity id="pkqt_quantity" onchange="change_cost_type()" class="form-control " %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
-										</div>
-										{% render_field form.pkqt_cft id="pkqt_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
-										</div>
-										{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Stock Purchase Number</span>
-										</div>
-										{% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control disable_a_href" %}
 									</div>
 								</div>
 								<br>
@@ -343,8 +353,8 @@
                 }
                 else if (jn1==4)
                 {
-          			$('#pkqt_item').addClass('disable_a_href');
-          			$('#pkqt_itemdescription').addClass('disable_a_href');
+          			$('#pkqt_item').removeClass('disable_a_href');
+          			$('#pkqt_itemdescription').removeClass('disable_a_href');
             		$('#pkqt_stock_description').removeClass('disable_a_href');
 					$('#pkqt_uom').addClass('disable_a_href');
 					$('#pkqt_quantity').removeClass('disable_a_href');
@@ -588,8 +598,8 @@
        }
         else if (stock_type == 4)
        {
-         $('#pkqt_item').addClass('disable_a_href');
-         $('#pkqt_itemdescription').addClass('disable_a_href');
+         $('#pkqt_item').removeClass('disable_a_href');
+         $('#pkqt_itemdescription').removeClass('disable_a_href');
          $('#pkqt_width_req').removeClass('disable_a_href');
          $('#pkqt_height_req').removeClass('disable_a_href');
          $('#pkqt_length_req').removeClass('disable_a_href');
