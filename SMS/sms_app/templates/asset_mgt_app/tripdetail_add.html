@@ -46,14 +46,14 @@
 									</div>
 									{% render_field trip_det_form.tr_vehiclesource id="tr_vehiclesource" class="form-control disable_a_href" %}
 								</div>
-								</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number</span>
 									</div>
 									{% render_field trip_det_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Type Placed</span>
@@ -78,8 +78,6 @@
 									</div>
 									{% render_field trip_det_form.tr_driver_lic id="tr_driver_lic" class="form-control disable_a_href" %}
 								</div>
-							</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Category</span>
@@ -88,42 +86,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Departed Location</span>
-									</div>
-									{% render_field trip_det_form.tr_departedlocation id="tr_departedlocation" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Departed KM</span>
-									</div>
-									{% render_field trip_det_form.tr_departedkm id="tr_departedkm" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Departed Date</span>
-									</div>
-									{% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Loading Time</span>
-									</div>
-									{% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="Datetime-local" class="form-control" %}
-								</div>
-								</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Un-Loading Time</span>
-									</div>
-									{% render_field trip_det_form.tr_unloading_time id="tr_unloading_time" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Reported Location</span>
 									</div>
 									{% render_field trip_det_form.tr_reportedlocation id="tr_reportedlocation" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Reported KM</span>
@@ -138,6 +106,50 @@
 								</div>
 								{% render_field trip_det_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
 								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dock In Time</span>
+									</div>
+									{% render_field trip_det_form.tr_dock_in_time id="tr_dock_in_time" type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dock Out Time</span>
+									</div>
+									{% render_field trip_det_form.tr_dock_out_time id="tr_dock_out_time" type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Departed Location</span>
+									</div>
+									{% render_field trip_det_form.tr_departedlocation id="tr_departedlocation" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Departed KM</span>
+									</div>
+									{% render_field trip_det_form.tr_departedkm id="tr_departedkm" class="form-control" %}
+								</div>
+							</div>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Departed Date</span>
+									</div>
+									{% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Loading Time</span>
+									</div>
+									{% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Un-Loading Time</span>
+									</div>
+									{% render_field trip_det_form.tr_unloading_time id="tr_unloading_time" type="Datetime-local" class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Status</span>

@@ -15,10 +15,10 @@ def vehiclemaster_add(request,vehiclemaster_id=0):
         return render(request, "asset_mgt_app/vehiclemaster_add.html", {'form': form,'first_name': first_name})
     else:
         if vehiclemaster_id == 0:
-            form = VehiclemasteraddForm(request.POST)
+            form = VehiclemasteraddForm(request.POST,request.FILES)
         else:
             vehiclemaster = VehiclemasterInfo.objects.get(pk=vehiclemaster_id)
-            form = VehiclemasteraddForm(request.POST,instance=vehiclemaster)
+            form = VehiclemasteraddForm(request.POST,request.FILES,instance=vehiclemaster)
         if form.is_valid():
             form.save()
         return redirect('/SMS/vehiclemaster_list')
