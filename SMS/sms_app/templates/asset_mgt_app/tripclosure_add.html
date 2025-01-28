@@ -38,6 +38,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Ref no </span>
+									</div>
+									{% render_field tripclosure_form.tr_customerref id="tr_customerref" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Type Requested</span>
 									</div>
 									{% render_field tripclosure_form.tr_vehicletype id="tr_vehicletype" class="form-control disable_a_href" %}

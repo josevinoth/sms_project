@@ -1,5 +1,8 @@
 from django.db import models
 from ..models import iou_info,EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo,Places,Tripstatusinfo
+
+def trip_attach_path(instance, filename):
+    return 'PODattachfiles/{0}/{1}'.format(instance.tr_tripnumber, filename)
 class Trip_category_info(models.Model):
     category = models.CharField(max_length=100, default='')
 
@@ -46,6 +49,9 @@ class TripdetailInfo(models.Model):
     tc_handlingcost = models.FloatField(default=0.0)
     tc_pod = models.FloatField(default=0.0)
     tc_financestatus = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE, default=1)
+    tc_pod_attachment = models.FileField(upload_to=trip_attach_path, null=True,blank=True)
+    tr_customerref = models.CharField(max_length=30,null=True,blank=True)
+
 
     class Meta:
         ordering = ["tr_tripnumber"]
