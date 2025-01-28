@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="">
+<form method="POST" action="" enctype="multipart/form-data">
 	{% csrf_token %}
 
 	<!--{{form.as_p}}-->
@@ -444,6 +444,13 @@
 															{% render_field form.vm_insurancecopy class="form-control" %}
 															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Insurance Attachment</span>
+															</div>
+															{% render_field form.vm_insurance_attach id="vm_insurance_attach" class="form-control" %}
+														</div>
+
 													</div>
 												</div>
 											</div>
@@ -556,6 +563,18 @@
 															{% render_field form.vm_roadtaxcopy class="form-control" %}
 															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">RC Attachment</span>
+															</div>
+															{% render_field form.vm_rc_attach id="vm_rc_attach" class="form-control" %}
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">RTO Attachment</span>
+															</div>
+															{% render_field form.vm_rto_attach id="vm_rto_attach" class="form-control" %}
+														</div>
 													</div>
 												</div>
 											</div>
@@ -619,6 +638,12 @@
 														</div>
 														<div class="input-group input-group-sm mb-3">
 															<div class="input-group-prepend">
+																<span class="input-group-text">Permit Attachment</span>
+															</div>
+															{% render_field form.vm_permit_attach id="vm_permit_attach" class="form-control" %}
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
 																<span class="input-group-text">Pollution Certificate #</span>
 															</div>
 															{% render_field form.vm_pollutioncertificate class="form-control" %}
@@ -646,6 +671,12 @@
 															</div>
 															{% render_field form.vm_pollutioncertificatecopy class="form-control" %}
 															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+														</div>
+														<div class="input-group input-group-sm mb-3">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Pollution Attachment</span>
+															</div>
+															{% render_field form.vm_pollution_attach id="vm_pollution_attach" class="form-control" %}
 														</div>
 													</div>
 												</div>
