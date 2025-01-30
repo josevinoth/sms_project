@@ -11,17 +11,15 @@
 </div>
 <br>
 <h2 style="color:black;">Business Model Wise P/L Report</h2>
-<br>
+<hr>
 <div class="container-fluid">
     <div class="row align-items-center">
-
-        <!-- Branch Filter -->
         <div class="col-md-2">
             <label for="branch-filter"><b>Branch:</b></label>
             <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
                 <option value="">All</option>
                 {% for branch in branches %}
-                <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
+                <option value="{{ branch.loc_name }}" {% if branch.loc_name == branch_filter %} selected {% endif %}>
                     {{ branch.loc_name }}
                 </option>
                 {% endfor %}
@@ -29,24 +27,23 @@
         </div>
 
         <div class="col-md-2">
-            <label for="businessmodel-filter"><b>Businessmodel:</b></label>
+            <label for="businessmodel-filter"><b>Business Model:</b></label>
             <select id="businessmodel-filter" name="businessmodel" class="form-control box-shadow rounded">
                 <option value="">All</option>
                 {% for businessmodel in businessmodels %}
-                <option value="{{ businessmodel.tb_trbusinesstype }}" {% if businessmodel.tb_trbusinesstype == selected_businessmodel %} selected {% endif %}>
+                <option value="{{ businessmodel.tb_trbusinesstype }}"
+                        {% if businessmodel.tb_trbusinesstype == businessmodel_filter %} selected {% endif %}>
                     {{ businessmodel.tb_trbusinesstype }}
                 </option>
                 {% endfor %}
             </select>
         </div>
 
-        <!-- From Date -->
         <div class="col-md-2">
             <label for="from-date"><b>From:</b></label>
             <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
         </div>
 
-        <!-- To Date -->
         <div class="col-md-3">
             <label for="to-date"><b>To:</b></label>
             <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
@@ -54,29 +51,105 @@
 
     </div>
 </div>
-
+<div style="width: 100%; margin: 20px;">
+    <canvas id="businessModelChart" class="bg-white box-shadow rounded"></canvas>
+</div>
 <hr>
 
 <table id="businessmodel_PL_table" class="table table-striped table-bordered">
     <thead class="thead-dark">
     <tr>
-        <th>Business Type</th>
         <th>Branch</th>
-        <th>Total Invoice Amount (INR)</th>
-        <th>Total Expenses (INR)</th>
+        <th>Unit</th>
+        <th>Total Income</th>
+        <th>Total Expense</th>
+        <th>Profit/Loss</th>
+        <th>Profit/Loss (%)</th>
     </tr>
     </thead>
     <tbody>
-    {% for summary in business_summary %}
+    {% for result in results %}
     <tr>
-        <td>{{ summary.wh_customer_type__tb_trbusinesstype }}</td>
-        <td>{{ summary.wh_branch__loc_name }}</td>
-        <td>{{ summary.total_invoice_amount|floatformat:2 }}</td>
-        <td>{{ summary.total_expenses|floatformat:2 }}</td>
+        <td>{{ result.branch }}</td>
+        <td>{{ result.unit }}</td>
+        <td>{{ result.total_income }}</td>
+        <td>{{ result.total_expense }}</td>
+        <td>{{ result.profit_loss }}</td>
+        <td>{{ result.profit_loss_percentage }}%</td>
     </tr>
     {% endfor %}
     </tbody>
 </table>
+
+
+<script>
+    const labels = {{ chart_labels|safe }};
+    const incomeData = {{ income_values|safe }};
+    const expenseData = {{ expense_values|safe }};
+    const profitLossData = {{ profit_loss_values|safe }};
+
+    console.log("Profit/Loss Data:", profitLossData);
+    const profitLossColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
+    const profitLossBorderColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
+
+    var ctx = document.getElementById('businessModelChart').getContext('2d');
+
+    var businessModelChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Income (INR)',
+                data: incomeData,
+                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Expense (INR)',
+                data: expenseData,
+                backgroundColor: 'rgba(255, 128, 0, 0.5)',
+                borderColor: 'rgba(255, 128, 0, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Profit/Loss (INR)',
+                data: profitLossData,
+                backgroundColor: profitLossColors,
+                borderColor: profitLossBorderColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'right',
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: (value) => value.toFixed(2),
+                    font: {
+                        size: 9,
+                    },
+                    color: '#000',
+                    backgroundColor: 'rgba(235, 233, 234, 0.8)',
+                    borderRadius: 4,
+                    padding: 3,
+                    borderWidth: 1,
+                    borderColor: '#000',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: Math.max(...incomeData.concat(expenseData, profitLossData)) * 1.2,
+                },
+            },
+        },
+        plugins: [ChartDataLabels]
+    });
+</script>
 
 <script>
     // Initialize DataTable
@@ -90,7 +163,6 @@
         });
     });
 
-    // Add event listeners to filters
     document.getElementById('branch-filter').addEventListener('change', updateFilters);
     document.getElementById('businessmodel-filter').addEventListener('change', updateFilters);
     document.getElementById('from-date').addEventListener('change', updateFilters);
@@ -103,40 +175,34 @@
     const toDate = document.getElementById('to-date').value;
     const url = new URL(window.location.href);
 
-    // Update branch filter
     if (branch) {
         url.searchParams.set('branch', branch);
     } else {
-        url.searchParams.delete('branch'); // Clear the parameter if "All" is selected
+        url.searchParams.delete('branch');
     }
 
     if (businessmodel) {
         url.searchParams.set('businessmodel', businessmodel);
     } else {
-        url.searchParams.delete('businessmodel'); // Clear the parameter if "All" is selected
+        url.searchParams.delete('businessmodel');
     }
 
 
     if (fromDate) {
         url.searchParams.set('from_date', fromDate);
     } else {
-        url.searchParams.delete('from_date'); // Clear the parameter if no date is provided
+        url.searchParams.delete('from_date');
     }
 
-    // Update to_date filter
     if (toDate) {
         url.searchParams.set('to_date', toDate);
     } else {
-        url.searchParams.delete('to_date'); // Clear the parameter if no date is provided
+        url.searchParams.delete('to_date');
     }
 
-    // Log the updated URL
     console.log(url.toString());
-
-    // Reload the page with updated filters
     window.location.href = url.toString();
 }
 
 </script>
-
 {% endblock content %}

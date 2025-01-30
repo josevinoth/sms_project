@@ -137,4 +137,4 @@ from .sub_views.warehouse_goods_add_new_view import warehouse_goods_add_gatein,w
 from .sub_views.salesperson_chart_view import targets_actuals_table
 from .sub_views.finance_reports_view import branch_profit_loss
 from .sub_views.finance_reports_view import branch_unit_profit_loss
-from .sub_views.finance_reports_view import finance_reports,businessmodel_PL,customerwise_PL
+from .sub_views.finance_reports_view import finance_reports,businessmodel_PL,customerwise_PL,fin_profit_loss_view,expenses_report,ar_due_reports
