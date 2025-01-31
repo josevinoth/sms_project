@@ -74,10 +74,10 @@
     <tr>
         <td>{{ result.branch }}</td>
         <td>{{ result.unit }}</td>
-        <td>{{ result.total_income }}</td>
-        <td>{{ result.total_expense }}</td>
-        <td>{{ result.profit_loss }}</td>
-        <td>{{ result.profit_loss_percentage }}%</td>
+        <td>{{ result.total_income|floatformat:2 }}</td>
+        <td>{{ result.total_expense|floatformat:2 }}</td>
+        <td>{{ result.profit_loss|floatformat:2 }}</td>
+        <td>{{ result.profit_loss_percentage|floatformat:2 }}%</td>
     </tr>
     {% endfor %}
     </tbody>

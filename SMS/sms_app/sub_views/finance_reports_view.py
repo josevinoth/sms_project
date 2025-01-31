@@ -600,7 +600,7 @@ def expenses_report(request):
         'chart_data': chart_data,
     }
 
-    return render(request, "asset_mgt_app/expenses_report.html", context)
+    return render(request, "asset_mgt_app/fin_expenses_report.html", context)
 
 
 

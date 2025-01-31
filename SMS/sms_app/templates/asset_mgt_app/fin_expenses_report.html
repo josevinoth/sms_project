@@ -71,7 +71,7 @@
     <tr>
         <td>{{ forloop.counter }}</td>
         <td>{{ row.expense_type }}</td>
-        <td>{{ row.total_expense }}</td>
+        <td>{{ row.total_expense|floatformat:2 }}</td>
     </tr>
     {% empty %}
     <tr>
