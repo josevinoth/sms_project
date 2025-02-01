@@ -1,10 +1,16 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
+from django.http import JsonResponse
+
 from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm,EnquirynotevehicleForm
 from ..models import User_extInfo,StatusList,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo,Enquirynotevehicle
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
+
+from ..sub_models.customer_mod import CustomerInfo
+
+
 @login_required(login_url='login_page')
 def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
     first_name = request.session.get('first_name')
@@ -198,3 +204,16 @@ def enquirynote_delete(request,enquirynote_id):
     enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
     enquirynote.delete()
     return redirect('/SMS/enquirynote_list')
+
+@login_required(login_url='login_page')
+def get_customer_details(request):
+    customer_id = request.GET.get('customer_id')  # Get customer ID from AJAX request
+    try:
+        customer = CustomerInfo.objects.get(id=customer_id)
+        data = {
+            'customer_contact': customer.cu_contactno,
+            'customer_email': customer.cu_email,
+        }
+        return JsonResponse(data)  # Return JSON response
+    except CustomerInfo.DoesNotExist:
+        return JsonResponse({'error': 'Customer not found'}, status=404)

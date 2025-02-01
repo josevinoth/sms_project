@@ -50,7 +50,7 @@ class TripdetailInfo(models.Model):
     tc_unloadingcost = models.FloatField(default=0.0)
     tc_weighmentcost = models.FloatField(default=0.0)
     tc_handlingcost = models.FloatField(default=0.0)
-    tc_pod = models.FloatField(default=0.0)
+    tc_pod = models.CharField(default=" ")
     tc_financestatus = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE, default=1)
     tc_pod_attachment = models.FileField(upload_to=trip_attach_path, null=True,blank=True)
     tr_customerref = models.CharField(max_length=30,null=True,blank=True)

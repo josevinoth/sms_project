@@ -193,3 +193,4 @@ from .sub_models.dsr_info_mod import DsrInfo
 from .sub_models.goods_new_mod import Warehouse_goods_new_info
 from .sub_models.consignmentgoods_new_mod import consignmentsgoods_new_info
 from .sub_models.warehouse_goods_new_mod import warehouse_goodsnew_info
+from .sub_models.transport_procurement_mod import Vehicle_procurementInfo

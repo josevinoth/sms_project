@@ -31,6 +31,12 @@
 								</div>
 							</div>
 							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer code</span>
+									</div>
+									{% render_field con_det_form.co_customercode id="co_customercode" class="form-control disable_a_href" %}
+								</div>
 								<div class="row">
 									<div class="col-10">
 										<div class="input-group input-group-sm mb-3">
@@ -54,14 +60,14 @@
 									</div>
 									{% render_field con_det_form.co_consignmentdate type="Date" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Frieght Amount (INR)</span>
 									</div>
 									{% render_field con_det_form.co_freight_amount id="co_freight_amount" class="form-control" %}
 								</div>
-							</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">GST Payable By</span>
@@ -74,14 +80,14 @@
 									</div>
 									{% render_field con_det_form.co_seal_number id="co_seal_number" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Container Number</span>
 									</div>
 									{% render_field con_det_form.co_container_number id="co_container_number" class="form-control" %}
 								</div>
-							</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Container Description</span>
@@ -97,11 +103,11 @@
 								{% render_field con_det_form.co_lastmodifiedby id="co_lastmodifiedby" hidden="True" class="form-control" %}
 							</div>
 							<div class="container-fluid input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Remarks</span>
-									</div>
-									{% render_field con_det_form.co_remarks class="form-control" id="co_remarks" %}
+								<div class="input-group-prepend">
+									<span class="input-group-text">Remarks</span>
 								</div>
+								{% render_field con_det_form.co_remarks class="form-control" id="co_remarks" %}
+							</div>
 						</div>
 						<div class="row">
 							<div class="col-1"></div>
@@ -129,22 +135,27 @@
 	</div>
 </form>
 <script>
-$(document).ready(function() {
-	document.getElementById("co_lastmodifiedby").value ='{{user_id}}';
-	var enquiry_num_id=document.getElementById("co_enquirynumber").value
-	if (enquiry_num_id=="")
-		{
-			document.getElementById("co_enquirynumber").value ='{{enquiry_num_id}}';
-		}
-	else
-		{
-			document.getElementById("co_enquirynumber").value =enquiry_num_id;
-		}
-	var customer=document.getElementById("co_customer").value
-	if (customer=="")
-		{
-			document.getElementById("co_customer").value='{{customer_id}}';
-		}
-  });
+	$(document).ready(function() {
+        document.getElementById("co_lastmodifiedby").value ='{{user_id}}';
+        var enquiry_num_id=document.getElementById("co_enquirynumber").value
+        if (enquiry_num_id=="")
+            {
+                document.getElementById("co_enquirynumber").value ='{{enquiry_num_id}}';
+            }
+        else
+            {
+                document.getElementById("co_enquirynumber").value =enquiry_num_id;
+            }
+        var customer=document.getElementById("co_customer").value
+        if (customer=="")
+            {
+                document.getElementById("co_customer").value='{{customer_id}}';
+            }
+        var customer_code=document.getElementById("co_customercode").value
+        if (customer_code=="")
+            {
+                document.getElementById("co_customercode").value='{{ customer_code }}';
+            }
+      });
 </script>
 {% endblock content %}
