@@ -603,4 +603,7 @@ urlpatterns = [
     path('vehicle_procurement_list/', views.vehicle_procurement_list, name='vehicle_procurement_list'),
     path('vehicle_procurement_update/<int:vp_id>/', views.vehicle_procurement_add, name='vehicle_procurement_update'),
     path('vehicle_procurement_delete/<int:vp_id>/', views.vehicle_procurement_delete,name='vehicle_procurement_delete'),
+    path('fin_profit_loss/', views.fin_profit_loss_view, name='fin_profit_loss_view'),
+    path('expenses_report/', views.expenses_report, name='expenses_report'),
+    path('ar_due_reports/', views.ar_due_reports, name='ar_due_reports'),
 ]
