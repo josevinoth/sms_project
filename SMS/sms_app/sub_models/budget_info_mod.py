@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import MyUser,Location_info,UnitInfo,Vendor_info
+from ..models import MyUser,Location_info,UnitInfo,Business_Sol_info
 
 class BudgetInfo(models.Model):
     bf_Airport_Handling_Charges = models.FloatField(blank=True, null=True,default=0.0)
@@ -80,6 +80,6 @@ class BudgetInfo(models.Model):
     bf_travelling_expenses = models.FloatField(blank=True, null=True, default=0.0)
     bf_location = models.ForeignKey(Location_info, null=True, on_delete=models.CASCADE, default='')
     bf_unit_reference = models.ForeignKey(UnitInfo, null=True, on_delete=models.CASCADE, default='')
-    bf_company = models.ForeignKey(Vendor_info, on_delete=models.CASCADE,null=True,blank=True)
+    bf_company = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE,null=True,blank=True)
     def __str__(self):
         return f"budget form at {self.bf_Airport_Handling_Charges}"
