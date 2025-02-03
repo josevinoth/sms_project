@@ -110,7 +110,7 @@ def tripdetail_add(request,tripdetail_id=0):
     else:
         if tripdetail_id == 0:
             print("I am inside post add tripdetails")
-            trip_det_form = TripdetailaddForm(request.POST)
+            trip_det_form = TripdetailaddForm(request.POST,request.FILES)
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES)
             enquiry_num = request.session.get('ses_enqiury_id')
             if trip_det_form.is_valid():
@@ -150,7 +150,7 @@ def tripdetail_add(request,tripdetail_id=0):
             print("I am inside post edit tripdetails")
             trip_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_tripnumber
             tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
-            trip_det_form = TripdetailaddForm(request.POST, instance=tripdetail)
+            trip_det_form = TripdetailaddForm(request.POST, request.FILES, instance=tripdetail)
             tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES, instance=tripclosure_files)
 

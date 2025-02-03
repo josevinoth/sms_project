@@ -344,14 +344,15 @@
     });
 </script>
 <script>
-	function deliver_type() {
-      var na_delivery_type = document.getElementById("na_delivery_type").value;
-        if (na_delivery_type == 2) {
-            $('#na_vehicle_type').removeClass('disable_a_href');
-        } else {
-            $('#na_vehicle_type').addClass('disable_a_href');
-        }
-    }
+		function deliver_type() {
+		  var na_delivery_type = document.getElementById("na_delivery_type").value;
+			if (na_delivery_type == 2) {
+				$('#na_vehicle_type').removeClass('disable_a_href');
+				document.getElementById("na_vehicle_type").value=""
+			} else {
+				$('#na_vehicle_type').addClass('disable_a_href');
+			}
+		}
 </script>
 <script>
 	function cusnewexist_enabler() {
