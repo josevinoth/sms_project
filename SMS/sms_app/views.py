@@ -138,3 +138,4 @@ from .sub_views.salesperson_chart_view import targets_actuals_table
 from .sub_views.finance_reports_view import branch_profit_loss
 from .sub_views.finance_reports_view import branch_unit_profit_loss
 from .sub_views.finance_reports_view import finance_reports,businessmodel_PL,customerwise_PL
+from .sub_views.vehicleavailability_view import vehicle_availability_list
