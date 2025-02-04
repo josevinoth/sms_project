@@ -584,7 +584,6 @@ urlpatterns = [
     path('save_consignment_data/', views.save_consignment_data, name='save_consignment_data'),
     path('delete_consignment_data/',views.delete_consignment_data, name='delete_consignment_data'),
     path('delete_goods_data/',views.delete_goods_data, name='delete_goods_data'),
-
     path('salesperson_wise_chart/', views.salesperson_wise_chart, name='salesperson_wise_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
@@ -602,5 +601,4 @@ urlpatterns = [
     path('expenses_report/', views.expenses_report, name='expenses_report'),
     path('ar_due_reports/', views.ar_due_reports, name='ar_due_reports'),
     path('vehicle_availability/',views.vehicle_availability_list, name='vehicle_availability'),
-
 ]
