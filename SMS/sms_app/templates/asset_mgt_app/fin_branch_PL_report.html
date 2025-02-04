@@ -83,88 +83,37 @@
     </tbody>
 </table>
 <script>
-    const labels = {{ chart_labels|safe }};
-    const incomeData = {{ chart_income|safe }}.map(value => value / 100000); // Convert to lakhs
-    const expenseData = {{ chart_expenses|safe }}.map(value => value / 100000);
-    const profitLossData = {{ chart_profit_loss|safe }}.map(value => value / 100000);
+    // Load Data from Django Context
+    const labels1 = {{ chart_labels|safe }};
+    const incomeData1 = convertToLakhs({{ chart_income|safe }});
+    const expenseData1 = convertToLakhs({{ chart_expenses|safe }});
+    const profitLossData1 = convertToLakhs({{ chart_profit_loss|safe }});
 
-    const profitLossColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
-    const profitLossBorderColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
-
-    const ctx = document.getElementById('branchPLChart').getContext('2d');
-
-    const branchPLChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Income',
-                    data: incomeData,
-                    backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                },
-                {
-                    label: 'Expenses',
-                    data: expenseData,
-                    backgroundColor: 'rgba(255, 128, 0, 0.7)', // Orange
-                    borderColor: 'rgba(255, 128, 0, 1)',
-                    borderWidth: 1,
-                },
-                {
-                    label: 'Profit/Loss',
-                    data: profitLossData,
-                    backgroundColor: profitLossColors,
-                    borderColor: profitLossBorderColors,
-                    borderWidth: 1,
-                },
-            ],
+    const datasets1 = [
+        {
+            label: 'Income',
+            data: incomeData1,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                },
-                datalabels: {
-                    anchor: 'end',
-                    align: 'top',
-                    color: '#000',
-                    backgroundColor: 'rgba(235, 233, 234, 0.8)',
-                    borderRadius: 4,
-                    padding: 4,
-                    borderWidth: 1,
-                    borderColor: '#000',
-                    font: {
-                        size: 10,
-                        weight: 'bold',
-                    },
-                    formatter: function(value) {
-                        return value.toFixed(2) + ' L'; // Display values in lakhs
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    suggestedMax: Math.max(...incomeData.concat(expenseData, profitLossData)) * 1.2,
-                    title: {
-                        display: true,
-                        text: 'Amount (Lakhs)',
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Branches',
-                    }
-                }
-            }
+        {
+            label: 'Expenses',
+            data: expenseData1,
+            backgroundColor: 'rgba(255, 128, 0, 0.7)',
+            borderColor: 'rgba(255, 128, 0, 1)',
+            borderWidth: 1,
         },
-        plugins: [ChartDataLabels]
-    });
+        {
+            label: 'Profit/Loss',
+            data: profitLossData1,
+            backgroundColor: getProfitLossColors(profitLossData1),
+            borderColor: getProfitLossBorderColors(profitLossData1),
+            borderWidth: 1,
+        },
+    ];
+
+    createBarChart('branchPLChart', labels1, datasets1);
 </script>
 
 
