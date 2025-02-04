@@ -18,6 +18,7 @@ class ConsignmentdetailInfo(models.Model):
     co_cusrefnum = models.CharField(max_length=80,null=True,blank=True)
     co_cusrefnum_check = models.BooleanField(blank=True,null=True)
     co_remarks = models.TextField(max_length=500, null=True, blank=True)
+    co_customercode = models.CharField(max_length=100,default = '')
 
     def __str__(self):
         return self.co_consignmentnumber

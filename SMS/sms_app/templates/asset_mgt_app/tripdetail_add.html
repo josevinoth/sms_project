@@ -201,6 +201,8 @@
         document.getElementById("tc_financestatus").value ='{{status_selected}}';
         document.getElementById("tr_enquirynumber").value ='{{enquiry_num_id}}';
         document.getElementById("tr_consignmentnumber").value ='{{consignment_selected}}'
+
+        trip_type();
       });
 </script>
 
@@ -249,11 +251,12 @@
 			if (tr_category == 1) {
 				$('#tc_pod_attachment').removeClass('disable_a_href');
 				$('#tc_pod').removeClass('disable_a_href');
-				document.getElementById("tc_pod_attachment").value=""
-				document.getElementById("tc_pod").value=""
+
 			} else {
 				$('#tc_pod_attachment').addClass('disable_a_href');
 				$('#tc_pod').addClass('disable_a_href');
+				document.getElementById("tc_pod_attachment").value=""
+				document.getElementById("tc_pod").value=""
 			}
 		}
 </script>

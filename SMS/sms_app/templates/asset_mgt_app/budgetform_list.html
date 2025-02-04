@@ -110,6 +110,13 @@
 <!--            <th>Telephone & Mobile Expenses</th>-->
 <!--            <th>Training Expenses</th>-->
 <!--            <th>Travelling Expenses</th>-->
+            <th>Income Subtotal</th>
+            <th>Department Expenses Subtotal </th>
+            <th>Employee Benefits Subtotal </th>
+            <th>Interest Expenses Subtotal </th>
+            <th>Operational Expenses Subtotal </th>
+            <th>Non Operational Expense Subtotal</th>
+            <th>Overall Total</th>
             <th>Budget Form Month & Year</th>
 <!--            <th>End Date</th>-->
             <th>Updated On</th>
@@ -203,6 +210,13 @@
 <!--            <td>{{ budget.bf_telephone_mobile_expenses }}</td>-->
 <!--            <td>{{ budget.bf_training_expenses }}</td>-->
 <!--            <td>{{ budget.bf_travelling_expenses }}</td>-->
+            <td>{{ income_total }}</td>
+            <td>{{ department_expenses_total }}</td>
+            <td>{{ employee_benefits_total }}</td>
+            <td>{{ interest_expenses_total }}</td>
+            <td>{{ operational_expenses_total }}</td>
+            <td>{{ non_operational_expenses_total }}</td>
+            <td>{{ overall_total }}</td>
             <td>{{ budget.bf_start_date_year }}</td>
 <!--            <td>{{ budget.bf_end_date }}</td>-->
             <td>{{ budget.bf_updated_at }}</td>
@@ -229,8 +243,11 @@
 <script>
     $(document).ready(function() {
     $('#budget_list').DataTable({
+        scrollY: "600px",
+        scrollX: true,
+        scrollCollapse: true,
+        dom: 'lBfrtip',
         order: [0, 'desc' ],
-        dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'
         ],

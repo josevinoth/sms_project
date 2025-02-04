@@ -92,8 +92,8 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
             print("No stock values found for the given conditions.")
         else:
             # Step 1: Filter stock_values and ensure the date fields are timezone-free
-            stock_values = stock_values.order_by(
-                '-wh_gate_injob_no_id__gatein_arrival_date'  # Sorting by recent "Date Of Arrival" on top
+            stock_values = stock_values.filter(wh_check_in_out="1").order_by(
+                '-wh_gate_injob_no_id__gatein_arrival_date'
             )
 
             # Step 2: In the loop, replace the date with timezone-free date objects
@@ -187,7 +187,7 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
             left=Side(style='thin'),
             right=Side(style='thin'),
             top=Side(style='thin'),
-            bottom=Side(style='thin')
+            bottom=Side(style='thin'),
         )
         customer_name =CustomerInfo.objects.get(id=customer_name).cu_name
         file_name = str(customer_name)+'_DSR_report.xlsx'  # Set your desired file name

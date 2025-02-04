@@ -22,14 +22,30 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Name</span>
 									</div>
-									{% render_field form.en_customername id="en_customername" class="form-control" onchange="package_type_change()" %}
+									{% render_field form.en_customername id="en_customername" class="form-control" onchange="fetchCustomerDetails()" %}
 								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer New Name</span>
 									</div>
 									{% render_field form.en_customer_new_name id="en_customer_new_name" class="form-control disable_a_href" %}
 								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Contact</span>
+									</div>
+									{% render_field form.en_contactno id="en_contactno" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Email</span>
+									</div>
+									{% render_field form.en_email id="en_email" class="form-control disable_a_href" %}
+								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Department</span>
@@ -42,8 +58,6 @@
 									</div>
 									{% render_field form.en_business_type id="en_business_type" class="form-control " %}
 								</div>
-							</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Movement Type</span>
@@ -62,14 +76,14 @@
 									</div>
 									{% render_field form.en_vehiclecategory class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Type</span>
 									</div>
 									{% render_field form.en_vehicletype class="form-control" %}
 								</div>
-							</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assigned To</span>
@@ -249,7 +263,7 @@
 });
 </script>
 <script>
-    function package_type_change() {
+	function package_type_change() {
         var type_packing = document.getElementById("en_customername").value;
 
         if (type_packing == 210) {
@@ -261,4 +275,24 @@
     }
 </script>
 
+<script>
+	function fetchCustomerDetails() {
+        var customerId = $("#en_customername").val();  // Get selected customer ID
+
+        if (customerId) {
+            $.ajax({
+                url: "{% url 'get_customer_details' %}",  // Django URL to fetch customer details
+                type: "GET",
+                data: { customer_id: customerId },
+                success: function(response) {
+                    $("#en_contactno").val(response.customer_contact);
+                    $("#en_email").val(response.customer_email);
+                },
+                error: function(xhr, status, error) {
+                    console.log("Error fetching customer details:", error);
+                }
+            });
+        }
+    }
+</script>
 {% endblock content %}

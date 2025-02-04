@@ -32,7 +32,9 @@ def consignmentdetail_add(request,consignmentdetail_id=0):
     user_id = request.session.get('ses_userID')
     enquiry_num = request.session.get('ses_enqiury_num')
     customer = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_customername
-    customer_id = CustomerInfo.objects.get(cu_name=customer).id
+    customer_obj = CustomerInfo.objects.get(cu_name=customer)
+    customer_id = customer_obj.id
+    customer_code = customer_obj.cu_customercode  # Fetch customer code
     if request.method == "GET":
         if consignmentdetail_id == 0:
             print("I am inside Get add consignmentdetails")
@@ -50,6 +52,7 @@ def consignmentdetail_add(request,consignmentdetail_id=0):
             'enquiry_num': enquiry_num,
             'enquiry_num_id': enquiry_num_id,
             'customer_id': customer_id,
+            'customer_code': customer_code,  # Include customer_code in context
             'consignmentdetail_list': ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id),
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)

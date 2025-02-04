@@ -56,8 +56,124 @@ def budgetform_add(request,budget_id=0):
 def budgetform_list(request):
     first_name = request.session.get('first_name')
     budget_list = BudgetInfo.objects.all()
-    context = {'budget_list': budget_list, 'first_name': first_name}
+
+    # Initialize subtotal variables
+    income_total = 0
+    department_expenses_total = 0
+    employee_benefits_total = 0
+    interest_expenses_total = 0
+    operational_expenses_total = 0
+    non_operational_expenses_total = 0
+    overall_total = 0
+
+    # Calculate subtotals
+    for budget in budget_list:
+        income_total += (
+                budget.bf_Airport_Handling_Charges +
+                budget.bf_Crane_Handling_Charges +
+                budget.bf_Forklift_Handling_Charges +
+                budget.bf_Handling_Charges +
+                budget.bf_Packing_Charges +
+                budget.bf_Warehouse_Handling_Charges +
+                budget.bf_Warehouse_Loading_Charges +
+                budget.bf_Warehouse_Storage_Charges +
+                budget.bf_Warehouse_Unloading_Charges
+
+        )  # Assuming 'bf_fixed' is for Income
+
+        department_expenses_total += (
+                budget.bf_audit_fees +
+                budget.bf_bad_debts +
+                budget.bf_bank_charges +
+                budget.bf_celebration_expenses +
+                budget.bf_consultancy_charges +
+                budget.bf_directors_remuneration +
+                budget.bf_insurance_car +
+                budget.bf_interest_on_statutory_dues +
+                budget.bf_professional_legal_charges +
+                budget.bf_subscription_membership
+        )
+
+        employee_benefits_total += (
+                budget.bf_corp_staff +
+                budget.bf_bonus_corp_staff +
+                budget.bf_EDLI_contribution_corp_staff +
+                budget.bf_employer_contribution_to_ESI_corp_staff +
+                budget.bf_employer_contribution_to_PF_corp_staff +
+                budget.bf_EPF_admin_charges_corp_staff +
+                budget.bf_gratuity_corp_staff +
+                budget.bf_salaries_wages_corp_staff +
+                budget.bf_dept_staff +
+                budget.bf_bonus_staff +
+                budget.bf_EDLI_contribution_staff +
+                budget.bf_employer_contribution_to_ESI_staff +
+                budget.bf_employer_contribution_to_PF_staff +
+                budget.bf_EPF_admin_charges_staff +
+                budget.bf_gratuity_staff +
+                budget.bf_salaries_wages_staff
+        )
+
+        interest_expenses_total += (
+                budget.bf_interest_on_borrowings +
+                budget.bf_interest_on_other_loans
+        )
+
+        operational_expenses_total += (
+                budget.bf_fixed +
+                budget.bf_depreciation +
+                budget.bf_handling_expenses +
+                budget.bf_software_AMC_charges +
+                budget.bf_insurance_warehouse +
+                budget.bf_rates_taxes +
+                budget.bf_rent_premises +
+                budget.bf_security_service_charges +
+                budget.bf_manpower_supply_expenses
+        )
+
+        non_operational_expenses_total += (
+                budget.bf_oe_Fixed +
+                budget.bf_housekeeping_salary +
+                budget.bf_insurance_corp_staff +
+                budget.bf_insurance_staff +
+                budget.bf_internet_data_card_expenses +
+                budget.bf_rent_plant_machinery +
+                budget.bf_oe_variable +
+                budget.bf_advertisement_business_promotion +
+                budget.bf_conveyance_expenses +
+                budget.bf_diesel_expenses_gense +
+                budget.bf_handling_expenses +
+                budget.bf_hotel_boarding_lodging_expenses +
+                budget.bf_office_repairs_maintenance +
+                budget.bf_office_supplies_general_expenses +
+                budget.bf_power_fuel +
+                budget.bf_printing_stationery +
+                budget.bf_service_maintenance_expenses +
+                budget.bf_staff_welfare_staff +
+                budget.bf_telephone_mobile_expenses +
+                budget.bf_training_expenses +
+                budget.bf_travelling_expenses
+        )
+
+    # Calculate the overall total
+    overall_total = (
+            income_total + department_expenses_total + employee_benefits_total +
+            interest_expenses_total + operational_expenses_total + non_operational_expenses_total
+    )
+
+    context = {
+        'budget_list': budget_list,
+        'first_name': first_name,
+        'income_total': income_total,
+        'department_expenses_total': department_expenses_total,
+        'employee_benefits_total': employee_benefits_total,
+        'interest_expenses_total': interest_expenses_total,
+        'operational_expenses_total': operational_expenses_total,
+        'non_operational_expenses_total': non_operational_expenses_total,
+        'overall_total': overall_total,
+    }
+
     return render(request, "asset_mgt_app/budgetform_list.html", context)
+
 
 #Delete bay
 @login_required(login_url='login_page')
