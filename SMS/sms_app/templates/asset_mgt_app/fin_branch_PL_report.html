@@ -74,24 +74,22 @@
     {% for row in summary_data %}
     <tr>
         <td>{{ row.branch }}</td>
-        <td>{{ row.total_invoice_cost|floatformat:2 }}</td>
-        <td>{{ row.total_expense|floatformat:2 }}</td>
-        <td>{{ row.profit_loss|floatformat:2 }}</td>
+        <td>{{ row.total_invoice_cost|to_lakhs }}</td>
+        <td>{{ row.total_expense|to_lakhs }}</td>
+        <td>{{ row.profit_loss|to_lakhs }}</td>
         <td>{{ row.profit_loss_percentage|floatformat:2 }}%</td>
     </tr>
     {% endfor %}
     </tbody>
 </table>
-
 <script>
     const labels = {{ chart_labels|safe }};
-    const incomeData = {{ chart_income|safe }};
-    const expenseData = {{ chart_expenses|safe }};
-    const profitLossData = {{ chart_profit_loss|safe }};
+    const incomeData = {{ chart_income|safe }}.map(value => value / 100000); // Convert to lakhs
+    const expenseData = {{ chart_expenses|safe }}.map(value => value / 100000);
+    const profitLossData = {{ chart_profit_loss|safe }}.map(value => value / 100000);
 
     const profitLossColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
     const profitLossBorderColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
-
 
     const ctx = document.getElementById('branchPLChart').getContext('2d');
 
@@ -110,7 +108,7 @@
                 {
                     label: 'Expenses',
                     data: expenseData,
-                    backgroundColor: 'rgba(255, 128, 0, 0.7)', // Red
+                    backgroundColor: 'rgba(255, 128, 0, 0.7)', // Orange
                     borderColor: 'rgba(255, 128, 0, 1)',
                     borderWidth: 1,
                 },
@@ -128,36 +126,47 @@
             plugins: {
                 legend: {
                     display: true,
-                    position: 'right',
+                    position: 'top',
                 },
                 datalabels: {
                     anchor: 'end',
                     align: 'top',
-                    formatter: (value) => value.toFixed(2),
-                    font: {
-                        size: 10,
-                        weight: 'bold',
-                    },
                     color: '#000',
                     backgroundColor: 'rgba(235, 233, 234, 0.8)',
                     borderRadius: 4,
                     padding: 4,
                     borderWidth: 1,
                     borderColor: '#000',
+                    font: {
+                        size: 10,
+                        weight: 'bold',
+                    },
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' L'; // Display values in lakhs
+                    }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    suggestedMax: Math.max(
-                        ...{{ chart_income|safe }}.concat({{ chart_expenses|safe }}, {{ chart_profit_loss|safe }})
-                    ) * 1.2,
+                    suggestedMax: Math.max(...incomeData.concat(expenseData, profitLossData)) * 1.2,
+                    title: {
+                        display: true,
+                        text: 'Amount (Lakhs)',
+                    }
                 },
-            },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Branches',
+                    }
+                }
+            }
         },
         plugins: [ChartDataLabels]
     });
 </script>
+
 
 
 <script>

@@ -2,6 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
+{% load currency_format %}
 
 <body>
 <div class="col-md-1">
@@ -72,9 +73,9 @@
     <tr>
         <td>{{ result.branch }}</td>
         <td>{{ result.unit }}</td>
-        <td>{{ result.total_income|floatformat:2 }}</td>
-        <td>{{ result.total_expense|floatformat:2 }}</td>
-        <td>{{ result.profit_loss|floatformat:2 }}</td>
+        <td>{{ result.total_income|to_lakhs }}</td>
+        <td>{{ result.total_expense|to_lakhs }}</td>
+        <td>{{ result.profit_loss|to_lakhs }}</td>
         <td>{{ result.profit_loss_percentage|floatformat:2 }}%</td>
     </tr>
     {% endfor %}
@@ -84,9 +85,9 @@
 
 <script>
     const labels = {{ chart_labels|safe }};
-    const incomeData = {{ income_values|safe }};
-    const expenseData = {{ expense_values|safe }};
-    const profitLossData = {{ profit_loss_values|safe }};
+    const incomeData = {{ income_values|safe }}.map(value => value / 100000);
+    const expenseData = {{ expense_values|safe }}.map(value => value / 100000);
+    const profitLossData = {{ profit_loss_values|safe }}.map(value => value / 100000);
 
     console.log("Profit/Loss Data:", profitLossData);
     const profitLossColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
@@ -123,21 +124,24 @@
             plugins: {
                 legend: {
                     display: true,
-                    position: 'right',
+                    position: 'top',
                 },
                 datalabels: {
                     anchor: 'end',
                     align: 'top',
-                    formatter: (value) => value.toFixed(2),
-                    font: {
-                        size: 9,
-                    },
                     color: '#000',
                     backgroundColor: 'rgba(235, 233, 234, 0.8)',
                     borderRadius: 4,
-                    padding: 3,
+                    padding: 4,
                     borderWidth: 1,
                     borderColor: '#000',
+                    font: {
+                        size: 10,
+                        weight: 'bold',
+                    },
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' L'; // Display values in lakhs
+                    }
                 }
             },
             scales: {

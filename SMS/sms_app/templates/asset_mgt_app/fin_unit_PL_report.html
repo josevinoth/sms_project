@@ -1,6 +1,6 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
-
+{% load currency_format %}
 {% block content %}
 {% load crispy_forms_tags %}
 
@@ -88,9 +88,9 @@
     <tr>
         <td>{{ item.branch }}</td>
         <td>{{ item.unit }}</td>
-        <td>{{ item.total_expense|floatformat:2 }}</td>
-        <td>{{ item.total_invoice_cost|floatformat:2 }}</td>
-        <td>{{ item.profit_loss|floatformat:2 }}</td>
+        <td>{{ item.total_expense|to_lakhs }}</td>
+        <td>{{ item.total_invoice_cost|to_lakhs }}</td>
+        <td>{{ item.profit_loss|to_lakhs }}</td>
         <td>{{ item.profit_loss_percentage|floatformat:2 }}%</td>
     </tr>
     {% endfor %}
@@ -100,9 +100,9 @@
 <script>
 
     const chartLabels = {{ chart_labels|safe }};
-    const chartIncome = {{ chart_income|safe }};
-    const chartExpenses = {{ chart_expenses|safe }};
-    const chartProfitLoss = {{ chart_profit_loss|safe }};
+    const chartIncome = {{ chart_income|safe }}.map(value => value / 100000);
+    const chartExpenses = {{ chart_expenses|safe }}.map(value => value / 100000);
+    const chartProfitLoss = {{ chart_profit_loss|safe }}.map(value => value / 100000);
 
     console.log("Chart Labels:", chartLabels);
     console.log("Income Data:", chartIncome);
@@ -131,8 +131,8 @@
                 {
                     label: 'Expenses',
                     data: chartExpenses,
-                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 128, 0, 0.5)',
+                    borderColor: 'rgba(255, 128, 0, 1)',
                     borderWidth: 1,
                 },
                 {
@@ -149,21 +149,24 @@
             plugins: {
                 legend: {
                     display: true,
-                    position: 'right',
+                    position: 'top',
                 },
                 datalabels: {
                     anchor: 'end',
                     align: 'top',
-                    formatter: (value) => value.toFixed(2),
-                    font: {
-                        size: 10,
-                   },
                     color: '#000',
                     backgroundColor: 'rgba(235, 233, 234, 0.8)',
                     borderRadius: 4,
                     padding: 4,
                     borderWidth: 1,
                     borderColor: '#000',
+                    font: {
+                        size: 10,
+                        weight: 'bold',
+                    },
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' L';
+                    }
                 }
             },
             scales: {

@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
-from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F
+from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F,IntegerField
 from django.db.models import F, Subquery, OuterRef
 from django.db.models.functions import Coalesce,Round
 from django.utils.dateparse import parse_date
@@ -398,7 +398,7 @@ def customerwise_PL(request):
     if selected_businessmodel:
         business_summary = business_summary.filter(wh_customer_type__tb_trbusinesstype=selected_businessmodel)
 
-    # Data for the bar chart: Aggregated by customer type
+
     chart_summary = Warehouse_goods_info.objects.values(
         'wh_customer_type__tb_trbusinesstype'  # Group by customer type
     ).annotate(
@@ -444,11 +444,14 @@ def fin_profit_loss_view(request):
     branch_filter = request.GET.get('branch')
     unit_filter = request.GET.get('unit')
     businessmodel_filter = request.GET.get('businessmodel')
+    customer_filter = request.GET.get('customer')
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
 
     branches = Location_info.objects.all()
+    customers= CustomerInfo.objects.all()
     businessmodels = TrbusinesstypeInfo.objects.all()
+
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
     if to_date:
@@ -460,6 +463,8 @@ def fin_profit_loss_view(request):
         income_queryset = income_queryset.filter(wh_branch__loc_name=branch_filter)
     if unit_filter:
         income_queryset = income_queryset.filter(wh_unit__unit_name=unit_filter)
+    if customer_filter:
+        income_queryset = income_queryset.filter(wh_customer_name__cu_nameshort=customer_filter)
     if businessmodel_filter:
         income_queryset = income_queryset.filter(wh_customer_type__tb_trbusinesstype=businessmodel_filter)
     if from_date:
@@ -535,8 +540,10 @@ def fin_profit_loss_view(request):
         'first_name':first_name,
         'results': results,
         'branches': branches,
+        'customers': customers,
         'businessmodels': businessmodels,
         'branch_filter': branch_filter,
+        'customer_filter': customer_filter,
         'businessmodel_filter': businessmodel_filter,
         'chart_labels': chart_labels,  # Bar chart labels
         'income_values': income_values,  # Income data for chart
@@ -603,6 +610,42 @@ def expenses_report(request):
     return render(request, "asset_mgt_app/fin_expenses_report.html", context)
 
 
+DUE_DAY_GROUPS = [
+    (0, 15, '0-15 Days', 1),
+    (16, 30, '16-30 Days', 2),
+    (31, 45, '31-45 Days', 3),
+    (46, 60, '46-60 Days', 4),
+    (61, 90, '61-90 Days', 5),
+    (91, 120, '91-120 Days', 6),
+    (121, 180, '121-180 Days', 7),
+    (181, 999999, '180-above Days', 8),
+]
+
+def get_due_day_case_expression(field_name):
+    """
+    Returns a Django Case expression to categorize the due days into predefined ranges.
+    """
+    return Case(
+        *[
+            When(**{f"{field_name}__gte": start, f"{field_name}__lte": end}, then=Value(label))
+            for start, end, label, _ in DUE_DAY_GROUPS
+        ],
+        default=Value('Unknown'),
+        output_field=CharField()
+    )
+
+def get_due_day_sort_expression():
+    """
+    Returns a Django Case expression to assign numeric order to due day groups for sorting.
+    """
+    return Case(
+        *[
+            When(due_range=label, then=Value(order))
+            for _, _, label, order in DUE_DAY_GROUPS
+        ],
+        default=Value(999),  # Default value for 'Unknown' or unexpected cases
+        output_field=IntegerField()
+    )
 
 def ar_due_reports(request):
     first_name = request.session.get('first_name')
@@ -630,36 +673,41 @@ def ar_due_reports(request):
     if company_filter:
         ar_summary = ar_summary.filter(ar_company__bvm_business=company_filter)
 
-    # Data for Line Graphs
     due_from_submission_data = (
         ar_summary
-        .values('ar_due_from_submission_date')
-        .annotate(total_amount=Sum('ar_amount'))
-        .order_by('ar_due_from_submission_date')
+        .annotate(due_range=get_due_day_case_expression('ar_due_from_submission_date'))
+        .annotate(due_order=get_due_day_sort_expression())
+        .values('due_range', 'due_order')  # Group by due_range and due_order
+        .annotate(total_amount=Sum('ar_amount'))  # Sum the amounts after grouping
+        .order_by('due_order')  # Ensure sorting is correct
     )
 
     due_from_operation_data = (
         ar_summary
-        .values('ar_due_from_operation_date')
+        .annotate(due_range=get_due_day_case_expression('ar_due_from_operation_date'))
+        .annotate(due_order=get_due_day_sort_expression())
+        .values('due_range', 'due_order')
         .annotate(total_amount=Sum('ar_amount'))
-        .order_by('ar_due_from_operation_date')
+        .order_by('due_order')
     )
 
     due_from_invoice_data = (
         ar_summary
-        .values('ar_due_from_invoice_date')
+        .annotate(due_range=get_due_day_case_expression('ar_due_from_invoice_date'))
+        .annotate(due_order=get_due_day_sort_expression())
+        .values('due_range', 'due_order')
         .annotate(total_amount=Sum('ar_amount'))
-        .order_by('ar_due_from_invoice_date')
+        .order_by('due_order')
     )
 
     # Convert QuerySets to Lists for JavaScript
-    submission_labels = [entry['ar_due_from_submission_date'] for entry in due_from_submission_data]
+    submission_labels = [entry['due_range'] for entry in due_from_submission_data]
     submission_amounts = [entry['total_amount'] for entry in due_from_submission_data]
 
-    operation_labels = [entry['ar_due_from_operation_date'] for entry in due_from_operation_data]
+    operation_labels = [entry['due_range'] for entry in due_from_operation_data]
     operation_amounts = [entry['total_amount'] for entry in due_from_operation_data]
 
-    invoice_labels = [entry['ar_due_from_invoice_date'] for entry in due_from_invoice_data]
+    invoice_labels = [entry['due_range'] for entry in due_from_invoice_data]
     invoice_amounts = [entry['total_amount'] for entry in due_from_invoice_data]
 
     context = {

@@ -1,5 +1,6 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
+{% load currency_format %}
 {% block content %}
 {% load crispy_forms_tags %}
 
@@ -55,66 +56,65 @@
     </div>
 </div>
 <br>
+<h4>Due from Submission Date</h4>
+    <canvas id="submissionChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
+<br>
 <table id="ar_due_submission_table" class="table table-striped table-bordered">
     <thead class="thead-dark">
     <tr>
-                <th>Due from Submission Date</th>
-                <th>Total Amount</th>
+                <th>Due from Submission Date(Days)</th>
+                <th>Total Amount (INR)</th>
             </tr>
         </thead>
         <tbody>
             {% for row in due_from_submission_data %}
             <tr>
-                <td>{{ row.ar_due_from_submission_date }}</td>
-                <td>{{ row.total_amount }}</td>
+                <td>{{ row.due_range }}</td>
+                <td>{{ row.total_amount|to_lakhs }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-
+<hr>
+<h4>Due from Operation Date</h4>
+    <canvas id="operationChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
+<br>
     <table id="ar_due_operation_table" class="table table-striped table-bordered">
     <thead class="thead-dark">
             <tr>
-                <th>Due from Operation Date</th>
-                <th>Total Amount</th>
+                <th>Due from Operation Date(Days)</th>
+                <th>Total Amount (INR)</th>
             </tr>
         </thead>
         <tbody>
             {% for row in due_from_operation_data %}
             <tr>
-                <td>{{ row.ar_due_from_operation_date }}</td>
-                <td>{{ row.total_amount }}</td>
+                <td>{{ row.due_range }}</td>
+                <td>{{ row.total_amount|to_lakhs }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-<h2>AR Due from Invoice Date</h2>
+<hr>
+<h4>Due from Invoice Date</h4>
+    <canvas id="invoiceChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
+<br>
     <table id="ar_due_invoice_table" class="table table-striped table-bordered">
     <thead class="thead-dark">
             <tr>
-                <th>Due from Invoice Date</th>
-                <th>Total Amount</th>
+                <th>Due from Invoice Date(Days)</th>
+                <th>Total Amount (INR)</th>
             </tr>
         </thead>
         <tbody>
             {% for row in due_from_invoice_data %}
             <tr>
-                <td>{{ row.ar_due_from_invoice_date }}</td>
-                <td>{{ row.total_amount }}</td>
+                <td>{{ row.due_range }}</td>
+                <td>{{ row.total_amount|to_lakhs }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
- <h1>AR Due Reports</h1>
-
-    <h3>Due from Submission Date</h3>
-    <canvas id="submissionChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
-
-    <h3>Due from Operation Date</h3>
-    <canvas id="operationChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
-
-    <h3>Due from Invoice Date</h3>
-    <canvas id="invoiceChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
 
 
 <script>
@@ -130,43 +130,44 @@
     const invoiceAmounts = {{ invoice_amounts|safe }};
 
     function createLineChart(ctx, labels, data, borderColor) {
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Total Amount',
-                    data: data,
-                    borderColor: borderColor,
-                    fill: false,
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        color: 'black',
-                        font: { weight: 'bold' },
-                        formatter: function(value) {
-                            return value.toLocaleString(); // Format with commas
-                        }
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total Amount (Lakhs)',
+                data: data.map(value => value / 100000), // Convert to lakhs
+                borderColor: borderColor,
+                fill: false,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: 'black',
+                    font: { weight: 'bold' },
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' L'; // Format with 2 decimals and 'L'
                     }
-                },
-                scales: {
-                    x: { title: { display: true, text: 'Date' } },
-                    y: { title: { display: true, text: 'Amount' } }
                 }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Due Days Range' } },
+                y: { title: { display: true, text: 'Amount (Lakhs)' } }
             }
-        });
-    }
+        }
+    });
+}
+
 
     // Create Charts
     createLineChart(document.getElementById('submissionChart').getContext('2d'), submissionLabels, submissionAmounts, 'blue');
     createLineChart(document.getElementById('operationChart').getContext('2d'), operationLabels, operationAmounts, 'green');
-    createLineChart(document.getElementById('invoiceChart').getContext('2d'), invoiceLabels, invoiceAmounts, 'red');
+    createLineChart(document.getElementById('invoiceChart').getContext('2d'), invoiceLabels, invoiceAmounts, 'black');
 
 </script>
 

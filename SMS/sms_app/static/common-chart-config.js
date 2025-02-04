@@ -83,3 +83,50 @@ function createDonutChart(ctx, labels, data, labelText, colors) {
         plugins: [ChartDataLabels] // Register the plugin
     });
 }
+
+// Function to convert values to lakhs
+function convertToLakhs(dataArray) {
+    return dataArray.map(value => value / 100000);
+}
+
+// Function to generate profit/loss colors dynamically
+function getProfitLossColors(dataArray) {
+    return dataArray.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
+}
+
+function getProfitLossBorderColors(dataArray) {
+    return dataArray.map(value => value >= 0 ? 'rgba(64, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
+}
+
+// Function to create a bar chart
+function createBarChart(ctxId, labels, datasets, yAxisTitle = "Amount (Lakhs)") {
+    const ctx = document.getElementById(ctxId).getContext('2d');
+    return new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: datasets },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'top' },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#000',
+                    font: { size: 10, weight: 'bold' },
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' L'; // Show values in Lakhs
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: Math.max(...datasets.flatMap(dataset => dataset.data)) * 1.2,
+                    title: { display: true, text: yAxisTitle }
+                },
+                x: { title: { display: true, text: 'Categories' } }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}

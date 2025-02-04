@@ -27,3 +27,15 @@ def format_currency(value):
         elif crore==0 and lakh==0 and thousand==0 and hundred==0 and ten == 0 and ones==0:
             return 0
         return value
+
+
+
+register = template.Library()
+
+@register.filter
+def to_lakhs(value):
+
+    try:
+        return f"{float(value) / 100000:.2f} L"
+    except (ValueError, TypeError):
+        return value
