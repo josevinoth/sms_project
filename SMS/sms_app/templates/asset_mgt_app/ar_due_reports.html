@@ -16,7 +16,6 @@
 <div class="container-fluid">
     <div class="row align-items-center">
 
-        <!-- Branch Filter -->
         <div class="col-md-2">
             <label for="branch-filter"><b>Branch:</b></label>
             <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
@@ -41,13 +40,11 @@
             </select>
         </div>
 
-        <!-- From Date -->
         <div class="col-md-2">
             <label for="from-date"><b>From:</b></label>
             <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
         </div>
 
-        <!-- To Date -->
         <div class="col-md-3">
             <label for="to-date"><b>To:</b></label>
             <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
@@ -115,13 +112,10 @@
             {% endfor %}
         </tbody>
     </table>
-
-
 <script>
-    // Register Data Labels Plugin
+
     Chart.register(ChartDataLabels);
 
-    // Ensure labels & data are properly formatted as JSON arrays
     const submissionLabels = {{ submission_labels|safe }};
     const submissionAmounts = {{ submission_amounts|safe }};
     const operationLabels = {{ operation_labels|safe }};
@@ -163,8 +157,6 @@
     });
 }
 
-
-    // Create Charts
     createLineChart(document.getElementById('submissionChart').getContext('2d'), submissionLabels, submissionAmounts, 'blue');
     createLineChart(document.getElementById('operationChart').getContext('2d'), operationLabels, operationAmounts, 'green');
     createLineChart(document.getElementById('invoiceChart').getContext('2d'), invoiceLabels, invoiceAmounts, 'black');
@@ -173,36 +165,31 @@
 
 
 <script>
-    // Initialize DataTable
-    $(document).ready(function() {
-        $('#ar_due_submission_table').DataTable({
-            scrollY: "600px",
-            scrollCollapse: true,
-            order: [1, 'desc'],
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
-        });
+   $(document).ready(function() {
+    $('#ar_due_submission_table').DataTable({
+        scrollY: "600px",
+        scrollCollapse: true,
+        ordering: false,
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
     });
 
-    $(document).ready(function() {
-        $('#ar_due_operation_table').DataTable({
-            scrollY: "600px",
-            scrollCollapse: true,
-            order: [1, 'desc'],
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
-        });
+    $('#ar_due_operation_table').DataTable({
+        scrollY: "600px",
+        scrollCollapse: true,
+        ordering: false,
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
     });
 
-    $(document).ready(function() {
-        $('#ar_due_invoice_table').DataTable({
-            scrollY: "600px",
-            scrollCollapse: true,
-            order: [1, 'desc'],
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
-        });
+    $('#ar_due_invoice_table').DataTable({
+        scrollY: "600px",
+        scrollCollapse: true,
+        ordering: false,
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
     });
+});
 
     document.getElementById('branch-filter').addEventListener('change', updateFilters);
 document.getElementById('company-filter').addEventListener('change', updateFilters);

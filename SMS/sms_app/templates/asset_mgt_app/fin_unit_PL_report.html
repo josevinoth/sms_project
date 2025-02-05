@@ -13,7 +13,6 @@
 <br>
 <h2 style="color:black;">Branch-Unit wise P/L Report</h2>
 <hr>
-
 <div class="container-fluid">
     <div class="row align-items-center">
         <div class="col-md-2">
@@ -26,10 +25,7 @@
                 </option>
                 {% endfor %}
             </select>
-
         </div>
-
-        <!-- Branch Filter -->
         <div class="col-md-2">
             <label for="branch-filter"><b>Branch:</b></label>
             <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
@@ -42,7 +38,6 @@
             </select>
         </div>
 
-        <!-- Unit Filter -->
         <div class="col-md-2">
             <label for="unit-filter"><b>Unit:</b></label>
             <select id="unit-filter" name="unit" class="form-control box-shadow rounded">
@@ -115,7 +110,7 @@
         {
             label: 'Expenses',
             data: expenseData1,
-            backgroundColor: 'rgba(255, 128, 0, 0.7)',
+            backgroundColor: 'rgba(255, 128, 0, 0.5)',
             borderColor: 'rgba(255, 128, 0, 1)',
             borderWidth: 1,
         },
@@ -197,5 +192,4 @@
 }
 
 </script>
-
 {% endblock content %}

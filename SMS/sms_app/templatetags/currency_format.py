@@ -29,9 +29,6 @@ def format_currency(value):
         return value
 
 
-
-register = template.Library()
-
 @register.filter
 def to_lakhs(value):
 
