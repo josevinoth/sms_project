@@ -856,6 +856,6 @@ def targets_actuals_table(request):
         'salespersons': salespersons,
     }
 
-    return render(request, "asset_mgt_app/Reports_example.html", context)
+    return render(request, "asset_mgt_app/fin_PL_report.html", context)
 
 

@@ -1,0 +1,100 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" action="" id="vehicle_procurement" >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update Transport Vehicle Sourcing</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Created on</span>
+									</div>
+									{% render_field form.vp_current id="vp_current" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vendor Name</span>
+									</div>
+									{% render_field form.vp_vendor_name id="vp_vendor_name" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">From location</span>
+									</div>
+									{% render_field form.vp_fromlocaion id="vp_fromlocaion" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">To Location</span>
+									</div>
+									{% render_field form.vp_tolocation id="vp_tolocation" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Type</span>
+									</div>
+									{% render_field form.vp_vehicletype id="vp_vehicletype" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Cost (INR)</span>
+									</div>
+									{% render_field form.vp_cost id="vp_cost" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Valid Till Date</span>
+									</div>
+									{% render_field form.vp_valid id="vp_valid" type="Date" class="form-control " %}
+								</div>
+							</div>
+
+							{% render_field form.vp_updated_by id="vp_updated_by" hidden="true" class="form-control" %}
+							<div class="input-group input-group-sm mb-3 container-fluid">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Remarks</span>
+								</div>
+								{% render_field form.vp_remarks class="form-control" %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'vehicle_procurement_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</form>
+<script>
+	$(document).ready(function() {
+	document.getElementById("vp_updated_by").value ='{{user_id}}';
+
+  });
+</script>
+</script>
+{% endblock content %}

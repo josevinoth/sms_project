@@ -3,8 +3,8 @@
 
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
+        <div class="col-4"></div>
+        <div class="col-3 rounded text-center bg-info">
             <h3>Finance Reports</h3>
         </div>
         <div class="col-5"></div>
@@ -53,5 +53,35 @@
         </div>
     </div>
     <div class="col-2"></div>
+</div>
+<div class="row">
+    <div class="col-2"></div>
+    <div class="col-2">
+        <div class="card text-white bg-light mb-3 text-center" >
+            <div class="card-header" style="color:black">Finance Profit/Loss </div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'fin_profit_loss_view' %}">
+                    <i class="fas fa-rupee-sign" style="color:black"></i></a></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card text-white bg-light mb-3 text-center" >
+            <div class="card-header" style="color:black">Expense Report</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'expenses_report' %}" >
+                    <i class="fas fa-wallet" style="color:black"></i></a></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card text-white bg-light mb-3 text-center" >
+            <div class="card-header" style="color:black">AR Report</div>
+            <div class="card-body text-center">
+                <h2><a href="{% url 'ar_due_reports' %}" >
+                    <i class="fas fa-wallet" style="color:black"></i></a></h2>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock content %}

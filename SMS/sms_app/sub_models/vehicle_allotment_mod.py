@@ -21,4 +21,4 @@ class Vehicle_allotmentInfo(models.Model):
     va_vendor_name=models.CharField(max_length=100,blank=True, null=True)
 
     def __str__(self):
-        return self.va_vehiclenumber
+        return self.va_vendor_name if self.va_vendor_name else "Unknown Vendor"

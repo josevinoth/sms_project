@@ -1,0 +1,237 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% load currency_format %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+<body>
+<div class="col-md-1">
+    <a href="{% url 'finance_reports' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+<br>
+<h2 style="color:black;">AR Report</h2>
+<hr>
+<div class="container-fluid">
+    <div class="row align-items-center">
+
+        <div class="col-md-2">
+            <label for="branch-filter"><b>Branch:</b></label>
+            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for branch in branches %}
+                <option value="{{ branch.loc_name }}" {% if branch.loc_name == branch_filter %} selected {% endif %}>
+                    {{ branch.loc_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="company-filter"><b>Company Name:</b></label>
+            <select id="company-filter" name="company" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for company in companies %}
+                <option value="{{ company }}" {% if company == company_filter %} selected {% endif %}>
+                    {{ company }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="from-date"><b>From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+        </div>
+
+        <div class="col-md-3">
+            <label for="to-date"><b>To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+        </div>
+
+    </div>
+</div>
+<br>
+<h4>Due from Submission Date</h4>
+    <canvas id="submissionChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
+<br>
+<table id="ar_due_submission_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+    <tr>
+                <th>Due from Submission Date(Days)</th>
+                <th>Total Amount (INR)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in due_from_submission_data %}
+            <tr>
+                <td>{{ row.due_range }}</td>
+                <td>{{ row.total_amount|to_lakhs }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<hr>
+<h4>Due from Operation Date</h4>
+    <canvas id="operationChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
+<br>
+    <table id="ar_due_operation_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+            <tr>
+                <th>Due from Operation Date(Days)</th>
+                <th>Total Amount (INR)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in due_from_operation_data %}
+            <tr>
+                <td>{{ row.due_range }}</td>
+                <td>{{ row.total_amount|to_lakhs }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<hr>
+<h4>Due from Invoice Date</h4>
+    <canvas id="invoiceChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
+<br>
+    <table id="ar_due_invoice_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+            <tr>
+                <th>Due from Invoice Date(Days)</th>
+                <th>Total Amount (INR)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in due_from_invoice_data %}
+            <tr>
+                <td>{{ row.due_range }}</td>
+                <td>{{ row.total_amount|to_lakhs }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<script>
+
+    Chart.register(ChartDataLabels);
+
+    const submissionLabels = {{ submission_labels|safe }};
+    const submissionAmounts = {{ submission_amounts|safe }};
+    const operationLabels = {{ operation_labels|safe }};
+    const operationAmounts = {{ operation_amounts|safe }};
+    const invoiceLabels = {{ invoice_labels|safe }};
+    const invoiceAmounts = {{ invoice_amounts|safe }};
+
+    function createLineChart(ctx, labels, data, borderColor) {
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total Amount (Lakhs)',
+                data: data.map(value => value / 100000), // Convert to lakhs
+                borderColor: borderColor,
+                fill: false,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: 'black',
+                    font: { weight: 'bold' },
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' L'; // Format with 2 decimals and 'L'
+                    }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Due Days Range' } },
+                y: { title: { display: true, text: 'Amount (Lakhs)' } }
+            }
+        }
+    });
+}
+
+    createLineChart(document.getElementById('submissionChart').getContext('2d'), submissionLabels, submissionAmounts, 'blue');
+    createLineChart(document.getElementById('operationChart').getContext('2d'), operationLabels, operationAmounts, 'green');
+    createLineChart(document.getElementById('invoiceChart').getContext('2d'), invoiceLabels, invoiceAmounts, 'black');
+
+</script>
+
+
+<script>
+   $(document).ready(function() {
+    $('#ar_due_submission_table').DataTable({
+        scrollY: "600px",
+        scrollCollapse: true,
+        ordering: false,
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+
+    $('#ar_due_operation_table').DataTable({
+        scrollY: "600px",
+        scrollCollapse: true,
+        ordering: false,
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+
+    $('#ar_due_invoice_table').DataTable({
+        scrollY: "600px",
+        scrollCollapse: true,
+        ordering: false,
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+});
+
+    document.getElementById('branch-filter').addEventListener('change', updateFilters);
+document.getElementById('company-filter').addEventListener('change', updateFilters);
+document.getElementById('from-date').addEventListener('change', updateFilters);
+document.getElementById('to-date').addEventListener('change', updateFilters);
+
+function updateFilters() {
+    const branch = document.getElementById('branch-filter').value;
+    const company = document.getElementById('company-filter').value;
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const url = new URL(window.location.href);
+
+    if (branch) {
+        url.searchParams.set('branch', branch);
+    } else {
+        url.searchParams.delete('branch');
+    }
+
+    if (company) {  // FIXED: Corrected variable name
+        url.searchParams.set('company', company);
+    } else {
+        url.searchParams.delete('company');
+    }
+
+    if (fromDate) {
+        url.searchParams.set('from_date', fromDate);
+    } else {
+        url.searchParams.delete('from_date');
+    }
+
+    if (toDate) {
+        url.searchParams.set('to_date', toDate);
+    } else {
+        url.searchParams.delete('to_date');
+    }
+
+    console.log(url.toString());
+    window.location.href = url.toString();
+}
+
+</script>
+
+
+{% endblock content %}

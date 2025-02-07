@@ -2,6 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
+{% load currency_format %}
 
 <body>
 <div class="col-md-1">
@@ -10,12 +11,11 @@
     </a>
 </div>
 <br>
-<h3 style="color:black;"><u>Customer Wise P/L Report</u></h3>
+<h2 style="color:black;">Customer Wise P/L Report</h2>
+<hr>
 
 <div class="container-fluid">
     <div class="row align-items-center">
-
-        <!-- Branch Filter -->
         <div class="col-md-2">
             <label for="branch-filter"><b>Branch:</b></label>
             <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
@@ -27,7 +27,6 @@
                 {% endfor %}
             </select>
         </div>
-
         <div class="col-md-2">
             <label for="businessmodel-filter"><b>Businessmodel:</b></label>
             <select id="businessmodel-filter" name="businessmodel" class="form-control box-shadow rounded">
@@ -40,13 +39,11 @@
             </select>
         </div>
 
-        <!-- From Date -->
         <div class="col-md-2">
             <label for="from-date"><b>From:</b></label>
             <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
         </div>
 
-        <!-- To Date -->
         <div class="col-md-3">
             <label for="to-date"><b>To:</b></label>
             <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
@@ -55,9 +52,11 @@
     </div>
 </div>
 
+<br>
+<canvas id="businessModelChart" width="400" height="200" class="bg-white box-shadow rounded" style="margin-top: 20px;"></canvas>
 <hr>
 
-<table id="businessmodel_PL_table" class="table table-striped table-bordered">
+<table id="customerwise_PL_table" class="table table-striped table-bordered">
     <thead class="thead-dark">
     <tr>
         <th>Business Type</th>
@@ -65,6 +64,8 @@
         <th>Customer Name</th>
         <th>Total Invoice Amount (INR)</th>
         <th>Total Expenses (INR)</th>
+        <th>Profit/Loss</th>
+        <th>Profit/Loss %</th>
     </tr>
     </thead>
     <tbody>
@@ -73,18 +74,97 @@
         <td>{{ summary.wh_customer_type__tb_trbusinesstype }}</td>
         <td>{{ summary.wh_branch__loc_name }}</td>
         <td>{{ summary.wh_customer_name__cu_nameshort }}</td>
-
-        <td>{{ summary.total_invoice_amount|floatformat:2 }}</td>
-        <td>{{ summary.total_expenses|floatformat:2 }}</td>
+        <td>{{ summary.total_invoice_amount|to_lakhs }}</td>
+        <td>{{ summary.total_expenses|to_lakhs }}</td>
+        <td>{{ summary.profit_loss|to_lakhs }}</td>
+        <td>{{ summary.profit_loss_percentage|floatformat:2 }}%</td>
     </tr>
     {% endfor %}
     </tbody>
 </table>
 
+
+
+
+<script>
+
+    const labels = {{ chart_labels|safe }};
+    const incomeData = {{ income_values|safe }}.map(value => value / 100000);
+    const expenseData = {{ expense_values|safe }}.map(value => value / 100000);
+    const profitLossData = {{ profit_loss_values|safe }}.map(value => value / 100000);
+    console.log("Profit/Loss Data:", profitLossData);
+
+
+    const profitLossColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
+    const profitLossBorderColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
+
+    var ctx = document.getElementById('businessModelChart').getContext('2d');
+
+    var businessModelChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Income (INR)',
+                data: incomeData,
+                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Expense (INR)',
+                data: expenseData,
+                backgroundColor: 'rgba(255, 128, 0, 0.5)',
+                borderColor: 'rgba(255, 128, 0, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Profit/Loss (INR)',
+                data: profitLossData,
+                backgroundColor: profitLossColors,
+                borderColor: profitLossBorderColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#000',
+                    backgroundColor: 'rgba(235, 233, 234, 0.8)',
+                    borderRadius: 4,
+                    padding: 4,
+                    borderWidth: 1,
+                    borderColor: '#000',
+                    font: {
+                        size: 10,
+                        weight: 'bold',
+                    },
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' L'; // Display values in lakhs
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: Math.max(...incomeData.concat(expenseData, profitLossData)) * 1.2,
+                },
+            },
+        },
+        plugins: [ChartDataLabels]
+    });
+</script>
+
+
 <script>
     // Initialize DataTable
     $(document).ready(function() {
-        $('#businessmodel_PL_table').DataTable({
+        $('#customerwise_PL_table').DataTable({
             scrollY: "600px",
             scrollCollapse: true,
             order: [1, 'desc'],
@@ -93,7 +173,6 @@
         });
     });
 
-    // Add event listeners to filters
     document.getElementById('branch-filter').addEventListener('change', updateFilters);
     document.getElementById('businessmodel-filter').addEventListener('change', updateFilters);
     document.getElementById('from-date').addEventListener('change', updateFilters);
@@ -110,34 +189,32 @@
     if (branch) {
         url.searchParams.set('branch', branch);
     } else {
-        url.searchParams.delete('branch'); // Clear the parameter if "All" is selected
+        url.searchParams.delete('branch');
     }
 
     if (businessmodel) {
         url.searchParams.set('businessmodel', businessmodel);
     } else {
-        url.searchParams.delete('businessmodel'); // Clear the parameter if "All" is selected
+        url.searchParams.delete('businessmodel');
     }
 
 
     if (fromDate) {
         url.searchParams.set('from_date', fromDate);
     } else {
-        url.searchParams.delete('from_date'); // Clear the parameter if no date is provided
+        url.searchParams.delete('from_date');
     }
 
     // Update to_date filter
     if (toDate) {
         url.searchParams.set('to_date', toDate);
     } else {
-        url.searchParams.delete('to_date'); // Clear the parameter if no date is provided
+        url.searchParams.delete('to_date');
     }
 
-    // Log the updated URL
     console.log(url.toString());
 
-    // Reload the page with updated filters
-    window.location.href = url.toString();
+     window.location.href = url.toString();
 }
 
 </script>
