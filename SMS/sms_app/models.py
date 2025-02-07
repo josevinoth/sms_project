@@ -191,5 +191,4 @@ from .sub_models.wh_highvaluecheck_info_mod import HighvalueInfo
 from .sub_models.wh_excess_stock_email_status import wh_excess_stock_email_status
 from .sub_models.dsr_info_mod import DsrInfo
 from .sub_models.consignmentgoods_new_mod import consignmentsgoods_new_info
-from .sub_models.warehouse_goods_new_mod import warehouse_goodsnew_info
 from .sub_models.transport_procurement_mod import Vehicle_procurementInfo
