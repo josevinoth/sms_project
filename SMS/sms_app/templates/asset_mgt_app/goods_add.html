@@ -387,6 +387,11 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
+						<br>
+						<!--<input class="btn btn-success" type="submit" name="Create User">-->
+						<button type="submit" class="btn btn-success float-right"><i class="fas fa-save"></i> Save</button>
+						<!--						<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">-->
+						<!--							<i class="fas fa-times"></i> Cancel</a>-->
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
@@ -398,11 +403,6 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
-						<br>
-						<!--<input class="btn btn-success" type="submit" name="Create User">-->
-						<button type="submit" class="btn btn-success float-right"><i class="fas fa-save"></i> Save</button>
-						<!--						<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">-->
-						<!--							<i class="fas fa-times"></i> Cancel</a>-->
 					</form>
 					{% include "asset_mgt_app/goods_list_woh.html" %}
 				</div>
@@ -528,6 +528,11 @@
 				$('#damagecheck_before_btn1').removeClass('disable_a_href');
 				$('#damagecheck_before_btn').addClass('btn-warning');
 				$('#damagecheck_before_btn1').addClass('btn-warning');
+			}
+			else
+			{
+				$('#damagecheck_before_btn').removeClass('disable_a_href');
+				$('#damagecheck_before_btn1').removeClass('disable_a_href');
 			}
 		}
 		else
