@@ -106,7 +106,11 @@ def storage_list(request):
         except AttributeError:
             messages.error(request, 'Enter Unloading End Date in Goods Receipt tab')
             return redirect(request.META['HTTP_REFERER'])
-
+        job_id = Gatein_info.objects.get(gatein_job_no=wh_job_id).id
+        try:
+            damage_status = Warehouse_goods_info.objects.get(wh_gate_injob_no_id=job_id).wh_damages.id
+        except ObjectDoesNotExist:
+            damage_status = 6
     context = {
         'first_name': first_name,
         'warehousein_form': warehousein_form,
@@ -125,5 +129,6 @@ def storage_list(request):
         'arrival_date': arrival_date,
         'unloading_start_time': unloading_start_time,
         'unloading_end_time': unloading_end_time,
+        'damage_status': damage_status,
         }
     return render(request, "asset_mgt_app/storage_add.html", context)

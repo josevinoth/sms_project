@@ -2,11 +2,11 @@
 {% block content %}
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center text-light bg-info">
+        <div class="col-4"></div>
+        <div class="col-4 rounded text-center text-light bg-info">
             <h3>Warehouse Jobs List</h3>
         </div>
-        <div class="col-5"></div>
+        <div class="col-4"></div>
     </div>
 </div>
 <div class="container-fluid row">
@@ -38,10 +38,10 @@
         {% for warehouse_goods in warehouse_goods_gatein_list %}
             <tr>
                 <td> {{warehouse_goods.id}}</td>
-                <td> {{warehouse_goods.whn_job_no}}</td>
-                <td> {{warehouse_goods.whn_customer_name}}</td>
-                <td> {{warehouse_goods.whn_goods_invoice}}</td>
-                <td> {{warehouse_goods.whn_po_num}}</td>
+                <td> {{warehouse_goods.gatein_job_no}}</td>
+                <td> {{warehouse_goods.gatein_customer}}</td>
+                <td> {{warehouse_goods.gatein_invoice}}</td>
+                <td> {{warehouse_goods.gatein_po_num}}</td>
                 <td>
 
                     <a class="btn btn-primary" href="{% url 'warehouse_goods_add_gatein_update' warehouse_goods.id %}" >

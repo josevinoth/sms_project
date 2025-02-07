@@ -3,7 +3,7 @@
 <div class="container-fluid row"></div>
 <hr>
 <div class="container-fluid">
-    <form id="goodsForm" method="POST" action="{% url 'save_goods_data' %}">
+    <form id="goodsForm" method="POST" action="">
         {% csrf_token %}
         <table id="goods_new_list" class="table table-striped table-bordered">
             <thead class="thead-dark">
@@ -127,7 +127,7 @@
 
             // Send AJAX request to save the row
             $.ajax({
-                url: "{% url 'save_goods_data' %}", // Update this to your backend endpoint
+                url: , // Update this to your backend endpoint
                 type: "POST",
                 data: rowData,
                 success: function (response) {
@@ -170,7 +170,7 @@
 
                     // Send AJAX request to save the row
                     $.ajax({
-                        url: "{% url 'save_goods_data' %}", // Update this to your backend endpoint
+                        url: "", // Update this to your backend endpoint
                         type: "POST",
                         data: rowData,
                         success: function (response) {
@@ -195,7 +195,7 @@
             if (confirm('Are you sure you want to delete this row?')) {
                 // Send AJAX request to delete the record from the server
                 $.ajax({
-                    url: "{% url 'delete_goods_data' %}", // Server-side endpoint to handle deletion
+                    url: "", // Server-side endpoint to handle deletion
                     type: "POST",
                     data: {
                         wh_job_no: wh_job_no, // Pass unique identifier

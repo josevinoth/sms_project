@@ -25,14 +25,17 @@
 		{% else %}
 		<a class="btn  border border-dark disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
 		{% endif %}
+
+		<a class="btn  border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
+
 		{% if damagereport_list %}
 		{% for damagecheckinfo in damagereport_list %}
-		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check/Before Offloading</a>
+		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check/Before Offloading</a>
+		<a class="btn  border border-dark disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check</a>
 		{% endif %}
-		<a class="btn  border border-dark disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
+
 		<!--		<a class="btn  border border-dark disable_a_href " id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
 		<a class="btn  border border-dark disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
 	</div>
@@ -237,6 +240,7 @@
         var damage_before_status_id='{{damage_before_status}}';
         var damage_after_status_id='{{damage_after_status}}';
         var warehousein_status_id='{{warehousein_status}}';
+        var damage_status='{{damage_status}}';
 
         if (gatein_status_id =="Completed")
         {
@@ -272,21 +276,32 @@
             $('#loadingbay_btn1').addClass('btn-warning');
         }
 
-        if (damage_before_status_id =="Completed")
-        {
-            $('#damagecheck_before_btn').removeClass('disable_a_href');
-            $('#damagecheck_before_btn1').removeClass('disable_a_href');
-            $('#damagecheck_before_btn').addClass('btn-success');
-            $('#damagecheck_before_btn1').addClass('btn-success');
-            $('#damagecheck_after_btn').removeClass('disable_a_href');
-        }
-        else if (damage_before_status_id =="Work In Progress")
-        {
-            $('#damagecheck_before_btn').removeClass('disable_a_href');
-            $('#damagecheck_before_btn1').removeClass('disable_a_href');
-            $('#damagecheck_before_btn').addClass('btn-warning');
-            $('#damagecheck_before_btn1').addClass('btn-warning');
-        }
+        if (damage_status!=6)
+		{
+			if (damage_before_status_id =="Completed")
+			{
+				$('#damagecheck_before_btn').removeClass('disable_a_href');
+				$('#damagecheck_before_btn1').removeClass('disable_a_href');
+				$('#damagecheck_before_btn').addClass('btn-success');
+				$('#damagecheck_before_btn1').addClass('btn-success');
+				$('#damagecheck_after_btn').removeClass('disable_a_href');
+			}
+			else if (damage_before_status_id =="Work In Progress")
+			{
+				$('#damagecheck_before_btn').removeClass('disable_a_href');
+				$('#damagecheck_before_btn1').removeClass('disable_a_href');
+				$('#damagecheck_before_btn').addClass('btn-warning');
+				$('#damagecheck_before_btn1').addClass('btn-warning');
+			}
+		}
+		else
+		{
+			$('#damagecheck_before_btn').addClass('disable_a_href');
+			$('#damagecheck_before_btn1').addClass('disable_a_href');
+			$('#damagecheck_before_btn').addClass('btn-danger');
+			$('#damagecheck_before_btn1').addClass('btn-danger');
+		}
+
         if (damage_after_status_id =="Completed")
         {
             $('#damagecheck_after_btn').removeClass('disable_a_href');
