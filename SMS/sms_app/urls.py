@@ -605,4 +605,3 @@ urlpatterns = [
 ]
 
 
-]
