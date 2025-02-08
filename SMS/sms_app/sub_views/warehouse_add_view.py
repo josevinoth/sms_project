@@ -1,16 +1,12 @@
 from datetime import datetime
 import json
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-
-from .gatein_add_view import gatein_add
 from ..forms import WarehoseinaddForm,WarehoseoutaddForm
 from ..models import Dispatch_info,Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
-
 from ..sub_forms.GateinForm_form import GateinaddForm
 from ..sub_models.gatein_mod_pre import Gatein_pre_info
 from ..views import warehousevolme_area_calc

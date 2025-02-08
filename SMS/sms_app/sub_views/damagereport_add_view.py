@@ -120,38 +120,37 @@ def damagereport_add(request,damagereport_id=0):
             picture_add(request)
             if damagereport_form.is_valid():
                 print("Main Form Saved")
+
+                # Save the Main Form but don't commit immediately
+                damagereport_instance = damagereport_form.save(commit=False)
+
                 if damagereportimg_form.is_valid():
                     print("SubForm Saved")
                     damagereportimg_form.save()
                 else:
                     print("Sub Form Not saved")
+
                 # Generate Random GRN number
-                if user_branch_id == 1:
-                    branch = 'BLR_GRN_'
-                elif user_branch_id == 2:
-                    branch = 'MAA_GRN_'
-                elif user_branch_id == 3:
-                    branch = 'PNY_GRN_'
-                else:
-                    branch = 'HYD_GRN_'
+                branch_mapping = {
+                    1: 'BLR_GRN_',
+                    2: 'MAA_GRN_',
+                    3: 'PNY_GRN_',
+                }
+                branch = branch_mapping.get(user_branch_id, 'HYD_GRN_')
+
                 try:
-                    group = []
-                    for i in wh_job_id:
-                        try:
-                            int(i)
-                            group.append(i)
-                        except ValueError:
-                            pass
-                    wh_grn_num_next = str(branch) + str(int(''.join(group)))
-                except ObjectDoesNotExist:
-                    wh_grn_num_next = str(branch) + str(randint(10000, 99999))
-                damagereport_form.save()
-                print('wh_grn_num_next',wh_grn_num_next)
-                last_id = (DamagereportInfo.objects.values_list('id', flat=True)).last()
-                DamagereportInfo.objects.filter(id=last_id).update(dam_GRN_num=wh_grn_num_next)
+                    group = [str(int(i)) for i in wh_job_id if str(i).isdigit()]
+                    wh_grn_num_next = branch + ''.join(group) if group else branch + str(randint(10000, 99999))
+                except ValueError:
+                    wh_grn_num_next = branch + str(randint(10000, 99999))
+
+                # Assigning GRN number and saving the form
+                damagereport_instance.dam_GRN_num = wh_grn_num_next
+                damagereport_instance.save()
+
+                # Redirecting after successful update
                 messages.success(request, 'Record Updated Successfully')
-                url = 'damagereport_update/' + str(last_id)
-                return redirect(url)
+                return redirect(f'damagereport_update/{damagereport_instance.id}')
             else:
                 print("Main Form Not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
@@ -162,7 +161,7 @@ def damagereport_add(request,damagereport_id=0):
             damagereport_form = DamagereportaddForm(request.POST,instance=damagereport_info)
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.POST,request.FILES,instance=damagereportimg_info)
-            picture_add(request)
+
             if damagereport_form.is_valid():
                 print("Damage_Report Main Form Saved")
                 damagereport_form.save()

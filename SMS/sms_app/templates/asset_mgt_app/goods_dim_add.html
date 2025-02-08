@@ -1,0 +1,98 @@
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" action="" id="goods_dim_add" >
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-3"></div>
+		<div class="col-6">
+			<div class="container-fluid">
+				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+					<div class="card-header text-center"><h3>Add/Update goods_dim</h3></div>
+					<div class="card-body bg-light" >
+						<div class="row">
+							<div class="col">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">WH Job #</span>
+									</div>
+									{% render_field form.wh_goods_dim_job_no id="wh_goods_dim_job_no" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Number</span>
+									</div>
+									{% render_field form.wh_goods_dim_qr_rand_num id="wh_goods_dim_qr_rand_num" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quantity</span>
+									</div>
+									{% render_field form.wh_goods_dim_goods_pieces id="wh_goods_dim_goods_pieces" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Length</span>
+									</div>
+									{% render_field form.wh_goods_dim_goods_length id="wh_goods_dim_goods_length" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width</span>
+									</div>
+									{% render_field form.wh_goods_dim_goods_width id="wh_goods_dim_goods_width" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height</span>
+									</div>
+									{% render_field form.wh_goods_dim_goods_height id="wh_goods_dim_goods_height" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weight</span>
+									</div>
+									{% render_field form.wh_goods_dim_goods_weight id="wh_goods_dim_goods_weight" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Goods Status</span>
+									</div>
+									{% render_field form.wh_goods_dim_check_in_out id="wh_goods_dim_check_in_out" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Check-In</span>
+									</div>
+									{% render_field form.wh_goods_dim_checkin_time id="wh_goods_dim_checkin_time" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Check-Out</span>
+									</div>
+									{% render_field form.wh_goods_dim_checkout_time id="wh_goods_dim_checkout_time" class="form-control disable_a_href" %}
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+<!--						<a href="{% url 'goods_dim_list' %}" class="btn btn-danger float-right">-->
+<!--							<i class="fas fa-times"></i> Cancel-->
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-3"></div>
+	</div>
+</form>
+{% endblock content %}

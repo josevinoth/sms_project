@@ -580,17 +580,11 @@ urlpatterns = [
     path('salescalls_details/', views.salescalls_details, name='salescalls_details'),
     path('target_actuals/', views.targets_actuals, name='targets_actuals'),
     path('warehouse_jobs_add/', views.warehouse_jobs_add, name='warehouse_jobs_add'),
-    path('save_goods_data/', views.save_goods_data, name='save_goods_data'),
     path('save_consignment_data/', views.save_consignment_data, name='save_consignment_data'),
     path('delete_consignment_data/',views.delete_consignment_data, name='delete_consignment_data'),
-    path('delete_goods_data/',views.delete_goods_data, name='delete_goods_data'),
     path('salesperson_wise_chart/', views.salesperson_wise_chart, name='salesperson_wise_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
-    path('warehouse_goods_add_gatein_insert/', views.warehouse_goods_add_gatein, name='warehouse_goods_add_gatein_insert'),  # Add warehouse_goods_add_gatein
-    path('warehouse_goods_add_gatein_update/<int:wh_goods_gatein_id>', views.warehouse_goods_add_gatein, name='warehouse_goods_add_gatein_update'),  # update warehouse_goods_add_gatein
-    path('warehouse_goods_gatein_delete/<int:wh_goods_gatein_id>/', views.warehouse_goods_gatein_delete, name='warehouse_goods_gatein_delete'),
-    path('warehouse_goods_gatein_list/', views.warehouse_goods_gatein_list, name='warehouse_goods_gatein_list'),
     path('target_actual_table/', views.targets_actuals_table, name='targets_actuals_table'),
     path('branch_profit_loss/', views.branch_profit_loss, name='branch_profit_loss'),
     path('branch_unit_profit_loss/', views.branch_unit_profit_loss, name='branch_unit_profit_loss'),
@@ -602,4 +596,13 @@ urlpatterns = [
     path('ar_due_reports/', views.ar_due_reports, name='ar_due_reports'),
     path('budget_expense_report/', views.budget_expense, name='budget_expense'),
     path('vehicle_availability/',views.vehicle_availability_list, name='vehicle_availability'),
+    path('get_customer_details/', views.get_customer_details, name='get_customer_details'),
+    path('vehicle_procurement_add/', views.vehicle_procurement_add, name='vehicle_procurement_add'),
+    path('vehicle_procurement_list/', views.vehicle_procurement_list, name='vehicle_procurement_list'),
+    path('vehicle_procurement_update/<int:vp_id>/', views.vehicle_procurement_add, name='vehicle_procurement_update'),
+    path('vehicle_procurement_delete/<int:vp_id>/', views.vehicle_procurement_delete,name='vehicle_procurement_delete'),
+    path('stock_value_send_email_view/', views.stock_value_send_email_view, name='stock_value_send_email_view'),
+]
+
+
 ]

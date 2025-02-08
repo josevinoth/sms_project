@@ -117,6 +117,14 @@ def loadingbay_add(request, loadingbay_id=0):
             loadingbayimg_form = LoadingbayImagesForm(request.FILES,instance=loadingbayimg_info)
             forkift_status = Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_forklift
             crane_status = Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_crane
+            job_id = Gatein_info.objects.get(gatein_job_no=wh_job_id).id
+
+            try:
+                damage_status = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=job_id).exclude(wh_damages_id=6).values_list('wh_damages_id', flat=True).first()
+                # If no non-6 values are found, default to 6
+                damage_status = damage_status if damage_status is not None else 6
+            except ObjectDoesNotExist:
+                damage_status = 6
             context = {
                 'currency_EUR': currency_EUR,
                 'currency_INR': currency_INR,
@@ -139,6 +147,7 @@ def loadingbay_add(request, loadingbay_id=0):
                 'forklift_1st_2hr': forklift_1st_2hr,
                 'forklift_nxt_2hr': forklift_nxt_2hr,
                 'shipper_invoice': shipper_invoice,
+                'damage_status': damage_status,
             }
         return render(request, "asset_mgt_app/loadingbay_add.html", context)
     else:
