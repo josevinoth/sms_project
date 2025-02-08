@@ -163,7 +163,7 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
                     # Index 31: wh_fumigation_process
                     str(stock_value.wh_fumigation_process or ''),
 
-                    str(stock_value.wh_check_in_out),  # Index 32
+                    "Stock on Hand" if str(stock_value.wh_check_in_out) == "Checked-In" else "Checked-In",  # Index 32
                     str(stock_value.wh_branch),  # Index 33
                     str(stock_value.wh_unit),  # Index 34
                     str(stock_value.wh_bay),  # Index 35

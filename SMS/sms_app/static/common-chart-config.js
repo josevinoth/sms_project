@@ -85,11 +85,13 @@ function createDonutChart(ctx, labels, data, labelText, colors) {
 }
 
 // Function to convert values to lakhs
+
 function convertToLakhs(dataArray) {
     return dataArray.map(value => value / 100000);
 }
 
 // Function to generate profit/loss colors dynamically
+
 function getProfitLossColors(dataArray) {
     return dataArray.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
 }
@@ -99,6 +101,7 @@ function getProfitLossBorderColors(dataArray) {
 }
 
 // Function to create a bar chart
+
 function createBarChart(ctxId, labels, datasets, yAxisTitle = "Amount (Lakhs)") {
     const ctx = document.getElementById(ctxId).getContext('2d');
     return new Chart(ctx, {

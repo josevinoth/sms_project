@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Budget vs Expense Report</title>
+    <style>
+        table {
+            width: 80%;
+            margin: auto;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .over-budget {
+            background-color: #ffcccc; /* Red if expense > budget */
+        }
+        .under-budget {
+            background-color: #ccffcc; /* Green if expense <= budget */
+        }
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align: center;">Budget vs Expense Report</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Expense Type</th>
+                <th>Total Budget (₹)</th>
+                <th>Total Expense (₹)</th>
+                <th>Difference (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+           {% for entry in category_wise_summary %}
+            <tr class="{% if entry.total_expense > entry.total_budget %}over-budget{% else %}under-budget{% endif %}">
+                <td>{{ entry.expense_type }}</td>
+                <td>{{ entry.total_budget|floatformat:2 }}</td>
+                <td>{{ entry.total_expense|floatformat:2 }}</td>
+                <td>{{ entry.difference|floatformat:2 }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
