@@ -5,7 +5,7 @@ from django.db.models.functions import Coalesce,Round
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from datetime import datetime
-from ..models import Warehouse_goods_info,ExpenseExtinfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,ExpenseTypeInfo,Ar_Info
+from ..models import Warehouse_goods_info,ExpenseExtinfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,ExpenseTypeInfo,Ar_Info,BudgetInfo,ExpenseInfo
 
 
 
@@ -696,3 +696,167 @@ def ar_due_reports(request):
     }
 
     return render(request, "asset_mgt_app/ar_due_reports.html", context)
+
+
+INCOME_CATEGORIES = {
+    "Airport Handling Charges": "bf_Airport_Handling_Charges",
+    "Forklift Handling Charges": "bf_Forklift_Handling_Charges",
+    "Crane Handling Charges": "bf_Crane_Handling_Charges",
+    "Handling Charges": "bf_Handling_Charges",
+    "Packing Expenses": "bf_Packing_Charges",
+    "Warehouse Handling Charges": "bf_Warehouse_Handling_Charges",
+    "Warehouse Loading Charges": "bf_Warehouse_Loading_Charges",
+    "Warehouse Storage Charges": "bf_Warehouse_Storage_Charges",
+    "Warehouse Unloading Charges": "bf_Warehouse_Unloading_Charges",
+}
+DEPARTMENT_EXPENSES_CATEGORIES = {
+    "Audit Fee": "bf_audit_fees",
+    "Bad Debts": "bf_bad_debts",
+    "Bank Charges": "bf_bank_charges",
+    "Consultancy Charges": "bf_consultancy_charges",
+    "Celebration Expenses": "bf_celebration_expenses",
+    "Directors Remuneration": "bf_directors_remuneration",
+    "Insurance Car": "bf_insurance_car",
+    "Interest On Statutory Dues": "bf_interest_on_statutory_dues",
+    "Professional & Legal Charges": "bf_professional_legal_charges",
+    "Subscription Membership": "bf_subscription_membership",
+}
+EMPLOYEE_BENEFITS_CATEGORIES = {
+    "Corp Staff": "bf_corp_staff",
+    "Bonus Corp Staff": "bf_bonus_corp_staff",
+    "EDLI Contribution Corp Staff": "bf_EDLI_contribution_corp_staff",
+    "Employer Contribution to ESI Corp Staff": "bf_employer_contribution_to_ESI_corp_staff",
+    "Employer Contribution to PF Corp Staff": "bf_employer_contribution_to_PF_corp_staff",
+    "EPF Admin Charges Corp Staff": "bf_EPF_admin_charges_corp_staff",
+    "Gratuity Corp Staff": "bf_gratuity_corp_staff",
+    "Salaries Wages Corp Staff": "bf_salaries_wages_corp_staff",
+
+    "Dept Staff": "bf_dept_staff",
+    "Bonus Staff": "bf_bonus_staff",
+    "EDLI Contribution Staff": "bf_EDLI_contribution_staff",
+    "Employer Contribution to ESI Staff": "bf_employer_contribution_to_ESI_staff",
+    "Employer Contribution to PF Staff": "bf_employer_contribution_to_PF_staff",
+    "EPF Admin Charges Staff": "bf_EPF_admin_charges_staff",
+    "Gratuity Staff": "bf_gratuity_staff",
+    "Salaries Wages Staff": "bf_salaries_wages_staff",
+}
+INTEREST_EXPENSES_CATEGORIES = {
+    "Interest on Borrowings": "bf_interest_on_borrowings",
+    "Interest on Other Loans ": "bf_interest_on_other_loans",
+}
+OPERATIONAL_EXPENSES_CATEGORIES = {
+    "Operational Expenses Fixed": "bf_fixed",
+    "Depreciation Expenses":"bf_depreciation",
+    "Software AMC Charges Expenses":"bf_software_AMC_charges",
+    "Insurance Expenses - Warehouse": "bf_insurance_warehouse",
+    "Rates & Taxes Expenses": "bf_rates_taxes",
+    "Rent - Premises Expenses": "bf_rent_premises",
+    "Security Service Charges Expenses": "bf_security_service_charges",
+    "Manpower Supply Expenses": "bf_manpower_supply_expenses",
+
+    "Operational Expenses Variable": "bf_variable",
+    "Crane Handling Expenses": "bf_crane_handling_expenses",
+    "Diesel Expenses - Forklift": "bf_diesel_expenses_forklift",
+    "Forklift Handling Expenses": "bf_forklift_handling_expenses",
+    "Fumigation Expenses":"bf_fumigation_expenses",
+}
+NON_OPERATIONAL_EXPENSES_CATEGORIES = {
+    "Non-Operational Expenses Fixed": "bf_oe_Fixed",
+    "Housekeeping Salary": "bf_housekeeping_salary",
+    "Insurance Corp Staff": "bf_insurance_corp_staff",
+    "Insurance Staff": "bf_insurance_staff",
+    "Internet Data Card Expenses": "bf_internet_data_card_expenses",
+    "Rent - Plant & Machinery Expenses":"bf_rent_plant_machinery",
+    "System AMC Expenses": "bf_system_amc",
+
+    "Non-Operational Expenses Variable": "bf_oe_variable",
+    "Advertisement & Business Promotion Expenses": "bf_advertisement_business_promotion",
+    "Conveyance Expenses": "bf_conveyance_expenses",
+    "Diesel Expenses - Genset":"bf_diesel_expenses_gense",
+    "Handling Expenses": "bf_handling_expenses",
+    "Hotel Boarding Lodging Expenses": "bf_hotel_boarding_lodging_expenses",
+    "Office Repairs and Maintenance Expenses": "bf_office_repairs_maintenance",
+    "Office Supplies & General Expenses": "bf_office_supplies_general_expenses",
+    "Postage & Courier Expenses": "bf_postage_courier",
+    "Power and Fuel Expenses": "bf_power_fuel",
+    "Printing & Stationery Expenses": "bf_printing_stationery",
+    "Service and Maintanance Expenses": "bf_service_maintenance_expenses",
+    "Staff Welfare Expenses": "bf_staff_welfare_staff",
+    "Telephone and Mobile Expenses": "bf_telephone_mobile_expenses",
+    "Training Expenses": "bf_training_expenses",
+    "Travelling Expenses" : "bf_travelling_expenses",
+
+}
+
+BUDGET_FIELD_MAPPING = {
+
+    "Insurance Car": "bf_insurance_car",
+    "Interest On Statutory Dues": "bf_interest_on_statutory_dues",
+    "Subscription Membership": "bf_subscription_membership",
+
+    "Interest on Borrowings": "bf_interest_on_borrowings",
+    "Interest on Other Loans ": "bf_interest_on_other_loans",
+    "Manpower Supply Expenses": "bf_manpower_supply_expenses",
+
+    "Rent - Plant & Machinery Expenses":"bf_rent_plant_machinery",
+
+    "System AMC Expenses": "bf_system_amc",
+
+    "Internet & Data Card Expenses": "bf_internet_data_card_expenses",
+    "Professional & Legal Charges": "bf_professional_legal_charges",
+    "TV Expense":None,
+    "Salary Expenses":None,
+    "Packing - Consumables & Spares": "bf_Packing_Charges",
+    "Transportation Expenses":None,
+    "Storage Expenses": "bf_Warehouse_Storage_Charges",
+    "Unloading Expenses":"bf_Warehouse_Unloading_Charges",
+    "Air Conditioning Expenses":None,
+
+}
+
+def budget_expense(request):
+    # Get total expense for each expense type
+    expense_summary = ExpenseInfo.objects.values('exp_expense_type__exp_type_name').annotate(
+        total_expense=Sum('exp_amount')
+    )
+
+    # Convert QuerySet to Dictionary
+    expense_dict = {item['exp_expense_type__exp_type_name']: item['total_expense'] for item in expense_summary}
+
+    # Aggregate budget amounts from different budget fields
+    budget_totals = BudgetInfo.objects.aggregate(**{
+        field: Sum(field) for field in BUDGET_FIELD_MAPPING.values()if field is not None
+    })
+
+    # Convert to Expense Type Mapping
+    budget_dict = {expense_type: budget_totals.get(field, 0.0) if field else 0.0 for expense_type, field in
+                   BUDGET_FIELD_MAPPING.items()}
+
+    # Step 3: Add Budget Fields Not Present in Expense Table
+    for field in BudgetInfo._meta.get_fields():
+        if (
+                field.name.startswith("bf_") and
+                isinstance(field, FloatField) and  # Only include FloatFields (budget amounts)
+                field.name not in BUDGET_FIELD_MAPPING.values()
+        ):
+            budget_dict[field.name] = budget_totals.get(field.name, 0.0)
+
+    # Get all unique categories
+    all_categories = set(expense_dict.keys()).union(set(budget_dict.keys()))
+
+    # Merge results into a list of dictionaries
+    category_wise_summary = []
+    for category in all_categories:
+        total_budget = budget_dict.get(category, 0.0)
+        total_expense = expense_dict.get(category, 0.0)
+        difference = total_budget - total_expense
+
+        category_wise_summary.append({
+            "expense_type": category,
+            "total_expense": expense_dict.get(category, 0.0),
+            "total_budget": budget_dict.get(category, 0.0),
+            "difference": difference,
+        })
+
+    # Pass data to the template
+    return render(request, "asset_mgt_app/fin_budget_expense_report.html", {'category_wise_summary': category_wise_summary})
