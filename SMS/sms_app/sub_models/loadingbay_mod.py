@@ -25,7 +25,7 @@ class Loadingbay_Info(models.Model):
     lb_mh_crane = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, related_name='lb_mh_crane',
                                     db_column='lb_mh_crane', default=2)
     lb_mh_handtrolley = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True,
-                                          related_name='lb_mh_handtrolley', db_column='lb_mh_handtrolley', default=2)
+                                          related_name='lb_mh_handtrolley', db_column='lb_mh_handtrolley', default=1)
     lb_crane_time = models.FloatField(blank=False, null=False,default=0.0)
     lb_forklift_time = models.FloatField(blank=False, null=False,default=0.0)
     lb_forklift_charges_std_l2hr = models.FloatField(blank=False, null=False,default=0.0)

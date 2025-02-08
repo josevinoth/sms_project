@@ -23,7 +23,7 @@ class Warehouse_goods_info(models.Model):
     wh_fumigation_process = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, blank=True,related_name='wh_fumigation_process',db_column='wh_fumigation_process',default=1)
     wh_fumigation_action = models.ForeignKey(Fumigation_ActionInfo, on_delete=models.CASCADE, null=True)
     wh_fumigation_date=models.DateTimeField(null=True,blank=True)
-    wh_uom = models.ForeignKey(UOM, on_delete=models.CASCADE, null=True, related_name='wh_uom',db_column='wh_uom')
+    wh_uom = models.ForeignKey(UOM, on_delete=models.CASCADE, null=True, related_name='wh_uom',db_column='wh_uom',default=1)
     wh_chargeable_weight = models.FloatField(null=True,default=0.0)
     wh_cbm = models.FloatField(null=True,default=0.0)
     wh_branch = models.ForeignKey(Location_info, null=True,on_delete=models.CASCADE, default='')
