@@ -5,7 +5,7 @@
     <!--        <i class="fas fa-arrow-left"></i>-->
     <!--      </a>-->
     <!--    </div>-->
-    <div class="col-md-1">
+    <div class="col-md-2">
         <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">
             <i class="fas fa-plus"></i> Add
         </a>
@@ -22,10 +22,6 @@
             <th>Customer Name</th>
             <th>Number of Pieces</th>
             <th>Weight</th>
-            <th>Branch</th>
-            <th>Unit</th>
-            <th>Bay</th>
-            <th>Stack</th>
             <th>Check-In Date/Time</th>
             <th>Goods Status</th>
             <th>Check-Out Date/Time</th>
@@ -43,10 +39,6 @@
             <td> {{goodsinfo.wh_customer_name}}</td>
             <td> {{goodsinfo.wh_goods_pieces}}</td>
             <td> {{goodsinfo.wh_goods_weight}}</td>
-            <td> {{goodsinfo.wh_branch}}</td>
-            <td> {{goodsinfo.wh_unit}}</td>
-            <td> {{goodsinfo.wh_bay}}</td>
-            <td> {{goodsinfo.wh_stack_layer}}</td>
             <td> {{goodsinfo.wh_checkin_time}}</td>
             <td> {{goodsinfo.wh_check_in_out}}</td>
             <td> {{goodsinfo.wh_checkout_time}}</td>

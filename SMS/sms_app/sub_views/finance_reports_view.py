@@ -1,9 +1,7 @@
 from django.shortcuts import render
-from django.contrib.auth.models import User
 from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F,IntegerField
 from django.db.models import F, Subquery, OuterRef
 from django.db.models.functions import Coalesce,Round
-from django.utils.dateparse import parse_date
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from datetime import datetime
@@ -30,7 +28,7 @@ def branch_profit_loss(request):
     invoices_filter = {}
 
     if selected_branch:
-        expenses_filter['exp_ext_branch__loc_name'] = selected_branch  # Adjust to match the loc_name field.
+        expenses_filter['exp_ext_branch__loc_name'] = selected_branch
         invoices_filter['wh_branch__loc_name'] = selected_branch
 
     if from_date:
@@ -67,7 +65,6 @@ def branch_profit_loss(request):
             'profit_loss_percentage': 0.0,
         }
 
-    # Process invoice data and combine with expenses data
     for invoice in invoice_data:
         key = (invoice['wh_branch'])
         if key in combined_data:
@@ -82,12 +79,11 @@ def branch_profit_loss(request):
                 'profit_loss_percentage': 0.0,
             }
     for key, data in combined_data.items():
-        if data['total_invoice_cost'] > 0:  # Avoid division by zero
+        if data['total_invoice_cost'] > 0:
             data['profit_loss_percentage'] = (data['profit_loss'] / data['total_invoice_cost']) * 100
         else:
-            data['profit_loss_percentage'] = 0.0  # Set percentage to 0.0 if no invoice cost
+            data['profit_loss_percentage'] = 0.0
 
-    # Remove entries with zero expenses and invoice cost (if necessary)
     summary_data = [
         row for row in combined_data.values()
         if row['total_expense'] != 0.0 or row['total_invoice_cost'] != 0.0
@@ -97,7 +93,6 @@ def branch_profit_loss(request):
     chart_expenses = [row['total_expense'] for row in summary_data]
     chart_profit_loss = [row['profit_loss'] for row in summary_data]
 
-    # Pass the data to the template
     context = {
         'summary_data': summary_data,
         'branches': branches,
@@ -105,10 +100,10 @@ def branch_profit_loss(request):
         'selected_branch': selected_branch,
         'from_date': from_date.strftime('%Y-%m-%d') if from_date else '',
         'to_date': to_date.strftime('%Y-%m-%d') if to_date else '',
-        'chart_labels': chart_labels,  # Pass as a Python list
-        'chart_income': chart_income,  # Pass as a Python list
-        'chart_expenses': chart_expenses,  # Pass as a Python list
-        'chart_profit_loss': chart_profit_loss,  # Pass as a Python list
+        'chart_labels': chart_labels,
+        'chart_income': chart_income,
+        'chart_expenses': chart_expenses,
+        'chart_profit_loss': chart_profit_loss,
     }
 
     return render(request, "asset_mgt_app/fin_branch_PL_report.html", context)
@@ -134,7 +129,7 @@ def branch_unit_profit_loss(request):
     invoices_filter = {}
 
     if selected_branch:
-        expenses_filter['exp_ext_branch__loc_name'] = selected_branch  # Adjust to match the loc_name field.
+        expenses_filter['exp_ext_branch__loc_name'] = selected_branch
         invoices_filter['wh_branch__loc_name'] = selected_branch
 
     if selected_unit:
@@ -176,7 +171,6 @@ def branch_unit_profit_loss(request):
             'profit_loss_percentage': 0.0,
         }
 
-    # Process invoice data and combine with expenses data
     for invoice in invoice_data:
         key = (invoice['wh_branch'], invoice['wh_unit'])
         if key in combined_data:
@@ -192,12 +186,11 @@ def branch_unit_profit_loss(request):
                 'profit_loss_percentage': 0.0,
             }
     for key, data in combined_data.items():
-        if data['total_invoice_cost'] > 0:  # Avoid division by zero
+        if data['total_invoice_cost'] > 0:
             data['profit_loss_percentage'] = (data['profit_loss'] / data['total_invoice_cost']) * 100
         else:
-            data['profit_loss_percentage'] = 0.0  # Set percentage to 0.0 if no invoice cost
+            data['profit_loss_percentage'] = 0.0
 
-    # Remove entries with zero expenses and invoice cost (if necessary)
     summary_data = [
         row for row in combined_data.values()
         if row['total_expense'] != 0.0 or row['total_invoice_cost'] != 0.0
@@ -207,7 +200,6 @@ def branch_unit_profit_loss(request):
     chart_expenses = [row['total_expense'] for row in summary_data]
     chart_profit_loss = [row['profit_loss'] for row in summary_data]
 
-    # Pass the data to the template
     context = {
         'summary_data': summary_data,
         'branches': branches,
@@ -220,7 +212,7 @@ def branch_unit_profit_loss(request):
         'chart_labels': chart_labels,
         'chart_income': chart_income,
         'chart_expenses': chart_expenses,
-        'chart_profit_loss': chart_profit_loss,  # Pass as a Python list
+        'chart_profit_loss': chart_profit_loss,
     }
 
     return render(request, "asset_mgt_app/fin_unit_PL_report.html", context)
@@ -254,14 +246,12 @@ def businessmodel_PL(request):
     if to_date:
         income_queryset = income_queryset.filter(wh_checkin_time__lte=to_date)
 
-    # Aggregate income
     income_data = income_queryset.values(
         branch_name=F('wh_branch__loc_name'),
         unit_name=F('wh_unit__unit_name'),
         businessmodel=F('wh_customer_type__tb_trbusinesstype')
     ).annotate(total_income=Sum('wh_total_invoice_cost'))
 
-    # Filter Expense table based on parameters
     expense_queryset = ExpenseExtinfo.objects.all()
     if branch_filter:
         expense_queryset = expense_queryset.filter(exp_ext_branch__loc_name=branch_filter)
@@ -272,7 +262,6 @@ def businessmodel_PL(request):
     if to_date:
         expense_queryset = expense_queryset.filter(exp_ext_updated_on__lte=to_date)
 
-    # Map Expenses to Business Models using Branch and Unit
     expense_data = (
         expense_queryset.values(
             branch_name=F('exp_ext_branch__loc_name'),
@@ -281,7 +270,6 @@ def businessmodel_PL(request):
         .annotate(total_expense=Sum('exp_ext_amount'))
     )
 
-    # Combine Income and Expense Data
     results = []
     for income in income_data:
         branch = income['branch_name']
@@ -289,13 +277,11 @@ def businessmodel_PL(request):
         businessmodel = income['businessmodel']
         total_income = income['total_income']
 
-        # Find matching expense for branch and unit
         matching_expense = next(
             (exp for exp in expense_data if exp['branch_name'] == branch and exp['unit_name'] == unit), None
         )
         total_expense = matching_expense['total_expense'] if matching_expense else 0
 
-        # Calculate profit/loss and percentage
         profit_loss = total_income - total_expense
         profit_loss_percentage = (profit_loss / total_income * 100) if total_income != 0 else 0
 
@@ -323,13 +309,11 @@ def businessmodel_PL(request):
         chart_data[businessmodel]['expense'] += result['total_expense']
         chart_data[businessmodel]['profit_loss'] += result['profit_loss']
 
-    # Prepare chart labels and values
     chart_labels = list(chart_data.keys())
     income_values = [data['income'] for data in chart_data.values()]
     expense_values = [data['expense'] for data in chart_data.values()]
     profit_loss_values = [data['profit_loss'] for data in chart_data.values()]
 
-    # Prepare context with data to pass to the template
     context = {
         'first_name': first_name,
         'from_date': from_date.strftime('%Y-%m-%d') if from_date else '',
@@ -361,7 +345,6 @@ def customerwise_PL(request):
     invoice_filters = Q()
     expense_filters = Q()
 
-    # Apply date filters
     if from_date:
         invoice_filters &= Q(wh_checkin_time__gte=from_date)
         expense_filters &= Q(exp_ext_updated_on__gte=from_date)
@@ -369,18 +352,16 @@ def customerwise_PL(request):
         invoice_filters &= Q(wh_checkin_time__lte=to_date)
         expense_filters &= Q(exp_ext_updated_on__lte=to_date)
 
-    # Subquery for total expenses
     total_expenses_subquery = ExpenseExtinfo.objects.filter(
         exp_ext_branch=OuterRef('wh_branch')
     ).values('exp_ext_branch').annotate(
         total_expenses=Sum('exp_ext_amount')
     ).values('total_expenses')
 
-    # Data for the table: Detailed data
     business_summary = Warehouse_goods_info.objects.values(
-        'wh_customer_type__tb_trbusinesstype',  # Customer type
-        'wh_branch__loc_name',                  # Branch
-        'wh_customer_name__cu_nameshort'        # Customer name
+        'wh_customer_type__tb_trbusinesstype',
+        'wh_branch__loc_name',
+        'wh_customer_name__cu_nameshort'
     ).annotate(
         total_invoice_amount=Coalesce(Sum('wh_total_invoice_cost', filter=invoice_filters), 0.0),
         total_expenses=Coalesce(Subquery(total_expenses_subquery), 0.0),
@@ -392,7 +373,6 @@ def customerwise_PL(request):
         )
     )
 
-    # Apply branch and business model filters for the table
     if selected_branch:
         business_summary = business_summary.filter(wh_branch__loc_name=selected_branch)
     if selected_businessmodel:
@@ -407,7 +387,6 @@ def customerwise_PL(request):
         profit_loss=F('total_invoice_amount') - F('total_expenses')
     )
 
-    # Prepare chart data
     chart_labels = []
     income_values = []
     expense_values = []
@@ -415,14 +394,13 @@ def customerwise_PL(request):
 
     for entry in chart_summary:
         customer_type = entry['wh_customer_type__tb_trbusinesstype']
-        chart_labels.append(customer_type)  # Use customer type as label
-        income_values.append(entry['total_invoice_amount'] or 0)  # Income value
-        expense_values.append(entry['total_expenses'] or 0)  # Expense value
-        profit_loss_values.append(entry['profit_loss'] or 0)  # Profit/Loss value
+        chart_labels.append(customer_type)
+        income_values.append(entry['total_invoice_amount'] or 0)
+        expense_values.append(entry['total_expenses'] or 0)
+        profit_loss_values.append(entry['profit_loss'] or 0)
 
-    # Context for rendering template
     context = {
-        'business_summary': business_summary,  # Detailed data for the table
+        'business_summary': business_summary,
         'first_name': first_name,
         'branches': branches,
         'businessmodels': businessmodels,
@@ -430,10 +408,10 @@ def customerwise_PL(request):
         'selected_businessmodel': selected_businessmodel,
         'from_date': from_date,
         'to_date': to_date,
-        'chart_labels': chart_labels,  # Customer type labels for the chart
-        'income_values': income_values,  # Income values for the chart
-        'expense_values': expense_values,  # Expense values for the chart
-        'profit_loss_values': profit_loss_values,  # Profit/Loss values for the chart
+        'chart_labels': chart_labels,
+        'income_values': income_values,
+        'expense_values': expense_values,
+        'profit_loss_values': profit_loss_values,
     }
 
     return render(request, "asset_mgt_app/fin_customerwise_PL_report.html", context)
@@ -457,7 +435,6 @@ def fin_profit_loss_view(request):
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
 
-    # Filter Income table based on parameters
     income_queryset = Warehouse_goods_info.objects.all()
     if branch_filter:
         income_queryset = income_queryset.filter(wh_branch__loc_name=branch_filter)
@@ -472,7 +449,6 @@ def fin_profit_loss_view(request):
     if to_date:
         income_queryset = income_queryset.filter(wh_checkin_time__lte=to_date)
 
-    # Aggregate income grouped only by branch and unit
     income_data = income_queryset.values(
         branch_name=F('wh_branch__loc_name'),
         unit_name=F('wh_unit__unit_name'),
@@ -480,7 +456,6 @@ def fin_profit_loss_view(request):
         total_income=Sum('wh_total_invoice_cost')
     )
 
-    # Filter Expense table based on parameters
     expense_queryset = ExpenseExtinfo.objects.all()
     if branch_filter:
         expense_queryset = expense_queryset.filter(exp_ext_branch__loc_name=branch_filter)
@@ -491,7 +466,6 @@ def fin_profit_loss_view(request):
     if to_date:
         expense_queryset = expense_queryset.filter(exp_ext_updated_on__lte=to_date)
 
-    # Map Expenses to Branch and Unit
     expense_data = (
         expense_queryset.values(
             branch_name=F('exp_ext_branch__loc_name'),
@@ -500,11 +474,10 @@ def fin_profit_loss_view(request):
         .annotate(total_expense=Sum('exp_ext_amount'))
     )
 
-    # Combine Income and Expense Data
     results = []
-    chart_labels = []  # For branch/unit labels
-    income_values = []  # For income values
-    expense_values = []  # For expense values
+    chart_labels = []
+    income_values = []
+    expense_values = []
     profit_loss_values = []
 
     for income in income_data:
@@ -512,13 +485,11 @@ def fin_profit_loss_view(request):
         unit = income['unit_name']
         total_income = income['total_income']
 
-        # Find matching expense for branch and unit
         matching_expense = next(
             (exp for exp in expense_data if exp['branch_name'] == branch and exp['unit_name'] == unit), None
         )
         total_expense = matching_expense['total_expense'] if matching_expense else 0
 
-        # Calculate profit/loss and percentage
         profit_loss = total_income - total_expense
         profit_loss_percentage = (profit_loss / total_income * 100) if total_income != 0 else 0
 
@@ -530,7 +501,7 @@ def fin_profit_loss_view(request):
             'profit_loss': profit_loss,
             'profit_loss_percentage': round(profit_loss_percentage, 2),
         })
-        label = f"{branch} - {unit}"  # Combine branch and unit for labels
+        label = f"{branch} - {unit}"
         chart_labels.append(label)
         income_values.append(total_income)
         expense_values.append(total_expense)
@@ -545,9 +516,9 @@ def fin_profit_loss_view(request):
         'branch_filter': branch_filter,
         'customer_filter': customer_filter,
         'businessmodel_filter': businessmodel_filter,
-        'chart_labels': chart_labels,  # Bar chart labels
-        'income_values': income_values,  # Income data for chart
-        'expense_values': expense_values,  # Expense data for chart
+        'chart_labels': chart_labels,
+        'income_values': income_values,
+        'expense_values': expense_values,
         'profit_loss_values': profit_loss_values,
         'from_date': from_date.strftime('%Y-%m-%d') if from_date else '',
         'to_date': to_date.strftime('%Y-%m-%d') if to_date else '',
@@ -568,7 +539,6 @@ def expenses_report(request):
     companies = Business_Sol_info.objects.values_list('bvm_business', flat=True).distinct()
     expense_summary = ExpenseExtinfo.objects.all()
 
-    # Apply filters
     if branch_filter:
         expense_summary = expense_summary.filter(exp_ext_branch__loc_name=branch_filter)
     if unit_filter:
@@ -584,7 +554,6 @@ def expenses_report(request):
             exp_ext_expense_number__exp_business__bvm_business=company_filter
             )
 
-    # Aggregate expense by expense type
     expense_summary = (
         expense_summary.values(expense_type=F('exp_ext_expense_number__exp_expense_type__exp_type_name'))
         .annotate(total_expense=Sum('exp_ext_amount'))
@@ -621,10 +590,9 @@ DUE_DAY_GROUPS = [
     (181, 999999, '180-above Days', 8),
 ]
 
+
 def get_due_day_case_expression(field_name):
-    """
-    Returns a Django Case expression to categorize the due days into predefined ranges.
-    """
+
     return Case(
         *[
             When(**{f"{field_name}__gte": start, f"{field_name}__lte": end}, then=Value(label))
@@ -634,18 +602,18 @@ def get_due_day_case_expression(field_name):
         output_field=CharField()
     )
 
-def get_due_day_sort_expression():
-    """
-    Returns a Django Case expression to assign numeric order to due day groups for sorting.
-    """
+
+def get_due_day_sort_expression(field_name):
+
     return Case(
         *[
-            When(due_range=label, then=Value(order))
+            When(**{f"{field_name}": label}, then=Value(order))
             for _, _, label, order in DUE_DAY_GROUPS
         ],
-        default=Value(999),  # Default value for 'Unknown' or unexpected cases
+        default=Value(999),
         output_field=IntegerField()
     )
+
 
 def ar_due_reports(request):
     first_name = request.session.get('first_name')
@@ -659,7 +627,6 @@ def ar_due_reports(request):
     companies = Business_Sol_info.objects.values_list('bvm_business', flat=True).distinct()
     ar_summary = Ar_Info.objects.all()
 
-    # Apply filters
     if branch_filter:
         ar_summary = ar_summary.filter(ar_branch__loc_name=branch_filter)
     if unit_filter:
@@ -676,16 +643,16 @@ def ar_due_reports(request):
     due_from_submission_data = (
         ar_summary
         .annotate(due_range=get_due_day_case_expression('ar_due_from_submission_date'))
-        .annotate(due_order=get_due_day_sort_expression())
-        .values('due_range', 'due_order')  # Group by due_range and due_order
-        .annotate(total_amount=Sum('ar_amount'))  # Sum the amounts after grouping
-        .order_by('due_order')  # Ensure sorting is correct
+        .annotate(due_order=get_due_day_sort_expression('due_range'))
+        .values('due_range', 'due_order')
+        .annotate(total_amount=Sum('ar_amount'))
+        .order_by('due_order')  # Ensure sorting
     )
 
     due_from_operation_data = (
         ar_summary
         .annotate(due_range=get_due_day_case_expression('ar_due_from_operation_date'))
-        .annotate(due_order=get_due_day_sort_expression())
+        .annotate(due_order=get_due_day_sort_expression('due_range'))
         .values('due_range', 'due_order')
         .annotate(total_amount=Sum('ar_amount'))
         .order_by('due_order')
@@ -694,13 +661,12 @@ def ar_due_reports(request):
     due_from_invoice_data = (
         ar_summary
         .annotate(due_range=get_due_day_case_expression('ar_due_from_invoice_date'))
-        .annotate(due_order=get_due_day_sort_expression())
+        .annotate(due_order=get_due_day_sort_expression('due_range'))
         .values('due_range', 'due_order')
         .annotate(total_amount=Sum('ar_amount'))
         .order_by('due_order')
     )
 
-    # Convert QuerySets to Lists for JavaScript
     submission_labels = [entry['due_range'] for entry in due_from_submission_data]
     submission_amounts = [entry['total_amount'] for entry in due_from_submission_data]
 

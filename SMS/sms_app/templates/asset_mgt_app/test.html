@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Form</title>
+</head>
+<body>
+    <h2>Enter Item Details</h2>
+    <form method="post" action="">
+        {% csrf_token %}
+
+        <!-- Common Fields -->
+        <div>
+            <label>Assessment Number:</label>
+            <input type="text" name="assessment_number" value="{{ previous_values.assessment_number }}" required>
+        </div>
+        <div>
+            <label>Customer Name:</label>
+            <input type="text" name="customer_name" value="{{ previous_values.customer_name }}" required>
+        </div>
+
+        <!-- Dynamic Fields for Items -->
+        <div id="items-container">
+            {% for item in previous_values.items %}
+            <div class="item-row">
+                <input type="text" name="item_name[]" value="{{ item.item_name }}" placeholder="Item Name" required>
+                <input type="text" name="item_description[]" value="{{ item.item_description }}" placeholder="Item Description" required>
+                <input type="number" name="height_req[]" value="{{ item.height_req }}" placeholder="Height (in/mm)" required>
+                <input type="number" name="width_req[]" value="{{ item.width_req }}" placeholder="Width (in/ft)" required>
+                <input type="number" name="length_req[]" value="{{ item.length_req }}" placeholder="Length (ft)" required>
+                <input type="number" name="quantity_req[]" value="{{ item.quantity_req }}" placeholder="Quantity" required>
+                <button type="button" onclick="removeRow(this)">Remove</button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" onclick="addRow()">Add New Item</button>
+        <br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        function addRow() {
+            const container = document.getElementById("items-container");
+            const newRow = document.createElement("div");
+            newRow.classList.add("item-row");
+            newRow.innerHTML = `
+                <input type="text" name="item_name[]" placeholder="Item Name" required>
+                <input type="text" name="item_description[]" placeholder="Item Description" required>
+                <input type="number" name="height_req[]" placeholder="Height (in/mm)" required>
+                <input type="number" name="width_req[]" placeholder="Width (in/ft)" required>
+                <input type="number" name="length_req[]" placeholder="Length (ft)" required>
+                <input type="number" name="quantity_req[]" placeholder="Quantity" required>
+                <button type="button" onclick="removeRow(this)">Remove</button>
+            `;
+            container.appendChild(newRow);
+        }
+
+        function removeRow(button) {
+            button.parentNode.remove();
+        }
+    </script>
+</body>
+</html>

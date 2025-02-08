@@ -67,7 +67,7 @@
 </div>
 <br>
 <div>
-    <canvas id="myChart" width="400" height="200" class="bg-white box-shadow rounded"></canvas>
+    <canvas id="finPLChart" width="400" height="200" class="bg-white box-shadow rounded"></canvas>
 </div>
 <hr>
 
@@ -97,78 +97,38 @@
 </table>
 
 <script>
-    const labels = {{ chart_labels|safe }};
-     const incomeData = {{ income_values|safe }}.map(value => value / 100000);
-     const expenseData = {{ expense_values|safe }}.map(value => value / 100000);
-     const profitLossData = {{ profit_loss_values|safe }}.map(value => value / 100000);
-     console.log("Profit/Loss Data:", profitLossData);
+     const labels1 = {{ chart_labels|safe }};
+    const incomeData1 = convertToLakhs({{ income_values|safe }});
+    const expenseData1 = convertToLakhs({{ expense_values|safe }});
+    const profitLossData1 = convertToLakhs({{ profit_loss_values|safe }});
 
+    const datasets1 = [
+        {
+            label: 'Income',
+            data: incomeData1,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+        },
+        {
+            label: 'Expenses',
+            data: expenseData1,
+            backgroundColor: 'rgba(255, 128, 0, 0.5)',
+            borderColor: 'rgba(255, 128, 0, 1)',
+            borderWidth: 1,
+        },
+        {
+            label: 'Profit/Loss',
+            data: profitLossData1,
+            backgroundColor: getProfitLossColors(profitLossData1),
+            borderColor: getProfitLossBorderColors(profitLossData1),
+            borderWidth: 1,
+        },
+    ];
 
-     const profitLossColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
-     const profitLossBorderColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
-
-     var ctx = document.getElementById('myChart').getContext('2d');
-
-     var myChart = new Chart(ctx, {
-         type: 'bar',
-         data: {
-             labels: labels,
-             datasets: [{
-                 label: 'Income (INR)',
-                 data: incomeData,
-                 backgroundColor: 'rgba(0, 123, 255, 0.5)',
-                 borderColor: 'rgba(0, 123, 255, 1)',
-                 borderWidth: 1
-             }, {
-                 label: 'Expense (INR)',
-                 data: expenseData,
-                 backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                 borderColor: 'rgba(255, 99, 132, 1)',
-                 borderWidth: 1
-             }, {
-                 label: 'Profit/Loss (INR)',
-                 data: profitLossData,
-                 backgroundColor: profitLossColors,
-                 borderColor: profitLossBorderColors,
-                 borderWidth: 1
-             }]
-         },
-         options: {
-             responsive: true,
-             plugins: {
-                 legend: {
-                     display: true,
-                     position: 'top',
-                 },
-                 datalabels: {
-                    anchor: 'end',
-                    align: 'top',
-                    color: '#000',
-                    backgroundColor: 'rgba(235, 233, 234, 0.8)',
-                    borderRadius: 4,
-                    padding: 4,
-                    borderWidth: 1,
-                    borderColor: '#000',
-                    font: {
-                        size: 10,
-                        weight: 'bold',
-                    },
-                    formatter: function(value) {
-                        return value.toFixed(2) + ' L';
-                    }
-                }
-             },
-             scales: {
-                 y: {
-                     beginAtZero: true,
-                     suggestedMax: Math.max(...incomeData.concat(expenseData, profitLossData)) * 1.2,
-                 },
-             },
-         },
-         plugins: [ChartDataLabels]
-     });
+    // Create the chart using the reusable function
+    createBarChart('finPLChart', labels1, datasets1);
 </script>
-
 
 <script>
     // Initialize DataTable

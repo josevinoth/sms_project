@@ -16,8 +16,6 @@
 
 <div class="container-fluid">
     <div class="row align-items-center">
-
-        <!-- Branch Filter -->
         <div class="col-md-2">
             <label for="branch-filter"><b>Branch:</b></label>
             <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
@@ -29,7 +27,6 @@
                 {% endfor %}
             </select>
         </div>
-
         <div class="col-md-2">
             <label for="businessmodel-filter"><b>Businessmodel:</b></label>
             <select id="businessmodel-filter" name="businessmodel" class="form-control box-shadow rounded">
@@ -176,7 +173,6 @@
         });
     });
 
-    // Add event listeners to filters
     document.getElementById('branch-filter').addEventListener('change', updateFilters);
     document.getElementById('businessmodel-filter').addEventListener('change', updateFilters);
     document.getElementById('from-date').addEventListener('change', updateFilters);
@@ -193,27 +189,27 @@
     if (branch) {
         url.searchParams.set('branch', branch);
     } else {
-        url.searchParams.delete('branch'); // Clear the parameter if "All" is selected
+        url.searchParams.delete('branch');
     }
 
     if (businessmodel) {
         url.searchParams.set('businessmodel', businessmodel);
     } else {
-        url.searchParams.delete('businessmodel'); // Clear the parameter if "All" is selected
+        url.searchParams.delete('businessmodel');
     }
 
 
     if (fromDate) {
         url.searchParams.set('from_date', fromDate);
     } else {
-        url.searchParams.delete('from_date'); // Clear the parameter if no date is provided
+        url.searchParams.delete('from_date');
     }
 
     // Update to_date filter
     if (toDate) {
         url.searchParams.set('to_date', toDate);
     } else {
-        url.searchParams.delete('to_date'); // Clear the parameter if no date is provided
+        url.searchParams.delete('to_date');
     }
 
     console.log(url.toString());

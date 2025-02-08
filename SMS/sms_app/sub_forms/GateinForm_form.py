@@ -1,5 +1,7 @@
 from django import forms
-from ..models import Gatein_pre_info,Gatein_info
+from ..models import Gatein_info
+
+
 
 class GateinaddForm(forms.ModelForm):
     class Meta:

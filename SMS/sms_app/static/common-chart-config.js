@@ -112,6 +112,11 @@ function createBarChart(ctxId, labels, datasets, yAxisTitle = "Amount (Lakhs)") 
                     anchor: 'end',
                     align: 'top',
                     color: '#000',
+                    backgroundColor: 'rgba(235, 233, 234, 0.8)',
+                    borderRadius: 4,
+                    padding: 4,
+                    borderWidth: 1,
+                    borderColor: '#000',
                     font: { size: 10, weight: 'bold' },
                     formatter: function(value) {
                         return value.toFixed(2) + ' L'; // Show values in Lakhs

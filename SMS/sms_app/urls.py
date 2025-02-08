@@ -580,24 +580,20 @@ urlpatterns = [
     path('salescalls_details/', views.salescalls_details, name='salescalls_details'),
     path('target_actuals/', views.targets_actuals, name='targets_actuals'),
     path('warehouse_jobs_add/', views.warehouse_jobs_add, name='warehouse_jobs_add'),
-    path('save_goods_data/', views.save_goods_data, name='save_goods_data'),
     path('save_consignment_data/', views.save_consignment_data, name='save_consignment_data'),
     path('delete_consignment_data/',views.delete_consignment_data, name='delete_consignment_data'),
-    path('delete_goods_data/',views.delete_goods_data, name='delete_goods_data'),
-
     path('salesperson_wise_chart/', views.salesperson_wise_chart, name='salesperson_wise_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
-    path('warehouse_goods_add_gatein_insert/', views.warehouse_goods_add_gatein, name='warehouse_goods_add_gatein_insert'),  # Add warehouse_goods_add_gatein
-    path('warehouse_goods_add_gatein_update/<int:wh_goods_gatein_id>', views.warehouse_goods_add_gatein, name='warehouse_goods_add_gatein_update'),  # update warehouse_goods_add_gatein
-    path('warehouse_goods_gatein_delete/<int:wh_goods_gatein_id>/', views.warehouse_goods_gatein_delete, name='warehouse_goods_gatein_delete'),
-    path('warehouse_goods_gatein_list/', views.warehouse_goods_gatein_list, name='warehouse_goods_gatein_list'),
     path('target_actual_table/', views.targets_actuals_table, name='targets_actuals_table'),
     path('branch_profit_loss/', views.branch_profit_loss, name='branch_profit_loss'),
     path('branch_unit_profit_loss/', views.branch_unit_profit_loss, name='branch_unit_profit_loss'),
     path('finance_reports/', views.finance_reports, name='finance_reports'),
     path('businessmodel_PL/', views.businessmodel_PL, name='businessmodel_PL'),
     path('customerwise_PL/', views.customerwise_PL, name='customerwise_PL'),
+    path('fin_profit_loss/', views.fin_profit_loss_view, name='fin_profit_loss_view'),
+    path('expenses_report/', views.expenses_report, name='expenses_report'),
+    path('ar_due_reports/', views.ar_due_reports, name='ar_due_reports'),
     path('vehicle_availability/',views.vehicle_availability_list, name='vehicle_availability'),
     path('get_customer_details/', views.get_customer_details, name='get_customer_details'),
     path('vehicle_procurement_add/', views.vehicle_procurement_add, name='vehicle_procurement_add'),
@@ -607,3 +603,5 @@ urlpatterns = [
     path('stock_value_send_email_view/', views.stock_value_send_email_view, name='stock_value_send_email_view'),
 ]
 
+
+]

@@ -31,7 +31,7 @@ from .sub_views.damage_add_view import damage_add,damage_list,damage_delete
 from .sub_views.picture_view import picture_add,picture_list,picture_delete
 from .sub_views.damagereport_add_view import damagereport_add,damagereport_list
 from .sub_views.locationmaster_add_view import locationmaster_add,locationmaster_list,locationmaster_delete,load_customer_model,warehousevolme_area_calc
-from .sub_views.goods_add_view import goods_add,goods_list,goods_delete,goods_update,wh_excess_stock_email,save_goods_data,delete_goods_data
+from .sub_views.goods_add_view import goods_add,goods_list,goods_delete,goods_update,wh_excess_stock_email
 from .sub_views.employee_add_view import emp_add,emp_list,emp_delete,emp_registration_page
 from .sub_views.unit_add_view import unit_add,unit_list,unit_delete
 from .sub_views.Bay_add_view import bay_add,bay_list,bay_delete
@@ -133,11 +133,10 @@ from .sub_views.salesperson_chart_view import salescalls_details
 from .sub_views.salesperson_chart_view import targets_actuals
 from .sub_views.salesperson_chart_view import salesperson_wise_chart
 from .sub_views.salesperson_chart_view import businesswon_chart
-from .sub_views.warehouse_goods_add_new_view import warehouse_goods_add_gatein,warehouse_goods_gatein_delete,warehouse_goods_gatein_list
 from .sub_views.salesperson_chart_view import targets_actuals_table
 from .sub_views.finance_reports_view import branch_profit_loss
 from .sub_views.finance_reports_view import branch_unit_profit_loss
-from .sub_views.finance_reports_view import finance_reports,businessmodel_PL,customerwise_PL
+from .sub_views.finance_reports_view import finance_reports,businessmodel_PL,customerwise_PL,fin_profit_loss_view,expenses_report,ar_due_reports
 from .sub_views.vehicleavailability_view import vehicle_availability_list
 from .sub_views.transport_procurement_view import vehicle_procurement_add,vehicle_procurement_list,vehicle_procurement_delete
 

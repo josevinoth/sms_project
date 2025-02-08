@@ -119,6 +119,4 @@ from .sub_forms.dsrForm_form import DsrForm
 from .sub_forms.dsr_report_email_form import dsr_EmailForm
 from .sub_forms.gate_out_email_form import gate_out_Form
 from .sub_forms.gate_in_email_form import gate_in_Form
-from .sub_forms.goods_newForm_form import WarehousegoodsnewForm
-from .sub_forms.warehouse_goodsadd_form_new import warehouse_goodsadd_gatein_form
 from .sub_forms.transport_procurement_form import vechicle_procurementForm

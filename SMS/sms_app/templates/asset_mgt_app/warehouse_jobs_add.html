@@ -1,7 +1,15 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-
+<div class="container-fluid pb-3">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Warehouse Job </h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
 <div class="accordion" id="accordionExample">
 	<div class="card">
 		<div class="card-header" id="gatein">
@@ -13,179 +21,7 @@
 		</div>
 		<div id="collapseOne" class="collapse show " aria-labelledby="headingOne" data-parent="#accordionExample">
 			<div class="card-body">
-				<form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" >
-					{% csrf_token %}
-					<div class="row container-fluid">
-						<div class="col-3">
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">WH Job Number</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_job_no class="form-control disable_a_href" id="whn_job_no"  %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Shipper Invoice</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_goods_invoice class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">PO Number</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_po_num class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Customer</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_customer_name id="whn_customer_name" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Customer Model</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_customer_type id="whn_customer_type" class="form-control disable_a_href" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Customer Department</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_department class="form-control" %}
-							</div>
-						</div>
-						<div class="col-3">
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Commodity</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_comodity class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">DG Cargo</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_cargo id="whn_cargo" class="form-control" id="whn_cargo"  %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Dock-In Date & Time</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_dock_in_date_time type="datetime-local" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Consigner</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_consigner class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Consignee</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_consignee class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Total Packages</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_total_qty class="form-control" %}
-							</div>
-						</div>
-						<div class="col-3">
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Invoice Weight-Gross (kg)</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_gross_weight class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Destination</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_destination class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">HAWB</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_hawb id="whn_hawb" class="form-control" id="whn_cargo"  %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Pre-Gatin</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_pre_id class="form-control" id="whn_pre_id" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Pre-Gatein Truck Number</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_truck_number_n id="whn_truck_number_n" class="form-control disable_a_href" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Gate-In Status</span>
-								</div>
-								{% render_field wh_goods_gatein_form.whn_gatein_status id="whn_gatein_status" class="form-control disable_a_href" %}
-							</div>
-						</div>
-						<div class="col-3">
-							<div class="input-group input-group-sm mb-3 ">
-								<div class="input-group-prepend">
-									<div class="input-group-text">Driver Name</div>
-								</div>
-								<input type="text" class="form-control disable_a_href" id="driver_name">
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<div class="input-group-text">Driver Contact</div>
-								</div>
-								<input type="text" class="form-control disable_a_href" id="driver_contact">
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<div class="input-group-text">Driver License</div>
-								</div>
-								<input type="text" class="form-control disable_a_href" id="driver_license">
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<div class="input-group-text">OTL</div>
-								</div>
-								<input type="text" class="form-control disable_a_href" id="otl">
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<div class="input-group-text">Transporter</div>
-								</div>
-								<input type="text" class="form-control disable_a_href" id="transporter">
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<div class="input-group-text">Truck Type</div>
-								</div>
-								<input type="text" class="form-control disable_a_href" id="truck_type">
-							</div>
-						</div>
-
-						{% render_field wh_goods_gatein_form.whn_updated_by id="whn_updated_by"  hidden="True" class="form-control" %}
-					</div>
-					<div class="row ">
-						<div class="col-1"></div>
-						<div class="col-10">
-							<div class="message text-center">
-								{% for message in messages %}
-								<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-								{% endfor %}
-							</div>
-						</div>
-						<div class="col-1"></div>
-					</div>
-					<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
-					<a href="{% url 'warehouse_goods_gatein_list' %}" class="btn btn-danger float-right">
-						<i class="fas fa-times"></i> Cancel </a>
-				</form>
+				{% include "asset_mgt_app/gatein_add_new.html" %}
 			</div>
 		</div>
 	</div>
@@ -199,6 +35,21 @@
 		</div>
 		<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
 			<div class="card-body">
+				{% include "asset_mgt_app/loadingbay_add_new.html" %}
+			</div>
+		</div>
+	</div>
+	<div class="card">
+		<div class="card-header" id="headingFour">
+			<h2 class="mb-0">
+				<button class="btn btn-link btn-block text-left text-white bg-info collapsed" type="button" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+					Inspection
+				</button>
+			</h2>
+		</div>
+		<div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordionExample">
+			<div class="card-body">
+				{% include "asset_mgt_app/goods_add_new.html" %}
 			</div>
 		</div>
 	</div>
@@ -212,102 +63,16 @@
 		</div>
 		<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
 			<div class="card-body">
-				And lastly, the placeholder content for the third and final accordion panel. This panel is hidden by default.
-			</div>
-		</div>
-	</div>
-	<div class="card">
-		<div class="card-header" id="headingFour">
-			<h2 class="mb-0">
-				<button class="btn btn-link btn-block text-left text-white bg-info collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-					Inspection
-				</button>
-			</h2>
-		</div>
-		<div id="collapseFour" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
-			<div class="card-body">
-				And lastly, the placeholder content for the third and final accordion panel. This panel is hidden by default.
+				{% include "asset_mgt_app/damagereport_add_new.html" %}
 			</div>
 		</div>
 	</div>
 </div>
 <script>
-	$("#whn_customer_name").change(function () {
-      var url = $("#gate_in").attr("data-load_customer_model-url");
-      var gatein_customer_id = $(this).find(":selected").text();
-      $.ajax({
-        url: url,
-        data: {
-          'lm_customer_name_id': gatein_customer_id
-        },
-        success: function (data) {
-            var customer_model=JSON.parse(data)["customer_businessmodel_val"];
-            document.getElementById("whn_customer_type").value =customer_model;
-        }
-      });
-    });
+    $(document).ready(function() {
+    alert('{{gatein_id}}')
+    document.getElementById("lb_job_no_id_new").value='{{gatein_id}}'
+});
 </script>
-<script>
-	$("#whn_pre_id").change(function () {
-      var pre_gatein_val = $(this).find(":selected").text();
-       $.ajax({
-        url: '{% url 'load_pre_gate_in' %}',
-        data: {
-          'pre_gatein_val': pre_gatein_val
-        },
-        success: function (data) {
-            var truck_numbers=data.truck_numbers;
-            var truck_numbers_id=data.truck_numbers_id;
-            $('#whn_truck_number_n').removeClass('disable_a_href');
-            $('#whn_truck_number_n').empty();
-            $('#whn_truck_number_n').empty().append("<option value='0'>--Select--</option>");
-            var len = (truck_numbers).length;
-            $('#whn_truck_number_n').empty().append("<option value='0'>--Select--</option>");
-            for( var i = 0; i<len; i++){
-                $("#whn_truck_number_n").append("<option value='"+truck_numbers_id[i]+"'>"+truck_numbers[i]+"</option>");
-            }
-        }
-      });
-    });
-</script>
-<script>
-	$("#whn_truck_number_n").change(function () {
-      var gatein_truck_number_val = $(this).find(":selected").text();
-       var pre_gatein_id =document.getElementById("whn_pre_id").value
-       $.ajax({
-        url: '{% url 'load_pre_gate_in_truck_details' %}',
-        data: {
-          'gatein_truck_number_val': gatein_truck_number_val,
-              'pre_gatein_id': pre_gatein_id,
-        },
-        success: function (data) {
-            var Transporter=data.Transporter;
-            var Driver_Name=data.Driver_Name;
-            var Driver_Contact=data.Driver_Contact;
-            var Driver_License=data.Driver_License;
-            var OTL=data.OTL;
-            var Truck_Number=data.Truck_Number;
-            var Truck_Type=data.Truck_Type;
-            var dock_in_time=data.dock_in_time;
-            document.getElementById("transporter").value =Transporter;
-            document.getElementById("truck_type").value =Truck_Type;
-            document.getElementById("otl").value =OTL;
-            document.getElementById("driver_license").value =Driver_License;
-            document.getElementById("driver_contact").value =Driver_Contact;
-            document.getElementById("driver_name").value =Driver_Name;
-            document.getElementById("gatein_arrival_date").value =dock_in_time;
-        }
-      });
 
-    });
-</script>
-<script>
-	$(document).ready(function() {
-        $('#gatein_pre_id').selectpicker({
-            liveSearch: true,
-            noneSelectedText: 'Search Pre-GateIn'
-        });
-        document.getElementById("whn_updated_by").value ='{{user_id}}';
-    });
-</script>
 {% endblock content %}
