@@ -604,5 +604,6 @@ urlpatterns = [
     path('vehicle_procurement_list/', views.vehicle_procurement_list, name='vehicle_procurement_list'),
     path('vehicle_procurement_update/<int:vp_id>/', views.vehicle_procurement_add, name='vehicle_procurement_update'),
     path('vehicle_procurement_delete/<int:vp_id>/', views.vehicle_procurement_delete,name='vehicle_procurement_delete'),
+    path('stock_value_send_email_view/', views.stock_value_send_email_view, name='stock_value_send_email_view'),
 ]
 

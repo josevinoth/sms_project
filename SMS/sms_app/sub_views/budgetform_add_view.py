@@ -159,6 +159,13 @@ def budgetform_list(request):
             income_total + department_expenses_total + employee_benefits_total +
             interest_expenses_total + operational_expenses_total + non_operational_expenses_total
     )
+    income_total = round(income_total, 2)
+    department_expenses_total = round(department_expenses_total, 2)
+    employee_benefits_total = round(employee_benefits_total, 2)
+    interest_expenses_total = round(interest_expenses_total, 2)
+    operational_expenses_total = round(operational_expenses_total, 2)
+    non_operational_expenses_total = round(non_operational_expenses_total, 2)
+    overall_total = round(overall_total, 2)
 
     context = {
         'budget_list': budget_list,
