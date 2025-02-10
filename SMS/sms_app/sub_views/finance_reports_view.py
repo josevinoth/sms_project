@@ -8,7 +8,6 @@ from datetime import datetime
 from ..models import Warehouse_goods_info,ExpenseExtinfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,ExpenseTypeInfo,Ar_Info,BudgetInfo,ExpenseInfo
 
 
-
 def finance_reports(request):
     first_name = request.session.get('first_name')
     context = {
@@ -978,8 +977,8 @@ def budget_expense(request):
     non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES)
     other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES)
 
-    total_budget = sum(budget_dict.values())
-    total_expense = sum(expense_dict.values())
+    total_budget = sum(value if value is not None else 0.0 for value in budget_dict.values())
+    total_expense = sum(value if value is not None else 0.0 for value in expense_dict.values())
     total_profit_loss = total_budget - total_expense
     total_pl_percentage = (total_profit_loss / total_budget * 100) if total_budget > 0 else 0.0
 
