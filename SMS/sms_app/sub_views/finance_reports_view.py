@@ -377,7 +377,6 @@ def customerwise_PL(request):
     if selected_businessmodel:
         business_summary = business_summary.filter(wh_customer_type__tb_trbusinesstype=selected_businessmodel)
 
-
     chart_summary = Warehouse_goods_info.objects.values(
         'wh_customer_type__tb_trbusinesstype'  # Group by customer type
     ).annotate(
@@ -736,7 +735,6 @@ EMPLOYEE_BENEFITS_CATEGORIES = {
     "EPF Admin Charges Corp Staff": "bf_EPF_admin_charges_corp_staff",
     "Gratuity Corp Staff": "bf_gratuity_corp_staff",
     "Salaries Wages Corp Staff": "bf_salaries_wages_corp_staff",
-
     "Dept Staff": "bf_dept_staff",
     "Bonus Staff": "bf_bonus_staff",
     "EDLI Contribution Staff": "bf_EDLI_contribution_staff",
@@ -759,7 +757,6 @@ OPERATIONAL_EXPENSES_CATEGORIES = {
     "Rent - Premises Expenses": "bf_rent_premises",
     "Security Service Charges Expenses": "bf_security_service_charges",
     "Manpower Supply Expenses": "bf_manpower_supply_expenses",
-
     "Operational Expenses Variable": "bf_variable",
     "Crane Handling Expenses": "bf_crane_handling_expenses",
     "Diesel Expenses - Forklift": "bf_diesel_expenses_forklift",
@@ -935,7 +932,6 @@ def budget_expense(request):
         'exp_ext_expense_number__exp_expense_type__exp_type_name'
     ).annotate(total_expense=Sum('exp_ext_amount'))
 
-    # Convert expenses to dictionary
     expense_dict = {
         item['exp_ext_expense_number__exp_expense_type__exp_type_name']: item['total_expense']
         for item in expense_summary
@@ -945,7 +941,6 @@ def budget_expense(request):
         field: Sum(field) for field in BUDGET_FIELD_MAPPING.values() if field is not None
     })
 
-    # Convert budget data into a dictionary
     budget_dict = {
         category: budget_totals.get(field, 0.0) if field else 0.0
         for category, field in BUDGET_FIELD_MAPPING.items()
@@ -955,8 +950,8 @@ def budget_expense(request):
     def get_category_summary(category_mapping):
         summary = []
         for category, field in category_mapping.items():
-            total_budget = budget_dict.get(category, 0.0) or 0.0  # Ensure default value is 0.0
-            total_expense = expense_dict.get(category, 0.0) or 0.0  # Ensure default value is 0.0
+            total_budget = budget_dict.get(category, 0.0) or 0.0
+            total_expense = expense_dict.get(category, 0.0) or 0.0
             difference = total_budget - total_expense
             pl_percentage = (difference / total_budget * 100) if total_budget > 0 else 0.0  # P/L %
 
@@ -982,7 +977,6 @@ def budget_expense(request):
     total_profit_loss = total_budget - total_expense
     total_pl_percentage = (total_profit_loss / total_budget * 100) if total_budget > 0 else 0.0
 
-    # Pass data to the template
     return render(request, "asset_mgt_app/fin_budget_expense_report.html", {
         "income_summary": income_summary,
         "department_expenses_summary": department_expenses_summary,
