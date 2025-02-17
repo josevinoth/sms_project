@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 
-from ..forms import ConsignmentdetailaddForm
+from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm,ConsignmentgoodsnewaddForm
 from ..models import VehiclemasterInfo,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect
 
@@ -31,6 +31,8 @@ def consignmentdetail_add(request,consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     enquiry_num = request.session.get('ses_enqiury_num')
+    consignmentgoods_id_val=request.session.get('ses_consignment_id')
+
     customer = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_customername
     customer_obj = CustomerInfo.objects.get(cu_name=customer)
     customer_id = customer_obj.id
@@ -39,20 +41,27 @@ def consignmentdetail_add(request,consignmentdetail_id=0):
         if consignmentdetail_id == 0:
             print("I am inside Get add consignmentdetails")
             con_det_form = ConsignmentdetailaddForm()
+            form = ConsignmentgoodsaddForm()
+            cn_form = ConsignmentgoodsnewaddForm()
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
         else:
             enquiry_num = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id).co_enquirynumber
             consignmentdetail=ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
+            form = ConsignmentgoodsaddForm()
+            cn_form = ConsignmentgoodsnewaddForm()
         context = {
             'first_name': first_name,
             'user_id': user_id,
             'con_det_form': con_det_form,
+            'form': form,
+            'cn_form': cn_form,
             'enquiry_num': enquiry_num,
             'enquiry_num_id': enquiry_num_id,
             'customer_id': customer_id,
             'customer_code': customer_code,  # Include customer_code in context
+            'consignmentgoods_id_val': consignmentgoods_id_val,  # Include consignmentgoods_id_val in context
             'consignmentdetail_list': ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id),
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
@@ -93,6 +102,7 @@ def consignmentdetail_add(request,consignmentdetail_id=0):
             else:
                 print("Main Form is not Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+
             return redirect(request.META['HTTP_REFERER'])
             # return redirect('/SMS/consignmentdetail_list')
 

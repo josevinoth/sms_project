@@ -1,10 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
+
+from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm,TripdetailaddForm
 from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, JsonResponse
 import json
 @login_required(login_url='login_page')
 def tripdetail_nav(request,tripdetail_id=0):
@@ -87,6 +89,7 @@ def tripdetail_add(request,tripdetail_id=0):
             enquiry_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_enquirynumber
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
+            request.session['ses_tripdetail_id']=tripdetail_id
             trip_det_form = TripdetailaddForm(instance=tripdetail)
             tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
@@ -235,3 +238,92 @@ def load_vehicle_details(request):
             'count_val':count_val,
         }
     return HttpResponse(json.dumps(data))
+
+
+
+@login_required(login_url='login_page')
+def trip_email(request):
+    tripdetail_id = request.session.get('ses_tripdetail_id')
+
+    if not tripdetail_id:
+        messages.error(request, "Trip detail ID is missing. Please try again.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    trip = TripdetailInfo.objects.get(pk=tripdetail_id)
+
+    recipient_list = [
+        'd.udhayakumar16@gmail.com',
+    ]
+
+    subject = f"Trip {trip.tr_tripnumber} - Update"
+
+    email_body = f"""
+        <html>
+            <head>
+               <style>
+                    table {{
+                        width: 60%;
+                        border-collapse: collapse;
+                        font-family: Arial, sans-serif;
+                        font-size: 14px;
+                        border: 1px solid black; /* Adds a black border */
+
+                    }}
+                    th, td {{
+                        border: 1px solid black; /* Ensures all cells have black borders */
+                        padding: 10px;
+                    }}
+                    th {{
+                        background-color: #f4f4f4;
+                        color: #333;
+                        text-align: left;
+                    }}
+                    td {{
+                        vertical-align: top;
+                    }}
+                    .remarks div {{
+                        margin-bottom: 10px;
+                    }}
+                </style>
+            </head>
+            <body>
+                <p>Dear Team,</p>
+                <p>Please find below the trip details:</p>
+                <table>
+                    <tr><th>Trip Number</th><td>{trip.tr_tripnumber}</td></tr>
+                    <tr><th>Enquiry Number</th><td>{trip.tr_enquirynumber}</td></tr>
+                    <tr><th>Consignment Number</th><td>{trip.tr_consignmentnumber}</td></tr>
+                    <tr><th>Vehicle Type</th><td>{trip.tr_vehicletype}</td></tr>
+                    <tr><th>Vehicle Number</th><td>{trip.tr_vehiclenumber}</td></tr>
+                    <tr><th>Vehicle Number</th><td>{trip.tr_vehicletype_placed}</td></tr>
+                    <tr><th>Driver Name</th><td>{trip.tr_drivername}</td></tr>
+                    <tr><th>Driver Number</th><td>{trip.tr_drivernumber}</td></tr>
+                    <tr><th>Trip Category</th><td>{trip.tr_category}</td></tr>
+                    <tr><th>Departed Location</th><td>{trip.tr_departedlocation}</td></tr>
+                    <tr><th>Departed KM</th><td>{trip.tr_departedkm}</td></tr>
+                    <tr><th>Departed Date</th><td>{trip.tr_departeddate}</td></tr>
+                    <tr><th>Loading Time</th><td>{trip.tr_loading_time}</td></tr>
+                    <tr><th>Un-Loading Time</th><td>{trip.tr_unloading_time}</td></tr>
+                    <tr><th>Reported Location</th><td>{trip.tr_reportedlocation}</td></tr>
+                    <tr><th>Reported KM</th><td>{trip.tr_reportedkm}</td></tr>
+                    <tr><th>Reported Date</th><td>{trip.tr_reporteddate}</td></tr>
+                    <tr><th>Trip Status</th><td>{trip.tc_financestatus}</td></tr>
+                    <tr><th>Attachment</th><td>{trip.tc_pod_attachment}</td></tr>
+                    <tr><th>POD Number</th><td>{trip.tc_pod}</td></tr>
+                    <tr><th>Updated By</th><td>{trip.tr_updated_by}</td></tr>
+                    <tr>
+                        <th>Remarks</th>
+                        <td class="remarks">
+                            {''.join(f'<div>{remark}</div>' for remark in trip.tr_remarks.splitlines())}
+                        </td>
+                    </tr>
+                </table>
+                <p>Regards,<br>Transport Admin</p>
+            </body>
+        </html>
+    """
+
+    send_department_email('itadmin',subject, email_body, recipient_list, email_type=1)
+
+    messages.success(request, "Trip email sent successfully.")
+    return redirect(request.META.get('HTTP_REFERER', '/'))
