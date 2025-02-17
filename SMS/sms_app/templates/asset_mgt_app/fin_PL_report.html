@@ -2,6 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
+{% load currency_format %}
 
 <body>
 <div class="col-md-1">
@@ -41,6 +42,18 @@
         </div>
 
         <div class="col-md-2">
+            <label for="customer-filter"><b>Customer Name:</b></label>
+            <select id="customer-filter" name="customer" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for customer in customers %}
+                <option value="{{ customer.cu_nameshort }}" {% if customer.cu_nameshort == customer_filter %} selected {% endif %}>
+                    {{ customer.cu_nameshort }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
             <label for="from-date"><b>From:</b></label>
             <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
         </div>
@@ -54,11 +67,11 @@
 </div>
 <br>
 <div>
-    <canvas id="myChart" width="400" height="200" class="bg-white box-shadow rounded"></canvas>
+    <canvas id="finPLChart" width="400" height="200" class="bg-white box-shadow rounded"></canvas>
 </div>
 <hr>
 
-<table id="businessmodel_PL_table" class="table table-striped table-bordered">
+<table id="finance_PL_table" class="table table-striped table-bordered">
     <thead class="thead-dark">
     <tr>
         <th>Branch</th>
@@ -74,9 +87,9 @@
     <tr>
         <td>{{ result.branch }}</td>
         <td>{{ result.unit }}</td>
-        <td>{{ result.total_income|floatformat:2 }}</td>
-        <td>{{ result.total_expense|floatformat:2 }}</td>
-        <td>{{ result.profit_loss|floatformat:2 }}</td>
+        <td>{{ result.total_income|to_lakhs }}</td>
+        <td>{{ result.total_expense|to_lakhs }}</td>
+        <td>{{ result.profit_loss|to_lakhs }}</td>
         <td>{{ result.profit_loss_percentage|floatformat:2 }}%</td>
     </tr>
     {% endfor %}
@@ -84,80 +97,43 @@
 </table>
 
 <script>
-    const labels = {{ chart_labels|safe }};
-     const incomeData = {{ income_values|safe }};
-     const expenseData = {{ expense_values|safe }};
-     const profitLossData = {{ profit_loss_values|safe }};
-     console.log("Profit/Loss Data:", profitLossData);
+     const labels1 = {{ chart_labels|safe }};
+    const incomeData1 = convertToLakhs({{ income_values|safe }});
+    const expenseData1 = convertToLakhs({{ expense_values|safe }});
+    const profitLossData1 = convertToLakhs({{ profit_loss_values|safe }});
 
+    const datasets1 = [
+        {
+            label: 'Income',
+            data: incomeData1,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+        },
+        {
+            label: 'Expenses',
+            data: expenseData1,
+            backgroundColor: 'rgba(255, 128, 0, 0.5)',
+            borderColor: 'rgba(255, 128, 0, 1)',
+            borderWidth: 1,
+        },
+        {
+            label: 'Profit/Loss',
+            data: profitLossData1,
+            backgroundColor: getProfitLossColors(profitLossData1),
+            borderColor: getProfitLossBorderColors(profitLossData1),
+            borderWidth: 1,
+        },
+    ];
 
-     const profitLossColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
-     const profitLossBorderColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
-
-     var ctx = document.getElementById('myChart').getContext('2d');
-
-     var myChart = new Chart(ctx, {
-         type: 'bar',
-         data: {
-             labels: labels,
-             datasets: [{
-                 label: 'Income (INR)',
-                 data: incomeData,
-                 backgroundColor: 'rgba(0, 123, 255, 0.5)',
-                 borderColor: 'rgba(0, 123, 255, 1)',
-                 borderWidth: 1
-             }, {
-                 label: 'Expense (INR)',
-                 data: expenseData,
-                 backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                 borderColor: 'rgba(255, 99, 132, 1)',
-                 borderWidth: 1
-             }, {
-                 label: 'Profit/Loss (INR)',
-                 data: profitLossData,
-                 backgroundColor: profitLossColors,
-                 borderColor: profitLossBorderColors,
-                 borderWidth: 1
-             }]
-         },
-         options: {
-             responsive: true,
-             plugins: {
-                 legend: {
-                     display: true,
-                     position: 'right',
-                 },
-                 datalabels: {
-                     anchor: 'end',
-                     align: 'top',
-                     formatter: (value) => value.toFixed(2),
-                     font: {
-                         size: 9,
-                     },
-                     color: '#000',
-                     backgroundColor: 'rgba(235, 233, 234, 0.8)',
-                     borderRadius: 4,
-                     padding: 3,
-                     borderWidth: 1,
-                     borderColor: '#000',
-                 }
-             },
-             scales: {
-                 y: {
-                     beginAtZero: true,
-                     suggestedMax: Math.max(...incomeData.concat(expenseData, profitLossData)) * 1.2,
-                 },
-             },
-         },
-         plugins: [ChartDataLabels]
-     });
+    // Create the chart using the reusable function
+    createBarChart('finPLChart', labels1, datasets1);
 </script>
-
 
 <script>
     // Initialize DataTable
     $(document).ready(function() {
-        $('#businessmodel_PL_table').DataTable({
+        $('#finance_PL_table').DataTable({
             scrollY: "600px",
             scrollCollapse: true,
             order: [1, 'desc'],
@@ -168,12 +144,14 @@
 
     // Add event listeners to filters
     document.getElementById('branch-filter').addEventListener('change', updateFilters);
+    document.getElementById('customer-filter').addEventListener('change', updateFilters);
     document.getElementById('businessmodel-filter').addEventListener('change', updateFilters);
     document.getElementById('from-date').addEventListener('change', updateFilters);
     document.getElementById('to-date').addEventListener('change', updateFilters);
 
     function updateFilters() {
     const branch = document.getElementById('branch-filter').value;
+    const customer = document.getElementById('customer-filter').value;
     const businessmodel = document.getElementById('businessmodel-filter').value;
     const fromDate = document.getElementById('from-date').value;
     const toDate = document.getElementById('to-date').value;
@@ -192,6 +170,11 @@
         url.searchParams.delete('businessmodel'); // Clear the parameter if "All" is selected
     }
 
+    if (customer) {
+        url.searchParams.set('customer', customer);
+    } else {
+        url.searchParams.delete('customer'); // Clear the parameter if "All" is selected
+    }
 
     if (fromDate) {
         url.searchParams.set('from_date', fromDate);

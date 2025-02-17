@@ -2,20 +2,20 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models.aggregates import Sum
 from django.contrib import messages
-from ..forms import GoodsaddForm,warehouse_EmailForm,WarehousegoodsnewForm
-from ..models import wh_excess_stock_email_status,Gatein_info,DamagereportInfo,Loadingbay_Info,Warehouse_goods_new_info
+from ..forms import GoodsaddForm,warehouse_EmailForm
+from ..models import wh_excess_stock_email_status,Gatein_info,DamagereportInfo,Loadingbay_Info
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
+
+from ..sub_models.Bay_info_mod import BayInfo
+from ..sub_models.location_info_mod import Location_info
+from ..sub_models.stacking_mod import StackingInfo
+from ..sub_models.unit_info_mod import UnitInfo
 from ..views import warehousevolme_area_calc
 from ..models import Warehouse_goods_info
 from ..views import send_department_email
 from num2words import num2words  # Import the num2words library to convert numbers to words
 from django.utils.timezone import now
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-
-
-
 
 # List goods
 @login_required(login_url='login_page')
@@ -118,9 +118,30 @@ def goods_add(request, goods_id=0):
             print("I am inside Get add Goods")
             customer_name_id = request.session.get('ses_customer_name_id')
             customer_type_id = request.session.get('ses_customer_type_id')
-            goods_form = GoodsaddForm()
+
+            # Retrieve stored values (IDs) from session
+            branch_id = request.session.get('last_warehouse_branch')
+            unit_id = request.session.get('last_warehouse_unit')
+            bay_id = request.session.get('last_warehouse_bay')
+            layer_id = request.session.get('last_stacking_layer')
+
+            initial_data = {
+            'wh_branch': Location_info.objects.get(id=branch_id) if branch_id else None,
+            'wh_unit': UnitInfo.objects.get(id=unit_id) if unit_id else None,
+            'wh_bay': BayInfo.objects.get(id=bay_id) if bay_id else None,
+            'wh_stack_layer': StackingInfo.objects.get(id=layer_id) if layer_id else None,
+            }
+            print(initial_data)
+            goods_form = GoodsaddForm(initial=initial_data)
             form_warehouse_email = warehouse_EmailForm(request.POST)
             email_count=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_email_count
+            try:
+                damage_status = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=gatein_wh_job_id).exclude(wh_damages_id=6).values_list('wh_damages_id', flat=True).first()
+
+                # If no non-6 values are found, default to 6
+                damage_status = damage_status if damage_status is not None else 6
+            except ObjectDoesNotExist:
+                damage_status = 6
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -144,14 +165,20 @@ def goods_add(request, goods_id=0):
                 'customer_type_id': customer_type_id,
                 'form_warehouse_email': form_warehouse_email,
                 'email_count': email_count,
+                'damage_status': damage_status,
+
             }
         else:
             print("I am inside get edit Goods")
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(instance=goodsinfo)
-            print('wh_job_id',wh_job_id)
             email_count=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_email_count
-            print('email_count',email_count)
+            try:
+                damage_status = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=gatein_wh_job_id).exclude(wh_damages_id=6).values_list('wh_damages_id', flat=True).first()
+                # If no non-6 values are found, default to 6
+                damage_status = damage_status if damage_status is not None else 6
+            except ObjectDoesNotExist:
+                damage_status = 6
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -172,6 +199,7 @@ def goods_add(request, goods_id=0):
                 'gatein_wh_job_id': gatein_wh_job_id,
                 'shipper_invoice': shipper_invoice,
                 'email_count': email_count,
+                'damage_status': damage_status,
             }
         return render(request, "asset_mgt_app/goods_add.html", context)
     else:
@@ -218,6 +246,12 @@ def goods_add(request, goods_id=0):
             else:
                 print("Goods Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+            # Store the selected values in session
+            request.session['last_warehouse_branch'] = goods_form.cleaned_data.get('wh_branch').id if goods_form.cleaned_data.get('wh_branch') else None
+            request.session['last_warehouse_unit'] = goods_form.cleaned_data.get('wh_unit').id if goods_form.cleaned_data.get('wh_unit') else None
+            request.session['last_warehouse_bay'] = goods_form.cleaned_data.get('wh_bay').id if goods_form.cleaned_data.get('wh_bay') else None
+            request.session['last_stacking_layer'] = goods_form.cleaned_data.get('wh_stack_layer').id if goods_form.cleaned_data.get('wh_stack_layer') else None
+
             return redirect(request.META['HTTP_REFERER'])
         else:
             print("I am inside post edit Goods")
@@ -278,7 +312,6 @@ def goods_delete(request, goods_id):
 @login_required(login_url='login_page')
 def goods_update(request):
     wh_job_id = request.session.get('ses_gatein_id_nam')
-    print('wh_job_id',wh_job_id)
     # //Update Invoice weight, qty,values
     invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('id', flat=True)
     stock_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num', flat=True)
@@ -430,92 +463,3 @@ def wh_excess_stock_email(self, *args, **kwargs):
             if email_status and email_status.email_sent:
                 email_status.email_sent = False
                 email_status.save()
-
-
-@csrf_exempt
-def save_goods_data(request):
-    # wh_job_no_base = request.session.get('ses_wh_job_no', 'WH_JOB_DEFAULT')
-    #
-    # # Fetch all available job numbers from the database
-    # available_job_nos = Warehouse_goods_new_info.objects.values_list('wh_new_job_no', flat=True).distinct()
-
-    if request.method == 'POST':
-        # Get the posted form data
-        wh_job_no = request.POST.getlist('wh_job_no[]')
-        wh_stock_no = request.POST.getlist('wh_stock_no[]')
-        pieces = request.POST.getlist('pieces[]')
-        length = request.POST.getlist('length[]')
-        width = request.POST.getlist('width[]')
-        height = request.POST.getlist('height[]')
-        weight = request.POST.getlist('weight[]')
-        checkin_time = request.POST.getlist('checkin_time[]')
-        goods_status = request.POST.getlist('goods_status[]')
-        checkout_time = request.POST.getlist('checkout_time[]')
-        job_status = request.POST.getlist('job_status[]')
-
-        response_data = {'status': 'success', 'message': 'Rows saved successfully.', 'duplicates': []}
-
-        # Loop over the lists and update Warehouse_goods_new_info objects
-        for i in range(len(wh_job_no)):
-            # wh_job_no = f"{wh_job_no_base}_{i + 1}"
-            # Check if the record exists
-            existing_goods = Warehouse_goods_new_info.objects.filter(
-                wh_new_job_no=wh_job_no[i]
-            ).first()
-
-            if existing_goods:
-                # Update the existing record
-                existing_goods.wh_new_job_no = wh_job_no[i]
-                existing_goods.wh_new_goods_pieces = pieces[i]
-                existing_goods.wh_new_goods_length = length[i]
-                existing_goods.wh_new_goods_width = width[i]
-                existing_goods.wh_new_goods_height = height[i]
-                existing_goods.wh_new_goods_weight = weight[i]
-                existing_goods.wh_new_checkin_time = checkin_time[i]
-                existing_goods.wh_new_check_in_out = goods_status[i]
-                existing_goods.wh_new_checkout_time = checkout_time[i] if checkout_time[i] else None
-                existing_goods.wh_new_goods_status = job_status[i]
-                existing_goods.save()
-            else:
-                # Generate a unique stock number
-                last_entry = Warehouse_goods_new_info.objects.last()
-                last_id = last_entry.id if last_entry else 0
-                wh_stock_num = 2000000 + last_id
-                wh_stock_num = f"Stock_{wh_stock_num}"
-
-                # Create a new entry if it doesn't exist
-                Warehouse_goods_new_info.objects.create(
-                    wh_new_job_no=wh_job_no,
-                    wh_new_qr_rand_num=wh_stock_num,  # Auto-generated stock number
-                    wh_new_goods_pieces=pieces[i],
-                    wh_new_goods_length=length[i],
-                    wh_new_goods_width=width[i],
-                    wh_new_goods_height=height[i],
-                    wh_new_goods_weight=weight[i],
-                    wh_new_checkin_time=checkin_time[i],
-                    wh_new_check_in_out=goods_status[i],
-                    wh_new_checkout_time=checkout_time[i] if checkout_time[i] else None,
-                    wh_new_goods_status=job_status[i],
-                )
-
-        # Return a success response
-        return JsonResponse(response_data)
-
-    # Render the template with available job numbers
-    return render(request, "asset_mgt_app/goods_add_new_list.html", {
-        # 'wh_job_no_base': wh_job_no_base,  # Pass the WH job number base to the template
-        # 'available_job_nos': available_job_nos,  # Pass available job numbers to the template
-    })
-
-@csrf_exempt
-def delete_goods_data(request):
-    if request.method == 'POST':
-        wh_job_no = request.POST.get('wh_job_no')
-        try:
-            # Find and delete the record in the database
-            Warehouse_goods_new_info.objects.filter(wh_new_job_no=wh_job_no).delete()
-            return JsonResponse({'status': 'success'}, status=200)
-        except Warehouse_goods_new_info.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Record not found'}, status=404)
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
-

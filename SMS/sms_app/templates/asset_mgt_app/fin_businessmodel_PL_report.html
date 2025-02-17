@@ -2,6 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
+{% load currency_format %}
 
 <body>
 <div class="col-md-1">
@@ -72,9 +73,9 @@
     <tr>
         <td>{{ result.branch }}</td>
         <td>{{ result.unit }}</td>
-        <td>{{ result.total_income|floatformat:2 }}</td>
-        <td>{{ result.total_expense|floatformat:2 }}</td>
-        <td>{{ result.profit_loss|floatformat:2 }}</td>
+        <td>{{ result.total_income|to_lakhs }}</td>
+        <td>{{ result.total_expense|to_lakhs }}</td>
+        <td>{{ result.profit_loss|to_lakhs }}</td>
         <td>{{ result.profit_loss_percentage|floatformat:2 }}%</td>
     </tr>
     {% endfor %}
@@ -83,74 +84,37 @@
 
 
 <script>
-    const labels = {{ chart_labels|safe }};
-    const incomeData = {{ income_values|safe }};
-    const expenseData = {{ expense_values|safe }};
-    const profitLossData = {{ profit_loss_values|safe }};
+     const labels1 = {{ chart_labels|safe }};
+    const incomeData1 = convertToLakhs({{ income_values|safe }});
+    const expenseData1 = convertToLakhs({{ expense_values|safe }});
+    const profitLossData1 = convertToLakhs({{ profit_loss_values|safe }});
 
-    console.log("Profit/Loss Data:", profitLossData);
-    const profitLossColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
-    const profitLossBorderColors = profitLossData.map(value => value >= 0 ? 'rgba(64, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
-
-    var ctx = document.getElementById('businessModelChart').getContext('2d');
-
-    var businessModelChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Income (INR)',
-                data: incomeData,
-                backgroundColor: 'rgba(0, 123, 255, 0.5)',
-                borderColor: 'rgba(0, 123, 255, 1)',
-                borderWidth: 1
-            }, {
-                label: 'Expense (INR)',
-                data: expenseData,
-                backgroundColor: 'rgba(255, 128, 0, 0.5)',
-                borderColor: 'rgba(255, 128, 0, 1)',
-                borderWidth: 1
-            }, {
-                label: 'Profit/Loss (INR)',
-                data: profitLossData,
-                backgroundColor: profitLossColors,
-                borderColor: profitLossBorderColors,
-                borderWidth: 1
-            }]
+    const datasets1 = [
+        {
+            label: 'Income',
+            data: incomeData1,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'right',
-                },
-                datalabels: {
-                    anchor: 'end',
-                    align: 'top',
-                    formatter: (value) => value.toFixed(2),
-                    font: {
-                        size: 9,
-                    },
-                    color: '#000',
-                    backgroundColor: 'rgba(235, 233, 234, 0.8)',
-                    borderRadius: 4,
-                    padding: 3,
-                    borderWidth: 1,
-                    borderColor: '#000',
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    suggestedMax: Math.max(...incomeData.concat(expenseData, profitLossData)) * 1.2,
-                },
-            },
+        {
+            label: 'Expenses',
+            data: expenseData1,
+            backgroundColor: 'rgba(255, 128, 0, 0.5)',
+            borderColor: 'rgba(255, 128, 0, 1)',
+            borderWidth: 1,
         },
-        plugins: [ChartDataLabels]
-    });
+        {
+            label: 'Profit/Loss',
+            data: profitLossData1,
+            backgroundColor: getProfitLossColors(profitLossData1),
+            borderColor: getProfitLossBorderColors(profitLossData1),
+            borderWidth: 1,
+        },
+    ];
+
+    createBarChart('businessModelChart', labels1, datasets1);
 </script>
-
 <script>
     // Initialize DataTable
     $(document).ready(function() {

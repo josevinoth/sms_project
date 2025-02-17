@@ -63,6 +63,12 @@ def gatein_add(request, gatein_id=0):
             request.session['ses_consignee'] = Gatein_info.objects.get(pk=gatein_id).gatein_consignee
             request.session['ses_po_num'] = wh_po_num
             request.session['ses_wh_gatein_id'] = gatein_id
+            try:
+                damage_status = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=gatein_id).exclude(wh_damages_id=6).values_list('wh_damages_id', flat=True).first()
+                # If no non-6 values are found, default to 6
+                damage_status = damage_status if damage_status is not None else 6
+            except ObjectDoesNotExist:
+                damage_status = 6
             # Gate In Status Check
             try:
                 gatein_status = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_status  # fetch gatein status
@@ -130,6 +136,7 @@ def gatein_add(request, gatein_id=0):
                 'damage_before_status':damage_before_status,
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
+                'damage_status': damage_status,
             }
         return render(request, "asset_mgt_app/gatein_add.html", context)
     else:

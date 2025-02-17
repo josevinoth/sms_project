@@ -8,7 +8,7 @@ class Loadingbay_Info(models.Model):
     lb_job_no = models.CharField(blank=False, null=False, max_length=50,default='')
     lb_job_no_id= models.ForeignKey(Gatein_info, on_delete=models.CASCADE, related_name='lb_job_no_id', db_column='lb_job_no_id',null=True,blank=True)
     lb_invoice = models.CharField(blank=False, null=False,max_length=100,default='')
-    lb_packing_list = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list')
+    lb_packing_list = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list',default=1)
     lb_eway_bill= models.CharField(blank=True, null=True, max_length=20,default='')
     lb_validity_date= models.DateTimeField(blank=True, null=True)
     lb_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6, null=True)
@@ -25,7 +25,7 @@ class Loadingbay_Info(models.Model):
     lb_mh_crane = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, related_name='lb_mh_crane',
                                     db_column='lb_mh_crane', default=2)
     lb_mh_handtrolley = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True,
-                                          related_name='lb_mh_handtrolley', db_column='lb_mh_handtrolley', default=2)
+                                          related_name='lb_mh_handtrolley', db_column='lb_mh_handtrolley', default=1)
     lb_crane_time = models.FloatField(blank=False, null=False,default=0.0)
     lb_forklift_time = models.FloatField(blank=False, null=False,default=0.0)
     lb_forklift_charges_std_l2hr = models.FloatField(blank=False, null=False,default=0.0)
@@ -38,7 +38,7 @@ class Loadingbay_Info(models.Model):
     lb_crane_charges_mod_g2hr = models.FloatField(blank=False, null=False, default=0.0)
     lb_no_of_crane= models.IntegerField(blank=False, null=False, default=0)
     lb_no_of_forklift= models.IntegerField(blank=False, null=False, default=0)
-    lb_pouch_yes = models.ForeignKey(SealedoropenedInfo, null=True,on_delete=models.CASCADE, default="")
+    lb_pouch_yes = models.ForeignKey(SealedoropenedInfo, null=True,on_delete=models.CASCADE, default=1)
 
 class Loadingbayimages_Info(models.Model):
     lbimg_job_no = models.CharField(max_length=300, null=True, default='')

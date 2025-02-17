@@ -1,0 +1,320 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+{% load currency_format %}
+
+<body>
+<div class="col-md-1">
+    <a href="{% url 'finance_reports' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+<br>
+<h2 style="color:black;">Budget-Expenses Report</h2>
+<hr>
+<div class="container-fluid">
+    <div class="row align-items-center">
+
+        <div class="col-md-2">
+            <label for="company-filter"><b>Company:</b></label>
+            <select id="company-filter" name="company" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for company in companies %}
+                <option value="{{ company }}" {% if company == selected_company %} selected {% endif %}>
+                    {{ company }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="branch-filter"><b>Branch:</b></label>
+            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for branch in branches %}
+                <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
+                    {{ branch.loc_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="unit-filter"><b>Unit:</b></label>
+            <select id="unit-filter" name="unit" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for unit in units %}
+                <option value="{{ unit }}" {% if unit == selected_unit %} selected {% endif %}>
+                    {{ unit }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="from-date"><b>From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+        </div>
+
+        <div class="col-md-3">
+            <label for="to-date"><b>To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+        </div>
+
+    </div>
+</div>
+<br>
+    <table id="income_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+            <tr>
+                <th>INCOME</th>
+                <th>Total Budget (₹)</th>
+                <th>Total Expense (₹)</th>
+                <th>Variance (₹)</th>
+                <th>Profit/Loss %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in income_summary %}
+                <tr>
+                    <td>{{ entry.expense_type }}</td>
+                    <td>{{ entry.total_budget|floatformat:2 }}</td>
+                    <td>{{ entry.total_expense|floatformat:2 }}</td>
+                    <td>{{ entry.difference|floatformat:2 }}</td>
+                    <td>{{ entry.pl_percentage|floatformat:2 }}%</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Department Expenses Table -->
+    <table id="department_exp_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+            <tr>
+                <th>DEPARTMENT EXPENSES</th>
+                <th>Total Budget (₹)</th>
+                <th>Total Expense (₹)</th>
+                <th>Variance (&#8377;)</th>
+                <th>Profit/Loss %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in department_expenses_summary %}
+                <tr>
+                    <td>{{ entry.expense_type }}</td>
+                    <td>{{ entry.total_budget|floatformat:2 }}</td>
+                    <td>{{ entry.total_expense|floatformat:2 }}</td>
+                    <td>{{ entry.difference|floatformat:2 }}</td>
+                    <td>{{ entry.pl_percentage|floatformat:2 }}%</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table id="employee_benefits_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+            <tr>
+                <th>EMPLOYEE BENEFITS</th>
+                <th>Total Budget (₹)</th>
+                <th>Total Expense (₹)</th>
+                <th>Variance (₹)</th>
+                <th>Profit/Loss %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in employee_benefits_summary %}
+                <tr>
+                    <td>{{ entry.expense_type }}</td>
+                    <td>{{ entry.total_budget|floatformat:2 }}</td>
+                    <td>{{ entry.total_expense|floatformat:2 }}</td>
+                    <td>{{ entry.difference|floatformat:2 }}</td>
+                    <td>{{ entry.pl_percentage|floatformat:2 }}%</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table id="interest_expense_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+            <tr>
+                <th>INTEREST EXPENSES</th>
+                <th>Total Budget (₹)</th>
+                <th>Total Expense (₹)</th>
+                <th>Variance (₹)</th>
+                <th>Profit/Loss %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in interest_summary %}
+                <tr>
+                    <td>{{ entry.expense_type }}</td>
+                    <td>{{ entry.total_budget|floatformat:2 }}</td>
+                    <td>{{ entry.total_expense|floatformat:2 }}</td>
+                    <td>{{ entry.difference|floatformat:2 }}</td>
+                    <td>{{ entry.pl_percentage|floatformat:2 }}%</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <table id="operational_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+            <tr>
+                <th>OPERATIONAL EXPENSES</th>
+                <th>Total Budget (₹)</th>
+                <th>Total Expense (₹)</th>
+                <th>Variance (₹)</th>
+                <th>Profit/Loss %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in operational_summary %}
+                <tr>
+                    <td>{{ entry.expense_type }}</td>
+                    <td>{{ entry.total_budget|floatformat:2 }}</td>
+                    <td>{{ entry.total_expense|floatformat:2 }}</td>
+                    <td>{{ entry.difference|floatformat:2 }}</td>
+                    <td>{{ entry.pl_percentage|floatformat:2 }}%</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <table id="non_operational_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+            <tr>
+                <th>NON-OPERATIONAL EXPENSES</th>
+                <th>Total Budget (₹)</th>
+                <th>Total Expense (₹)</th>
+                <th>Difference (₹)</th>
+                <th>Profit/Loss %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in non_operational_summary %}
+                <tr>
+                    <td>{{ entry.expense_type }}</td>
+                    <td>{{ entry.total_budget|floatformat:2 }}</td>
+                    <td>{{ entry.total_expense|floatformat:2 }}</td>
+                    <td>{{ entry.difference|floatformat:2 }}</td>
+                    <td>{{ entry.pl_percentage|floatformat:2 }}%</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<h3>Total Budget: ₹{{ total_budget|floatformat:2 }}</h3>
+<h3>Total Expense: ₹{{ total_expense|floatformat:2 }}</h3>
+<h3>Profit/Loss: ₹{{ total_profit_loss|floatformat:2 }}</h3>
+<h3>P/L %: {{ total_pl_percentage|floatformat:2 }}%</h3>
+
+<script>
+    // Initialize DataTable
+    $(document).ready(function() {
+        $('#income_table').DataTable({
+            scrollY: "600px",
+            scrollCollapse: true,
+            order: [1, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+
+     $(document).ready(function() {
+        $('#department_exp_table').DataTable({
+            scrollY: "600px",
+            scrollCollapse: true,
+            order: [1, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+
+     $(document).ready(function() {
+        $('#employee_benefits_table').DataTable({
+            scrollY: "600px",
+            scrollCollapse: true,
+            order: [1, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+
+     $(document).ready(function() {
+        $('#interest_expense_table').DataTable({
+            scrollY: "600px",
+            scrollCollapse: true,
+            order: [1, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+
+     $(document).ready(function() {
+        $('#operational_table').DataTable({
+            scrollY: "600px",
+            scrollCollapse: true,
+            order: [1, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+     $(document).ready(function() {
+        $('#non_operational_table').DataTable({
+            scrollY: "600px",
+            scrollCollapse: true,
+            order: [1, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+
+    document.getElementById('branch-filter').addEventListener('change', updateFilters);
+    document.getElementById('unit-filter').addEventListener('change', updateFilters);
+    document.getElementById('company-filter').addEventListener('change', updateFilters);
+    document.getElementById('from-date').addEventListener('change', updateFilters);
+    document.getElementById('to-date').addEventListener('change', updateFilters);
+
+    function updateFilters() {
+    const branch = document.getElementById('branch-filter').value;
+    const unit = document.getElementById('unit-filter').value;
+    const company = document.getElementById('company-filter').value;
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const url = new URL(window.location.href);
+
+    if (branch) {
+        url.searchParams.set('branch', branch);
+    } else {
+        url.searchParams.delete('branch');
+    }
+
+    if (unit) {
+        url.searchParams.set('unit', unit);
+    } else {
+        url.searchParams.delete('unit');
+    }
+
+    if (company) {
+        url.searchParams.set('company', company);
+    } else {
+        url.searchParams.delete('company');
+    }
+
+
+    if (fromDate) {
+        url.searchParams.set('from_date', fromDate);
+    } else {
+        url.searchParams.delete('from_date');
+    }
+
+    if (toDate) {
+        url.searchParams.set('to_date', toDate);
+    } else {
+        url.searchParams.delete('to_date');
+    }
+
+    console.log(url.toString());
+    window.location.href = url.toString();
+}
+</script>
+{% endblock content %}
+
