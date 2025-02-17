@@ -1,0 +1,159 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Gate Meeting List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'gate_meeting_add' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table id="gate_meeting_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>ID</th>
+            <th>Location</th>
+            <th>Unit</th>
+            <th>Date</th>
+            <th>Previous night security monitoring</th>
+            <th>Previous night security monitoring remark</th>
+            <th>Any incident of previous day reported to management</th>
+            <th>Any incident of previous day reported to management remark</th>
+            <th>Previous day WH closing checklist</th>
+            <th>Current day WH opening checklist</th>
+            <th>WMS updation 100% till yesterday</th>
+            <th>DSR sent to all customers yesterday</th>
+            <th>Stock more than 3 days and 5 days informed to Customer</th>
+            <th>Pre-alerts shared with customers 100% for all inbound and outbound</th>
+            <th>Acknowledgement for Inbound provided and documents scanned</th>
+            <th>Acknowledgement for Outbound received and documents scanned</th>
+            <th>Cleanliness of warehouse</th>
+            <th>Facility walk around - as per checklist provided</th>
+            <th>Space Issues if any</th>
+            <th>Space Issues if any remark</th>
+            <th>HPTE condition</th>
+            <th>Fork Lift check</th>
+            <th>Weightment scale condition</th>
+            <th>Fire Extinguisher</th>
+            <th>CCTV condition</th>
+            <th>Lights condition</th>
+            <th>UPS Invertor condition</th>
+            <th>Genset condition</th>
+            <th>Stock of Diesel for Genset as per Minimum order level </th>
+            <th>Security attendance</th>
+            <th>Staff Attendance</th>
+            <th>Labour Attendance</th>
+            <th>Todays crucial shipment to be handled</th>
+            <th>Todays crucial shipment to be handled remark</th>
+            <th>Yesterdays pending</th>
+            <th>Yesterdays pending remark</th>
+            <th>Customer complaints escalations received</th>
+            <th>Customer complaints escalations received remark</th>
+            <th>Action for today regarding Audit score improvement plan</th>
+            <th>Action for today regarding Audit score improvement plan remark</th>
+            <th>Floor pallets Stock Number of pallets</th>
+            <th>Any Approval from DGM pending</th>
+            <th>Any Approval from DGM pending remark</th>
+            <th>Pending task to be completed today</th>
+            <th>Pending task to be completed today remark</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for gatemeet in gate_meet_list %}
+        <tr>
+            <td> {{gatemeet.id}}</td>
+            <td> {{gatemeet.gm_branch}}</td>
+            <td> {{gatemeet.gm_unit}}</td>
+            <td> {{gatemeet.gm_date}}</td>
+            <td> {{gatemeet.gm_Previous_night_security}}</td>
+            <td> {{gatemeet.gm_Previous_night_security_remark}}</td>
+            <td> {{gatemeet.gm_Any_incident_of_previous_day}}</td>
+            <td> {{gatemeet.gm_Any_incident_of_previous_day_remark}}</td>
+            <td> {{gatemeet.gm_Previous_day_WH_closing_checklist}}</td>
+            <td> {{gatemeet.gm_Current_day_WH_opening_checklist}}</td>
+            <td> {{gatemeet.gm_WMS_updation_till_yesterday}}</td>
+            <td> {{gatemeet.gm_DSR_sent_to_all_customers_yesterday}}</td>
+            <td> {{gatemeet.gm_Stock_informed_to_Customer}}</td>
+            <td> {{gatemeet.gm_Pre_alerts_customers_inbound_outbound}}</td>
+            <td> {{gatemeet.gm_Inbound_documents_scanned}}</td>
+            <td> {{gatemeet.gm_Outbound_documents_scanned}}</td>
+            <td> {{gatemeet.gm_Cleanliness_of_warehouse}}</td>
+            <td> {{gatemeet.gm_Facility_checklist_provided}}</td>
+            <td> {{gatemeet.gm_Space_issues}}</td>
+            <td> {{gatemeet.gm_Space_issues_remark}}</td>
+            <td> {{gatemeet.gm_HPTE_condition}}</td>
+            <td> {{gatemeet.gm_Fork_Lift_check}}</td>
+            <td> {{gatemeet.gm_Weight_scale_condition}}</td>
+            <td> {{gatemeet.gm_Fire_Extinguisher}}</td>
+            <td> {{gatemeet.gm_CCTV_condition}}</td>
+            <td> {{gatemeet.gm_Lights_condition}}</td>
+            <td> {{gatemeet.gm_UPS_invertor_condition}}</td>
+            <td> {{gatemeet.gm_Genset_condition}}</td>
+            <td> {{gatemeet.gm_Stock_of_Diesel_Genset}}</td>
+            <td> {{gatemeet.gm_Security_attendance}}</td>
+            <td> {{gatemeet.gm_Staff_attendance}}</td>
+            <td> {{gatemeet.gm_Labour_attendance}}</td>
+            <td> {{gatemeet.gm_Todays_crucial_shipment_handled}}</td>
+            <td> {{gatemeet.gm_Todays_crucial_shipment_handled_remark}}</td>
+            <td> {{gatemeet.gm_Yesterdays_pending}}</td>
+            <td> {{gatemeet.gm_Yesterdays_pending_remark}}</td>
+            <td> {{gatemeet.gm_Customer_complaints_received}}</td>
+            <td> {{gatemeet.gm_Customer_complaints_received_remark}}</td>
+            <td> {{gatemeet.gm_Audit_score_plan}}</td>
+            <td> {{gatemeet.gm_Audit_score_plan_remark}}</td>
+            <td> {{gatemeet.gm_Floor_pallets_Stock}}</td>
+            <td> {{gatemeet.gm_Approval_DGM_pending}}</td>
+            <td> {{gatemeet.gm_Approval_DGM_pending_remark}}</td>
+            <td> {{gatemeet.gm_Pending_task_today}}</td>
+            <td> {{gatemeet.gm_Pending_task_today_remark}}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'gate_meeting_update' gatemeet.id %}" >
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'gate_meeting_delete' gatemeet.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt" ></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#gate_meeting_list').DataTable({
+        scrollY: "800px",
+        scrollX: true,
+        scrollCollapse: true,
+        order: [0, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    });
+} );
+</script>
+
+{% endblock content %}

@@ -192,3 +192,6 @@ from .sub_models.wh_excess_stock_email_status import wh_excess_stock_email_statu
 from .sub_models.dsr_info_mod import DsrInfo
 from .sub_models.consignmentgoods_new_mod import consignmentsgoods_new_info
 from .sub_models.transport_procurement_mod import Vehicle_procurementInfo
+from .sub_models.goodnotgood_mod import GoodnotgoodInfo
+from .sub_models.gate_meeting_mod import Gatemeetinginfo
+from .sub_models.opsauditscorecard_mod import OpsauditscorecardInfo
