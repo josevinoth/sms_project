@@ -29,6 +29,18 @@
         </div>
 
         <div class="col-md-2">
+            <label for="unit-filter"><b>Unit:</b></label>
+            <select id="unit-filter" name="unit" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for unit in units %}
+                <option value="{{ unit }}" {% if unit == unit_filter %} selected {% endif %}>
+                    {{ unit }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
             <label for="company-filter"><b>Company Name:</b></label>
             <select id="company-filter" name="company" class="form-control box-shadow rounded">
                 <option value="">All</option>
@@ -139,12 +151,14 @@
     });
 
     document.getElementById('branch-filter').addEventListener('change', updateFilters);
+    document.getElementById('unit-filter').addEventListener('change', updateFilters);
 document.getElementById('company-filter').addEventListener('change', updateFilters);
 document.getElementById('from-date').addEventListener('change', updateFilters);
 document.getElementById('to-date').addEventListener('change', updateFilters);
 
 function updateFilters() {
     const branch = document.getElementById('branch-filter').value;
+    const unit = document.getElementById('unit-filter').value;
     const company = document.getElementById('company-filter').value;
     const fromDate = document.getElementById('from-date').value;
     const toDate = document.getElementById('to-date').value;
@@ -154,6 +168,12 @@ function updateFilters() {
         url.searchParams.set('branch', branch);
     } else {
         url.searchParams.delete('branch');
+    }
+
+    if (unit) {
+        url.searchParams.set('unit', unit);
+    } else {
+        url.searchParams.delete('unit');
     }
 
     if (company) {  // FIXED: Corrected variable name

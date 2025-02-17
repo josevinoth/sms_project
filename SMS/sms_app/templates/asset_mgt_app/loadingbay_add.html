@@ -90,7 +90,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipper Invoice Currency</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_invoice_currency id="lb_stock_invoice_currency" class="form-control" onchange="inv_curr_change()" %}
+									{% render_field loadingbay_form.lb_stock_invoice_currency id="lb_stock_invoice_currency" class="form-control" onchange="updateCurrencyConversion()" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -285,8 +285,13 @@
         var damage_after_status_id='{{damage_after_status}}';
         var warehousein_status_id='{{warehousein_status}}';
         var damage_status='{{damage_status}}';
+        var currency= document.getElementById("lb_stock_invoice_currency").value
         document.getElementById("lb_invoice").value='{{shipper_invoice}}'
-
+		if (currency=="")
+		{
+			document.getElementById("lb_stock_invoice_currency").value=1;
+			updateCurrencyConversion();
+		}
         document.getElementById("lb_crane_charges_std_l2hr").value='{{crane_1st_2hr}}'
         document.getElementById("lb_crane_charges_std_g2hr").value='{{crane_nxt_2hr}}'
         document.getElementById("lb_forklift_charges_std_l2hr").value='{{forklift_1st_2hr}}'
@@ -409,23 +414,25 @@
 </script>
 <!--Fetch Units-->
 <script>
-	$("#lb_stock_invoice_currency").change(function () {
-       var url = $("#loadingbay_add").attr("data-currency_value-url");
-       var currency_type = $(this).val();
-       $.ajax({
-         url: url,
-         data: {
-           'currency_type': currency_type,
-         },
-         success: function (data) {
-             conversion_rate_val=JSON.parse(data)["currency_value"]
-             document.getElementById("lb_stock_currency_con").value=conversion_rate_val;
-             var invoice_value_val=document.getElementById("lb_stock_invoice_value").value;
-             var amount_INR_val=(invoice_value_val*conversion_rate_val).toFixed(2)
-             document.getElementById("lb_stock_amount_in").value=amount_INR_val
-         }
-       });
-     });
+	function updateCurrencyConversion() {
+    var url = $("#loadingbay_add").attr("data-currency_value-url");
+    var currency_type = $("#lb_stock_invoice_currency").val();
+
+    $.ajax({
+        url: url,
+        data: {
+            'currency_type': currency_type,
+        },
+        success: function (data) {
+            var conversion_rate_val = JSON.parse(data)["currency_value"];
+            document.getElementById("lb_stock_currency_con").value = conversion_rate_val;
+
+            var invoice_value_val = document.getElementById("lb_stock_invoice_value").value;
+            var amount_INR_val = (invoice_value_val * conversion_rate_val).toFixed(2);
+            document.getElementById("lb_stock_amount_in").value = amount_INR_val;
+        }
+    });
+}
 </script>
 <script>
 	function lb_status_change() {
