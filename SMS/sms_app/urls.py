@@ -602,6 +602,15 @@ urlpatterns = [
     path('vehicle_procurement_update/<int:vp_id>/', views.vehicle_procurement_add, name='vehicle_procurement_update'),
     path('vehicle_procurement_delete/<int:vp_id>/', views.vehicle_procurement_delete,name='vehicle_procurement_delete'),
     path('stock_value_send_email_view/', views.stock_value_send_email_view, name='stock_value_send_email_view'),
+    path('gate_meeting_add/', views.gatemeeting_add, name='gate_meeting_add'),
+    path('gate_meeting_list/', views.gatemeeting_list, name='gate_meeting_list'),
+    path('gate_meeting_update/<int:gate_meet_id>/', views.gatemeeting_add, name='gate_meeting_update'),
+    path('gate_meeting_delete/<int:gate_meet_id>/', views.gatemeeting_delete, name='gate_meeting_delete'),
+    path('gate_meeting_send_email/', views.gate_meeting_send_email, name='gate_meeting_send_email'),
+    path('ops_audit_score_add/', views.opsauditscorecard_add, name='ops_audit_score_add'),
+    path('ops_audit_score_list/', views.opsauditscorecard_list, name='ops_audit_score_list'),
+    path('ops_audit_score_update/<int:ops_audit_id>/', views.opsauditscorecard_add, name='ops_audit_score_update'),
+    path('ops_audit_score_delete/<int:ops_audit_id>/', views.opsauditscorecard_delete, name='ops_audit_score_delete'),
 ]
 
 
