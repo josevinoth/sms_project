@@ -448,11 +448,12 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
         # subject = request.POST.get('subject')
         message = request.POST.get('message')
         customer_name_1=customer_name
-        print(customer_name_1)
         if customer_name_1==None:
             customer_name = request.POST.get('ds_customer')
+            customer_id=False
         else:
             customer_name=customer_name
+            customer_id = True
         recipient_list = [email.strip() for email in recipient.split(',')]
 
         wb = openpyxl.Workbook()
@@ -511,9 +512,14 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
 
             # Step 2: In the loop, replace the date with timezone-free date objects
             for stock_value in stock_values:
-                date_of_arrival = stock_value.wh_gate_injob_no_id.gatein_arrival_date
-                if date_of_arrival:
-                    date_of_arrival = date_of_arrival.replace(tzinfo=None).date()  # Convert to date object
+                date_of_arrival = None  # Default value
+
+                if stock_value.wh_gate_injob_no_id:  # Check if exists
+                    date_of_arrival = getattr(stock_value.wh_gate_injob_no_id, 'gatein_arrival_date', None)
+                    if date_of_arrival:
+                        date_of_arrival = date_of_arrival.replace(tzinfo=None).date()
+                    else:
+                        date_of_arrival = ""
 
                 checkin_weight = stock_value.wh_gross_weight if stock_value.wh_gross_weight else 0
                 dispatch_qty = stock_value.wh_dispatch_id.dispatch_total_goods if stock_value.wh_dispatch_id and stock_value.wh_dispatch_id.dispatch_total_goods else 0
@@ -614,8 +620,10 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             top=Side(style='thin'),
             bottom=Side(style='thin'),
         )
-        customer_name = CustomerInfo.objects.filter(cu_name=customer_name).first()
-
+        if str(customer_name).isdigit():
+            customer_name = CustomerInfo.objects.get(pk=int(customer_name)).cu_name
+        else:
+            customer_name = CustomerInfo.objects.filter(cu_name=customer_name).first()
         file_name = str(customer_name)+'_Stock Value_report.xlsx'  # Set your desired file name
         # Apply formatting to the first row
         for cell in sheet[1]:
