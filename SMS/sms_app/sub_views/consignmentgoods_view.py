@@ -115,3 +115,4 @@ def consignmentgoods_back(request):
     enquirynote_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquirynote_num).id
     return redirect('/SMS/consignmentdetail_nav/' + str(enquirynote_id))
     # return redirect('/SMS/consignmentgoods_nav/' + str(consignmentgoods_id_val))
+
