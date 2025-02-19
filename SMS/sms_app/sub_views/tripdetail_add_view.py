@@ -243,6 +243,7 @@ def load_vehicle_details(request):
 
 @login_required(login_url='login_page')
 def trip_email(request):
+    recipient = request.POST.get('recipient')
     tripdetail_id = request.session.get('ses_tripdetail_id')
 
     if not tripdetail_id:
@@ -251,9 +252,7 @@ def trip_email(request):
 
     trip = TripdetailInfo.objects.get(pk=tripdetail_id)
 
-    recipient_list = [
-        'd.udhayakumar16@gmail.com',
-    ]
+    recipient_list = [email.strip() for email in recipient.split(',')]
 
     subject = f"Trip {trip.tr_tripnumber} - Update"
 

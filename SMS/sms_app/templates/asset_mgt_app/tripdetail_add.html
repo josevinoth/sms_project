@@ -8,17 +8,32 @@
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 				<div class="row">
-					<div class="col-10 card-header text-center">
+					<div class="col-8 card-header text-center">
 						<h3>Add/Update Trip Detail</h3>
 					</div>
-					<div class="col-2 card-header text-center">
-						<br>
+					<div class="col-1"></div>
+						<div class="col-3">
+							<button id="email_alert" type="button" onclick="email_message_fn()" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target=".bd-example-modal-lg">
+								<i class="fas fa-envelope-square"></i> Email Alert <span class="badge badge-danger"></span>
+							</button>
+							<!-- Modal Structure -->
+							<div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+								<div class="modal-dialog modal-lg" role="document">
+									<div class="modal-content">
+										<div class="modal-header bg-info">
+											<h5 class="modal-title text-center" id="sendEmailModalLabel">Email Alert </h5>
+											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+												<span aria-hidden="true">&times;</span>
+											</button>
+										</div>
+										<div class="modal-body text-dark">
+											{% include "asset_mgt_app/trip_send_email.html" %}
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
 
-						<form id="tripEmailForm" action="{% url 'trip_email' %}" method="POST">
-							{% csrf_token %}
-							<button type="submit" class="btn btn-primary" id="sendEmailBtn">Send Trip Email</button>
-						</form>
-					</div>
 				</div>
 				<div class="card-body bg-light" >
 					<form method="POST" action="" id="tripdetail_add" enctype="multipart/form-data">
