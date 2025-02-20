@@ -1,4 +1,3 @@
-
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
@@ -7,13 +6,8 @@
 <div class="d-flex justify-content-between ">
 	<form id="tripEmailForm" action="{% url 'gate_meeting_send_email' %}" method="POST">
 		{% csrf_token %}
-		<button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn"><i class="fas fa-envelope-square"></i> Send Gate Meeting Email</button>
+		<button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn"><i class="fas fa-envelope-square"></i> Send Gate Meeting Email <span class="badge badge-danger">{{gate_meet_email_count}}</span></button>
 	</form>
-
-	<button id="email_alert" type="button" onclick="email_message_fn()" class="btn btn-warning btn-lg" data-toggle="modal" data-target=".bd-example-modal-lg">
-		<i class="fas fa-envelope-square"></i> Email Count
-		<span id="email_count" class="badge badge-danger">{{ gate.gm_email_count }}</span>
-	</button>
 
 </div>
 <br>
@@ -293,14 +287,27 @@
 </form>
 
 <script>
-	function updateEmailCount(newCount) {
-    document.getElementById("email_count").innerText = newCount;
-}
-
-	$(document).ready(function() {
-		status_update();
-		document.getElementById("ar_updated_by").value = '{{ user_id }}';
-	});
+	$("#gm_branch").change(function () {
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#gm_unit').removeClass('disable_a_href');
+             $("#gm_unit").empty();
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#gm_unit').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#gm_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
 </script>
 
 {% endblock content %}

@@ -611,6 +611,7 @@ urlpatterns = [
     path('ops_audit_score_list/', views.opsauditscorecard_list, name='ops_audit_score_list'),
     path('ops_audit_score_update/<int:ops_audit_id>/', views.opsauditscorecard_add, name='ops_audit_score_update'),
     path('ops_audit_score_delete/<int:ops_audit_id>/', views.opsauditscorecard_delete, name='ops_audit_score_delete'),
+    path('send_ops_audit_email/', views.send_ops_audit_email, name='send_ops_audit_email'),
 ]
 
 

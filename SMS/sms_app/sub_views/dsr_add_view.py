@@ -100,17 +100,19 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
             for stock_value in stock_values:
                 date_of_arrival = stock_value.wh_gate_injob_no_id.gatein_arrival_date
                 if date_of_arrival:
-                    date_of_arrival = date_of_arrival.replace(tzinfo=None).date()  # Convert to date object
+                    date_of_arrival = date_of_arrival.replace(tzinfo=None)  # Keep both date and time
 
                 row = [
                     stock_value.wh_job_no,  # Index 0
                     stock_value.wh_qr_rand_num,  # Index 1
                     str(stock_value.wh_customer_name),  # Index 2
                     date_of_arrival if date_of_arrival else '',  # Index 3: Only Date, no time
-                    stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time.replace(tzinfo=None).date()
+                    stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time.replace(tzinfo=None)
                     if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time else '',
-                    stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time.replace(tzinfo=None).date()
+
+                    stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time.replace(tzinfo=None)
                     if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time else '',
+
                     # Index 6: gatein_transporter
                     getattr(stock_value.wh_gate_injob_no_id, 'gatein_transporter', ''),
 

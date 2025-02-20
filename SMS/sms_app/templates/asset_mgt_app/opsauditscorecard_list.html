@@ -26,6 +26,20 @@
     <table id="opsauditscore_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th></th>
+            <th><input type="text" class="form-control" placeholder="Search Location"></th>
+            <th><input type="text" class="form-control" placeholder="Search Unit"></th>
+            <th><input type="text" class="form-control" placeholder="Search Date"></th>
+            <th><input type="text" class="form-control" placeholder="Search Audit Start Date"></th>
+            <th><input type="text" class="form-control" placeholder="Search Audit End Date"></th>
+            <th><input type="text" class="form-control" placeholder="Search Weighing Scale"></th>
+            <th><input type="text" class="form-control" placeholder="Search Calibration"></th>
+            <th><input type="text" class="form-control" placeholder="Search AMC contracts"></th>
+            <th><input type="text" class="form-control" placeholder="Search CCTV availability"></th>
+            <th></th>
+            <th></th>
+        </tr>
+        <tr>
             <th>ID</th>
             <th>Location</th>
             <th>Unit</th>
@@ -82,6 +96,11 @@
             'copy', 'csv', 'excel', 'print'
         ]
     });
+    // Apply column-wise search
+        $('#opsauditscore_list thead input').on('keyup change', function () {
+            let colIdx = $(this).parent().index();
+            table.column(colIdx).search(this.value).draw();
+        });
 } );
 </script>
 

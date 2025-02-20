@@ -22,9 +22,11 @@ def gatemeeting_add(request,gate_meet_id=0):
             print("I am inside get edit gatemeeting")
             gatemeet = Gatemeetinginfo.objects.get(pk=gate_meet_id)
             form = GatemeetingaddForm(instance=gatemeet)
+            gate_meet_email_count = Gatemeetinginfo.objects.get(pk=gate_meet_id).gm_email_count
             context = {
                 'form': form,
                 'first_name': first_name,
+                'gate_meet_email_count': gate_meet_email_count,
             }
         return render(request, "asset_mgt_app/gate_meeting_add.html", context)
 
@@ -74,6 +76,7 @@ def gate_meeting_send_email(request):
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
     gate = Gatemeetinginfo.objects.get(pk=gate_meet_id)
+    gate_meet_email_count = Gatemeetinginfo.objects.get(pk=gate_meet_id).gm_email_count
 
     recipient_list = [
         'hariharasudhanh968@gmail.com',
@@ -169,17 +172,16 @@ def gate_meeting_send_email(request):
 
                     <br>
 
-                    <p>Regards,<br><b>Gate Meeting Admin</b></p>
+                    <p>Regards,<br><b>gate Meeting Admin</b></p>
                 </body>
             </html>
         """
 
     send_department_email('itadmin',subject, email_body, recipient_list, email_type=1)
 
-    messages.success(request, "Gate Meeting email sent successfully.")
-    gate.gm_email_count += 1
-    gate.save()
+    gate_meet_email_count = gate_meet_email_count + 1
+    Gatemeetinginfo.objects.filter(pk=gate_meet_id).update(gm_email_count=gate_meet_email_count)
 
-    messages.success(request, f"Gate Meeting email sent successfully. (Total sent: {gate.gm_email_count})")
+    messages.success(request, "Gate Meeting email sent successfully.")
 
     return redirect(request.META.get('HTTP_REFERER', '/'))
