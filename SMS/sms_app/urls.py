@@ -183,6 +183,7 @@ urlpatterns = [
     path('tripdetail_update/<int:tripdetail_id>/', views.tripdetail_add, name='tripdetail_update'),  # Update tripdetail
     path('tripdetail_nav/<int:tripdetail_id>/', views.tripdetail_nav, name='tripdetail_nav'),  # Navigate tripdetail
     path('tripdetail_delete/<int:tripdetail_id>/', views.tripdetail_delete, name='tripdetail_delete'),  # Delete tripdetail
+    path('trip_email/', views.trip_email, name='trip_email'),
     path('movementtype_list/', views.movementtype_list, name='movementtype_list'),  # List movementtype,
     path('movementtype_insert', views.movementtype_add, name='movementtype_insert'),  # Add movementtype
     path('movementtype_update/<int:movementtype_id>/', views.movementtype_add, name='movementtype_update'),  # Update movementtype
@@ -580,8 +581,6 @@ urlpatterns = [
     path('salescalls_details/', views.salescalls_details, name='salescalls_details'),
     path('target_actuals/', views.targets_actuals, name='targets_actuals'),
     path('warehouse_jobs_add/', views.warehouse_jobs_add, name='warehouse_jobs_add'),
-    path('save_consignment_data/', views.save_consignment_data, name='save_consignment_data'),
-    path('delete_consignment_data/',views.delete_consignment_data, name='delete_consignment_data'),
     path('salesperson_wise_chart/', views.salesperson_wise_chart, name='salesperson_wise_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
     path('business_won_chart/', views.businesswon_chart, name='businesswon_chart'),
@@ -611,6 +610,10 @@ urlpatterns = [
     path('ops_audit_score_list/', views.opsauditscorecard_list, name='ops_audit_score_list'),
     path('ops_audit_score_update/<int:ops_audit_id>/', views.opsauditscorecard_add, name='ops_audit_score_update'),
     path('ops_audit_score_delete/<int:ops_audit_id>/', views.opsauditscorecard_delete, name='ops_audit_score_delete'),
+    path('consignment_goods/add/', views.consignment_goods_add, name='consignment_goods_add'),
+    path('consignment_goods/add/<int:goods_id>/', views.consignment_goods_add, name='consignment_goods_edit'),
+    path('consignment_goods/list/', views.consignment_goods_list, name='consignment_goods_list'),
+    path('consignment_goods/delete/<int:goods_id>/', views.consignment_goods_delete, name='consignment_goods_delete'),
     path('send_ops_audit_email/', views.send_ops_audit_email, name='send_ops_audit_email'),
 ]
 
