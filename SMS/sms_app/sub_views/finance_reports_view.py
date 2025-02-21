@@ -8,7 +8,6 @@ from datetime import datetime
 from ..models import Warehouse_goods_info,ExpenseExtinfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,ExpenseTypeInfo,Ar_Info,BudgetInfo,ExpenseInfo
 
 
-
 def finance_reports(request):
     first_name = request.session.get('first_name')
     context = {
@@ -378,7 +377,6 @@ def customerwise_PL(request):
     if selected_businessmodel:
         business_summary = business_summary.filter(wh_customer_type__tb_trbusinesstype=selected_businessmodel)
 
-
     chart_summary = Warehouse_goods_info.objects.values(
         'wh_customer_type__tb_trbusinesstype'  # Group by customer type
     ).annotate(
@@ -536,16 +534,21 @@ def expenses_report(request):
     to_date = request.GET.get('to_date')
 
     branches = Location_info.objects.all()
+    units = UnitInfo.objects.values_list('unit_name', flat=True).distinct()
     companies = Business_Sol_info.objects.values_list('bvm_business', flat=True).distinct()
     expense_summary = ExpenseExtinfo.objects.all()
 
     if branch_filter:
+        units = expense_summary.filter(exp_ext_branch__loc_name=branch_filter).values_list('exp_ext_unit__unit_name', flat=True).distinct()
         expense_summary = expense_summary.filter(exp_ext_branch__loc_name=branch_filter)
+
     if unit_filter:
         expense_summary = expense_summary.filter(exp_ext_unit__unit_name=unit_filter)
+
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
         expense_summary = expense_summary.filter(exp_ext_updated_on__gte=from_date)
+
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
         expense_summary = expense_summary.filter(exp_ext_updated_on__lte=to_date)
@@ -566,8 +569,10 @@ def expenses_report(request):
     context = {
         'first_name': first_name,
         'branches': branches,
+        'units': units,
         'companies': companies,
         'branch_filter': branch_filter,
+        'unit_filter': unit_filter,
         'company_filter': company_filter,
         'from_date': request.GET.get('from_date', ''),
         'to_date': request.GET.get('to_date', ''),
@@ -703,11 +708,11 @@ INCOME_CATEGORIES = {
     "Forklift Handling Charges": "bf_Forklift_Handling_Charges",
     "Crane Handling Charges": "bf_Crane_Handling_Charges",
     "Handling Charges": "bf_Handling_Charges",
-    "Packing Expenses": "bf_Packing_Charges",
+    "Packing - Consumables & Spares": "bf_Packing_Charges",
     "Warehouse Handling Charges": "bf_Warehouse_Handling_Charges",
     "Warehouse Loading Charges": "bf_Warehouse_Loading_Charges",
-    "Warehouse Storage Charges": "bf_Warehouse_Storage_Charges",
-    "Warehouse Unloading Charges": "bf_Warehouse_Unloading_Charges",
+    "Storage Expenses": "bf_Warehouse_Storage_Charges",
+    "Unloading Expenses":"bf_Warehouse_Unloading_Charges",
 }
 DEPARTMENT_EXPENSES_CATEGORIES = {
     "Audit Fee": "bf_audit_fees",
@@ -730,7 +735,6 @@ EMPLOYEE_BENEFITS_CATEGORIES = {
     "EPF Admin Charges Corp Staff": "bf_EPF_admin_charges_corp_staff",
     "Gratuity Corp Staff": "bf_gratuity_corp_staff",
     "Salaries Wages Corp Staff": "bf_salaries_wages_corp_staff",
-
     "Dept Staff": "bf_dept_staff",
     "Bonus Staff": "bf_bonus_staff",
     "EDLI Contribution Staff": "bf_EDLI_contribution_staff",
@@ -753,7 +757,6 @@ OPERATIONAL_EXPENSES_CATEGORIES = {
     "Rent - Premises Expenses": "bf_rent_premises",
     "Security Service Charges Expenses": "bf_security_service_charges",
     "Manpower Supply Expenses": "bf_manpower_supply_expenses",
-
     "Operational Expenses Variable": "bf_variable",
     "Crane Handling Expenses": "bf_crane_handling_expenses",
     "Diesel Expenses - Forklift": "bf_diesel_expenses_forklift",
@@ -789,74 +792,210 @@ NON_OPERATIONAL_EXPENSES_CATEGORIES = {
 }
 
 BUDGET_FIELD_MAPPING = {
-
-    "Insurance Car": "bf_insurance_car",
-    "Interest On Statutory Dues": "bf_interest_on_statutory_dues",
-    "Subscription Membership": "bf_subscription_membership",
-
-    "Interest on Borrowings": "bf_interest_on_borrowings",
-    "Interest on Other Loans ": "bf_interest_on_other_loans",
-    "Manpower Supply Expenses": "bf_manpower_supply_expenses",
-
-    "Rent - Plant & Machinery Expenses":"bf_rent_plant_machinery",
-
-    "System AMC Expenses": "bf_system_amc",
-
-    "Internet & Data Card Expenses": "bf_internet_data_card_expenses",
-    "Professional & Legal Charges": "bf_professional_legal_charges",
     "TV Expense":None,
     "Salary Expenses":None,
-    "Packing - Consumables & Spares": "bf_Packing_Charges",
     "Transportation Expenses":None,
-    "Storage Expenses": "bf_Warehouse_Storage_Charges",
-    "Unloading Expenses":"bf_Warehouse_Unloading_Charges",
     "Air Conditioning Expenses":None,
 
+    "Airport Handling Charges": "bf_Airport_Handling_Charges",
+    "Forklift Handling Charges": "bf_Forklift_Handling_Charges",
+    "Crane Handling Charges": "bf_Crane_Handling_Charges",
+    "Handling Charges": "bf_Handling_Charges",
+    "Packing - Consumables & Spares": "bf_Packing_Charges",
+    "Warehouse Handling Charges": "bf_Warehouse_Handling_Charges",
+    "Warehouse Loading Charges": "bf_Warehouse_Loading_Charges",
+    "Storage Expenses": "bf_Warehouse_Storage_Charges",
+    "Unloading Expenses": "bf_Warehouse_Unloading_Charges",
+    "Audit Fee": "bf_audit_fees",
+    "Bad Debts": "bf_bad_debts",
+    "Bank Charges": "bf_bank_charges",
+    "Consultancy Charges": "bf_consultancy_charges",
+    "Celebration Expenses": "bf_celebration_expenses",
+    "Directors Remuneration": "bf_directors_remuneration",
+    "Insurance Car": "bf_insurance_car",
+    "Interest On Statutory Dues": "bf_interest_on_statutory_dues",
+    "Professional & Legal Charges": "bf_professional_legal_charges",
+    "Subscription Membership": "bf_subscription_membership",
+    "Corp Staff": "bf_corp_staff",
+    "Bonus Corp Staff": "bf_bonus_corp_staff",
+    "EDLI Contribution Corp Staff": "bf_EDLI_contribution_corp_staff",
+    "Employer Contribution to ESI Corp Staff": "bf_employer_contribution_to_ESI_corp_staff",
+    "Employer Contribution to PF Corp Staff": "bf_employer_contribution_to_PF_corp_staff",
+    "EPF Admin Charges Corp Staff": "bf_EPF_admin_charges_corp_staff",
+    "Gratuity Corp Staff": "bf_gratuity_corp_staff",
+    "Salaries Wages Corp Staff": "bf_salaries_wages_corp_staff",
+
+    "Dept Staff": "bf_dept_staff",
+    "Bonus Staff": "bf_bonus_staff",
+    "EDLI Contribution Staff": "bf_EDLI_contribution_staff",
+    "Employer Contribution to ESI Staff": "bf_employer_contribution_to_ESI_staff",
+    "Employer Contribution to PF Staff": "bf_employer_contribution_to_PF_staff",
+    "EPF Admin Charges Staff": "bf_EPF_admin_charges_staff",
+    "Gratuity Staff": "bf_gratuity_staff",
+    "Salaries Wages Staff": "bf_salaries_wages_staff",
+    "Interest on Borrowings": "bf_interest_on_borrowings",
+    "Interest on Other Loans ": "bf_interest_on_other_loans",
+    "Operational Expenses Fixed": "bf_fixed",
+    "Depreciation Expenses": "bf_depreciation",
+    "Software AMC Charges Expenses": "bf_software_AMC_charges",
+    "Insurance Expenses - Warehouse": "bf_insurance_warehouse",
+    "Rates & Taxes Expenses": "bf_rates_taxes",
+    "Rent - Premises Expenses": "bf_rent_premises",
+    "Security Service Charges Expenses": "bf_security_service_charges",
+    "Manpower Supply Expenses": "bf_manpower_supply_expenses",
+
+    "Operational Expenses Variable": "bf_variable",
+    "Crane Handling Expenses": "bf_crane_handling_expenses",
+    "Diesel Expenses - Forklift": "bf_diesel_expenses_forklift",
+    "Forklift Handling Expenses": "bf_forklift_handling_expenses",
+    "Fumigation Expenses": "bf_fumigation_expenses",
+    "Non-Operational Expenses Fixed": "bf_oe_Fixed",
+    "Housekeeping Salary": "bf_housekeeping_salary",
+    "Insurance Corp Staff": "bf_insurance_corp_staff",
+    "Insurance Staff": "bf_insurance_staff",
+    "Internet Data Card Expenses": "bf_internet_data_card_expenses",
+    "Rent - Plant & Machinery Expenses":"bf_rent_plant_machinery",
+    "System AMC Expenses": "bf_system_amc",
+
+    "Non-Operational Expenses Variable": "bf_oe_variable",
+    "Advertisement & Business Promotion Expenses": "bf_advertisement_business_promotion",
+    "Conveyance Expenses": "bf_conveyance_expenses",
+    "Diesel Expenses - Genset":"bf_diesel_expenses_gense",
+    "Handling Expenses": "bf_handling_expenses",
+    "Hotel Boarding Lodging Expenses": "bf_hotel_boarding_lodging_expenses",
+    "Office Repairs and Maintenance Expenses": "bf_office_repairs_maintenance",
+    "Office Supplies & General Expenses": "bf_office_supplies_general_expenses",
+    "Postage & Courier Expenses": "bf_postage_courier",
+    "Power and Fuel Expenses": "bf_power_fuel",
+    "Printing & Stationery Expenses": "bf_printing_stationery",
+    "Service and Maintanance Expenses": "bf_service_maintenance_expenses",
+    "Staff Welfare Expenses": "bf_staff_welfare_staff",
+    "Telephone and Mobile Expenses": "bf_telephone_mobile_expenses",
+    "Training Expenses": "bf_training_expenses",
+    "Travelling Expenses" : "bf_travelling_expenses",
+
+
 }
+OTHER_EXPENSES_CATEGORIES = {k: v for k, v in BUDGET_FIELD_MAPPING.items() if v not in (
+    set(INCOME_CATEGORIES.values()) |
+    set(DEPARTMENT_EXPENSES_CATEGORIES.values()) |
+    set(EMPLOYEE_BENEFITS_CATEGORIES.values()) |
+    set(INTEREST_EXPENSES_CATEGORIES.values()) |
+    set(OPERATIONAL_EXPENSES_CATEGORIES.values()) |
+    set(NON_OPERATIONAL_EXPENSES_CATEGORIES.values())
+
+)}
+
 
 def budget_expense(request):
-    # Get total expense for each expense type
-    expense_summary = ExpenseInfo.objects.values('exp_expense_type__exp_type_name').annotate(
-        total_expense=Sum('exp_amount')
-    )
+    first_name = request.session.get('first_name')
+    selected_branch = request.GET.get('branch')
+    selected_unit = request.GET.get('unit')
+    selected_company = request.GET.get('company')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
 
-    # Convert QuerySet to Dictionary
-    expense_dict = {item['exp_expense_type__exp_type_name']: item['total_expense'] for item in expense_summary}
+    branches = Location_info.objects.all()
+    units = UnitInfo.objects.values_list('unit_name', flat=True).distinct()
+    companies = Business_Sol_info.objects.values_list('bvm_business', flat=True).distinct()
 
-    # Aggregate budget amounts from different budget fields
-    budget_totals = BudgetInfo.objects.aggregate(**{
-        field: Sum(field) for field in BUDGET_FIELD_MAPPING.values()if field is not None
+    if selected_branch:
+        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list('unit_name', flat=True).distinct()
+
+    expenses_filter = {}
+    budget_filter = {}
+
+    if selected_company:
+        expenses_filter['exp_ext_expense_number__exp_business__bvm_business'] = selected_company
+        budget_filter['bf_company__bvm_business'] = selected_company
+
+    if selected_branch:
+        expenses_filter['exp_ext_branch__loc_name'] = selected_branch
+        budget_filter['bf_location__loc_name'] = selected_branch
+
+    if selected_unit:
+        expenses_filter['exp_ext_unit__unit_name'] = selected_unit
+        budget_filter['bf_unit_reference__unit_name'] = selected_unit
+
+    if from_date:
+        from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
+        expenses_filter['exp_ext_updated_on__gte'] = from_date
+        budget_filter['bf_updated_at__gte'] = from_date
+
+    if to_date:
+        to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
+        expenses_filter['exp_ext_updated_on__lte'] = to_date
+        budget_filter['bf_updated_at__lte'] = to_date
+
+    # Get total expenses per category
+    expense_summary = ExpenseExtinfo.objects.filter(**expenses_filter).values(
+        'exp_ext_expense_number__exp_expense_type__exp_type_name'
+    ).annotate(total_expense=Sum('exp_ext_amount'))
+
+    expense_dict = {
+        item['exp_ext_expense_number__exp_expense_type__exp_type_name']: item['total_expense']
+        for item in expense_summary
+    }
+
+    budget_totals = BudgetInfo.objects.filter(**budget_filter).aggregate(**{
+        field: Sum(field) for field in BUDGET_FIELD_MAPPING.values() if field is not None
     })
 
-    # Convert to Expense Type Mapping
-    budget_dict = {expense_type: budget_totals.get(field, 0.0) if field else 0.0 for expense_type, field in
-                   BUDGET_FIELD_MAPPING.items()}
+    budget_dict = {
+        category: budget_totals.get(field, 0.0) if field else 0.0
+        for category, field in BUDGET_FIELD_MAPPING.items()
+    }
 
-    # Step 3: Add Budget Fields Not Present in Expense Table
-    for field in BudgetInfo._meta.get_fields():
-        if (
-                field.name.startswith("bf_") and
-                isinstance(field, FloatField) and  # Only include FloatFields (budget amounts)
-                field.name not in BUDGET_FIELD_MAPPING.values()
-        ):
-            budget_dict[field.name] = budget_totals.get(field.name, 0.0)
+    # Function to generate summaries
+    def get_category_summary(category_mapping):
+        summary = []
+        for category, field in category_mapping.items():
+            total_budget = budget_dict.get(category, 0.0) or 0.0
+            total_expense = expense_dict.get(category, 0.0) or 0.0
+            difference = total_budget - total_expense
+            pl_percentage = (difference / total_budget * 100) if total_budget > 0 else 0.0  # P/L %
 
-    # Get all unique categories
-    all_categories = set(expense_dict.keys()).union(set(budget_dict.keys()))
+            summary.append({
+                "expense_type": category,
+                "total_budget": total_budget,
+                "total_expense": total_expense,
+                "difference": difference,
+                "pl_percentage": pl_percentage,
+            })
+        return summary
 
-    # Merge results into a list of dictionaries
-    category_wise_summary = []
-    for category in all_categories:
-        total_budget = budget_dict.get(category, 0.0)
-        total_expense = expense_dict.get(category, 0.0)
-        difference = total_budget - total_expense
+    income_summary = get_category_summary(INCOME_CATEGORIES)
+    department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES)
+    employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES)
+    interest_summary = get_category_summary(INTEREST_EXPENSES_CATEGORIES)
+    operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES)
+    non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES)
+    other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES)
 
-        category_wise_summary.append({
-            "expense_type": category,
-            "total_expense": expense_dict.get(category, 0.0),
-            "total_budget": budget_dict.get(category, 0.0),
-            "difference": difference,
-        })
+    total_budget = sum(value if value is not None else 0.0 for value in budget_dict.values())
+    total_expense = sum(value if value is not None else 0.0 for value in expense_dict.values())
+    total_profit_loss = total_budget - total_expense
+    total_pl_percentage = (total_profit_loss / total_budget * 100) if total_budget > 0 else 0.0
 
-    # Pass data to the template
-    return render(request, "asset_mgt_app/fin_budget_expense_report.html", {'category_wise_summary': category_wise_summary})
+    return render(request, "asset_mgt_app/fin_budget_expense_report.html", {
+        "income_summary": income_summary,
+        "department_expenses_summary": department_expenses_summary,
+        "employee_benefits_summary": employee_benefits_summary,
+        "interest_summary": interest_summary,
+        "operational_summary": operational_summary,
+        "non_operational_summary": non_operational_summary,
+        "other_expenses_summary": other_expenses_summary,
+        'total_budget': total_budget,
+        'total_expense': total_expense,
+        'total_profit_loss': total_profit_loss,
+        'total_pl_percentage': total_pl_percentage,
+        'branches': branches,
+        'units': units,
+        'companies': companies,
+        'selected_company': selected_company,
+        'selected_branch': selected_branch,
+        'selected_unit': selected_unit,
+        'first_name': first_name,
+        'from_date': request.GET.get('from_date', ''),
+        'to_date': request.GET.get('to_date', ''),
+    })

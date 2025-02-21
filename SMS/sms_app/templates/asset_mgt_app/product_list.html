@@ -27,6 +27,13 @@
 <div class="container-fluid">
 <table  id="product_list" class="table table-striped table-bordered">
     <thead class="thead-dark">
+    <tr>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Product Type"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Product Name"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Description"></th>
+                <th></th>
+                <th></th>
+    </tr>
         <tr>
 <!--            <th>Product Category</th>-->
             <th>Product Type</th>
@@ -64,8 +71,29 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#product_list').DataTable();
-} );
+    // Initialize DataTable
+    var table = $('#product_list').DataTable({
+        order: [[0, 'desc']],
+        scrollX: false,
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print'],
+        initComplete: function () {
+            var api = this.api();
+
+            // Apply search to each column
+            $('.filter-input').on('keyup change', function () {
+                var index = $(this).parent().index(); // Get column index
+                api.column(index).search(this.value).draw();
+            });
+        }
+    });
+
+    // Prevent sorting when clicking inside the filter input
+    $('#product_list thead input').on('click', function(e) {
+        e.stopPropagation();
+    });
+});
+
 </script>
 
 {% endblock content %}

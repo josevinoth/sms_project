@@ -31,6 +31,23 @@
 <div class="container-fluid">
     <table id="budget_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
+         <tr>
+            <th><input type="text" class="form-control" placeholder="Search ID"></th>
+            <th></th>
+            <th><input type="text" class="form-control" placeholder="Search Company"></th>
+            <th><input type="text" class="form-control" placeholder="Search Branch"></th>
+            <th><input type="text" class="form-control" placeholder="Search Unit"></th>
+            <th><input type="text" class="form-control" placeholder="Search AHC"></th>
+            <th><input type="text" class="form-control" placeholder="Search CHC"></th>
+            <th><input type="text" class="form-control" placeholder="Search FHC"></th>
+            <th><input type="text" class="form-control" placeholder="Search HC"></th>
+            <th><input type="text" class="form-control" placeholder="Search PC"></th>
+            <th><input type="text" class="form-control" placeholder="Search Month/Year"></th>
+            <th><input type="text" class="form-control" placeholder="Search Updated On"></th>
+            <th><input type="text" class="form-control" placeholder="Search Updated By"></th>
+            <th></th>
+            <th></th>
+        </tr>
         <tr>
             <th>ID</th>
             <th>Clone</th>
@@ -124,6 +141,7 @@
             <th>Edit</th>
             <th>Delete</th>
         </tr>
+
         </thead>
         <tbody>
         {% for budget in budget_list %}
@@ -247,12 +265,23 @@
         scrollX: true,
         scrollCollapse: true,
         dom: 'lBfrtip',
-        order: [0, 'desc' ],
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ],
+
+        var table = $('#budget_list').DataTable({
+            order: [[0, 'desc']],
+            dom: 'Bfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            initComplete: function () {
+                this.api().columns().every(function () {
+                    var that = this;
+                    $('input', this.header()).on('keyup change clear', function () {
+                        if (that.search() !== this.value) {
+                            that.search(this.value).draw();
+                        }
+                    });
+                });
+            }
+        });
     });
-} );
 </script>
 
 {% endblock content %}
