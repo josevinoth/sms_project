@@ -3,6 +3,13 @@
 {% block content %}
 {% load crispy_forms_tags %}
 
+<div class="d-flex justify-content-between ">
+	<form id="tripEmailForm" action="{% url 'send_ops_audit_email' %}" method="POST">
+		{% csrf_token %}
+		<button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn"><i class="fas fa-envelope-square"></i> Send Score Card Email</button>
+	</form>
+</div>
+<br>
 <form method="POST" action="" id="opsauditscorecard_add">
 	{% csrf_token %}
 	<div class="container-fluid">
@@ -547,7 +554,6 @@
 						</tr>
 					</tbody>
 				</table>
-				{% render_field form.ar_updated_by class="form-control" hidden="True" id="ar_updated_by" %}
 				<div class="row">
 					<div class="col-1"></div>
 					<div class="col-10">
@@ -608,12 +614,29 @@
         </div>
     </div>
 </div>
-
 <script>
-	$(document).ready(function() {
-		status_update();
-		document.getElementById("ar_updated_by").value = '{{ user_id }}';
-	});
+	$("#ops_branch").change(function () {
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#ops_unit').removeClass('disable_a_href');
+             $("#ops_unit").empty();
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#ops_unit').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#ops_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
 </script>
+
 
 {% endblock content %}

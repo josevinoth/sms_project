@@ -16,7 +16,7 @@ class PkneedassessmentInfo(models.Model):
     na_unloading = models.ForeignKey(Nabvmcustomer, on_delete=models.CASCADE, related_name='na_unloading', db_column='na_unloading', default='')
     na_wood_norms = models.ManyToManyField(Nawoodnorms,blank=True)
     na_delivery_by = models.ForeignKey(Nabvmcustomer, on_delete=models.CASCADE, related_name='na_delivery_by', db_column='na_delivery_by', null=True, blank=True, default='')
-    na_vehicle_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='')
+    na_vehicle_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',null=True,blank=True)
 
     # Updated field to ManyToMany for multi-select functionality
     na_type_of_access = models.ManyToManyField(Natypeofaccess,blank=True)

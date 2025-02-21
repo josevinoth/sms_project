@@ -614,6 +614,7 @@ urlpatterns = [
     path('consignment_goods/add/<int:goods_id>/', views.consignment_goods_add, name='consignment_goods_edit'),
     path('consignment_goods/list/', views.consignment_goods_list, name='consignment_goods_list'),
     path('consignment_goods/delete/<int:goods_id>/', views.consignment_goods_delete, name='consignment_goods_delete'),
+    path('send_ops_audit_email/', views.send_ops_audit_email, name='send_ops_audit_email'),
 ]
 
 

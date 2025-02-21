@@ -107,10 +107,16 @@ def storage_list(request):
             messages.error(request, 'Enter Unloading End Date in Goods Receipt tab')
             return redirect(request.META['HTTP_REFERER'])
         job_id = Gatein_info.objects.get(gatein_job_no=wh_job_id).id
+
         try:
-            damage_status = Warehouse_goods_info.objects.get(wh_gate_injob_no_id=job_id).wh_damages.id
+            damage_status = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=job_id).exclude(
+                wh_damages_id=6).values_list('wh_damages_id', flat=True).first()
+
+            # If no non-6 values are found, default to 6
+            damage_status = damage_status if damage_status is not None else 6
         except ObjectDoesNotExist:
             damage_status = 6
+
     context = {
         'first_name': first_name,
         'warehousein_form': warehousein_form,
