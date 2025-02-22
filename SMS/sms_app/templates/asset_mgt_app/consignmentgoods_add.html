@@ -1,4 +1,3 @@
-{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
@@ -102,6 +101,7 @@
 									</div>
 									{% render_field form.cg_dateofvalidity type="Date" class="form-control" %}
 								</div>
+								{% render_field form.cg_lastmodifiedby id="cg_lastmodifiedby"  class="form-control" %}
 							</div>
 						</div>
 						<div class="row">
@@ -124,14 +124,26 @@
 			</div>
 		</div>
 	</div>
-	{% include "asset_mgt_app/consignmentgoods_new_list.html" %}
 	{% include "asset_mgt_app/consignmentgoods_list_WOH.html" %}
-	</div>
 </form>
+
+	{% include "asset_mgt_app/consignmentgoods_new_list.html" %}
+
+
 <script>
 	$(document).ready(function() {
         document.getElementById("cg_lastmodifiedby").value ='{{user_id}}';
-        document.getElementById("cg_consignmentnumber").value ='{{consignmentgoods_id_val}}';
+         var consignment_num = document.getElementById("cg_consignmentnumber").value;
+			var x= '{{ consignmentgoods_id_val }}';
+alert(x);
+            if (x=="")
+            {
+        	document.getElementById("cg_consignmentnumber").value =" ";
+            }
+            else
+            {
+        	document.getElementById("cg_consignmentnumber").value ='{{consignmentgoods_id_val}}';
+            }
       });
 </script>
 {% endblock content %}

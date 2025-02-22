@@ -120,3 +120,6 @@ from .sub_forms.dsr_report_email_form import dsr_EmailForm
 from .sub_forms.gate_out_email_form import gate_out_Form
 from .sub_forms.gate_in_email_form import gate_in_Form
 from .sub_forms.transport_procurement_form import vechicle_procurementForm
+from .sub_forms.gate_meeting_form import GatemeetingaddForm
+from .sub_forms.OpsauditscorecardForm_Form import OpsauditscorecardForm
+from .sub_forms.consignmentgoodsnewform_Form import ConsignmentgoodsnewaddForm

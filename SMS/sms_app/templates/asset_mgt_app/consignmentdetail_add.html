@@ -128,12 +128,24 @@
 				</div>
 			</div>
 		</div>
-
-		{% include "asset_mgt_app/consignmentdetail_list_WOH.html" %}
-
-	</div>
 	</div>
 </form>
+<div class="accordion container-fluid" id="consignment_goods">
+	<div class="card">
+		<div class="card-header bg-info" id="headingOne">
+			<h2 class="mb-0">
+				<button class="btn btn-block text-left text-white " type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+					<h3>Add Consignment Goods</h3>
+				</button>
+			</h2>
+		</div>
+		<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#consignment_goods">
+			<div class="card-body">
+				{% include "asset_mgt_app/consignmentgoods_add.html" %}
+			</div>
+		</div>
+	</div>
+</div>
 <script>
 	$(document).ready(function() {
         document.getElementById("co_lastmodifiedby").value ='{{user_id}}';
@@ -156,6 +168,22 @@
             {
                 document.getElementById("co_customercode").value='{{ customer_code }}';
             }
+        var consignment_num = document.getElementById("cn_consignment_num").value;
+
+            if (consignment_num=="")
+            {
+                document.getElementById("cn_consignment_num").value = '{{ consignmentgoods_id_val }}';
+            }
+            else
+            {
+                document.getElementById("cn_consignment_num").value =consignment_num;
+            }
+         var consignmentnumber = document.getElementById("co_consignmentnumber").value;
+			if (consignmentnumber == "") {
+				$('#consignment_goods').addClass('disable_a_href');
+			} else {
+				$('#consignment_goods').removeClass('disable_a_href');
+			}
       });
 </script>
 {% endblock content %}

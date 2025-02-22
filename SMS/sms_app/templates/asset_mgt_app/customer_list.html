@@ -1,6 +1,5 @@
 {% extends "asset_mgt_app/base.html" %}
 
-
 {% block content %}
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
@@ -25,8 +24,23 @@
 </div>
 <hr>
 <div class="container-fluid">
-    <table  id="customer_list" class="table table-striped table-bordered">
+    <table id="customer_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
+        <tr>
+            <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Customer Name"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Code"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Short Name"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Customer Business"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Contact Person"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Contact Number"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Email"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Modified By"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Modified On"></th>
+            <th></th>
+            <th></th>
+        </tr>
         <tr>
             <th>ID</th>
             <th>Created On</th>
@@ -41,6 +55,7 @@
             <th>Modified On</th>
             <th>Edit</th>
             <th>Delete</th>
+        </tr>
         </thead>
         <tbody>
         {% for customerinfo in customer_list %}
@@ -57,15 +72,14 @@
             <td> {{customerinfo.cu_lastmodifiedby}}</td>
             <td> {{customerinfo.cu_updated_at}}</td>
             <td>
-
-                <a  class="btn btn-primary" href="{% url 'customer_update' customerinfo.id %}" >
+                <a class="btn btn-primary" href="{% url 'customer_update' customerinfo.id %}" >
                     <i class="far fa-edit"></i>
                 </a>
             </td>
             <td>
                 <form action="{% url 'customer_delete' customerinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
-                    <button type="submit" class="btn  btn-danger">
+                    <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>
@@ -77,14 +91,26 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#customer_list').DataTable({
-        order: [0, 'desc' ],
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ],
-    });
-} );
-</script>
+        var table = $('#customer_list').DataTable({
+            order: [[0, 'desc']],
+            scrollX: false,
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            initComplete: function () {
+                var api = this.api();
 
+                // Apply search to each column
+                $('.filter-input').on('keyup change', function () {
+                    var columnIndex = $(this).parent().index(); // Get correct column index
+                    api.column(columnIndex).search(this.value).draw();
+                });
+            }
+        });
+
+        // Prevent sorting when clicking inside the filter input
+        $('#customer_list thead input').on('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+</script>
 {% endblock content %}

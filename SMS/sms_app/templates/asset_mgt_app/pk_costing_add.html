@@ -171,31 +171,19 @@
 												</div>
 												{% render_field form.ct_uom id="ct_uom" class="form-control " %}
 											</div>
+										</div>
+										<div class="col-6">
 											<div class="input-group input-group-sm mb-3">
 												<div class="input-group-prepend">
 													<span class="input-group-text">Size</span>
 												</div>
 												{% render_field form.ct_size id="ct_size" class="form-control disable_a_href" %}
 											</div>
-										</div>
-										<div class="col-6">
-											<div class="input-group input-group-sm mb-3">
-												<div class="input-group-prepend">
-													<span class="input-group-text">Quantity</span>
-												</div>
-												{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
-											</div>
 											<div class="input-group input-group-sm mb-3">
 												<div class="input-group-prepend">
 													<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
 												</div>
 												{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
-											</div>
-											<div class="input-group input-group-sm mb-3">
-												<div class="input-group-prepend">
-													<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
-												</div>
-												{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
 											</div>
 											<div class="input-group input-group-sm mb-3">
 												<div class="input-group-prepend">
@@ -211,6 +199,18 @@
 									<div class="col-6">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
+												<span class="input-group-text">Quantity</span>
+											</div>
+											{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
+											</div>
+											{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
 												<span class="input-group-text">Unit Cost</span>
 											</div>
 											{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
@@ -221,14 +221,14 @@
 											</div>
 											<span id="ct_cft_sqft_req" class="form-control disable_a_href"></span>
 										</div>
+									</div>
+									<div class="col-6">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Total Cost</span>
 											</div>
 											{% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control disable_a_href" %}
 										</div>
-									</div>
-									<div class="col-6">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Stock Status</span>
@@ -257,33 +257,33 @@
 								</div>
 							</div>
 						</div>
-								<div class="row">
-									<div class="col-1"></div>
-									<div class="col-10">
-										<div class="message text-center">
-											{% for message in messages %}
-											<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-											{% endfor %}
-										</div>
-									</div>
-									<div class="col-1"></div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
 								</div>
-								{% if form.errors %}
-								<div class="alert alert-danger">
-									<ul>
-										{% for field, errors in form.errors.items %}
-										<li>{{ field }}: {{ errors|join:", " }}</li>
-										{% endfor %}
-									</ul>
-								</div>
-								{% endif %}
-								<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-								<a href="{% url 'costing_cancel' %}" class="btn btn-danger float-right">
-									<i class="fas fa-times"></i> Cancel
-								</a>
 							</div>
+							<div class="col-1"></div>
 						</div>
+						{% if form.errors %}
+						<div class="alert alert-danger">
+							<ul>
+								{% for field, errors in form.errors.items %}
+								<li>{{ field }}: {{ errors|join:", " }}</li>
+								{% endfor %}
+							</ul>
+						</div>
+						{% endif %}
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'costing_cancel' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
 					</div>
+				</div>
+			</div>
 		</form>
 	</div>
 	<div class="col-3">

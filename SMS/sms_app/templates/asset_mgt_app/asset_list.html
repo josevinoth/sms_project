@@ -39,6 +39,23 @@
     <table id="asset_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Asset Number"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Asset ID"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Category"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Model"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Make"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Assigned To"></th>
+            <th></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Updated On"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Updated By"></th>
+            <th></th>
+            <th></th>
+        </tr>
+        <tr>
             <th>ID</th>
             <th>Created On</th>
             <th>Asset Number</th>
@@ -115,15 +132,30 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#asset_list').DataTable({
-        order: [0, 'desc' ],
+    // Initialize DataTable
+    var table = $('#asset_list').DataTable({
+        order: [[0, 'desc']],
         scrollX: true,
         dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
+        buttons: ['copy', 'csv', 'excel', 'print'],
+        initComplete: function () {
+            var api = this.api();
+
+            // Apply search to each column
+            $('.filter-input').on('keyup change', function () {
+                var index = $(this).parent().index(); // Get column index
+                api.column(index).search(this.value).draw();
+            });
+        }
     });
-} );
+
+    // Prevent sorting when clicking inside the filter input
+    $('#asset_list thead input').on('click', function(e) {
+        e.stopPropagation();
+    });
+});
 </script>
+
+
 {% endblock content %}
 

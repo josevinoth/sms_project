@@ -78,13 +78,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipper Invoice</span>
 									</div>
-									{% render_field loadingbay_form.lb_invoice id="lb_invoice" class="form-control disable_a_href" %}
+									{% render_field loadingbay_form.lb_invoice id="lb_invoice"  class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipper Invoice Value</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_invoice_value id="lb_stock_invoice_value" onchange="inv_curr_change()" class="form-control disable_a_href" %}
+									{% render_field loadingbay_form.lb_stock_invoice_value id="lb_stock_invoice_value" onchange="updateCurrencyConversion()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -96,7 +96,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Conversion Rate</span>
 									</div>
-									{% render_field loadingbay_form.lb_stock_currency_con id="lb_stock_currency_con" class="form-control disable_a_href" onchange="inv_curr_change()"%}
+									{% render_field loadingbay_form.lb_stock_currency_con id="lb_stock_currency_con" class="form-control disable_a_href" onchange="updateCurrencyConversion()"%}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -388,7 +388,6 @@
         }
         lb_crane_forklift_change();
         lb_status_change();
-        inv_curr_change();
         challan_damage_btn_active();
         change_pouch();
       });
@@ -446,7 +445,6 @@
                 $('#lb_stock_invoice_currency').addClass('disable_a_href');
                 $('#lb_stock_invoice_value').addClass('disable_a_href');
             }
-            inv_curr_change();
         }
 </script>
 
