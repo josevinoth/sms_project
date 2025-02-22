@@ -120,7 +120,7 @@ def monthly_summary(request):
             "target_revenue": item['target_revenue'] or 0,
             "actual_revenue": item['actual_revenue'] or 0,
             "performance_percentage": round(
-                (item['unique_customers'] / item['total_sales']) * 100, 2
+                (item['total_quotes'] / item['total_sales']) * 100, 2
             ) if item['total_sales'] > 0 else 0.0,  # Performance % calculation
             "productivity_percentage": round(
                 (item['won_business_count'] / item['total_quotes']) * 100, 2
@@ -236,9 +236,9 @@ def salesperson_productivity_performance(request):
     for item in sales_data_query:
         total_sales = item['total_sales']
         total_quotes = item['total_quotes']
-        won_business_count = item['won_business_count']  # Ensure this is captured
+        won_business_count = item['won_business_count']
         performance_percentage = round(
-            (item['unique_customers'] / total_sales) * 100, 2
+            (item['total_quotes'] / total_sales) * 100, 2
         ) if total_sales > 0 else 0.0
 
         productivity_percentage = round(
@@ -254,7 +254,7 @@ def salesperson_productivity_performance(request):
             "new_customer_calls": item['new_customer_calls'],
             "existing_customer_calls": item['existing_customer_calls'],
             "won_business_count": won_business_count,
-            "total_quotes": total_quotes,  # Ensure total quotes is included
+            "total_quotes": total_quotes,
             "target_existing_customer_calls": item['target_existing_customer_calls'] or 0,
             "target_new_customer_calls": item['target_new_customer_calls'] or 0,
             "target_revenue": item['target_revenue'] or 0,
@@ -716,7 +716,7 @@ def salesperson_wise_chart(request):
             filter=Q(sc_sales_number__s_bus_won_not=1),
         ),
         performance_percentage=Case(
-            When(total_sales_calls__gt=0, then=(F('total_customers') / F('total_sales_calls')) * 100),
+            When(total_sales_calls__gt=0, then=(F('total_quotes') / F('total_sales_calls')) * 100),
             default=Value(0.0),
             output_field=FloatField(),
         ),

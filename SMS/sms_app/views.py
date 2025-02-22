@@ -139,4 +139,4 @@ from .sub_views.finance_reports_view import branch_unit_profit_loss
 from .sub_views.finance_reports_view import finance_reports,businessmodel_PL,customerwise_PL,fin_profit_loss_view,expenses_report,ar_due_reports,budget_expense
 from .sub_views.vehicleavailability_view import vehicle_availability_list
 from .sub_views.transport_procurement_view import vehicle_procurement_add,vehicle_procurement_list,vehicle_procurement_delete
-
+from .sub_views.wh_reports_view import wh_damage_report,wh_stock_report,wh_space_availability_report

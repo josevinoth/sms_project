@@ -36,3 +36,21 @@ def to_lakhs(value):
         return f"{float(value) / 100000:.2f} L"
     except (ValueError, TypeError):
         return value
+
+
+@register.filter
+def to_tons(value):
+
+    try:
+        return f"{float(value) / 1000:.2f} T"
+    except (ValueError, TypeError):
+        return value
+
+
+@register.filter
+def to_crores(value):
+
+    try:
+        return f"{float(value) / 10000000:.2f} Cr"
+    except (ValueError, TypeError):
+        return value

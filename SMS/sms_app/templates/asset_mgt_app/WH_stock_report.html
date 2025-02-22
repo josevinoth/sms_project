@@ -1,0 +1,246 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+{% load currency_format %}
+
+
+    <div class="col-md-1">
+        <a href="{% url 'warehouse_reports' %}" class="btn btn-primary btn-block ">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+<br>
+<h2 style="color:black;">WH Stock Report</h2>
+<hr>
+<div class="container-fluid">
+    <div class="row align-items-center">
+        <div class="col-md-2">
+            <label for="branch-filter"><b>Branch:</b></label>
+            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for branch in branches %}
+                <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
+                    {{ branch.loc_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="unit-filter"><b>Unit:</b></label>
+            <select id="unit-filter" name="unit" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for unit in units %}
+                <option value="{{ unit.unit_name }}" {% if unit.unit_name == selected_unit %} selected {% endif %}>
+                    {{ unit.unit_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- From Date -->
+        <div class="col-md-2">
+            <label for="from-date"><b>From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+        </div>
+
+        <!-- To Date -->
+        <div class="col-md-3">
+            <label for="to-date"><b>To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+        </div>
+
+    </div>
+</div>
+
+<br>
+ <!-- Charts Section -->
+    <div class="row">
+        <div class="col-md-6">
+            <canvas id="goodsWeightChart" width="300" height="300" class="bg-white box-shadow rounded"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="goodsQuantityChart" class="bg-white box-shadow rounded"></canvas>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <canvas id="jobCountChart" width="300" height="300" class="bg-white box-shadow rounded"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="invoiceAmountChart" class="bg-white box-shadow rounded"></canvas>
+        </div>
+    </div>
+<br>
+<hr>
+    <table id="stock_report" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Check IN-OUT Names</th>
+            <th>Job Count</th>
+            <th>Total Goods Weight</th>
+            <th>Total Quantity</th>
+            <th>Total Invoice Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in stock_summary %}
+        <tr>
+            <td>{{ row.wh_check_in_out__check_in_out_name}}</td>
+            <td>{{ row.count }}</td>
+            <td>{{ row.total_goods_weight|to_tons}}</td>
+            <td>{{ row.total_quantity }}</td>
+            <td>{{ row.total_invoice_amount|to_crores}}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2">No damage records found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Ensure Chart.js Datalabels plugin is registered
+        Chart.register(ChartDataLabels);
+
+        // Parse JSON data safely from Django
+        var stockData = JSON.parse('{{ stock_summary_json|escapejs }}');
+
+        // Extract labels and values for charts
+        var labels = stockData.map(item => item.wh_check_in_out__check_in_out_name);
+        var jobCounts = stockData.map(item => item.count);
+        var goodsWeights = stockData.map(item => (item.total_goods_weight / 1000).toFixed(2)); // Convert kg to Tons
+        var goodsQuantities = stockData.map(item => item.total_quantity);
+        var invoiceAmounts = stockData.map(item => (item.total_invoice_amount / 10000000).toFixed(2)); // Convert INR to Crores
+
+        function createBarChart(canvasId, title, yAxisLabel, label, data, backgroundColor) {
+            var ctx = document.getElementById(canvasId).getContext('2d');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: 'rgba(0, 0, 0, 0.8)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title, // Chart Title
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                        },
+                        legend: {
+                            display: false
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#000',
+                            backgroundColor: 'rgba(235, 233, 234, 0.8)',
+                            borderRadius: 4,
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function (value) {
+                                return value;
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: Math.max(...data) * 1.2,  // Use `data` instead of `damage_counts`
+                            title: {
+                                display: true,
+                                text: yAxisLabel,
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                padding: 10
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // Create different charts
+        createBarChart("jobCountChart", "Job Count ", "Number of Jobs", "Job Count", jobCounts, "rgba(255, 99, 132, 0.6)");
+        createBarChart("goodsWeightChart", "Goods Weight ", "Weight in Tons", "Total Weight", goodsWeights, "rgba(54, 162, 235, 0.6)");
+        createBarChart("goodsQuantityChart", "Goods Quantity ", "Total Quantity", "Goods Quantity", goodsQuantities, "rgba(75, 192, 192, 0.6)");
+        createBarChart("invoiceAmountChart", "Invoice Amount ", "Amount in Crores", "Invoice Amount", invoiceAmounts, "rgba(255, 206, 86, 0.6)");
+
+    });
+</script>
+<script>
+    $(document).ready(function() {
+    $('#stock_report').DataTable({
+        scrollY: "600px",
+<!--        scrollX: true,-->
+        scrollCollapse: true,
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+    });
+} );
+document.getElementById('branch-filter').addEventListener('change', updateFilters);
+    document.getElementById('unit-filter').addEventListener('change', updateFilters);
+    document.getElementById('from-date').addEventListener('change', updateFilters);
+    document.getElementById('to-date').addEventListener('change', updateFilters);
+
+    function updateFilters() {
+    const branch = document.getElementById('branch-filter').value;
+const unit = document.getElementById('unit-filter').value;
+
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const url = new URL(window.location.href);
+
+    if (branch) {
+        url.searchParams.set('branch', branch);
+    } else {
+        url.searchParams.delete('branch');
+    }
+
+    if (unit) {
+        url.searchParams.set('unit', unit);
+    } else {
+        url.searchParams.delete('unit');
+    }
+
+    if (fromDate) {
+        url.searchParams.set('from_date', fromDate);
+    } else {
+        url.searchParams.delete('from_date');
+    }
+
+    if (toDate) {
+        url.searchParams.set('to_date', toDate);
+    } else {
+        url.searchParams.delete('to_date'); // Clear the parameter if no date is provided
+    }
+
+    console.log(url.toString());
+    window.location.href = url.toString();
+}
+</script>
+{% endblock content %}

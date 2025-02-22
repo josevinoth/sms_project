@@ -10,7 +10,6 @@
 <br>
 <h2 style="color:black;">Sales Calls Details Report</h2>
 <hr>
-<br>
         <div class="col-md-11">
             <label for="salesperson-filter"><b>Salesperson:</b></label>
             <select id="salesperson-filter" name="salesperson" class="box-shadow rounded m-1">
@@ -29,7 +28,7 @@
             <label for="to-date"><b> To:</b></label>
             <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="box-shadow">
         </div>
-<hr>
+<br>
 
 <div class="row">
     <div class="col-4">
@@ -143,7 +142,7 @@
     $('#call_purpose_table').DataTable(
         {
         scrollY: "600px",
-<!--        scrollX: true,-->
+        scrollX: true,
         scrollCollapse: true,
         order: [1, 'desc' ],
         dom: 'lBfrtip',
