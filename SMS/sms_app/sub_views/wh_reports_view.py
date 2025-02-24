@@ -1,6 +1,6 @@
 from django.shortcuts import render
 import json
-from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F,IntegerField
+from django.db.models import Count, Q,Sum,Case,ExpressionWrapper, When, Value, CharField, Min,FloatField, F,IntegerField
 from django.db.models import F, Subquery, OuterRef
 from django.db.models.functions import Coalesce,Round
 from django.utils import timezone
@@ -188,3 +188,83 @@ def wh_space_availability_report(request):
         'selected_businessmodel': selected_businessmodel,
     }
     return render(request, "asset_mgt_app/WH_space_availability_report.html", context)
+
+
+def wh_space_utilization_report(request):
+    first_name = request.session.get('first_name')
+    selected_branch = request.session.get('branch')
+    selected_unit = request.session.get('unit')
+    selected_bay = request.session.get('bay')
+    selected_businessmodel = request.session.get('businessmodel')
+
+    branches = Location_info.objects.all()
+    units = UnitInfo.objects.all()
+    bays = BayInfo.objects.all()
+    businessmodels = TrbusinesstypeInfo.objects.all()
+
+    utilization_summary = LocationmasterInfo.objects.all()
+
+    # Apply filters dynamically
+    filters = {}
+    if selected_branch:
+        filters["lm_wh_unit__ui_branch_name__loc_name"] = selected_branch
+    if selected_unit:
+        filters["lm_wh_unit__unit_name"] = selected_unit
+    if selected_bay:
+        filters["lm_wh_areaside__bay_bayname"] = selected_bay
+    if selected_businessmodel:
+        filters["lm_customer_model__tb_trbusinesstype"] = selected_businessmodel
+
+    if filters:
+        utilization_summary = utilization_summary.filter(**filters)
+
+    # Grouped Summary for Branches (Summed values)
+    branch_summary = utilization_summary.values("lm_wh_location__loc_name").annotate(
+        total_area=Sum(F("lm_size"), distinct=True),
+        occupied_area=Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_area"), distinct=True),  # From WH table
+        occupied_volume=Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_volume_weight"), distinct=True),  # From WH table
+        available_area=ExpressionWrapper(
+            Sum(F("lm_size"), distinct=True) -Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_area"), distinct=True),
+            output_field=FloatField()
+        ),
+        total_volume=Sum(F("lm_total_volume"), distinct=True),
+        available_volume=ExpressionWrapper(
+            Sum(F("lm_total_volume"), distinct=True) - Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_volume_weight"), distinct=True),
+            output_field=FloatField()
+        ),
+
+    )
+
+    # 🔹 FIX: Group Units Within Each Branch Separately
+    unit_summary = utilization_summary.values("lm_wh_location__loc_name", "lm_wh_unit__unit_name").annotate(
+        total_area=Sum(F("lm_size"), distinct=True),
+        occupied_area=Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_area"), distinct=True),  # From WH table
+        occupied_volume=Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_volume_weight"), distinct=True),
+        # From WH table
+        available_area=ExpressionWrapper(
+            Sum(F("lm_size"), distinct=True) - Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_area"),
+                                                   distinct=True),
+            output_field=FloatField()
+        ),
+        total_volume=Sum(F("lm_total_volume"), distinct=True),
+        available_volume=ExpressionWrapper(
+            Sum(F("lm_total_volume"), distinct=True) - Sum(
+                F("lm_wh_location__warehouse_goods_info__wh_goods_volume_weight"), distinct=True),
+            output_field=FloatField()
+        ),
+    )
+    context = {
+        'utilization_summary': utilization_summary,
+        'branch_summary': branch_summary,
+        'unit_summary': unit_summary,
+        'first_name': first_name,
+        'branches': branches,
+        'units': units,
+        'bays': bays,
+        'businessmodels': businessmodels,
+        'selected_branch': selected_branch,
+        'selected_unit': selected_unit,
+        'selected_bay': selected_bay,
+        'selected_businessmodel': selected_businessmodel,
+    }
+    return render(request, "asset_mgt_app/WH_space_utilization_report.html", context)
