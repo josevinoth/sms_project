@@ -183,25 +183,28 @@ def sales_comments_add(request, sales_comments_id=0):
 def sales_comments_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id = RoleInfo.objects.get(role_name=role).id
 
-    if role_id == 3:
-        sales_comments_list=(Sales_Comments_Info.objects.all()).order_by('-sc_created_at')
-    elif role_id == 1:
-        sales_comments_list=(Sales_Comments_Info.objects.all()).order_by('-sc_created_at')
+    # Get user's role
+    user_ext = User_extInfo.objects.get(user=user_id)
+    role_id = RoleInfo.objects.get(role_name=user_ext.emp_role).id
+
+    # Filtering based on role
+    if role_id in [1, 3]:  # Role ID 1 & 3 should see all records
+        sales_comments_list = Sales_Comments_Info.objects.all().order_by('-sc_created_at')  # Latest created at first
     else:
-        sales_comments_list = (Sales_Comments_Info.objects.all(sc_updated_by=user_id)).order_by('-sc_created_at')
+        sales_comments_list = Sales_Comments_Info.objects.filter(sc_updated_by=user_id).order_by('-sc_created_at')
+
+    # Paginate results
+    paginator = Paginator(sales_comments_list, 10000)  # Large number to ensure all results load
     page_number = request.GET.get('page')
-    paginator = Paginator(sales_comments_list, 10000)
     page_obj = paginator.get_page(page_number)
 
     context = {
-        'comments_list':sales_comments_list,
-        'role': role,
+        'comments_list': sales_comments_list,  # All records (useful for processing)
+        'role': user_ext.emp_role,
         'user_id': user_id,
         'first_name': first_name,
-        'page_obj': page_obj,
+        'page_obj': page_obj,  # Paginated data for the table
     }
     return render(request, "asset_mgt_app/sales_comments_list.html", context)
 @login_required(login_url='login_page')

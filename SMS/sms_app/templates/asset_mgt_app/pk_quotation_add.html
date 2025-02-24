@@ -77,7 +77,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Description</span>
 									</div>
-									{% render_field form.pkqt_stock_description id="pkqt_stock_description" onchange="change_cost_type()" class="form-control disable_a_href" %}
+									{% render_field form.pkqt_stock_description id="pkqt_stock_description" onchange="change_cost_type()" class="form-control " %}
 								</div>
 							</div>
 							<div class="col-3">
@@ -170,31 +170,19 @@
 												</div>
 												{% render_field form.pkqt_uom id="pkqt_uom" class="form-control " %}
 											</div>
+										</div>
+										<div class="col-6">
 											<div class="input-group input-group-sm mb-3">
 												<div class="input-group-prepend">
 													<span class="input-group-text">Size</span>
 												</div>
 												{% render_field form.pkqt_size id="pkqt_size" class="form-control disable_a_href" %}
 											</div>
-										</div>
-										<div class="col-6">
-											<div class="input-group input-group-sm mb-3">
-												<div class="input-group-prepend">
-													<span class="input-group-text">Quantity</span>
-												</div>
-												{% render_field form.pkqt_quantity id="pkqt_quantity" onchange="change_cost_type()" class="form-control " %}
-											</div>
 											<div class="input-group input-group-sm mb-3">
 												<div class="input-group-prepend">
 													<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
 												</div>
 												{% render_field form.pkqt_cft id="pkqt_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
-											</div>
-											<div class="input-group input-group-sm mb-3">
-												<div class="input-group-prepend">
-													<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
-												</div>
-												{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control" %}
 											</div>
 											<div class="input-group input-group-sm mb-3">
 												<div class="input-group-prepend">
@@ -206,6 +194,18 @@
 									</div>
 								</div>
 								<br>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Quantity</span>
+									</div>
+									{% render_field form.pkqt_quantity id="pkqt_quantity" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
+									</div>
+									{% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Unit Cost (INR)</span>
@@ -299,6 +299,7 @@
                 document.getElementById("pkqt_customer_new_name2").value = customer_new_name;
             }
 
+
         pk_store_na_dimension_id();
         $("#search_wood").on("click", function() {
                 search_wood();
@@ -323,6 +324,10 @@
                 var jn1=document.getElementById("pkqt_stock_type").value
                 if (jn1==1)
                 {
+                	$('#pkqt_stock_description').selectpicker({
+						liveSearch: true,
+						noneSelectedText: 'Search'
+					});
             		$('#pkqt_stock_description').removeClass('disable_a_href');
                     $('#pkqt_uom').addClass('disable_a_href');
                     $('#pkqt_quantity').removeClass('disable_a_href');
@@ -844,7 +849,6 @@
     });
 }
 </script>
-
 <script>
 	function onChangeHandler() {
         change_cost_type();

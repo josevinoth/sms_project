@@ -35,7 +35,7 @@ class Gatein_info(models.Model):
     # gatein_sbill = models.CharField(blank=True, null=True, max_length=100)
     # gatein_sbill_date = models.DateField(blank=True, null=True)
     gatein_email_count = models.IntegerField(blank=True, null=True,default=0)
-    gatein_cargo = models.ForeignKey(YesNoInfo,blank=True, null=True,default='1', on_delete=models.CASCADE)
+    gatein_cargo = models.ForeignKey(YesNoInfo,blank=True, null=True,default='2', on_delete=models.CASCADE)
 
     class Meta:
         ordering = ["gatein_job_no"]

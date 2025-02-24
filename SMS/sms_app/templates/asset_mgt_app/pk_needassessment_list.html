@@ -31,6 +31,7 @@
             <th>Assessment NO.</th>
             <th>Date</th>
             <th>Customer Name</th>
+            <th>New Customer Name</th>
             <th>Type Of Work</th>
             <th>Type Of Packing</th>
             <th>Type Of Lifting</th>
@@ -49,8 +50,9 @@
             <td>{{ needassessmentinfo.na_assessment_num }}</td>
             <td>{{ needassessmentinfo.na_date }}</td>
             <td>{{ needassessmentinfo.na_customer_name }}</td>
+            <td>{{ needassessmentinfo.na_customer_new_name }}</td>
             <td>{{ needassessmentinfo.na_type_of_work }}</td>
-            <td>{{ needassessmentinfo.na_type_of_pack }}</td>
+            <td>{{ needassessmentinfo.na_type_of_pack1 }}</td>
 <!--            <td>{{ needassessmentinfo.na_type_of_access }}</td>-->
              <td>
                 {% if needassessmentinfo.na_type_of_access.exists %}

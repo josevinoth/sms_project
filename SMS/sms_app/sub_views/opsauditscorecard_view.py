@@ -103,6 +103,8 @@ def opsauditscorecard_add(request, ops_audit_id=0):
             print("I am inside get edit Ops Audit Score Card")
             opsaudit = OpsauditscorecardInfo.objects.get(pk=ops_audit_id)
             form = OpsauditscorecardForm(instance=opsaudit)
+            request.session['ses_ops_audit_id'] = ops_audit_id
+
             context = {
                 'form': form,
                 'first_name': first_name,
@@ -155,6 +157,8 @@ def opsauditscorecard_delete(request,ops_audit_id):
 
 @login_required(login_url='login_page')
 def send_ops_audit_email(request):
+    ops_audit_id = request.session.get('ses_ops_audit_id')
+    print('ops_audit_id',ops_audit_id)
     distinct_audit_entries = OpsauditscorecardInfo.objects.values('ops_branch', 'ops_unit', 'ops_date').distinct()
 
     categories = {
