@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
-from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F
+from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F,IntegerField
 from django.db.models import F, Subquery, OuterRef
 from django.db.models.functions import Coalesce,Round
 from django.utils.dateparse import parse_date
@@ -219,10 +219,14 @@ def salesperson_productivity_performance(request):
         existing_customer_calls=Count('id', filter=~Q(sc_sales_number__s_customer_name_id=210)),
         unique_customers=Count('sc_sales_number__s_customer_name', distinct=True),
         total_quotes=Count('sc_sales_number__s_quote_ref', distinct=True),
-        won_business_count=Count(
-            'sc_sales_number__s_bus_won_not',
-            filter=Q(sc_sales_number__s_bus_won_not=1)
+        won_business_count=Subquery(
+            SalesInfo.objects.filter(
+                s_updated_by=OuterRef('sc_updated_by'),
+                s_bus_won_not=1
+            ).values('s_updated_by').annotate(count=Count('id')).values('count')[:1],
+            output_field=IntegerField()
         ),
+
         target_existing_customer_calls=Subquery(target_existing_customers_subquery),
         target_new_customer_calls=Subquery(target_new_customers_subquery),
         target_revenue=Subquery(target_revenue_subquery),
@@ -711,10 +715,12 @@ def salesperson_wise_chart(request):
             filter=~Q(sc_sales_number__s_customer_name=210),
         ),
         total_quotes=Count('sc_sales_number__s_quote_ref', distinct=True),
-        won_count=Count(
-            'sc_sales_number__s_bus_won_not',
-            filter=Q(sc_sales_number__s_bus_won_not=1),
-        ),
+        won_count=Subquery(SalesInfo.objects.filter(
+        s_updated_by=OuterRef('sc_updated_by'),
+        s_bus_won_not=1
+    ).values('s_updated_by').annotate(count=Count('id')).values('count')[:1],
+    output_field=IntegerField()
+),
         performance_percentage=Case(
             When(total_sales_calls__gt=0, then=(F('total_quotes') / F('total_sales_calls')) * 100),
             default=Value(0.0),
