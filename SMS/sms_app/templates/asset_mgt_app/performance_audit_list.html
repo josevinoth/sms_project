@@ -1,0 +1,101 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Performance Audit List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'performance_audit_add' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table id="performance_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th></th>
+            <th><input type="text" class="form-control" placeholder="Search Location"></th>
+            <th><input type="text" class="form-control" placeholder="Search Unit"></th>
+            <th><input type="text" class="form-control" placeholder="Search Date"></th>
+            <th><input type="text" class="form-control" placeholder="Search Audit Start Date"></th>
+            <th><input type="text" class="form-control" placeholder="Search Listing the Take-aways and Directions"></th>
+            <th><input type="text" class="form-control" placeholder="Search Owner Defined and Trained"></th>
+            <th><input type="text" class="form-control" placeholder="Search Progress visibility"></th>
+            <th></th>
+            <th></th>
+        </tr>
+        <tr>
+            <th>ID</th>
+            <th>Location</th>
+            <th>Unit</th>
+            <th>Date</th>
+            <th>Period of Audit Start Date</th>
+            <th>Listing the Take-aways and Directions </th>
+            <th>Owner Defined and Trained</th>
+            <th>Progress visibility</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for performance in performaudit_list %}
+        <tr>
+            <td> {{performance.id}}</td>
+            <td> {{performance.pa_branch}}</td>
+            <td> {{performance.pa_unit}}</td>
+            <td> {{performance.pa_date}}</td>
+            <td> {{performance.pa_audit_start_date}}</td>
+            <td> {{performance.pa_Listing_the_Take_ways_Directions}}</td>
+            <td> {{performance.pa_Owner_Defined_Trained}}</td>
+            <td> {{performance.pa_Progress_visibility}}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'performance_audit_update' performance.id %}" >
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'performance_audit_delete' performance.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt" ></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#performance_list').DataTable({
+        scrollY: "800px",
+        scrollX: true,
+        order: [0, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    });
+    // Apply column-wise search
+        $('#performance_list thead input').on('keyup change', function () {
+            let colIdx = $(this).parent().index();
+            table.column(colIdx).search(this.value).draw();
+        });
+} );
+</script>
+
+{% endblock content %}
