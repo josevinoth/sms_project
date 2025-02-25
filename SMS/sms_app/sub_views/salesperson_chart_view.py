@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
-from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F
+from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F,IntegerField
 from django.db.models import F, Subquery, OuterRef
 from django.db.models.functions import Coalesce,Round
 from django.utils.dateparse import parse_date
@@ -120,7 +120,7 @@ def monthly_summary(request):
             "target_revenue": item['target_revenue'] or 0,
             "actual_revenue": item['actual_revenue'] or 0,
             "performance_percentage": round(
-                (item['unique_customers'] / item['total_sales']) * 100, 2
+                (item['total_quotes'] / item['total_sales']) * 100, 2
             ) if item['total_sales'] > 0 else 0.0,  # Performance % calculation
             "productivity_percentage": round(
                 (item['won_business_count'] / item['total_quotes']) * 100, 2
@@ -217,12 +217,28 @@ def salesperson_productivity_performance(request):
         total_sales=Count('id'),
         new_customer_calls=Count('id', filter=Q(sc_sales_number__s_customer_name_id=210)),
         existing_customer_calls=Count('id', filter=~Q(sc_sales_number__s_customer_name_id=210)),
-        unique_customers=Count('sc_sales_number__s_customer_name', distinct=True),
-        total_quotes=Count('sc_sales_number__s_quote_ref', distinct=True),
-        won_business_count=Count(
-            'sc_sales_number__s_bus_won_not',
-            filter=Q(sc_sales_number__s_bus_won_not=1)
+        unique_customers=Subquery(
+            SalesInfo.objects.filter(s_updated_by=OuterRef('sc_updated_by'))
+            .values('s_updated_by')
+            .annotate(count=Count('s_customer_name', distinct=False))
+            .values('count')[:1],
+            output_field=IntegerField()
         ),
+        total_quotes=Subquery(
+            SalesInfo.objects.filter(s_updated_by=OuterRef('sc_updated_by'))
+            .values('s_updated_by')
+            .annotate(count=Count('s_quote_ref', distinct=False))
+            .values('count')[:1],
+            output_field=IntegerField()
+        ),
+        won_business_count=Subquery(
+            SalesInfo.objects.filter(
+                s_updated_by=OuterRef('sc_updated_by'),
+                s_bus_won_not=1
+            ).values('s_updated_by').annotate(count=Count('id')).values('count')[:1],
+            output_field=IntegerField()
+        ),
+
         target_existing_customer_calls=Subquery(target_existing_customers_subquery),
         target_new_customer_calls=Subquery(target_new_customers_subquery),
         target_revenue=Subquery(target_revenue_subquery),
@@ -236,9 +252,10 @@ def salesperson_productivity_performance(request):
     for item in sales_data_query:
         total_sales = item['total_sales']
         total_quotes = item['total_quotes']
-        won_business_count = item['won_business_count']  # Ensure this is captured
+        won_business_count = item['won_business_count']
+        unique_customers =item['unique_customers']
         performance_percentage = round(
-            (item['unique_customers'] / total_sales) * 100, 2
+            (item['total_quotes'] / total_sales) * 100, 2
         ) if total_sales > 0 else 0.0
 
         productivity_percentage = round(
@@ -251,10 +268,11 @@ def salesperson_productivity_performance(request):
         sales_data.append({
             "salesperson": item['sc_updated_by__first_name'],
             "total_sales": total_sales,
+            "unique_customers": unique_customers,
             "new_customer_calls": item['new_customer_calls'],
             "existing_customer_calls": item['existing_customer_calls'],
             "won_business_count": won_business_count,
-            "total_quotes": total_quotes,  # Ensure total quotes is included
+            "total_quotes": total_quotes,
             "target_existing_customer_calls": item['target_existing_customer_calls'] or 0,
             "target_new_customer_calls": item['target_new_customer_calls'] or 0,
             "target_revenue": item['target_revenue'] or 0,
@@ -690,16 +708,31 @@ def salesperson_wise_chart(request):
     sales_summary = sales_summary.values(
         'sc_updated_by__first_name'  # Salesperson's first name
     ).annotate(
-        total_customers=Count('sc_sales_number__s_customer_name', distinct=False),
-        new_customers=Count(
-            'sc_sales_number__s_customer_name',
-            filter=Q(sc_sales_number__s_customer_name=210),
-            distinct=False,
+        total_customers=Subquery(
+            SalesInfo.objects.filter(s_updated_by=OuterRef('sc_updated_by'))
+            .values('s_updated_by')
+            .annotate(count=Count('s_customer_name', distinct=False))
+            .values('count')[:1],
+            output_field=IntegerField()
         ),
-        existing_customers=Count(
-            'sc_sales_number__s_customer_name',
-            filter=~Q(sc_sales_number__s_customer_name=210),
-            distinct=False,
+
+        # Subquery for new customers from SalesInfo (s_customer_name = 210)
+        new_customers=Subquery(
+            SalesInfo.objects.filter(s_updated_by=OuterRef('sc_updated_by'), s_customer_name=210)
+            .values('s_updated_by')
+            .annotate(count=Count('s_customer_name', distinct=False))
+            .values('count')[:1],
+            output_field=IntegerField()
+        ),
+
+        # Subquery for existing customers from SalesInfo (excluding s_customer_name = 210)
+        existing_customers=Subquery(
+            SalesInfo.objects.filter(s_updated_by=OuterRef('sc_updated_by'))
+            .exclude(s_customer_name=210)
+            .values('s_updated_by')
+            .annotate(count=Count('s_customer_name', distinct=False))
+            .values('count')[:1],
+            output_field=IntegerField()
         ),
         total_sales_calls=Count('id'),
         new_customer_calls=Count(
@@ -710,18 +743,24 @@ def salesperson_wise_chart(request):
             'id',
             filter=~Q(sc_sales_number__s_customer_name=210),
         ),
-        total_quotes=Count('sc_sales_number__s_quote_ref', distinct=True),
-        won_count=Count(
-            'sc_sales_number__s_bus_won_not',
-            filter=Q(sc_sales_number__s_bus_won_not=1),
+        total_quotes=Subquery(
+            SalesInfo.objects.filter(s_updated_by=OuterRef('sc_updated_by'))
+            .values('s_updated_by')
+            .annotate(count=Count('s_quote_ref', distinct=False))
+            .values('count')[:1],
+            output_field=IntegerField()
+        ),
+        won_count=Subquery(SalesInfo.objects.filter(
+            s_updated_by=OuterRef('sc_updated_by'), s_bus_won_not=1).values('s_updated_by').annotate(count=Count('id')).values('count')[:1],
+            output_field=IntegerField()
         ),
         performance_percentage=Case(
-            When(total_sales_calls__gt=0, then=(F('total_customers') / F('total_sales_calls')) * 100),
+            When(total_sales_calls__gt=0, then=(F('total_quotes') * 1.0 / F('total_sales_calls')) * 100),
             default=Value(0.0),
             output_field=FloatField(),
         ),
         productivity_percentage=Case(
-            When(total_quotes__gt=0, then=(F('won_count') / F('total_quotes')) * 100),
+            When(total_quotes__gt=0, then=(F('won_count') * 1.0 / F('total_quotes')) * 100),
             default=Value(0.0),
             output_field=FloatField(),
         ),

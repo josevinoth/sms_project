@@ -89,9 +89,17 @@
     </div>
 <br>
     <hr>
-
+<button id="clear-filters" class="btn btn-secondary mb-3">Clear All Filters</button>
  <table id="business_won_loss_table" class="table table-striped table-bordered">
+
     <thead class="thead-dark">
+    <tr class="filter">
+                <th><input type="text" placeholder="Salesperson" class="column-filter"></th>
+                <th><input type="text" placeholder="Customer Name" class="column-filter"></th>
+                <th><input type="text" placeholder="New Customer" class="column-filter"></th>
+                <th><input type="text" placeholder=" Yes/No" class="column-filter"></th>
+                <th><input type="text" placeholder="Remarks" class="column-filter"></th>
+                </tr>
         <tr>
             <th>Salesperson Name</th>
             <th>Customer Name</th>
@@ -118,18 +126,32 @@
 
 <script>
     $(document).ready(function() {
-    $('#business_won_loss_table').DataTable(
-        {
+    var table = $('#business_won_loss_table').DataTable({  // Add var table
         scrollY: "600px",
-<!--        scrollX: true,-->
         scrollCollapse: true,
-        order: [1, 'desc' ],
+        order: [[1, 'desc']],
         dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ]
-    } );
-} );
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+
+    // Attach event listeners to filter inputs
+    $('.filter .column-filter').on('keyup change', function () {
+        var columnIndex = $(this).closest('th').index();
+        table.column(columnIndex).search(this.value).draw(); // Ensure table is used
+    });
+
+    // Clear All Filters button functionality
+    $('#clear-filters').on('click', function () {
+        $('.filter .column-filter').val(''); // Clear input values
+        table.columns().search('').draw(); // Reset all filters
+    });
+
+    // Prevent sorting when clicking filter inputs
+    $('#business_won_loss_table thead input').on('click', function (e) {
+        e.stopPropagation();
+    });
+});
+
 </script>
     <script>
         // Bar Chart
@@ -274,7 +296,7 @@
             }
         }
     },
-    plugins: [ChartDataLabels] // Activate the Datalabels plugin
+    plugins: [ChartDataLabels]
 });
 
 
@@ -326,5 +348,17 @@ function updateFilters() {
 }
 
     </script>
+
 </body>
+<style>
+    .column-filter {
+        width: 120px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    #clear-filters {
+        float: right;
+    }
+</style>
 {% endblock %}
