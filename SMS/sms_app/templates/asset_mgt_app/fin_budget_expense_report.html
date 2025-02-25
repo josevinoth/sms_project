@@ -16,7 +16,7 @@
 }
 
 .bg-gradient-primary {
-    background: linear-gradient(to right, #4a90e2, #0061f2);
+    background: linear-gradient(to right, #581845, #f46e3a);
 }
 
 .bg-gradient-danger {
@@ -46,25 +46,25 @@
         <div class="col-md-3">
             <div class="summary-box bg-gradient-primary">
                 <h5>Total Budget</h5>
-                <h5>₹ {{ total_budget|floatformat:2 }}</h5>
+                <h5>₹ {{ total_budget|to_lakhs }}</h5>
             </div>
         </div>
         <div class="col-md-3">
             <div class="summary-box bg-gradient-danger">
                 <h5>Total Expense</h5>
-                <h5>₹ {{ total_expense|floatformat:2 }}</h5>
+                <h5>₹ {{ total_expense|to_lakhs }}</h5>
             </div>
         </div>
         <div class="col-md-3">
             <div class="summary-box bg-gradient-success">
                 <h5>Profit/Loss</h5>
-                <h5>₹ {{ total_profit_loss|floatformat:2 }}</h5>
+                <h5>₹ {{ total_profit_loss|to_lakhs }}</h5>
             </div>
         </div>
         <div class="col-md-3">
             <div class="summary-box bg-gradient-warning">
-                <h5>Profit/Loss %</h5>
-                <h5>{{ total_pl_percentage|floatformat:2 }}%</h5>
+                <h5>Profit/Loss  %</h5>
+                <h5>{{ total_pl_percentage|floatformat:2 }} %</h5>
             </div>
         </div>
     </div>
