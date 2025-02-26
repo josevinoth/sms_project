@@ -10,6 +10,8 @@ from .send_department_email import send_department_email
 def opsauditscorecard_add(request, ops_audit_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    ops_audit_entry = OpsauditscorecardInfo.objects.filter(id=ops_audit_id).first()
+    enable = ops_audit_id != 0
 
     categories = {
         "Admin": {"fields": ["ops_weighing_scale_calibration", "ops_calibration_equipment_list", "ops_AMC_contracts"],
@@ -78,11 +80,16 @@ def opsauditscorecard_add(request, ops_audit_id=0):
     category_counts = {}
     for category, data in categories.items():
         fields = data["fields"]
-        count = sum(OpsauditscorecardInfo.objects.filter(**{f"{field}__exact": "1"}).count() for field in fields)
+        count = 0
+        for field in fields:
+            value = str(getattr(ops_audit_entry, field, "No")).strip()
+            if value.lower() == "yes":
+                count += 1
         category_counts[category] = {
             "actual_score": count,
             "expected_score": data["expected_score"]
         }
+
     overall_expected_count = sum(data["expected_score"] for data in categories.values())
     overall_total_yes = sum(item["actual_score"] for item in category_counts.values())
 
@@ -111,6 +118,7 @@ def opsauditscorecard_add(request, ops_audit_id=0):
                 'category_counts': category_counts,
                 'overall_total_yes': overall_total_yes,
                 'overall_expected_count': overall_expected_count,
+                'enable': enable,
             }
 
         return render(request, "asset_mgt_app/opsauditscorecard_add.html", context)
@@ -159,8 +167,11 @@ def opsauditscorecard_delete(request,ops_audit_id):
 def send_ops_audit_email(request):
     ops_audit_id = request.session.get('ses_ops_audit_id')
     print('ops_audit_id',ops_audit_id)
-    distinct_audit_entries = OpsauditscorecardInfo.objects.values('ops_branch', 'ops_unit', 'ops_date').distinct()
+    ops_audit_entry = OpsauditscorecardInfo.objects.filter(id=ops_audit_id).first()
 
+    branch = ops_audit_entry.ops_branch
+    unit = ops_audit_entry.ops_unit
+    date = ops_audit_entry.ops_date
     categories = {
         "Admin": {"fields": ["ops_weighing_scale_calibration", "ops_calibration_equipment_list", "ops_AMC_contracts"], "expected_score": 3},
         "CCTV": {"fields": ["ops_CCTV_availability_working_condition", "ops_CCTV_DVR_kept_under_lock", "ops_CCTV_AMC",
@@ -209,23 +220,24 @@ def send_ops_audit_email(request):
                                  "ops_reports_including_DSR_correctness"], "expected_score": 3},
     }
 
-    for entry in distinct_audit_entries:
-        branch = entry['ops_branch']
-        unit = entry['ops_unit']
-        date = entry['ops_date']
+    category_counts = {}
 
-        filtered_data = OpsauditscorecardInfo.objects.filter(ops_branch=branch, ops_unit=unit, ops_date=date)
+    for category, data in categories.items():
+        fields = data["fields"]
+        count = 0
+        for field in fields:
+            value = str(getattr(ops_audit_entry, field, "No")).strip()
+            if value.lower() == "yes":
+                count += 1
+        category_counts[category] = {
+            "actual_score": count,
+            "expected_score": data["expected_score"]
+        }
 
-        category_counts = {}
-        for category, data in categories.items():
-            fields = data["fields"]
-            count = sum(filtered_data.filter(**{f"{field}__exact": "1"}).count() for field in fields)
-            category_counts[category] = {"actual_score": count, "expected_score": data["expected_score"]}
+    overall_expected_count = sum(data["expected_score"] for data in categories.values())
+    overall_total_yes = sum(item["actual_score"] for item in category_counts.values())
 
-        overall_expected_count = sum(data["expected_score"] for data in categories.values())
-        overall_total_yes = sum(item["actual_score"] for item in category_counts.values())
-
-        email_body = f"""
+    email_body = f"""
         <html>
             <head>
                 <style>
@@ -264,11 +276,13 @@ def send_ops_audit_email(request):
         </html>
         """
 
-        recipient_list = ['hariharasudhanh968@gmail.com']
-        subject = f"Ops Audit Scorecard Report - {branch} - {unit} ({date})"
+    recipient_list = ['hariharasudhanh968@gmail.com']
 
-        send_department_email('itadmin', subject, email_body, recipient_list, email_type=1)
+    subject = f"Ops Audit Scorecard Report - {branch} - {unit} ({date})"
+
+    send_department_email('itadmin', subject, email_body, recipient_list, email_type=1)
 
     messages.success(request, "Ops Audit Scorecard emails sent successfully.")
+
     return redirect(request.META.get('HTTP_REFERER', '/'))
 

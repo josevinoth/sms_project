@@ -3,11 +3,64 @@
 {% block content %}
 {% load crispy_forms_tags %}
 
-<div class="d-flex justify-content-between ">
-	<form id="tripEmailForm" action="{% url 'send_performance_audit_email' %}" method="POST">
-		{% csrf_token %}
-		<button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn"><i class="fas fa-envelope-square"></i> Send Score Card Email</button>
-	</form>
+
+
+<div class="d-flex justify-content-between">
+    <form id="tripEmailForm" action="{% url 'send_performance_audit_email' %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn" {% if not enable %}disabled{% endif %}>
+            <i class="fas fa-envelope-square"></i> Send Score Card Email
+        </button>
+    </form>
+</div>
+<br>
+
+<div class="container-fluid">
+    <div class="row text-center">
+        <div class="col-md-2">
+            <div class="summary-box bg-gradient-blue">
+                <h5>No. of Questions for - A </h5>
+                <h5> {{ total_A_count }}</h5>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="summary-box bg-gradient-red">
+                <h5>No. of Questions for - B </h5>
+                <h5> {{ total_B_count }}</h5>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="summary-box bg-gradient-teal">
+                <h5>Weightage - A </h5>
+                <h5>2</h5>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="summary-box bg-gradient-orange">
+                <h5>Weightage - B </h5>
+                <h5>1</h5>
+            </div>
+        </div>
+		<div class="col-md-2">
+            <div class="summary-box bg-gradient-purple">
+                <h5>Total Marks for - A </h5>
+                <h5>{{ overall_total_A }}</h5>
+            </div>
+        </div>
+		<div class="col-md-2">
+            <div class="summary-box bg-gradient-pink">
+                <h5>Total Marks for - B</h5>
+                <h5>{{ overall_total_B }}</h5>
+            </div>
+        </div>
+    </div>
+</div>
+<br>
+<div class="col-md-2">
+	<div class="summary-box bg-gradient-gold">
+		<h5>Total </h5>
+		<h5>{{ total }}</h5>
+	</div>
 </div>
 <br>
 
@@ -682,8 +735,8 @@
         <thead>
             <tr>
                 <th>Category</th>
-                <th>Actual Score (A=3)</th>
-                <th>Actual Score (B=2)</th>
+                <th>Actual Score (A=2)</th>
+                <th>Actual Score (B=1)</th>
             </tr>
         </thead>
         <tbody>
@@ -695,13 +748,6 @@
             </tr>
             {% endfor %}
         </tbody>
-        <tfoot>
-            <tr>
-                <th>Total</th>
-                <th>{{ overall_total_A }}</th>
-                <th>{{ overall_total_B }}</th>
-            </tr>
-        </tfoot>
     </table>
 </div>
 <script>
@@ -727,6 +773,46 @@
        });
      });
 </script>
+
+<style>
+.summary-box {
+    padding: 8px;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.bg-gradient-blue {
+    background: linear-gradient(to left, #1E3C72, #2A5298); /* Dark Blue */
+}
+
+.bg-gradient-red {
+    background: linear-gradient(to right, #D31027, #EA384D); /* Bright Red */
+}
+
+.bg-gradient-teal {
+    background: linear-gradient(to left, #136a8a, #267871); /* Deep Teal */
+}
+
+
+.bg-gradient-orange {
+    background: linear-gradient(to right, #FF8008, #FFC837); /* Deep Orange */
+}
+
+.bg-gradient-purple {
+    background: linear-gradient(to left, #6A11CB, #2575FC); /* Purple-Blue */
+}
+
+.bg-gradient-pink {
+    background: linear-gradient(to right, #ff758c, #ff7eb3); /* Soft Pink */
+}
+
+.bg-gradient-gold {
+    background: linear-gradient(to right, #D4AF37, #FFD700); /* Gold */
+}
+</style>
 
 
 {% endblock content %}

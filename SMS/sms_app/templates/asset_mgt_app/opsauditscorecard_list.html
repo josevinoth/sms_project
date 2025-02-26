@@ -9,6 +9,7 @@
         <div class="col-5"></div>
     </div>
 </div>
+
 <div class="container-fluid row">
     <div class="col-md-1">
         <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
@@ -21,21 +22,19 @@
         </a>
     </div>
 </div>
+
 <hr>
+
 <div class="container-fluid">
     <table id="opsauditscore_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
-            <th></th>
-            <th><input type="text" class="form-control" placeholder="Search Location"></th>
-            <th><input type="text" class="form-control" placeholder="Search Unit"></th>
-            <th><input type="text" class="form-control" placeholder="Search Date"></th>
-            <th><input type="text" class="form-control" placeholder="Search Audit Start Date"></th>
-            <th><input type="text" class="form-control" placeholder="Search Audit End Date"></th>
-            <th><input type="text" class="form-control" placeholder="Search Weighing Scale"></th>
-            <th><input type="text" class="form-control" placeholder="Search Calibration"></th>
-            <th><input type="text" class="form-control" placeholder="Search AMC contracts"></th>
-            <th><input type="text" class="form-control" placeholder="Search CCTV availability"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Location"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Date"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Audit Start Date"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Audit End Date"></th>
             <th></th>
             <th></th>
         </tr>
@@ -46,10 +45,6 @@
             <th>Date</th>
             <th>Period of Audit Start Date</th>
             <th>Period of Audit End Date</th>
-            <th>Weighing Scale Calibration</th>
-            <th>Calibration Equipment list, schedule and records</th>
-            <th>AMC contracts</th>
-            <th>CCTV availability and working condition</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
@@ -57,18 +52,14 @@
         <tbody>
         {% for opsaudit in ops_audit_list %}
         <tr>
-            <td> {{opsaudit.id}}</td>
-            <td> {{opsaudit.ops_branch}}</td>
-            <td> {{opsaudit.ops_unit}}</td>
-            <td> {{opsaudit.ops_date}}</td>
-            <td> {{opsaudit.ops_audit_start_date}}</td>
-            <td> {{opsaudit.ops_audit_end_date}}</td>
-            <td> {{opsaudit.ops_weighing_scale_calibration}}</td>
-            <td> {{opsaudit.ops_calibration_equipment_list}}</td>
-            <td> {{opsaudit.ops_AMC_contracts}}</td>
-            <td> {{opsaudit.ops_CCTV_availability_working_condition}}</td>
+            <td>{{ opsaudit.id }}</td>
+            <td>{{ opsaudit.ops_branch }}</td>
+            <td>{{ opsaudit.ops_unit }}</td>
+            <td>{{ opsaudit.ops_date }}</td>
+            <td>{{ opsaudit.ops_audit_start_date }}</td>
+            <td>{{ opsaudit.ops_audit_end_date }}</td>
             <td>
-                <a class="btn btn-primary" href="{% url 'ops_audit_score_update' opsaudit.id %}" >
+                <a class="btn btn-primary" href="{% url 'ops_audit_score_update' opsaudit.id %}">
                     <i class="far fa-edit"></i>
                 </a>
             </td>
@@ -76,7 +67,7 @@
                 <form action="{% url 'ops_audit_score_delete' opsaudit.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt" ></i>
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>
             </td>
@@ -85,23 +76,26 @@
         </tbody>
     </table>
 </div>
+
 <script>
     $(document).ready(function() {
-    $('#opsauditscore_list').DataTable({
-        scrollY: "800px",
-        scrollX: true,
-        order: [0, 'desc' ],
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ]
-    });
-    // Apply column-wise search
-        $('#opsauditscore_list thead input').on('keyup change', function () {
-            let colIdx = $(this).parent().index();
-            table.column(colIdx).search(this.value).draw();
+        var table = $('#opsauditscore_list').DataTable({
+            order: [[0, 'desc']],
+            scrollX: false,
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
         });
-} );
-</script>
 
+        // Apply search to each column
+        $('.filter-input').on('keyup change', function () {
+            var columnIndex = $(this).parent().index(); // Get correct column index
+            table.column(columnIndex).search(this.value).draw();
+        });
+
+        // Prevent sorting when clicking inside the filter input
+        $('#opsauditscore_list thead input').on('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+</script>
 {% endblock content %}
