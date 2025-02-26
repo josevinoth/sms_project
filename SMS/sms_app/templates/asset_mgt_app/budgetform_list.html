@@ -42,11 +42,19 @@
             <th><input type="text" class="form-control" placeholder="Search FHC"></th>
             <th><input type="text" class="form-control" placeholder="Search HC"></th>
             <th><input type="text" class="form-control" placeholder="Search PC"></th>
+             <th><input type="text" class="form-control" placeholder="Search IS"></th>
+            <th><input type="text" class="form-control" placeholder="Search DPS"></th>
+             <th><input type="text" class="form-control" placeholder="Search EBS"></th>
+             <th><input type="text" class="form-control" placeholder="Search IES"></th>
+             <th><input type="text" class="form-control" placeholder="Search OES"></th>
+             <th><input type="text" class="form-control" placeholder="Search NOES"></th>
+             <th><input type="text" class="form-control" placeholder="Search Ot"></th>
             <th><input type="text" class="form-control" placeholder="Search Month/Year"></th>
             <th><input type="text" class="form-control" placeholder="Search Updated On"></th>
             <th><input type="text" class="form-control" placeholder="Search Updated By"></th>
-            <th></th>
-            <th></th>
+
+             <th></th>
+             <th></th>
         </tr>
         <tr>
             <th>ID</th>
@@ -260,24 +268,18 @@
 
 <script>
     $(document).ready(function() {
-    $('#budget_list').DataTable({
-        scrollY: "600px",
-        scrollX: true,
-        scrollCollapse: true,
-        dom: 'lBfrtip',
-
-        var table = $('#budget_list').DataTable({
-            order: [[0, 'desc']],
-            dom: 'Bfrtip',
+            var table = $('#budget_list').DataTable({
+            scrollY: "600px",
+            scrollX: true,
+            scrollCollapse: true,
+            order: [0, 'desc'], // Sorting by "Date of Call"
+            dom: 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'print'],
-            initComplete: function () {
-                this.api().columns().every(function () {
-                    var that = this;
-                    $('input', this.header()).on('keyup change clear', function () {
-                        if (that.search() !== this.value) {
-                            that.search(this.value).draw();
-                        }
-                    });
+            initComplete: function() {
+                // Apply column search for each input field
+                $('.filter-row input').on('keyup change', function() {
+                    let colIndex = $(this).parent().index();
+                    table.column(colIndex).search(this.value).draw();
                 });
             }
         });

@@ -1,0 +1,188 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+{% load currency_format %}
+
+<body>
+<div class="col-md-1">
+    <a href="{% url 'warehouse_reports' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+<br>
+<h2 style="color:black;">WH Space Utilization Report</h2>
+<hr>
+<div class="container-fluid">
+    <div class="row align-items-center">
+
+        <div class="col-md-2">
+            <label for="branch-filter"><b>Branch:</b></label>
+            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for branch in branches %}
+                <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
+                    {{ branch.loc_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="unit-filter"><b>Unit:</b></label>
+            <select id="unit-filter" name="unit" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for unit in units %}
+                <option value="{{ unit.unit_name }}" {% if unit.unit_name == selected_unit %} selected {% endif %}>
+                    {{ unit.unit_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="businessmodel-filter"><b>Business Model:</b></label>
+            <select id="businessmodel-filter" name="businessmodel" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for businessmodel in businessmodels %}
+                <option value="{{ businessmodel.tb_trbusinesstype }}"
+                        {% if businessmodel.tb_trbusinesstype == selected_businessmodel %} selected {% endif %}>
+                    {{ businessmodel.tb_trbusinesstype }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="bay-filter"><b>Bay Name:</b></label>
+            <select id="bay-filter" name="bay" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for bay in bays %}
+                <option value="{{ bay.bay_bayname }}" {% if bay.bay_bayname == selected_bay %} selected {% endif %}>
+                    {{ bay.bay_bayname }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+    </div>
+</div>
+<br>
+
+<hr>
+
+<table id="space_utilization_table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Branch</th>
+            <th>Total Area</th>
+            <th>Occupied Area</th>
+            <th>Available Area</th>
+            <th>Total Volume</th>
+            <th>Occupied Volume</th>
+            <th>Available Volume</th>
+            <th>Available Area %</th>
+            <th>Occupied Area %</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for branch in branch_summary %}
+        <tr class="grouped" data-branch="{{ branch.lm_wh_location__loc_name }}">
+            <td><b>📂{{ branch.lm_wh_location__loc_name }}</b></td>
+            <td>{{ branch.total_area|floatformat:2 }}</td>
+            <td>{{ branch.occupied_area|floatformat:2 }}</td>
+            <td>{{ branch.available_area|floatformat:2 }}</td>
+            <td>{{ branch.total_volume|floatformat:2 }}</td>
+            <td>{{ branch.occupied_volume|floatformat:2 }}</td>
+            <td>{{ branch.available_area_percent|floatformat:2 }}</td>
+            <td>{{ branch.occupied_area_percent|floatformat:2 }}</td>
+        </tr>
+
+        {% for unit in unit_summary %}
+            {% if unit.lm_wh_location__loc_name == branch.lm_wh_location__loc_name %}
+            <tr class="unit-row" data-branch="{{ branch.lm_wh_location__loc_name }}">
+                <td>{{ unit.lm_wh_unit__unit_name }}</td>
+                <td>{{ unit.total_area|floatformat:2 }}</td>
+                <td>{{ unit.occupied_area|floatformat:2 }}</td>
+                <td>{{ unit.available_area|floatformat:2 }}</td>
+                <td>{{ unit.total_volume|floatformat:2 }}</td>
+                <td>{{ unit.occupied_volume|floatformat:2 }}</td>
+                <td>{{ unit.available_volume|floatformat:2 }}</td>
+                <td>{{ unit.available_area_percent|floatformat:2 }}</td>
+                <td>{{ unit.occupied_area_percent|floatformat:2 }}</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+<script>
+
+
+$(document).ready(function() {
+    // Hide all unit rows initially
+    $('.unit-row').hide();
+
+    // Toggle child rows when clicking a branch
+    $('.grouped').on('click', function() {
+        var branch = $(this).data('branch');
+        $("tr[data-branch='" + branch + "'].unit-row").toggle();
+    });
+});
+</script>
+
+
+
+<script>
+
+    // Add event listeners to filters
+    document.getElementById('branch-filter').addEventListener('change', updateFilters);
+    document.getElementById('unit-filter').addEventListener('change', updateFilters);
+    document.getElementById('bay-filter').addEventListener('change', updateFilters);
+    document.getElementById('businessmodel-filter').addEventListener('change', updateFilters);
+
+
+    function updateFilters() {
+    const branch = document.getElementById('branch-filter').value;
+    const unit = document.getElementById('unit-filter').value;
+    const bay = document.getElementById('bay-filter').value;
+    const businessmodel = document.getElementById('businessmodel-filter').value;
+    const url = new URL(window.location.href);
+
+
+    if (branch) {
+        url.searchParams.set('branch', branch);
+    } else {
+        url.searchParams.delete('branch'); // Clear the parameter if "All" is selected
+    }
+
+    if (businessmodel) {
+        url.searchParams.set('businessmodel', businessmodel);
+    } else {
+        url.searchParams.delete('businessmodel'); // Clear the parameter if "All" is selected
+    }
+
+    if (unit) {
+        url.searchParams.set('unit', unit);
+    } else {
+        url.searchParams.delete('unit'); // Clear the parameter if "All" is selected
+    }
+
+    if (bay) {
+        url.searchParams.set('bay', bay);
+    } else {
+        url.searchParams.delete('bay'); // Clear the parameter if "All" is selected
+    }
+
+     console.log(url.toString());
+
+    window.location.href = url.toString();
+}
+
+</script>
+
+{% endblock content %}
