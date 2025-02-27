@@ -619,6 +619,12 @@ urlpatterns = [
     path('wh_stock_report/', views.wh_stock_report, name='wh_stock_report'),
     path('wh_space_availability_report/', views.wh_space_availability_report, name='wh_space_availability_report'),
     path('wh_space_utilization_report/', views.wh_space_utilization_report, name='wh_space_utilization_report'),
+    path('performance_audit_add/', views.performanceaudit_add, name='performance_audit_add'),
+    path('performance_audit_list/', views.performanceaudit_list, name='performance_audit_list'),
+    path('performance_audit_update/<int:perform_audit_id>/', views.performanceaudit_add, name='performance_audit_update'),
+    path('performance_audit_delete/<int:perform_audit_id>/', views.performanceaudit_delete, name='performance_audit_delete'),
+    path('send_performance_audit_email/', views.send_performance_audit_email, name='send_performance_audit_email'),
+
     path('salesperson_wise_table/', views.salesperson_wise_table, name='salesperson_wise_table'),
 ]
 
