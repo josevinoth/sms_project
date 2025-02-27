@@ -191,8 +191,10 @@ def salesperson_productivity_performance(request):
     ).values('st_target_revenue')[:1]
 
     actual_revenue_subquery = BusinessrevenueInfo.objects.filter(
-        br_sale_person__first_name=OuterRef('sc_updated_by__first_name')  # Adjust field name if needed
-    ).values('br_revenue_1')[:1]
+        br_sale_person__first_name=OuterRef('sc_updated_by__first_name')
+    ).annotate(
+        actual_revenue=Sum('br_revenue_1')
+    ).values('actual_revenue')[:1]
 
     sales_data_query = Sales_Comments_Info.objects.filter(
         sc_updated_by__user_extinfo__department__dept_name="Sales",sc_updated_by__is_active=True
@@ -238,11 +240,19 @@ def salesperson_productivity_performance(request):
             ).values('s_updated_by').annotate(count=Count('id')).values('count')[:1],
             output_field=IntegerField()
         ),
+        actual_revenue=Subquery(
+            BusinessrevenueInfo.objects.filter(
+                br_sale_person=OuterRef('sc_updated_by'),
+                **({'br_from_date__gte': from_date} if from_date else {}),
+                **({'br_from_date__lte': to_date} if to_date else {}),
+            ).values('br_sale_person')
+            .annotate(total=Sum('br_revenue_1'))
+            .values('total')[:1]
+        ),
 
         target_existing_customer_calls=Subquery(target_existing_customers_subquery),
         target_new_customer_calls=Subquery(target_new_customers_subquery),
         target_revenue=Subquery(target_revenue_subquery),
-        actual_revenue=Subquery(actual_revenue_subquery),
     )
 
     sales_data = []
@@ -766,28 +776,28 @@ def salesperson_wise_chart(request):
         ),
         target_revenue=Subquery(
             Sales_target_info.objects.filter(
-                st_sales_person=OuterRef('sc_updated_by'),
+                st_sales_person__first_name=OuterRef('sc_updated_by__first_name'),
                 **({'st_start_date__gte': from_date} if from_date else {}),
                 **({'st_start_date__lte': to_date} if to_date else {}),
             ).values('st_target_revenue')[:1]
         ),
         target_customers=Subquery(
             Sales_target_info.objects.filter(
-                st_sales_person=OuterRef('sc_updated_by'),
+                st_sales_person__first_name=OuterRef('sc_updated_by__first_name'),
                 **({'st_start_date__gte': from_date} if from_date else {}),
                 **({'st_start_date__lte': to_date} if to_date else {}),
             ).values('st_target_customer')[:1]
         ),
         target_calls_new_customer=Subquery(
             Sales_target_info.objects.filter(
-                st_sales_person=OuterRef('sc_updated_by'),
+                st_sales_person__first_name=OuterRef('sc_updated_by__first_name'),
                 **({'st_start_date__gte': from_date} if from_date else {}),
                 **({'st_start_date__lte': to_date} if to_date else {}),
             ).values('st_target_calls_new_customer')[:1]
         ),
         target_calls_existing_customer=Subquery(
             Sales_target_info.objects.filter(
-                st_sales_person=OuterRef('sc_updated_by'),
+                st_sales_person__first_name=OuterRef('sc_updated_by__first_name'),
                 **({'st_start_date__gte': from_date} if from_date else {}),
                 **({'st_start_date__lte': to_date} if to_date else {}),
             ).values('st_target_calls_existing_customer')[:1]
@@ -898,3 +908,170 @@ def targets_actuals_table(request):
     return render(request, "asset_mgt_app/fin_PL_report.html", context)
 
 
+def salesperson_wise_table(request):
+    first_name = request.session.get('first_name')
+    selected_salesperson = request.GET.get('salesperson', None)
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+
+    salespersons = MyUser.objects.select_related('user_extinfo').filter(
+        user_extinfo__department__dept_name="Sales", is_active=True
+    ).distinct().values_list('first_name', flat=True)
+
+    target_filter = Q()
+    if selected_salesperson:
+        target_filter &= Q(st_sales_person__first_name=selected_salesperson)
+    if from_date:
+        target_filter &= Q(st_updated_at__gte=from_date)
+    if to_date:
+        target_filter &= Q(st_updated_at__lte=to_date)
+
+    actual_filter = Q()
+    if selected_salesperson:
+        actual_filter &= Q(s_updated_by__first_name=selected_salesperson)
+    if from_date:
+        actual_filter &= Q(s_updated_at__gte=from_date)
+    if to_date:
+        actual_filter &= Q(s_updated_at__lte=to_date)
+
+    calls_filter = Q()
+    if selected_salesperson:
+        calls_filter &= Q(sc_updated_by__first_name=selected_salesperson)
+    if from_date:
+        calls_filter &= Q(sc_updated_at__date__gte=from_date)
+    if to_date:
+        calls_filter &= Q(sc_updated_at__date__lte=to_date)
+
+    revenue_filter = Q()
+    if selected_salesperson:
+        revenue_filter &= Q(br_sale_person__first_name=selected_salesperson)
+    if from_date:
+        revenue_filter &= Q(br_updated_on__gte=from_date)
+    if to_date:
+        revenue_filter &= Q(br_updated_on__lte=to_date)
+
+    # Apply filters to each dataset
+    target_data = Sales_target_info.objects.filter(target_filter, st_sales_person__is_active=True).values(
+        'st_sales_person__id', 'st_sales_person__first_name'
+    ).annotate(
+        total_target_customers=Sum('st_target_customer'),
+        target_new_customer_calls=Sum('st_target_calls_new_customer'),
+        target_existing_customer_calls=Sum('st_target_calls_existing_customer'),
+        target_revenue=Sum('st_target_revenue')
+    )
+
+    actual_data = SalesInfo.objects.filter(actual_filter, s_updated_by__user_extinfo__department__dept_name="Sales",s_updated_by__is_active=True).values(
+        's_updated_by__id', 's_updated_by__first_name'
+    ).annotate(
+        total_actual_customers=Count('s_customer_name', distinct=False),
+        total_new_customers=Count('s_customer_new_name', distinct=False),
+        total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=False),
+        total_quotes=Count('s_quote_ref'),
+        business_won=Count(('s_bus_won_not'),filter=Q(s_bus_won_not=1)),
+    )
+
+    sales_calls = Sales_Comments_Info.objects.filter(calls_filter, sc_updated_by__user_extinfo__department__dept_name="Sales",sc_updated_by__is_active=True).values(
+        'sc_updated_by__id', 'sc_updated_by__first_name'
+    ).annotate(
+        total_sales_calls=Count('id'),
+        actual_new_customer_calls=Count('id', filter=Q(sc_sales_number__s_customer_name_id=210)),
+        actual_existing_customer_calls=Count('id', filter=~Q(sc_sales_number__s_customer_name_id=210))
+    )
+
+    actual_revenue = BusinessrevenueInfo.objects.filter(revenue_filter).values(
+        'br_sale_person__id', 'br_sale_person__first_name'
+    ).annotate(
+        actual_revenue=Sum('br_revenue_1')
+    )
+
+    summary = []
+    salesperson_ids = set(
+        list(target['st_sales_person__id'] for target in target_data) +
+        list(actual['s_updated_by__id'] for actual in actual_data) +
+        list(call['sc_updated_by__id'] for call in sales_calls) +
+        list(revenue['br_sale_person__id'] for revenue in actual_revenue)
+    )
+    call_type_summary = []
+    call_nature_summary = []
+    call_purpose_summary = []
+
+    for salesperson_id in salesperson_ids:
+        salesperson_name = next(
+            (t['st_sales_person__first_name'] for t in target_data if t['st_sales_person__id'] == salesperson_id),
+            None
+        ) or next(
+            (a['s_updated_by__first_name'] for a in actual_data if a['s_updated_by__id'] == salesperson_id),
+            None
+        ) or next(
+            (c['sc_updated_by__first_name'] for c in sales_calls if c['sc_updated_by__id'] == salesperson_id),
+            "Unknown"
+        ) or next(
+            (rev['br_sale_person__first_name'] for rev in actual_revenue if rev['br_sale_person__id'] == salesperson_id),
+            "Unknown"
+        )
+
+        # Fetch target, actuals, and calls
+        target = next((t for t in target_data if t['st_sales_person__id'] == salesperson_id), {})
+        actual = next((a for a in actual_data if a['s_updated_by__id'] == salesperson_id), {})
+        calls = next((c for c in sales_calls if c['sc_updated_by__id'] == salesperson_id), {})
+        revenue = next((rev for rev in actual_revenue if rev['br_sale_person__id'] == salesperson_id), {})
+        sales_data = []
+        performance_percentages = []
+        productivity_percentages = []
+
+        total_sales_calls = calls.get('total_sales_calls', 0)
+        total_quotes = actual.get('total_quotes', 0)
+        business_won = actual.get('business_won', 0)
+
+        # Calculate performance and productivity percentages
+        performance_percentage = round((total_quotes / total_sales_calls) * 100, 2) if total_sales_calls > 0 else 0.0
+        productivity_percentage = round((business_won / total_quotes) * 100, 2) if total_quotes > 0 else 0.0
+
+        summary.append({
+            'salesperson': salesperson_name,
+            'total_target_customers': target.get('total_target_customers', 0),
+            'target_new_customer_calls': target.get('target_new_customer_calls', 0),
+            'target_existing_customer_calls': target.get('target_existing_customer_calls', 0),
+            'target_revenue': target.get('target_revenue', 0),
+            'total_actual_customers': actual.get('total_actual_customers', 0),
+            'total_new_customers': actual.get('total_new_customers', 0),
+            'total_existing_customers': actual.get('total_existing_customers', 0),
+            'total_sales_calls': total_sales_calls,
+            'total_quotes': total_quotes,
+            'business_won': business_won,
+            'actual_new_customer_calls': calls.get('actual_new_customer_calls', 0),
+            'actual_existing_customer_calls': calls.get('actual_existing_customer_calls', 0),
+            'actual_revenue': revenue.get('actual_revenue', 0),
+            'performance_percentage': performance_percentage,
+            'productivity_percentage': productivity_percentage
+        })
+
+        call_type_summary = sales_calls.values(
+            'sc_call_type__call_type'
+        ).annotate(
+            call_type_count=Count('sc_call_type')
+        )
+
+        call_nature_summary = sales_calls.values(
+            'sc_call_nature__call_nature'
+        ).annotate(
+            call_nature_count=Count('sc_call_nature')
+        )
+
+        call_purpose_summary = sales_calls.values(
+            'sc_call_purpose__call_purpose'
+        ).annotate(
+            call_purpose_count=Count('sc_call_purpose')
+        )
+
+    return render(request, "asset_mgt_app/salesperson_wise_2.html", {
+        'summary': summary,
+        'call_purpose_summary': call_purpose_summary,
+        'call_type_summary': call_type_summary,
+        'call_nature_summary': call_nature_summary,
+        'first_name': first_name,
+        'salespersons': salespersons,
+        'selected_salesperson': selected_salesperson,
+        'from_date': from_date,
+        'to_date': to_date
+    })
