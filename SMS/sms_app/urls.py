@@ -625,6 +625,7 @@ urlpatterns = [
     path('performance_audit_delete/<int:perform_audit_id>/', views.performanceaudit_delete, name='performance_audit_delete'),
     path('send_performance_audit_email/', views.send_performance_audit_email, name='send_performance_audit_email'),
 
+    path('salesperson_wise_table/', views.salesperson_wise_table, name='salesperson_wise_table'),
 ]
 
 
