@@ -93,7 +93,6 @@
         <thead class="thead-dark">
             <tr>
                 <th>Salesperson</th>
-                <th>Total Customers</th>
                 <th>Total Sales Calls</th>
                 <th>Target Calls-New Customer</th>
                 <th>New Customer Calls</th>
@@ -111,7 +110,6 @@
             {% for row in sales_data %}
                 <tr>
                     <td>{{ row.salesperson }}</td>
-                    <td>{{ row.unique_customers }}</td>
                     <td>{{ row.total_sales }}</td>
                     <td>{{ row.target_new_customer_calls }}</td>
                     <td>{{ row.new_customer_calls }}</td>
@@ -182,7 +180,7 @@ new Chart(ctxSales, {
                 align: 'top',
                 formatter: (value) => value,
                 font: {
-                    size: 10 ,
+                    size: 12 ,
                     weight: 'bold',
                 },
                 color: '#000',

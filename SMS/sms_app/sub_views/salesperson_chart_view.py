@@ -249,10 +249,28 @@ def salesperson_productivity_performance(request):
             .annotate(total=Sum('br_revenue_1'))
             .values('total')[:1]
         ),
+        target_new_customer_calls=Subquery(
+            Sales_target_info.objects.filter(
+                st_sales_person__first_name=OuterRef('sc_updated_by__first_name'),
+                **({'st_start_date__gte': from_date} if from_date else {}),
+                **({'st_start_date__lte': to_date} if to_date else {}),
+            ).values('st_target_calls_new_customer')[:1]
+        ),
 
-        target_existing_customer_calls=Subquery(target_existing_customers_subquery),
-        target_new_customer_calls=Subquery(target_new_customers_subquery),
-        target_revenue=Subquery(target_revenue_subquery),
+        target_existing_customer_calls=Subquery(
+            Sales_target_info.objects.filter(
+                st_sales_person__first_name=OuterRef('sc_updated_by__first_name'),
+                **({'st_start_date__gte': from_date} if from_date else {}),
+                **({'st_start_date__lte': to_date} if to_date else {}),
+            ).values('st_target_calls_existing_customer')[:1]
+        ),
+        target_revenue=Subquery(
+            Sales_target_info.objects.filter(
+                st_sales_person__first_name=OuterRef('sc_updated_by__first_name'),
+                **({'st_start_date__gte': from_date} if from_date else {}),
+                **({'st_start_date__lte': to_date} if to_date else {}),
+            ).values('st_target_revenue')[:1]
+        ),
     )
 
     sales_data = []
@@ -444,9 +462,9 @@ def targets_actuals(request):
     if selected_salesperson:
         target_filter &= Q(st_sales_person__first_name=selected_salesperson)
     if from_date:
-        target_filter &= Q(st_updated_at__gte=from_date)
+        target_filter &= Q(st_start_date__gte=from_date)
     if to_date:
-        target_filter &= Q(st_updated_at__lte=to_date)
+        target_filter &= Q(st_end_date__lte=to_date)
 
     actual_filter = Q()
     if selected_salesperson:
@@ -468,9 +486,9 @@ def targets_actuals(request):
     if selected_salesperson:
         revenue_filter &= Q(br_sale_person__first_name=selected_salesperson)
     if from_date:
-        revenue_filter &= Q(br_updated_on__gte=from_date)
+        revenue_filter &= Q(br_from_date__gte=from_date)
     if to_date:
-        revenue_filter &= Q(br_updated_on__lte=to_date)
+        revenue_filter &= Q(br_from_date__lte=to_date)
 
     # Apply filters to each dataset
     target_data = Sales_target_info.objects.filter(target_filter, st_sales_person__is_active=True).values(
@@ -785,21 +803,21 @@ def salesperson_wise_chart(request):
             Sales_target_info.objects.filter(
                 st_sales_person__first_name=OuterRef('sc_updated_by__first_name'),
                 **({'st_start_date__gte': from_date} if from_date else {}),
-                **({'st_start_date__lte': to_date} if to_date else {}),
+                **({'st_end_date__lte': to_date} if to_date else {}),
             ).values('st_target_customer')[:1]
         ),
         target_calls_new_customer=Subquery(
             Sales_target_info.objects.filter(
                 st_sales_person__first_name=OuterRef('sc_updated_by__first_name'),
                 **({'st_start_date__gte': from_date} if from_date else {}),
-                **({'st_start_date__lte': to_date} if to_date else {}),
+                **({'st_end_date__lte': to_date} if to_date else {}),
             ).values('st_target_calls_new_customer')[:1]
         ),
         target_calls_existing_customer=Subquery(
             Sales_target_info.objects.filter(
                 st_sales_person__first_name=OuterRef('sc_updated_by__first_name'),
                 **({'st_start_date__gte': from_date} if from_date else {}),
-                **({'st_start_date__lte': to_date} if to_date else {}),
+                **({'st_end_date__lte': to_date} if to_date else {}),
             ).values('st_target_calls_existing_customer')[:1]
         ),
         total_revenue=Subquery(
@@ -922,9 +940,9 @@ def salesperson_wise_table(request):
     if selected_salesperson:
         target_filter &= Q(st_sales_person__first_name=selected_salesperson)
     if from_date:
-        target_filter &= Q(st_updated_at__gte=from_date)
+        target_filter &= Q(st_start_date__gte=from_date)
     if to_date:
-        target_filter &= Q(st_updated_at__lte=to_date)
+        target_filter &= Q(st_end_date__lte=to_date)
 
     actual_filter = Q()
     if selected_salesperson:
@@ -946,9 +964,9 @@ def salesperson_wise_table(request):
     if selected_salesperson:
         revenue_filter &= Q(br_sale_person__first_name=selected_salesperson)
     if from_date:
-        revenue_filter &= Q(br_updated_on__gte=from_date)
+        revenue_filter &= Q(br_from_date__gte=from_date)
     if to_date:
-        revenue_filter &= Q(br_updated_on__lte=to_date)
+        revenue_filter &= Q(br_from_date__lte=to_date)
 
     # Apply filters to each dataset
     target_data = Sales_target_info.objects.filter(target_filter, st_sales_person__is_active=True).values(
