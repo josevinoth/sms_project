@@ -81,6 +81,7 @@
             <th>Total Volume</th>
             <th>Occupied Volume</th>
             <th>Available Volume</th>
+            <th>Available Area %</th>
         </tr>
     </thead>
     <tbody>
@@ -93,6 +94,7 @@
             <td>{{ branch.total_volume|floatformat:2 }}</td>
             <td>{{ branch.occupied_volume|floatformat:2 }}</td>
             <td>{{ branch.available_volume|floatformat:2 }}</td>
+            <td>{{ branch.available_area_percent|floatformat:2 }}</td>
         </tr>
 
         {% for unit in unit_summary %}
@@ -105,6 +107,7 @@
                 <td>{{ unit.total_volume|floatformat:2 }}</td>
                 <td>{{ unit.occupied_volume|floatformat:2 }}</td>
                 <td>{{ unit.available_volume|floatformat:2 }}</td>
+                <td>{{ unit.available_area_percent|floatformat:2 }}%</td>
             </tr>
             {% endif %}
         {% endfor %}

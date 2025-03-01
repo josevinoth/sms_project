@@ -160,7 +160,11 @@ def wh_space_availability_report(request):
         available_area=Sum("lm_available_area"),
         total_volume=Sum("lm_total_volume"),
         occupied_volume=Sum("lm_volume_occupied"),
-        available_volume=Sum("lm_available_volume")
+        available_volume=Sum("lm_available_volume"),
+        available_area_percent=ExpressionWrapper(
+            (F("available_area") * 100.0) / F("total_area"),
+            output_field=FloatField()
+        )
     )
 
     # 🔹 FIX: Group Units Within Each Branch Separately
@@ -170,7 +174,11 @@ def wh_space_availability_report(request):
         available_area=Sum("lm_available_area"),
         total_volume=Sum("lm_total_volume"),
         occupied_volume=Sum("lm_volume_occupied"),
-        available_volume=Sum("lm_available_volume")
+        available_volume=Sum("lm_available_volume"),
+        available_area_percent=ExpressionWrapper(
+            (F("available_area") * 100.0) / F("total_area"),
+            output_field=FloatField()
+        )
     ).order_by("lm_wh_location__loc_name", "lm_wh_unit__unit_name")  # Ensure correct ordering
 
     context = {
