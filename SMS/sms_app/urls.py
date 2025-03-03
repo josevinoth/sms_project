@@ -1,4 +1,6 @@
 from django.urls import path
+from django.views.generic import TemplateView
+
 from . import views
 from django.contrib.auth import views as auth_views #import this
 urlpatterns = [
@@ -155,6 +157,7 @@ urlpatterns = [
     path('enquirynote_insert', views.enquirynote_add, name='enquirynote_insert'),  # Add enquirynote
     path('enquirynote_update/<int:enquirynote_id>/', views.enquirynote_add, name='enquirynote_update'),  # Update enquirynote
     path('enquirynote_delete/<int:enquirynote_id>/', views.enquirynote_delete, name='enquirynote_delete'),  # Delete enquirynote
+    path('enquirynote_nav/<int:enquirynote_id>/', views.enquirynote_nav, name='enquirynote_nav'),   # Update enquirynote navigation
     path('consignmentdetail_list/', views.consignmentdetail_list, name='consignmentdetail_list'),  # List consignmentdetail,
     path('consignmentdetail_insert', views.consignmentdetail_add, name='consignmentdetail_insert'),  # Add consignmentdetail
     path('consignmentdetail_update/<int:consignmentdetail_id>/', views.consignmentdetail_add, name='consignmentdetail_update'),  # Update consignmentdetail
@@ -440,6 +443,8 @@ urlpatterns = [
     path('consignmentgoods_update/<int:consignmentgoods_id>', views.consignmentgoods_add, name='consignmentgoods_update'),  # update consignmentgoods
     path('consignmentgoods_delete/<int:consignmentgoods_id>', views.consignmentgoods_delete, name='consignmentgoods_delete'),  # delete consignmentgoods
     path('consignmentgoods_nav/<int:consignmentdetails_id>', views.consignmentgoods_nav, name='consignmentgoods_nav'),  # nav consignmentgoods
+    # path('transport_nav/', views.transport_nav, name='transport_nav'),  # nav transport
+    path('transport_nav/', TemplateView.as_view(template_name='asset_mgt_app/transport_nav.html'), name='transport_nav'),
     path('consignmentgoods_cancel/', views.consignmentgoods_cancel, name='consignmentgoods_cancel'),  # Cancel consignmentgoods
     path('consignmentgoods_back/', views.consignmentgoods_back, name='consignmentgoods_back'),  # Cancel consignmentgoods
     path('load_location/', views.load_location, name='load_location'),
@@ -610,10 +615,10 @@ urlpatterns = [
     path('ops_audit_score_list/', views.opsauditscorecard_list, name='ops_audit_score_list'),
     path('ops_audit_score_update/<int:ops_audit_id>/', views.opsauditscorecard_add, name='ops_audit_score_update'),
     path('ops_audit_score_delete/<int:ops_audit_id>/', views.opsauditscorecard_delete, name='ops_audit_score_delete'),
-    path('consignment_goods/add/', views.consignment_goods_add, name='consignment_goods_add'),
-    path('consignment_goods/add/<int:goods_id>/', views.consignment_goods_add, name='consignment_goods_edit'),
-    path('consignment_goods/list/', views.consignment_goods_list, name='consignment_goods_list'),
-    path('consignment_goods/delete/<int:goods_id>/', views.consignment_goods_delete, name='consignment_goods_delete'),
+    path('consignment_goods_new_insert/', views.consignment_goods_new_add, name='consignment_goods_new_insert'),
+    path('consignment_goods_new_update/<int:goods_id>/', views.consignment_goods_new_add, name='consignment_goods_new_update'),
+    path('consignment_goods_new_list/', views.consignment_goods_new_list, name='consignment_goods_new_list'),
+    path('consignment_goods_new_delete/<int:goods_id>/', views.consignment_goods_new_delete, name='consignment_goods_new_delete'),
     path('send_ops_audit_email/', views.send_ops_audit_email, name='send_ops_audit_email'),
     path('wh_damage_report/', views.wh_damage_report, name='wh_damage_report'),
     path('wh_stock_report/', views.wh_stock_report, name='wh_stock_report'),
@@ -624,7 +629,6 @@ urlpatterns = [
     path('performance_audit_update/<int:perform_audit_id>/', views.performanceaudit_add, name='performance_audit_update'),
     path('performance_audit_delete/<int:perform_audit_id>/', views.performanceaudit_delete, name='performance_audit_delete'),
     path('send_performance_audit_email/', views.send_performance_audit_email, name='send_performance_audit_email'),
-
     path('salesperson_wise_table/', views.salesperson_wise_table, name='salesperson_wise_table'),
 ]
 

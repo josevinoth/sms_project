@@ -41,12 +41,13 @@
                 <!-- Submit & Cancel in the same row -->
                 <div class="col-md-2 text-center mt-4">
                     <button type="submit" class="btn btn-success btn-sm">Submit</button>
-                    <a href="{% url 'consignment_goods_list' %}" class="btn btn-secondary btn-sm">Cancel</a>
+                    <a href="{% url 'consignment_goods_new_list' %}" class="btn btn-secondary btn-sm">Cancel</a>
                 </div>
             </div>
         </div>
     </div>
 </form>
+<hr>
 	{% include "asset_mgt_app/consignmentgoods_newlist_woh.html" %}
 
 <script>
