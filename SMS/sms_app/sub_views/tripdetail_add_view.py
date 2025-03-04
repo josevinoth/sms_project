@@ -265,11 +265,10 @@ def trip_email(request):
                         border-collapse: collapse;
                         font-family: Arial, sans-serif;
                         font-size: 14px;
-                        border: 1px solid black; /* Adds a black border */
-
+                        border: 1px solid black;
                     }}
                     th, td {{
-                        border: 1px solid black; /* Ensures all cells have black borders */
+                        border: 1px solid black;
                         padding: 10px;
                     }}
                     th {{
@@ -294,7 +293,7 @@ def trip_email(request):
                     <tr><th>Consignment Number</th><td>{trip.tr_consignmentnumber}</td></tr>
                     <tr><th>Vehicle Type</th><td>{trip.tr_vehicletype}</td></tr>
                     <tr><th>Vehicle Number</th><td>{trip.tr_vehiclenumber}</td></tr>
-                    <tr><th>Vehicle Number</th><td>{trip.tr_vehicletype_placed}</td></tr>
+                    <tr><th>Vehicle Type Placed</th><td>{trip.tr_vehicletype_placed}</td></tr>
                     <tr><th>Driver Name</th><td>{trip.tr_drivername}</td></tr>
                     <tr><th>Driver Number</th><td>{trip.tr_drivernumber}</td></tr>
                     <tr><th>Trip Category</th><td>{trip.tr_category}</td></tr>
@@ -307,7 +306,6 @@ def trip_email(request):
                     <tr><th>Reported KM</th><td>{trip.tr_reportedkm}</td></tr>
                     <tr><th>Reported Date</th><td>{trip.tr_reporteddate}</td></tr>
                     <tr><th>Trip Status</th><td>{trip.tc_financestatus}</td></tr>
-                    <tr><th>Attachment</th><td>{trip.tc_pod_attachment}</td></tr>
                     <tr><th>POD Number</th><td>{trip.tc_pod}</td></tr>
                     <tr><th>Updated By</th><td>{trip.tr_updated_by}</td></tr>
                     <tr>
@@ -322,7 +320,27 @@ def trip_email(request):
         </html>
     """
 
-    send_department_email('itadmin',subject, email_body, recipient_list, email_type=1)
+    # Get the attachment details
+    if trip.tc_pod_attachment:
+        attachment_path = trip.tc_pod_attachment.path
+        attachment_type = "application/octet-stream"  # Default MIME type
+        file_name = trip.tc_pod_attachment.name.split("/")[-1]  # Extract file name
+    else:
+        attachment_path = None
+        attachment_type = None
+        file_name = None
 
-    messages.success(request, "Trip email sent successfully.")
+    # Send email with attachment (if available)
+    send_department_email(
+        department='itadmin',
+        subject=subject,
+        message=email_body,
+        recipient_list=recipient_list,
+        attachment=open(attachment_path, 'rb') if attachment_path else None,
+        attachment_type=attachment_type,
+        file_name=file_name,
+        email_type=1
+    )
+
+    messages.success(request, "Trip email sent successfully with attachment.")
     return redirect(request.META.get('HTTP_REFERER', '/'))
