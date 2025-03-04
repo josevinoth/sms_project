@@ -577,14 +577,39 @@ def targets_actuals(request):
 
 
 def sales_call_report(request):
+    first_name = request.session.get('first_name')
+    selected_salesperson = request.GET.get('salesperson', None)
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+
+    salespersons = MyUser.objects.select_related('user_extinfo').filter(
+        user_extinfo__department__dept_name="Sales", is_active=True
+    ).distinct().values_list('first_name', flat=True)
+
+    sales_summary = Sales_Comments_Info.objects.filter(
+        sc_updated_by__user_extinfo__department__dept_name="Sales", sc_updated_by__is_active=True
+    )
+
+    if selected_salesperson:
+        sales_summary = sales_summary.filter(sc_updated_by__first_name=selected_salesperson)
+    if from_date:
+        sales_summary = sales_summary.filter(sc_updated_at__date__gte=from_date)
+    if to_date:
+        sales_summary = sales_summary.filter(sc_updated_at__date__lte=to_date)
+
     # Query SalesInfo and related Sales_Comments_Info
-    sales_reports = Sales_Comments_Info.objects.select_related(
+    sales_summary = sales_summary.select_related(
         'sc_sales_number',
         'sc_updated_by'
     ).all()
 
     context = {
-        'sales_reports': sales_reports
+        'first_name': first_name,
+        'selected_salesperson': selected_salesperson,
+        'salespersons': salespersons,
+        'from_date': from_date,
+        'to_date': to_date,
+        'sales_summary': sales_summary
     }
     return render(request,"asset_mgt_app/sales_call_report.html",context)
 

@@ -10,7 +10,35 @@ from django.core.paginator import Paginator
 
 from ..sub_models.customer_mod import CustomerInfo
 
-
+@login_required(login_url='login_page')
+def enquirynote_nav(request,enquirynote_id=0,enquirynotevehicle_id=0):
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    if enquirynote_id == 0:
+        print("I am inside Get add Enquirynote")
+        form = EnquirynoteaddForm()
+        enquiryvechicle_form = EnquirynotevehicleForm()
+        context = {
+            'user_id': user_id,
+            'form': form,
+            'enquiryvechicle_form': enquiryvechicle_form,
+            'first_name': first_name,
+        }
+    else:
+        print("I am inside get edit Enuirynote")
+        enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
+        form = EnquirynoteaddForm(instance=enquirynote)
+        enquiryvechicle_form = EnquirynotevehicleForm()
+        enquirynotevehicle_list = Enquirynotevehicle.objects.filter(env_enquirynumber=enquirynote_id)
+        context = {
+            'user_id': user_id,
+            'form': form,
+            'enquiryvechicle_form': enquiryvechicle_form,
+            'first_name': first_name,
+            'enquirynotevehicle_list': enquirynotevehicle_list,
+            'enquirynote_id': enquirynote_id,
+        }
+    return render(request, "asset_mgt_app/enquirynote_add.html", context)
 @login_required(login_url='login_page')
 def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
     first_name = request.session.get('first_name')
@@ -36,7 +64,7 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
             form = EnquirynoteaddForm(instance=enquirynote)
             # enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
             enquiryvechicle_form = EnquirynotevehicleForm()
-            enquirynotevehicle_list=Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_num_id)
+            enquirynotevehicle_list=Enquirynotevehicle.objects.filter(env_enquirynumber=enquirynote_id)
             context={
                 'user_id': user_id,
                 'form': form,

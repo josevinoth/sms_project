@@ -1,0 +1,20 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="accordion container-fluid" id="consignment_goods">
+	<div class="card">
+		<div class="card-header bg-info" id="headingOne">
+			<h2 class="mb-0">
+				<button class="btn btn-block text-left text-white " type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+					<h3>Add Consignment Details</h3>
+				</button>
+			</h2>
+		</div>
+		<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#consignment_goods">
+			<div class="card-body">
+				{% include "asset_mgt_app/consignmentdetail_add.html" %}
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}
