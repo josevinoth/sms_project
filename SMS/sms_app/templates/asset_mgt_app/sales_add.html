@@ -848,4 +848,27 @@
 }
 </script>
 
+<script>
+$(document).ready(function () {
+    function hc_enabler() {
+        var jn7 = $("#s_quote_ref").val().trim();
+        var businessWonField = $("#s_bus_won_not");
+
+        if (jn7 === "" || jn7.toLowerCase() === "null" || jn7.toLowerCase() === "none") {
+            businessWonField.val("2").addClass("disable_a_href").prop("disabled", true);
+        } else {
+            businessWonField.removeClass("disable_a_href").prop("disabled", false);
+        }
+    }
+    hc_enabler();
+
+    $("#s_quote_ref").on("change keyup", function () {
+        hc_enabler();
+    });
+});
+</script>
+
+
+
+
 {% endblock content %}

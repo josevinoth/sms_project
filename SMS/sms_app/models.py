@@ -93,6 +93,7 @@ from .sub_models.damagereport_mod import DamagereportInfo,DamagereportImages
 from .sub_models.loadingbay_mod import Loadingbay_Info,Loadingbayimages_Info
 from .sub_models.customername_mod import CustomernameInfo_new
 from .sub_models.vehiclecategory_mod import VehiclecategoryInfo
+from .sub_models.transitdistribute_info_mod import TransitdistributeInfo
 from .sub_models.dispatch_mod import Dispatch_info
 from .sub_models.warehouse_goods_info_mod import Warehouse_goods_info
 from .sub_models.expense_category_mod import ExpenseCategoryInfo

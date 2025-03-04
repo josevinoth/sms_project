@@ -154,6 +154,19 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Dispatch Model</span>
+									</div>
+									{% render_field dispatch_form.dispatch_transit class="form-control" id="dispatch_model" %}
+								</div>
+
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Reference</span>
+									</div>
+									{% render_field dispatch_form.dispatch_reference class="form-control"  id="dispatch_reference" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
 									{% render_field dispatch_form.dispatch_status id="dispatch_status" class="form-control"  %}
@@ -252,4 +265,22 @@
       });
     });
 </script>
+
+
+<script>
+$(document).ready(function () {
+    $("#gate_in").submit(function (event) {
+        var dispatchModel = $("#dispatch_model").val().trim();
+
+        if (dispatchModel === "1") {
+               alert("Dispatch is not allowed when the model is Transit.");
+            	event.preventDefault();
+            	return false;
+        }
+    });
+});
+</script>
+
+
+
 {% endblock content %}

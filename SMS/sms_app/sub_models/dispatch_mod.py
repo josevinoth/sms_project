@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Check_in_out,CustomerInfo,Labels_pasted_Info,StatusList,VehicletypeInfo,GstexcemptionInfo,MyUser
+from ..models import Check_in_out,CustomerInfo,Labels_pasted_Info,StatusList,VehicletypeInfo,GstexcemptionInfo,MyUser,TransitdistributeInfo
 
 class Dispatch_info(models.Model):
     dispatch_depature_date = models.DateTimeField(null=True,blank=True)
@@ -14,7 +14,7 @@ class Dispatch_info(models.Model):
     dispatch_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,null=False)
     dispatch_sticker_pasted_bvm= models.ForeignKey(Labels_pasted_Info, on_delete=models.CASCADE,null=True,blank=True,related_name='dispatch_sticker_pasted_bvm', db_column='dispatch_sticker_pasted_bvm')
     # dispatch_destination = models.CharField(null=False, max_length=20)
-    dispatch_comments = models.TextField(null=False,blank=True,max_length=300,default="Goods In Good Condition")
+    dispatch_comments = models.TextField(null=False,blank=True,max_length=300,default="All Goods Received and In Good Condition")
     dispatch_cargo_picked = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,null=False,related_name='dispatch_cargo_picked', db_column='dispatch_cargo_picked')
     dispatch_num = models.CharField(null=False,blank=True,max_length=20)
     # dispatch_ewaybill = models.CharField(null=False, max_length=30)
@@ -31,3 +31,5 @@ class Dispatch_info(models.Model):
                                                     related_name='dispatch_billing_truck_type',
                                                     db_column='dispatch_billing_truck_type', null=True, blank=True)
     dispatch_email_count = models.IntegerField(null=True,blank=True,default=0)
+    dispatch_transit = models.ForeignKey(TransitdistributeInfo,on_delete=models.CASCADE, default=1)
+    dispatch_reference = models.CharField(null=True,blank=True, max_length=40)

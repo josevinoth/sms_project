@@ -332,7 +332,7 @@ def export_stockreport_to_csv(request):
     headers = [
          'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival',
             'Unloading Start Time', 'Unloading End Time', 'Transporter',
-            'Truck Number', 'Consigner', 'Consignee', 'Docs Received', 'HAWB',
+            'Truck Number', 'Consignor', 'Consignee', 'Docs Received', 'HAWB',
             'Destination', 'Invoice Number', 'Case Number', 'Invoice Qty',
             'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight',
@@ -463,7 +463,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
         # Write the headers
         headers = [
             'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival', 'Unloading Start Time',
-            'Unloading End Time', 'Transporter', 'Truck Number', 'Consigner', 'Consignee',
+            'Unloading End Time', 'Transporter', 'Truck Number', 'Consignor', 'Consignee',
             'Docs Received', 'HAWB', 'Destination', 'Invoice Number', 'Case Number',
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
