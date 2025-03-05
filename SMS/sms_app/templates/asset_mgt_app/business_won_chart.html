@@ -134,19 +134,16 @@
         buttons: ['copy', 'csv', 'excel', 'print']
     });
 
-    // Attach event listeners to filter inputs
     $('.filter .column-filter').on('keyup change', function () {
         var columnIndex = $(this).closest('th').index();
-        table.column(columnIndex).search(this.value).draw(); // Ensure table is used
+        table.column(columnIndex).search(this.value).draw();
     });
 
-    // Clear All Filters button functionality
     $('#clear-filters').on('click', function () {
-        $('.filter .column-filter').val(''); // Clear input values
-        table.columns().search('').draw(); // Reset all filters
+        $('.filter .column-filter').val('');
+        table.columns().search('').draw();
     });
 
-    // Prevent sorting when clicking filter inputs
     $('#business_won_loss_table thead input').on('click', function (e) {
         e.stopPropagation();
     });
@@ -184,7 +181,7 @@
                 align: 'top',
                 formatter: (value) => value,
                 font: {
-                    size: 10,
+                    size: 12,
                     weight: 'bold',
                 },
                 color: '#000',
@@ -192,19 +189,20 @@
                 borderRadius: 4,
                 padding: 5,
                 borderWidth: 1,
-                borderColor: '#000', // Border around the label
+                borderColor: '#000',
             }
         },
         scales: {
             y: {
-                beginAtZero: true
+                beginAtZero: true,
+                suggestedMax: Math.max(...{{ new_customer_counts|safe }}, ...{{ existing_customer_counts|safe }}) * 1.2,
             }
         }
     },
-    plugins: [ChartDataLabels] // Activate the Datalabels plugin
+    plugins: [ChartDataLabels]
 });
 
-         // Donut Chart
+
     const donutChartCtx = document.getElementById('donutChart').getContext('2d');
     const donutChart = new Chart(donutChartCtx, {
         type: 'doughnut',

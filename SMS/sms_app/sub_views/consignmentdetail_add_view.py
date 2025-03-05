@@ -64,15 +64,14 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'customer_code': customer_code,
             'consignmentgoods_id_val': consignmentgoods_id_val,
             'consignmentdetail_list': ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id),
+            'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentgoods_id_val),
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
     else:
         con_det_form = ConsignmentdetailaddForm(request.POST)
-        form = ConsignmentgoodsaddForm(request.POST)
-        cn_form = ConsignmentgoodsnewaddForm(request.POST)
 
-        if con_det_form.is_valid() and form.is_valid() and cn_form.is_valid():
+        if con_det_form.is_valid():
             if consignmentdetail_id == 0:
                 last_id = ConsignmentdetailInfo.objects.latest('id').id if ConsignmentdetailInfo.objects.exists() else 0
                 cons_num_next = f"CON_{1000000 if last_id == 0 else int(ConsignmentdetailInfo.objects.get(id=last_id).co_consignmentnumber.replace('CON_', '')) + 1}"
@@ -81,14 +80,10 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 consignment_detail.co_consignmentnumber = cons_num_next
                 consignment_detail.save()
 
-                goods = form.save(commit=False)
-                goods.consignmentdetail = consignment_detail
-                goods.save()
-
-                new_goods = cn_form.save(commit=False)
-                new_goods.consignmentdetail = consignment_detail
-                new_goods.save()
-
+                for field, errors in con_det_form.errors.items():
+                    for error in errors:
+                        print(f"Error in {field}: {error}")
+                        messages.error(request, f"Error in {field}: {error}")
                 messages.success(request, 'Record Updated Successfully')
                 return redirect(f'/SMS/consignmentdetail_update/{consignment_detail.id}')
             else:
@@ -103,7 +98,8 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
 
                     messages.success(request, 'Record Updated Successfully')
 
-                return redirect('/SMS/consignmentdetail_list/')
+                # return redirect('/SMS/consignmentdetail_list/')
+                return redirect(request.META['HTTP_REFERER'])
 
         messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
         return redirect(request.META['HTTP_REFERER'])

@@ -1,13 +1,13 @@
 {% block content %}
 <div class="container-fluid row">
+<!--    <div class="col-md-1">-->
+<!--      <a href="{% url 'consignmentgoods_back' %}" class="btn btn-primary btn-block btn-lg">-->
+<!--        <i class="fas fa-arrow-left"></i> Back-->
+<!--      </a>-->
+<!--    </div>-->
     <div class="col-md-1">
-      <a href="{% url 'consignmentgoods_back' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i> Back
-      </a>
-    </div>
-    <div class="col-md-1">
-      <a href="{% url 'consignmentgoods_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i> Add
+      <a href="{% url 'consignmentgoods_insert' %}" class="btn btn-primary btn-block btn-lg">
+        <i class="fas fa-plus"></i> Addw
       </a>
     </div>
 </div>
@@ -66,6 +66,7 @@
         </tbody>
     </table>
 </div>
+
 <script>
     $(document).ready(function() {
     $('#consignmentgoods_list').DataTable();

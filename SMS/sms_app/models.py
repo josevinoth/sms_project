@@ -93,6 +93,7 @@ from .sub_models.damagereport_mod import DamagereportInfo,DamagereportImages
 from .sub_models.loadingbay_mod import Loadingbay_Info,Loadingbayimages_Info
 from .sub_models.customername_mod import CustomernameInfo_new
 from .sub_models.vehiclecategory_mod import VehiclecategoryInfo
+from .sub_models.transitdistribute_info_mod import TransitdistributeInfo
 from .sub_models.dispatch_mod import Dispatch_info
 from .sub_models.warehouse_goods_info_mod import Warehouse_goods_info
 from .sub_models.expense_category_mod import ExpenseCategoryInfo
@@ -195,4 +196,6 @@ from .sub_models.transport_procurement_mod import Vehicle_procurementInfo
 from .sub_models.goodnotgood_mod import GoodnotgoodInfo
 from .sub_models.gate_meeting_mod import Gatemeetinginfo
 from .sub_models.opsauditscorecard_mod import OpsauditscorecardInfo
+from .sub_models.ab_info_mod import ABInfo
+from .sub_models.performance_audit_mod import PerformanceauditInfo
 from .sub_models.trip_closure_mbl import Trclosure_mblInfo

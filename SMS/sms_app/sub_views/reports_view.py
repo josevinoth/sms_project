@@ -1,6 +1,8 @@
 import csv
 from itertools import chain
 from io import BytesIO
+
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import StreamingHttpResponse
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
@@ -323,7 +325,7 @@ def export_stockreport_to_csv(request):
         'wh_fumigation_process__ge_gstexcepmtion', 'wh_check_in_out__check_in_out_name', 'wh_branch__loc_name',
         'wh_unit__unit_name',
         'wh_bay__bay_bayname', 'wh_storage_time', 'wh_dispatch_id__dispatch_truck_number',
-        'wh_dispatch_id__dispatch_truck_type__vt_vehicletype','departure_time',
+        str('wh_dispatch_id__dispatch_truck_type__vt_vehicletype'),'departure_time',
         'wh_dispatch_id__dispatch_sticker_pasted_bvm__lp_name', 'wh_dispatch_id__dispatch_mawb',
         'wh_dispatch_id__dispatch_num',
     )
@@ -332,7 +334,7 @@ def export_stockreport_to_csv(request):
     headers = [
          'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival',
             'Unloading Start Time', 'Unloading End Time', 'Transporter',
-            'Truck Number', 'Consigner', 'Consignee', 'Docs Received', 'HAWB',
+            'Truck Number', 'Consignor', 'Consignee', 'Docs Received', 'HAWB',
             'Destination', 'Invoice Number', 'Case Number', 'Invoice Qty',
             'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight',
@@ -463,7 +465,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
         # Write the headers
         headers = [
             'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival', 'Unloading Start Time',
-            'Unloading End Time', 'Transporter', 'Truck Number', 'Consigner', 'Consignee',
+            'Unloading End Time', 'Transporter', 'Truck Number', 'Consignor', 'Consignee',
             'Docs Received', 'HAWB', 'Destination', 'Invoice Number', 'Case Number',
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
@@ -517,22 +519,32 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                 if stock_value.wh_gate_injob_no_id:  # Check if exists
                     date_of_arrival = getattr(stock_value.wh_gate_injob_no_id, 'gatein_arrival_date', None)
                     if date_of_arrival:
-                        date_of_arrival = date_of_arrival.replace(tzinfo=None).date()
+                        date_of_arrival = date_of_arrival.replace(tzinfo=None)
                     else:
                         date_of_arrival = ""
 
-                checkin_weight = stock_value.wh_gross_weight if stock_value.wh_gross_weight else 0
+                checkin_qty = stock_value.wh_invoice_qty if stock_value.wh_invoice_qty else 0
                 dispatch_qty = stock_value.wh_dispatch_id.dispatch_total_goods if stock_value.wh_dispatch_id and stock_value.wh_dispatch_id.dispatch_total_goods else 0
 
-                stock_on_hand = checkin_weight - dispatch_qty  # Subtract dispatch quantity
+                stock_on_hand = checkin_qty - dispatch_qty  # Subtract dispatch quantity
+                try:
+                    if stock_value.wh_dispatch_id and stock_value.wh_dispatch_id.dispatch_depature_date:
+                        dispatch_depature_time = stock_value.wh_dispatch_id.dispatch_depature_date.replace(tzinfo=None)
+                    else:
+                        dispatch_depature_time = None
+                except AttributeError:
+                    dispatch_depature_time = None
+
                 row = [
                     stock_value.wh_job_no,  # Index 0
                     stock_value.wh_qr_rand_num,  # Index 1
                     str(stock_value.wh_customer_name),  # Index 2
                     date_of_arrival if date_of_arrival else '',  # Index 3: Only Date, no time
-                    stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time.replace(tzinfo=None).date()
+
+                    stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time.replace(tzinfo=None)
                     if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time else '',
-                    stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time.replace(tzinfo=None).date()
+
+                    stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time.replace(tzinfo=None)
                     if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time else '',
                     # Index 6: gatein_transporter
                     getattr(stock_value.wh_gate_injob_no_id, 'gatein_transporter', ''),
@@ -586,15 +598,16 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                     # Index 31: wh_fumigation_process
                     str(stock_value.wh_fumigation_process or ''),
 
-                    "Stock on Hand" if str(stock_value.wh_check_in_out) == "Checked-In" else "Checked-In", # Index # Index 32
+                    "Stock on Hand" if str(stock_value.wh_check_in_out) == "Checked-In" else "Checked-Out", # Index # Index 32
                     str(stock_value.wh_branch),  # Index 33
                     str(stock_value.wh_unit),  # Index 34
                     str(stock_value.wh_bay),  # Index 35
                     stock_value.wh_storage_time,# Index 36
                     getattr(stock_value.wh_dispatch_id, 'dispatch_truck_number', ''),# Index 37
-                    getattr(stock_value.wh_dispatch_id, 'dispatch_truck_type', ''),# Index 38
-                    getattr(stock_value.wh_dispatch_id, 'dispatch_depature_date', ''),# Index 39
-                    getattr(stock_value.wh_dispatch_id, 'dispatch_sticker_pasted_bvm', ''),# Index 40
+                    str(getattr(stock_value.wh_dispatch_id, 'dispatch_truck_type', '')),# Index 38
+                    # getattr(stock_value.wh_dispatch_id, 'dispatch_depature_date', ''),# Index 39
+                    dispatch_depature_time,
+                    str(getattr(stock_value.wh_dispatch_id, 'dispatch_sticker_pasted_bvm', '')),# Index 40
                     getattr(stock_value.wh_dispatch_id, 'dispatch_mawb', ''),# Index 41
                     getattr(stock_value.wh_dispatch_id, 'dispatch_num', ''),# Index 42
                     getattr(stock_value.wh_dispatch_id, 'dispatch_total_goods', ''),# Index 43

@@ -93,7 +93,6 @@
         <thead class="thead-dark">
             <tr>
                 <th>Salesperson</th>
-                <th>Total Customers</th>
                 <th>Total Sales Calls</th>
                 <th>Target Calls-New Customer</th>
                 <th>New Customer Calls</th>
@@ -111,7 +110,6 @@
             {% for row in sales_data %}
                 <tr>
                     <td>{{ row.salesperson }}</td>
-                    <td>{{ row.unique_customers }}</td>
                     <td>{{ row.total_sales }}</td>
                     <td>{{ row.target_new_customer_calls }}</td>
                     <td>{{ row.new_customer_calls }}</td>
@@ -136,7 +134,7 @@
     $('#monthly_summary_table').DataTable(
         {
         scrollY: "600px",
-<!--        scrollX: true,-->
+        scrollX: true,
         scrollCollapse: true,
         order: [1, 'desc' ],
         dom: 'lBfrtip',
@@ -148,11 +146,11 @@
 </script>
 
     <script>
-        const labels = {{ labels|safe }}; // Salesperson names
-        const newCustomerCalls = {{ new_customer_calls|safe }}; // New customer call counts
-        const existingCustomerCalls = {{ existing_customer_calls|safe }}; // Existing customer call counts
-        const performancePercentages = {{ performance_percentages|safe }}; // Performance data
-        const productivityPercentages = {{ productivity_percentages|safe }}; // Productivity data
+        const labels = {{ labels|safe }};
+        const newCustomerCalls = {{ new_customer_calls|safe }};
+        const existingCustomerCalls = {{ existing_customer_calls|safe }};
+        const performancePercentages = {{ performance_percentages|safe }};
+        const productivityPercentages = {{ productivity_percentages|safe }};
 
 
       const ctxSales = document.getElementById('salesChart').getContext('2d');
@@ -178,19 +176,19 @@ new Chart(ctxSales, {
         responsive: true,
         plugins: {
             datalabels: {
-                anchor: 'end', // Position of the label (above the bar)
-                align: 'top',  // Position the label above the bar
-                formatter: (value) => value, // Show the value in the label
+                anchor: 'end',
+                align: 'top',
+                formatter: (value) => value,
                 font: {
-                    size: 9 ,
+                    size: 12 ,
                     weight: 'bold',
                 },
-                color: '#000', // Label text color
-                backgroundColor: 'rgba(235, 233, 234, 0.8)', // Background color for the label
+                color: '#000',
+                backgroundColor: 'rgba(235, 233, 234, 0.8)',
                 borderRadius: 4,
                 padding: 5,
                 borderWidth: 1,
-                borderColor: '#000', // Border around the label
+                borderColor: '#000',
             }
         },
         scales: {
@@ -203,6 +201,7 @@ new Chart(ctxSales, {
             },
             y: {
                 beginAtZero: true,
+                suggestedMax: Math.max(...newCustomerCalls, ...existingCustomerCalls) * 1.2,
                 ticks: {
                     font: { size: 10, weight: 'bold' },
                     color: '#000',
@@ -210,7 +209,7 @@ new Chart(ctxSales, {
             }
         }
     },
-    plugins: [ChartDataLabels] // Enable the ChartDataLabels plugin
+    plugins: [ChartDataLabels]
 });
 
 // Productivity Donut Chart
@@ -222,7 +221,7 @@ createDonutChart(
     'Productivity (%)', // Legend label
     ['#FF6384', '#36A2EB', '#ff0000','#FFCE56', '#4BC0C0', '#9966FF','#4ce9b9',
     '#FF9F40', '#BFBFBF', '#AA64B1', '#8AC926', '#FF595E','#ffa500','#4c2447'
-] // Colors for the chart
+]
 );
 
 // Performance Donut Chart
@@ -234,17 +233,17 @@ createDonutChart(
     'Performance (%)', // Legend label
     ['#FF6384', '#36A2EB', '#ff0000','#FFCE56', '#4BC0C0', '#9966FF','#4ce9b9',
     '#FF9F40', '#BFBFBF', '#AA64B1', '#8AC926', '#FF595E','#ffa500','#4c2447'
-] // Colors for the chart
+]
 );
 
 
 
 
-          document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
-         document.getElementById('from-date').addEventListener('change', updateFilters);
-        document.getElementById('to-date').addEventListener('change', updateFilters);
-            document.getElementById('company-filter').addEventListener('change', updateFilters);
-document.getElementById('branch-filter').addEventListener('change', updateFilters);
+       document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+       document.getElementById('from-date').addEventListener('change', updateFilters);
+       document.getElementById('to-date').addEventListener('change', updateFilters);
+       document.getElementById('company-filter').addEventListener('change', updateFilters);
+       document.getElementById('branch-filter').addEventListener('change', updateFilters);
 
 function updateFilters() {
     const salesperson = document.getElementById('salesperson-filter').value;

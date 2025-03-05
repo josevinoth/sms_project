@@ -3,13 +3,17 @@
 {% block content %}
 {% load crispy_forms_tags %}
 
-<div class="d-flex justify-content-between ">
-	<form id="tripEmailForm" action="{% url 'send_ops_audit_email' %}" method="POST">
-		{% csrf_token %}
-		<button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn"><i class="fas fa-envelope-square"></i> Send Score Card Email</button>
-	</form>
+
+<div class="d-flex justify-content-between">
+    <form id="tripEmailForm" action="{% url 'send_ops_audit_email' %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn" {% if not enable %}disabled{% endif %}>
+            <i class="fas fa-envelope-square"></i> Send Score Card Email
+        </button>
+    </form>
 </div>
 <br>
+
 <form method="POST" action="" id="opsauditscorecard_add">
 	{% csrf_token %}
 	<div class="container-fluid">
