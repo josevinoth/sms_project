@@ -619,6 +619,10 @@ urlpatterns = [
     path('wh_stock_report/', views.wh_stock_report, name='wh_stock_report'),
     path('wh_space_availability_report/', views.wh_space_availability_report, name='wh_space_availability_report'),
     path('wh_space_utilization_report/', views.wh_space_utilization_report, name='wh_space_utilization_report'),
+    path('trclosure_mbl_add/', views.trclosure_mbl_add, name='trclosure_mbl_add'),
+    path('trclosure_mbl_add/<int:trm_id>/', views.trclosure_mbl_add, name='trclosure_mbl_edit'),
+    path('trclosure_mbl_list/', views.trclosure_mbl_list, name='trclosure_mbl_list'),
+    path('trclosure_mbl_delete/<int:trm_id>/', views.trclosure_mbl_delete, name='trclosure_mbl_delete'),
 ]
 
 

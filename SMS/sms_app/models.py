@@ -195,3 +195,4 @@ from .sub_models.transport_procurement_mod import Vehicle_procurementInfo
 from .sub_models.goodnotgood_mod import GoodnotgoodInfo
 from .sub_models.gate_meeting_mod import Gatemeetinginfo
 from .sub_models.opsauditscorecard_mod import OpsauditscorecardInfo
+from .sub_models.trip_closure_mbl import Trclosure_mblInfo

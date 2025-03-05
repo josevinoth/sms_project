@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if form.instance.pk %} Edit {% else %} Add {% endif %} Trip Closure</title>
+
+    <!-- Bootstrap 5 CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+
+    <!-- FontAwesome for Icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn-custom {
+            width: 100%;
+            font-weight: bold;
+        }
+        .form-label {
+            font-weight: 600;
+        }
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0px 0px 5px rgba(13, 110, 253, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="form-container">
+        <h3 class="text-center mb-4">
+            <i class="fas fa-truck"></i> {% if form.instance.pk %} Edit {% else %} Add {% endif %} Trip Closure
+        </h3>
+
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {% csrf_token %}
+
+            <!-- Trip Number -->
+            <div class="mb-3">
+                <label for="trm_tripnumber" class="form-label">Trip Number</label>
+                <select id="trm_tripnumber" name="trm_tripnumber" class="form-control" required>
+                    <option value="">-- Select Trip --</option>
+                    {% for trip in trips %}
+                    <option value="{{ trip.id }}" {% if form.trm_tripnumber.value == trip.id %}selected{% endif %}>{{ trip }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select a trip number.</div>
+            </div>
+
+            <!-- Departed Location -->
+            <div class="mb-3">
+                <label for="trm_departedlocation" class="form-label">Departed Location</label>
+                <select id="trm_departedlocation" name="trm_departedlocation" class="form-control" required>
+                    <option value="">-- Select Location --</option>
+                    {% for place in places %}
+                    <option value="{{ place.id }}" {% if form.trm_departedlocation.value == place.id %}selected{% endif %}>{{ place }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select a departed location.</div>
+            </div>
+
+            <!-- Reported Location -->
+            <div class="mb-3">
+                <label for="trm_reportedlocation" class="form-label">Reported Location</label>
+                <select id="trm_reportedlocation" name="trm_reportedlocation" class="form-control" required>
+                    <option value="">-- Select Location --</option>
+                    {% for place in places %}
+                    <option value="{{ place.id }}" {% if form.trm_reportedlocation.value == place.id %}selected{% endif %}>{{ place }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select a reported location.</div>
+            </div>
+
+            <!-- Departed Date -->
+            <div class="mb-3">
+                <label for="trm_departeddate" class="form-label">Departed Date</label>
+                <input type="datetime-local" id="trm_departeddate" name="trm_departeddate" class="form-control" value="{{ form.trm_departeddate.value|default:'' }}" required>
+                <div class="invalid-feedback">Please select a valid departed date.</div>
+            </div>
+
+            <!-- Status -->
+            <div class="mb-3">
+                <label for="trm_status" class="form-label">Status</label>
+                <select id="trm_status" name="trm_status" class="form-control" required>
+                    <option value="">-- Select Status --</option>
+                    {% for status in statuses %}
+                    <option value="{{ status.id }}" {% if form.trm_status.value == status.id %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select a status.</div>
+            </div>
+
+            <!-- Attachment Upload -->
+            <div class="mb-3">
+                <label for="trm_attachment" class="form-label">Upload Attachment (Optional)</label>
+                <input type="file" id="trm_attachment" name="trm_attachment" class="form-control">
+            </div>
+
+            <!-- Buttons -->
+            <button type="submit" class="btn btn-success btn-custom">
+                <i class="fas fa-save"></i> Save
+            </button>
+                <a href="{% url 'trclosure_mbl_list' %}" class="btn btn-secondary btn-custom mt-2">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </form>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Form Validation Script -->
+<script>
+    (function () {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+
+</body>
+</html>
