@@ -31,5 +31,5 @@ class Dispatch_info(models.Model):
                                                     related_name='dispatch_billing_truck_type',
                                                     db_column='dispatch_billing_truck_type', null=True, blank=True)
     dispatch_email_count = models.IntegerField(null=True,blank=True,default=0)
-    dispatch_transit = models.ForeignKey(TransitdistributeInfo,on_delete=models.CASCADE, default=1)
+    dispatch_transit = models.ForeignKey(TransitdistributeInfo,on_delete=models.CASCADE,null=True,blank=True)
     dispatch_reference = models.CharField(null=True,blank=True, max_length=40)
