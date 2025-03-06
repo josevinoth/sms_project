@@ -630,6 +630,12 @@ urlpatterns = [
     path('performance_audit_delete/<int:perform_audit_id>/', views.performanceaudit_delete, name='performance_audit_delete'),
     path('send_performance_audit_email/', views.send_performance_audit_email, name='send_performance_audit_email'),
     path('salesperson_wise_table/', views.salesperson_wise_table, name='salesperson_wise_table'),
+    path('sales_multiple_item_add/', views.sales_multiple_item_add, name='sales_multiple_item_add'),
+    path('sales_multiple_item_list/', views.sales_multiple_item_list, name='sales_multiple_item_list'),
+    path('sales_multiple_item_update/<int:sales_multiple_id>/', views.sales_multiple_item_add, name='sales_multiple_item_update'),
+    path('sales_multiple_item_delete/<int:sales_multiple_id>/', views.sales_multiple_item_delete,name='sales_multiple_item_delete'),
+    path('sales_multiple_item_cancel/', views.sales_multiple_item_cancel, name='sales_multiple_item_cancel'),
+
 ]
 
 
