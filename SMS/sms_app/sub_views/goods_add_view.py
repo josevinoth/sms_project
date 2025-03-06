@@ -124,12 +124,16 @@ def goods_add(request, goods_id=0):
             unit_id = request.session.get('last_warehouse_unit')
             bay_id = request.session.get('last_warehouse_bay')
             layer_id = request.session.get('last_stacking_layer')
+            last_available_area = request.session.get('last_available_area')
+            last_available_volume = request.session.get('last_available_volume')
 
             initial_data = {
             'wh_branch': Location_info.objects.get(id=branch_id) if branch_id else None,
             'wh_unit': UnitInfo.objects.get(id=unit_id) if unit_id else None,
             'wh_bay': BayInfo.objects.get(id=bay_id) if bay_id else None,
             'wh_stack_layer': StackingInfo.objects.get(id=layer_id) if layer_id else None,
+            'wh_available_area': last_available_area,
+            'wh_available_volume': last_available_volume,
             }
             print(initial_data)
             goods_form = GoodsaddForm(initial=initial_data)
@@ -166,7 +170,6 @@ def goods_add(request, goods_id=0):
                 'form_warehouse_email': form_warehouse_email,
                 'email_count': email_count,
                 'damage_status': damage_status,
-
             }
         else:
             print("I am inside get edit Goods")
@@ -251,6 +254,8 @@ def goods_add(request, goods_id=0):
             request.session['last_warehouse_unit'] = goods_form.cleaned_data.get('wh_unit').id if goods_form.cleaned_data.get('wh_unit') else None
             request.session['last_warehouse_bay'] = goods_form.cleaned_data.get('wh_bay').id if goods_form.cleaned_data.get('wh_bay') else None
             request.session['last_stacking_layer'] = goods_form.cleaned_data.get('wh_stack_layer').id if goods_form.cleaned_data.get('wh_stack_layer') else None
+            request.session['last_available_area'] = goods_form.cleaned_data.get('wh_available_area') if goods_form.cleaned_data.get('wh_available_area') else None
+            request.session['last_available_volume'] = goods_form.cleaned_data.get('wh_available_volume') if goods_form.cleaned_data.get('wh_available_volume') else None
 
             return redirect(request.META['HTTP_REFERER'])
         else:

@@ -1,11 +1,14 @@
 import json
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
+
 from ..forms import ModifyDimensionsForm,CostingSearchForm,PkcostingForm
-from ..models import POdimension,Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo
+from ..models import POdimension,Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo,Costtype,Pkstocktype,Stockdescription,pk_itemInfo,pk_itemdescriptionInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 
+@transaction.atomic
 @login_required(login_url='login_page')
 def costing_add(request, costing_id=0):
     first_name = request.session.get('first_name')
@@ -18,7 +21,31 @@ def costing_add(request, costing_id=0):
 
     if request.method == "GET":
         if costing_id == 0:
-            form = PkcostingForm()
+            print("Inside PK quotation GET add")
+
+            # Fetch session data with a default value
+            ct_cost_type_id = request.session.get('last_cs_cost_type', None)
+            ct_job_type_id = request.session.get('last_cs_job_type', None)
+            ct_job_type_quant_id = request.session.get('last_cs_job_type_quantity', None)
+            ct_stock_type_id = request.session.get('last_cs_stock_type_quantity', None)
+            ct_stock_description_id = request.session.get('last_cs_stock_desc_quantity', None)
+            ct_item_type_id = request.session.get('last_cs_item_type', None)
+            ct_item_description_id = request.session.get('last_cs_item_desc', None)
+
+            # Retrieve objects safely
+            initial_data = {
+                'ct_cost_type': Costtype.objects.filter(id=ct_cost_type_id).first(),
+                'ct_requirement': Nadimension.objects.filter(id=ct_job_type_id).first() if ct_job_type_id else None,
+                'ct_na_quantity': ct_job_type_quant_id,
+                'ct_stock_type': Pkstocktype.objects.filter(id=ct_stock_type_id).first() if ct_stock_type_id else None,
+                'ct_stock_description':  Stockdescription.objects.filter(id=ct_stock_description_id).first() if ct_stock_description_id else None,
+                'ct_item': pk_itemInfo.objects.filter(id=ct_item_type_id).first() if ct_item_type_id else None,
+                'ct_itemdescription': pk_itemdescriptionInfo.objects.filter(id=ct_item_description_id).first() if ct_item_description_id else None,
+            }
+
+            print("Initial Data:", initial_data)
+
+            form = PkcostingForm(initial=initial_data)
         else:
             costing = get_object_or_404(PkcostingInfo, pk=costing_id)
             form = PkcostingForm(instance=costing)
@@ -97,6 +124,16 @@ def costing_add(request, costing_id=0):
                 # If cost type is not stock-related, save the record
                 form.save()
                 messages.success(request, 'Record Saved Successfully')
+
+                # Store values in session after saving
+            request.session['last_cs_cost_type'] = form.cleaned_data.get('ct_cost_type').id if form.cleaned_data.get('ct_cost_type') else None
+            request.session['last_cs_job_type'] = form.cleaned_data.get('ct_requirement').id if form.cleaned_data.get('ct_requirement') else None
+            request.session['last_cs_job_type_quantity'] = form.cleaned_data.get('ct_na_quantity') if form.cleaned_data.get('ct_na_quantity') else None
+            request.session['last_cs_stock_type_quantity'] = form.cleaned_data.get('ct_stock_type').id if form.cleaned_data.get('ct_stock_type') else None
+            request.session['last_cs_stock_desc_quantity'] = form.cleaned_data.get('ct_stock_description').id if form.cleaned_data.get('ct_stock_description') else None
+            request.session['last_cs_item_type'] = form.cleaned_data.get('ct_item').id if form.cleaned_data.get('ct_item') else None
+            request.session['last_cs_item_desc'] = form.cleaned_data.get('ct_itemdescription').id if form.cleaned_data.get('ct_itemdescription') else None
+
 
             return redirect('/SMS/costing_insert/')
 

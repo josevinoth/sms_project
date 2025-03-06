@@ -1,24 +1,55 @@
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import JsonResponse
 from ..forms import PkquotationForm
-from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo
+from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo,Costtype,Pkstocktype,Stockdescription,pk_itemInfo,pk_itemdescriptionInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
 
+@transaction.atomic
 @login_required(login_url='login_page')
-def pk_quotation_add(request,quotation_id=0):
+def pk_quotation_add(request, quotation_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
     na_customer_name_id = request.session.get('na_customer_name_id')
     na_customer_new_name_id = request.session.get('na_customer_new_name')
-    role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+
+    try:
+        user_ext = User_extInfo.objects.get(user=user_id)
+        role = user_ext.emp_role
+        role_id = user_ext.emp_role.id
+    except User_extInfo.DoesNotExist:
+        messages.error(request, "User role not found.")
+        return redirect('some_error_page')
+
     if request.method == "GET":
         if quotation_id == 0:
-            print("Inside PK quotation get add")
-            form = PkquotationForm()
+            print("Inside PK quotation GET add")
+
+            # ✅ Retrieve stored values (IDs) from session safely
+            pkqt_cost_type_id = request.session.get('last_cost_type')
+            pkqt_job_type_id = request.session.get('last_job_type')
+            pkqt_job_type_quant_id = request.session.get('last_job_type_quantity')
+            pkqt_stock_type_id = request.session.get('last_stock_type_quantity')
+            pkqt_stock_description_id = request.session.get('last_stock_desc_quantity')
+            pkqt_item_type_id = request.session.get('last_item_type')
+            pkqt_item_description_id = request.session.get('last_item_desc')
+
+            initial_data = {
+                'pkqt_cost_type': Costtype.objects.filter(id=pkqt_cost_type_id).first(),
+                'pkqt_requirement': Nadimension.objects.filter(id=pkqt_job_type_id).first() if pkqt_job_type_id else None,
+                'pkqt_na_quantity': pkqt_job_type_quant_id,
+                'pkqt_stock_type': Pkstocktype.objects.filter(id=pkqt_stock_type_id).first() if pkqt_stock_type_id else None,
+                'pkqt_stock_description': Stockdescription.objects.filter(id=pkqt_stock_description_id).first() if pkqt_stock_description_id else None,
+                'pkqt_item': pk_itemInfo.objects.filter(id=pkqt_item_type_id).first() if pkqt_item_type_id else None,
+                'pkqt_itemdescription': pk_itemdescriptionInfo.objects.filter(id=pkqt_item_description_id).first() if pkqt_item_description_id else None,
+
+            }
+            print(initial_data)
+
+            form = PkquotationForm(initial=initial_data)
             context = {
                 'form': form,
                 'first_name': first_name,
@@ -44,7 +75,8 @@ def pk_quotation_add(request,quotation_id=0):
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
             }
         return render(request, "asset_mgt_app/pk_quotation_add.html", context)
-    else:
+
+    else:  # POST request
         if quotation_id == 0:
             print("Inside PK quotation post add")
             form = PkquotationForm(request.POST)
@@ -54,19 +86,17 @@ def pk_quotation_add(request,quotation_id=0):
             form = PkquotationForm(request.POST, instance=quotation)
 
         if form.is_valid():
-            print('form is valid')
+            print('Form is valid')
             cost_type_id = request.POST.get('pkqt_cost_type')
 
             if int(cost_type_id) == 8:  # For stock-related cost types
                 stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
                 if stock_purchase_num_id:
                     try:
-                        # Try fetching the stock purchase record based on the given ID
                         stock_purchase = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
                         stock_purchase_num = stock_purchase.sp_purchase_num
                         stock_qty_available = stock_purchase.sp_quantity_reduced
 
-                        # Get the quantity from the form
                         stock_qty_str = request.POST.get('pkqt_quantity', None)
                         if not stock_qty_str:
                             messages.error(request, 'Quantity is required.')
@@ -76,9 +106,14 @@ def pk_quotation_add(request,quotation_id=0):
                             stock_qty = int(stock_qty_str)
                         except ValueError:
                             messages.error(request, 'Invalid quantity value. It should be a number.')
+
+                            # ✅ Store selected values in session even when validation fails
+                            request.session['last_cost_type'] = form.cleaned_data.get(
+                                'pkqt_cost_type').id if form.cleaned_data.get('pkqt_cost_type') else None
+
                             return redirect(request.META['HTTP_REFERER'])
 
-                        # # Validate the stock quantity
+                        # ✅ Uncomment this if stock validation is needed
                         # if stock_qty <= 0:
                         #     messages.error(request, 'Quantity should be greater than 0.')
                         #     return redirect(request.META['HTTP_REFERER'])
@@ -89,41 +124,49 @@ def pk_quotation_add(request,quotation_id=0):
                         #     )
                         #     messages.error(request, error_message)
                         #     return redirect(request.META['HTTP_REFERER'])
-                        # else:
-                        #     # Save the form and process the stock update
-                        #     form.save()
-                        #     print("Quotation form is valid and stock updated.")
-                        #     messages.success(request, 'Stock Updated Successfully')
+
                         form.save()
                         print("Quotation form is valid and stock updated.")
                         messages.success(request, 'Stock Updated Successfully')
+
                     except PkstockpurchasesInfo.DoesNotExist:
-                        # If stock purchase number is not found, pass silently
-                        pass
+                        pass  # Ignore if stock purchase number is not found
                 else:
-                    # Save the form regardless of whether the stock purchase number exists
                     form.save()
                     messages.warning(request, 'Stock saved without Stock Purchase Number')
             else:
-                # If the cost type is not stock-related, simply save the form
                 form.save()
                 messages.success(request, 'Quotation Updated Successfully')
 
-            # Redirect after a successful save
+            # ✅ Store selected values in session after a successful form save
+            request.session['last_cost_type'] = form.cleaned_data.get('pkqt_cost_type').id if form.cleaned_data.get('pkqt_cost_type') else None
+            request.session['last_job_type'] = form.cleaned_data.get('pkqt_requirement').id if form.cleaned_data.get('pkqt_requirement') else None
+            request.session['last_job_type_quantity'] = form.cleaned_data.get('pkqt_na_quantity') if form.cleaned_data.get('pkqt_na_quantity') else None
+            request.session['last_stock_type_quantity'] = form.cleaned_data.get('pkqt_stock_type').id if form.cleaned_data.get('pkqt_stock_type') else None
+            request.session['last_stock_desc_quantity'] = form.cleaned_data.get('pkqt_stock_description').id if form.cleaned_data.get('pkqt_stock_description') else None
+            request.session['last_item_type'] = form.cleaned_data.get('pkqt_item').id if form.cleaned_data.get('pkqt_item') else None
+            request.session['last_item_desc'] = form.cleaned_data.get('pkqt_itemdescription').id if form.cleaned_data.get('pkqt_itemdescription') else None
+            request.session['last_box_id_clearance_l'] = form.cleaned_data.get('pkqt_box_id_clearance_l') if form.cleaned_data.get('pkqt_box_id_clearance_l') else None
+            request.session['last_box_id_clearance_w'] = form.cleaned_data.get('pkqt_box_id_clearance_w') if form.cleaned_data.get('pkqt_box_id_clearance_w') else None
+            request.session['last_box_id_clearance_h'] = form.cleaned_data.get('pkqt_box_id_clearance_h') if form.cleaned_data.get('pkqt_box_id_clearance_h') else None
+            request.session['last_box_od_clearance_l'] = form.cleaned_data.get('pkqt_box_od_clearance_l') if form.cleaned_data.get('pkqt_box_od_clearance_l') else None
+            request.session['last_box_od_clearance_w'] = form.cleaned_data.get('pkqt_box_od_clearance_w') if form.cleaned_data.get('pkqt_box_od_clearance_w') else None
+            request.session['last_box_od_clearance_h'] = form.cleaned_data.get('pkqt_box_od_clearance_h') if form.cleaned_data.get('pkqt_box_od_clearance_h') else None
+
             return redirect('/SMS/pk_quotation_insert/')
 
         else:
-            # If the form is not valid
             print("Quotation form is not valid.")
             messages.error(request, 'Record Not Updated Successfully')
 
-            # Display form errors
+            # Debugging: Display form errors
             for field, errors in form.errors.items():
                 for error in errors:
                     print(f"Error in {field}: {error}")
                     messages.error(request, f"Error in {field}: {error}")
 
         return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
+
 
 # List quotation
 @login_required(login_url='login_page')

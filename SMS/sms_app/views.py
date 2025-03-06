@@ -147,3 +147,4 @@ from .sub_views.opsauditscorecard_view import opsauditscorecard_add,opsauditscor
 from .sub_views.performance_audit_view import performanceaudit_add,performanceaudit_list,performanceaudit_delete,send_performance_audit_email
 from .sub_views.gate_meeting_add_view import gatemeeting_add,gatemeeting_list,gatemeeting_delete,gate_meeting_send_email
 from .sub_views.transport_nav_view import transport_nav
+from .sub_views.trip_closure_mblview import trclosure_mbl_add,trclosure_mbl_list,trclosure_mbl_delete

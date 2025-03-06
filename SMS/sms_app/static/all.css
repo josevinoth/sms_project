@@ -179,7 +179,7 @@ font-weight: bold;
 
 .header_style{
 background-color: #111;
-border-bottom:5px solid #3366ff;
+border-bottom:8px solid #3366ff;
 text-align: center;
 }
 
@@ -526,11 +526,6 @@ font-size: 12px;
     font-size: 12px;
   }
 
-  .header_style {
-    border-bottom: 3px solid #3366ff;
-    font-size: 18px;
-  }
-
   .hr_style {
     border-bottom: 1px solid #3366ff;
   }
@@ -618,10 +613,6 @@ font-size: 12px;
   font-family: 'Heebo', sans-serif;
   font-weight: bold;
 }
-  .header_style {
-    border-bottom: 4px solid #3366ff;
-    font-size: 22px;
-  }
 
   .hr_style {
     border-bottom: 1.5px solid #3366ff;
