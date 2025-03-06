@@ -37,7 +37,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Customer Name</span>
 									</div>
-									{% render_field form.s_customer_name class="form-control " id="s_customer_name" required="True" onchange="cusnewexist_enabler()"  %}
+									{% render_field form.s_customer_name class="form-control " id="s_customer_name" onchange="cusnewexist_enabler()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -605,6 +605,33 @@
 		</tbody>
 	</table>
 </div>
+
+<hr>
+<div class="row">
+	<div class="col" id="customer_order_attach">
+		<div id="" class="container-fluid">
+			<div class="card">
+				<div class="card-header bg-info" id="headingTwo">
+					<h5 class="mb-0">
+						<button class="btn btn-warning text-white collapsed" id="add_edit_sales" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+							Add/Edit Sales
+						</button>
+					</h5>
+				</div>
+				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+					<div class="card-body">
+						<div class="card-body">
+							<div id="customer_attach_list_WOH">
+								{% include "asset_mgt_app/salesmultipleitem_list_woh.html" %}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script>
 	$(document).ready(function() {
         $('#sales_comments_list').DataTable({
@@ -772,6 +799,8 @@
             document.getElementById("s_yesdate_quote").value=""
             document.getElementById("s_quote_ref").value=""
             $('#Commercials').addClass('disable_a_href');
+
+
         }
     }
 </script>
@@ -865,12 +894,43 @@ $(document).ready(function () {
     });
 });
 </script>
-
 <script>
-	function customer_name_change()
-	{
-    	var customer_name = document.getElementById("s_customer_name").value;
-		customer_name.setAttribute("required", "required");  // Make it mandatory
-	}
+	function cusnewexist_enabler() {
+      var jn5=document.getElementById("s_customer_new").value
+      if (jn5==2)
+        {
+            $('#s_customer_name').removeClass('disable_a_href');
+            $('#s_customer_new_name').addClass('disable_a_href');
+            $('#s_customer_type').addClass('disable_a_href');
+            document.getElementById("s_customer_new_name").value=""
+        }
+      else
+          {
+            $('#s_customer_name').addClass('disable_a_href');
+            $('#s_customer_new_name').removeClass('disable_a_href');
+            $('#s_customer_type').removeClass('disable_a_href');
+            document.getElementById("s_customer_name").value=""
+        }
+    }
 </script>
+
+
+<!--<script>
+	$(document).ready(function() {
+            {
+                var s_customer_name = document.getElementById("s_customer_name").value
+                if (s_customer_name == "")
+                {
+                    $('#add_edit_sales').addClass('disable_a_href');
+                }
+                else
+                {
+                    $('#add_edit_sales').removeClass('disable_a_href');
+                }
+            }
+        });
+</script> -->
+
+
+
 {% endblock content %}
