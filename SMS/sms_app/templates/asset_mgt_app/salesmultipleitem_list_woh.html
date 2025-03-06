@@ -12,7 +12,7 @@
         <thead class="thead-dark">
             <tr>
                 <th>ID</th>
-                <th>Customer Name</th>
+                <th>Sales Number</th>
                 <th>Date of Quote</th>
                 <th>Quote Ref</th>
                 <th>Rate Approval</th>
@@ -24,7 +24,7 @@
             {% for sales in Salesmultipleitem_list %}
             <tr>
                 <td>{{ sales.id }}</td>
-                <td>{{ sales.sm_customer_name }}</td>
+                <td>{{ sales.sm_sales_num }}</td>
                 <td>{{ sales.sm_Date_of_Quote }}</td>
                 <td>{{ sales.sm_Quote_Ref }}</td>
                 <td>{{ sales.sm_Rate_Approval }}</td>

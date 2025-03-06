@@ -15,9 +15,9 @@
                             <div class="col">
                                  <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer Name</span>
+                                        <span class="input-group-text">Sales Number</span>
                                     </div>
-                                    {% render_field form.sm_customer_name id="sm_customer_name" class="form-control" %}
+                                    {% render_field form.sm_sales_num id="sm_sales_num" class="form-control disable_a_href" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -68,6 +68,19 @@
         </div>
     </div>
 </form>
+<script>
+	$(document).ready(function() {
+        var sales_id = document.getElementById("sm_sales_num").value
+                if (sales_id == "")
+                {
+                    document.getElementById("sm_sales_num").value='{{sales_id}}'
+                }
+                else
+                {
+                    document.getElementById("sm_sales_num").value=sales_id;
+                }
+        });
+</script>
 
 
 {% endblock content %}
