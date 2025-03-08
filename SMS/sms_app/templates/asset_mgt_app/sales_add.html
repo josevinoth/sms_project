@@ -546,15 +546,43 @@
 		<!--		<div class="col-1"></div>-->
 	</div>
 </form>
+
+<hr>
+<div class="row">
+	<div class="col" id="customer_order_attach">
+		<div id="" class="container-fluid">
+			<div class="card">
+				<div class="card-header bg-info" id="headingTwo">
+					<h5 class="mb-0">
+						<button class="btn btn-warning text-white collapsed" id="add_edit_sales" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+							Add/Edit Quotation
+						</button>
+					</h5>
+				</div>
+				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+					<div class="card-body">
+						<div class="card-body">
+							<div id="customer_attach_list_WOH">
+								{% include "asset_mgt_app/salesmultipleitem_list_woh.html" %}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<br>
+
 <div class="container-fluid row">
 	<!--    <div class="col-md-1">-->
 	<!--      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
 	<!--        <i class="fas fa-arrow-left"></i>-->
 	<!--      </a>-->
 	<!--    </div>-->
-	<div class="col-md-1">
+	<div class="col-md-2">
 		<a id="sales_comments_add" href="{% url 'sales_comments_insert' %}" class="btn btn-success btn-block btn-lg disable_a_href">
-			<i class="fas fa-plus"></i> Insert
+			<i class="fas fa-plus"></i> Comments
 		</a>
 	</div>
 </div>
@@ -605,6 +633,7 @@
 		</tbody>
 	</table>
 </div>
+
 <script>
 	$(document).ready(function() {
         $('#sales_comments_list').DataTable({
@@ -847,5 +876,63 @@
     }
 }
 </script>
+
+<script>
+$(document).ready(function () {
+    function hc_enabler() {
+        var jn7 = $("#s_quote_ref").val().trim();
+        var businessWonField = $("#s_bus_won_not");
+
+        if (jn7 === "" || jn7.toLowerCase() === "null" || jn7.toLowerCase() === "none") {
+            businessWonField.val("2").addClass("disable_a_href").prop("disabled", true);
+        } else {
+            businessWonField.removeClass("disable_a_href").prop("disabled", false);
+        }
+    }
+    hc_enabler();
+
+    $("#s_quote_ref").on("change keyup", function () {
+        hc_enabler();
+    });
+});
+</script>
+<script>
+	function cusnewexist_enabler() {
+      var jn5=document.getElementById("s_customer_new").value
+      if (jn5==2)
+        {
+            $('#s_customer_name').removeClass('disable_a_href');
+            $('#s_customer_new_name').addClass('disable_a_href');
+            $('#s_customer_type').addClass('disable_a_href');
+            document.getElementById("s_customer_new_name").value=""
+        }
+      else
+          {
+            $('#s_customer_name').addClass('disable_a_href');
+            $('#s_customer_new_name').removeClass('disable_a_href');
+            $('#s_customer_type').removeClass('disable_a_href');
+            document.getElementById("s_customer_name").value=""
+        }
+    }
+</script>
+
+
+<!--<script>
+	$(document).ready(function() {
+            {
+                var s_customer_name = document.getElementById("s_customer_name").value
+                if (s_customer_name == "")
+                {
+                    $('#add_edit_sales').addClass('disable_a_href');
+                }
+                else
+                {
+                    $('#add_edit_sales').removeClass('disable_a_href');
+                }
+            }
+        });
+</script> -->
+
+
 
 {% endblock content %}

@@ -1,11 +1,8 @@
-import json
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 from ..forms import ConsignmentgoodsaddForm,ConsignmentgoodsnewaddForm,ConsignmentdetailaddForm
-from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,consignmentsgoods_new_info
-from django.shortcuts import render, redirect, get_object_or_404
+from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo
+from django.shortcuts import render, redirect
 from django.contrib import messages
 
 
@@ -35,27 +32,18 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentgoods_id_val),
             'consignmentgoods_id_val': consignmentgoods_id_val,
         }
-        return render(request, "asset_mgt_app/consignmentgoods_add.html", context)
+        return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
     else:
         form = ConsignmentgoodsaddForm(request.POST)
-        cn_form = ConsignmentgoodsnewaddForm(request.POST)
-        con_det_form = ConsignmentdetailaddForm(request.POST)
 
-        if form.is_valid() and cn_form.is_valid() and con_det_form.is_valid():
-            consignment_goods = form.save()
-            new_goods = cn_form.save(commit=False)
-            new_goods.consignmentgoods = consignment_goods
-            new_goods.save()
-
-            consignment_detail = con_det_form.save(commit=False)
-            consignment_detail.co_consignmentnumber = consignmentgoods_id_val
-            consignment_detail.save()
-
-            last_id = ConsignmentgoodsInfo.objects.latest('id').id
-            messages.success(request, 'Record Updated Successfully')
-            return redirect(f'/SMS/consignmentgoods_update/{last_id}')
+        if form.is_valid() :
+            form.save()
+            messages.success(request, 'Record  Updated Successfully')
+            print("Consignment Goods form is valid")
+            return redirect(request.META['HTTP_REFERER'])
         else:
+            print("Consignment Goods form is not valid")
             messages.error(request, 'Record Not Updated Successfully')
             return redirect(request.META['HTTP_REFERER'])
 

@@ -67,10 +67,10 @@ def enquirynotevehicle_list(request):
 def enquirynotevehicle_delete(request,enquirynotevehicle_id):
     enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
     enquirynotevehicle.delete()
-    return redirect('/SMS/enquirynotevehicle_list')
+    return redirect(request.META['HTTP_REFERER'])
+    # return redirect('/SMS/enquirynotevehicle_list')
 
 @login_required(login_url='login_page')
 def enquirynotevehicle_cancel(request):
     enquiry_num_id = request.session.get('enquiry_num_id')
     return redirect('/SMS/enquirynote_update/' + str(enquiry_num_id))
-

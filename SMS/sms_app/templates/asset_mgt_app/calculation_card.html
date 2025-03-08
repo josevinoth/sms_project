@@ -131,6 +131,35 @@
 	</div>
 </div>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // List of input IDs
+        let inputFields = [
+            "pkqt_dimension_type", "pkqt_dimension_type_id", "pkqt_uom_calc",
+            "pkqt_l", "pkqt_w", "pkqt_h",
+            "pkqt_box_id_clearance_l", "pkqt_box_id_clearance_w", "pkqt_box_id_clearance_h",
+            "pkqt_box_od_clearance_l", "pkqt_box_od_clearance_w", "pkqt_box_od_clearance_h",
+            "length_cm", "width_cm", "height_cm",
+            "length_in", "width_in", "height_in",
+            "length_ft", "width_ft", "height_ft"
+        ];
+
+        // Restore values from localStorage
+        inputFields.forEach(id => {
+            let savedValue = localStorage.getItem(id);
+            if (savedValue !== null) {
+                document.getElementById(id).value = savedValue;
+            }
+        });
+
+        // Save values on input change
+        inputFields.forEach(id => {
+            document.getElementById(id).addEventListener("input", function() {
+                localStorage.setItem(id, this.value);
+            });
+        });
+    });
+</script>
 
 <script>
 	function calculateDimensions(na_uom_id_val, l, w, h) {

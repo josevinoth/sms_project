@@ -5,8 +5,8 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 
-from ..forms import SalescommentForm,SalesinfoaddForm
-from ..models import RoleInfo,Sales_Comments_Info,User_extInfo,SalesInfo
+from ..forms import SalescommentForm,SalesinfoaddForm,SalesmultipleitemForm
+from ..models import RoleInfo,Sales_Comments_Info,User_extInfo,SalesInfo,SalesmultipleitemInfo
 from django.shortcuts import render, redirect
 from random import randint
 
@@ -44,6 +44,7 @@ def sales_add(request, sales_id=0):
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+    Salesmultipleitem_list = SalesmultipleitemInfo.objects.filter(sm_sales_num=sales_id)
     if request.method == "GET":
         if sales_id == 0:
             form = SalesinfoaddForm()
@@ -56,17 +57,20 @@ def sales_add(request, sales_id=0):
                 'first_name': first_name,
                 'created_by': created_by,
                 'user_id': user_id,
+                'Salesmultipleitem_list': Salesmultipleitem_list,
                 # 'sales_num': sales_num,
             }
             return render(request, "asset_mgt_app/sales_add.html", context)
         else:
             salesinfo = SalesInfo.objects.get(pk=sales_id)
             form = SalesinfoaddForm(instance=salesinfo)
-            ses_sales_num_val = request.session.get('ses_sales_num')
-            sale_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
-            sale_num_id=SalesInfo.objects.get(s_sale_number=sale_num).id
-            request.session['ses_sales_num_id'] = sale_num_id
-            comments_list_filterd = (Sales_Comments_Info.objects.filter(sc_sales_number=sale_num_id)).order_by('-sc_created_at')
+            # ses_sales_num_val = request.session.get('ses_sales_num')
+            # sale_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
+            # sale_num_id=SalesInfo.objects.get(s_sale_number=sale_num).id
+            # request.session['ses_sales_num_id'] = sale_num_id
+            comments_list_filterd = (Sales_Comments_Info.objects.filter(sc_sales_number=sales_id)).order_by('-sc_created_at')
+            Sales_multiple_item_list = SalesmultipleitemInfo.objects.filter(sm_sales_num=sales_id)
+            request.session['ses_sales_id'] = sales_id
 
             context={
                 'form': form,
@@ -76,14 +80,21 @@ def sales_add(request, sales_id=0):
                 'first_name': first_name,
                 'user_id': user_id,
                 'comments_list_filterd': comments_list_filterd,
+                'Salesmultipleitem_list': Sales_multiple_item_list,
             }
             return render(request, "asset_mgt_app/sales_add.html", context)
     else:
-        print("I am insode POST")
+        print("I am inside POST")
         if sales_id == 0:
             form = SalesinfoaddForm(request.POST, request.FILES)
             if form.is_valid():
                 form.save()
+                sale_num = request.POST.get('s_sale_number')
+                sales_id = CustomerInfo.objects.get(s_sale_number=sale_num).id
+                url = 'customer_update/' + str(sales_id)
+                messages.success(request, 'Record Updated Successfully')
+                request.session['ses_customer_id'] = sales_id
+                return redirect(url)
                 print("Sales Form Saved")
                 try:
                     last_id = SalesInfo.objects.latest('id').id
@@ -276,3 +287,85 @@ def sales_reports(request):
                'first_name': first_name
                }
     return render(request,"asset_mgt_app/sales_reports.html",context)
+
+@login_required(login_url='login_page')
+def sales_multiple_item_add(request, sales_multiple_id=0):
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    sales_id = request.session.get('ses_sales_id')
+    print('sales_id',sales_id)
+
+    if request.method == "GET":
+        if sales_multiple_id == 0:
+            form = SalesmultipleitemForm()
+        else:
+            try:
+                salesmultiple = SalesmultipleitemInfo.objects.get(pk=sales_multiple_id)
+                form = SalesmultipleitemForm(instance=salesmultiple)
+            except SalesmultipleitemInfo.DoesNotExist:
+                messages.error(request, ' not found')
+                return redirect('/SMS/salesmultipleitem_list')
+        return render(request, "asset_mgt_app/salesmultipleitem_add.html", {'form': form, 'first_name': first_name,'sales_id' : sales_id, 'user_id': user_id})
+
+    elif request.method == "POST":
+        if sales_multiple_id == 0:
+            form = SalesmultipleitemForm(request.POST)
+            if form.is_valid():
+                form.save()
+                sales_id = (SalesmultipleitemInfo.objects.latest('id')).id
+
+                print('sales_id', sales_id)
+                messages.success(request, 'saved successfully')
+                return redirect('/SMS/sales_multiple_item_update/' + str(sales_id))  # Use the new item's ID
+            else:
+                messages.error(request, 'Form is not valid')
+                print(form.errors)  # Debugging
+                return redirect('/SMS/sales_multiple_item_add')
+        else:
+            try:
+                salesmultiple = SalesmultipleitemInfo.objects.get(pk=sales_multiple_id)
+            except SalesmultipleitemInfo.DoesNotExist:
+                messages.error(request, 'Sales multiple item not found.')
+                return redirect('/SMS/salesmultipleitem_list')
+
+            form = SalesmultipleitemForm(request.POST, instance=salesmultiple)
+            if form.is_valid():
+                form.save()
+                messages.success(request, ' updated successfully')
+                return redirect(request.META.get('HTTP_REFERER', '/SMS/salesmultipleitem_list'))
+            else:
+                messages.error(request, 'Form is not valid')
+                print(form.errors)  # Debugging
+                return redirect(request.META.get('HTTP_REFERER', '/SMS/salesmultipleitem_list'))
+
+
+# List bay
+@login_required(login_url='login_page')
+def sales_multiple_item_list(request):
+    first_name = request.session.get('first_name')
+    sales_id = request.session.get('ses_sales_id')
+
+    Salesmultipleitem_list = SalesmultipleitemInfo.objects.filter(sm_customer_name=sales_id)
+
+    context = {
+        'Salesmultipleitem_list': Salesmultipleitem_list,
+        'first_name': first_name,
+    }
+    return render(request, "asset_mgt_app/salesmultipleitem_list.html", context)
+
+#Delete bay
+@login_required(login_url='login_page')
+def sales_multiple_item_delete(request, sales_multiple_id):
+    salesmultiple = SalesmultipleitemInfo.objects.get(pk=sales_multiple_id)
+    salesmultiple.delete()
+    messages.success(request, 'deleted successfully')
+    return redirect(request.META['HTTP_REFERER'])
+
+
+@login_required(login_url='login_page')
+def sales_multiple_item_cancel(request, sales_id=0):
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    salesmultiple_id = request.session.get('sales_multiple_id')
+    sales_id = request.session.get('ses_sales_id')
+    return redirect(f'/SMS/sales_update/{sales_id}')

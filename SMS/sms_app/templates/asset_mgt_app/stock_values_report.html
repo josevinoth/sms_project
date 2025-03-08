@@ -15,6 +15,18 @@
     <div class="col-4"></div>
   </div>
   <br>
+  <div class="row">
+    <div class="col-1"></div>
+    <div class="col-10">
+      <div class="message text-center">
+        {% for message in messages %}
+        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="col-1"></div>
+  </div>
+  <br>
   <form method="POST" action="{% url 'stock_value_report' %}">
     {% csrf_token %}
     <div class="row">
@@ -22,11 +34,11 @@
         {% render_field form.ds_customer id="ds_customer" class="form-control" value=customer_name %}
       </div>
       <div class="col-1">
-        <button type="submit" class="btn btn-success">Filter</button>
+        <button type="submit" class="btn btn-primary">Filter</button>
       </div>
     </div>
   </form>
-<br>
+  <br>
   <div class="row">
     <div class="btn-group">
       <button type="button" class="btn btn-danger border border-dark">MAA_Today</button>
@@ -71,14 +83,14 @@
       </a>
     </div>
     <div class="col-2">
-        <a id="stockReportButton" href="{% url 'export_stockreport' %}" class="btn btn-warning btn-block btn-lg">
+      <a id="stockReportButton" href="{% url 'export_stockreport' %}" class="btn btn-warning btn-block btn-lg">
         <i class="fas fa-file-csv"></i> Stock Report
       </a>
     </div>
-     <div class="col-1.5">
+    <div class="col-1.5">
       <!-- Trigger Button to Open Modal -->
       <button type="button" onclick="email_message_fn()" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target=".bd-example-modal-lg">
-        <i class="fas fa-envelope-square"></i> Goods movement report  <!-- Add the badge here -->
+        <i class="fas fa-envelope-square"></i> Goods Movement Report  <!-- Add the badge here -->
       </button>
       <!-- Modal Structure -->
       <div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
@@ -111,7 +123,7 @@
         <th>Unloading End Time</th>
         <th>Transporter</th>
         <th>Truck Number</th>
-        <th>Consigner</th>
+        <th>Consignor</th>
         <th>Consignee</th>
         <th>Docs Received</th>
         <th>HAWB</th>

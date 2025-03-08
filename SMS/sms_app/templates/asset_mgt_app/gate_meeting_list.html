@@ -26,15 +26,27 @@
     <table id="gate_meeting_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Location"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Date"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Previous night security"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search security monitoring remark"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Any incident of previous day"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search reported to management remark"></th>
+            <th></th>
+            <th></th>
+        </tr>
+        <tr>
             <th>ID</th>
             <th>Location</th>
             <th>Unit</th>
             <th>Date</th>
-            <th>Previous night security monitoring</th>
+           <th>Previous night security monitoring</th>
             <th>Previous night security monitoring remark</th>
             <th>Any incident of previous day reported to management</th>
             <th>Any incident of previous day reported to management remark</th>
-            <th>Previous day WH closing checklist</th>
+        <!--    <th>Previous day WH closing checklist</th>
             <th>Current day WH opening checklist</th>
             <th>WMS updation 100% till yesterday</th>
             <th>DSR sent to all customers yesterday</th>
@@ -70,7 +82,7 @@
             <th>Any Approval from DGM pending</th>
             <th>Any Approval from DGM pending remark</th>
             <th>Pending task to be completed today</th>
-            <th>Pending task to be completed today remark</th>
+            <th>Pending task to be completed today remark</th> -->
             <th>Edit</th>
             <th>Delete</th>
         </tr>
@@ -86,7 +98,7 @@
             <td> {{gatemeet.gm_Previous_night_security_remark}}</td>
             <td> {{gatemeet.gm_Any_incident_of_previous_day}}</td>
             <td> {{gatemeet.gm_Any_incident_of_previous_day_remark}}</td>
-            <td> {{gatemeet.gm_Previous_day_WH_closing_checklist}}</td>
+        <!--    <td> {{gatemeet.gm_Previous_day_WH_closing_checklist}}</td>
             <td> {{gatemeet.gm_Current_day_WH_opening_checklist}}</td>
             <td> {{gatemeet.gm_WMS_updation_till_yesterday}}</td>
             <td> {{gatemeet.gm_DSR_sent_to_all_customers_yesterday}}</td>
@@ -122,7 +134,7 @@
             <td> {{gatemeet.gm_Approval_DGM_pending}}</td>
             <td> {{gatemeet.gm_Approval_DGM_pending_remark}}</td>
             <td> {{gatemeet.gm_Pending_task_today}}</td>
-            <td> {{gatemeet.gm_Pending_task_today_remark}}</td>
+            <td> {{gatemeet.gm_Pending_task_today_remark}}</td> -->
             <td>
                 <a class="btn btn-primary" href="{% url 'gate_meeting_update' gatemeet.id %}" >
                     <i class="far fa-edit"></i>
@@ -143,17 +155,24 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#gate_meeting_list').DataTable({
-        scrollY: "800px",
-        scrollX: true,
-        scrollCollapse: true,
-        order: [0, 'desc' ],
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ]
+        var table = $('#gate_meeting_list').DataTable({
+            order: [[0, 'desc']],
+            scrollX: false,
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+        });
+
+        // Apply search to each column
+        $('.filter-input').on('keyup change', function () {
+            var columnIndex = $(this).parent().index(); // Get correct column index
+            table.column(columnIndex).search(this.value).draw();
+        });
+
+        // Prevent sorting when clicking inside the filter input
+        $('#gate_meeting_list thead input').on('click', function(e) {
+            e.stopPropagation();
+        });
     });
-} );
 </script>
 
 {% endblock content %}

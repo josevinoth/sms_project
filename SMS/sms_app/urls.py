@@ -1,4 +1,6 @@
 from django.urls import path
+from django.views.generic import TemplateView
+
 from . import views
 from django.contrib.auth import views as auth_views #import this
 urlpatterns = [
@@ -440,6 +442,8 @@ urlpatterns = [
     path('consignmentgoods_update/<int:consignmentgoods_id>', views.consignmentgoods_add, name='consignmentgoods_update'),  # update consignmentgoods
     path('consignmentgoods_delete/<int:consignmentgoods_id>', views.consignmentgoods_delete, name='consignmentgoods_delete'),  # delete consignmentgoods
     path('consignmentgoods_nav/<int:consignmentdetails_id>', views.consignmentgoods_nav, name='consignmentgoods_nav'),  # nav consignmentgoods
+    # path('transport_nav/', views.transport_nav, name='transport_nav'),  # nav transport
+    path('transport_nav/', TemplateView.as_view(template_name='asset_mgt_app/transport_nav.html'), name='transport_nav'),
     path('consignmentgoods_cancel/', views.consignmentgoods_cancel, name='consignmentgoods_cancel'),  # Cancel consignmentgoods
     path('consignmentgoods_back/', views.consignmentgoods_back, name='consignmentgoods_back'),  # Cancel consignmentgoods
     path('load_location/', views.load_location, name='load_location'),
@@ -609,10 +613,10 @@ urlpatterns = [
     path('ops_audit_score_list/', views.opsauditscorecard_list, name='ops_audit_score_list'),
     path('ops_audit_score_update/<int:ops_audit_id>/', views.opsauditscorecard_add, name='ops_audit_score_update'),
     path('ops_audit_score_delete/<int:ops_audit_id>/', views.opsauditscorecard_delete, name='ops_audit_score_delete'),
-    path('consignment_goods/add/', views.consignment_goods_add, name='consignment_goods_add'),
-    path('consignment_goods/add/<int:goods_id>/', views.consignment_goods_add, name='consignment_goods_edit'),
-    path('consignment_goods/list/', views.consignment_goods_list, name='consignment_goods_list'),
-    path('consignment_goods/delete/<int:goods_id>/', views.consignment_goods_delete, name='consignment_goods_delete'),
+    path('consignment_goods_new_insert/', views.consignment_goods_new_add, name='consignment_goods_new_insert'),
+    path('consignment_goods_new_update/<int:goods_id>/', views.consignment_goods_new_add, name='consignment_goods_new_update'),
+    path('consignment_goods_new_list/', views.consignment_goods_new_list, name='consignment_goods_new_list'),
+    path('consignment_goods_new_delete/<int:goods_id>/', views.consignment_goods_new_delete, name='consignment_goods_new_delete'),
     path('send_ops_audit_email/', views.send_ops_audit_email, name='send_ops_audit_email'),
     path('wh_damage_report/', views.wh_damage_report, name='wh_damage_report'),
     path('wh_stock_report/', views.wh_stock_report, name='wh_stock_report'),
@@ -623,8 +627,17 @@ urlpatterns = [
     path('performance_audit_update/<int:perform_audit_id>/', views.performanceaudit_add, name='performance_audit_update'),
     path('performance_audit_delete/<int:perform_audit_id>/', views.performanceaudit_delete, name='performance_audit_delete'),
     path('send_performance_audit_email/', views.send_performance_audit_email, name='send_performance_audit_email'),
-
     path('salesperson_wise_table/', views.salesperson_wise_table, name='salesperson_wise_table'),
+    path('sales_multiple_item_add/', views.sales_multiple_item_add, name='sales_multiple_item_add'),
+    path('sales_multiple_item_list/', views.sales_multiple_item_list, name='sales_multiple_item_list'),
+    path('sales_multiple_item_update/<int:sales_multiple_id>/', views.sales_multiple_item_add, name='sales_multiple_item_update'),
+    path('sales_multiple_item_delete/<int:sales_multiple_id>/', views.sales_multiple_item_delete,name='sales_multiple_item_delete'),
+    path('sales_multiple_item_cancel/', views.sales_multiple_item_cancel, name='sales_multiple_item_cancel'),
+
+    path('trclosure_mbl_add/', views.trclosure_mbl_add, name='trclosure_mbl_add'),
+    path('trclosure_mbl_add/<int:trm_id>/', views.trclosure_mbl_add, name='trclosure_mbl_edit'),
+    path('trclosure_mbl_list/', views.trclosure_mbl_list, name='trclosure_mbl_list'),
+    path('trclosure_mbl_delete/<int:trm_id>/', views.trclosure_mbl_delete, name='trclosure_mbl_delete'),
 ]
 
 

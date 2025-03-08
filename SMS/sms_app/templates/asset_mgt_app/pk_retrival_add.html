@@ -65,7 +65,11 @@
 									</div>
 									{% render_field form.ct_stock_type id="ct_stock_type" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+
+							</div>
+							<div class="col-4">
+								<div class="row ">
+									<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Description</span>
 									</div>
@@ -83,21 +87,18 @@
 									</div>
 									{% render_field form.ct_itemdescription id="ct_itemdescription" class="form-control disable_a_href" %}
 								</div>
-							</div>
-							<div class="col-4">
-								<div class="row ">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
-										</div>
-										{% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
 									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Width Req (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
-										</div>
-										{% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+									{% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width Req (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
 									</div>
+									{% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Length Req (ft)</span>
@@ -127,31 +128,6 @@
 										<button id="search_wood" type="button" class="btn btn-primary btn-lg"><i class="fas fa-search"></i> Search Item</button>
 									</div>
 									<br><br><br><br>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Unit Cost</span>
-										</div>
-										{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Total CFT/SQFT Required</span>
-										</div>
-										<span id="ct_cft_sqft_req" class="form-control disable_a_href"></span>
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Total Cost</span>
-										</div>
-										{% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control disable_a_href" %}
-									</div>
-
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Stock Status</span>
-										</div>
-										{% render_field form.ct_stock_status id="ct_stock_status" class="form-control " %}
-									</div>
 								</div>
 							</div>
 							<div class="col-4">
@@ -189,21 +165,9 @@
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Quantity</span>
-										</div>
-										{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
 											<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
 										</div>
 										{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Rate/Qty (CFT)</span>
-										</div>
-										{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
@@ -213,7 +177,43 @@
 									</div>
 								</div>
 								<br>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text"> Item Quantity</span>
+									</div>
+									{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Rate/Qty (CFT)</span>
+									</div>
+									{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Unit Cost</span>
+									</div>
+									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total CFT/SQFT Required</span>
+									</div>
+									<span id="ct_cft_sqft_req" class="form-control disable_a_href"></span>
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Total Cost</span>
+									</div>
+									{% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control disable_a_href" %}
+								</div>
 
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock Status</span>
+									</div>
+									{% render_field form.ct_stock_status id="ct_stock_status" class="form-control " %}
+								</div>
 
 								{% render_field form.ct_excess_status id="ct_excess_status" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
