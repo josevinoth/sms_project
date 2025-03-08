@@ -39,12 +39,12 @@ def pk_stock_vendor_add(request,stock_vendor_id=0):
         psv_form = PkstockvendorForm(request.POST)
 
         if psv_form.is_valid():
-            psv_form.save()  # Save the new record
+            # psv_form.save()  # Save the new record
             # Extract the vendor bill and purchase type
             spv_vendor_bill = psv_form.cleaned_data['spv_vendor_bill']
             purchase_type = psv_form.cleaned_data['spv_stock_Purchasetype'].id
-
-            if purchase_type == 3 and PkstockvebdorInfo.objects.filter(spv_vendor_bill=spv_vendor_bill).exclude(id=stock_vendor_id).exists():
+            print('purchase_type', purchase_type)
+            if purchase_type == 1 and PkstockvebdorInfo.objects.filter(spv_vendor_bill=spv_vendor_bill).exclude(id=stock_vendor_id).exists():
                 print("Data not saved - Duplicate Vendor Bill found for purchase_type=3")
                 messages.error(request, 'Duplicate Found. Please enter a Unique Vendor Bill.')
                 return redirect(request.META['HTTP_REFERER'])
