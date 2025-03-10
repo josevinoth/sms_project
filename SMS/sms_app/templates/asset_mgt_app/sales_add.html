@@ -44,7 +44,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >New Customer Name</span>
 									</div>
-									{% render_field form.s_customer_new_name class="form-control disable_a_href" id="s_customer_new_name"%}
+									{% render_field form.s_customer_new_name class="form-control disable_a_href" id="s_customer_new_name" onchange="new_customer_enabler()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -312,6 +312,7 @@
 								</div>
 							</div>
 						</div>
+						<hr>
 
 						<!-------------------------------------commercials------------------------------------------------------------->
 
@@ -320,8 +321,8 @@
 								<div class="card">
 									<div class="card-header bg-info" id="headingOne">
 										<h5 class="mb-0">
-											<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-												Commercials
+											<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="padding-right:1400px;">
+											<i class="fas fa-angle-down"></i> Commercials
 											</a>
 										</h5>
 									</div>
@@ -414,35 +415,35 @@
 														<div class="input-group-prepend">
 															<span class="input-group-text">KYC</span>
 														</div>
-														{% render_field form.s_kyc class="form-control" id="s_kyc" %}
+														{% render_field form.s_kyc class="form-control disable_a_href" id="s_kyc" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">Contract</span>
 														</div>
-														{% render_field form.s_contract class="form-control" id="s_contract" %}
+														{% render_field form.s_contract class="form-control disable_a_href" id="s_contract" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">SOW</span>
 														</div>
-														{% render_field form.s_sow class="form-control" %}
+														{% render_field form.s_sow class="form-control disable_a_href" id="s_sow" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">OPS SOP</span>
 														</div>
-														{% render_field form.s_ops_sop class="form-control" %}
+														{% render_field form.s_ops_sop class="form-control disable_a_href" id="s_ops_sop" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">Billing SOP</span>
 														</div>
-														{% render_field form.s_billing_sop class="form-control" %}
+														{% render_field form.s_billing_sop class="form-control disable_a_href" id="s_billing_sop" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 												</div>
@@ -451,7 +452,7 @@
 														<div class="input-group-prepend">
 															<span class="input-group-text">Transition and Implement</span>
 														</div>
-														{% render_field form.s_trans_imp class="form-control" %}
+														{% render_field form.s_trans_imp class="form-control disable_a_href" id="s_trans_imp" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 													<div class="input-group input-group-sm mb-3">
@@ -479,7 +480,7 @@
 														<div class="input-group-prepend">
 															<span class="input-group-text" >Status</span>
 														</div>
-														{% render_field form.s_status class="form-control" %}
+														{% render_field form.s_status class="form-control disable_a_href" id="s_status" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
 												</div>
@@ -548,7 +549,7 @@
 </form>
 
 <hr>
-<div class="row">
+<div class="row" id="Quotation">
 	<div class="col" id="customer_order_attach">
 		<div id="" class="container-fluid">
 			<div class="card">
@@ -673,6 +674,7 @@
         enable_customer_code()
         enable_sales()
         hc_enabler()
+        new_customer_enabler()
         });
 </script>
 
@@ -790,6 +792,7 @@
             $('#s_quote_ref').removeClass('disable_a_href');
             document.getElementById("s_noreason_cp").value=""
             $('#Commercials').removeClass('disable_a_href');
+            $('#Quotation').removeClass('disable_a_href');
 
 
         }
@@ -801,6 +804,7 @@
             document.getElementById("s_yesdate_quote").value=""
             document.getElementById("s_quote_ref").value=""
             $('#Commercials').addClass('disable_a_href');
+            $('#Quotation').addClass('disable_a_href');
 
 
         }
@@ -817,14 +821,25 @@
             document.getElementById("s_not_reason").value=""
             $('#s_kyc').removeClass('disable_a_href');
             $('#s_contract').removeClass('disable_a_href');
-        }
+            $('#s_sow').removeClass('disable_a_href');
+            $('#s_ops_sop').removeClass('disable_a_href');
+            $('#s_billing_sop').removeClass('disable_a_href');
+            $('#s_trans_imp').removeClass('disable_a_href');
+            $('#s_status').removeClass('disable_a_href');
+    	}
       else
           {
             $('#s_not_reason').removeClass('disable_a_href');
             $('#s_yesdate_business').addClass('disable_a_href');
             document.getElementById("s_yesdate_business").value=""
             $('#s_kyc').addClass('disable_a_href');
-            $('#s_contract').addClass('disable_a_href')
+            $('#s_contract').addClass('disable_a_href');
+            $('#s_sow').addClass('disable_a_href');
+            $('#s_ops_sop').addClass('disable_a_href');
+            $('#s_billing_sop').addClass('disable_a_href');
+            $('#s_trans_imp').addClass('disable_a_href');
+            $('#s_status').addClass('disable_a_href');
+            
         }
     }
 </script>
@@ -917,11 +932,11 @@ $(document).ready(function () {
 </script>
 
 
-<!--<script>
+<script>
 	$(document).ready(function() {
             {
-                var s_customer_name = document.getElementById("s_customer_name").value
-                if (s_customer_name == "")
+                var s_sale_number = document.getElementById("s_sale_number").value
+                if (s_sale_number == "")
                 {
                     $('#add_edit_sales').addClass('disable_a_href');
                 }
@@ -931,7 +946,21 @@ $(document).ready(function () {
                 }
             }
         });
-</script> -->
+</script>
+
+<script>
+	function new_customer_enabler() {
+    var jn7 = document.getElementById("s_customer_new_name").value;
+    if (jn7 == 9) {
+        $("#s_industry_type").addClass('disable_a_href');
+    } else {
+        $("#s_industry_type").removeClass('disable_a_href');
+    }
+}
+</script>
+
+
+
 
 
 

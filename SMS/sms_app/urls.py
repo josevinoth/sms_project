@@ -639,6 +639,11 @@ urlpatterns = [
     path('trclosure_mbl_add/<int:trm_id>/', views.trclosure_mbl_add, name='trclosure_mbl_edit'),
     path('trclosure_mbl_list/', views.trclosure_mbl_list, name='trclosure_mbl_list'),
     path('trclosure_mbl_delete/<int:trm_id>/', views.trclosure_mbl_delete, name='trclosure_mbl_delete'),
+
+    path('gatein_pre_mbl_add/', views.gatein_pre_mbl_add, name='gatein_pre_mbl_add'),
+    path('gatein_pre_mbl_edit/<int:gpm_id>/', views.gatein_pre_mbl_add, name='gatein_pre_mbl_edit'),
+    path('gatein_pre_mbl_list/', views.gatein_pre_mbl_list, name='gatein_pre_mbl_list'),
+    path('gatein_pre_mbl_delete/<int:gpm_id>/', views.gatein_pre_mbl_delete, name='gatein_pre_mbl_delete'),
 ]
 
 
