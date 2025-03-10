@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import StatusList, MyUser,Packreuqirementinfo,Cusnewexist, Natypeofwork, Nadeliverytype, Naspecialrequirements, Napackingfield, Natypeofpack, CustomerInfo, Nawoodtreatmentreq, Nabvmcustomer, Nawoodnorms, VehicletypeInfo, Natypeofaccess, Stockdescription
+from ..models import StatusList, MyUser,Packreuqirementinfo, Natypeofwork, Nadeliverytype, Naspecialrequirements, Napackingfield, CustomerInfo, Nawoodtreatmentreq, Nabvmcustomer, Nawoodnorms, VehicletypeInfo, Natypeofaccess, Stockdescription
 
 # Function to handle file upload path
 def Pkneedassessment_directory_path(instance, filename):

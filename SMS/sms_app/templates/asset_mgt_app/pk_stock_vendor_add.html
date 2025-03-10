@@ -92,7 +92,7 @@
     <br>
     <!--Stock Item List-->
     <div class="container-fluid row">
-        <div class="col-md-1">
+        <div class="col-md-1.5">
             <a href="{% url 'stockpurchases_insert' %}" id="stock_purchase_item_add" class="btn btn-success btn-block btn-lg">
                 <i class="fas fa-plus"></i> Add Stocks
             </a>
@@ -169,12 +169,17 @@
 <script>
     $(document).ready(function() {
         document.getElementById("spv_updated_by").value ='{{user_id}}';
-        var vendor_bill=document.getElementById("spv_vendor_bill").value
-        if (vendor_bill=="") {
-            $('#stock_purchase_item_add').addClass('disable_a_href');
-        } else {
+        var stock_purchase_type=document.getElementById("spv_stock_Purchasetype").value;
+        if (stock_purchase_type=="")
+        {
+               $('#stock_purchase_item_add').addClass('disable_a_href');
+        }
+        else
+        {
             $('#stock_purchase_item_add').removeClass('disable_a_href');
         }
+        var vendor_bill=document.getElementById("spv_vendor_bill").value
+
         spv_stock_Purchasetype_change();
     });
 </script>
@@ -216,21 +221,31 @@
 <script>
     function spv_stock_Purchasetype_change() {
         var jn = document.getElementById("spv_stock_Purchasetype").value;
+        alert(jn)
         if (jn == 1) {
             $('#spv_vendor_name').removeClass('disable_a_href');
             $('#spv_vendor_bill').removeClass('disable_a_href');
             $('#spv_assessment_num').addClass('disable_a_href');
+            document.getElementById("spv_assessment_num").value="";
+            document.getElementById("spv_customer_po").value="";
+            document.getElementById("spv_customer_name").value="";
+            document.getElementById("spv_customer_new_name").value="";
             $('#spv_customer_po').addClass('disable_a_href');
-        } else {
+            spv_vendor_name.setAttribute("required", "required");  // Make it mandatory
+        }
+        else
+        {
             $('#spv_vendor_name').addClass('disable_a_href');
+            document.getElementById("spv_vendor_name").value="";
+            document.getElementById("spv_vendor_bill").value="-";
             $('#spv_vendor_bill').addClass('disable_a_href');
             $('#spv_assessment_num').removeClass('disable_a_href');
-            $('#spv_customer_po').removeClass('disable_a_href');
+            spv_assessment_num.setAttribute("required", "required");  // Make it mandatory
+            spv_vendor_name.removeAttribute("required");
         }
     }
 </script>
 <script>
-
     $(document).ready(function () {
         $("#spv_assessment_num").change(function () {
             var assessment_num = $(this).val().trim(); // Ensure no leading/trailing spaces
@@ -267,42 +282,45 @@
             });
         });
     });
-
 </script>
+
 <script>
-    function sp_assessment_num_change()
-    {
-        var cs_assessment_num = document.getElementById("spv_assessment_num").value;
-        $.ajax
-        ({
-            url: '{% url "pk_costing_get_customer" %}',
-            data: {
-                    'cs_assessment_num': cs_assessment_num
-                },
-            dataType: 'json',
-            success: function(data)
-            {
-                var customer_name_id=data.customer_name_id
-                document.getElementById("spv_customer_name").value=customer_name_id
-                   $('#spv_customer_po').removeClass('disable_a_href');
-                $("#spv_customer_po").empty();
-                var customer_po_id=data.customer_po_id;
-                if (customer_po_id=="")
-                {
-                    $('#unique_field_error').text('Customer PO not available for the selected Assessment Number.');
-                }
-                var customer_po_name=data.customer_po_name;
-                var len1 = (customer_po_id).length;
-                $("#spv_customer_po").empty();
-                $('#spv_customer_po').empty().append("<option value='0'>--Select--</option>");
-                for( var j = 0; j<len1; j++)
-                {
-                    $("#spv_customer_po").append("<option value='"+customer_po_id[j]+"'>"+customer_po_name[j]+"</option>");
+    function sp_assessment_num_change() {
+    var cs_assessment_num = document.getElementById("spv_assessment_num").value;
+
+    $.ajax({
+        url: '{% url "pk_costing_get_customer" %}',
+        data: {
+            'cs_assessment_num': cs_assessment_num
+        },
+        dataType: 'json',
+        success: function(data) {
+            var customer_name_id = data.customer_name_id;
+            document.getElementById("spv_customer_name").value = customer_name_id;
+
+            var spv_customer_po = document.getElementById("spv_customer_po");
+            $('#spv_customer_po').removeClass('disable_a_href'); // Enable dropdown
+
+            $("#spv_customer_po").empty().append("<option value=''>--Select--</option>"); // Default option
+
+            var customer_po_id = data.customer_po_id;
+            var customer_po_name = data.customer_po_name;
+
+            // Add options if available
+            if (customer_po_id && customer_po_id.length > 0) {
+                for (var j = 0; j < customer_po_id.length; j++) {
+                    $("#spv_customer_po").append("<option value='" + customer_po_id[j] + "'>" + customer_po_name[j] + "</option>");
                 }
             }
-        });
-    }
+
+            // Make the field required if enabled
+            if (!spv_customer_po.disabled) {
+                spv_customer_po.setAttribute("required", "required");
+            } else {
+                spv_customer_po.removeAttribute("required"); // Remove required if disabled
+            }
+        }
+    });
+}
 </script>
-
-
 {% endblock %}
