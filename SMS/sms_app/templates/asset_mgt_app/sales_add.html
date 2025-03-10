@@ -2,8 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
-<form method="POST" action="" id="sales_add" enctype="multipart/form-data" data-load_customer_model-url="{% url 'load_customer_model' %}" >
-	{% csrf_token %}
+
 	<div class="row">
 		<!--		<div class="col-1"></div>-->
 		<div class="col">
@@ -11,6 +10,8 @@
 				<div class="card text-white bg-info mb-3"  style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Sales</h3></div>
 					<div class="card-body bg-light" >
+						<form method="POST" action="" id="sales_add" enctype="multipart/form-data" data-load_customer_model-url="{% url 'load_customer_model' %}" >
+						{% csrf_token %}
 						<div class="row" id="add_sales_info">
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
@@ -539,15 +540,8 @@
 						<button  type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'sales_search' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel </a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<!--		<div class="col-1"></div>-->
-	</div>
-</form>
-
-<hr>
+					</form>
+						<hr>
 <div class="row">
 	<div class="col" id="customer_order_attach">
 		<div id="" class="container-fluid">
@@ -572,7 +566,12 @@
 		</div>
 	</div>
 </div>
-<br>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--		<div class="col-1"></div>-->
+	</div>
 
 <div class="container-fluid row">
 	<!--    <div class="col-md-1">-->
