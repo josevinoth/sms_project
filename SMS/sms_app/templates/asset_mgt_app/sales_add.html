@@ -3,14 +3,14 @@
 {% block content %}
 {% load crispy_forms_tags %}
 
-	<div class="row">
-		<!--		<div class="col-1"></div>-->
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3"  style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Sales</h3></div>
-					<div class="card-body bg-light" >
-						<form method="POST" action="" id="sales_add" enctype="multipart/form-data" data-load_customer_model-url="{% url 'load_customer_model' %}" >
+<div class="row">
+	<!--		<div class="col-1"></div>-->
+	<div class="col">
+		<div class="container-fluid">
+			<div class="card text-white bg-info mb-3"  style="max-width: 100%;">
+				<div class="card-header text-center"><h3>Add/Update Sales</h3></div>
+				<div class="card-body bg-light" >
+					<form method="POST" action="" id="sales_add" enctype="multipart/form-data" data-load_customer_model-url="{% url 'load_customer_model' %}" >
 						{% csrf_token %}
 						<div class="row" id="add_sales_info">
 							<div class="col-3">
@@ -45,7 +45,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >New Customer Name</span>
 									</div>
-									{% render_field form.s_customer_new_name class="form-control disable_a_href" id="s_customer_new_name" onchange="new_customer_enabler()" %}
+									{% render_field form.s_customer_new_name class="form-control disable_a_href" id="s_customer_new_name"  %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -323,7 +323,7 @@
 									<div class="card-header bg-info" id="headingOne">
 										<h5 class="mb-0">
 											<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="padding-right:1400px;">
-											<i class="fas fa-angle-down"></i> Commercials
+												<i class="fas fa-angle-down"></i> Commercials
 											</a>
 										</h5>
 									</div>
@@ -541,34 +541,35 @@
 						<button  type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'sales_search' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel </a>
-					</div>
 				</div>
 			</div>
 		</div>
-		<!--		<div class="col-1"></div>-->
 	</div>
+	<!--		<div class="col-1"></div>-->
+</div>
 </form>
 
 <hr>
 <div class="row" id="Quotation">
-					</form>
-						<hr>
-<div class="row">
-	<div class="col" id="customer_order_attach">
-		<div id="" class="container-fluid">
-			<div class="card">
-				<div class="card-header bg-info" id="headingTwo">
-					<h5 class="mb-0">
-						<button class="btn btn-warning text-white collapsed" id="add_edit_sales" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-							Add/Edit Quotation
-						</button>
-					</h5>
-				</div>
-				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-					<div class="card-body">
+	</form>
+	<hr>
+	<div class="row">
+		<div class="col" id="customer_order_attach">
+			<div id="" class="container-fluid">
+				<div class="card">
+					<div class="card-header bg-info" id="headingTwo">
+						<h5 class="mb-0">
+							<button class="btn btn-warning text-white collapsed" id="add_edit_sales" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+								Add/Edit Quotation
+							</button>
+						</h5>
+					</div>
+					<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
 						<div class="card-body">
-							<div id="customer_attach_list_WOH">
-								{% include "asset_mgt_app/salesmultipleitem_list_woh.html" %}
+							<div class="card-body">
+								<div id="customer_attach_list_WOH">
+									{% include "asset_mgt_app/salesmultipleitem_list_woh.html" %}
+								</div>
 							</div>
 						</div>
 					</div>
@@ -577,12 +578,11 @@
 		</div>
 	</div>
 </div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<!--		<div class="col-1"></div>-->
-	</div>
+</div>
+</div>
+</div>
+<!--		<div class="col-1"></div>-->
+</div>
 
 <div class="container-fluid row">
 	<!--    <div class="col-md-1">-->
@@ -683,7 +683,6 @@
         enable_customer_code()
         enable_sales()
         hc_enabler()
-        new_customer_enabler()
         });
 </script>
 
@@ -957,16 +956,7 @@ $(document).ready(function () {
         });
 </script>
 
-<script>
-	function new_customer_enabler() {
-    var jn7 = document.getElementById("s_customer_new_name").value;
-    if (jn7 == 9) {
-        $("#s_industry_type").addClass('disable_a_href');
-    } else {
-        $("#s_industry_type").removeClass('disable_a_href');
-    }
-}
-</script>
+
 
 
 
