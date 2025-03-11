@@ -89,12 +89,11 @@ def sales_add(request, sales_id=0):
             form = SalesinfoaddForm(request.POST, request.FILES)
             if form.is_valid():
                 form.save()
-                sale_num = request.POST.get('s_sale_number')
-                sales_id = CustomerInfo.objects.get(s_sale_number=sale_num).id
-                url = 'customer_update/' + str(sales_id)
-                messages.success(request, 'Record Updated Successfully')
+                # sale_num = request.POST.get('s_sale_number')
+                # sales_id = CustomerInfo.objects.get(s_sale_number=sale_num).id
+                # url = 'customer_update/' + str(sales_id)
                 request.session['ses_customer_id'] = sales_id
-                return redirect(url)
+                # return redirect(url)
                 print("Sales Form Saved")
                 try:
                     last_id = SalesInfo.objects.latest('id').id
@@ -105,7 +104,7 @@ def sales_add(request, sales_id=0):
                     sales_num_next=1000000
                 sales_num_next = str('S_') +str(sales_num_next)
                 SalesInfo.objects.filter(id=last_id).update(s_sale_number=sales_num_next)
-                messages.success(request, 'Record Updated Successfully')
+                messages.success(request, 'Record saved Successfully')
                 # sales_num = request.POST.get('s_sale_number')
                 sales_id = SalesInfo.objects.get(s_sale_number=sales_num_next).id
                 # url = 'sales_update/' + str(sales_id)
@@ -319,7 +318,6 @@ def sales_multiple_item_add(request, sales_multiple_id=0):
                 return redirect('/SMS/sales_multiple_item_update/' + str(sales_id))  # Use the new item's ID
             else:
                 messages.error(request, 'Form is not valid')
-                print(form.errors)  # Debugging
                 return redirect('/SMS/sales_multiple_item_add')
         else:
             try:
