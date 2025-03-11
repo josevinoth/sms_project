@@ -10,7 +10,7 @@ from ..models import RoleInfo,Sales_Comments_Info,User_extInfo,SalesInfo,Salesmu
 from django.shortcuts import render, redirect
 from random import randint
 
-from ..sub_models.customer_mod import CustomerInfo
+
 
 
 @login_required(login_url='login_page')
@@ -89,7 +89,6 @@ def sales_add(request, sales_id=0):
             form = SalesinfoaddForm(request.POST, request.FILES)
             if form.is_valid():
                 form.save()
-                request.session['ses_customer_id'] = sales_id
                 print("Sales Form Saved")
                 try:
                     last_id = SalesInfo.objects.latest('id').id
@@ -339,7 +338,7 @@ def sales_multiple_item_list(request):
     first_name = request.session.get('first_name')
     sales_id = request.session.get('ses_sales_id')
 
-    Salesmultipleitem_list = SalesmultipleitemInfo.objects.filter(sm_customer_name=sales_id)
+    Salesmultipleitem_list = SalesmultipleitemInfo.objects.filter(sm_sales_num=sales_id)
 
     context = {
         'Salesmultipleitem_list': Salesmultipleitem_list,
