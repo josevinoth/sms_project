@@ -89,11 +89,7 @@ def sales_add(request, sales_id=0):
             form = SalesinfoaddForm(request.POST, request.FILES)
             if form.is_valid():
                 form.save()
-                # sale_num = request.POST.get('s_sale_number')
-                # sales_id = CustomerInfo.objects.get(s_sale_number=sale_num).id
-                # url = 'customer_update/' + str(sales_id)
                 request.session['ses_customer_id'] = sales_id
-                # return redirect(url)
                 print("Sales Form Saved")
                 try:
                     last_id = SalesInfo.objects.latest('id').id
