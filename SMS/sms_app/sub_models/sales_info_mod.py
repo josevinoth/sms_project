@@ -75,5 +75,6 @@ class SalesInfo(models.Model):
     s_or_business = models.CharField(blank=True, null=True, max_length=30)
     class Meta:
         ordering = ["s_sale_number"]
+
     def __str__(self):
-        return self.s_sale_number
+        return self.s_sale_number if self.s_sale_number else "No Sale Number"

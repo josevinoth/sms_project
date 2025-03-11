@@ -1,6 +1,6 @@
 <div class="container-fluid row">
     <div class="col-md-1.5">
-        <a href="{% url 'sales_multiple_item_add' %}" id="add_dim_btn" class="btn btn-success btn-block btn-lg">
+        <a href="{% url 'sales_multiple_item_add' %}" id="add_dim_btn" class="btn btn-primary btn-block btn-lg">
             <i class="fas fa-plus"></i> Insert
         </a>
     </div>
@@ -16,6 +16,8 @@
                 <th>Date of Quote</th>
                 <th>Quote Ref</th>
                 <th>Rate Approval</th>
+                <th>Updated By</th>
+                <th>Updated On</th>
                 <th>Edit</th>
                 <th>Delete</th>
             </tr>
@@ -28,6 +30,8 @@
                 <td>{{ sales.sm_Date_of_Quote }}</td>
                 <td>{{ sales.sm_Quote_Ref }}</td>
                 <td>{{ sales.sm_Rate_Approval }}</td>
+                <td>{{ sales.sm_lastmodifiedby }}</td>
+                <td>{{ sales.sm_updated_at }}</td>
                 <td>
                     <a class="btn btn-primary" href="{% url 'sales_multiple_item_update' sales.id %}">
                         <i class="far fa-edit"></i>
