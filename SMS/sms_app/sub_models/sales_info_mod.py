@@ -5,10 +5,10 @@ def sales_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
     return 'Sales_Files/{0}/{1}'.format(instance.s_sale_number, filename)
 class SalesInfo(models.Model):
-    s_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE)
+    s_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE,blank=True, null=True,)
     s_customer_new_name = models.CharField(blank=True, null=True,max_length=500)
     s_customer_type = models.ForeignKey(CustomertypeInfo,blank=True, null=True, on_delete=models.CASCADE, default='')
-    # s_customer_new = models.ForeignKey(Cusnewexist, on_delete=models.CASCADE, default=2)
+    # s_customer_new = models.ForeignKey(Cusnewexist, on_delete=models.C3ASCADE, default=2)
     s_industry_type = models.ForeignKey(Industrytype,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_wh_requirement = models.ForeignKey(Whrequirementinfo,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_trans_requirement = models.ForeignKey(Transrequirementinfo,blank=True, null=True, on_delete=models.CASCADE, default='')
