@@ -48,48 +48,55 @@
         <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
             {% csrf_token %}
 
-
-            <!-- Location -->
+            <!-- Location (BRANCH) -->
             <div class="mb-3">
-                <label for="gpm_branch" class="form-label">Branch</label>
-                <select id="gpm_branch" name="gpm_branch" class="form-control" required>
-                    <option value="">-- Select Status --</option>
+                <label for="gatein_pre_branch" class="form-label">Branch</label>
+                <select id="gatein_pre_branch" name="gatein_pre_branch" class="form-control" required>
+                    <option value="">-- Select Branch --</option>
                     {% for Location in Location %}
-                    <option value="{{ Location.id }}" {% if form.gpm_branch.value == Location.id %}selected{% endif %}>{{ Location }}</option>
+                    <option value="{{ Location.id }}" 
+                        {% if form.gatein_pre_branch.value == Location.id %}selected{% endif %}>
+                        {{ Location }}
+                    </option>
                     {% endfor %}
                 </select>
-                <div class="invalid-feedback">Please select a status</div>
+                <div class="invalid-feedback">Please select a branch</div>
             </div>
 
-            <!-- status -->
+            <!-- Status -->
             <div class="mb-3">
-                <label for="gpm_status" class="form-label">status</label>
-                <select id="gpm_status" name="gpm_status" class="form-control" required>
+                <label for="gatein_pre_status" class="form-label">Status</label>
+                <select id="gatein_pre_status" name="gatein_pre_status" class="form-control" required>
                     <option value="">-- Select Status --</option>
                     {% for Status in Status %}
-                    <option value="{{ Status.id }}" {% if form.gpm_status.value == Status.id %}selected{% endif %}>{{ Status }}</option>
+                    <option value="{{ Status.id }}" 
+                        {% if form.gatein_pre_status.value == Status.id %}selected{% endif %}>
+                        {{ Status }}
+                    </option>
                     {% endfor %}
                 </select>
                 <div class="invalid-feedback">Please select a status</div>
             </div>
 
-            <!-- Attachment Upload -->
+            <!-- Attachment Upload (Shipment Details) -->
             <div class="mb-3">
-                <label for="gpm_shipment_details" class="form-label">Upload Attachment (shipment details)</label>
-                <input type="file" id="gpm_shipment_details" name="gpm_shipment_details" class="form-control">
+                <label for="gatein_pre_shipment_att" class="form-label">Upload Attachment (Shipment Details)</label>
+                <input type="file" id="gatein_pre_shipment_att" name="gatein_pre_shipment_att" class="form-control">
             </div>
 
-            <!-- Attachment Upload -->
+            <!-- Attachment Upload (Customer Approval) -->
             <div class="mb-3">
-                <label for="gpm_customer_approval" class="form-label">Upload Attachment (customer approval)</label>
-                <input type="file" id="gpm_customer_approval" name="gpm_customer_approval" class="form-control">
+                <label for="gatein_pre_cust_appr_att" class="form-label">Upload Attachment (Customer Approval)</label>
+                <input type="file" id="gatein_pre_cust_appr_att" name="gatein_pre_cust_appr_att" class="form-control">
             </div>
+
+            <input type="hidden" name="gatein_pre_updated_by" value="{{ user_id }}">
 
             <!-- Buttons -->
             <button type="submit" class="btn btn-success btn-custom">
                 <i class="fas fa-save"></i> Save
             </button>
-                <a href="{% url 'gatein_pre_mbl_list' %}" class="btn btn-secondary btn-custom mt-2">
+            <a href="{% url 'gatein_pre_mbl_list' %}" class="btn btn-secondary btn-custom mt-2">
                 <i class="fas fa-times"></i> Cancel
             </a>
         </form>
@@ -114,6 +121,23 @@
             }, false);
         });
     })();
+</script>
+
+
+<script>
+$(document).ready(function() {
+            {
+                var gatein_pre_updated_by = document.getElementById("gatein_pre_updated_by").value
+                if (gatein_pre_updated_by == "")
+                {
+                    document.getElementById("gatein_pre_updated_by").value='{{user_id}}'
+                }
+                else
+                {
+                    document.getElementById("gatein_pre_updated_by").value=updated_by;
+                }
+            }
+        });
 </script>
 
 </body>

@@ -98,7 +98,7 @@ def sales_add(request, sales_id=0):
                 sales_instance.s_sale_number = f"S_{1000000 + sales_instance.id}"
                 sales_instance.save(update_fields=['s_sale_number'])  # Save again to update only s_sale_number
 
-                messages.success(request, 'Record Updated Successfully')
+                messages.success(request, 'Record Saved Successfully')
                 request.session['ses_sales_id'] = sales_instance.id
 
                 return redirect(f'/SMS/sales_update/{sales_instance.id}')
@@ -299,7 +299,7 @@ def sales_multiple_item_add(request, sales_multiple_id=0):
         return render(request, "asset_mgt_app/salesmultipleitem_add.html", context)
     else:
         if sales_multiple_id == 0:
-            form = SalesmultipleitemForm(request.POST)
+            form = SalesmultipleitemForm(request.POST,request.FILES)
             if form.is_valid():
                 form.save()
                 sales_id = (SalesmultipleitemInfo.objects.latest('id')).id
@@ -316,7 +316,7 @@ def sales_multiple_item_add(request, sales_multiple_id=0):
                 messages.error(request, 'Sales multiple item not found.')
                 return redirect('/SMS/salesmultipleitem_list')
 
-            form = SalesmultipleitemForm(request.POST, instance=salesmultiple)
+            form = SalesmultipleitemForm(request.POST,request.FILES, instance=salesmultiple)
             if form.is_valid():
                 form.save()
                 messages.success(request, ' updated successfully')
@@ -326,7 +326,7 @@ def sales_multiple_item_add(request, sales_multiple_id=0):
                 print(form.errors)  # Debugging
                 return redirect(request.META.get('HTTP_REFERER', '/SMS/salesmultipleitem_list'))
 
-# List bay
+
 @login_required(login_url='login_page')
 def sales_multiple_item_list(request):
     first_name = request.session.get('first_name')
@@ -340,7 +340,6 @@ def sales_multiple_item_list(request):
     }
     return render(request, "asset_mgt_app/salesmultipleitem_list.html", context)
 
-#Delete bay
 @login_required(login_url='login_page')
 def sales_multiple_item_delete(request, sales_multiple_id):
     salesmultiple = SalesmultipleitemInfo.objects.get(pk=sales_multiple_id)

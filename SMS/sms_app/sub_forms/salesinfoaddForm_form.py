@@ -25,8 +25,6 @@ class SalesinfoaddForm(forms.ModelForm):
         self.fields['s_not_reason'].empty_label = "--Select--"
         self.fields['s_kyc'].empty_label = "--Select--"
         self.fields['s_contract'].empty_label = "--Select--"
-        self.fields['s_rate_approval'].empty_label = "--Select--"
-        self.fields['s_approver_name'].empty_label = "--Select--"
         self.fields['s_status'].empty_label = "--Select--"
         self.fields['s_noreason_cp'].empty_label = "--Select--"
         self.fields['s_not_reason'].empty_label = "--Select--"

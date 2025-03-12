@@ -3,15 +3,33 @@
 {% block content %}
 {% load crispy_forms_tags %}
 
+<style>
+	fieldset {
+    display: block;
+    margin: 5px 0; /* Remove left & right margin */
+    padding: 5px;
+    border: 3px solid #ccc;
+    border-radius: 5px;
+    width: 80%; /* Ensure it takes full width */
+}
+    legend {
+        font-size: 1.2em;
+        padding: 3px 10px;
+        color: black;
+        display: table; /* Ensures the border extends */
+        width: auto;
+    }
+</style>
+
 <div class="row">
 	<!--		<div class="col-1"></div>-->
 	<div class="col">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3"  style="max-width: 100%;">
 				<div class="card-header text-center"><h3>Add/Update Sales</h3></div>
-					<div class="card-body bg-light" >
-						<form method="POST" action="" id="sales_add" enctype="multipart/form-data" data-load_customer_model-url="{% url 'load_customer_model' %}" >
-					{% csrf_token %}
+				<div class="card-body bg-light" >
+					<form method="POST" action="" id="sales_add" enctype="multipart/form-data" data-load_customer_model-url="{% url 'load_customer_model' %}" >
+						{% csrf_token %}
 						<div class="row" id="add_sales_info">
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
@@ -48,6 +66,8 @@
 									{% render_field form.s_customer_new_name class="form-control disable_a_href" id="s_customer_new_name"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Customer Type</span>
@@ -63,175 +83,6 @@
 									{% render_field form.s_industry_type id="s_industry_type" class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Warehouse Requirement</span>
-									</div>
-									{% render_field form.s_wh_requirement class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="row">
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >WR Volume<br> potential</span>
-											</div>
-											{% render_field form.s_wh_volume class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >WR Business <br> potential</span>
-											</div>
-											{% render_field form.s_wh_business class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Transport Requirement</span>
-									</div>
-									{% render_field form.s_trans_requirement class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="row">
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >TR Volume <br> potential</span>
-											</div>
-											{% render_field form.s_tr_volume class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >TR Business <br> potential</span>
-											</div>
-											{% render_field form.s_tr_business class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-								</div>
-
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Packing Requirement</span>
-									</div>
-									{% render_field form.s_pack_requirement class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="row">
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >PR Volume <br> potential</span>
-											</div>
-											{% render_field form.s_pr_volume class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >PR Business <br> potential</span>
-											</div>
-											{% render_field form.s_pr_business class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" style="width:250px" >Facility management Requirement</span>
-									</div>
-									{% render_field form.s_fac_mgmt_requirement class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="row">
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >FMR Volume <br> potential</span>
-											</div>
-											{% render_field form.s_fmr_volume class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >FMR Business <br> potential</span>
-											</div>
-											{% render_field form.s_fmr_business class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Other Requirement</span>
-									</div>
-									{% render_field form.s_manpower_requirement class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="row">
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >OR Volume <br> potential</span>
-											</div>
-											{% render_field form.s_or_volume class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >OR Business <br> potential</span>
-											</div>
-											{% render_field form.s_or_business class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Type of supply</span>
-									</div>
-									{% render_field form.s_supply_type class="form-control" id="s_supply_type" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="row">
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" > Volume <br> potential</span>
-											</div>
-											{% render_field form.s_vol_customer class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-									<div class="col-6">
-										<div class=" mb-3">
-											<div class="input-group-prepend">
-												<span class="col input-group-text" >Business <br> potential</span>
-											</div>
-											{% render_field form.s_bus_customer class="form-control" %}
-											<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-										</div>
-									</div>
-								</div>
-							</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Name of the Person Met</span>
@@ -253,6 +104,8 @@
 									{% render_field form.s_designation id="s_designation" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Contact No.</span>
@@ -290,6 +143,8 @@
 									{% render_field form.s_designation_dm class="form-control disable_a_href" id="s_designation_dm" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Email ID (DM)</span>
@@ -313,6 +168,231 @@
 								</div>
 							</div>
 						</div>
+						<div class="row">
+							<!-- Column 1 -->
+							<div class="col-md-2">
+								<fieldset>
+									<legend>Warehouse<br> Requirement</legend>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text" >Warehouse Requirement</span>
+												</div>
+												{% render_field form.s_wh_requirement class="form-control" %}
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">WR Volume Potential</span>
+												</div>
+												{% render_field form.s_wh_volume class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">WR Business Potential</span>
+												</div>
+												{% render_field form.s_wh_business class="form-control" %}
+											</div>
+										</div>
+									</div>
+								</fieldset>
+							</div>
+							<div class="col-2">
+								<fieldset>
+									<legend>Transport <br>Requirement</legend>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text" >Transport Requirement</span>
+												</div>
+												{% render_field form.s_trans_requirement class="form-control" %}
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">TR Volume Potential</span>
+												</div>
+												{% render_field form.s_tr_volume class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">TR Business Potential</span>
+												</div>
+												{% render_field form.s_tr_business class="form-control" %}
+											</div>
+										</div>
+									</div>
+								</fieldset>
+							</div>
+
+							<!-- Column 2 -->
+							<div class="col-md-2">
+								<fieldset>
+									<legend>Packing<br> Requirement</legend>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text" >Packing Requirement</span>
+												</div>
+												{% render_field form.s_pack_requirement class="form-control" %}
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">PR Volume Potential</span>
+												</div>
+												{% render_field form.s_pr_volume class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">PR Business Potential</span>
+												</div>
+												{% render_field form.s_pr_business class="form-control" %}
+											</div>
+										</div>
+									</div>
+								</fieldset>
+							</div>
+							<div class="col-2">
+								<fieldset>
+									<legend>Facility<br> Requirement</legend>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text" >Facility Requirement</span>
+												</div>
+												{% render_field form.s_fac_mgmt_requirement class="form-control" %}
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">FMR Volume Potential</span>
+												</div>
+												{% render_field form.s_fmr_volume class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">FMR Business Potential</span>
+												</div>
+												{% render_field form.s_fmr_business class="form-control" %}
+											</div>
+										</div>
+									</div>
+								</fieldset>
+							</div>
+
+							<!-- Column 3 -->
+							<div class="col-2">
+								<fieldset>
+									<legend>Other<br> Requirement</legend>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text" >Other Requirement</span>
+												</div>
+												{% render_field form.s_manpower_requirement class="form-control" %}
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">OR Volume Potential</span>
+												</div>
+												{% render_field form.s_or_volume class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">OR Business Potential</span>
+												</div>
+												{% render_field form.s_or_business class="form-control" %}
+											</div>
+										</div>
+									</div>
+								</fieldset>
+							</div>
+							<div class="col-2">
+								<fieldset>
+									<legend>Type of <br> Supply</legend>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text" >Type of Supply</span>
+												</div>
+												{% render_field form.s_manpower_requirement class="form-control" %}
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">TS Volume Potential</span>
+												</div>
+												{% render_field form.s_vol_customer class="form-control" %}
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-6">
+											<div class="mb-3" style="width:160px;">
+												<div class="input-group-prepend" style="width:160px;">
+													<span class="col input-group-text">TS Business Potential</span>
+												</div>
+												{% render_field form.s_bus_customer class="form-control" %}
+											</div>
+										</div>
+									</div>
+								</fieldset>
+
+							</div>
+						</div>
+
 						<hr>
 						<!-------------------------------------commercials------------------------------------------------------------->
 						<div class="row" id="Commercials">
@@ -331,34 +411,6 @@
 												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
-															<span class="input-group-text" > If Yes, Date of Quote</span>
-														</div>
-														{% render_field form.s_yesdate_quote type="date" class="form-control disable_a_href" onchange="buss_days_calc()" id="s_yesdate_quote" %}
-														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-													</div>
-													<div class="input-group input-group-sm mb-3">
-														<div class="input-group-prepend">
-															<span class="input-group-text">Quote Ref</span>
-														</div>
-														{% render_field form.s_quote_ref id="s_quote_ref" class="form-control disable_a_href" %}
-														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-													</div>
-													<div class="input-group input-group-sm mb-3">
-														<div class="input-group-prepend">
-															<span class="input-group-text">Rate Approval</span>
-														</div>
-														{% render_field form.s_rate_approval class="form-control" %}
-														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-													</div>
-													<div class="input-group input-group-sm mb-3">
-														<div class="input-group-prepend">
-															<span class="input-group-text">Rate Approval-Customer</span>
-														</div>
-														{% render_field form.s_rate_approval_customer id="s_rate_approval_customer" class="form-control " %}
-														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-													</div>
-													<div class="input-group input-group-sm mb-3">
-														<div class="input-group-prepend">
 															<span class="input-group-text" > Credit Period (Days)</span>
 														</div>
 														{% render_field form.s_credit_period class="form-control" %}
@@ -371,8 +423,6 @@
 														{% render_field form.s_expected_prof class="form-control" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
-												</div>
-												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">Expected Revenue</span>
@@ -387,13 +437,8 @@
 														{% render_field form.s_payment_cycle class="form-control" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
-													<div class="input-group input-group-sm mb-3">
-														<div class="input-group-prepend">
-															<span class="input-group-text" > Approver Name</span>
-														</div>
-														{% render_field form.s_approver_name class="form-control" %}
-														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-													</div>
+												</div>
+												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">Business Won?</span>
@@ -408,8 +453,6 @@
 														{% render_field form.s_not_reason class="form-control disable_a_href" id="s_not_reason" onchange="buss_not_won_reason_change()" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
-												</div>
-												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">KYC</span>
@@ -424,6 +467,8 @@
 														{% render_field form.s_contract class="form-control disable_a_href" id="s_contract" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
+												</div>
+												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">SOW</span>
@@ -445,8 +490,6 @@
 														{% render_field form.s_billing_sop class="form-control disable_a_href" id="s_billing_sop" %}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
-												</div>
-												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">Transition and Implement</span>
@@ -454,6 +497,8 @@
 														{% render_field form.s_trans_imp class="form-control disable_a_href" id="s_trans_imp"%}
 														<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 													</div>
+												</div>
+												<div class="col-3">
 													<div class="input-group input-group-sm mb-3">
 														<div class="input-group-prepend">
 															<span class="input-group-text">Customer Code</span>
@@ -502,29 +547,10 @@
 						</div>
 						<br>
 						<!----------------------------------------End-------------------------------------------------------->
-						<div class="container-fluid input-group input-group-sm mb-3" >
-							<div class="input-group-prepend">
-								<span class="input-group-text">Remarks</span>
-							</div>
-							{% render_field form.s_remarks id="s_remarks" class="form-control" id="s_bus_won_not" onchange="Buswonnot_enabler()" %}
-							<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-						</div>
+
 						{% render_field form.s_updated_by id="s_updated_by"  hidden="true" class="form-control" %}
 						{% render_field form.s_created_by id="s_created_by"  hidden="true" class="form-control" %}
 						{% render_field form.s_business_start_days id="s_business_start_days" hidden="true" class="form-control" %}
-
-						<div class="row">
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Attachment</span>
-									</div>
-									{% render_field form.s_attachment class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-6"></div>
-						</div>
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
@@ -540,7 +566,7 @@
 						<a href="{% url 'sales_search' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel </a>
 					</form>
-						</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -548,30 +574,30 @@
 </div>
 <hr>
 <br>
-						<div class="row" id="Quotation">
-				<div class="col" id="salesmultipleitem_list">
-					<div id="" class="container-fluid">
-						<div class="card">
-							<div class="card-header bg-info" id="headingTwo">
-								<h5 class="mb-0">
-									<button class="btn btn-warning text-white collapsed" id="add_edit_sales" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-										<i class="fas fa-angle-down"></i>	Add/Edit Quotation
-									</button>
-								</h5>
-							</div>
-							<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-								<div class="card-body">
-									<div class="card-body">
-										<div id="salesmultipleitem_list_woh">
-											{% include "asset_mgt_app/salesmultipleitem_list_woh.html" %}
-										</div>
-									</div>
-								</div>
+<div class="row" id="Quotation">
+	<div class="col" id="salesmultipleitem_list">
+		<div id="" class="container-fluid">
+			<div class="card">
+				<div class="card-header bg-info" id="headingTwo">
+					<h5 class="mb-0">
+						<button class="btn btn-warning text-white collapsed" id="add_edit_sales" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+							<i class="fas fa-angle-down"></i>	Add/Edit Quotation
+						</button>
+					</h5>
+				</div>
+				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+					<div class="card-body">
+						<div class="card-body">
+							<div id="salesmultipleitem_list_woh">
+								{% include "asset_mgt_app/salesmultipleitem_list_woh.html" %}
 							</div>
 						</div>
 					</div>
 				</div>
-						</div>
+			</div>
+		</div>
+	</div>
+</div>
 <hr>
 <div class="container-fluid row">
 	<!--    <div class="col-md-1">-->
@@ -881,25 +907,6 @@
 }
 </script>
 
-<script>
-	$(document).ready(function () {
-        function hc_enabler() {
-            var jn7 = $("#s_quote_ref").val().trim();
-            var businessWonField = $("#s_bus_won_not");
-
-            if (jn7 === "" || jn7.toLowerCase() === "null" || jn7.toLowerCase() === "none") {
-                businessWonField.val("2").addClass("disable_a_href").prop("disabled", true);
-            } else {
-                businessWonField.removeClass("disable_a_href").prop("disabled", false);
-            }
-        }
-        hc_enabler();
-
-        $("#s_quote_ref").on("change keyup", function () {
-            hc_enabler();
-        });
-    });
-</script>
 
 <script>
 	$(document).ready(function() {
