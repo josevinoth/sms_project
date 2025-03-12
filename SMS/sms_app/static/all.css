@@ -446,7 +446,21 @@ font-size: 12px;
     /*padding: 10px 55px 10px 5px; *//* Add padding for better appearance *//*
     margin-right: 10px;  Add space between buttons */
 }
-
+fieldset {
+    display: block;
+    margin: 5px 0; /* Remove left & right margin */
+    padding: 5px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    width: 80%; /* Ensure it takes full width */
+}
+legend {
+        font-size: 1.2em;
+        padding: 3px 10px;
+        color: black;
+        display: table; /* Ensures the border extends */
+        width: auto;
+    }
 /* Remove margin-right for the last button */
 
 
@@ -646,4 +660,5 @@ font-size: 12px;
   .card-body {
     padding: 15px;
   }
+
 }
