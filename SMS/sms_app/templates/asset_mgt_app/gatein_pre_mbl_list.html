@@ -43,6 +43,7 @@
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
+                    <th>Pre Gate-in ID</th>
                     <th>Location</th>
                     <th>Shipment Details</th>
                     <th>Customer Approval</th>
@@ -55,6 +56,7 @@
                 {% for gatein_pre in gatein_pre %}
                 <tr class="gatein-row">
                     <td>{{ gatein_pre.id }}</td>
+                    <td>{{ gatein_pre.gatein_pre_number }}</td>
                     <td>{{ gatein_pre.gatein_pre_branch }}</td>
                     <td>
                         {% if gatein_pre.gatein_pre_shipment_att %}

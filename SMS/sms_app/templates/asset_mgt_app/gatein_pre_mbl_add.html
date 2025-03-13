@@ -47,6 +47,22 @@
 
         <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
             {% csrf_token %}
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-success btn-sm-2">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <a href="{% url 'gatein_pre_mbl_list' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+            <br>
+
+            <div class="mb-3">
+                <label for="gatein_pre_number" class="form-label">Pre Gate-in ID</label>
+                <input type="text" id="gatein_pre_number" name="gatein_pre_number" class="form-control"
+                       value="{{ form.gatein_pre_number.value }}" readonly>
+            </div>
+
 
             <!-- Location (BRANCH) -->
             <div class="mb-3">
@@ -93,12 +109,14 @@
             <input type="hidden" name="gatein_pre_updated_by" value="{{ user_id }}">
 
             <!-- Buttons -->
-            <button type="submit" class="btn btn-success btn-custom">
-                <i class="fas fa-save"></i> Save
-            </button>
-            <a href="{% url 'gatein_pre_mbl_list' %}" class="btn btn-secondary btn-custom mt-2">
-                <i class="fas fa-times"></i> Cancel
-            </a>
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-success btn-sm-2">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <a href="{% url 'gatein_pre_mbl_list' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
         </form>
     </div>
 </div>
