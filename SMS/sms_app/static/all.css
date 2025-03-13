@@ -455,7 +455,7 @@ fieldset {
     width: 80%; /* Ensure it takes full width */
 }
 legend {
-        font-size: 1.2em;
+        font-size: 16px;
         padding: 3px 10px;
         color: black;
         display: table; /* Ensures the border extends */
