@@ -460,6 +460,9 @@ legend {
         color: black;
         display: table; /* Ensures the border extends */
         width: auto;
+        text-align: center;
+        background-color: #FFDBBB;
+        border-radius: 5px;
     }
 /* Remove margin-right for the last button */
 
