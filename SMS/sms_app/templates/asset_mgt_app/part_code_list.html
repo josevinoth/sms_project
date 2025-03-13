@@ -1,0 +1,87 @@
+{% extends "asset_mgt_app/base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Part code List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'part_code_add' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table id="part_code_List" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Part Code</th>
+            <th>Stock Type</th>
+            <th>Stock Description</th>
+            <th>Length</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Size</th>
+            <th>UOM</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for part_code in part_code_list %}
+        <tr>
+            <td>{{ part_code.pc_code }}</td>
+            <td>{{ part_code.pc_stock_type }}</td>
+            <td>{{ part_code.pc_stock_description }}</td>
+            <td>{{ part_code.pc_length }}</td>
+            <td>{{ part_code.pc_width }}</td>
+            <td>{{ part_code.pc_height }}</td>
+            <td>{{ part_code.pc_size }}</td>
+            <td>{{ part_code.pc_uom }}</td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'part_code_edit' part_code.id %}">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+            <td>
+                <form action="{% url 'part_code_delete' part_code.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+        $('#part_code_List').DataTable();
+          {
+        scrollY: "600px",
+<!--        scrollX: true,-->
+        scrollCollapse: true,
+        order: [1, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    } );
+} );
+</script>
+
+{% endblock content %}

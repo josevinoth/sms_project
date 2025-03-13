@@ -148,3 +148,4 @@ from .sub_views.performance_audit_view import performanceaudit_add,performanceau
 from .sub_views.gate_meeting_add_view import gatemeeting_add,gatemeeting_list,gatemeeting_delete,gate_meeting_send_email
 from .sub_views.transport_nav_view import transport_nav
 from .sub_views.trip_closure_mblview import trclosure_mbl_add,trclosure_mbl_list,trclosure_mbl_delete
+from .sub_views.part_code_view import part_code_add,part_code_list,part_code_delete

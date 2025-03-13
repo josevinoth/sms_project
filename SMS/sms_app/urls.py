@@ -634,11 +634,14 @@ urlpatterns = [
     path('sales_multiple_item_update/<int:sales_multiple_id>/', views.sales_multiple_item_add, name='sales_multiple_item_update'),
     path('sales_multiple_item_delete/<int:sales_multiple_id>/', views.sales_multiple_item_delete,name='sales_multiple_item_delete'),
     path('sales_multiple_item_cancel/', views.sales_multiple_item_cancel, name='sales_multiple_item_cancel'),
-
     path('trclosure_mbl_add/', views.trclosure_mbl_add, name='trclosure_mbl_add'),
     path('trclosure_mbl_add/<int:trm_id>/', views.trclosure_mbl_add, name='trclosure_mbl_edit'),
     path('trclosure_mbl_list/', views.trclosure_mbl_list, name='trclosure_mbl_list'),
     path('trclosure_mbl_delete/<int:trm_id>/', views.trclosure_mbl_delete, name='trclosure_mbl_delete'),
+    path('part_code_add/', views.part_code_add, name='part_code_add'),
+    path('part_code_add/<int:pc_id>/', views.part_code_add, name='part_code_edit'),
+    path('part_code_list/', views.part_code_list, name='part_code_list'),
+    path('part_code_delete/<int:pc_id>/', views.part_code_delete, name='part_code_delete'),
 ]
 
 
