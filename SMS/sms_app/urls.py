@@ -505,6 +505,7 @@ urlpatterns = [
     path('pk_bvm_invoice_excel/', views.pk_bvm_invoice_excel, name='pk_bvm_invoice_excel'),# pk_bvm_invoice_excel
     path('pk_store_po_dimension_id/', views.pk_store_po_dimension_id, name='pk_store_po_dimension_id'),# pk_store_po_dimension_id
     path('pk_store_na_dimension_id/', views.pk_store_na_dimension_id, name='pk_store_na_dimension_id'),# pk_store_na_dimension_id
+    path('fetch_part_code_details/', views.fetch_part_code_details, name='fetch_part_code_details'),
     path('po_dimension_list/', views.po_dimension_list, name='po_dimension_list'),  # List po_dimension
     path('po_dimension_insert/', views.po_dimension_add, name='po_dimension_insert'),  # Add po_dimension
     path('po_dimension_update/<int:po_dimension_id>', views.po_dimension_add, name='po_dimension_update'),  # update po_dimension
@@ -637,6 +638,10 @@ urlpatterns = [
     path('gatein_pre_mbl_edit/<int:gpm_id>/', views.gatein_pre_mbl_add, name='gatein_pre_mbl_edit'),
     path('gatein_pre_mbl_list/', views.gatein_pre_mbl_list, name='gatein_pre_mbl_list'),
     path('gatein_pre_mbl_delete/<int:gpm_id>/', views.gatein_pre_mbl_delete, name='gatein_pre_mbl_delete'),
+    path('part_code_add/', views.part_code_add, name='part_code_add'),
+    path('part_code_add/<int:pc_id>/', views.part_code_add, name='part_code_edit'),
+    path('part_code_list/', views.part_code_list, name='part_code_list'),
+    path('part_code_delete/<int:pc_id>/', views.part_code_delete, name='part_code_delete'),
 ]
 
 
