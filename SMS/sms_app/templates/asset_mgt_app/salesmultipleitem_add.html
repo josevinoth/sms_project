@@ -1,10 +1,12 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" >
-    {% csrf_token %}
-    <div class="row">
-        <div class="col">
+
+<div class="row">
+    <div class="col-3"></div>
+    <div class="col-6">
+        <form method="POST" enctype="multipart/form-data" >
+            {% csrf_token %}
             <div class="container-fluid">
                 <div class="card text-white bg-info mb-3" style="max-width: 100%;">
                     <div class="card-header text-center">
@@ -13,7 +15,7 @@
                     <div class="card-body bg-light">
                         <div class="row">
                             <div class="col">
-                                 <div class="input-group input-group-sm mb-3">
+                                <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Sales Number</span>
                                     </div>
@@ -38,22 +40,29 @@
                                     </div>
                                     {% render_field form.sm_Rate_Approval id="sm_Rate_Approval" class="form-control"  %}
                                 </div>
+                                <div class="input-group input-group-sm mb-3 bg-dark block">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Attachment</span>
+									</div>
+									{% render_field form.sm_attachment class="form-control" %}
+								</div>
+                                {% render_field form.sm_lastmodifiedby id="sm_lastmodifiedby" hidden="True" class="form-control"  %}
                             </div>
                         </div>
 
 
                         <!-- Message Display Section -->
                         <div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
 
                         <!-- Submit and Cancel Buttons -->
                         <button type="submit" class="btn btn-success" id="save-btn">
@@ -65,22 +74,15 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
-</form>
+    <div class="col-3"></div>
+</div>
 <script>
-	$(document).ready(function() {
-        var sales_id = document.getElementById("sm_sales_num").value
-                if (sales_id == "")
-                {
-                    document.getElementById("sm_sales_num").value='{{sales_id}}'
-                }
-                else
-                {
-                    document.getElementById("sm_sales_num").value=sales_id;
-                }
+    $(document).ready(function() {
+        document.getElementById("sm_sales_num").value ='{{sales_id}}';
+        document.getElementById("sm_lastmodifiedby").value ='{{user_id}}';
         });
 </script>
-
 
 {% endblock content %}

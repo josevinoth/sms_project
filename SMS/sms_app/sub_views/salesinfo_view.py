@@ -1,3 +1,5 @@
+from lib2to3.fixes.fix_input import context
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
@@ -67,7 +69,7 @@ def sales_add(request, sales_id=0):
             # ses_sales_num_val = request.session.get('ses_sales_num')
             # sale_num = SalesInfo.objects.get(pk=sales_id).s_sale_number
             # sale_num_id=SalesInfo.objects.get(s_sale_number=sale_num).id
-            # request.session['ses_sales_num_id'] = sale_num_id
+            request.session['ses_sales_num_id'] = sales_id
             comments_list_filterd = (Sales_Comments_Info.objects.filter(sc_sales_number=sales_id)).order_by('-sc_created_at')
             Sales_multiple_item_list = SalesmultipleitemInfo.objects.filter(sm_sales_num=sales_id)
             request.session['ses_sales_id'] = sales_id
@@ -88,33 +90,21 @@ def sales_add(request, sales_id=0):
         if sales_id == 0:
             form = SalesinfoaddForm(request.POST, request.FILES)
             if form.is_valid():
-                form.save()
-                sale_num = request.POST.get('s_sale_number')
-                sales_id = CustomerInfo.objects.get(s_sale_number=sale_num).id
-                url = 'customer_update/' + str(sales_id)
-                messages.success(request, 'Record Updated Successfully')
-                request.session['ses_customer_id'] = sales_id
-                return redirect(url)
-                print("Sales Form Saved")
-                try:
-                    last_id = SalesInfo.objects.latest('id').id
-                    # sales_num_next =str('S_')+str(int(((SalesInfo.objects.get(id=last_id)).s_sale_number).replace('S_', ''))+1)
-                    sales_num_next=1000000+last_id
-                except ObjectDoesNotExist:
-                    # sales_num_next = str('S_') + str(randint(10000, 99999))
-                    sales_num_next=1000000
-                sales_num_next = str('S_') +str(sales_num_next)
-                SalesInfo.objects.filter(id=last_id).update(s_sale_number=sales_num_next)
-                messages.success(request, 'Record Updated Successfully')
-                # sales_num = request.POST.get('s_sale_number')
-                sales_id = SalesInfo.objects.get(s_sale_number=sales_num_next).id
-                # url = 'sales_update/' + str(sales_id)
-                # print(url)
-                return redirect('/SMS/sales_update/' + str(sales_id))
-                # return redirect(url)
+                # Save form but do not commit yet
+                sales_instance = form.save(commit=False)
+
+                # Assign a sale number based on the instance's ID (after saving)
+                sales_instance.save()  # Save to get the ID
+                sales_instance.s_sale_number = f"S_{1000000 + sales_instance.id}"
+                sales_instance.save(update_fields=['s_sale_number'])  # Save again to update only s_sale_number
+
+                messages.success(request, 'Record Saved Successfully')
+                request.session['ses_sales_id'] = sales_instance.id
+
+                return redirect(f'/SMS/sales_update/{sales_instance.id}')
             else:
                 print("Sales Form not saved")
-                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+                messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
                 # Display form errors
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -294,27 +284,25 @@ def sales_multiple_item_add(request, sales_multiple_id=0):
     user_id = request.session.get('ses_userID')
     sales_id = request.session.get('ses_sales_id')
     print('sales_id',sales_id)
-
     if request.method == "GET":
         if sales_multiple_id == 0:
             form = SalesmultipleitemForm()
         else:
-            try:
-                salesmultiple = SalesmultipleitemInfo.objects.get(pk=sales_multiple_id)
-                form = SalesmultipleitemForm(instance=salesmultiple)
-            except SalesmultipleitemInfo.DoesNotExist:
-                messages.error(request, ' not found')
-                return redirect('/SMS/salesmultipleitem_list')
-        return render(request, "asset_mgt_app/salesmultipleitem_add.html", {'form': form, 'first_name': first_name,'sales_id' : sales_id, 'user_id': user_id})
-
-    elif request.method == "POST":
+            salesmultiple = SalesmultipleitemInfo.objects.get(pk=sales_multiple_id)
+            form = SalesmultipleitemForm(instance=salesmultiple)
+        context={
+                    'form': form,
+                    'first_name': first_name,
+                    'sales_id': sales_id,
+                    'user_id': user_id
+                }
+        return render(request, "asset_mgt_app/salesmultipleitem_add.html", context)
+    else:
         if sales_multiple_id == 0:
-            form = SalesmultipleitemForm(request.POST)
+            form = SalesmultipleitemForm(request.POST,request.FILES)
             if form.is_valid():
                 form.save()
                 sales_id = (SalesmultipleitemInfo.objects.latest('id')).id
-
-                print('sales_id', sales_id)
                 messages.success(request, 'saved successfully')
                 return redirect('/SMS/sales_multiple_item_update/' + str(sales_id))  # Use the new item's ID
             else:
@@ -328,7 +316,7 @@ def sales_multiple_item_add(request, sales_multiple_id=0):
                 messages.error(request, 'Sales multiple item not found.')
                 return redirect('/SMS/salesmultipleitem_list')
 
-            form = SalesmultipleitemForm(request.POST, instance=salesmultiple)
+            form = SalesmultipleitemForm(request.POST,request.FILES, instance=salesmultiple)
             if form.is_valid():
                 form.save()
                 messages.success(request, ' updated successfully')
@@ -339,7 +327,6 @@ def sales_multiple_item_add(request, sales_multiple_id=0):
                 return redirect(request.META.get('HTTP_REFERER', '/SMS/salesmultipleitem_list'))
 
 
-# List bay
 @login_required(login_url='login_page')
 def sales_multiple_item_list(request):
     first_name = request.session.get('first_name')
@@ -353,7 +340,6 @@ def sales_multiple_item_list(request):
     }
     return render(request, "asset_mgt_app/salesmultipleitem_list.html", context)
 
-#Delete bay
 @login_required(login_url='login_page')
 def sales_multiple_item_delete(request, sales_multiple_id):
     salesmultiple = SalesmultipleitemInfo.objects.get(pk=sales_multiple_id)

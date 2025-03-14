@@ -5,10 +5,10 @@ def sales_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
     return 'Sales_Files/{0}/{1}'.format(instance.s_sale_number, filename)
 class SalesInfo(models.Model):
-    s_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE)
+    s_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE,blank=True, null=True,)
     s_customer_new_name = models.CharField(blank=True, null=True,max_length=500)
     s_customer_type = models.ForeignKey(CustomertypeInfo,blank=True, null=True, on_delete=models.CASCADE, default='')
-    # s_customer_new = models.ForeignKey(Cusnewexist, on_delete=models.CASCADE, default=2)
+    # s_customer_new = models.ForeignKey(Cusnewexist, on_delete=models.C3ASCADE, default=2)
     s_industry_type = models.ForeignKey(Industrytype,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_wh_requirement = models.ForeignKey(Whrequirementinfo,blank=True, null=True, on_delete=models.CASCADE, default='')
     s_trans_requirement = models.ForeignKey(Transrequirementinfo,blank=True, null=True, on_delete=models.CASCADE, default='')
@@ -32,16 +32,12 @@ class SalesInfo(models.Model):
     s_bus_customer = models.CharField(blank=True, null=True,max_length=30)
     s_customer_prospective = models.ForeignKey(YesNoInfo,blank=True, null=True, on_delete=models.CASCADE, related_name='s_customer_prospective', db_column='s_customer_prospective',default=2)
     s_noreason_cp = models.ForeignKey(Prespectivec_customer_NoInfo,blank=True, null=True, on_delete=models.CASCADE,default=4)
-    s_yesdate_quote = models.DateField(null = True,blank=True)
-    s_quote_ref = models.CharField(blank=True, null=True,max_length=50)
     s_bus_won_not = models.ForeignKey(YesNoInfo,blank=True, null=True, on_delete=models.CASCADE,related_name='s_bus_won_not', db_column='s_bus_won_not', default=2)
     s_not_reason = models.ForeignKey(Business_won_NoInfo,blank=True, null=True, on_delete=models.CASCADE,default=4)
     s_yesdate_business = models.DateField(null = True,blank=True)
     s_kyc = models.ForeignKey(YesNoInfo,blank=True, null=True, on_delete=models.CASCADE,related_name='s_kyc', db_column='s_kyc' ,default=2)
     s_contract = models.ForeignKey(YesNoInfo,blank=True, null=True, on_delete=models.CASCADE,related_name='s_contract', db_column='s_contract', default=2)
-    s_rate_approval = models.ForeignKey(YesNoInfo,blank=True, null=True, related_name='s_rate_approval', db_column='s_rate_approval',on_delete=models.CASCADE, default=2)
     s_expected_prof = models.FloatField(blank=True, null=True,default=0.0)
-    s_approver_name = models.ForeignKey(MyUser, related_name='s_approver_name', db_column='s_approver_name',on_delete=models.CASCADE, blank=True, null=True,default=2)
     s_status = models.ForeignKey(Salestatus,blank=True, null=True, on_delete=models.CASCADE, default=1)
     s_next_meet_schd_date = models.DateField(null = True,blank=True)
     s_credit_period = models.IntegerField(blank=True, null=True)
@@ -51,13 +47,10 @@ class SalesInfo(models.Model):
     s_created_by = models.ForeignKey(MyUser, related_name='s_created_by', db_column='s_created_by',on_delete=models.CASCADE, blank=True, null=True)
     s_business_start_days=models.IntegerField(null = True,blank=True,default=0)
     s_sale_number = models.CharField(blank=True, null=True,max_length=30)
-    s_attachment = models.FileField(upload_to=sales_directory_path, null=True, blank=True)
     s_company = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, default=1)
     s_expected_revenue = models.FloatField(blank=True, null=True,default=0.0)
     s_payment_cycle = models.ForeignKey(PaymentcycleInfo, related_name='s_payment_cycle', db_column='s_payment_cycle',on_delete=models.CASCADE, default=1)
     s_not_competitive_remarks=models.TextField(default="NA")
-    s_remarks=models.TextField(blank=True, null=True)
-    s_rate_approval_customer = models.CharField(blank=True, null=True, max_length=50)
     s_sow = models.ForeignKey(YesNoInfo, blank=True, null=True, on_delete=models.CASCADE,related_name='s_sow', db_column='s_sow', default=2)
     s_ops_sop = models.ForeignKey(YesNoInfo, blank=True, null=True, on_delete=models.CASCADE, related_name='s_ops_sop',db_column='s_ops_sop', default=2)
     s_billing_sop = models.ForeignKey(YesNoInfo, blank=True, null=True, on_delete=models.CASCADE, related_name='billing_sop',db_column='billing_sop', default=2)
@@ -75,5 +68,6 @@ class SalesInfo(models.Model):
     s_or_business = models.CharField(blank=True, null=True, max_length=30)
     class Meta:
         ordering = ["s_sale_number"]
+
     def __str__(self):
-        return self.s_sale_number
+        return self.s_sale_number if self.s_sale_number else "No Sale Number"

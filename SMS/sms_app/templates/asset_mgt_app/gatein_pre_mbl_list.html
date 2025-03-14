@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,13 +20,22 @@
         .hidden {
             display: none;
         }
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container mt-4">
     <h2 class="text-center">Pre Gatein</h2>
-    <a href="{% url 'gatein_pre_mbl_add' %}" class="btn btn-primary w-100 mb-3">+ Add New</a>
+
+    <div class="btn-container">
+        <a href="{% url 'gatein_pre_mbl_add' %}" class="btn btn-primary">+ Add New</a>
+        <a href="{% url 'home_page' %}" class="btn btn-secondary">Back</a>
+    </div>
 
     <!-- Desktop View -->
     <div class="d-none d-md-block">
@@ -31,10 +43,12 @@
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
+                    <th>Pre Gate-in ID</th>
                     <th>Location</th>
                     <th>Shipment Details</th>
                     <th>Customer Approval</th>
                     <th>Status</th>
+                    <th>Updated By</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -42,22 +56,24 @@
                 {% for gatein_pre in gatein_pre %}
                 <tr class="gatein-row">
                     <td>{{ gatein_pre.id }}</td>
-                    <td>{{ gatein_pre.gpm_branch }}</td>
+                    <td>{{ gatein_pre.gatein_pre_number }}</td>
+                    <td>{{ gatein_pre.gatein_pre_branch }}</td>
                     <td>
-                        {% if gatein_pre.gpm_shipment_details %}
-                            <a href="{{ gatein_pre.gpm_shipment_details.url }}" target="_blank">shipment details File</a>
+                        {% if gatein_pre.gatein_pre_shipment_att %}
+                            <a href="{{ gatein_pre.gatein_pre_shipment_att.url }}" target="_blank">shipment details File</a>
                         {% else %}
                             No Attachment
                         {% endif %}
                     </td>
                     <td>
-                        {% if gatein_pre.gpm_customer_approval %}
-                            <a href="{{ gatein_pre.gpm_customer_approval.url }}" target="_blank">customer approval File</a>
+                        {% if gatein_pre.gatein_pre_cust_appr_att %}
+                            <a href="{{ gatein_pre.gatein_pre_cust_appr_att.url }}" target="_blank">customer approval File</a>
                         {% else %}
                             No Attachment
                         {% endif %}
                     </td>
-                    <td>{{ gatein_pre.gpm_status }}</td>
+                    <td>{{ gatein_pre.gatein_pre_status }}</td>
+                    <td>{{ gatein_pre.gatein_pre_updated_by }}</td>
                     <td>
                         <a href="{% url 'gatein_pre_mbl_edit' gatein_pre.id %}" class="btn btn-warning btn-sm">Edit</a>
                         <a href="{% url 'gatein_pre_mbl_delete' gatein_pre.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
@@ -77,16 +93,23 @@
         {% for gatein_pre in gatein_pre %}
         <div class="card mb-3">
             <div class="card-body">
-                <p><strong>Location:</strong> {{ gatein_pre.gpm_branch }}</p>
-                <p><strong>pre gatein id:</strong> {{ gatein_pre.gpm_id }}</p>
+                <p><strong>Location:</strong> {{ gatein_pre.gatein_pre_branch }}</p>
                 <p><strong>Shipment Details:</strong>
-                    {% if gatein_pre.gpm_shipment_details %}
-                        <a href="{{ gatein_pre.gpm_shipment_details.url }}" target="_blank">View File</a>
+                    {% if gatein_pre.gatein_pre_shipment_att %}
+                        <a href="{{ gatein_pre.gatein_pre_shipment_att.url }}" target="_blank">shipment File</a>
                     {% else %}
                         No Attachment
                     {% endif %}
                 </p>
-                <p><strong>Status:</strong> {{ gatein_pre.gpm_status }}</p>
+                <p><strong>Customer Details:</strong>
+                    {% if gatein_pre.gatein_pre_cust_appr_att %}
+                        <a href="{{ gatein_pre.gatein_pre_cust_appr_att.url }}" target="_blank">Customer File</a>
+                    {% else %}
+                        No Attachment
+                    {% endif %}
+                </p>
+                <p><strong>Status:</strong> {{ gatein_pre.gatein_pre_status }}</p>
+                <p><strong>Updated By:</strong> {{ gatein_pre.gatein_pre_updated_by }}</p>
                 <div class="btn-group">
                     <a href="{% url 'gatein_pre_mbl_edit' gatein_pre.id %}" class="btn btn-warning btn-sm w-50">Edit</a>
                     <a href="{% url 'gatein_pre_mbl_delete' gatein_pre.id %}" class="btn btn-danger btn-sm w-50" onclick="return confirm('Are you sure?');">Delete</a>
@@ -97,10 +120,7 @@
         <p class="text-center">No records found.</p>
         {% endfor %}
     </div>
-
-    <a href="{% url 'home_page' %}" class="btn btn-secondary w-100">Back</a>
 </div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
