@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 
-from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm,ConsignmentgoodsnewaddForm
+from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
 from ..models import VehiclemasterInfo,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect
 
@@ -24,6 +24,7 @@ def consignmentdetail_nav(request,consignmentdetail_id=0):
         'enquiry_num': enquiry_num,
         'enquiry_num_id': enquiry_num_id,
         'consignmentdetail_list': consignmentdetail_list,
+        'consignmentdetail_id': consignmentdetail_id,
     }
     return render(request, "asset_mgt_app/consignmentdetail_nav.html", context)
 @login_required(login_url='login_page')
@@ -42,29 +43,28 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         if consignmentdetail_id == 0:
             con_det_form = ConsignmentdetailaddForm()
             form = ConsignmentgoodsaddForm()
-            cn_form = ConsignmentgoodsnewaddForm()
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
         else:
+            request.session['ses_consignment_detail_id'] = consignmentdetail_id
             enquiry_num = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id).co_enquirynumber
             consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
             form = ConsignmentgoodsaddForm()
-            cn_form = ConsignmentgoodsnewaddForm()
 
         context = {
             'first_name': first_name,
             'user_id': user_id,
             'con_det_form': con_det_form,
             'form': form,
-            'cn_form': cn_form,
             'enquiry_num': enquiry_num,
             'enquiry_num_id': enquiry_num_id,
             'customer_id': customer_id,
             'customer_code': customer_code,
+            'consignmentdetail_id': consignmentdetail_id,
             'consignmentgoods_id_val': consignmentgoods_id_val,
             'consignmentdetail_list': ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id),
-            'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentgoods_id_val),
+            'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentdetail_id),
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 

@@ -8,25 +8,26 @@
 			{% render_field enquiryvechicle_form.env_enquirynumber id="env_enquirynumber" class="form-control disable_a_href" %}
 		</div>
 		<div class="col-auto">
-			{% render_field enquiryvechicle_form.env_vehicletype id="env_vehicletype" onchange="change_charge_type()" class="form-control" %}
+			{% render_field enquiryvechicle_form.env_vehicletype id="env_vehicletype" class="form-control disable_a_href" %}
 		</div>
 		<div class="col-auto">
-			{% render_field enquiryvechicle_form.env_vehiclecategory id="env_vehiclecategory" class="form-control" %}
+			{% render_field enquiryvechicle_form.env_vehiclecategory id="env_vehiclecategory" class="form-control disable_a_href" %}
 		</div>
 		<div class="col-auto">
-			{% render_field enquiryvechicle_form.env_quantity id="env_quantity" class="form-control" placeholder="Quantity" %}
+			{% render_field enquiryvechicle_form.env_quantity id="env_quantity" class="form-control disable_a_href" placeholder="Quantity" %}
 		</div>
 		<div class="col-auto">
 			{% render_field enquiryvechicle_form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
 		</div>
 		<div class="col-auto">
+		<a href="{% url 'enquirynotevehicle_insert' %}"  onclick="enable_disable()" id="add_new" class="btn btn-primary btn-block ">
+			<i class="fas fa-plus"></i> Add
+		</a>
+		</div>
+		<div class="col-auto">
 			<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
 		</div>
-<!--		<div class="col-auto">-->
-<!--			<a href="{% url 'enquirynotevehicle_cancel' %}" class="btn btn-danger float-right">-->
-<!--				<i class="fas fa-times"></i> Cancel-->
-<!--			</a>-->
-<!--		</div>-->
+
 	</div>
 	<br>
 	<div class="row ">
@@ -43,11 +44,11 @@
 </form>
 <hr>
 <div class="container-fluid row">
-	<div class="col-md-1">
-		<a href="{% url 'enquirynotevehicle_insert' %}"  id="add_enquiry" class="btn btn-primary btn-block ">
-			<i class="fas fa-plus"></i> Add
-		</a>
-	</div>
+<!--	<div class="col-md-1">-->
+<!--		<a href="{% url 'enquirynotevehicle_insert' %}"  id="add_enquiry" class="btn btn-primary btn-block ">-->
+<!--			<i class="fas fa-plus"></i> Add-->
+<!--		</a>-->
+<!--	</div>-->
 </div>
 <br>
 <div class="container-fluid">
@@ -109,5 +110,30 @@
         }
         });
 </script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      // Check if the current URL contains 'enquirynotevehicle_insert'
+      if (window.location.href.includes("enquirynotevehicle_insert")) {
+          // Enable fields
+          $('#env_vehicletype, #env_vehiclecategory, #env_quantity')
+              .removeClass('disable_a_href')
+              .prop('disabled', false);
+      }
+      else if (window.location.href.includes("enquirynotevehicle_update")) {
+          // Enable fields
+          $('#env_vehicletype, #env_vehiclecategory, #env_quantity')
+              .removeClass('disable_a_href')
+              .prop('disabled', false);
+      }
+      else {
+          // Disable fields if on any other page
+          $('#env_vehicletype, #env_enquirynumber, #env_vehiclecategory, #env_quantity')
+              .addClass('disable_a_href')
+              .prop('disabled', true);
+      }
+  });
+</script>
+
 
 {% endblock content %}

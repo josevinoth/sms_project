@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 
-from ..forms import ConsignmentgoodsaddForm,ConsignmentgoodsnewaddForm,ConsignmentdetailaddForm
+from ..forms import ConsignmentgoodsaddForm,ConsignmentdetailaddForm
 from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -10,33 +10,34 @@ from django.contrib import messages
 def consignmentgoods_add(request, consignmentgoods_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    consignmentgoods_id_val = request.session.get('ses_consignment_id')
-
+    consignment_detail_id = request.session.get('ses_consignment_detail_id')
+    print('consignment_detail_id', consignment_detail_id)
     if request.method == "GET":
         if consignmentgoods_id == 0:
             form = ConsignmentgoodsaddForm()
-            cn_form = ConsignmentgoodsnewaddForm()
-            con_det_form = ConsignmentdetailaddForm()
+            consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
+            con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
         else:
             consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
+            consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
+            con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
             form = ConsignmentgoodsaddForm(instance=consignmentgoods)
-            cn_form = ConsignmentgoodsnewaddForm()
-            con_det_form = ConsignmentdetailaddForm()
-
         context = {
             'form': form,
-            'cn_form': cn_form,
             'con_det_form': con_det_form,
             'first_name': first_name,
             'user_id': user_id,
-            'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentgoods_id_val),
-            'consignmentgoods_id_val': consignmentgoods_id_val,
+            'consignmentdetail_id': consignment_detail_id,
+            'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignment_detail_id),
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
     else:
-        form = ConsignmentgoodsaddForm(request.POST)
-
+        if consignmentgoods_id == 0:
+            form = ConsignmentgoodsaddForm(request.POST)
+        else:
+            consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
+            form = ConsignmentgoodsaddForm(request.POST,instance=consignmentgoods)
         if form.is_valid() :
             form.save()
             messages.success(request, 'Record  Updated Successfully')
@@ -46,7 +47,6 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             print("Consignment Goods form is not valid")
             messages.error(request, 'Record Not Updated Successfully')
             return redirect(request.META['HTTP_REFERER'])
-
 
 # List consignmentgoods
 @login_required(login_url='login_page')
@@ -58,19 +58,15 @@ def consignmentgoods_list(request):
         'consignmentgoods_list' : consignmentgoods_list,
         'first_name': first_name,
     }
-
-    # assessment_num_val = request.session.get('na_assessment_id')
-    # costing_summary_id=PkcostingsummaryInfo.objects.get(cs_assessment_num=assessment_num_val).id
-    # return redirect('/SMS/consignmentdetail_update/' + str(costing_summary_id))
-    # return render(request,"asset_mgt_app/consignmentdetails_list.html",context)
-    # return redirect('/SMS/consignmentdetail_list')
     return render(request, "asset_mgt_app/consignmentgoods_list.html", context)
 #Delete consignmentgoods
 @login_required(login_url='login_page')
 def consignmentgoods_delete(request,consignmentgoods_id):
     consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
     consignmentgoods.delete()
-    return redirect('/SMS/consignmentgoods_list')
+    # return redirect('/SMS/consignmentgoods_list')
+    return redirect(request.META['HTTP_REFERER'])
+
 
 @login_required(login_url='login_page')
 def consignmentgoods_nav(request,consignmentdetails_id):

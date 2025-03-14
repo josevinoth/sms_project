@@ -613,10 +613,6 @@ urlpatterns = [
     path('ops_audit_score_list/', views.opsauditscorecard_list, name='ops_audit_score_list'),
     path('ops_audit_score_update/<int:ops_audit_id>/', views.opsauditscorecard_add, name='ops_audit_score_update'),
     path('ops_audit_score_delete/<int:ops_audit_id>/', views.opsauditscorecard_delete, name='ops_audit_score_delete'),
-    path('consignment_goods_new_insert/', views.consignment_goods_new_add, name='consignment_goods_new_insert'),
-    path('consignment_goods_new_update/<int:goods_id>/', views.consignment_goods_new_add, name='consignment_goods_new_update'),
-    path('consignment_goods_new_list/', views.consignment_goods_new_list, name='consignment_goods_new_list'),
-    path('consignment_goods_new_delete/<int:goods_id>/', views.consignment_goods_new_delete, name='consignment_goods_new_delete'),
     path('send_ops_audit_email/', views.send_ops_audit_email, name='send_ops_audit_email'),
     path('wh_damage_report/', views.wh_damage_report, name='wh_damage_report'),
     path('wh_stock_report/', views.wh_stock_report, name='wh_stock_report'),
@@ -633,12 +629,10 @@ urlpatterns = [
     path('sales_multiple_item_update/<int:sales_multiple_id>/', views.sales_multiple_item_add, name='sales_multiple_item_update'),
     path('sales_multiple_item_delete/<int:sales_multiple_id>/', views.sales_multiple_item_delete,name='sales_multiple_item_delete'),
     path('sales_multiple_item_cancel/', views.sales_multiple_item_cancel, name='sales_multiple_item_cancel'),
-
     path('trclosure_mbl_add/', views.trclosure_mbl_add, name='trclosure_mbl_add'),
     path('trclosure_mbl_add/<int:trm_id>/', views.trclosure_mbl_add, name='trclosure_mbl_edit'),
     path('trclosure_mbl_list/', views.trclosure_mbl_list, name='trclosure_mbl_list'),
     path('trclosure_mbl_delete/<int:trm_id>/', views.trclosure_mbl_delete, name='trclosure_mbl_delete'),
-
     path('gatein_pre_mbl_add/', views.gatein_pre_mbl_add, name='gatein_pre_mbl_add'),
     path('gatein_pre_mbl_edit/<int:gpm_id>/', views.gatein_pre_mbl_add, name='gatein_pre_mbl_edit'),
     path('gatein_pre_mbl_list/', views.gatein_pre_mbl_list, name='gatein_pre_mbl_list'),
