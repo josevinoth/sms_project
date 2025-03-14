@@ -8,6 +8,8 @@ class SalesinfoaddForm(forms.ModelForm):
     s_not_competitive_remarks = forms.CharField(widget=forms.Textarea(attrs={'rows': 3, 'cols': 40}))
     def __init__(self, *args, **kwargs):
         super(SalesinfoaddForm,self).__init__(*args, **kwargs)
+        if not self.instance.pk:  # Only set the default for new instances
+            self.fields['s_not_competitive_remarks'].initial = "NA"
         self.fields['s_customer_name'].empty_label = "--Select--"
         self.fields['s_customer_type'].empty_label = "--Select--"
         # self.fields['s_customer_new'].empty_label = "--Select--"
@@ -25,8 +27,6 @@ class SalesinfoaddForm(forms.ModelForm):
         self.fields['s_not_reason'].empty_label = "--Select--"
         self.fields['s_kyc'].empty_label = "--Select--"
         self.fields['s_contract'].empty_label = "--Select--"
-        self.fields['s_rate_approval'].empty_label = "--Select--"
-        self.fields['s_approver_name'].empty_label = "--Select--"
         self.fields['s_status'].empty_label = "--Select--"
         self.fields['s_noreason_cp'].empty_label = "--Select--"
         self.fields['s_not_reason'].empty_label = "--Select--"

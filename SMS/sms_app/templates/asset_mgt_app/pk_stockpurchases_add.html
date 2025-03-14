@@ -16,7 +16,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Bill/Return/New Order</span>
 									</div>
-									{% render_field form.sp_vendor_bill id="sp_vendor_bill" class="form-control disable_a_href" %}
+									{% render_field form.sp_vendor_bill_id id="sp_vendor_bill_id" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -199,6 +199,7 @@
 </form>
 <script>
 	$(document).ready(function() {
+        document.getElementById("sp_vendor_bill_id").value ='{{stock_vendor_id}}';
         document.getElementById("sp_updated_by").value ='{{user_id}}';
         var pk_vendor_bill='{{pk_vendor_bill}}'
         var sp_vendor_bill_val=document.getElementById("sp_vendor_bill").value

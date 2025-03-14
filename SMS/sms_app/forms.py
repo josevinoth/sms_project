@@ -126,6 +126,7 @@ from .sub_forms.consignmentgoodsnewform_Form import ConsignmentgoodsnewaddForm
 from .sub_forms.trip_closure_mblForm import Trclosure_mblForm
 from .sub_forms.performance_auditForm_form import PerformanceauditForm
 from.sub_forms.salesmultipleitemForm_form import SalesmultipleitemForm
+from.sub_forms.gatein_pre_mblForm_form import gateinpre_mblForm
 from.sub_forms.part_code_Form import Part_codeForm
 
 

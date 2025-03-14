@@ -15,36 +15,30 @@ def pk_stock_vendor_add(request,stock_vendor_id=0):
             psv_form = PkstockvendorForm()
             pk_vendor_bill = ''
             stockpurchases_list = PkstockpurchasesInfo.objects.filter(sp_vendor_bill=pk_vendor_bill)
-            context = {
-                'psv_form': psv_form,
-                'first_name': first_name,
-                'user_id': user_id,
-                'stockpurchases_list': stockpurchases_list,
-                 }
         else:
             pk_vendor_bill = PkstockvebdorInfo.objects.get(pk=stock_vendor_id).spv_vendor_bill
-            print('vendor_bill', pk_vendor_bill)
             request.session['ses_pk_vendor_bill'] = pk_vendor_bill
+            request.session['ses_stock_vendor_id'] = stock_vendor_id
             pk_stock_vendor = PkstockvebdorInfo.objects.get(pk=stock_vendor_id)
             psv_form = PkstockvendorForm(instance=pk_stock_vendor)
             pk_vendor_bill = request.session.get('ses_pk_vendor_bill')
             stockpurchases_list = PkstockpurchasesInfo.objects.filter(sp_vendor_bill=pk_vendor_bill)
-            context={
-                    'psv_form': psv_form,
-                    'first_name': first_name,
-                    'user_id': user_id,
-                    'stockpurchases_list':stockpurchases_list,}
+        context={
+                'psv_form': psv_form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'stockpurchases_list':stockpurchases_list,}
         return render(request, "asset_mgt_app/pk_stock_vendor_add.html", context)
     else:
         psv_form = PkstockvendorForm(request.POST)
 
         if psv_form.is_valid():
-            psv_form.save()  # Save the new record
+            # psv_form.save()  # Save the new record
             # Extract the vendor bill and purchase type
             spv_vendor_bill = psv_form.cleaned_data['spv_vendor_bill']
             purchase_type = psv_form.cleaned_data['spv_stock_Purchasetype'].id
-
-            if purchase_type == 3 and PkstockvebdorInfo.objects.filter(spv_vendor_bill=spv_vendor_bill).exclude(id=stock_vendor_id).exists():
+            print('purchase_type', purchase_type)
+            if purchase_type == 1 and PkstockvebdorInfo.objects.filter(spv_vendor_bill=spv_vendor_bill).exclude(id=stock_vendor_id).exists():
                 print("Data not saved - Duplicate Vendor Bill found for purchase_type=3")
                 messages.error(request, 'Duplicate Found. Please enter a Unique Vendor Bill.')
                 return redirect(request.META['HTTP_REFERER'])

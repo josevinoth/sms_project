@@ -10,7 +10,7 @@
     </a>
 </div>
 <br>
-<h2 style="color:black;">Sales Vs Salesperson</h2>
+<h2 style="color:black;">Monthly Summary Report</h2>
 
 <hr>
 <br>
@@ -58,11 +58,11 @@
     {% for row in sales_data %}
     <tr>
         <td>{{ row.salesperson }}</td>
-        <td>{{ row.total_sales }}</td>
+        <td>{{ row.total_sales_calls }}</td>
         <td>{{ row.target_new_customer_calls }}</td>
-        <td>{{ row.new_customer_calls }}</td>
+        <td>{{ row.actual_new_customer_calls }}</td>
         <td>{{ row.target_existing_customer_calls }}</td>
-        <td>{{ row.existing_customer_calls }}</td>
+        <td>{{ row.actual_existing_customer_calls }}</td>
         <td>{{ row.target_revenue }}</td>
         <td>{{ row.actual_revenue }}</td>
         <td>{{ row.performance_percentage }}%</td>
@@ -94,8 +94,8 @@
 
 <script>
     const labels = {{ labels|safe }};
-     const newCustomerCalls = {{ new_customer_calls|safe }};
-     const existingCustomerCalls = {{ existing_customer_calls|safe }};
+     const newCustomerCalls = {{ actual_new_customer_calls|safe }};
+     const existingCustomerCalls = {{ actual_existing_customer_calls|safe }};
 
 
    const ctxSales = document.getElementById('salesChart').getContext('2d');
@@ -118,6 +118,9 @@ new Chart(ctxSales, {
     options: {
         responsive: true,
         plugins: {
+            legend: {
+                ...commonChartStyles.legendStyle
+            },
             datalabels: {
                 anchor: 'end',
                 align: 'top',

@@ -3,7 +3,7 @@ from django.urls import reverse
 
 from .part_code_mod import PkpartcodeInfo
 from .stock_purchase_status_mod import PkstockpurchaseStatus
-from ..models import MyUser,Category,Pkstocktype,Source,Stockdescription,Unitofmeasure
+from ..models import PkstockvebdorInfo,MyUser,Category,Pkstocktype,Source,Stockdescription,Unitofmeasure
 
 class PkstockpurchasesInfo(models.Model):
     sp_category = models.ForeignKey(Category, on_delete=models.CASCADE, default='')
@@ -30,6 +30,7 @@ class PkstockpurchasesInfo(models.Model):
     sp_stock_in_date = models.DateTimeField(blank=True, null=True)
     sp_remarks = models.TextField(blank=True, null=True)
     sp_vendor_bill = models.CharField(max_length=100,blank=True, null=True)
+    sp_vendor_bill_id = models.ForeignKey(PkstockvebdorInfo, on_delete=models.CASCADE, related_name='sp_vendor_bill_id',db_column='sp_vendor_bill_id', null=True)
     sp_thick_height_reduced = models.FloatField(blank=True, null=True, default=0.0)
     sp_width_reduced = models.FloatField(blank=True, null=True, default=0.0)
     sp_length_reduced = models.FloatField(blank=True, null=True, default=0.0)
