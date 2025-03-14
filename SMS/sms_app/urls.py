@@ -505,6 +505,7 @@ urlpatterns = [
     path('pk_bvm_invoice_excel/', views.pk_bvm_invoice_excel, name='pk_bvm_invoice_excel'),# pk_bvm_invoice_excel
     path('pk_store_po_dimension_id/', views.pk_store_po_dimension_id, name='pk_store_po_dimension_id'),# pk_store_po_dimension_id
     path('pk_store_na_dimension_id/', views.pk_store_na_dimension_id, name='pk_store_na_dimension_id'),# pk_store_na_dimension_id
+    path('fetch_part_code_details/', views.fetch_part_code_details, name='fetch_part_code_details'),
     path('po_dimension_list/', views.po_dimension_list, name='po_dimension_list'),  # List po_dimension
     path('po_dimension_insert/', views.po_dimension_add, name='po_dimension_insert'),  # Add po_dimension
     path('po_dimension_update/<int:po_dimension_id>', views.po_dimension_add, name='po_dimension_update'),  # update po_dimension

@@ -16,3 +16,4 @@ class PkstockpurchasesForm(forms.ModelForm):
         self.fields['sp_uom'].empty_label = "--Select--"
         self.fields['sp_stock_type'].empty_label = "--Select--"
         self.fields['sp_status'].empty_label = "--Select--"
+        self.fields['sp_part_code'].empty_label = "--Select--"

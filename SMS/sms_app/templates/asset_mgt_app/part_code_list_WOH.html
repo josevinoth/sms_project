@@ -26,6 +26,8 @@
     <table id="part_code_List" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>ID</th>
+            <th>Created On</th>
             <th>Part Code</th>
             <th>Stock Type</th>
             <th>Stock Description</th>
@@ -34,6 +36,8 @@
             <th>Height</th>
             <th>Size</th>
             <th>UOM</th>
+            <th>Updated At</th>
+            <th>Updated by</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
@@ -41,6 +45,8 @@
         <tbody>
         {% for part_code in part_code_list %}
         <tr>
+            <td> {{part_code.id}}</td>
+            <td> {{part_code.pc_created_at}}</td>
             <td>{{ part_code.pc_code }}</td>
             <td>{{ part_code.pc_stock_type }}</td>
             <td>{{ part_code.pc_stock_description }}</td>
@@ -49,6 +55,8 @@
             <td>{{ part_code.pc_height }}</td>
             <td>{{ part_code.pc_size }}</td>
             <td>{{ part_code.pc_uom }}</td>
+            <td>{{ part_code.pc_updated_at }}</td>
+            <td>{{ part_code.pc_updated_by }}</td>
             <td>
                 <a class="btn btn-primary" href="{% url 'part_code_edit' part_code.id %}">
                     <i class="far fa-edit"></i>

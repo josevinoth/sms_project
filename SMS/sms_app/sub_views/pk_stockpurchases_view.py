@@ -3,8 +3,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 
 from ..forms import PkstockpurchasesForm
-from ..models import PkstockpurchasesInfo
-from django.shortcuts import render, redirect
+from ..models import PkstockpurchasesInfo,PkpartcodeInfo
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
 from ..sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
@@ -156,3 +156,34 @@ def stockpurchases_cancel(request):
 #
 #     # Return JSON response
 #     return JsonResponse(data)
+
+@login_required(login_url='login_page')
+def fetch_part_code_details(request):
+    part_code_id = request.GET.get('part_code_id')  # Ensure this matches the frontend
+
+    if not part_code_id:
+        return JsonResponse({'error': 'Part code ID is required'}, status=400)
+
+    try:
+        part_code = get_object_or_404(PkpartcodeInfo, pk=part_code_id)
+
+        # Ensure ForeignKey fields exist before accessing .id
+        pc_stock_type_id = part_code.pc_stock_type.id if part_code.pc_stock_type else None
+        pc_stock_description_id = part_code.pc_stock_description.id if part_code.pc_stock_description else None
+        pc_uom_id = part_code.pc_uom.id if part_code.pc_uom else None
+
+        data = {
+            'pc_stock_type': str(part_code.pc_stock_type) if part_code.pc_stock_type else '',
+            'pc_stock_type_id': pc_stock_type_id,
+            'pc_stock_description': str(part_code.pc_stock_description) if part_code.pc_stock_description else '',
+            'pc_stock_description_id': pc_stock_description_id,
+            'pc_uom': str(part_code.pc_uom) if part_code.pc_uom else '',
+            'pc_uom_id': pc_uom_id,
+            'pc_length': part_code.pc_length,
+            'pc_width': part_code.pc_width,
+            'pc_height': part_code.pc_height,
+            'pc_size': part_code.pc_size,
+        }
+        return JsonResponse(data)
+    except PkpartcodeInfo.DoesNotExist:
+        return JsonResponse({'error': 'Part code not found'}, status=404)
