@@ -58,7 +58,7 @@
         </div>
     </div>
 </div>
-<hr>
+<br>
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
     <!-- Bar Chart -->
     <div style="flex: 1; margin-right: 10px;">
@@ -108,7 +108,7 @@
         <td style="background-color: {% if entry.s_bus_won_not__yesno_name == 'Yes' %}green{% elif entry.s_bus_won_not__yesno_name == 'No' %}red{% else %}transparent{% endif %};">
             {{ entry.s_bus_won_not__yesno_name }}
         </td>
-        <td>{{ entry.s_remarks }}</td>
+        <td>{{ entry.s_noreason_cp__pc_no_name }}</td>
     </tr>
     {% endfor %}
     </tbody>

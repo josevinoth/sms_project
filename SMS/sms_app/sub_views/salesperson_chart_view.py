@@ -6,7 +6,7 @@ from django.db.models.functions import Coalesce,Round
 from django.utils.dateparse import parse_date
 from django.utils import timezone
 from datetime import datetime
-from ..models import Sales_Comments_Info, MyUser,SalesInfo,Sales_target_info,BusinessrevenueInfo,Calltype,Callpurpose,Callnature,User_extInfo,CustomerInfo,YesNoInfo,Business_Sol_info,Location_info
+from ..models import Sales_Comments_Info, MyUser,SalesInfo,Sales_target_info,BusinessrevenueInfo,Calltype,Callpurpose,Callnature,User_extInfo,CustomerInfo,YesNoInfo,Business_Sol_info,Location_info,SalesmultipleitemInfo
 
 
 def salesperson_chart(request):
@@ -112,7 +112,13 @@ def monthly_summary(request):
         total_actual_customers=Count('s_customer_name', distinct=False),
         total_new_customers=Count('s_customer_new_name', distinct=False),
         total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True),
-        total_quotes=Count('s_quote_ref'),
+        total_quotes=Subquery(
+            SalesmultipleitemInfo.objects.filter(sm_lastmodifiedby=OuterRef('s_updated_by'))
+            .values('sm_lastmodifiedby')
+            .annotate(count=Count('sm_Quote_Ref', distinct=False))
+            .values('count')[:1],
+            output_field=IntegerField()
+        ),
         business_won=Count(('s_bus_won_not'), filter=Q(s_bus_won_not=1)),
     )
 
@@ -168,12 +174,12 @@ def monthly_summary(request):
         calls = next((c for c in sales_calls if c['sc_updated_by__id'] == salesperson_id), {})
         revenue = next((rev for rev in actual_revenue if rev['br_sale_person__id'] == salesperson_id), {})
 
-        total_sales_calls = calls.get('total_sales_calls', 0)
-        total_quotes = actual.get('total_quotes', 0)
-        business_won = actual.get('business_won', 0)
+        total_sales_calls = calls.get('total_sales_calls', 0) or 0
+        total_quotes = actual.get('total_quotes', 0) or 0
+        business_won = actual.get('business_won', 0) or 0
 
-        performance_percentage = round((total_quotes / total_sales_calls) * 100, ) if total_sales_calls > 0 else 0
-        productivity_percentage = round((business_won / total_quotes) * 100, ) if total_quotes > 0 else 0
+        performance_percentage = round((total_quotes / total_sales_calls) * 100) if total_sales_calls else 0
+        productivity_percentage = round((business_won / total_quotes) * 100) if total_quotes else 0
 
         summary.append({
             'salesperson': salesperson_name,
@@ -289,7 +295,13 @@ def salesperson_productivity_performance(request):
         total_actual_customers=Count('s_customer_name', distinct=False),
         total_new_customers=Count('s_customer_new_name', distinct=False),
         total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True),
-        total_quotes=Count('s_quote_ref'),
+        total_quotes=Subquery(
+            SalesmultipleitemInfo.objects.filter(sm_lastmodifiedby=OuterRef('s_updated_by'))
+            .values('sm_lastmodifiedby')
+            .annotate(count=Count('sm_Quote_Ref', distinct=False))
+            .values('count')[:1],
+            output_field=IntegerField()
+        ),
         business_won=Count(('s_bus_won_not'), filter=Q(s_bus_won_not=1)),
     )
 
@@ -347,9 +359,9 @@ def salesperson_productivity_performance(request):
         calls = next((c for c in sales_calls if c['sc_updated_by__id'] == salesperson_id), {})
         revenue = next((rev for rev in actual_revenue if rev['br_sale_person__id'] == salesperson_id), {})
 
-        total_sales_calls = calls.get('total_sales_calls', 0)
-        total_quotes = actual.get('total_quotes', 0)
-        business_won = actual.get('business_won', 0)
+        total_sales_calls = calls.get('total_sales_calls', 0) or 0
+        total_quotes = actual.get('total_quotes', 0) or 0
+        business_won = actual.get('business_won', 0) or 0
 
         performance_percentage = round((total_quotes / total_sales_calls) * 100, ) if total_sales_calls > 0 else 0
         productivity_percentage = round((business_won / total_quotes) * 100, ) if total_quotes > 0 else 0
@@ -581,6 +593,10 @@ def targets_actuals(request):
         'sc_updated_by__id', 'sc_updated_by__first_name'
     ).annotate(
         total_sales_calls=Count('id'),
+        total_actual_customers_comments=Count('sc_sales_number', distinct=True),
+        total_new_customers_comments=Count('sc_sales_number__s_customer_new_name', distinct=True),
+        total_existing_customers_comments=Count('sc_sales_number__s_customer_name',
+                                                filter=~Q(sc_sales_number__s_customer_name=210), distinct=True),
         actual_new_customer_calls=Count('id', filter=Q(sc_sales_number__s_customer_name_id=210)),
         actual_existing_customer_calls=Count('id', filter=~Q(sc_sales_number__s_customer_name_id=210))
     )
@@ -626,9 +642,9 @@ def targets_actuals(request):
             'target_new_customer_calls': target.get('target_new_customer_calls', 0),
             'target_existing_customer_calls': target.get('target_existing_customer_calls', 0),
             'target_revenue': target.get('target_revenue', 0),
-            'total_actual_customers': actual.get('total_actual_customers', 0),
-            'total_new_customers': actual.get('total_new_customers', 0),
-            'total_existing_customers': actual.get('total_existing_customers', 0),
+            'total_actual_customers': calls.get('total_actual_customers_comments', 0),
+            'total_new_customers': calls.get('total_new_customers_comments', 0),
+            'total_existing_customers': calls.get('total_existing_customers_comments', 0),
             'total_sales_calls': calls.get('total_sales_calls', 0),
             'actual_new_customer_calls': calls.get('actual_new_customer_calls', 0),
             'actual_existing_customer_calls': calls.get('actual_existing_customer_calls', 0),
@@ -780,7 +796,7 @@ def businesswon_chart(request):
         's_customer_name__cu_nameshort',
         's_customer_new_name',
         's_bus_won_not__yesno_name',
-        's_remarks'
+        's_noreason_cp__pc_no_name'
     )
     context = {
         'first_name': first_name,
@@ -1011,7 +1027,13 @@ def salesperson_wise_table(request):
         total_actual_customers=Count('s_customer_name', distinct=False),
         total_new_customers=Count('s_customer_new_name', distinct=False),
         total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True),
-        total_quotes=Count('s_quote_ref'),
+        total_quotes=Subquery(
+            SalesmultipleitemInfo.objects.filter(sm_lastmodifiedby=OuterRef('s_updated_by'))
+            .values('sm_lastmodifiedby')
+            .annotate(count=Count('sm_Quote_Ref', distinct=False))
+            .values('count')[:1],
+            output_field=IntegerField()
+        ),
         business_won=Count(('s_bus_won_not'),filter=Q(s_bus_won_not=1)),
     )
 
@@ -1069,9 +1091,9 @@ def salesperson_wise_table(request):
         calls = next((c for c in sales_calls if c['sc_updated_by__id'] == salesperson_id), {})
         revenue = next((rev for rev in actual_revenue if rev['br_sale_person__id'] == salesperson_id), {})
 
-        total_sales_calls = calls.get('total_sales_calls', 0)
-        total_quotes = actual.get('total_quotes', 0)
-        business_won = actual.get('business_won', 0)
+        total_sales_calls = calls.get('total_sales_calls', 0) or 0
+        total_quotes = actual.get('total_quotes', 0) or 0
+        business_won = actual.get('business_won', 0) or 0
 
         performance_percentage = round((total_quotes / total_sales_calls) * 100, ) if total_sales_calls > 0 else 0
         productivity_percentage = round((business_won / total_quotes) * 100, ) if total_quotes > 0 else 0
