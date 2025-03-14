@@ -4,18 +4,17 @@
 {% block content %}
 
 <body>
-    <div class="col-md-1">
-        <a href="{% url 'sales_reports' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-    <br>
-    <h2 style="color:black;">Business Won/Loss </h2>
-    <hr>
+<div class="col-md-1">
+    <a href="{% url 'sales_reports' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+<br>
+<h2 style="color:black;">Business Won/Loss </h2>
+<hr>
 
-    <div class="container-fluid">
+<div class="container-fluid">
     <div class="row align-items-center">
-        <!-- Salesperson Filter -->
         <div class="col-md-2">
             <label for="salesperson-filter"><b>Salesperson:</b></label>
             <select id="salesperson-filter" name="salesperson" class="form-control box-shadow rounded">
@@ -27,8 +26,6 @@
                 {% endfor %}
             </select>
         </div>
-
-        <!-- Company Filter -->
         <div class="col-md-2">
             <label for="company-filter"><b>Company:</b></label>
             <select id="company-filter" name="company" class="form-control box-shadow rounded">
@@ -40,8 +37,6 @@
                 {% endfor %}
             </select>
         </div>
-
-        <!-- Branch Filter -->
         <div class="col-md-2">
             <label for="branch-filter"><b>Branch:</b></label>
             <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
@@ -53,73 +48,69 @@
                 {% endfor %}
             </select>
         </div>
-
-        <!-- From Date -->
         <div class="col-md-2">
             <label for="from-date"><b>From:</b></label>
             <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
         </div>
-
-        <!-- To Date -->
         <div class="col-md-3">
             <label for="to-date"><b>To:</b></label>
             <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
         </div>
     </div>
 </div>
-     <hr>
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
-        <!-- Bar Chart -->
-        <div style="flex: 1; margin-right: 10px;">
-            <h3 style="color:black;">Customer wise Business Won/Loss</h3>
-            <canvas id="barChart" width="80" height="80" class="bg-white box-shadow rounded"></canvas>
-        </div>
-
-
-        <div style="flex: 1; margin-right: 10px;">
-            <h3 style="color:black;"> Business Won/Loss%</h3>
-            <canvas id="donutChart" width="80" height="80" class="bg-white box-shadow rounded"></canvas>
-        </div>
-
-        <div style="flex: 1;">
-
-            <h3 style="color:black;"> Business Won</h3>
-            <canvas id="donutChartSalesperson" width="200" height="200" class="bg-white box-shadow rounded"></canvas>
-        </div>
+<hr>
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
+    <!-- Bar Chart -->
+    <div style="flex: 1; margin-right: 10px;">
+        <h3 style="color:black;">Customer wise Business Won/Loss</h3>
+        <canvas id="barChart" width="80" height="80" class="bg-white box-shadow rounded"></canvas>
     </div>
+
+
+    <div style="flex: 1; margin-right: 10px;">
+        <h3 style="color:black;"> Business Won/Loss%</h3>
+        <canvas id="donutChart" width="80" height="80" class="bg-white box-shadow rounded"></canvas>
+    </div>
+
+    <div style="flex: 1;">
+
+        <h3 style="color:black;"> Business Won</h3>
+        <canvas id="donutChartSalesperson" width="200" height="200" class="bg-white box-shadow rounded"></canvas>
+    </div>
+</div>
 <br>
-    <hr>
+<hr>
 <button id="clear-filters" class="btn btn-secondary mb-3">Clear All Filters</button>
- <table id="business_won_loss_table" class="table table-striped table-bordered">
+<table id="business_won_loss_table" class="table table-striped table-bordered">
 
     <thead class="thead-dark">
     <tr class="filter">
-                <th><input type="text" placeholder="Salesperson" class="column-filter"></th>
-                <th><input type="text" placeholder="Customer Name" class="column-filter"></th>
-                <th><input type="text" placeholder="New Customer" class="column-filter"></th>
-                <th><input type="text" placeholder=" Yes/No" class="column-filter"></th>
-                <th><input type="text" placeholder="Remarks" class="column-filter"></th>
-                </tr>
-        <tr>
-            <th>Salesperson Name</th>
-            <th>Customer Name</th>
-            <th>New Customer Name</th>
-            <th>Business Won?</th>
-            <th>Remarks</th>
-        </tr>
+        <th><input type="text" placeholder="Salesperson" class="column-filter"></th>
+        <th><input type="text" placeholder="Customer Name" class="column-filter"></th>
+        <th><input type="text" placeholder="New Customer" class="column-filter"></th>
+        <th><input type="text" placeholder=" Yes/No" class="column-filter"></th>
+        <th><input type="text" placeholder="Remarks" class="column-filter"></th>
+    </tr>
+    <tr>
+        <th>Salesperson Name</th>
+        <th>Customer Name</th>
+        <th>New Customer Name</th>
+        <th>Business Won?</th>
+        <th>Remarks</th>
+    </tr>
     </thead>
     <tbody>
-        {% for entry in table_data %}
-        <tr>
-            <td>{{ entry.s_updated_by__first_name }}</td>
-            <td>{{ entry.s_customer_name__cu_nameshort }}</td>
-            <td>{{ entry.s_customer_new_name }}</td>
-             <td style="background-color: {% if entry.s_bus_won_not__yesno_name == 'Yes' %}green{% elif entry.s_bus_won_not__yesno_name == 'No' %}red{% else %}transparent{% endif %};">
-                {{ entry.s_bus_won_not__yesno_name }}
-            </td>
-            <td>{{ entry.s_remarks }}</td>
-        </tr>
-        {% endfor %}
+    {% for entry in table_data %}
+    <tr>
+        <td>{{ entry.s_updated_by__first_name }}</td>
+        <td>{{ entry.s_customer_name__cu_nameshort }}</td>
+        <td>{{ entry.s_customer_new_name }}</td>
+        <td style="background-color: {% if entry.s_bus_won_not__yesno_name == 'Yes' %}green{% elif entry.s_bus_won_not__yesno_name == 'No' %}red{% else %}transparent{% endif %};">
+            {{ entry.s_bus_won_not__yesno_name }}
+        </td>
+        <td>{{ entry.s_remarks }}</td>
+    </tr>
+    {% endfor %}
     </tbody>
 </table>
 
@@ -150,202 +141,214 @@
 });
 
 </script>
-    <script>
-        // Bar Chart
-        const barChartCtx = document.getElementById('barChart').getContext('2d');
-        const barChart = new Chart(barChartCtx, {
-            type: 'bar',
-            data: {
-                labels: {{ yesno_labels|safe }},
-                datasets: [
-                    {
-                        label: 'New Customers',
-                        data: {{ new_customer_counts|safe }},
-                        backgroundColor: 'rgba(243, 165, 78, 0.8)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Existing Customers',
-                        data: {{ existing_customer_counts|safe }},
-                        backgroundColor: 'rgba(132, 129, 126, 0.8)',
-                        borderWidth: 1
-                    }
-                ]
-            },
-             options: {
-        responsive: true,
-        plugins: {
-            datalabels: {
-                anchor: 'end',
-                align: 'top',
-                formatter: (value) => value,
-                font: {
-                    size: 12,
-                    weight: 'bold',
+<script>
+    // Bar Chart
+    const barChartCtx = document.getElementById('barChart').getContext('2d');
+    const barChart = new Chart(barChartCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ yesno_labels|safe }},
+            datasets: [
+                {
+                    label: 'New Customers',
+                    data: {{ new_customer_counts|safe }},
+                    backgroundColor: 'rgba(243, 165, 78, 0.8)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
                 },
+                {
+                    label: 'Existing Customers',
+                    data: {{ existing_customer_counts|safe }},
+                    backgroundColor: 'rgba(132, 129, 126, 0.8)',
+                    borderWidth: 1
+                }
+            ]
+        },
+         options: {
+    responsive: true,
+    plugins: {
+        legend: {
+            ...commonChartStyles.legendStyle
+        },
+        datalabels: {
+            anchor: 'end',
+            align: 'top',
+            formatter: (value) => value,
+            font: {
+                size: 12,
+                weight: 'bold',
+            },
+            color: '#000',
+            backgroundColor: 'rgba(235, 233, 234, 0.8)',
+            borderRadius: 4,
+            padding: 5,
+            borderWidth: 1,
+            borderColor: '#000',
+        }
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            suggestedMax: Math.max(...{{ new_customer_counts|safe }}, ...{{ existing_customer_counts|safe }}) * 1.2,
+        }
+    }
+},
+plugins: [ChartDataLabels]
+});
+
+
+const donutChartCtx = document.getElementById('donutChart').getContext('2d');
+const donutChart = new Chart(donutChartCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ donut_chart_labels|safe }}, // Labels like "New Customers (Yes)"
+        datasets: [
+            {
+                data: {{ donut_chart_data|safe }}, // Data for new and existing customers grouped by Yes/No
+                 backgroundColor: [
+            '#FF6384', '#36A2EB', '#FFCE56', '#9966FF', '#4CE9B9'
+
+        ], // Unique colors for each salesperson
+        borderColor: '#ffffff',
+        borderWidth: 1,
+            }
+        ]
+    },
+    options: {
+    responsive: true,
+    plugins: {
+        legend: {
+            position: 'right',
+            labels: {
+                font: { size: 14, weight: 'bold' },
                 color: '#000',
-                backgroundColor: 'rgba(235, 233, 234, 0.8)',
-                borderRadius: 4,
-                padding: 5,
-                borderWidth: 1,
-                borderColor: '#000',
+    },
+
+        },
+        tooltip: {
+            callbacks: {
+                label: function(tooltipItem) {
+                    return tooltipItem.label + ': ' + tooltipItem.raw;
+                }
             }
         },
-        scales: {
-            y: {
-                beginAtZero: true,
-                suggestedMax: Math.max(...{{ new_customer_counts|safe }}, ...{{ existing_customer_counts|safe }}) * 1.2,
+        datalabels: {
+            formatter: (value, ctx) => {
+                let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                let percentage = ((value / total) * 100).toFixed(1) + "%";
+                return percentage;
+            },
+            color: '#000',
+            font: {
+                size: 12,
+                weight: 'bold',
             }
         }
+    }
+},
+plugins: [ChartDataLabels]
+});
+     // Donut Chart for Salesperson-wise Business Won
+const donutChartSalespersonCtx = document.getElementById('donutChartSalesperson').getContext('2d');
+const donutChartSalesperson = new Chart(donutChartSalespersonCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ salesperson_labels|safe }},
+        datasets: [
+            {
+                data: {{ salesperson_counts|safe }},
+                 backgroundColor: [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#4CE9B9',
+            '#FF9F40', '#BFBFBF', '#AA64B1', '#8AC926', '#FF595E', '#FFA500', '#4C2447'
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 1,
+            }
+        ]
     },
-    plugins: [ChartDataLabels]
+    options: {
+    responsive: true,
+    plugins: {
+        legend: {
+            position: 'right',
+            labels: {
+                   font: { size: 14, weight: 'bold' },
+                   color: '#000',
+    },
+        },
+        tooltip: {
+            callbacks: {
+                label: function(tooltipItem) {
+                    return tooltipItem.label + ': ' + tooltipItem.raw;
+                }
+            }
+        },
+        datalabels: {
+            formatter: (value, ctx) => {
+                let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                let percentage = ((value / total) * 100).toFixed(1) + "%";
+                return percentage;
+            },
+            color: '#000',
+            font: {
+                size: 12,
+                weight: 'bold',
+            }
+        }
+    }
+},
+plugins: [ChartDataLabels]
 });
 
 
-    const donutChartCtx = document.getElementById('donutChart').getContext('2d');
-    const donutChart = new Chart(donutChartCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ donut_chart_labels|safe }}, // Labels like "New Customers (Yes)"
-            datasets: [
-                {
-                    data: {{ donut_chart_data|safe }}, // Data for new and existing customers grouped by Yes/No
-                     backgroundColor: [
-                '#FF6384', '#36A2EB', '#FFCE56', '#9966FF', '#4CE9B9'
-
-            ], // Unique colors for each salesperson
-            borderColor: '#ffffff', // Optional: adds a border around each slice
-            borderWidth: 1, // Border width
-                }
-            ]
-        },
-        options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'right'
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(tooltipItem) {
-                        return tooltipItem.label + ': ' + tooltipItem.raw;
-                    }
-                }
-            },
-            datalabels: {
-                formatter: (value, ctx) => {
-                    let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                    let percentage = ((value / total) * 100).toFixed(1) + "%";
-                    return percentage; // Show percentage inside the donut
-                },
-                color: '#fff',
-                font: {
-                    size: 12,
-                    weight: 'bold',
-                }
-            }
-        }
-    },
-    plugins: [ChartDataLabels] // Activate the Datalabels plugin
-});
-         // Donut Chart for Salesperson-wise Business Won
-    const donutChartSalespersonCtx = document.getElementById('donutChartSalesperson').getContext('2d');
-    const donutChartSalesperson = new Chart(donutChartSalespersonCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ salesperson_labels|safe }},
-            datasets: [
-                {
-                    data: {{ salesperson_counts|safe }},
-                     backgroundColor: [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#4CE9B9',
-                '#FF9F40', '#BFBFBF', '#AA64B1', '#8AC926', '#FF595E', '#FFA500', '#4C2447'
-            ], // Unique colors for each salesperson
-            borderColor: '#ffffff', // Optional: adds a border around each slice
-            borderWidth: 1, // Border width
-                }
-            ]
-        },
-        options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'right'
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(tooltipItem) {
-                        return tooltipItem.label + ': ' + tooltipItem.raw;
-                    }
-                }
-            },
-            datalabels: {
-                formatter: (value, ctx) => {
-                    let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                    let percentage = ((value / total) * 100).toFixed(1) + "%";
-                    return percentage; // Show percentage inside the donut
-                },
-                color: '#fff',
-                font: {
-                    size: 12,
-                    weight: 'bold',
-                }
-            }
-        }
-    },
-    plugins: [ChartDataLabels]
-});
-
-
-         document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
-         document.getElementById('from-date').addEventListener('change', updateFilters);
-        document.getElementById('to-date').addEventListener('change', updateFilters);
-            document.getElementById('company-filter').addEventListener('change', updateFilters);
+     document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+     document.getElementById('from-date').addEventListener('change', updateFilters);
+    document.getElementById('to-date').addEventListener('change', updateFilters);
+        document.getElementById('company-filter').addEventListener('change', updateFilters);
 document.getElementById('branch-filter').addEventListener('change', updateFilters);
 
 function updateFilters() {
-    const salesperson = document.getElementById('salesperson-filter').value;
-    const fromDate = document.getElementById('from-date').value;
-    const toDate = document.getElementById('to-date').value;
-    const company = document.getElementById('company-filter').value;
-    const branch = document.getElementById('branch-filter').value;
-    const url = new URL(window.location.href);
+const salesperson = document.getElementById('salesperson-filter').value;
+const fromDate = document.getElementById('from-date').value;
+const toDate = document.getElementById('to-date').value;
+const company = document.getElementById('company-filter').value;
+const branch = document.getElementById('branch-filter').value;
+const url = new URL(window.location.href);
 
-    if (salesperson) {
-        url.searchParams.set('salesperson', salesperson);
-    } else {
-        url.searchParams.delete('salesperson');
-    }
-
-    if (fromDate) {
-        url.searchParams.set('from_date', fromDate);
-    } else {
-        url.searchParams.delete('from_date');
-    }
-
-    if (toDate) {
-        url.searchParams.set('to_date', toDate);
-    } else {
-        url.searchParams.delete('to_date');
-    }
-
-    if (company) {
-        url.searchParams.set('company', company);
-    } else {
-        url.searchParams.delete('company');
-    }
-
-    if (branch) {
-        url.searchParams.set('branch', branch);
-    } else {
-        url.searchParams.delete('branch');
-    }
-
-    window.location.href = url.toString();
+if (salesperson) {
+    url.searchParams.set('salesperson', salesperson);
+} else {
+    url.searchParams.delete('salesperson');
 }
 
-    </script>
+if (fromDate) {
+    url.searchParams.set('from_date', fromDate);
+} else {
+    url.searchParams.delete('from_date');
+}
+
+if (toDate) {
+    url.searchParams.set('to_date', toDate);
+} else {
+    url.searchParams.delete('to_date');
+}
+
+if (company) {
+    url.searchParams.set('company', company);
+} else {
+    url.searchParams.delete('company');
+}
+
+if (branch) {
+    url.searchParams.set('branch', branch);
+} else {
+    url.searchParams.delete('branch');
+}
+
+window.location.href = url.toString();
+}
+
+</script>
 
 </body>
 <style>

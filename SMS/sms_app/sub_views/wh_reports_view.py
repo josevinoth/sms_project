@@ -127,10 +127,10 @@ def wh_stock_report(request):
 
 def wh_space_availability_report(request):
     first_name = request.session.get('first_name')
-    selected_branch = request.session.get('branch')
-    selected_unit = request.session.get('unit')
-    selected_bay = request.session.get('bay')
-    selected_businessmodel = request.session.get('businessmodel')
+    selected_branch = request.session.get('branch','')
+    selected_unit = request.session.get('unit','')
+    selected_bay = request.session.get('bay','')
+    selected_businessmodel = request.session.get('businessmodel','')
 
     branches = Location_info.objects.all()
     units = UnitInfo.objects.all()
@@ -179,7 +179,31 @@ def wh_space_availability_report(request):
             (F("available_area") * 100.0) / F("total_area"),
             output_field=FloatField()
         )
-    ).order_by("lm_wh_location__loc_name", "lm_wh_unit__unit_name")  # Ensure correct ordering
+    ).order_by("lm_wh_location__loc_name", "lm_wh_unit__unit_name").order_by("-occupied_area")  # Ensure correct ordering
+
+    # Get branch-unit with max occupied area
+    max_occupied_unit = unit_summary.first()
+    max_occupied_area = max_occupied_unit["occupied_area"] if max_occupied_unit else 0
+    max_occupied_branch_unit = f"{max_occupied_unit['lm_wh_location__loc_name']} - {max_occupied_unit['lm_wh_unit__unit_name']}" if max_occupied_unit else "N/A"
+
+    branch_labels = []
+    total_areas = []
+    occupied_areas = []
+    available_areas = []
+    total_volumes = []
+    occupied_volumes = []
+    available_volumes = []
+    available_area_percentages = []
+
+    for branch in branch_summary:
+        branch_labels.append(branch["lm_wh_location__loc_name"])
+        total_areas.append(branch["total_area"])
+        occupied_areas.append(branch["occupied_area"])
+        available_areas.append(branch["available_area"])
+        total_volumes.append(branch["total_volume"])
+        occupied_volumes.append(branch["occupied_volume"])
+        available_volumes.append(branch["available_volume"])
+        available_area_percentages.append(branch["available_area_percent"])
 
     context = {
         'utilization_summary': utilization_summary,
@@ -194,6 +218,16 @@ def wh_space_availability_report(request):
         'selected_unit': selected_unit,
         'selected_bay': selected_bay,
         'selected_businessmodel': selected_businessmodel,
+        'branch_labels': branch_labels,
+        'total_areas': total_areas,
+        'occupied_areas': occupied_areas,
+        'available_areas': available_areas,
+        'total_volumes': total_volumes,
+        'occupied_volumes': occupied_volumes,
+        'available_volumes': available_volumes,
+        'available_area_percentages': available_area_percentages,
+        'max_occupied_area': max_occupied_area,
+        'max_occupied_branch_unit': max_occupied_branch_unit,
     }
     return render(request, "asset_mgt_app/WH_space_availability_report.html", context)
 
@@ -226,41 +260,88 @@ def wh_space_utilization_report(request):
     if filters:
         utilization_summary = utilization_summary.filter(**filters)
 
-    # Grouped Summary for Branches (Summed values)
+    # **Subqueries for Branch-wise Occupied Area and Volume**
+    occupied_area_branch_subquery = Warehouse_goods_info.objects.filter(
+        wh_branch=OuterRef("lm_wh_location")
+    ).values("wh_branch").annotate(
+        total_occupied_area=Sum("wh_goods_area")
+    ).values("total_occupied_area")[:1]
+
+    occupied_volume_branch_subquery = Warehouse_goods_info.objects.filter(
+        wh_branch=OuterRef("lm_wh_location")
+    ).values("wh_branch").annotate(
+        total_occupied_volume=Sum("wh_goods_volume_weight")
+    ).values("total_occupied_volume")[:1]
+
+    # **Subqueries for Unit-wise Occupied Area and Volume**
+    occupied_area_unit_subquery = Warehouse_goods_info.objects.filter(
+        wh_branch=OuterRef("lm_wh_location"),
+        wh_unit=OuterRef("lm_wh_unit")
+    ).values("wh_branch", "wh_unit").annotate(
+        total_occupied_area=Sum("wh_goods_area")
+    ).values("total_occupied_area")[:1]
+
+    occupied_volume_unit_subquery = Warehouse_goods_info.objects.filter(
+        wh_branch=OuterRef("lm_wh_location"),
+        wh_unit=OuterRef("lm_wh_unit")
+    ).values("wh_branch", "wh_unit").annotate(
+        total_occupied_volume=Sum("wh_goods_volume_weight")
+    ).values("total_occupied_volume")[:1]
+
+    # **Branch-Level Summary**
     branch_summary = utilization_summary.values("lm_wh_location__loc_name").annotate(
-        total_area=Sum(F("lm_size"), distinct=True),
-        occupied_area=Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_area"), distinct=True),  # From WH table
-        occupied_volume=Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_volume_weight"), distinct=True),  # From WH table
+        total_area=Sum(F("lm_size")),
+        occupied_area=Subquery(occupied_area_branch_subquery, output_field=FloatField()),
+        occupied_volume=Subquery(occupied_volume_branch_subquery, output_field=FloatField()),
         available_area=ExpressionWrapper(
-            Sum(F("lm_size"), distinct=True) -Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_area"), distinct=True),
+            Sum(F("lm_size")) - Subquery(occupied_area_branch_subquery, output_field=FloatField()),
             output_field=FloatField()
         ),
-        total_volume=Sum(F("lm_total_volume"), distinct=True),
+        total_volume=Sum(F("lm_total_volume")),
         available_volume=ExpressionWrapper(
-            Sum(F("lm_total_volume"), distinct=True) - Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_volume_weight"), distinct=True),
+            Sum(F("lm_total_volume")) - Subquery(occupied_volume_branch_subquery, output_field=FloatField()),
             output_field=FloatField()
         ),
 
+        occupied_area_percentage=ExpressionWrapper(
+            (Subquery(occupied_area_branch_subquery, output_field=FloatField()) * 100.0) / Sum(F("lm_size")),
+            output_field=FloatField()
+        ),
+
+        available_area_percentage=ExpressionWrapper(
+            ((Sum(F("lm_size")) - Subquery(occupied_area_branch_subquery, output_field=FloatField())) * 100.0) / Sum(
+                F("lm_size")),
+            output_field=FloatField()
+        ),
     )
 
-    # 🔹 FIX: Group Units Within Each Branch Separately
+    # **Unit-Level Summary**
     unit_summary = utilization_summary.values("lm_wh_location__loc_name", "lm_wh_unit__unit_name").annotate(
-        total_area=Sum(F("lm_size"), distinct=True),
-        occupied_area=Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_area"), distinct=True),  # From WH table
-        occupied_volume=Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_volume_weight"), distinct=True),
-        # From WH table
+        total_area=Sum(F("lm_size")),
+        occupied_area=Subquery(occupied_area_unit_subquery, output_field=FloatField()),
+        occupied_volume=Subquery(occupied_volume_unit_subquery, output_field=FloatField()),
         available_area=ExpressionWrapper(
-            Sum(F("lm_size"), distinct=True) - Sum(F("lm_wh_location__warehouse_goods_info__wh_goods_area"),
-                                                   distinct=True),
+            Sum(F("lm_size")) - Subquery(occupied_area_unit_subquery, output_field=FloatField()),
             output_field=FloatField()
         ),
-        total_volume=Sum(F("lm_total_volume"), distinct=True),
+        total_volume=Sum(F("lm_total_volume")),
         available_volume=ExpressionWrapper(
-            Sum(F("lm_total_volume"), distinct=True) - Sum(
-                F("lm_wh_location__warehouse_goods_info__wh_goods_volume_weight"), distinct=True),
+            Sum(F("lm_total_volume")) - Subquery(occupied_volume_unit_subquery, output_field=FloatField()),
+            output_field=FloatField()
+        ),
+
+        occupied_area_percentage=ExpressionWrapper(
+            (Subquery(occupied_area_unit_subquery, output_field=FloatField()) * 100.0) / Sum(F("lm_size")),
+            output_field=FloatField()
+        ),
+
+        available_area_percentage=ExpressionWrapper(
+            ((Sum(F("lm_size")) - Subquery(occupied_area_unit_subquery, output_field=FloatField())) * 100.0) / Sum(
+                F("lm_size")),
             output_field=FloatField()
         ),
     )
+
     context = {
         'utilization_summary': utilization_summary,
         'branch_summary': branch_summary,
@@ -275,4 +356,5 @@ def wh_space_utilization_report(request):
         'selected_bay': selected_bay,
         'selected_businessmodel': selected_businessmodel,
     }
+
     return render(request, "asset_mgt_app/WH_space_utilization_report.html", context)
