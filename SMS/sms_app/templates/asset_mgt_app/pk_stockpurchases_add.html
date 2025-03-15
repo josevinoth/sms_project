@@ -32,29 +32,35 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Source</span>
+									</div>
+									{% render_field form.sp_source id="sp_source" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Stock In Date</span>
+									</div>
+									{% render_field form.sp_stock_in_date id="sp_stock_in_date" type="Date" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Part Code</span>
+									</div>
+									{% render_field form.sp_part_code id="sp_part_code" onchange="fetchPartCodeDetails()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field form.sp_stock_type id="sp_stock_type" onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.sp_stock_type id="sp_stock_type"  class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Description</span>
 									</div>
 									{% render_field form.sp_stock_description id="sp_stock_description" onchange="change_charge_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Source</span>
-									</div>
-									{% render_field form.sp_source id="sp_source" class="form-control " %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock In Date</span>
-									</div>
-									{% render_field form.sp_stock_in_date id="sp_stock_in_date" type="Date" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -78,21 +84,6 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Weight (Kg)</span>
-									</div>
-									{% render_field form.sp_weight id="sp_weight" onchange="change_charge_type()" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<!--										<span class="input-group-text">CFT/SQFT</span>-->
-										<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Plywood SQFT"></i></span>
-									</div>
-									{% render_field form.sp_cft id="sp_cft" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">UOM</span>
 									</div>
 									{% render_field form.sp_uom id="sp_uom" class="form-control " %}
@@ -102,6 +93,27 @@
 										<span class="input-group-text">Size</span>
 									</div>
 									{% render_field form.sp_size id="sp_size" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weight (Kg)</span>
+									</div>
+									{% render_field form.sp_weight id="sp_weight" onchange="change_charge_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weight/Sq.mt</span>
+									</div>
+									{% render_field form.sp_weight_sqft id="sp_weight_sqft" onchange="change_charge_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<!--										<span class="input-group-text">CFT/SQFT</span>-->
+										<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Plywood SQFT"></i></span>
+									</div>
+									{% render_field form.sp_cft id="sp_cft" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -395,5 +407,36 @@
 		}
 	}
 </script>
+<script>
+	function fetchPartCodeDetails() {
+    var partCodeId = $('#sp_part_code').val();  // Get selected Part Code ID
 
+    $.ajax({
+        url: '{% url "fetch_part_code_details" %}',  // Ensure URL is mapped in Django
+        type: 'GET',
+        data: { 'part_code_id': partCodeId },  // Make sure param name matches the backend
+         dataType: 'json',
+            success: function(data) {
+                var pc_stock_type = data.pc_stock_type;
+                var pc_stock_type_id = data.pc_stock_type_id;
+                document.getElementById("sp_stock_type").value = pc_stock_type_id;
+               	var pc_stock_description = data.pc_stock_description;
+                var pc_stock_description_id = data.pc_stock_description_id;
+                document.getElementById("sp_stock_description").value = pc_stock_description_id;
+                var pc_uom_id = data.pc_uom_id;
+                document.getElementById("sp_uom").value = pc_uom_id;
+                var pc_length = parseFloat(data.pc_length);
+                document.getElementById("sp_length").value = pc_length;
+                var pc_width = parseFloat(data.pc_width);
+                document.getElementById("sp_width").value = pc_width;
+                var pc_height = parseFloat(data.pc_height);
+                document.getElementById("sp_thick_height").value = pc_height;
+                var pc_size = parseFloat(data.pc_size);
+                document.getElementById("sp_size").value = pc_size;
+
+
+            }
+        });
+    }
+</script>
 {% endblock content %}

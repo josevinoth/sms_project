@@ -193,7 +193,6 @@ from .sub_models.hpt_forklift_crane_mod import hptforkliftcraneInfo
 from .sub_models.wh_highvaluecheck_info_mod import HighvalueInfo
 from .sub_models.wh_excess_stock_email_status import wh_excess_stock_email_status
 from .sub_models.dsr_info_mod import DsrInfo
-from .sub_models.consignmentgoods_new_mod import consignmentsgoods_new_info
 from .sub_models.transport_procurement_mod import Vehicle_procurementInfo
 from .sub_models.goodnotgood_mod import GoodnotgoodInfo
 from .sub_models.gate_meeting_mod import Gatemeetinginfo
@@ -202,3 +201,4 @@ from .sub_models.ab_info_mod import ABInfo
 from .sub_models.performance_audit_mod import PerformanceauditInfo
 from .sub_models.salesmultipleitem_mod import SalesmultipleitemInfo
 from .sub_models.trip_closure_mbl import Trclosure_mblInfo
+from .sub_models.part_code_mod import PkpartcodeInfo

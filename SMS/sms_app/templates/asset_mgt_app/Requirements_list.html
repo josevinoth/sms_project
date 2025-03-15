@@ -132,19 +132,20 @@
 
 <script>
     $(document).ready(function() {
-        var table = $('#requirements_list').DataTable({
-            scrollX: true,
-            order: [[0, 'desc']],
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
-        });
-
-        // Apply column-wise search
-        $('#requirements_list thead input').on('keyup change', function () {
-            let colIdx = $(this).parent().index();
-            table.column(colIdx).search(this.value).draw();
-        });
+    var table = $('#requirements_list').DataTable({
+        scrollX: true,
+        order: [[0, 'desc']],
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
     });
+
+    // Apply column-wise search correctly
+    $('#requirements_list thead input').on('keyup change', function () {
+        let colIdx = $(this).closest('th').index();  // Get correct index
+        table.column(colIdx).search(this.value).draw();
+    });
+});
+
 </script>
 
 {% endblock content %}
