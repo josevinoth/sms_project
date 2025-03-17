@@ -642,6 +642,12 @@ urlpatterns = [
     path('part_code_add/<int:pc_id>/', views.part_code_add, name='part_code_edit'),
     path('part_code_list/', views.part_code_list, name='part_code_list'),
     path('part_code_delete/<int:pc_id>/', views.part_code_delete, name='part_code_delete'),
+    path('gatein_pre_truck_mbl_add/', views.gatein_pre_truck_mbl_add, name='gatein_pre_truck_mbl_add'),
+    path('gatein_pre_truck_mbl_edit/<int:gp_tm_id>/', views.gatein_pre_truck_mbl_add, name='gatein_pre_truck_mbl_edit'),
+    path('gatein_pre_truck_mbl_list/', views.gatein_pre_truck_mbl_list, name='gatein_pre_truck_mbl_list'),
+    path('gatein_pre_truck_mbl_delete/<int:gp_tm_id>/', views.gatein_pre_truck_mbl_delete, name='gatein_pre_truck_mbl_delete'),
+    path('gatein_pre_truck_mbl_cancel/', views.gatein_pre_truck_mbl_cancel, name='gatein_pre_truck_mbl_cancel'),
+
 ]
 
 
