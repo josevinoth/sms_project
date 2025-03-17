@@ -643,6 +643,12 @@ urlpatterns = [
     path('gatein_pre_mbl_edit/<int:gpm_id>/', views.gatein_pre_mbl_add, name='gatein_pre_mbl_edit'),
     path('gatein_pre_mbl_list/', views.gatein_pre_mbl_list, name='gatein_pre_mbl_list'),
     path('gatein_pre_mbl_delete/<int:gpm_id>/', views.gatein_pre_mbl_delete, name='gatein_pre_mbl_delete'),
+
+    path('gatein_pre_truck_mbl_add/', views.gatein_pre_truck_mbl_add, name='gatein_pre_truck_mbl_add'),
+    path('gatein_pre_truck_mbl_edit/<int:gp_tm_id>/', views.gatein_pre_truck_mbl_add, name='gatein_pre_truck_mbl_edit'),
+    path('gatein_pre_truck_mbl_list/', views.gatein_pre_truck_mbl_list, name='gatein_pre_truck_mbl_list'),
+    path('gatein_pre_truck_mbl_delete/<int:gp_tm_id>/', views.gatein_pre_truck_mbl_delete, name='gatein_pre_truck_mbl_delete'),
+    path('gatein_pre_truck_mbl_cancel/', views.gatein_pre_truck_mbl_cancel, name='gatein_pre_truck_mbl_cancel'),
 ]
 
 
