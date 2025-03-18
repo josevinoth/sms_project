@@ -1,49 +1,10 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if form.instance.pk %} Edit {% else %} Add {% endif %} Pre Gatein</title>
-
-    <!-- Bootstrap 5 CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/css/styles.css">
-
-    <!-- FontAwesome for Icons -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .form-container {
-            max-width: 600px;
-            margin: 40px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .btn-custom {
-            width: 100%;
-            font-weight: bold;
-        }
-        .form-label {
-            font-weight: 600;
-        }
-        .form-control:focus {
-            border-color: #0d6efd;
-            box-shadow: 0px 0px 5px rgba(13, 110, 253, 0.3);
-        }
-    </style>
-</head>
-<body>
+{% extends "asset_mgt_app/base_mbl.html" %}
+{% block content %}
 
 <div class="container">
     <div class="form-container">
         <h3 class="text-center mb-4">
-            <i class="fas fa-truck"></i> {% if form.instance.pk %} Edit {% else %} Add {% endif %} Pre Gatein
+              Add Pre Gatein
         </h3>
 
         <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
@@ -55,14 +16,11 @@
             </div>
             <br>
 
-
-
             <div class="mb-3">
                 <label for="gatein_pre_number" class="form-label">Pre Gate-in ID</label>
                 <input type="text" id="gatein_pre_number" name="gatein_pre_number" class="form-control"
                        value="{{ form.gatein_pre_number.value }}" readonly>
             </div>
-
 
             <!-- Location (BRANCH) -->
             <div class="mb-3">
@@ -70,7 +28,7 @@
                 <select id="gatein_pre_branch" name="gatein_pre_branch" class="form-control" required>
                     <option value="">-- Select Branch --</option>
                     {% for Location in Location %}
-                    <option value="{{ Location.id }}" 
+                    <option value="{{ Location.id }}"
                         {% if form.gatein_pre_branch.value == Location.id %}selected{% endif %}>
                         {{ Location }}
                     </option>
@@ -85,7 +43,7 @@
                 <select id="gatein_pre_status" name="gatein_pre_status" class="form-control" required>
                     <option value="">-- Select Status --</option>
                     {% for Status in Status %}
-                    <option value="{{ Status.id }}" 
+                    <option value="{{ Status.id }}"
                         {% if form.gatein_pre_status.value == Status.id %}selected{% endif %}>
                         {{ Status }}
                     </option>
@@ -123,7 +81,7 @@
 
 <div class="container-fluid row">
 	<div class="col-md-1">
-		<a href="{% url 'gatein_pre_truck_mbl_add' %}" id= "add_gateinpre" class="btn btn-success btn-block btn-lg">
+		<a href="{% url 'gatein_pre_truck_mbl_add' %}" id= "add_gateinpre" class="btn btn-success  ">
 			<i class="fas fa-plus"></i> Add
 		</a>
 	</div>
@@ -209,13 +167,20 @@
                 <p><strong>Updated On:</strong> {{ gatein_pre.pregatein_updated_at }}</p>
                 <p><strong>Updated By:</strong> {{ gatein_pre.pregatein_updated_by }}</p>
                 <div class="row">
-    <div class="col">
-        <a href="{% url 'gatein_pre_truck_mbl_edit' gatein_pre.id %}" class="btn btn-warning btn-sm">Edit</a>
-    </div>
-    <div class="col text-end">
-        <a href="{% url 'gatein_pre_truck_mbl_delete' gatein_pre.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
-    </div>
-</div>
+                    <div class="col">
+                        <a class="btn btn-primary" href="{% url 'gatein_pre_truck_mbl_edit' gatein_pre.id %}" >
+                            <i class="far fa-edit"></i>
+                        </a>
+                    </div>
+                    <div class="col text-end">
+                        <form action="{% url 'gatein_pre_truck_mbl_delete' gatein_pre.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -277,5 +242,4 @@ $(document).ready(function() {
         });
 </script>
 
-</body>
-</html>
+{% endblock content %}

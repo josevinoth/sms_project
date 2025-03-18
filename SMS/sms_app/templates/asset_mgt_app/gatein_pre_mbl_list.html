@@ -1,34 +1,9 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pre Gatein List</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/css/styles.css">
-    <style>
-        .card-header {
-            font-weight: bold;
-        }
-        .btn-group {
-            display: flex;
-            gap: 5px;
-        }
-        .hidden {
-            display: none;
-        }
-        .btn-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body>
+{% extends "asset_mgt_app/base_mbl.html" %}
+{% block content %}
 
 <div class="container mt-4">
-    <h2 class="text-center">Pre Gatein</h2>
+
+    <h3 class="text-center" >Pre Gatein</h3>
 
     <input type="text" id="searchInput" class="form-control mb-3" placeholder="Search by Pre Gatein ID...">
 
@@ -52,7 +27,8 @@
                     <th>Customer Approval</th>
                     <th>Status</th>
                     <th>Updated By</th>
-                    <th>Action</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
                 </tr>
             </thead>
             <tbody id="gateinpre_Table">
@@ -78,8 +54,21 @@
                     <td>{{ gatein_pre.gatein_pre_status }}</td>
                     <td>{{ gatein_pre.gatein_pre_updated_by }}</td>
                     <td>
-                        <a href="{% url 'gatein_pre_mbl_edit' gatein_pre.id %}" class="btn btn-warning btn-sm">Edit</a>
-                        <a href="{% url 'gatein_pre_mbl_delete' gatein_pre.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
+                        <div class="col">
+                        <a class="btn btn-primary" href="{% url 'gatein_pre_mbl_edit' gatein_pre.id %}" >
+                            <i class="far fa-edit"></i>
+                        </a>
+                    </div>
+                    </td>
+                    <td>
+                    <div class="col text-end">
+                        <form action="{% url 'gatein_pre_mbl_delete' gatein_pre.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
                     </td>
                 </tr>
                 {% empty %}
@@ -113,7 +102,7 @@
         {% for gatein_pre in page_obj %}
         <div class="card mb-3">
             <div class="card-body">
-                <p><strong>Gatein Number</strong>{{ gatein_pre.gatein_pre_number }}</p>
+                <p><strong>Gatein Number:</strong>{{ gatein_pre.gatein_pre_number }}</p>
                 <p><strong>Location:</strong> {{ gatein_pre.gatein_pre_branch }}</p>
                 <p><strong>Shipment Details:</strong>
                     {% if gatein_pre.gatein_pre_shipment_att %}
@@ -132,8 +121,19 @@
                 <p><strong>Status:</strong> {{ gatein_pre.gatein_pre_status }}</p>
                 <p><strong>Updated By:</strong> {{ gatein_pre.gatein_pre_updated_by }}</p>
                 <div class="btn-group">
-                    <a href="{% url 'gatein_pre_mbl_edit' gatein_pre.id %}" class="btn btn-warning btn-sm w-50">Edit</a>
-                    <a href="{% url 'gatein_pre_mbl_delete' gatein_pre.id %}" class="btn btn-danger btn-sm w-50" onclick="return confirm('Are you sure?');">Delete</a>
+                        <div class="col">
+                        <a class="btn btn-primary" href="{% url 'gatein_pre_mbl_edit' gatein_pre.id %}" >
+                            <i class="far fa-edit"></i>
+                        </a>
+                    </div>
+                    <div class="col text-end">
+                        <form action="{% url 'gatein_pre_mbl_delete' gatein_pre.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -179,9 +179,9 @@
 
     // Filter Card View
     document.querySelectorAll(".card").forEach(card => {
-        let gateinNumberElement = card.querySelector("p strong:first-child");
-        if (gateinNumberElement) {
-            let gateinNumber = gateinNumberElement.nextSibling.textContent.toLowerCase().trim();
+        let tripNumberElement = card.querySelector("p strong:first-child");
+        if (tripNumberElement) {
+            let gateinNumber = tripNumberElement.nextSibling.textContent.toLowerCase().trim();
             if (gateinNumber.includes(filter)) {
                 card.classList.remove("hidden");
             } else {
@@ -202,6 +202,4 @@
         });
     });
 </script>
-
-</body>
-</html>
+{% endblock content %}
