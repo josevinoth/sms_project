@@ -598,6 +598,7 @@ urlpatterns = [
     path('expenses_report/', views.expenses_report, name='expenses_report'),
     path('ar_due_reports/', views.ar_due_reports, name='ar_due_reports'),
     path('budget_expense_report/', views.budget_expense, name='budget_expense'),
+    path('budget_expense_mis/', views.budget_expense_mis, name='budget_expense_mis'),
     path('vehicle_availability/',views.vehicle_availability_list, name='vehicle_availability'),
     path('get_customer_details/', views.get_customer_details, name='get_customer_details'),
     path('vehicle_procurement_add/', views.vehicle_procurement_add, name='vehicle_procurement_add'),

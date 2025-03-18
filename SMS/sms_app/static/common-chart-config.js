@@ -68,7 +68,7 @@ function createDonutChart(ctx, labels, data, labelText, colors) {
                         color: '#000'
                     }
                 },
-                datalabels: { // Data Labels configuration
+                datalabels: {
                     color: '#000', // Text color
                     font: {
                         size: 12,
@@ -78,9 +78,9 @@ function createDonutChart(ctx, labels, data, labelText, colors) {
                 }
             },
             responsive: true,
-            maintainAspectRatio: true // Prevent resizing issues
+            maintainAspectRatio: true,
         },
-        plugins: [ChartDataLabels] // Register the plugin
+        plugins: [ChartDataLabels]
     });
 }
 

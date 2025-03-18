@@ -59,20 +59,23 @@
         </div>
     </div>
 </div>
-<div style="display: flex; align-items: flex-start; margin-top: 20px;">
-    <div style="flex: 3; margin-right: 20px;">
-        <h3 style="color:black;">Sales Calls</h3>
-        <canvas id="salesChart" width="300" height="200" class="bg-white box-shadow rounded"></canvas>
-    </div>
-
-    <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-        <div style="text-align: center;">
-            <h3 style="color:black;">Productivity</h3>
-            <canvas id="productivityDonut" width="100" height="100" class="bg-white box-shadow rounded"></canvas>
+<br>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <h3>Sales Calls</h3>
+            <canvas id="salesChart" class="bg-white box-shadow rounded"></canvas>
         </div>
-        <div style="text-align: center;">
-            <h3 style="color:black;">Performance</h3>
-            <canvas id="performanceDonut" width="100" height="100" class="bg-white box-shadow rounded"></canvas>
+    </div>
+    <div class="row">
+        <div class="col-6">
+
+            <h3>Productivity</h3>
+            <canvas id="productivityDonut" class="bg-white box-shadow rounded"></canvas>
+        </div>
+        <div class="col-6">
+            <h3>Performance</h3>
+            <canvas id="performanceDonut" class="bg-white box-shadow rounded"></canvas>
         </div>
     </div>
 </div>
@@ -153,14 +156,14 @@ data: {
         label: 'New Customer Calls',
         data: newCustomerCalls,
         ...commonChartStyles.bar_chart_1,
-        barThickness: 10,
-        maxBarThickness: 10,
+        barThickness: 25,
+        maxBarThickness: 25,
     }, {
         label: 'Existing Customer Calls',
         data: existingCustomerCalls,
         ...commonChartStyles.bar_chart_2,
-        barThickness: 10,
-        maxBarThickness: 10,
+        barThickness: 25,
+        maxBarThickness: 25,
     }]
 },
 options: {

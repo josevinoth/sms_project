@@ -3,6 +3,7 @@ from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,Floa
 from django.db.models import F, Subquery, OuterRef
 from django.db.models.functions import Coalesce,Round
 from django.utils import timezone
+from calendar import month_name
 from django.utils.timezone import make_aware
 from datetime import datetime
 from ..models import Warehouse_goods_info,ExpenseExtinfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,ExpenseTypeInfo,Ar_Info,BudgetInfo,ExpenseInfo
@@ -998,4 +999,180 @@ def budget_expense(request):
         'first_name': first_name,
         'from_date': request.GET.get('from_date', ''),
         'to_date': request.GET.get('to_date', ''),
+    })
+
+
+def budget_expense_mis(request):
+    first_name = request.session.get("first_name")
+    selected_branch = request.GET.get("branch")
+    selected_unit = request.GET.get("unit")
+    selected_company = request.GET.get("company")
+    from_date = request.GET.get("from_date")
+    to_date = request.GET.get("to_date")
+    # Get the selected year from the request
+    selected_year = request.GET.get("year")
+    if selected_year:
+        try:
+            selected_year = int(selected_year)
+        except ValueError:
+            selected_year = None
+    else:
+        selected_year = None
+
+    years = list(
+        ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
+        .distinct()
+    )
+
+    branches = Location_info.objects.all()
+    units = UnitInfo.objects.values_list("unit_name", flat=True).distinct()
+    companies = Business_Sol_info.objects.values_list("bvm_business", flat=True).distinct()
+    years = list(
+        ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
+        .distinct()
+    )
+
+    if selected_branch:
+        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list("unit_name", flat=True).distinct()
+
+    expenses_filter = {}
+    budget_filter = {}
+
+    if selected_year:
+        expenses_filter["exp_ext_updated_on__year"] = selected_year
+        budget_filter["bf_updated_at__year"] = selected_year
+    if selected_company:
+        expenses_filter["exp_ext_expense_number__exp_business__bvm_business"] = selected_company
+        budget_filter["bf_company__bvm_business"] = selected_company
+
+    if selected_branch:
+        expenses_filter["exp_ext_branch__loc_name"] = selected_branch
+        budget_filter["bf_location__loc_name"] = selected_branch
+
+    if selected_unit:
+        expenses_filter["exp_ext_unit__unit_name"] = selected_unit
+        budget_filter["bf_unit_reference__unit_name"] = selected_unit
+
+    if from_date:
+        from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+        expenses_filter["exp_ext_updated_on__gte"] = from_date
+        budget_filter["bf_updated_at__gte"] = from_date
+
+    if to_date:
+        to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+        expenses_filter["exp_ext_updated_on__lte"] = to_date
+        budget_filter["bf_updated_at__lte"] = to_date
+
+    expense_summary = (
+        ExpenseExtinfo.objects.filter(**expenses_filter)
+        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_updated_on__month")
+        .annotate(total_expense=Sum("exp_ext_amount"))
+    )
+
+    # Convert the expense data into a dictionary with month-wise expenses
+    expense_dict = {}
+    for item in expense_summary:
+        category = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
+        month = item["exp_ext_updated_on__month"]
+
+        if category not in expense_dict:
+            expense_dict[category] = {i: 0 for i in range(1, 13)}  # Initialize dictionary for all months (1-12)
+
+        expense_dict[category][month] = item["total_expense"]  # Store the expense for the specific month
+
+
+    budget_summary = (
+        BudgetInfo.objects.filter(**budget_filter)
+        .values("bf_updated_at__month")  # Make sure you're using the correct date field for month extraction
+        .annotate(**{field: Sum(field) for field in BUDGET_FIELD_MAPPING.values() if field is not None})
+    )
+
+    # Convert the budget data into a dictionary with month-wise budgets
+    budget_dict_by_month = {}
+    for item in budget_summary:
+        month = item["bf_updated_at__month"]
+        for category, field in BUDGET_FIELD_MAPPING.items():
+            if field:
+                if category not in budget_dict_by_month:
+                    budget_dict_by_month[category] = {i: 0 for i in range(1, 13)}  # Initialize for all months (1-12)
+                budget_dict_by_month[category][month] = item.get(field, 0.0)  # Store the budget for the specific month
+
+    budget_totals = BudgetInfo.objects.filter(**budget_filter).aggregate(
+        **{field: Sum(field) for field in BUDGET_FIELD_MAPPING.values() if field is not None}
+    )
+
+    budget_dict = {
+        category: budget_totals.get(field, 0.0) if field else 0.0
+        for category, field in BUDGET_FIELD_MAPPING.items()
+    }
+
+    # Function to generate summaries with month-wise values
+    # Function to generate summaries with month-wise values
+    def get_category_summary(category_mapping):
+        summary = []
+        for category, field in category_mapping.items():
+            # Get the monthly expenses and budgets, or set them to zero if no data for that month
+            monthly_expenses = expense_dict.get(category, {i: 0 for i in range(1, 13)})
+            monthly_budgets = budget_dict_by_month.get(category, {i: 0 for i in range(1, 13)})
+
+            # Calculate total expenses and budgets
+            total_expense = sum(monthly_expenses.values())
+            total_budget = sum(monthly_budgets.values())
+
+            difference = total_budget - total_expense
+            pl_percentage = (difference / total_budget * 100) if total_budget > 0 else 0.0
+
+            summary.append({
+                "expense_type": category,
+                "monthly_expenses": monthly_expenses,
+                "monthly_budgets": monthly_budgets,
+                "total_expense": total_expense,
+                "total_budget": total_budget,
+                "difference": difference,
+                "pl_percentage": pl_percentage,
+            })
+        return summary
+
+    # Generate category-wise summaries
+    income_summary = get_category_summary(INCOME_CATEGORIES)
+    department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES)
+    employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES)
+    interest_summary = get_category_summary(INTEREST_EXPENSES_CATEGORIES)
+    operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES)
+    non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES)
+    other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES)
+
+    # Get total budget and expense for all categories
+    total_budget = sum(value if value is not None else 0.0 for value in budget_dict.values())
+    total_expense = sum(
+        sum(monthly_values.values()) for monthly_values in expense_dict.values()
+    )
+
+    total_profit_loss = total_budget - total_expense
+    total_pl_percentage = (total_profit_loss / total_budget * 100) if total_budget > 0 else 0.0
+
+    return render(request, "asset_mgt_app/fin_budget_expense_MIS.html", {
+        "income_summary": income_summary,
+        "department_expenses_summary": department_expenses_summary,
+        "employee_benefits_summary": employee_benefits_summary,
+        "interest_summary": interest_summary,
+        "operational_summary": operational_summary,
+        "non_operational_summary": non_operational_summary,
+        "other_expenses_summary": other_expenses_summary,
+        "total_budget": total_budget,
+        "total_expense": total_expense,
+        "total_profit_loss": total_profit_loss,
+        "total_pl_percentage": total_pl_percentage,
+        "months": [month_name[i] for i in range(1, 13)],  # ["Jan", "Feb", ..., "Dec"]
+        "branches": branches,
+        "units": units,
+        "companies": companies,
+        "years": years,
+        "selected_year": selected_year,
+        "selected_company": selected_company,
+        "selected_branch": selected_branch,
+        "selected_unit": selected_unit,
+        "first_name": first_name,
+        "from_date": request.GET.get("from_date", ""),
+        "to_date": request.GET.get("to_date", ""),
     })
