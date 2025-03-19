@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre Gatein List</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .card-header {
+            font-weight: bold;
+        }
+        .btn-group {
+            display: flex;
+            gap: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <h2 class="text-center">Pre Gatein</h2>
+
+    <div class="btn-container">
+        <a href="{% url 'gatein_pre_truck_mbl_add' %}" class="btn btn-primary">+ Add New</a>
+        <a href="{% url 'home_page' %}" class="btn btn-secondary">Back</a>
+    </div>
+
+    <!-- Desktop View -->
+    <div class="d-none d-md-block">
+	<table id="pregateintruck_list" class="table table-striped table-bordered">
+		<thead class="thead-dark">
+		<tr>
+			<th>Created On</th>
+			<th>Pre-Gate-In #</th>
+			<th>Transporter</th>
+			<th>Truck Number</th>
+			<th>Truck Type</th>
+			<th>Driver Name</th>
+			<th>Driver Number</th>
+			<th>Driver DL Number</th>
+			<th>OTL Type</th>
+			<th>OTL Number</th>
+			<th>Updated On</th>
+			<th>Updated By</th>
+			<th>Action</th>
+
+		</thead>
+		<tbody>
+		{% for pregateintruckinfo in page_obj %}
+		<tr>
+			<td> {{pregateintruckinfo.pregatein_created_at}}</td>
+			<td> {{pregateintruckinfo.pregatein_number}}</td>
+			<td> {{pregateintruckinfo.pregatein_transporter}}</td>
+			<td> {{pregateintruckinfo.pregatein_truck_number}}</td>
+			<td> {{pregateintruckinfo.pregatein_truck_type}}</td>
+			<td> {{pregateintruckinfo.pregatein_driver}}</td>
+			<td> {{pregateintruckinfo.pregatein_contact_number}}</td>
+			<td> {{pregateintruckinfo.pregatein_dl_number}}</td>
+			<td> {{pregateintruckinfo.pregatein_otl_type}}</td>
+			<td> {{pregateintruckinfo.pregatein_otl}}</td>
+			<td> {{pregateintruckinfo.pregatein_updated_at}}</td>
+			<td> {{pregateintruckinfo.pregatein_updated_by}}</td>
+			<td>
+                <a href="{% url 'gatein_pre_truck_mbl_edit' pregateintruckinfo.id %}" class="btn btn-warning btn-sm">Edit</a>
+                <a href="{% url 'gatein_pre_truck_mbl_delete' pregateintruckinfo.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
+            </td>
+		</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+        <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a class="btn btn-warning" href="?page=1">First</a>
+                <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+        </span>
+        </div>
+    </div>
+
+    <!-- Mobile View -->
+    <div class="d-md-none">
+        {% for gatein_pre in page_obj %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <p><strong>Created On:</strong> {{ gatein_pre.pregatein_created_at }}</p>
+                <p><strong>Pre-Gate-In #:</strong> {{ gatein_pre.pregatein_number }}</p>
+                <p><strong>Transporter:</strong> {{ gatein_pre.pregatein_transporter }}</p>
+                <p><strong>Truck Number:</strong> {{ gatein_pre.pregatein_truck_number }}</p>
+                <p><strong>Truck Type:</strong> {{ gatein_pre.pregatein_truck_type }}</p>
+                <p><strong>Driver Name:</strong> {{ gatein_pre.pregatein_driver }}</p>
+                <p><strong>Driver Number:</strong> {{ gatein_pre.pregatein_contact_number }}</p>
+                <p><strong>Driver DL Number:</strong> {{ gatein_pre.pregatein_dl_number }}</p>
+                <p><strong>OTL Type:</strong> {{ gatein_pre.pregatein_otl_type }}</p>
+                <p><strong>OTL Number:</strong> {{ gatein_pre.pregatein_otl }}</p>
+                <p><strong>Updated On:</strong> {{ gatein_pre.pregatein_updated_at }}</p>
+                <p><strong>Updated By:</strong> {{ gatein_pre.pregatein_updated_by }}</p>
+                <div class="btn-group">
+                    <a href="{% url 'gatein_pre_truck_mbl_edit' gatein_pre.id %}" class="btn btn-warning btn-sm w-50">Edit</a>
+                    <a href="{% url 'gatein_pre_truck_mbl_delete' gatein_pre.id %}" class="btn btn-danger btn-sm w-50" onclick="return confirm('Are you sure?');">Delete</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center">No records found.</p>
+        {% endfor %}
+        <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a class="btn btn-warning" href="?page=1">First</a>
+                <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+        </span>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- JavaScript for Search Functionality -->
+<!--<script>
+    document.getElementById("searchInput").addEventListener("keyup", function () {
+        let filter = this.value.toLowerCase();
+
+        // Filter Table Rows
+        document.querySelectorAll(".trip-row").forEach(row => {
+            let tripNumber = row.querySelector(".trip-number").textContent.toLowerCase();
+            if (tripNumber.includes(filter)) {
+                row.classList.remove("hidden");
+            } else {
+                row.classList.add("hidden");
+            }
+        });
+
+        // Filter Card View
+        document.querySelectorAll(".trip-card").forEach(card => {
+            let tripNumber = card.querySelector(".trip-number").textContent.toLowerCase();
+            if (tripNumber.includes(filter)) {
+                card.classList.remove("hidden");
+            } else {
+                card.classList.add("hidden");
+            }
+        });
+    });
+</script> -->
+<script>
+    $(document).ready(function() {
+        var table = $('#gatein_list').DataTable({
+            order: [[0, 'desc']],
+            scrollX: false,
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+        });
+    });
+</script>
+
+</body>
+</html>

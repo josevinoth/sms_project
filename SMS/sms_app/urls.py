@@ -598,6 +598,7 @@ urlpatterns = [
     path('expenses_report/', views.expenses_report, name='expenses_report'),
     path('ar_due_reports/', views.ar_due_reports, name='ar_due_reports'),
     path('budget_expense_report/', views.budget_expense, name='budget_expense'),
+    path('budget_expense_mis/', views.budget_expense_mis, name='budget_expense_mis'),
     path('vehicle_availability/',views.vehicle_availability_list, name='vehicle_availability'),
     path('get_customer_details/', views.get_customer_details, name='get_customer_details'),
     path('vehicle_procurement_add/', views.vehicle_procurement_add, name='vehicle_procurement_add'),
@@ -614,10 +615,6 @@ urlpatterns = [
     path('ops_audit_score_list/', views.opsauditscorecard_list, name='ops_audit_score_list'),
     path('ops_audit_score_update/<int:ops_audit_id>/', views.opsauditscorecard_add, name='ops_audit_score_update'),
     path('ops_audit_score_delete/<int:ops_audit_id>/', views.opsauditscorecard_delete, name='ops_audit_score_delete'),
-    path('consignment_goods_new_insert/', views.consignment_goods_new_add, name='consignment_goods_new_insert'),
-    path('consignment_goods_new_update/<int:goods_id>/', views.consignment_goods_new_add, name='consignment_goods_new_update'),
-    path('consignment_goods_new_list/', views.consignment_goods_new_list, name='consignment_goods_new_list'),
-    path('consignment_goods_new_delete/<int:goods_id>/', views.consignment_goods_new_delete, name='consignment_goods_new_delete'),
     path('send_ops_audit_email/', views.send_ops_audit_email, name='send_ops_audit_email'),
     path('wh_damage_report/', views.wh_damage_report, name='wh_damage_report'),
     path('wh_stock_report/', views.wh_stock_report, name='wh_stock_report'),
@@ -646,6 +643,12 @@ urlpatterns = [
     path('part_code_add/<int:pc_id>/', views.part_code_add, name='part_code_edit'),
     path('part_code_list/', views.part_code_list, name='part_code_list'),
     path('part_code_delete/<int:pc_id>/', views.part_code_delete, name='part_code_delete'),
+    path('gatein_pre_truck_mbl_add/', views.gatein_pre_truck_mbl_add, name='gatein_pre_truck_mbl_add'),
+    path('gatein_pre_truck_mbl_edit/<int:gp_tm_id>/', views.gatein_pre_truck_mbl_add, name='gatein_pre_truck_mbl_edit'),
+    path('gatein_pre_truck_mbl_list/', views.gatein_pre_truck_mbl_list, name='gatein_pre_truck_mbl_list'),
+    path('gatein_pre_truck_mbl_delete/<int:gp_tm_id>/', views.gatein_pre_truck_mbl_delete, name='gatein_pre_truck_mbl_delete'),
+    path('gatein_pre_truck_mbl_cancel/', views.gatein_pre_truck_mbl_cancel, name='gatein_pre_truck_mbl_cancel'),
+
 ]
 
 

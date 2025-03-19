@@ -54,3 +54,9 @@ def to_crores(value):
         return f"{float(value) / 10000000:.2f} Cr"
     except (ValueError, TypeError):
         return value
+
+
+@register.filter
+def get(dictionary, key):
+        """Safely gets a key from a dictionary."""
+        return dictionary.get(key, None)  # Return None if the key does not exist
