@@ -24,7 +24,7 @@ class PkstockpurchasesInfo(models.Model):
     sp_purchase_num=models.CharField(max_length=50,blank=True,null=True)
     sp_stock_description = models.ForeignKey(Stockdescription, on_delete=models.CASCADE, default='',blank=True, null=True)
     sp_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='',blank=True, null=True)
-    sp_size = models.FloatField(blank=True, null=True, default=0.0)
+    sp_size = models.CharField(blank=True, null=True, default=0.0)
     sp_rate = models.FloatField(blank=True, null=True, default=0.0)
     sp_price = models.FloatField(blank=True, null=True, default=0)
     sp_stock_in_date = models.DateTimeField(blank=True, null=True)
@@ -40,6 +40,8 @@ class PkstockpurchasesInfo(models.Model):
     sp_weight_sqft = models.FloatField(blank=True, null=True, default=0.0)
     sp_status = models.ForeignKey(PkstockpurchaseStatus, on_delete=models.CASCADE, null=True,blank=True)
     sp_part_code = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True,blank=True)
+    sp_con_length = models.FloatField(blank=True, null=True, default=0.0)
+
     class Meta:
         ordering = ["sp_purchase_num"]
 

@@ -178,7 +178,8 @@ def fetch_part_code_details(request):
             'pc_length': part_code.pc_length,
             'pc_width': part_code.pc_width,
             'pc_height': part_code.pc_height,
-            'pc_size': part_code.pc_size,
+            'pc_size': part_code.pc_diameter_width,
+            'pc_con_length': part_code.pc_con_length,
         }
         return JsonResponse(data)
     except PkpartcodeInfo.DoesNotExist:
