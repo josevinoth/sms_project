@@ -1,11 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
+from django.db.models import Q
 
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm,TripdetailaddForm
 from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 import json
 @login_required(login_url='login_page')
@@ -13,11 +14,9 @@ def tripdetail_nav(request,tripdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     print("I am inside Get add tripetails")
-    # con_det_form = ConsignmentdetailaddForm()
-    trip_det_form = TripdetailaddForm(request.POST)
-    tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES)
-    enquiry_num = EnquirynoteInfo.objects.get(pk=tripdetail_id).en_enquirynumber
-    enquiry_num_id = EnquirynoteInfo.objects.get(pk=tripdetail_id).id
+    trip_det_form = TripdetailaddForm()
+    tripclosurefiles_form = TripclosurefilesForm()
+    enquiry_num_id = tripdetail_id
     request.session['ses_enqiury_id'] = enquiry_num_id
     tripdetail_list=TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
     status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3])
@@ -27,39 +26,11 @@ def tripdetail_nav(request,tripdetail_id=0):
         'user_id': user_id,
         'trip_det_form': trip_det_form,
         'tripclosurefiles_form': tripclosurefiles_form,
-        'enquiry_num': enquiry_num,
         'enquiry_num_id': enquiry_num_id,
         'tripdetail_list': tripdetail_list,
         'status_list': status_list,
         'consignment_list': consignment_list,
     }
-    if trip_det_form.is_valid():
-        trip_status_list = list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id).values_list('tc_financestatus', flat=True))
-        print('trip_status_list', trip_status_list)
-        for i in trip_status_list:
-            if i == 1:
-                messages.error(request, 'Please close Open Trip against this enquiry and try to create new Trip')
-                return redirect(request.META['HTTP_REFERER'])
-            else:
-                pass
-        try:
-            last_id = TripdetailInfo.objects.latest('id').id
-            trip_num_next = str('TN_') + str(int(((TripdetailInfo.objects.get(id=last_id)).tr_tripnumber).replace('TN_', '')) + 1)
-        except ObjectDoesNotExist:
-            trip_num_next = str('TN_') + str(1000000)
-        trip_det_form.save()
-        tripclosurefiles_form.save()
-        print("Trip Details Main Form is Valid")
-        last_id = TripdetailInfo.objects.latest('id').id
-        last_id_files = Trip_closure_files_Info.objects.latest('id').id
-        TripdetailInfo.objects.filter(id=last_id).update(tr_tripnumber=trip_num_next)
-        Trip_closure_files_Info.objects.filter(id=last_id_files).update(tcf_tripnumber=trip_num_next)
-        tripdetail_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id).values_list('tr_tripnumber', flat=True)
-        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripdetails=list(tripdetail_list))
-        messages.success(request, 'Record Updated Successfully')
-    else:
-        print("Trip Details Main Form is not Valid")
-        messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
     return render(request, "asset_mgt_app/tripdetail_add.html", context)
 
 @login_required(login_url='login_page')
@@ -74,6 +45,7 @@ def tripdetail_add(request,tripdetail_id=0):
             enquiry_num_id = request.session.get('ses_enqiury_id')
             status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3])
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+            status_selected =1
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
@@ -82,6 +54,7 @@ def tripdetail_add(request,tripdetail_id=0):
                 'enquiry_num_id': enquiry_num_id,
                 'status_list': status_list,
                 'consignment_list': consignment_list,
+                'status_selected': status_selected,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
             }
         else:
@@ -95,6 +68,7 @@ def tripdetail_add(request,tripdetail_id=0):
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
             status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3])
             status_selected = (TripdetailInfo.objects.get(pk=tripdetail_id).tc_financestatus.id)
+            print('status_selected',status_selected)
             consignment_selected = (TripdetailInfo.objects.get(pk=tripdetail_id).tr_consignmentnumber.id)
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
             context = {
@@ -116,6 +90,7 @@ def tripdetail_add(request,tripdetail_id=0):
             trip_det_form = TripdetailaddForm(request.POST,request.FILES)
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES)
             enquiry_num = request.session.get('ses_enqiury_id')
+            cosnignment_number=request.POST.get('tr_consignmentnumber')
             if trip_det_form.is_valid():
                 # enquiry_number = request.GET.get('enquiry_number')
                 # consignment_number = request.GET.get('consignment_number')
@@ -123,11 +98,11 @@ def tripdetail_add(request,tripdetail_id=0):
                 # vehicle_number=TripdetailInfo.objects.get(pk=tripdetail_id).tr_vehiclenumber
                 # print('consignment_number',consignment_number)
                 # print('vehicle_number',vehicle_number)
-                trip_status_list=list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list('tc_financestatus',flat=True))
+                trip_status_list=list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num,tr_consignmentnumber=cosnignment_number).values_list('tc_financestatus',flat=True))
                 print('trip_status_list',trip_status_list)
                 for i in trip_status_list:
                     if i==1:
-                        messages.error(request, 'Please close Open Trip against this enquiry and try to create new Trip')
+                        messages.error(request, 'Please close the open Trip against this enquiry and try to create new Trip')
                         return redirect(request.META['HTTP_REFERER'])
                     else:
                         pass
@@ -167,7 +142,11 @@ def tripdetail_add(request,tripdetail_id=0):
                 EnquirynoteInfo.objects.filter(pk=enquiry_num).update(en_tripdetails=list(tripdetail_list))
                 messages.success(request, 'Record Updated Successfully')
             else:
-                print("Main Form is not Valid")
+                for field, errors in trip_det_form.errors.items():
+                    for error in errors:
+                        print(f"Error in {field}: {error}")
+                        messages.error(request, f"Error in {field}: {error}")
+                print("Trip Details Main Form is not Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
         return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/enquirynote_list')
@@ -203,15 +182,10 @@ def tripdetail_delete(request,tripdetail_id):
 def load_vehicle_details(request):
     enquiry_number = request.GET.get('enquiry_number')
     consignment_number = request.GET.get('consignment_number')
-    print(enquiry_number)
-    print(consignment_number)
     count=0
     trip_number=list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_number,tr_consignmentnumber=consignment_number,tc_financestatus=1).values_list('tr_tripnumber',flat=True))
-    print('trip_number',trip_number)
-    print('Length',len(trip_number))
     if len(trip_number)>0:
         count=count+1
-    print(count)
     if count<1:
         vehicle_type_requested=list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehicletype',flat=True))
         vehicle_type_placed=list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehicletype_placed',flat=True))
@@ -230,7 +204,6 @@ def load_vehicle_details(request):
             'driver_number': driver_number,
             'driver_license': driver_license,
             'count_val': count_val,
-
         }
     else:
         count_val=count
@@ -238,8 +211,6 @@ def load_vehicle_details(request):
             'count_val':count_val,
         }
     return HttpResponse(json.dumps(data))
-
-
 
 @login_required(login_url='login_page')
 def trip_email(request):
@@ -344,3 +315,37 @@ def trip_email(request):
 
     messages.success(request, "Trip email sent successfully with attachment.")
     return redirect(request.META.get('HTTP_REFERER', '/'))
+
+@login_required(login_url='login_page')
+def load_truck_details(request):
+    consignment_number = request.GET.get("consignment_number")
+    enquiry_number = request.GET.get("enquiry_number")
+    filtered_records = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number)
+
+    try:
+        # Fetch truck number from ConsignmentdetailInfo
+
+        truck_number = ConsignmentdetailInfo.objects.get(pk=consignment_number).co_vehicelnumber
+
+        # Fetch vehicle details from Vehicle_allotmentInfo (search in both fields)
+        vehicle_info = filtered_records.filter(
+            Q(va_vehiclenumber__vm_registrationnumber=truck_number) | Q(va_vehiclenumber_mkt=truck_number)
+        ).first()  # Get first matching record
+
+        if vehicle_info:
+            data = {
+                "truck_number": truck_number,
+                "va_drivername": vehicle_info.va_drivername,
+                "va_drivernumber": vehicle_info.va_drivernumber,
+                "va_vehiclesource": vehicle_info.va_vehiclesource.id if vehicle_info.va_vehiclesource else None,
+                "va_vehicletype_placed": vehicle_info.va_vehicletype_placed.id if vehicle_info.va_vehicletype_placed else None,
+                "va_vehicletype": vehicle_info.va_vehicletype.id if vehicle_info.va_vehicletype else None,
+                "va_driver_lic": vehicle_info.va_driver_lic,
+            }
+        else:
+            data = {"error": "No vehicle allotment details found for this Consignment number"}
+
+    except ObjectDoesNotExist:
+        data = {"error": "Consignment number not found"}
+
+    return JsonResponse(data)

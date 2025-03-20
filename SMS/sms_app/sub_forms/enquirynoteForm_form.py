@@ -11,8 +11,6 @@ class EnquirynoteaddForm(forms.ModelForm):
         super(EnquirynoteaddForm,self).__init__(*args, **kwargs)
         self.fields['en_customername'].empty_label = "--Select--"
         self.fields['en_customerdepartment'].empty_label = "--Select--"
-        self.fields['en_vehiclecategory'].empty_label = "--Select--"
-        self.fields['en_vehicletype'].empty_label = "--Select--"
         self.fields['en_assignedto'].empty_label = "--Select--"
         self.fields['en_status'].empty_label = "--Select--"
         self.fields['en_fromlocaion'].empty_label = "--Select--"

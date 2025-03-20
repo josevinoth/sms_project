@@ -9,7 +9,6 @@ class VehicleallotmentForm(forms.ModelForm):
         fields = '__all__'
     def __init__(self, *args, **kwargs):
         super(VehicleallotmentForm,self).__init__(*args, **kwargs)
-        self.fields['va_consignmentnumber'].empty_label = "--Select--"
         self.fields['va_vehiclesource'].empty_label = "--Select--"
         self.fields['va_vehicletype_placed'].empty_label = "--Select--"
         self.fields['va_vehicletype'].empty_label = "--Select--"

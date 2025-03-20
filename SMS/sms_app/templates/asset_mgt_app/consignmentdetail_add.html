@@ -25,6 +25,14 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Number</span>
+									</div>
+									<select id="co_vehicelnumber" name="co_vehicelnumber" onfocus="vehicle_allotted()" class="form-control">
+										<option value="">--Select--</option>
+									</select>
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Customer</span>
 									</div>
 									{% render_field con_det_form.co_customer id="co_customer" class="form-control disable_a_href" %}
@@ -121,7 +129,7 @@
 							<div class="col-1"></div>
 						</div>
 						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
+						<a href="{% url 'consignmentdetail_cancel' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</div>
@@ -130,26 +138,34 @@
 		</div>
 	</div>
 </form>
-<div class="accordion container-fluid" id="consignment_goods">
-	<div class="card">
+<div class="accordion container-fluid" id="accordionExample">
+	<div class="card border-info">
 		<div class="card-header bg-info" id="headingOne">
-			<h2 class="mb-0">
-				<button class="btn btn-block text-left text-white " type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-					<h3>Add Consignment Goods</h3>
-				</button>
-			</h2>
+			<div class="d-flex align-items-center">
+				<h2 class="mb-0">
+					<button class="btn btn-link text-left text-white" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+						Add Consignment Goods <i class="fas fa-angle-down"></i>
+					</button>
+				</h2>
+				<a href="{% url 'consignmentgoods_insert' %}" class="btn btn-primary ml-3">
+					<i class="fas fa-plus"></i> Add
+				</a>
+			</div>
 		</div>
-		<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#consignment_goods">
+		<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
 			<div class="card-body">
 				{% include "asset_mgt_app/consignmentgoods_add.html" %}
 			</div>
 		</div>
 	</div>
 </div>
+
 <script>
 	$(document).ready(function() {
         document.getElementById("co_lastmodifiedby").value ='{{user_id}}';
+        document.getElementById("cg_lastmodifiedby").value ='{{user_id}}';
         var enquiry_num_id=document.getElementById("co_enquirynumber").value
+        document.getElementById("cg_consignmentnumber").value ='{{consignmentdetail_id}}';
         if (enquiry_num_id=="")
             {
                 document.getElementById("co_enquirynumber").value ='{{enquiry_num_id}}';
@@ -168,22 +184,78 @@
             {
                 document.getElementById("co_customercode").value='{{ customer_code }}';
             }
-        var consignment_num = document.getElementById("cn_consignment_num").value;
 
-            if (consignment_num=="")
-            {
-                document.getElementById("cn_consignment_num").value = '{{ consignmentgoods_id_val }}';
+        var consignmentnumber = document.getElementById("co_consignmentnumber").value;
+		if (consignmentnumber=="")
+		{
+			$('#consignment_goods_id').addClass('disable_a_href');
+		}
+		var consignment_num = document.getElementById("cg_consignmentnumber").value;
+        if (consignment_num=="")
+        	{
+        	document.getElementById("cg_consignmentnumber").value ="{{consignment_detail_id}}";
             }
             else
             {
-                document.getElementById("cn_consignment_num").value =consignment_num;
+        	document.getElementById("cg_consignmentnumber").value =consignment_num;
             }
-         var consignmentnumber = document.getElementById("co_consignmentnumber").value;
-			if (consignmentnumber == "") {
-				$('#consignment_goods').addClass('disable_a_href');
-			} else {
-				$('#consignment_goods').removeClass('disable_a_href');
-			}
+            vehicle_allotted();
       });
+</script>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+        if (window.location.href.includes("consignmentgoods_insert")) {
+            // Enable fields
+            $('#consignment_goods_id')
+                .removeClass('disable_a_href')
+                .prop('disabled', false);
+        }
+        else if (window.location.href.includes("consignmentgoods_update")) {
+            // Enable fields
+            $('#consignment_goods_id')
+                .removeClass('disable_a_href')
+                .prop('disabled', false);
+        }
+        else {
+            // Disable fields if on any other page
+            $('#consignment_goods_id')
+                .addClass('disable_a_href')
+                .prop('disabled', true);
+        }
+    });
+</script>
+<script>
+	function vehicle_allotted() {
+    var enquiry_number = document.getElementById("co_enquirynumber").value.trim();
+	var consignmentdetail_id_val='{{consignmentdetail_id}}'
+    if (!enquiry_number) {
+        console.warn("Enquiry number is empty. Skipping request.");
+        return;
+    }
+
+    $.ajax({
+        url: '{% url "vehicle_allotted" %}',
+        type: 'GET',
+        data: {
+        		'enquiry_number': enquiry_number,
+        		'consignmentdetail_id_val':consignmentdetail_id_val
+        		},
+        success: function (data) {
+    var final_vehicle_list = data.final_vehicle_list || [];
+    var selectedVehicle = data.selected_vehicles || "";
+
+    $("#co_vehicelnumber").empty();
+    $("#co_vehicelnumber").append("<option value=''>--Select--</option>");
+
+    final_vehicle_list.forEach(function(vehicle) {
+        var isSelected = vehicle === selectedVehicle ? "selected" : "";
+        $("#co_vehicelnumber").append("<option value='" + vehicle + "' " + isSelected + ">" + vehicle + "</option>");
+    });
+},
+        error: function (xhr, status, error) {
+            console.error("AJAX Error:", status, error);
+        }
+    });
+}
 </script>
 {% endblock content %}

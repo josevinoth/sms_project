@@ -642,6 +642,11 @@ urlpatterns = [
     path('part_code_add/<int:pc_id>/', views.part_code_add, name='part_code_edit'),
     path('part_code_list/', views.part_code_list, name='part_code_list'),
     path('part_code_delete/<int:pc_id>/', views.part_code_delete, name='part_code_delete'),
+    path('vehicle_requested/', views.vehicle_requested, name='vehicle_requested'),
+    path('vehicle_type_counts/', views.vehicle_type_counts, name='vehicle_type_counts'),
+    path('vehicle_allotted/', views.vehicle_allotted, name='vehicle_allotted'),
+    path('consignmentdetail_cancel/', views.consignmentdetail_cancel, name='consignmentdetail_cancel'),
+    path('load_truck_details/', views.load_truck_details, name='load_truck_details'),
 ]
 
 

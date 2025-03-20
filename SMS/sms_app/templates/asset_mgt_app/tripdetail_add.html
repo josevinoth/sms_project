@@ -1,14 +1,22 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-
 <div class="row">
 	<div class="col">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-				<div class="row">
-					<div class="col-3">
-							<br>
+				<div class="card-header text-center">
+					<div class="row">
+						<div class="col-3 d-flex align-items-center">
+							<h3 class="mb-0">Add/Update Trip Detail</h3>
+							<a href="{% url 'tripdetail_insert' %}" class="btn btn-primary ml-3">
+								<i class="fas fa-plus"></i> Add
+							</a>
+						</div>
+						<div class="col-6 ">
+						</div>
+						<div class="col-1"></div>
+						<div class="col-2 content-center">
 							<button id="email_alert" type="button" onclick="email_message_fn()" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target=".bd-example-modal-lg">
 								<i class="fas fa-envelope-square"></i> Email Alert <span class="badge badge-danger"></span>
 							</button>
@@ -29,21 +37,24 @@
 								</div>
 							</div>
 						</div>
-					<div class="col-9 card-header text-center">
-						<h3>Add/Update Trip Detail</h3>
 					</div>
-
 				</div>
 				<div class="card-body bg-light" >
 					<form method="POST" action="" id="tripdetail_add" enctype="multipart/form-data">
 						{% csrf_token %}
-						<div class="row">
+						<div class="row" id="tripdetail_id">
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Enquiry Number</span>
 									</div>
 									{% render_field trip_det_form.tr_enquirynumber id="tr_enquirynumber" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Trip Number</span>
+									</div>
+									{% render_field trip_det_form.tr_tripnumber id="tr_tripnumber" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -58,15 +69,9 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Number</span>
+										<span class="input-group-text">Vehicle Number</span>
 									</div>
-									{% render_field trip_det_form.tr_tripnumber id="tr_tripnumber" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Type Requested</span>
-									</div>
-									{% render_field trip_det_form.tr_vehicletype id="tr_vehicletype" class="form-control disable_a_href" %}
+									{% render_field trip_det_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -78,9 +83,9 @@
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Number</span>
+										<span class="input-group-text">Vehicle Type Requested</span>
 									</div>
-									{% render_field trip_det_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control " %}
+									{% render_field trip_det_form.tr_vehicletype id="tr_vehicletype" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -212,7 +217,7 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<button id="tripdetail_submit_id" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
@@ -231,48 +236,50 @@
         document.getElementById("tr_consignmentnumber").value ='{{consignment_selected}}'
 
         trip_type();
+        trip_status_update();
       });
 </script>
 
 <script>
 	$("#tr_consignmentnumber").change(function () {
-       var enquiry_number = document.getElementById("tr_enquirynumber").value;
-       var consignment_number = $(this).val();
-       $.ajax({
-         url: '{% url 'load_vehicle_details' %}',
-         data: {
-           'enquiry_number': enquiry_number,
-           'consignment_number': consignment_number,
-         },
-            success: function (data) {
-                var count_val=JSON.parse(data)["count_val"]
-                if (count_val=='0')
-                    {
-                        var vehicle_type_requested=JSON.parse(data)["vehicle_type_requested"]
-                     var vehicle_type_placed=JSON.parse(data)["vehicle_type_placed"]
-                     var vehicletype_source=JSON.parse(data)["vehicletype_source"]
-                     var vehicletype_number=JSON.parse(data)["vehicletype_number"]
-                     var driver_name=JSON.parse(data)["driver_name"]
-                     var driver_number=JSON.parse(data)["driver_number"]
-                     var driver_license=JSON.parse(data)["driver_license"]
-                     $("#tr_vehiclenumber").val(vehicletype_number);
-                     $("#tr_vehiclesource").val(vehicletype_source);
-                     $("#tr_vehicletype").val(vehicle_type_requested);
-                     $("#tr_vehicletype_placed").val(vehicle_type_placed);
-                     $("#tr_drivername").val(driver_name);
-                     $("#tr_drivernumber").val(driver_number);
-                     $("#tr_driver_lic").val(driver_license);
+        var consignment_number = $(this).val();
+        var enquiry_number=document.getElementById("tr_enquirynumber").value
+        console.log("Triggered change event. Consignment Number:", consignment_number);
+        if (consignment_number) {
+            $.ajax({
+                url: '{% url "load_truck_details" %}',
+                type: "GET",
+                data: { 'consignment_number': consignment_number,'enquiry_number':enquiry_number},
+                dataType: "json",
+                beforeSend: function () {
+                    console.log("Sending request to Django...");
+                },
+                success: function (data) {
+                    console.log("Response received:", data);
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        $("#tr_vehiclenumber").val(data.truck_number);
+                        $("#tr_drivername").val(data.va_drivername || "");
+                        $("#tr_drivernumber").val(data.va_drivernumber || "");
+                        $("#tr_vehiclesource").val(data.va_vehiclesource || "");
+                        $("#tr_vehicletype_placed").val(data.va_vehicletype_placed || "");
+                        $("#tr_vehicletype").val(data.va_vehicletype || "");
+                        $("#tr_driver_lic").val(data.va_driver_lic || "");
                     }
-                else
-                {
-                 document.getElementById("tr_consignmentnumber").value=""
-                    alert("Please close existing trip before starting a new trip")
-
-             }
-         }
-       });
-     });
+                },
+                error: function (xhr, status, error) {
+                    console.log("AJAX Error:", status, error);
+                    alert("Failed to load truck details.");
+                }
+            });
+        } else {
+            console.log("No consignment number entered.");
+            alert("Please enter a consignment number.");
+        }
+    });
 </script>
+
 <script>
 	function trip_type() {
       var tr_category = document.getElementById("tr_category").value;
@@ -297,5 +304,48 @@
             alert("Trip email has been sent successfully!");
         }
     });
+</script>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+        if (window.location.href.includes("tripdetail_insert")) {
+            // Enable fields
+            $('#tripdetail_id,#tripdetail_submit_id')
+                .removeClass('disable_a_href')
+                .prop('disabled', false);
+        }
+        else if (window.location.href.includes("tripdetail_update")) {
+            // Enable fields
+            $('#tripdetail_id,#tripdetail_submit_id')
+                .removeClass('disable_a_href')
+                .prop('disabled', false);
+        }
+        else {
+            // Disable fields if on any other page
+            $('#tripdetail_id,#tripdetail_submit_id')
+                .addClass('disable_a_href')
+                .prop('disabled', true);
+        }
+    });
+</script>
+
+<script>
+	function trip_status_update()
+	{
+    	var trip_status = document.getElementById("tc_financestatus").value;
+		alert
+    	if (trip_status == 1) {
+        	tr_departedlocation.setAttribute("required", "required");  // Make it mandatory
+        	tr_departedkm.setAttribute("required", "required");  // Make it mandatory
+        	tr_departeddate.setAttribute("required", "required");  // Make it mandatory
+        	tr_loading_time.setAttribute("required", "required");  // Make it mandatory
+    	}
+    	else if (trip_status ==2)
+    	{
+			tr_unloading_time.setAttribute("required", "required");  // Make it mandatory
+        	tr_reportedlocation.setAttribute("required", "required");  // Make it mandatory
+        	tr_reportedkm.setAttribute("required", "required");  // Make it mandatory
+        	tr_reporteddate.setAttribute("required", "required");  // Make it mandatory
+    	}
+	}
 </script>
 {% endblock content %}

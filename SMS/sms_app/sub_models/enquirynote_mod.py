@@ -5,8 +5,6 @@ class EnquirynoteInfo(models.Model):
     en_enquirynumber = models.CharField(max_length=100,null=True,blank=True)
     en_customername = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
     en_customerdepartment = models.ForeignKey(CustomerdepartmentInfo, on_delete=models.CASCADE, default='')
-    en_vehiclecategory = models.ForeignKey(VehiclecategoryInfo,on_delete=models.CASCADE, default='')
-    en_vehicletype = models.ForeignKey(VehicletypeInfo,on_delete=models.CASCADE, default='')
     en_assignedto = models.ForeignKey(MyUser,on_delete=models.CASCADE, default='')
     en_status = models.ForeignKey(StatusList,on_delete=models.CASCADE, default=6)
     en_updatedon = models.DateTimeField(null=True, auto_now=True)
