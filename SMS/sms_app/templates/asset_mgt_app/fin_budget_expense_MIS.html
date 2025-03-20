@@ -1,0 +1,179 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+{% load currency_format %}
+
+<body>
+<div class="col-md-1">
+    <a href="{% url 'finance_reports' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+<br>
+<h2 style="color:black;">Budget-Expenses Report_MIS</h2>
+<hr>
+
+<div class="container-fluid">
+    <div class="row align-items-center">
+
+        <div class="col-md-2">
+            <label for="company-filter"><b>Company:</b></label>
+            <select id="company-filter" name="company" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for company in companies %}
+                <option value="{{ company }}" {% if company == selected_company %} selected {% endif %}>
+                    {{ company }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="branch-filter"><b>Branch:</b></label>
+            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for branch in branches %}
+                <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
+                    {{ branch.loc_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="unit-filter"><b>Unit:</b></label>
+            <select id="unit-filter" name="unit" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for unit in units %}
+                <option value="{{ unit }}" {% if unit == selected_unit %} selected {% endif %}>
+                    {{ unit }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="year"><b>year:</b></label>
+             <select name="year" id="year">
+        {% for year in years %}
+            <option value="{{ year }}" {% if year == selected_year %} selected {% endif %}>{{ year }}</option>
+        {% endfor %}
+    </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="from-date"><b>From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+        </div>
+
+        <div class="col-md-3">
+            <label for="to-date"><b>To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+        </div>
+
+    </div>
+</div>
+<br>
+   <table border="1">
+    <thead>
+        <tr>
+            <th>Category</th>
+            {% for month in months %}
+                <th>{{ month }}</th>
+            {% endfor %}
+            <th>Total Expense</th>
+            {% for month in months %}
+                <th>{{ month }}</th>
+            {% endfor %}
+            <th>Budget</th>
+            <th>Difference</th>
+            <th>P/L %</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for summary in operational_summary %}
+        <tr>
+            <td>{{ summary.expense_type }}</td>
+            {% for month in months %}
+                <td>{{ summary.monthly_expenses.forloop.counter|default:0 }}</td>
+            {% endfor %}
+            <td>{{ summary.total_expense }}</td>
+            {% for month in months %}
+                <td>{{ summary.monthly_budget.forloop.counter|default:0 }}</td>
+            {% endfor %}
+            <td>{{ summary.total_budget }}</td>
+            <td>{{ summary.difference }}</td>
+            <td>{{ summary.pl_percentage|floatformat:2 }}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<p><b>Total Budget (Jan-Dec):</b> {{ total_budget_jan_dec|floatformat:2 }}</p>
+<p><b>Total Expenses (Jan-Dec):</b> {{ total_expense_jan_dec|floatformat:2 }}</p>
+
+
+
+<hr>
+<script>
+    // Initialize DataTable
+    $(document).ready(function() {
+        $('#income_table').DataTable({
+            scrollY: "600px",
+            scrollCollapse: true,
+            order: [1, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+
+     document.getElementById('branch-filter').addEventListener('change', updateFilters);
+    document.getElementById('unit-filter').addEventListener('change', updateFilters);
+    document.getElementById('company-filter').addEventListener('change', updateFilters);
+    document.getElementById('from-date').addEventListener('change', updateFilters);
+    document.getElementById('to-date').addEventListener('change', updateFilters);
+
+    function updateFilters() {
+    const branch = document.getElementById('branch-filter').value;
+    const unit = document.getElementById('unit-filter').value;
+    const company = document.getElementById('company-filter').value;
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const url = new URL(window.location.href);
+
+    if (branch) {
+        url.searchParams.set('branch', branch);
+    } else {
+        url.searchParams.delete('branch');
+    }
+
+    if (unit) {
+        url.searchParams.set('unit', unit);
+    } else {
+        url.searchParams.delete('unit');
+    }
+
+    if (company) {
+        url.searchParams.set('company', company);
+    } else {
+        url.searchParams.delete('company');
+    }
+
+
+    if (fromDate) {
+        url.searchParams.set('from_date', fromDate);
+    } else {
+        url.searchParams.delete('from_date');
+    }
+
+    if (toDate) {
+        url.searchParams.set('to_date', toDate);
+    } else {
+        url.searchParams.delete('to_date');
+    }
+
+    console.log(url.toString());
+    window.location.href = url.toString();
+}
+</script>
+{% endblock content %}
+

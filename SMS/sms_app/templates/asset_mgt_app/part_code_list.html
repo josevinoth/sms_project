@@ -30,12 +30,14 @@
             <th>ID</th>
             <th>Created On</th>
             <th>Part Code</th>
+            <th>Description</th>
             <th>Stock Type</th>
             <th>Stock Description</th>
             <th>Length</th>
             <th>Width</th>
             <th>Height</th>
-            <th>Size</th>
+            <th>Diameter/Width</th>
+            <th>Length(Con/Tools)</th>
             <th>UOM</th>
             <th>Updated At</th>
             <th>Updated by</th>
@@ -49,12 +51,14 @@
             <td> {{part_code.id}}</td>
             <td> {{part_code.pc_created_at}}</td>
             <td>{{ part_code.pc_code }}</td>
+            <td>{{ part_code.pc_description }}</td>
             <td>{{ part_code.pc_stock_type }}</td>
             <td>{{ part_code.pc_stock_description }}</td>
             <td>{{ part_code.pc_length }}</td>
             <td>{{ part_code.pc_width }}</td>
             <td>{{ part_code.pc_height }}</td>
-            <td>{{ part_code.pc_size }}</td>
+            <td>{{ part_code.pc_diameter_width }}</td>
+            <td>{{ part_code.pc_con_length }}</td>
             <td>{{ part_code.pc_uom }}</td>
             <td>{{ part_code.pc_updated_at }}</td>
             <td>{{ part_code.pc_updated_by }}</td>

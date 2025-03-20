@@ -112,13 +112,15 @@ def monthly_summary(request):
         total_actual_customers=Count('s_customer_name', distinct=False),
         total_new_customers=Count('s_customer_new_name', distinct=False),
         total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True),
-        total_quotes=Subquery(
-            SalesmultipleitemInfo.objects.filter(sm_lastmodifiedby=OuterRef('s_updated_by'))
-            .values('sm_lastmodifiedby')
-            .annotate(count=Count('sm_Quote_Ref', distinct=False))
-            .values('count')[:1],
-            output_field=IntegerField()
+        total_quotes=Count(
+            's_updated_by__salesmultipleiteminfo',
+            filter=Q(
+                s_updated_by__salesmultipleiteminfo__sm_lastmodifiedby=F('s_updated_by'))
+                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__gte=from_date) if from_date else Q())
+                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__lte=to_date) if to_date else Q()),
+            distinct=True
         ),
+
         business_won=Count(('s_bus_won_not'), filter=Q(s_bus_won_not=1)),
     )
 
@@ -295,13 +297,15 @@ def salesperson_productivity_performance(request):
         total_actual_customers=Count('s_customer_name', distinct=False),
         total_new_customers=Count('s_customer_new_name', distinct=False),
         total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True),
-        total_quotes=Subquery(
-            SalesmultipleitemInfo.objects.filter(sm_lastmodifiedby=OuterRef('s_updated_by'))
-            .values('sm_lastmodifiedby')
-            .annotate(count=Count('sm_Quote_Ref', distinct=False))
-            .values('count')[:1],
-            output_field=IntegerField()
+        total_quotes=Count(
+            's_updated_by__salesmultipleiteminfo',
+            filter=Q(
+                s_updated_by__salesmultipleiteminfo__sm_lastmodifiedby=F('s_updated_by'))
+                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__gte=from_date) if from_date else Q())
+                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__lte=to_date) if to_date else Q()),
+            distinct=True
         ),
+
         business_won=Count(('s_bus_won_not'), filter=Q(s_bus_won_not=1)),
     )
 
@@ -1027,13 +1031,15 @@ def salesperson_wise_table(request):
         total_actual_customers=Count('s_customer_name', distinct=False),
         total_new_customers=Count('s_customer_new_name', distinct=False),
         total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True),
-        total_quotes=Subquery(
-            SalesmultipleitemInfo.objects.filter(sm_lastmodifiedby=OuterRef('s_updated_by'))
-            .values('sm_lastmodifiedby')
-            .annotate(count=Count('sm_Quote_Ref', distinct=False))
-            .values('count')[:1],
-            output_field=IntegerField()
+        total_quotes=Count(
+            's_updated_by__salesmultipleiteminfo',
+            filter=Q(
+                s_updated_by__salesmultipleiteminfo__sm_lastmodifiedby=F('s_updated_by'))
+                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__gte=from_date) if from_date else Q())
+                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__lte=to_date) if to_date else Q()),
+            distinct=True
         ),
+
         business_won=Count(('s_bus_won_not'),filter=Q(s_bus_won_not=1)),
     )
 

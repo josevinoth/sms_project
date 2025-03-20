@@ -24,6 +24,12 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
+                                        <span class="input-group-text">Description</span>
+                                    </div>
+                                    {% render_field form.pc_description id="pc_description" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
                                         <span class="input-group-text">Stock Type</span>
                                     </div>
                                     {% render_field form.pc_stock_type id="pc_stock_type" class="form-control" %}
@@ -42,27 +48,21 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3" id="width_group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Width <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood in. For Plywood ft"></i></span>
+                                        <span class="input-group-text">Width (In/Ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood in. For Plywood ft"></i></span>
                                     </div>
                                     {% render_field form.pc_width id="pc_width" class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3" id="length_group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Length</span>
+                                        <span class="input-group-text">Length (ft)</span>
                                     </div>
                                     {% render_field form.pc_length id="pc_length" class="form-control" %}
                                 </div>
-                                <div class="input-group input-group-sm mb-3">
+                                <div class="input-group input-group-sm mb-3" id="uom_group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">UOM</span>
                                     </div>
                                     {% render_field form.pc_uom id="pc_uom" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Size</span>
-                                    </div>
-                                    {% render_field form.pc_size id="pc_size" class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3" id="diameter_width_group">
                                     <div class="input-group-prepend">
@@ -102,12 +102,29 @@
 
         function toggleFields() {
             var stockType = $("#pc_stock_type").val();
-            if (stockType == "1" || stockType == "3" || stockType == "4") {
-                $("#diameter_width_group, #con_length_group").hide();
+            var pc_length = document.getElementById("pc_length");
+            var pc_width = document.getElementById("pc_width");
+            var pc_height = document.getElementById("pc_height");
+            var pc_uom = document.getElementById("pc_uom");
+            var pc_con_length = document.getElementById("pc_con_length");
+            var pc_diameter_width = document.getElementById("pc_diameter_width");
+
+            if (stockType == "1" || stockType == "4") {
+                $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
                 $("#length_group, #width_group, #height_group").show();
-            } else {
-                $("#diameter_width_group, #con_length_group").show();
+                pc_length.value = "";
+                pc_length.setAttribute("required", "required");  // Make it mandatory
+                pc_width.value = "";
+                pc_width.setAttribute("required", "required");  // Make it mandatory
+                pc_height.value = "";
+                pc_height.setAttribute("required", "required");  // Make it mandatory
+            }
+            else {
+                $("#diameter_width_group, #con_length_group, #uom_group ").show();
                 $("#length_group, #width_group, #height_group").hide();
+                pc_diameter_width.setAttribute("required", "required");  // Make it mandatory
+                pc_con_length.setAttribute("required", "required");  // Make it mandatory
+
             }
         }
 

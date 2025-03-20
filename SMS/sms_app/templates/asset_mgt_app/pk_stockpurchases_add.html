@@ -54,7 +54,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
 									</div>
-									{% render_field form.sp_stock_type id="sp_stock_type"  class="form-control " %}
+									{% render_field form.sp_stock_type id="sp_stock_type" onchange="toggleFields()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -62,38 +62,44 @@
 									</div>
 									{% render_field form.sp_stock_description id="sp_stock_description" onchange="change_charge_type()" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="height_group">
 									<div class="input-group-prepend">
 										<!--										<span class="input-group-text">Thick (mm)/Height (In)</span>-->
-										<span class="input-group-text">Thick (mm)/Height (In) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood in. For Plywood mm"></i></span>
+										<span class="input-group-text">Thick (mm)/Height (In) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood in. For Plywood mm" ></i></span>
 									</div>
-									{% render_field form.sp_thick_height id="sp_thick_height" onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.sp_thick_height id="sp_thick_height" onchange="change_charge_type()" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="width_group">
 									<div class="input-group-prepend">
 										<!--										<span class="input-group-text">Width (In/Ft)</span>-->
-										<span class="input-group-text">Width (In/Ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood in. For Plywood ft"></i></span>
+										<span class="input-group-text">Width (In/Ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood in. For Plywood ft" ></i></span>
 									</div>
-									{% render_field form.sp_width id="sp_width" onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.sp_width id="sp_width" onchange="change_charge_type()" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="length_group">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Length (Ft)</span>
 									</div>
-									{% render_field form.sp_length id="sp_length" onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.sp_length id="sp_length" onchange="change_charge_type()" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="uom_group">
 									<div class="input-group-prepend">
-										<span class="input-group-text">UOM</span>
+										<span class="input-group-text">UOM </span>
 									</div>
-									{% render_field form.sp_uom id="sp_uom" class="form-control " %}
+									{% render_field form.sp_uom id="sp_uom" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="diameter_width_group">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Size</span>
+										<span class="input-group-text">Diameter/Width</span>
 									</div>
-									{% render_field form.sp_size id="sp_size" class="form-control " %}
+									{% render_field form.sp_size id="sp_size" class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3" id="con_length_group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Length</span>
+                                    </div>
+                                    {% render_field form.sp_con_length id="sp_con_length" class="form-control disable_a_href" %}
+                                </div>
 							</div>
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
@@ -104,7 +110,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Weight/Sq.mt</span>
+										<span class="input-group-text">Weight/(Sq.mt or mt)</span>
 									</div>
 									{% render_field form.sp_weight_sqft id="sp_weight_sqft" onchange="change_charge_type()" class="form-control disable_a_href" %}
 								</div>
@@ -212,6 +218,8 @@
             document.getElementById("sp_vendor_bill").value = sp_vendor_bill_val
         }
         change_charge_type();
+        fetchPartCodeDetails();
+
         });
 </script>
 <script>
@@ -433,10 +441,28 @@
                 document.getElementById("sp_thick_height").value = pc_height;
                 var pc_size = parseFloat(data.pc_size);
                 document.getElementById("sp_size").value = pc_size;
+                var pc_con_length = parseFloat(data.pc_con_length);
+                document.getElementById("sp_con_length").value = pc_con_length;
 
-
+				toggleFields()
             }
         });
     }
+</script>
+<script>
+	 function toggleFields() {
+            var stockType = $("#sp_stock_type").val();
+
+            if (stockType == "1" || stockType == "4" ) {
+                $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
+                $("#length_group, #width_group, #height_group").show();
+
+            }
+            else {
+                $("#diameter_width_group, #con_length_group, #uom_group ").show();
+                $("#length_group, #width_group, #height_group").hide();
+            }
+        }
+
 </script>
 {% endblock content %}
