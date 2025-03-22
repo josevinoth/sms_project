@@ -4,6 +4,40 @@
 {% load crispy_forms_tags %}
 {% load currency_format %}
 
+<style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+
+        thead th {
+            background-color: grey;
+            color: white;
+            border-color:black;
+        }
+        .warehouse-budget {
+            background-color: #2E3192;
+            color: white;
+        }
+        .warehouse-actuals {
+            background-color: #062F7E;
+            color: white;
+        }
+        .income {
+            background-color: #C6E0B4;
+            font-weight: bold;
+        }
+        .total {
+            background-color: #58ff58;
+            font-weight: bold;
+        }
+        .expenses {
+            background-color: #F4B084;
+        }
+    </style>
 <body>
 <div class="col-md-1">
     <a href="{% url 'finance_reports' %}" class="btn btn-primary">
@@ -28,6 +62,7 @@
                 {% endfor %}
             </select>
         </div>
+
         <div class="col-md-2">
             <label for="branch-filter"><b>Branch:</b></label>
             <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
@@ -39,6 +74,7 @@
                 {% endfor %}
             </select>
         </div>
+
         <div class="col-md-2">
             <label for="unit-filter"><b>Unit:</b></label>
             <select id="unit-filter" name="unit" class="form-control box-shadow rounded">
@@ -50,13 +86,15 @@
                 {% endfor %}
             </select>
         </div>
+
         <div class="col-md-2">
-            <label for="year"><b>year:</b></label>
-             <select name="year" id="year">
-        {% for year in years %}
-            <option value="{{ year }}" {% if year == selected_year %} selected {% endif %}>{{ year }}</option>
-        {% endfor %}
-    </select>
+            <label for="year"><b>Year:</b></label>
+            <select name="year" id="year" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for year in years %}
+                <option value="{{ year }}" {% if year == selected_year %} selected {% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
         </div>
 
         <div class="col-md-2">
@@ -64,52 +102,152 @@
             <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label for="to-date"><b>To:</b></label>
             <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
         </div>
 
     </div>
 </div>
+
 <br>
-   <table border="1">
+<table border="1">
     <thead>
-        <tr>
-            <th>Category</th>
-            {% for month in months %}
-                <th>{{ month }}</th>
-            {% endfor %}
-            <th>Total Expense</th>
-            {% for month in months %}
-                <th>{{ month }}</th>
-            {% endfor %}
-            <th>Budget</th>
-            <th>Difference</th>
-            <th>P/L %</th>
-        </tr>
+    <tr>
+        <th class="warehouse-actuals" colspan="15">Warehouse Actuals</th>
+        <th class="warehouse-budget" colspan="13">Warehouse Budget</th>
+    <tr>
+        <th colspan="2">Warehouse</th>
+        {% for month in months %}
+        <th>{{ month }}</th>
+        {% endfor %}
+        <th>Total Expense</th>
+        {% for month in months %}
+        <th>{{ month }}</th>
+        {% endfor %}
+        <th>Total Budget</th>
+        <th>Difference</th>
+        <th>P/L %</th>
+    </tr>
     </thead>
     <tbody>
-        {% for summary in operational_summary %}
-        <tr>
-            <td>{{ summary.expense_type }}</td>
-            {% for month in months %}
-                <td>{{ summary.monthly_expenses.forloop.counter|default:0 }}</td>
-            {% endfor %}
-            <td>{{ summary.total_expense }}</td>
-            {% for month in months %}
-                <td>{{ summary.monthly_budget.forloop.counter|default:0 }}</td>
-            {% endfor %}
-            <td>{{ summary.total_budget }}</td>
-            <td>{{ summary.difference }}</td>
-            <td>{{ summary.pl_percentage|floatformat:2 }}%</td>
-        </tr>
+    {% for summary in operational_summary %}
+    <tr>
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:1 }}</td>
         {% endfor %}
+        <td class="expenses">{{ summary.total_expense }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_budgets|get_item:forloop.counter|default:0 }}</td>
+        {% endfor %}
+        <td class="income">{{ summary.total_budget }}</td>
+        <td>{{ summary.difference }}</td>
+        <td>{{ summary.pl_percentage|floatformat:2 }}%</td>
+    </tr>
+    {% endfor %}
+    <tr class="total">
+    <td colspan="2"><strong>Month Totals</strong></td>
+    {% for month in months %}
+        <td><strong>{{ category_summaries.operational_expense|get_item:forloop.counter|floatformat:1 }}</strong></td>
+    {% endfor %}
+    <td><strong>{{ category_totals.operational_expense|floatformat:2 }}</strong></td>
+    {% for month in months %}
+        <td><strong>{{ category_summaries.operational_budget|get_item:forloop.counter|floatformat:1 }}</strong></td>
+    {% endfor %}
+    <td><strong>{{ category_totals.operational_budget|floatformat:2 }}</strong></td>
+    <td><strong>{{ total_profit_loss|floatformat:2 }}</strong></td>
+    <td><strong>{{ total_pl_percentage | floatformat:1 }}%</strong></td>
+</tr>
+    <tr><td style="background:#7b87cf;" colspan="20">INCOME</td></tr>
+ {% for summary in income_summary %}
+    <tr>
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:1 }}</td>
+        {% endfor %}
+        <td>{{ summary.total_expense }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_budgets|get_item:forloop.counter|default:0 }}</td>
+        {% endfor %}
+        <td>{{ summary.total_budget }}</td>
+        <td>{{ summary.difference }}</td>
+        <td>{{ summary.pl_percentage|floatformat:2 }}%</td>
+    </tr>
+    {% endfor %}
+<tr class="total">
+    <td><strong>Month Totals</strong></td>
+    {% for month in months %}
+        <td><strong>{{ category_summaries.income_expense|get_item:forloop.counter|floatformat:1 }}</strong></td>
+    {% endfor %}
+    <td><strong>{{ category_totals.income_expense|floatformat:2 }}</strong></td>
+    {% for month in months %}
+        <td><strong>{{ category_summaries.income_budget|get_item:forloop.counter|floatformat:1 }}</strong></td>
+    {% endfor %}
+    <td><strong>{{ category_totals.income_budget|floatformat:2 }}</strong></td>
+    <td><strong>{{ total_profit_loss|floatformat:2 }}</strong></td>
+    <td><strong>{{ total_pl_percentage | floatformat:1 }}%</strong></td>
+</tr>
     </tbody>
 </table>
 
 
-<p><b>Total Budget (Jan-Dec):</b> {{ total_budget_jan_dec|floatformat:2 }}</p>
-<p><b>Total Expenses (Jan-Dec):</b> {{ total_expense_jan_dec|floatformat:2 }}</p>
+
+<br>
+<table border="1">
+    <thead>
+    <tr>
+        <th>INCOME</th>
+        {% for month in months %}
+        <th>{{ month }}</th>
+        {% endfor %}
+        <th>Total Expense</th>
+        {% for month in months %}
+        <th>{{ month }}</th>
+        {% endfor %}
+        <th>Total Budget</th>
+        <th>Difference</th>
+        <th>P/L %</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for summary in income_summary %}
+    <tr>
+        <td>{{ summary.expense_type }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:1 }}</td>
+        {% endfor %}
+        <td>{{ summary.total_expense }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_budgets|get_item:forloop.counter|default:0 }}</td>
+        {% endfor %}
+        <td>{{ summary.total_budget }}</td>
+        <td>{{ summary.difference }}</td>
+        <td>{{ summary.pl_percentage|floatformat:2 }}%</td>
+    </tr>
+    {% endfor %}
+
+    <!-- Grand Total Row -->
+    <tr>
+    <td><strong>Grand Total</strong></td>
+    {% for month in months %}
+    <td><strong>
+        {{ income_summary|sum_monthly_values:month|floatformat:1 }}
+    </strong></td>
+    {% endfor %}
+    <td><strong>{{ income_summary|sum_attribute:"total_expense"|floatformat:1 }}</strong></td>
+    {% for month in months %}
+    <td><strong>{{ income_summary|sum_monthly_values:month|floatformat:1 }}</strong></td>
+    {% endfor %}
+    <td><strong>{{ income_summary|sum_attribute:"total_budget"|floatformat:1 }}</strong></td>
+    <td><strong>{{ income_summary|sum_attribute:"difference"|floatformat:1 }}</strong></td>
+    <td><strong>{{ income_summary|sum_attribute:"pl_percentage"|floatformat:2 }}%</strong></td>
+</tr>
+
+
+    </tbody>
+</table>
+
 
 
 
@@ -129,6 +267,7 @@
      document.getElementById('branch-filter').addEventListener('change', updateFilters);
     document.getElementById('unit-filter').addEventListener('change', updateFilters);
     document.getElementById('company-filter').addEventListener('change', updateFilters);
+    document.getElementById('year').addEventListener('change', updateFilters);
     document.getElementById('from-date').addEventListener('change', updateFilters);
     document.getElementById('to-date').addEventListener('change', updateFilters);
 
@@ -136,6 +275,7 @@
     const branch = document.getElementById('branch-filter').value;
     const unit = document.getElementById('unit-filter').value;
     const company = document.getElementById('company-filter').value;
+    const year = document.getElementById('year').value;
     const fromDate = document.getElementById('from-date').value;
     const toDate = document.getElementById('to-date').value;
     const url = new URL(window.location.href);
@@ -156,6 +296,12 @@
         url.searchParams.set('company', company);
     } else {
         url.searchParams.delete('company');
+    }
+
+    if (year) {
+        url.searchParams.set('year', year);
+    } else {
+        url.searchParams.delete('year');
     }
 
 

@@ -4,6 +4,8 @@ from django.db.models import F, Subquery, OuterRef
 from django.db.models.functions import Coalesce,Round
 from django.utils import timezone
 from calendar import month_name
+from django.core.serializers import serialize
+import json
 from django.utils.timezone import make_aware
 from datetime import datetime
 from ..models import Warehouse_goods_info,ExpenseExtinfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,ExpenseTypeInfo,Ar_Info,BudgetInfo,ExpenseInfo
@@ -563,9 +565,10 @@ def expenses_report(request):
         .annotate(total_expense=Sum('exp_ext_amount'))
         .order_by('expense_type')
     )
-
     chart_labels = [entry['expense_type'] for entry in expense_summary]
     chart_data = [entry['total_expense'] for entry in expense_summary]
+    chart_labels_json = json.dumps(chart_labels)
+    chart_data_json = json.dumps(chart_data)
 
     context = {
         'first_name': first_name,
@@ -578,8 +581,8 @@ def expenses_report(request):
         'from_date': request.GET.get('from_date', ''),
         'to_date': request.GET.get('to_date', ''),
         'expense_summary': expense_summary,
-        'chart_labels': chart_labels,
-        'chart_data': chart_data,
+        'chart_labels': chart_labels_json,
+        'chart_data': chart_data_json,
     }
 
     return render(request, "asset_mgt_app/fin_expenses_report.html", context)
@@ -1009,7 +1012,6 @@ def budget_expense_mis(request):
     selected_company = request.GET.get("company")
     from_date = request.GET.get("from_date")
     to_date = request.GET.get("to_date")
-    # Get the selected year from the request
     selected_year = request.GET.get("year")
     if selected_year:
         try:
@@ -1018,6 +1020,8 @@ def budget_expense_mis(request):
             selected_year = None
     else:
         selected_year = None
+
+    # Apply the filter if selected_year is provided
 
     years = list(
         ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
@@ -1067,23 +1071,19 @@ def budget_expense_mis(request):
         ExpenseExtinfo.objects.filter(**expenses_filter)
         .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_updated_on__month")
         .annotate(total_expense=Sum("exp_ext_amount"))
+        .order_by("exp_ext_updated_on__month")
     )
 
-    # Convert the expense data into a dictionary with month-wise expenses
-    expense_dict = {}
+    expense_dict = {category: {i: 0 for i in range(1, 13)} for category in set(INCOME_CATEGORIES.keys())}
     for item in expense_summary:
         category = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
         month = item["exp_ext_updated_on__month"]
-
-        if category not in expense_dict:
-            expense_dict[category] = {i: 0 for i in range(1, 13)}  # Initialize dictionary for all months (1-12)
-
-        expense_dict[category][month] = item["total_expense"]  # Store the expense for the specific month
-
+        expense_dict.setdefault(category, {i: 0 for i in range(1, 13)})  # Initialize if missing
+        expense_dict[category][month] += item["total_expense"]  # Ensure cumulative sum if duplicate entries exist
 
     budget_summary = (
         BudgetInfo.objects.filter(**budget_filter)
-        .values("bf_updated_at__month")  # Make sure you're using the correct date field for month extraction
+        .values("bf_updated_at__month")
         .annotate(**{field: Sum(field) for field in BUDGET_FIELD_MAPPING.values() if field is not None})
     )
 
@@ -1106,16 +1106,15 @@ def budget_expense_mis(request):
         for category, field in BUDGET_FIELD_MAPPING.items()
     }
 
-    # Function to generate summaries with month-wise values
-    # Function to generate summaries with month-wise values
     def get_category_summary(category_mapping):
         summary = []
         for category, field in category_mapping.items():
-            # Get the monthly expenses and budgets, or set them to zero if no data for that month
+
             monthly_expenses = expense_dict.get(category, {i: 0 for i in range(1, 13)})
             monthly_budgets = budget_dict_by_month.get(category, {i: 0 for i in range(1, 13)})
 
-            # Calculate total expenses and budgets
+
+
             total_expense = sum(monthly_expenses.values())
             total_budget = sum(monthly_budgets.values())
 
@@ -1151,8 +1150,60 @@ def budget_expense_mis(request):
     total_profit_loss = total_budget - total_expense
     total_pl_percentage = (total_profit_loss / total_budget * 100) if total_budget > 0 else 0.0
 
+    category_totals = {
+        "income_budget": 0,
+        "income_expense": 0,
+        "operational_budget": 0,
+        "operational_expense": 0,
+        "non_operational_budget": 0,
+        "non_operational_expense": 0,
+    }
+
+    category_summaries = {
+        "income_budget": {i: 0 for i in range(1, 13)},
+        "income_expense": {i: 0 for i in range(1, 13)},
+        "operational_budget": {i: 0 for i in range(1, 13)},
+        "operational_expense": {i: 0 for i in range(1, 13)},
+        "non_operational_budget": {i: 0 for i in range(1, 13)},
+        "non_operational_expense": {i: 0 for i in range(1, 13)},
+    }
+
+    # ✅ Store Budget Data
+    for item in budget_summary:
+        month = item["bf_updated_at__month"]
+        income_total = sum(item[field] for field in INCOME_CATEGORIES.values() if field in item)
+        operational_total = sum(item[field] for field in OPERATIONAL_EXPENSES_CATEGORIES.values() if field in item)
+        non_operational_total = sum(
+            item[field] for field in NON_OPERATIONAL_EXPENSES_CATEGORIES.values() if field in item)
+
+        category_summaries["income_budget"][month] = income_total
+        category_summaries["operational_budget"][month] = operational_total
+        category_summaries["non_operational_budget"][month] = non_operational_total
+
+        category_totals["income_budget"] += income_total
+        category_totals["operational_budget"] += operational_total
+        category_totals["non_operational_budget"] += non_operational_total
+
+    # ✅ Store Expense Data
+    for item in expense_summary:
+        month = item["exp_ext_updated_on__month"]
+        category = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
+        amount = item["total_expense"]
+
+        if category in INCOME_CATEGORIES:
+            category_summaries["income_expense"][month] += amount
+            category_totals["income_expense"] += amount
+        elif category in OPERATIONAL_EXPENSES_CATEGORIES:
+            category_summaries["operational_expense"][month] += amount
+            category_totals["operational_expense"] += amount
+        elif category in NON_OPERATIONAL_EXPENSES_CATEGORIES:
+            category_summaries["non_operational_expense"][month] += amount
+            category_totals["non_operational_expense"] += amount
+
     return render(request, "asset_mgt_app/fin_budget_expense_MIS.html", {
         "income_summary": income_summary,
+        "category_totals": category_totals,
+        "category_summaries": category_summaries,
         "department_expenses_summary": department_expenses_summary,
         "employee_benefits_summary": employee_benefits_summary,
         "interest_summary": interest_summary,
@@ -1175,4 +1226,5 @@ def budget_expense_mis(request):
         "first_name": first_name,
         "from_date": request.GET.get("from_date", ""),
         "to_date": request.GET.get("to_date", ""),
+
     })

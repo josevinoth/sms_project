@@ -115,7 +115,7 @@ from .sub_views.pk_stock_acceptance_view import pK_acceptance_cancel,pk_acceptan
 from .sub_views.comments_add_view import comments_list,comments_delete,comments_add,comments_cancel
 from .sub_views.chart_view import bar_chart,bar_chart_data
 from .sub_views.task_add_view import task_add,task_list,task_delete,get_requirement_description
-from .sub_views.timesheet_add_view import timesheet_add,timesheet_list,timesheet_delete,timesheet_nav
+from .sub_views.timesheet_add_view import timesheet_add,timesheet_list,timesheet_delete,timesheet_nav,timesheet_report
 from .sub_views.ml_category_view import create_product,ml_product_list,ml_product_delete
 from .sub_views.businessrevenue_view import business_revenue_add,business_revenue_list,business_revenue_delete
 from .sub_views.pk_gate_pass_returnable_view import gate_return_add,gate_return_list,gate_return_delete,gate_return_pdf,gate_return_employee_id

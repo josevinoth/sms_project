@@ -1,0 +1,311 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<body>
+<div class="col-md-1">
+    <a href="{% url 'home_page' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+<br>
+<h2 style="color:black;">TimeSheet Report</h2>
+<hr>
+<div class="container-fluid">
+    <div class="row align-items-center">
+        <!-- Salesperson Filter -->
+        <div class="col-md-2">
+            <label for="teammember-filter"><b>Team Member:</b></label>
+            <select id="teammember-filter" name="teammember" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for teammember in teammembers %}
+                <option value="{{ teammember }}" {% if teammember == selected_teammember %} selected {% endif %}>
+                    {{ teammember }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- From Date -->
+        <div class="col-md-2">
+            <label for="from-date"><b>From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+        </div>
+
+        <!-- To Date -->
+        <div class="col-md-3">
+            <label for="to-date"><b>To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+        </div>
+    </div>
+</div>
+<br>
+<div class="container-fluid">
+    <div class="row">
+    <div class="col-6">
+    <canvas id="timesheetChart" width="300" height="200" class="bg-white box-shadow rounded"></canvas>
+</div>
+    <div class="col-6">
+<canvas id="requirementChart" width="300" height="200" class="bg-white box-shadow rounded"></canvas>
+    </div>
+</div>
+    </div>
+<hr>
+<div class="container-fluid">
+    <button id="clear-filters" class="btn btn-secondary mb-3">Clear All Filters</button>
+    <table id="timesheet_report" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr class="filter">
+                <th></th>
+                <th><input type="text" placeholder="Filter Date" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Name" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Application" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Task" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter MainTask" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter SubTask" class="column-filter"></th>
+                <th><input type="text" placeholder="Filter Hours" class="column-filter"></th>
+            </tr>
+            <tr>
+                <th>Sr No</th>
+                <th>Date</th>
+                <th>Team Member Name</th>
+                <th>Application</th>
+                <th>Task ID</th>
+                <th>Main Task</th>
+                <th>Sub Task</th>
+                <th>Working Hours</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in timesheet_summary %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ report.ts_start_date }}</td>
+                <td>{{ report.ts_updated_by__first_name }}</td>
+                <td>{{ report.ts_task_id__application__app_name }}</td>
+                <td>{{ report.ts_task_id__task_id }}</td>
+                <td>{{ report.ts_task_id__main_task }}</td>
+                <td>{{ report.ts_task_id__sub_task }}</td>
+                <td>{{ report.total_hours }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<hr>
+    <table id="requirement_report" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+    <tr>
+                <th>Sr No</th>
+                <th>Date</th>
+                <th>Team Member Name</th>
+                <th>Application</th>
+                <th>Task ID</th>
+                <th>Main Task</th>
+                <th>Requirement Number</th>
+                <th>Requirement Description</th>
+                <th>Working Hours</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in timesheet_summary %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ report.ts_start_date }}</td>
+                <td>{{ report.ts_updated_by__first_name }}</td>
+                <td>{{ report.ts_task_id__application__app_name }}</td>
+                <td>{{ report.ts_task_id__task_id }}</td>
+                <td>{{ report.ts_task_id__main_task }}</td>
+                <td>{{ report.ts_task_id__t_requirement_id__req_number }}</td>
+                <td>{{ report.ts_task_id__t_requirement_description }}</td>
+                <td>{{ report.total_hours }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<script>
+    $(document).ready(function() {
+    $('#requirement_report').DataTable(
+        {
+        scrollY: "600px",
+        scrollX: true,
+        scrollCollapse: true,
+        order: [1, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    } );
+} );
+</script>
+<script>
+    $(document).ready(function () {
+        // Initialize DataTable
+        var table = $('#timesheet_report').DataTable({
+            scrollY: "600px",
+            scrollCollapse: true,
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+        });
+
+
+
+        // Attach event listeners to filter inputs
+        $('.filter .column-filter').on('keyup change', function () {
+            var columnIndex = $(this).closest('th').index(); // Get column index
+            table.column(columnIndex).search(this.value).draw(); // Apply search
+        });
+
+        // Clear All Filters button functionality
+        $('#clear-filters').on('click', function () {
+            $('.filter .column-filter').each(function () {
+                $(this).val(''); // Clear the input value
+                var columnIndex = $(this).closest('th').index(); // Get column index
+                table.column(columnIndex).search(''); // Clear column filter
+            });
+            table.draw(); // Redraw the table
+        });
+
+        // Prevent sorting when clicking filter inputs
+        $('#sales_call_report thead input').on('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+
+
+     document.getElementById('teammember-filter').addEventListener('change', updateFilters);
+       document.getElementById('from-date').addEventListener('change', updateFilters);
+       document.getElementById('to-date').addEventListener('change', updateFilters);
+
+    function updateFilters() {
+    const teammember = document.getElementById('teammember-filter').value;
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+
+    const url = new URL(window.location.href);
+
+    if (teammember) {
+        url.searchParams.set('teammember', teammember);
+    } else {
+        url.searchParams.delete('teammember');
+    }
+
+    if (fromDate) {
+        url.searchParams.set('from_date', fromDate);
+    } else {
+        url.searchParams.delete('from_date');
+    }
+
+    if (toDate) {
+        url.searchParams.set('to_date', toDate);
+    } else {
+        url.searchParams.delete('to_date');
+    }
+
+     window.location.href = url.toString();
+}
+</script>
+
+<style>
+    .column-filter {
+        width: 120px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    #clear-filters {
+        float: right;
+    }
+</style>
+<script>
+// Data for the first chart
+const timesheetChartLabels = JSON.parse('{{ chart_labels|safe|escapejs }}');
+const timesheetChartData = JSON.parse('{{ chart_data|safe|escapejs }}');
+
+const timesheetCtx = document.getElementById('timesheetChart').getContext('2d');
+new Chart(timesheetCtx, {
+    type: 'bar',
+    data: {
+        labels: timesheetChartLabels,
+        datasets: [{
+            label: 'Total Hours',
+            data: timesheetChartData,
+            backgroundColor: 'rgba(255, 99, 132, 0.7)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            datalabels: {
+                anchor: 'end',
+                align: 'end',
+                color: '#000',
+                backgroundColor: 'rgba(235, 233, 234, 0.8)',
+                borderRadius: 4,
+                font: {
+                    size: 12,
+                 },
+                formatter: function(value) {
+                    return value;
+                }
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true
+            }
+        }
+    },
+    plugins: [ChartDataLabels]
+});
+
+// Data for the second chart
+const requirementChartLabels = JSON.parse('{{ req_labels|safe|escapejs }}');
+const requirementChartData = JSON.parse('{{ req_data|safe|escapejs }}');
+
+const requirementCtx = document.getElementById('requirementChart').getContext('2d');
+new Chart(requirementCtx, {
+    type: 'bar',
+    data: {
+        labels: requirementChartLabels,
+        datasets: [{
+            label: 'Total Hours',
+            data: requirementChartData,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        indexAxis:'y',
+        plugins: {
+            datalabels: {
+                anchor: 'end',
+                align: 'end',
+                color: '#000',
+                backgroundColor: 'rgba(235, 233, 234, 0.8)',
+                borderRadius: 4,
+                font: {
+                    size: 12,
+                 },
+                formatter: function(value) {
+                    return value;
+                }
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true
+            }
+        }
+    },
+    plugins: [ChartDataLabels]
+});
+
+</script>
+
+
+{% endblock content %}
