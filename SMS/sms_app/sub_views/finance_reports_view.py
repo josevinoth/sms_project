@@ -712,7 +712,7 @@ INCOME_CATEGORIES = {
     "Forklift Handling Charges": "bf_Forklift_Handling_Charges",
     "Crane Handling Charges": "bf_Crane_Handling_Charges",
     "Handling Charges": "bf_Handling_Charges",
-    "Packing - Consumables & Spares": "bf_Packing_Charges",
+    "Packing Expenses": "bf_Packing_Charges",
     "Warehouse Handling Charges": "bf_Warehouse_Handling_Charges",
     "Warehouse Loading Charges": "bf_Warehouse_Loading_Charges",
     "Storage Expenses": "bf_Warehouse_Storage_Charges",
@@ -805,7 +805,7 @@ BUDGET_FIELD_MAPPING = {
     "Forklift Handling Charges": "bf_Forklift_Handling_Charges",
     "Crane Handling Charges": "bf_Crane_Handling_Charges",
     "Handling Charges": "bf_Handling_Charges",
-    "Packing - Consumables & Spares": "bf_Packing_Charges",
+    "Packing Expenses": "bf_Packing_Charges",
     "Warehouse Handling Charges": "bf_Warehouse_Handling_Charges",
     "Warehouse Loading Charges": "bf_Warehouse_Loading_Charges",
     "Storage Expenses": "bf_Warehouse_Storage_Charges",
@@ -1112,22 +1112,22 @@ def budget_expense_mis(request):
 
             monthly_expenses = expense_dict.get(category, {i: 0 for i in range(1, 13)})
             monthly_budgets = budget_dict_by_month.get(category, {i: 0 for i in range(1, 13)})
-
-
+            monthly_variance = {month: monthly_budgets[month] - monthly_expenses[month] for month in range(1, 13)}
 
             total_expense = sum(monthly_expenses.values())
             total_budget = sum(monthly_budgets.values())
+            total_variance = total_budget - total_expense
 
-            difference = total_budget - total_expense
-            pl_percentage = (difference / total_budget * 100) if total_budget > 0 else 0.0
+            pl_percentage = (total_variance / total_budget * 100) if total_budget > 0 else 0.0
 
             summary.append({
                 "expense_type": category,
                 "monthly_expenses": monthly_expenses,
                 "monthly_budgets": monthly_budgets,
+                "monthly_variance": monthly_variance,
                 "total_expense": total_expense,
                 "total_budget": total_budget,
-                "difference": difference,
+                "total_variance": total_variance,
                 "pl_percentage": pl_percentage,
             })
         return summary
@@ -1166,6 +1166,7 @@ def budget_expense_mis(request):
         "operational_expense": {i: 0 for i in range(1, 13)},
         "non_operational_budget": {i: 0 for i in range(1, 13)},
         "non_operational_expense": {i: 0 for i in range(1, 13)},
+
     }
 
     # ✅ Store Budget Data
@@ -1184,7 +1185,6 @@ def budget_expense_mis(request):
         category_totals["operational_budget"] += operational_total
         category_totals["non_operational_budget"] += non_operational_total
 
-    # ✅ Store Expense Data
     for item in expense_summary:
         month = item["exp_ext_updated_on__month"]
         category = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
@@ -1199,6 +1199,34 @@ def budget_expense_mis(request):
         elif category in NON_OPERATIONAL_EXPENSES_CATEGORIES:
             category_summaries["non_operational_expense"][month] += amount
             category_totals["non_operational_expense"] += amount
+
+    category_summaries["income_variance"] = {i: 0 for i in range(1, 13)}
+    category_summaries["operational_variance"] = {i: 0 for i in range(1, 13)}
+    category_summaries["non_operational_variance"] = {i: 0 for i in range(1, 13)}
+
+    for month in range(1, 13):
+        category_summaries["income_variance"][month] = (
+                category_summaries["income_budget"].get(month, 0) - category_summaries["income_expense"].get(month, 0)
+        )
+        category_summaries["operational_variance"][month] = (
+                category_summaries["operational_budget"].get(month, 0) - category_summaries["operational_expense"].get(
+            month, 0)
+        )
+        category_summaries["non_operational_variance"][month] = (
+                category_summaries["non_operational_budget"].get(month, 0) - category_summaries[
+            "non_operational_expense"].get(month, 0)
+        )
+        category_totals["income_variance"] = (
+                category_totals["income_budget"] - category_totals["income_expense"]
+        )
+
+        category_totals["operational_variance"] = (
+                category_totals["operational_budget"] - category_totals["operational_expense"]
+        )
+
+        category_totals["non_operational_variance"] = (
+                category_totals["non_operational_budget"] - category_totals["non_operational_expense"]
+        )
 
     return render(request, "asset_mgt_app/fin_budget_expense_MIS.html", {
         "income_summary": income_summary,

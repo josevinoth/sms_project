@@ -11,7 +11,6 @@
 <hr>
 <div class="container-fluid">
     <div class="row align-items-center">
-        <!-- Salesperson Filter -->
         <div class="col-md-2">
             <label for="teammember-filter"><b>Team Member:</b></label>
             <select id="teammember-filter" name="teammember" class="form-control box-shadow rounded">
@@ -23,6 +22,44 @@
                 {% endfor %}
             </select>
         </div>
+        <!-- Application Filter -->
+<div class="col-md-2">
+    <label for="application-filter"><b>Application:</b></label>
+    <select id="application-filter" name="application" class="form-control box-shadow rounded">
+        <option value="">All</option>
+        {% for application in applications %}
+        <option value="{{ application.app_name }}" {% if application.app_name == selected_application %} selected {% endif %}>
+            {{ application.app_name }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+
+<!-- Requirement Filter -->
+<div class="col-md-2">
+    <label for="requirement-filter"><b>Requirement Number:</b></label>
+    <select id="requirement-filter" name="requirement" class="form-control box-shadow rounded">
+        <option value="">All</option>
+        {% for requirement in requirements %}
+        <option value="{{ requirement.req_number }}" {% if requirement.req_number == selected_requirement %} selected {% endif %}>
+            {{ requirement.req_number }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+
+<!-- Status Filter -->
+<div class="col-md-2">
+    <label for="status-filter"><b>Status:</b></label>
+    <select id="status-filter" name="status" class="form-control box-shadow rounded">
+        <option value="">All</option>
+        {% for status in statuslist %}
+        <option value="{{ status.status_title }}" {% if status.status_title == selected_status %} selected {% endif %}>
+            {{ status.status_title }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
 
         <!-- From Date -->
         <div class="col-md-2">
@@ -31,7 +68,7 @@
         </div>
 
         <!-- To Date -->
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label for="to-date"><b>To:</b></label>
             <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
         </div>
@@ -120,6 +157,29 @@
             {% endfor %}
         </tbody>
     </table>
+    <hr>
+<h3>Leave Summary</h3>
+<table id="leave_report" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Sr No</th>
+            <th>Name</th>
+            <th>Leave Date</th>
+            <th>Leave Count</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for leave in leave_summary %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ leave.ts_updated_by__first_name }}</td>
+            <td>{{ leave.ts_start_date }}</td>
+            <td>{{ leave.total_days }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
 </div>
 
 
@@ -129,6 +189,21 @@
         {
         scrollY: "600px",
         scrollX: true,
+        scrollCollapse: true,
+        order: [1, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    } );
+} );
+</script>
+<script>
+    $(document).ready(function() {
+    $('#leave_report').DataTable(
+        {
+        scrollY: "600px",
+        scrollX: false,
         scrollCollapse: true,
         order: [1, 'desc' ],
         dom: 'lBfrtip',
@@ -174,11 +249,17 @@
 
 
      document.getElementById('teammember-filter').addEventListener('change', updateFilters);
+     document.getElementById('application-filter').addEventListener('change', updateFilters);
+     document.getElementById('requirement-filter').addEventListener('change', updateFilters);
+     document.getElementById('status-filter').addEventListener('change', updateFilters);
        document.getElementById('from-date').addEventListener('change', updateFilters);
        document.getElementById('to-date').addEventListener('change', updateFilters);
 
     function updateFilters() {
     const teammember = document.getElementById('teammember-filter').value;
+    const application = document.getElementById('application-filter').value;
+    const requirement = document.getElementById('requirement-filter').value;
+    const status = document.getElementById('status-filter').value;
     const fromDate = document.getElementById('from-date').value;
     const toDate = document.getElementById('to-date').value;
 
@@ -188,6 +269,22 @@
         url.searchParams.set('teammember', teammember);
     } else {
         url.searchParams.delete('teammember');
+    }
+
+    if (application) {
+        url.searchParams.set('application', application);
+    } else {
+        url.searchParams.delete('application');
+    }
+    if (requirement) {
+        url.searchParams.set('requirement', requirement);
+    } else {
+        url.searchParams.delete('requirement');
+    }
+    if (status) {
+        url.searchParams.set('status', status);
+    } else {
+        url.searchParams.delete('status');
     }
 
     if (fromDate) {
@@ -230,35 +327,52 @@ new Chart(timesheetCtx, {
         datasets: [{
             label: 'Total Hours',
             data: timesheetChartData,
-            backgroundColor: 'rgba(255, 99, 132, 0.7)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1
+            ...commonChartStyles.bar_chart_2,
+            barThickness: 80,
+            maxBarThickness: 80
         }]
     },
     options: {
         responsive: true,
         plugins: {
-            datalabels: {
-                anchor: 'end',
-                align: 'end',
-                color: '#000',
-                backgroundColor: 'rgba(235, 233, 234, 0.8)',
-                borderRadius: 4,
-                font: {
-                    size: 12,
-                 },
-                formatter: function(value) {
-                    return value;
-                }
-            }
+            legend: {
+            ...commonChartStyles.legendStyle
         },
-        scales: {
-            x: {
-                beginAtZero: true
-            }
+           datalabels: {
+            anchor: 'end',
+            align: 'top',
+            formatter: (value) => value,
+            font: {
+                size: 12 ,
+
+            },
+            color: '#000',
+            backgroundColor: 'rgba(235, 233, 234, 0.8)',
+            borderRadius: 4,
+            padding: 5,
+            borderWidth: 1,
+            borderColor: '#000',
         }
     },
-    plugins: [ChartDataLabels]
+        scales: {
+        x: {
+            beginAtZero: true,
+            ticks: {
+                font: { size: 10, weight: 'bold' },
+                color: '#000',
+            },
+        },
+        y: {
+            beginAtZero: true,
+            suggestedMax: Math.max(...timesheetChartData) * 1.2,
+            ticks: {
+                font: { size: 10, weight: 'bold' },
+                color: '#000',
+            },
+        }
+    }
+},
+plugins: [ChartDataLabels]
 });
 
 // Data for the second chart
@@ -275,13 +389,17 @@ new Chart(requirementCtx, {
             data: requirementChartData,
             backgroundColor: 'rgba(54, 162, 235, 0.7)',
             borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
+            borderWidth: 1,
+            maxBarThickness: 80
         }]
     },
     options: {
         responsive: true,
         indexAxis:'y',
         plugins: {
+             legend: {
+            ...commonChartStyles.legendStyle
+        },
             datalabels: {
                 anchor: 'end',
                 align: 'end',
@@ -297,12 +415,24 @@ new Chart(requirementCtx, {
             }
         },
         scales: {
-            x: {
-                beginAtZero: true
-            }
+        x: {
+            beginAtZero: true,
+            suggestedMax: Math.max(...requirementChartData) * 1.05,
+            ticks: {
+                font: { size: 10, weight: 'bold' },
+                color: '#000',
+            },
+        },
+        y: {
+            beginAtZero: true,
+            ticks: {
+                font: { size: 10, weight: 'bold' },
+                color: '#000',
+            },
         }
-    },
-    plugins: [ChartDataLabels]
+    }
+},
+plugins: [ChartDataLabels]
 });
 
 </script>

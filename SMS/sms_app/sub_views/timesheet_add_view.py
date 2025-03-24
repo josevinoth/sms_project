@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from ..forms import timesheetaddForm
-from ..models import task_Info,timesheet_Info,MyUser,RequirementsInfo
+from ..models import task_Info,timesheet_Info,MyUser,RequirementsInfo,applicaiton_Info,StatusList
 from django.shortcuts import render, redirect
 import json
 from django.db.models import Count, Q,Sum
@@ -87,12 +87,18 @@ def timesheet_delete(request,timesheet_id):
 def timesheet_report(request):
     first_name = request.session.get('first_name')
     selected_teammember = request.GET.get('teammember', None)
+    selected_application = request.GET.get('application', None)
+    selected_requirement = request.GET.get('requirement', None)
+    selected_status = request.GET.get('status', None)
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
 
     teammembers = MyUser.objects.select_related('user_extinfo').filter(
         user_extinfo__department__dept_name="IT", is_active=True
     ).distinct().values_list('first_name', flat=True)
+    applications= applicaiton_Info.objects.all()
+    requirements=RequirementsInfo.objects.all()
+    statuslist=StatusList.objects.all()
 
     timesheet_summary = timesheet_Info.objects.filter(
         ts_updated_by__user_extinfo__department__dept_name="IT", ts_updated_by__is_active=True
@@ -100,6 +106,12 @@ def timesheet_report(request):
 
     if selected_teammember:
         timesheet_summary = timesheet_summary.filter(ts_updated_by__first_name=selected_teammember)
+    if selected_application:
+        timesheet_summary = timesheet_summary.filter(ts_task_id__application__app_name=selected_application)
+    if selected_requirement:
+        timesheet_summary = timesheet_summary.filter(ts_task_id__t_requirement_id__req_number=selected_requirement)
+    if selected_status:
+        timesheet_summary = timesheet_summary.filter(ts_task_id__t_requirement_id__req_status__status_title=selected_status)
     if from_date:
         timesheet_summary = timesheet_summary.filter(ts_start_date__gte=from_date)
     if to_date:
@@ -111,6 +123,11 @@ def timesheet_report(request):
         'ts_task_id__application__app_name', 'ts_task_id__main_task',
         'ts_task_id__sub_task', 'ts_task_id__task_id','ts_task_id__t_requirement_description','ts_task_id__t_requirement_id__req_number'
     ).annotate(total_hours=Sum('ts_hours'))
+
+    # Leave Summary (only leave tasks)
+    leave_summary = timesheet_summary.filter(ts_task_id__task_id__in=['Task_100170', 'Task_100168']).values(
+        'ts_start_date','ts_updated_by__first_name'
+    ).annotate(total_days=Count('ts_start_date')).order_by('ts_start_date')
 
     # Second Query: Aggregate team-wise total hours (for chart)
     timesheet_chart = timesheet_summary.values('ts_updated_by__first_name').annotate(
@@ -128,10 +145,17 @@ def timesheet_report(request):
     context = {
         'first_name': first_name,
         'selected_teammember': selected_teammember,
+        'selected_requirement':selected_requirement,
+        'selected_application': selected_application,
+        'selected_status': selected_status,
+        'statuslist':statuslist,
+        'requirements':requirements,
+        'applications':applications,
         'teammembers': teammembers,
         'from_date': from_date,
         'to_date': to_date,
-        'timesheet_summary': timesheet_table,  # Table data
+        'timesheet_summary': timesheet_table,
+        'leave_summary': leave_summary,
         'chart_labels': json.dumps(chart_labels),
         'chart_data': json.dumps(chart_data),
         'req_labels': json.dumps(req_labels),
