@@ -2,7 +2,6 @@ from django.db import models
 from ..models import Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure
 class PkpartcodeInfo(models.Model):
     pc_code = models.CharField(blank=False, null=False,default='',max_length=50, unique=True)
-    pc_description = models.CharField(blank=True, null=True,default='',max_length=50)
     pc_stock_description = models.ForeignKey(Stockdescription, on_delete=models.CASCADE, default='',blank=False, null=False)
     pc_length = models.FloatField(blank=True, null=True, default=0.0)
     pc_width = models.FloatField(blank=True, null=True, default=0.0)
