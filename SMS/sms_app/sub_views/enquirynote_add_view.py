@@ -168,7 +168,7 @@ def enquirynote_list(request):
 
     # Organize the data for the template
     enquiry_data = []
-    trip_dict = {}
+    trip_dict=trip_dict
     for enquiry in page_obj:
         enquiry_data.append({
             'enquiry': enquiry,
