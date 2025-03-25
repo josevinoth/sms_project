@@ -57,6 +57,38 @@ def to_crores(value):
 
 
 @register.filter
-def get(dictionary, key):
-        """Safely gets a key from a dictionary."""
-        return dictionary.get(key, None)  # Return None if the key does not exist
+def get_item(dictionary, key):
+    if isinstance(dictionary, dict):  # Ensure it's a dictionary
+        return dictionary.get(key, 0)
+    return dictionary  # Return as-is if it's not a dictionary
+
+
+@register.filter
+def sum_attribute(queryset, attribute):
+    """
+    Sums up a specific attribute across all items in a queryset.
+    If the attribute is a dictionary (e.g., monthly expenses), sum each month's values separately.
+    """
+    total = 0
+    for item in queryset:
+        value = getattr(item, attribute, 0)
+        if isinstance(value, dict):  # Handle case where attribute is a dictionary
+            for v in value.values():
+                total += float(v) if isinstance(v, (int, float)) else 0
+        else:
+            total += float(value) if isinstance(value, (int, float)) else 0
+    return total
+
+
+@register.filter
+def sum_monthly_values(queryset, month):
+    """
+    Sums up values for a specific month from a dictionary inside a queryset.
+    Example Usage: {{ income_summary|sum_monthly_values:"Jan" }}
+    """
+    total = 0
+    for item in queryset:
+        monthly_data = getattr(item, "monthly_expenses", {})  # Access monthly expenses
+        if isinstance(monthly_data, dict):  # Ensure it's a dictionary
+            total += float(monthly_data.get(month, 0))
+    return total
