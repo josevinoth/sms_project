@@ -110,10 +110,10 @@
             <td>
                 {% if data.trips %}
                     {% for trip_num, trip_status,trip_status_id in data.trips %}
-                        {% if trip_status_id == 2 %}
-                            <a class="link" href="{% url 'tripclosure_nav' data.enquiry.id %}">{{trip_status}}</a><br>
-                        {% else %}
+                        {% if trip_status_id == 1 or trip_status_id == 5 %}
                             <a class="link disable_a_href_list" href="{% url 'tripclosure_nav' data.enquiry.id %}" style="pointer-events: none; color: gray;">{{trip_status}}</a><br>
+                        {% else %}
+                            <a class="link" href="{% url 'tripclosure_nav' data.enquiry.id %}">{{trip_status}}</a><br>
                         {% endif %}
                     {% endfor %}
                 {% else %}
