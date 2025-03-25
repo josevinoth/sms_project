@@ -28,3 +28,4 @@ class TripdetailaddForm(forms.ModelForm):
         self.fields['tr_reportedlocation'].empty_label = "--Select--"
         self.fields['tc_financestatus'].empty_label = "--Select--"
         self.fields['tr_category'].empty_label = "--Select--"
+        self.fields['tc_financestatus'].empty_label = "--Select--"

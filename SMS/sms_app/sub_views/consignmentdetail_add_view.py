@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+import json
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
@@ -15,9 +16,11 @@ def consignmentdetail_nav(request,consignmentdetail_id=0):
     user_id = request.session.get('ses_userID')
     print("I am inside Get add consignmentdetails")
     enquiry_num = EnquirynoteInfo.objects.get(pk=consignmentdetail_id).en_enquirynumber
-    enquiry_num_id = EnquirynoteInfo.objects.get(pk=consignmentdetail_id).id
+    enquiry_num_id = consignmentdetail_id
     request.session['ses_enqiury_num'] = enquiry_num
+    request.session['ses_enqiury_num_id'] = enquiry_num_id
     consignmentdetail_list=ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+    print('enquiry_num',enquiry_num)
     context = {
         'first_name': first_name,
         'user_id': user_id,
@@ -32,9 +35,10 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     enquiry_num = request.session.get('ses_enqiury_num')
+    enquiry_num_id = request.session.get('ses_enqiury_num_id')
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
 
-    customer = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_customername
+    customer = EnquirynoteInfo.objects.get(pk=enquiry_num_id).en_customername
     customer_obj = CustomerInfo.objects.get(cu_name=customer)
     customer_id = customer_obj.id
     customer_code = customer_obj.cu_customercode
@@ -43,12 +47,10 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         if consignmentdetail_id == 0:
             con_det_form = ConsignmentdetailaddForm()
             form = ConsignmentgoodsaddForm()
-            enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
         else:
             request.session['ses_consignment_detail_id'] = consignmentdetail_id
             enquiry_num = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id).co_enquirynumber
             consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
-            enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
             form = ConsignmentgoodsaddForm()
 
@@ -168,3 +170,33 @@ def consignment_note_pdf(request,consignment_note_id=0):
     if pisa_status.err:
         return HttpResponse('We has some error <pre>' + html + '</pre>')
     return response
+
+from django.http import JsonResponse
+
+@login_required(login_url='login_page')
+def vehicle_allotted(request):
+    enquiry_number = request.GET.get('enquiry_number')
+    consignmentdetail_id_val = request.GET.get('consignmentdetail_id_val')
+    print(consignmentdetail_id_val)
+    requested_vehicles = list(
+        Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number)
+        .select_related('va_vehiclenumber')
+        .values_list('va_vehiclenumber__vm_registrationnumber', flat=True)
+    )
+    requested_vehicles_market = list(
+        Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number)
+        .values_list('va_vehiclenumber_mkt', flat=True)
+    )
+    # Combine lists and filter out None or blank values
+    final_vehicle_list = [v for v in (requested_vehicles + requested_vehicles_market) if v]
+    try:
+        selected_vehicles = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id_val).co_vehicelnumber
+    except ConsignmentdetailInfo.DoesNotExist:
+        selected_vehicles = None  # Or set a default value
+    return JsonResponse({'final_vehicle_list': final_vehicle_list,'selected_vehicles':selected_vehicles})
+
+@login_required(login_url='login_page')
+def consignmentdetail_cancel(request):
+    first_name = request.session.get('first_name')
+    enquiry_num_id = request.session.get('ses_enqiury_num_id')
+    return redirect('/SMS/consignmentdetail_nav/'+ str(enquiry_num_id))

@@ -11,92 +11,126 @@
 </div>
 <div class="container-fluid row">
     <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+        <a href="{% url 'home_page' %}" class="btn btn-warning btn-block btn-lg">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
     <div class="col-md-1">
-        <a href="{% url 'enquirynote_insert' %}" class="btn btn-success btn-block btn-lg">
+        <a href="{% url 'enquirynote_insert' %}" class="btn btn-primary btn-block btn-lg">
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
 </div>
 <hr>
 <div class="container-fluid">
-    <table  id="enquirynote_list" class="table table-striped table-bordered">
+    <table id="enquirynote_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>ID</th>
             <th>Created On</th>
             <th>Enquiry Number</th>
             <th>Customer Name</th>
             <th>From Location</th>
             <th>To Location</th>
-            <th>Vehicle Type</th>
             <th>Assigned To</th>
-            <th>Consignment Details</th>
-            <th>Vehicle Allotment Details</th>
-            <th>Trip Details</th>
+            <th>Vehicle Number</th>
+            <th>Consignment Number</th>
+            <th>Trip Number</th>
             <th>Trip Settlement</th>
             <th>Updated On</th>
             <th>Updated By</th>
             <th>Status</th>
             <th>Edit</th>
             <th>Delete</th>
+        </tr>
         </thead>
         <tbody>
-        {% for enquirynoteinfo in page_obj %}
+        {% for data in enquiry_data %}
         <tr>
-            <td> {{enquirynoteinfo.en_created_at}}</td>
-            <td> {{enquirynoteinfo.en_enquirynumber}}</td>
-            <td> {{enquirynoteinfo.en_customername}}</td>
-            <td> {{enquirynoteinfo.en_fromlocaion}}</td>
-            <td> {{enquirynoteinfo.en_tolocation}}</td>
-            <td> {{enquirynoteinfo.en_vehicletype}}</td>
-            <td> {{enquirynoteinfo.en_assignedto}}</td>
+            <td>{{ data.enquiry.id }}</td>
+            <td>{{ data.enquiry.en_created_at }}</td>
+            <td>{{ data.enquiry.en_enquirynumber }}</td>
+            <td>{{ data.enquiry.en_customername }}</td>
+            <td>{{ data.enquiry.en_fromlocaion }}</td>
+            <td>{{ data.enquiry.en_tolocation }}</td>
+            <td>{{ data.enquiry.en_assignedto }}</td>
+
+            <!-- Vehicle Number -->
             <td>
-                <a class="link" href="{% url 'consignmentdetail_nav' enquirynoteinfo.id%}" >{{enquirynoteinfo.en_consignmentdetails}}</a>
+                {% if data.enquiry.id %}  {# Ensure enquiry exists #}
+                {% if data.vehicles %}  {# If vehicles are assigned #}
+                {% for vehicle in data.vehicles %}
+                <a class="link" href="{% url 'vehicle_allotment_nav' data.enquiry.id %}">{{ vehicle }}</a><br>
+                {% endfor %}
+                {% else %}
+                <a class="link" href="{% url 'vehicle_allotment_nav' data.enquiry.id %}">No Vehicle</a>
+                {% endif %}
+                {% else %}
+                <a class="link disable_a_href_list">No Vehicle</a>  {# Disable link when no enquiry exists #}
+                {% endif %}
+            </td>
+            <!-- Consignment Number -->
+            <td>
+                {% if data.vehicles and data.vehicles|length > 0 %}
+                {% if data.consignments and data.consignments|length > 0 %}
+                {% for consignment in data.consignments %}
+                <a class="link" href="{% url 'consignmentdetail_nav' data.enquiry.id %}">
+                    {{ consignment.co_consignmentnumber }}
+                </a>
+                <br>
+                {% endfor %}
+                {% else %}
+                <!-- If vehicle exists but no consignment, enable "No Consignment" -->
+                <a class="link" href="{% url 'consignmentdetail_nav' data.enquiry.id %}" style="color: red;">
+                    No Consignment
+                </a>
+                {% endif %}
+                {% else %}
+                <!-- If no vehicle exists, disable "No Consignment" -->
+                <a class="link disable_a_href_list" href="#" style="pointer-events: none; color: gray;">
+                    No Consignment
+                </a>
+                {% endif %}
             </td>
 
-            {% if enquirynoteinfo.en_consignmentdetails %}
+            <!-- Trip Number -->
             <td>
-                <a class="link" href="{% url 'vehicle_allotment_nav' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_vehicle_allotment}}</a>
+                {% if data.consignments and data.trips %}
+                {% for trip_num, trip_status, trip_status_id in data.trips %}
+                <a class="link" href="{% url 'tripdetail_nav' data.enquiry.id %}">{{ trip_num }}</a><br>
+                {% endfor %}
+                {% elif data.consignments %}
+                <a class="link " href="{% url 'tripdetail_nav' data.enquiry.id %}">No Trip</a>
+                {% else %}
+                <a class="link disable_a_href_list" href="#" style="pointer-events: none; color: gray;">No Trip</a>
+                {% endif %}
             </td>
-            {%else%}
-            <td>
-                <a class="link disable_a_href_list" href="{% url 'vehicle_allotment_nav' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_vehicle_allotment}}</a>
-            </td>
-            {% endif %}
 
-            {% if enquirynoteinfo.en_vehicle_allotment %}
+            <!-- Trip Settlement -->
             <td>
-                <a class="link" href="{% url 'tripdetail_nav' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripdetails}}</a>
+                {% if data.trips %}
+                    {% for trip_num, trip_status,trip_status_id in data.trips %}
+                        {% if trip_status_id == 2 %}
+                            <a class="link" href="{% url 'tripclosure_nav' data.enquiry.id %}">{{trip_status}}</a><br>
+                        {% else %}
+                            <a class="link disable_a_href_list" href="{% url 'tripclosure_nav' data.enquiry.id %}" style="pointer-events: none; color: gray;">{{trip_status}}</a><br>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <a class="link disable_a_href_list" href="{% url 'tripclosure_nav' data.enquiry.id %}" style="pointer-events: none; color: gray;">No Settlement</a>
+                {% endif %}
             </td>
-            {%else%}
-            <td>
-                <a class="link disable_a_href_list" href="{% url 'tripdetail_nav' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripdetails}}</a>
-            </td>
-            {% endif %}
 
-            {% if enquirynoteinfo.en_tripdetails %}
+            <td>{{ data.enquiry.en_updatedon }}</td>
+            <td>{{ data.enquiry.en_updated_by }}</td>
+            <td>{{ data.enquiry.en_status }}</td>
             <td>
-                <a class="link" href="{% url 'tripclosure_nav' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripclosure}}</a>
-            </td>
-            {%else%}
-            <td>
-                <a class="link disable_a_href_list" href="{% url 'tripclosure_nav' enquirynoteinfo.id %}" >{{enquirynoteinfo.en_tripclosure}}</a>
-            </td>
-            {% endif %}
-
-            <td> {{enquirynoteinfo.en_updatedon}}</td>
-            <td> {{enquirynoteinfo.en_updated_by}}</td>
-            <td> {{enquirynoteinfo.en_status}}</td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'enquirynote_update' enquirynoteinfo.id %}" >
+                <a class="btn btn-primary" href="{% url 'enquirynote_update' data.enquiry.id %}">
                     <i class="far fa-edit"></i>
                 </a>
             </td>
             <td>
-                <form action="{% url 'enquirynote_delete' enquirynoteinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                <form action="{% url 'enquirynote_delete' data.enquiry.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash-alt"></i>
@@ -107,6 +141,7 @@
         {% endfor %}
         </tbody>
     </table>
+
     <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
@@ -128,7 +163,7 @@
 <script>
     $(document).ready(function() {
     $('#enquirynote_list').DataTable({
-        order: [1, 'desc' ],
+        order: [0, 'desc' ],
         dom: 'lBfrtip',
         buttons: [
             'copy', 'csv', 'excel','print'

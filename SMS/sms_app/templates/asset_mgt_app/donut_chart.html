@@ -62,20 +62,26 @@
 <br>
 <div class="container-fluid">
     <div class="row">
-        <div class="col">
+        <!-- Half column for Bar Chart -->
+        <div class="col-8">
             <h3>Sales Calls</h3>
             <canvas id="salesChart" class="bg-white box-shadow rounded"></canvas>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-6">
 
-            <h3>Productivity</h3>
-            <canvas id="productivityDonut" class="bg-white box-shadow rounded"></canvas>
-        </div>
-        <div class="col-6">
-            <h3>Performance</h3>
-            <canvas id="performanceDonut" class="bg-white box-shadow rounded"></canvas>
+        <!-- Half column for Stacked Donut Charts -->
+        <div class="col-4">
+            <div class="row">
+                <div class="col-8">
+                    <h3>Productivity</h3>
+                    <canvas id="productivityDonut" class="bg-white box-shadow rounded"></canvas>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-8">
+                    <h3>Performance</h3>
+                    <canvas id="performanceDonut" class="bg-white box-shadow rounded"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>

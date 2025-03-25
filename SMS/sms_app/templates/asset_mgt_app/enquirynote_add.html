@@ -27,7 +27,7 @@
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Customer New Name</span>
+										<span class="input-group-text">New Customer Name</span>
 									</div>
 									{% render_field form.en_customer_new_name id="en_customer_new_name" class="form-control disable_a_href" %}
 								</div>
@@ -70,20 +70,8 @@
 									</div>
 									{% render_field form.en_trip_type id="en_trip_type" class="form-control " %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Category</span>
-									</div>
-									{% render_field form.en_vehiclecategory class="form-control" %}
-								</div>
 							</div>
 							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Type</span>
-									</div>
-									{% render_field form.en_vehicletype class="form-control" %}
-								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assigned To</span>
@@ -134,8 +122,14 @@
 									</div>
 									{% render_field form.en_pickupdatetime id="en_pickupdatetime" type="Datetime-local" class="form-control" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Status</span>
+									</div>
+									{% render_field form.en_status class="form-control" %}
+								</div>
 							</div>
-							{% render_field form.en_status hidden="true" class="form-control" %}
+
 							{% render_field form.en_updated_by id="en_updated_by" hidden="True" class="form-control" %}
 							{% render_field form.en_consignmentdetails id="en_consignmentdetails" hidden="True" class="form-control" %}
 							{% render_field form.en_vehicle_allotment id="en_vehicle_allotment" hidden="True" class="form-control" %}
@@ -166,18 +160,18 @@
 <div class="accordion container-fluid">
 	<div class="card" >
 		<div class="card-header bg-info" id="headingOne">
-			<h2 class="mb-0">
-				<a href="{% url 'enquirynotevehicle_insert' %}"
-				   class="btn btn-block text-left text-white"
-				   data-toggle="collapse"
-				   data-target="#collapseOne"
-				   aria-expanded="true"
-				   aria-controls="collapseOne"
-				   >
-					<h3>Add/Update Vehicle Details <i class="fas fa-chevron-down"></i></h3>
+			<div class="d-flex align-items-center">
+				<h2 class="mb-0">
+					<button class="btn btn-link text-left text-white" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+						Add/Update Vehicle Details <i class="fas fa-angle-down"></i>
+					</button>
+				</h2>
+				<a href="{% url 'enquirynotevehicle_insert' %}" class="btn btn-primary ml-3">
+					<i class="fas fa-plus"></i> Add
 				</a>
-			</h2>
+			</div>
 		</div>
+
 		<div id="collapseOne" class="collapse show " aria-labelledby="headingOne" data-parent="#vehicledetails">
 			<div class="card-body" id="vehicledetails">
 				{% include "asset_mgt_app/enquirynotevehicle_add.html" %}
@@ -215,23 +209,16 @@
     }
 });
 </script>
-<script>
-	function package_type_change() {
-        var type_packing = document.getElementById("en_customername").value;
 
-        if (type_packing == 210) {
+<script>
+	function fetchCustomerDetails() {
+        var customerId = $("#en_customername").val();  // Get selected customer ID
+		if (customerId == 210) {
             $('#en_customer_new_name').removeClass('disable_a_href');
         } else {
             $('#en_customer_new_name').addClass('disable_a_href');
             document.getElementById("en_customer_new_name").value = "";
         }
-    }
-</script>
-
-<script>
-	function fetchCustomerDetails() {
-        var customerId = $("#en_customername").val();  // Get selected customer ID
-
         if (customerId) {
             $.ajax({
                 url: "{% url 'get_customer_details' %}",  // Django URL to fetch customer details

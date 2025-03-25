@@ -20,11 +20,6 @@
 			{% render_field enquiryvechicle_form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
 		</div>
 		<div class="col-auto">
-		<a href="{% url 'enquirynotevehicle_insert' %}"  onclick="enable_disable()" id="add_new" class="btn btn-primary btn-block ">
-			<i class="fas fa-plus"></i> Add
-		</a>
-		</div>
-		<div class="col-auto">
 			<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
 		</div>
 
@@ -134,6 +129,4 @@
       }
   });
 </script>
-
-
 {% endblock content %}

@@ -1,14 +1,16 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
+from django.db.models import Q
 from django.http import JsonResponse
 
 from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm,EnquirynotevehicleForm
-from ..models import User_extInfo,StatusList,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo,Enquirynotevehicle
+from ..models import Vehicle_allotmentInfo,User_extInfo,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo,Enquirynotevehicle
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 
 from ..sub_models.customer_mod import CustomerInfo
+
 
 @login_required(login_url='login_page')
 def enquirynote_nav(request,enquirynote_id=0,enquirynotevehicle_id=0):
@@ -113,59 +115,74 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
 # List enquirynote
 @login_required(login_url='login_page')
 def enquirynote_list(request):
-    global consignment_status_id, trip_details_status_id
     print("Inside Enquiry List")
+
     first_name = request.session.get('first_name')
-    enquiry_num_list=EnquirynoteInfo.objects.all()
     user_id = request.session.get('ses_userID')
     user_role = User_extInfo.objects.get(user_id=user_id).emp_role
-    print('user_role',user_role)
-    for m in enquiry_num_list:
-        try:
-            consignment_status_id_list=[]
-            consignment_status = ConsignmentdetailInfo.objects.filter(co_enquirynumber=m).values_list('co_status',flat=True)
-            for i in consignment_status:
-                consignment_status_id_list = consignment_status_id_list.append(StatusList.objects.get(status_title=i).id)
-            if all(element == 5 for element in (consignment_status_id_list)):
-                consignment_status_id=5
-        except ObjectDoesNotExist:
-            consignment_status_id=6
-        try:
-            trip_status_id_list=[]
-            trip_details_status = TripdetailInfo.objects.filter(tr_enquirynumber=m).values_list('tc_financestatus',flat=True)
-            for j in trip_details_status:
-                trip_status_id_list = trip_status_id_list.append(StatusList.objects.get(status_title=j).id)
-            if all(element == 5 for element in (trip_status_id_list)):
-                trip_details_status_id=5
-        except ObjectDoesNotExist:
-            trip_details_status_id = 6
-        try:
-            trip_closure_status_id=[]
-            trip_closure_status = TripdetailInfo.objects.filter(tr_enquirynumber=m).values_list('tc_financestatus',flat=True)
-            for k in trip_closure_status:
-                trip_closure_status_id.append(StatusList.objects.get(status_title=k).id)
-            if all(element == 5 for element in (trip_closure_status_id)):
-                trip_closure_status_id=5
-        except ObjectDoesNotExist:
-            trip_closure_status_id = 6
+    print('user_role:', user_role)
 
-        if consignment_status_id == 5 and trip_details_status_id==5 and trip_closure_status_id==5:
-            EnquirynoteInfo.objects.filter(en_enquirynumber=m).update(en_status=5)
-        else:
-            EnquirynoteInfo.objects.filter(en_enquirynumber=m).update(en_status=6)
-    enquirynote_list= (EnquirynoteInfo.objects.all()).order_by('id')
+    # Fetch paginated enquiry notes
+    enquirynote_queryset = EnquirynoteInfo.objects.order_by('id')
+    paginator = Paginator(enquirynote_queryset, 50)
+
     page_number = request.GET.get('page')
-    paginator = Paginator(enquirynote_list, 50)
+    if page_number and page_number.isdigit():
+        page_number = int(page_number)
+    else:
+        page_number = 1  # Default to first page
+
     page_obj = paginator.get_page(page_number)
+
+    # Extract only valid enquiry IDs
+    enquiry_ids = [enq.id for enq in page_obj if enq.id is not None and isinstance(enq.id, int)]
+
+    consignment_data = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enquiry_ids)
+    # trip_data = TripdetailInfo.objects.filter(tr_enquirynumber_id__in=enquiry_ids)
+    # print(trip_data)
+    vehicle_data = Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=enquiry_ids).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt')
+
+    # Convert vehicle data into a dictionary for easy lookup
+    vehicle_dict = {}
+
+    for enq_id, reg_num, mkt_num in vehicle_data:
+        # Filter out None values
+        valid_numbers = [num for num in (reg_num, mkt_num) if num]
+
+        if valid_numbers:  # Only add to dict if there's at least one valid vehicle number
+            vehicle_dict.setdefault(enq_id, []).extend(valid_numbers)
+        else:
+            vehicle_dict.setdefault(enq_id, []).append("No Vehicle")  # Add fallback
+
+        trip_data = TripdetailInfo.objects.filter(tr_enquirynumber_id__in=enquiry_ids).values_list('tr_enquirynumber','tr_tripnumber','tc_financestatus__status','tc_financestatus')
+
+        # Convert trip data into a dictionary for easy lookup
+        trip_dict = {}
+
+        for enq_id, trip_num, trip_status,trip_status_id in trip_data:
+            if trip_num:
+                trip_dict.setdefault(enq_id, []).append((trip_num, trip_status,trip_status_id))
+            else:
+                trip_dict.setdefault(enq_id, []).append(("No Trip", "Not Applicable"))
+
+    # Organize the data for the template
+    enquiry_data = []
+    for enquiry in page_obj:
+        enquiry_data.append({
+            'enquiry': enquiry,
+            'consignments': consignment_data.filter(co_enquirynumber=enquiry),
+            'trips': trip_dict.get(enquiry.id, []),
+            'vehicles': vehicle_dict.get(enquiry.id, []),  # Use dictionary lookup
+        })
+
     context = {
-                'enquirynote_list' : enquirynote_list,
-                'consignmentdetail_list': ConsignmentdetailInfo.objects.all(),
-                'tripdetails_list': TripdetailInfo.objects.all(),
-                'page_obj': page_obj,
-                'first_name': first_name,
-                 'role': user_role,
-                }
-    return render(request,"asset_mgt_app/enquirynote_list.html",context)
+        'page_obj': page_obj,
+        'first_name': first_name,
+        'role': user_role,
+        'enquiry_data': enquiry_data,
+    }
+    return render(request, "asset_mgt_app/enquirynote_list.html", context)
+
 
 # Connect to consignemnt Note
 @login_required(login_url='login_page')

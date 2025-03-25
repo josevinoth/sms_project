@@ -99,7 +99,6 @@ from .sub_models.warehouse_goods_info_mod import Warehouse_goods_info
 from .sub_models.expense_category_mod import ExpenseCategoryInfo
 from .sub_models.enquirynote_mod import EnquirynoteInfo
 from .sub_models.iou_mod import iou_info
-from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from .sub_models.ownership_mod import OwnershipInfo
 from .sub_models.vhmanufacturer_mod import VhmanufacturerInfo
 from .sub_models.vehiclemodel_mod import VehiclemodelInfo
@@ -109,7 +108,6 @@ from .sub_models.fueltype_mod import FueltypeInfo
 from .sub_models.vehiclecolour_mod import VehiclecolourInfo
 from .sub_models.permittype_mod import PermittypeInfo
 from .sub_models.vehiclemaster_mod import VehiclemasterInfo
-from .sub_models.tripdetail_mod import TripdetailInfo,Trip_category_info,Trip_closure_files_Info
 from .sub_models.rtratemaster_mod import RtratemasterInfo
 from .sub_models.upload_mod import UploadInfo
 from.sub_models.expense_type_mod import ExpenseTypeInfo
@@ -154,17 +152,17 @@ from .sub_models.pk_packing_field_mod import Napackingfield
 from .sub_models.pk_special_requirements import Naspecialrequirements
 from .sub_models.pk_needassessment_mod import PkneedassessmentInfo
 from .sub_models.pk_openingstock_mod import PkopeningstockInfo
-
 from .sub_models.pk_dimension_type_mod import Nadimensiontype
 from .sub_models.na_dimension_mod import Nadimension
 from .sub_models.pk_quotes_mod import PkquotesInfo
 from .sub_models.pk_retrival_mod import PkretrivalInfo
-
 from .sub_models.pk_quotation_summary_mod import PkquotationsummaryInfo
 from .sub_models.pk_purchaseorder_mod import PkpurchaseorderInfo
 from .sub_models.po_dimension_mod import POdimension
 from .sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
 from .sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
+from .sub_models.tripdetail_mod import TripdetailInfo,Trip_category_info,Trip_closure_files_Info
 from .sub_models.test_info_mod import TestInfo
 from .sub_models.fuel_vendor_mod import Fuelvendor
 from .sub_models.bunk_name_mod import Bunkname
