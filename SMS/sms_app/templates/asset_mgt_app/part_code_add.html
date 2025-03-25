@@ -18,69 +18,71 @@
                             <div class="col">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Part code</span>
+                                        <span class="input-group-text">Part Code</span>
                                     </div>
-                                    {% render_field form.pc_code id="pc_code" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Description</span>
-                                    </div>
-                                    {% render_field form.pc_description id="pc_description" class="form-control" %}
+                                    {% render_field form.pc_code class="form-control" id="pc_code" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Stock Type</span>
                                     </div>
-                                    {% render_field form.pc_stock_type id="pc_stock_type" class="form-control" %}
+                                    {% render_field form.pc_stock_type class="form-control" id="pc_stock_type" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Stock Description</span>
                                     </div>
-                                    {% render_field form.pc_stock_description id="pc_stock_description" class="form-control" %}
+                                    {% render_field form.pc_stock_description class="form-control select2" id="pc_stock_description" %}
                                 </div>
-                                 <div class="input-group input-group-sm mb-3" id="height_group">
+                                <div class="input-group input-group-sm mb-3" id="height_group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Thick (mm)/Height (In) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood in. For Plywood mm"></i></span>
+                                        <span class="input-group-text">Thick (mm)/Height (In)</span>
                                     </div>
-                                    {% render_field form.pc_height id="pc_height" class="form-control" %}
+                                    {% render_field form.pc_height class="form-control" id="pc_height" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3" id="width_group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Width (In/Ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood in. For Plywood ft"></i></span>
+                                        <span class="input-group-text">Width (In/Ft)</span>
                                     </div>
-                                    {% render_field form.pc_width id="pc_width" class="form-control" %}
+                                    {% render_field form.pc_width class="form-control" id="pc_width" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3" id="length_group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Length (ft)</span>
                                     </div>
-                                    {% render_field form.pc_length id="pc_length" class="form-control" %}
+                                    {% render_field form.pc_length class="form-control" id="pc_length" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3" id="uom_group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">UOM</span>
                                     </div>
-                                    {% render_field form.pc_uom id="pc_uom" class="form-control" %}
+                                    {% render_field form.pc_uom class="form-control" id="pc_uom" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3" id="diameter_width_group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Diameter/Width</span>
                                     </div>
-                                    {% render_field form.pc_diameter_width id="pc_diameter_width" class="form-control" %}
+                                    {% render_field form.pc_diameter_width class="form-control" id="pc_diameter_width" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3" id="con_length_group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Length</span>
                                     </div>
-                                    {% render_field form.pc_con_length id="pc_con_length" class="form-control" %}
+                                    {% render_field form.pc_con_length class="form-control" id="pc_con_length" %}
                                 </div>
-                                {% render_field form.pc_updated_by id="pc_updated_by" hidden="True" class="form-control" %}
+                                <input type="hidden" id="pc_updated_by" name="pc_updated_by" value="{{ user_id }}">
                             </div>
-                            <div class="message">
-                                {{ form.errors }}
+                        </div>
+                        <div class="row">
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
                             </div>
+                            <div class="col-1"></div>
                         </div>
                         <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Submit</button>
                         <a href="{% url 'part_code_list' %}" class="btn btn-danger float-right">
@@ -98,60 +100,53 @@
 
 <script>
     $(document).ready(function() {
-        document.getElementById("pc_updated_by").value = '{{ user_id }}';
+        // Stock Type Field Change Event
+        $("#pc_stock_type").change(function() {
+            toggleFields();
+            loadStockDescriptions();
+        });
 
+        // Function to show/hide fields based on Stock Type
         function toggleFields() {
             var stockType = $("#pc_stock_type").val();
-            var pc_length = document.getElementById("pc_length");
-            var pc_width = document.getElementById("pc_width");
-            var pc_height = document.getElementById("pc_height");
-            var pc_uom = document.getElementById("pc_uom");
-            var pc_con_length = document.getElementById("pc_con_length");
-            var pc_diameter_width = document.getElementById("pc_diameter_width");
+            var pc_length = $("#pc_length");
+            var pc_width = $("#pc_width");
+            var pc_height = $("#pc_height");
+            var pc_uom = $("#pc_uom");
+            var pc_con_length = $("#pc_con_length");
+            var pc_diameter_width = $("#pc_diameter_width");
 
-            if (stockType == "1" || stockType == "4") {
-                $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
+            if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
+                $("#diameter_width_group, #con_length_group, #uom_group").hide();
                 $("#length_group, #width_group, #height_group").show();
-                pc_length.value = "";
-                pc_length.setAttribute("required", "required");  // Make it mandatory
-                pc_width.value = "";
-                pc_width.setAttribute("required", "required");  // Make it mandatory
-                pc_height.value = "";
-                pc_height.setAttribute("required", "required");  // Make it mandatory
-            }
-            else {
-                $("#diameter_width_group, #con_length_group, #uom_group ").show();
+                pc_length.prop("required", true).val("");
+                pc_width.prop("required", true).val("");
+                pc_height.prop("required", true).val("");
+            } else {
+                $("#diameter_width_group, #con_length_group, #uom_group").show();
                 $("#length_group, #width_group, #height_group").hide();
-                pc_diameter_width.setAttribute("required", "required");  // Make it mandatory
-                pc_con_length.setAttribute("required", "required");  // Make it mandatory
-
+                pc_diameter_width.prop("required", true);
+                pc_con_length.prop("required", true);
             }
         }
 
-        toggleFields();
 
-        $("#pc_stock_type").change(function() {
-            toggleFields();
-        });
-    });
-</script>
 
-<script>
-    $("#pc_stock_type").change(function() {
-        var stock_type = $(this).val();
-        $.ajax({
-            url: '{% url "load_stock_description" %}',
-            data: {
-                'stock_type': stock_type,
-            },
-            success: function(data) {
-                $('#pc_stock_description').removeClass('disable_a_href').empty().append("<option value='0'>--Select--</option>");
-                var stockData = JSON.parse(data);
-                for (var i = 0; i < stockData["stock_description_id"].length; i++) {
-                    $("#pc_stock_description").append("<option value='" + stockData["stock_description_id"][i] + "'>" + stockData["stock_description"][i] + "</option>");
+        // Load initial stock descriptions when page loads
+        function loadStockDescriptions() {
+            $.ajax({
+                url: "{% url 'load_stock_description' %}",
+                data: { stock_type: $("#pc_stock_type").val() },
+                success: function(data) {
+                    $("#pc_stock_description").empty().append("<option value='0'>--Select--</option>");
+                    data.forEach(item => {
+                        $("#pc_stock_description").append(`<option value='${item.id}'>${item.stock_description}</option>`);
+                    });
                 }
-            }
-        });
+            });
+        }
+
+        toggleFields();
     });
 </script>
 
