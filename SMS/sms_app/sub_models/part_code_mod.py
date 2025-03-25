@@ -12,7 +12,7 @@ class PkpartcodeInfo(models.Model):
     pc_updated_at = models.DateTimeField(null=True, auto_now=True)
     pc_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='pc_updated_by',db_column='pc_updated_by', null=True)
     pc_con_length = models.FloatField(blank=True, null=True, default=0.0)
-    pc_diameter_width = models.CharField(blank=True, null=True, default=0.0)
+    pc_diameter_width = models.CharField(max_length=20,blank=True, null=True, default=0.0)
 
     class Meta:
         ordering = ["pc_code"]

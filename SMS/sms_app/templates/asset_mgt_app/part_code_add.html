@@ -119,9 +119,9 @@
             if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
                 $("#diameter_width_group, #con_length_group, #uom_group").hide();
                 $("#length_group, #width_group, #height_group").show();
-                pc_length.prop("required", true).val("");
-                pc_width.prop("required", true).val("");
-                pc_height.prop("required", true).val("");
+                pc_length.prop("required", true);
+                pc_width.prop("required", true);
+                pc_height.prop("required", true);
             } else {
                 $("#diameter_width_group, #con_length_group, #uom_group").show();
                 $("#length_group, #width_group, #height_group").hide();
