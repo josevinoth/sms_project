@@ -85,7 +85,7 @@
                             <div class="col-1"></div>
                         </div>
                         <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Submit</button>
-                        <a href="{% url 'home_page' %}" class="btn btn-danger float-right">
+                        <a href="{% url 'part_code_list' %}" class="btn btn-danger float-right">
                             <i class="fas fa-times"></i> Cancel
                         </a>
                     </div>
@@ -100,53 +100,60 @@
 
 <script>
     $(document).ready(function() {
-        // Stock Type Field Change Event
-        $("#pc_stock_type").change(function() {
-            toggleFields();
-            loadStockDescriptions();
-        });
+        document.getElementById("pc_updated_by").value = '{{ user_id }}';
 
-        // Function to show/hide fields based on Stock Type
         function toggleFields() {
             var stockType = $("#pc_stock_type").val();
-            var pc_length = $("#pc_length");
-            var pc_width = $("#pc_width");
-            var pc_height = $("#pc_height");
-            var pc_uom = $("#pc_uom");
-            var pc_con_length = $("#pc_con_length");
-            var pc_diameter_width = $("#pc_diameter_width");
+            var pc_length = document.getElementById("pc_length");
+            var pc_width = document.getElementById("pc_width");
+            var pc_height = document.getElementById("pc_height");
+            var pc_uom = document.getElementById("pc_uom");
+            var pc_con_length = document.getElementById("pc_con_length");
+            var pc_diameter_width = document.getElementById("pc_diameter_width");
 
             if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
-                $("#diameter_width_group, #con_length_group, #uom_group").hide();
+                $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
                 $("#length_group, #width_group, #height_group").show();
-                pc_length.prop("required", true);
-                pc_width.prop("required", true);
-                pc_height.prop("required", true);
-            } else {
-                $("#diameter_width_group, #con_length_group, #uom_group").show();
+                pc_length.value = "";
+                pc_length.setAttribute("required", "required");  // Make it mandatory
+                pc_width.value = "";
+                pc_width.setAttribute("required", "required");  // Make it mandatory
+                pc_height.value = "";
+                pc_height.setAttribute("required", "required");  // Make it mandatory
+            }
+            else {
+                $("#diameter_width_group, #con_length_group, #uom_group ").show();
                 $("#length_group, #width_group, #height_group").hide();
-                pc_diameter_width.prop("required", true);
-                pc_con_length.prop("required", true);
+                pc_diameter_width.setAttribute("required", "required");  // Make it mandatory
+                pc_con_length.setAttribute("required", "required");  // Make it mandatory
+
             }
         }
 
-
-
-        // Load initial stock descriptions when page loads
-        function loadStockDescriptions() {
-            $.ajax({
-                url: "{% url 'load_stock_description' %}",
-                data: { stock_type: $("#pc_stock_type").val() },
-                success: function(data) {
-                    $("#pc_stock_description").empty().append("<option value='0'>--Select--</option>");
-                    data.forEach(item => {
-                        $("#pc_stock_description").append(`<option value='${item.id}'>${item.stock_description}</option>`);
-                    });
-                }
-            });
-        }
-
         toggleFields();
+
+        $("#pc_stock_type").change(function() {
+            toggleFields();
+        });
+    });
+</script>
+
+<script>
+    $("#pc_stock_type").change(function() {
+        var stock_type = $(this).val();
+        $.ajax({
+            url: '{% url "load_stock_description" %}',
+            data: {
+                'stock_type': stock_type,
+            },
+            success: function(data) {
+                $('#pc_stock_description').removeClass('disable_a_href').empty().append("<option value='0'>--Select--</option>");
+                var stockData = JSON.parse(data);
+                for (var i = 0; i < stockData["stock_description_id"].length; i++) {
+                    $("#pc_stock_description").append("<option value='" + stockData["stock_description_id"][i] + "'>" + stockData["stock_description"][i] + "</option>");
+                }
+            }
+        });
     });
 </script>
 
