@@ -6,54 +6,54 @@
 
 
 <div class="d-flex justify-content-between">
-    <form id="tripEmailForm" action="{% url 'send_performance_audit_email' %}" method="POST">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn" {% if not enable %}disabled{% endif %}>
-            <i class="fas fa-envelope-square"></i> Send Score Card Email
-        </button>
-    </form>
+	<form id="tripEmailForm" action="{% url 'send_performance_audit_email' %}" method="POST">
+		{% csrf_token %}
+		<button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn" {% if not enable %}disabled{% endif %}>
+			<i class="fas fa-envelope-square"></i> Send Score Card Email
+		</button>
+	</form>
 </div>
 <br>
 
 <div class="container-fluid">
-    <div class="row text-center">
-        <div class="col-md-2">
-            <div class="summary-box bg-gradient-blue">
-                <h5>No. of Questions for - A </h5>
-                <h5> {{ total_A_count }}</h5>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="summary-box bg-gradient-red">
-                <h5>No. of Questions for - B </h5>
-                <h5> {{ total_B_count }}</h5>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="summary-box bg-gradient-teal">
-                <h5>Weightage - A </h5>
-                <h5>2</h5>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="summary-box bg-gradient-orange">
-                <h5>Weightage - B </h5>
-                <h5>1</h5>
-            </div>
-        </div>
+	<div class="row text-center">
 		<div class="col-md-2">
-            <div class="summary-box bg-gradient-purple">
-                <h5>Total Marks for - A </h5>
-                <h5>{{ overall_total_A }}</h5>
-            </div>
-        </div>
+			<div class="summary-box bg-gradient-blue">
+				<h5>No. of Questions for - A </h5>
+				<h5> {{ total_A_count }}</h5>
+			</div>
+		</div>
 		<div class="col-md-2">
-            <div class="summary-box bg-gradient-pink">
-                <h5>Total Marks for - B</h5>
-                <h5>{{ overall_total_B }}</h5>
-            </div>
-        </div>
-    </div>
+			<div class="summary-box bg-gradient-red">
+				<h5>No. of Questions for - B </h5>
+				<h5> {{ total_B_count }}</h5>
+			</div>
+		</div>
+		<div class="col-md-2">
+			<div class="summary-box bg-gradient-teal">
+				<h5>Weightage - A </h5>
+				<h5>2</h5>
+			</div>
+		</div>
+		<div class="col-md-2">
+			<div class="summary-box bg-gradient-orange">
+				<h5>Weightage - B </h5>
+				<h5>1</h5>
+			</div>
+		</div>
+		<div class="col-md-2">
+			<div class="summary-box bg-gradient-purple">
+				<h5>Total Marks for - A </h5>
+				<h5>{{ overall_total_A }}</h5>
+			</div>
+		</div>
+		<div class="col-md-2">
+			<div class="summary-box bg-gradient-pink">
+				<h5>Total Marks for - B</h5>
+				<h5>{{ overall_total_B }}</h5>
+			</div>
+		</div>
+	</div>
 </div>
 <br>
 <div class="col-md-2">
@@ -73,632 +73,651 @@
 			</div>
 			<div class="card-body bg-light">
 				<table class="table table-bordered">
-                    <tbody>
-                        <tr>
-                            <th>Location</th>
-                            <td>{% render_field form.pa_branch class="form-control" id="pa_branch" %}</td>
-                        </tr>
-                        <tr>
-                            <th>Unit Reference</th>
-                            <td>{% render_field form.pa_unit class="form-control" id="pa_unit" %}</td>
-                        </tr>
-                        <tr>
-                            <th>Date</th>
-                            <td>{% render_field form.pa_date type="date" class="form-control" id="pa_date" %}</td>
-                        </tr>
-                        <tr>
-                            <th>Period of Audit Start Date</th>
-                            <td>{% render_field form.pa_audit_start_date type="date" class="form-control" id="pa_audit_start_date" %}</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-				<table class="table table-bordered">
-					<thead class="thead-dark">
-						<tr>
-							<th>Topics</th>
-							<th>Check points</th>
-							<th>Scores</th>
-						</tr>
-					</thead>
 					<tbody>
-						<tr>
-							<th>Implementation of Takeaways and Directions</th>
-							<th>Listing the Take-aways and Directions (for Ex: CMP)</th>
-							<td>{% render_field form.pa_Listing_the_Take_ways_Directions class="form-control" id="pa_Listing_the_Take_ways_Directions"  %}</td>
-						</tr>
-						<tr>
-							<th>Implementation of Takeaways and Directions</th>
-							<th>Owner Defined and Trained</th>
-							<td>{% render_field form.pa_Owner_Defined_Trained class="form-control" id="pa_Owner_Defined_Trained"  %}</td>
-						</tr>
-						<tr>
-							<th>Implementation of Takeaways and Directions</th>
-							<th>Periodical Monitoring of this Program through the template provided</th>
-							<td>{% render_field form.pa_Periodical_Monitoring_template_provided class="form-control" id="pa_Periodical_Monitoring_template_provided"  %}</td>
-						</tr>
-						<tr>
-							<th>Implementation of Takeaways and Directions</th>
-							<th>Progress visibility</th>
-							<td>{% render_field form.pa_Progress_visibility class="form-control" id="pa_Progress_visibility" %}</td>
-						</tr>
-						<tr>
-							<th>Implementation of Takeaways and Directions</th>
-							<th>Process defined is followed</th>
-							<td>{% render_field form.pa_Process_defined_followed class="form-control" id="pa_Process_defined_followed"  %}</td>
-						</tr>
-						<tr>
-							<th>Implementation of Takeaways and Directions</th>
-							<th>Weekly reporting to Management on the progress</th>
-							<td>{% render_field form.pa_Weekly_reporting_Management_progress class="form-control" id="pa_Weekly_reporting_Management_progress"  %}</td>
-						</tr>
-						<tr>
-							<th>Implementation of Takeaways and Directions</th>
-							<th>Completed as per Timeline</th>
-							<td>{% render_field form.pa_Completed_Timeline class="form-control" id="pa_Completed_Timeline" %}</td>
-						</tr>
-						<tr>
-							<th>Implementation of Takeaways and Directions</th>
-							<th>Outcome reported to Management</th>
-							<td>{% render_field form.pa_Outcome_reported_Management class="form-control" id="pa_Outcome_reported_Management"  %}</td>
-						</tr>
-                        <tr>
-							<th>Staff Attendance and Timely Reporting</th>
-							<th>Timely reporting of all staffs, labourers</th>
-							<td>{% render_field form.pa_Timely_reporting_staffs_labourers class="form-control" id="pa_Timely_reporting_staffs_labourers"  %}</td>
-						</tr>
-                        <tr>
-							<th>Staff Attendance and Timely Reporting</th>
-							<th>Attendance thru Biometric  only & NO manual attendance (exceptions to be approved by HR/Authorised person for BLR)</th>
-							<td>{% render_field form.pa_Attendance_thru_Biometric class="form-control" id="pa_Attendance_thru_Biometric"  %}</td>
-						</tr>
-                        <tr>
-							<th>Staff Attendance and Timely Reporting</th>
-							<th>Permissions slip provided for each instances</th>
-							<td>{% render_field form.pa_Permissions_slip_provided_instances class="form-control" id="pa_Permissions_slip_provided_instances"  %}</td>
-						</tr>
-                        <tr>
-							<th>Staff Attendance and Timely Reporting</th>
-							<th>Monthly attendance provided to HR on 1st working day</th>
-							<td>{% render_field form.pa_Monthly_attendance_provided_HR_1st_working_day class="form-control" id="pa_Monthly_attendance_provided_HR_1st_working_day"  %}</td>
-						</tr>
-                        <tr>
-							<th>Staff Attendance and Timely Reporting</th>
-							<th>Monthly closing process followed</th>
-							<td>{% render_field form.pa_Monthly_closing_process_followed class="form-control" id="pa_Monthly_closing_process_followed"  %}</td>
-						</tr>
-                        <tr>
-							<th>Staff Attendance and Timely Reporting</th>
-							<th>New staff formalities followed</th>
-							<td>{% render_field form.pa_New_staff_formalities_followed class="form-control" id="pa_New_staff_formalities_followed"  %}</td>
-						</tr>
-                        <tr>
-							<th>Staff Attendance and Timely Reporting</th>
-							<th>Resignation process followed</th>
-							<td>{% render_field form.pa_Resignation_process_followed class="form-control" id="pa_Resignation_process_followed"  %}</td>
-						</tr>
-                        <tr>
-							<th>Extended Working Hours</th>
-							<th>Is there extended working hours than agreed</th>
-							<td>{% render_field form.pa_Is_extended_working_hours_agreed class="form-control" id="pa_Is_extended_working_hours_agreed"  %}</td>
-						</tr>
-                        <tr>
-							<th>Extended Working Hours</th>
-							<th>Is total overtime exceeded the limit as per law</th>
-							<td>{% render_field form.pa_Is_overtime_exceeded_per_law class="form-control" id="pa_Is_overtime_exceeded_per_law"  %}</td>
-						</tr>
-                        <tr>
-							<th>Extended Working Hours</th>
-							<th>Is the expenses billed back to customer</th>
-							<td>{% render_field form.pa_Is_expenses_billed_back_customer class="form-control" id="pa_Is_expenses_billed_back_customer"  %}</td>
-						</tr>
-                        <tr>
-							<th>Additional Labour Deployed / Labour Reduction</th>
-							<th>Labour - Addition with DGM Approval</th>
-							<td>{% render_field form.pa_Labour_Addition_DGM_Approval class="form-control" id="pa_Labour_Addition_DGM_Approval"  %}</td>
-						</tr>
-                        <tr>
-							<th>Additional Labour Deployed / Labour Reduction</th>
-							<th>Adequate Employee compensation insurance taken</th>
-							<td>{% render_field form.pa_Adequate_Employee_compensation_insurance_taken class="form-control" id="pa_Adequate_Employee_compensation_insurance_taken"  %}</td>
-						</tr>
-                        <tr>
-							<th>Additional Labour Deployed / Labour Reduction</th>
-							<th>Reduction of labour with approval</th>
-							<td>{% render_field form.pa_Reduction_labour_approval class="form-control" id="pa_Reduction_labour_approval"  %}</td>
-						</tr>
-                        <tr>
-							<th>Additional Labour Deployed / Labour Reduction</th>
-							<th>Finance informed for salary reduction</th>
-							<td>{% render_field form.pa_Finance_informed_salary_reduction class="form-control" id="pa_Finance_informed_salary_reduction"  %}</td>
-						</tr>
-                        <tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>Cleanliness of Office and Warehouse</th>
-							<td>{% render_field form.pa_Cleanliness_Office_Warehouse class="form-control" id="pa_Cleanliness_Office_Warehouse"  %}</td>
-						</tr>
-						<tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>Dump seen in warehouse</th>
-							<td>{% render_field form.pa_Dump_seen_warehouse class="form-control" id="pa_Dump_seen_warehouse"  %}</td>
-						</tr>
-						<tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>Empty pallets kept in order</th>
-							<td>{% render_field form.pa_Empty_pallets_kept_order class="form-control" id="pa_Empty_pallets_kept_order"  %}</td>
-						</tr>
-						<tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>Pest control done - monthly</th>
-							<td>{% render_field form.pa_Pest_control_done_monthly class="form-control" id="pa_Pest_control_done_monthly" %}</td>
-						</tr>
-						<tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>Cob wires</th>
-							<td>{% render_field form.pa_Cob_wires class="form-control" id="pa_Cob_wires"  %}</td>
-						</tr>
-						<tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>Leakages</th>
-							<td>{% render_field form.pa_Leakages class="form-control" id="pa_Leakages"  %}</td>
-						</tr>
-						<tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>Is all pathways clean</th>
-							<td>{% render_field form.pa_Is_pathways_clean class="form-control" id="pa_Is_pathways_clean" %}</td>
-						</tr>
-						<tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>Fire Extinguisher is easily accessable, (Location & Signage)</th>
-							<td>{% render_field form.pa_Fire_Extinguisher_easily_accessable class="form-control" id="pa_Fire_Extinguisher_easily_accessable"  %}</td>
-						</tr>
-                        <tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>Daily gate meeting / photos on cleanliness</th>
-							<td>{% render_field form.pa_Daily_gate_meeting_photos_cleanliness class="form-control" id="pa_Daily_gate_meeting_photos_cleanliness"  %}</td>
-						</tr>
-                        <tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>First Aid box as per compliance standards (Monitor expiry date & refilling)</th>
-							<td>{% render_field form.pa_First_box_compliance_standards class="form-control" id="pa_First_box_compliance_standards"  %}</td>
-						</tr>
-                        <tr>
-							<th>Warehouse / Office Maintenance</th>
-							<th>Adequate Lighting and all lights are functional</th>
-							<td>{% render_field form.pa_Adequate_Lighting_lights_functional class="form-control" id="pa_Adequate_Lighting_lights_functional"  %}</td>
-						</tr>
-                        <tr>
-							<th>Space Management</th>
-							<th>Physical cargo location and DSR matching</th>
-							<td>{% render_field form.pa_Physical_location_DSR_matching class="form-control" id="pa_Physical_location_DSR_matching"  %}</td>
-						</tr>
-                        <tr>
-							<th>Space Management</th>
-							<th>No DG cargo handled without management approval</th>
-							<td>{% render_field form.pa_DG_cargo_handled_without_management_approval class="form-control" id="pa_DG_cargo_handled_without_management_approval"  %}</td>
-						</tr>
-                        <tr>
-							<th>Space Management</th>
-							<th>Idle space reported to management in time</th>
-							<td>{% render_field form.pa_Idle_space_reported_management_time class="form-control" id="pa_Idle_space_reported_management_time"  %}</td>
-						</tr>
-                        <tr>
-							<th>Space Management</th>
-							<th>Stacking done as per SOP agreed</th>
-							<td>{% render_field form.pa_Stacking_done_SOP_agreed class="form-control" id="pa_Stacking_done_SOP_agreed"  %}</td>
-						</tr>
-                        <tr>
-							<th>Space Management</th>
-							<th>Inter change of Location reported and approved by DGM, update the revised location in the DSR</th>
-							<td>{% render_field form.pa_Inter_change_of_Location class="form-control" id="pa_Inter_change_of_Location"  %}</td>
-						</tr>
-                        <tr>
-							<th>WMS and Reports</th>
-							<th>WMS usage - 100%</th>
-							<td>{% render_field form.pa_WMS_usage class="form-control" id="pa_WMS_usage"  %}</td>
-						</tr>
-                        <tr>
-							<th>WMS and Reports</th>
-							<th>Any back date entries? (With approval & Negative of 20 marks)</th>
-							<td>{% render_field form.pa_Any_back_date_entries class="form-control" id="pa_Any_back_date_entries"  %}</td>
-						</tr>
-                        <tr>
-							<th>WMS and Reports</th>
-							<th>AMC contract available for systems and tablets?</th>
-							<td>{% render_field form.pa_AMC_contract_available class="form-control" id="pa_AMC_contract_available"  %}</td>
-						</tr>
-                        <tr>
-							<th>WMS and Reports</th>
-							<th>Periodical service done?</th>
-							<td>{% render_field form.pa_Periodical_service class="form-control" id="pa_Periodical_service"  %}</td>
-						</tr>
-                        <tr>
-							<th>WMS and Reports</th>
-							<th>Reports shared as per calendar?</th>
-							<td>{% render_field form.pa_Reports_shared_per_calendar class="form-control" id="pa_Reports_shared_per_calendar"  %}</td>
-						</tr>
-                        <tr>
-							<th>Customer Service / Retention / Development</th>
-							<th>DSR and Pre-alerts sent on all working days</th>
-							<td>{% render_field form.pa_DSR_Pre_alerts_working_days class="form-control" id="pa_DSR_Pre_alerts_working_days"  %}</td>
-						</tr>
-                        <tr>
-							<th>Customer Service / Retention / Development</th>
-							<th>Email response time (within 1 hour)</th>
-							<td>{% render_field form.pa_Email_response_time class="form-control" id="pa_Email_response_time"  %}</td>
-						</tr>
-                        <tr>
-							<th>Customer Service / Retention / Development</th>
-							<th>Escalations from customers - Yes / No</th>
-							<td>{% render_field form.pa_Escalations_customers class="form-control" id="pa_Escalations_customers"  %}</td>
-						</tr>
-                        <tr>
-							<th>Customer Service / Retention / Development</th>
-							<th>Monthly reviews for KAM accounts</th>
-							<td>{% render_field form.pa_Monthly_reviews_KAM_accounts class="form-control" id="pa_Monthly_reviews_KAM_accounts"  %}</td>
-						</tr>
-                        <tr>
-							<th>Customer Service / Retention / Development</th>
-							<th>Quarterly reviews for Non-KAM accounts</th>
-							<td>{% render_field form.pa_Quarterly_reviews_Non_KAM_accounts class="form-control" id="pa_Quarterly_reviews_Non_KAM_accounts"  %}</td>
-						</tr>
-                        <tr>
-							<th>Customer Service / Retention / Development</th>
-							<th>Conversion of 2 Non-Key customers to Key customers</th>
-							<td>{% render_field form.pa_Conversion_customers_customers class="form-control" id="pa_Conversion_customers_customers"  %}</td>
-						</tr>
-                        <tr>
-							<th>Customer Service / Retention / Development</th>
-							<th>Additional business from Existing customers</th>
-							<td>{% render_field form.pa_Additional_business_Existing_customers class="form-control" id="pa_Additional_business_Existing_customers"  %}</td>
-						</tr>
-                        <tr>
-							<th>Customer Service / Retention / Development</th>
-							<th>Customer Claims - NIL</th>
-							<td>{% render_field form.pa_Customer_Claims_NIL class="form-control" id="pa_Customer_Claims_NIL"  %}</td>
-						</tr>
-                        <tr>
-							<th>Customer Service / Retention / Development</th>
-							<th>KAM Program followed as per KAM manual</th>
-							<td>{% render_field form.pa_KAM_Program_followed_KAM_manual class="form-control" id="pa_KAM_Program_followed_KAM_manual"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>All shipments despatched with Invoice and Valid Eway bill</th>
-							<td>{% render_field form.pa_All_shipments_dispatched class="form-control" id="pa_All_shipments_dispatched"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>Clean POD obtained for all despatch (on Gatepass)</th>
-							<td>{% render_field form.pa_Clean_POD_obtained_all_dispatch class="form-control" id="pa_Clean_POD_obtained_all_dispatch"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>All PODs scanned (Scanned & saved in WMS)</th>
-							<td>{% render_field form.pa_All_PODs_scanned class="form-control" id="pa_All_PODs_scanned"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>Safety and Security compliance followed (ISO Process)</th>
-							<td>{% render_field form.pa_Safety_Security_compliance_followed class="form-control" id="pa_Safety_Security_compliance_followed"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>HVC checklist prepared & scanned in WMS (Full process to be defined)</th>
-							<td>{% render_field form.pa_HVC_checklist_prepared_scanned_WMS class="form-control" id="pa_HVC_checklist_prepared_scanned_WMS"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>Workmen compensation insurance available for all labourers</th>
-							<td>{% render_field form.pa_Workmen_compensation_insurance class="form-control" id="pa_Workmen_compensation_insurance"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>E-Way bill - Ref number and Validity correctly mentioned in WMS</th>
-							<td>{% render_field form.pa_E_Way_bill_Ref_number_Validity class="form-control" id="pa_E_Way_bill_Ref_number_Validity"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>Customer & Vendor contracts available for all customers / vendors</th>
-							<td>{% render_field form.pa_Customer_Vendor_contracts_available class="form-control" id="pa_Customer_Vendor_contracts_available"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>Record keeping policy followed (Shipment Invoices, POD on gatepass for the previous month check out cargo to be handed over by every 10th to finance)</th>
-							<td>{% render_field form.pa_Record_keeping_policy_followed class="form-control" id="pa_Record_keeping_policy_followed"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>Shop & Establishment Compliance audit scores 100% (Training on S&e tobe provided toWH team)</th>
-							<td>{% render_field form.pa_Shop_Establishment_Compliance_audit_scores class="form-control" id="pa_Shop_Establishment_Compliance_audit_scores"  %}</td>
-						</tr>
-                        <tr>
-							<th>Compliance - Documentation / E-way bill / Invoice</th>
-							<th>Only Approved vendors are engaged</th>
-							<td>{% render_field form.pa_Only_Approved_vendors_engaged class="form-control" id="pa_Only_Approved_vendors_engaged"  %}</td>
-						</tr>
-                        <tr>
-							<th>Controls on Cross Labelling</th>
-							<th>Is double check done for all despatches?</th>
-							<td>{% render_field form.pa_Is_double_check_done_dispatches class="form-control" id="pa_Is_double_check_done_dispatches"  %}</td>
-						</tr>
-                        <tr>
-							<th>Controls on Cross Labelling</th>
-							<th>WMS to have a has a provision for digital signature of two staffs on double check screen? (To discuss with Mr. Jose)</th>
-							<td>{% render_field form.pa_WMS_to_have_has_provision class="form-control" id="pa_WMS_to_have_has_provision"  %}</td>
-						</tr>
-                        <tr>
-							<th>Stock</th>
-							<th>High value cargo - Daily opening and closing stock taken?</th>
-							<td>{% render_field form.pa_High_value_cargo_Daily_opening class="form-control" id="pa_High_value_cargo_Daily_opening"  %}</td>
-						</tr>
-                        <tr>
-							<th>Stock</th>
-							<th>Others - Physical stock count taken daily?</th>
-							<td>{% render_field form.pa_Others_Physical_stock_count class="form-control" id="pa_Others_Physical_stock_count"  %}</td>
-						</tr>
-                        <tr>
-							<th>Stock</th>
-							<th>Day end run for stock done -WMS</th>
-							<td>{% render_field form.pa_Day_run_stock_done_WMS class="form-control" id="pa_Day_run_stock_done_WMS"  %}</td>
-						</tr>
-                        <tr>
-							<th>Stock</th>
-							<th>Closing value exceeding Insurance value</th>
-							<td>{% render_field form.pa_Closing_value_exceeding_Insurance class="form-control" id="pa_Closing_value_exceeding_Insurance"  %}</td>
-						</tr>
-                        <tr>
-							<th>Stock</th>
-							<th>Excess value reported to Finance</th>
-							<td>{% render_field form.pa_Excess_value_reported_Finance class="form-control" id="pa_Excess_value_reported_Finance"  %}</td>
-						</tr>
-                        <tr>
-							<th>Manual Entries - WMS</th>
-							<th>Prior approval obtained</th>
-							<td>{% render_field form.pa_Prior_approval_obtained class="form-control" id="pa_Prior_approval_obtained"  %}</td>
-						</tr>
-                        <tr>
-							<th>Manual Entries - WMS</th>
-							<th>Regularised Subsequently</th>
-							<td>{% render_field form.pa_Regularised_Subsequently class="form-control" id="pa_Regularised_Subsequently"  %}</td>
-						</tr>
-                        <tr>
-							<th>Manual Entries - WMS</th>
-							<th>Stock check done</th>
-							<td>{% render_field form.pa_Stock_check_done class="form-control" id="pa_Stock_check_done"  %}</td>
-						</tr>
-                        <tr>
-							<th>Security Management</th>
-							<th>Valid contract in place?</th>
-							<td>{% render_field form.pa_Valid_contract_place class="form-control" id="pa_Valid_contract_place"  %}</td>
-						</tr>
-                        <tr>
-							<th>Security Management</th>
-							<th>Attendance</th>
-							<td>{% render_field form.pa_Attendance class="form-control" id="pa_Attendance"  %}</td>
-						</tr>
-                        <tr>
-							<th>Security Management</th>
-							<th>Reporting</th>
-							<td>{% render_field form.pa_Reporting class="form-control" id="pa_Reporting"  %}</td>
-						</tr>
-                        <tr>
-							<th>Security Management</th>
-							<th>Continuous shifts</th>
-							<td>{% render_field form.pa_Continuous_shifts class="form-control" id="pa_Continuous_shifts"  %}</td>
-						</tr>
-                        <tr>
-							<th>Security Management</th>
-							<th>Night partrolling</th>
-							<td>{% render_field form.pa_Night_partrolling class="form-control" id="pa_Night_partrolling"  %}</td>
-						</tr>
-                        <tr>
-							<th>Security Management</th>
-							<th>Supervisor visits and meetings / MOM with proof</th>
-							<td>{% render_field form.pa_Supervisor_visits_meeting class="form-control" id="pa_Supervisor_visits_meeting"  %}</td>
-						</tr>
-                        <tr>
-							<th>Security Management</th>
-							<th>WH Key management and log book</th>
-							<td>{% render_field form.pa_WH_Key_management class="form-control" id="pa_WH_Key_management"  %}</td>
-						</tr>
-                        <tr>
-							<th>Procurement</th>
-							<th>Three quotes obtained</th>
-							<td>{% render_field form.pa_Three_quotes_obtained class="form-control" id="pa_Three_quotes_obtained"  %}</td>
-						</tr>
-                        <tr>
-							<th>Procurement</th>
-							<th>Procurement done in time</th>
-							<td>{% render_field form.pa_Procurement_done_time class="form-control" id="pa_Procurement_done_time"  %}</td>
-						</tr>
-                        <tr>
-							<th>Month end details / Invoicing details / WMS month end closing  / Reports to Management</th>
-							<th>Month end details as per template</th>
-							<td>{% render_field form.pa_Month_end_details_per_template class="form-control" id="pa_Month_end_details_per_template"  %}</td>
-						</tr>
-                        <tr>
-							<th>Month end details / Invoicing details / WMS month end closing  / Reports to Management</th>
-							<th>WMS month end closing  & Billing details on or before 1rd</th>
-							<td>{% render_field form.pa_WMS_month_end_closing_Billing class="form-control" id="pa_WMS_month_end_closing_Billing"  %}</td>
-						</tr>
-                        <tr>
-							<th>Month end details / Invoicing details / WMS month end closing  / Reports to Management</th>
-							<th>Providing Reports to management as per timeline agreed</th>
-							<td>{% render_field form.pa_Providing_Reports_management class="form-control" id="pa_Providing_Reports_management"  %}</td>
-						</tr>
-                        <tr>
-							<th>Incident and Accident</th>
-							<th>Incident and Accident recorded</th>
-							<td>{% render_field form.pa_Incident_Accident_recorded class="form-control" id="pa_Incident_Accident_recorded"  %}</td>
-						</tr>
-                        <tr>
-							<th>Incident and Accident</th>
-							<th>Reported to management immediately</th>
-							<td>{% render_field form.pa_Reported_management_immediately class="form-control" id="pa_Reported_management_immediately"  %}</td>
-						</tr>
-                        <tr>
-							<th>Sales Program / Sales meetings / Quotation management</th>
-							<th>Sales calls as per weekly Sales planning</th>
-							<td>{% render_field form.pa_Sales_calls_weekly_Sales_planning class="form-control" id="pa_Sales_calls_weekly_Sales_planning"  %}</td>
-						</tr>
-                        <tr>
-							<th>Sales Program / Sales meetings / Quotation management</th>
-							<th>Updating all sales calls in Sales software within time line(Sales call done today can be updated today & tomorrow only)</th>
-							<td>{% render_field form.pa_Updating_all_sales class="form-control" id="pa_Updating_all_sales"  %}</td>
-						</tr>
-                        <tr>
-							<th>Sales Program / Sales meetings / Quotation management</th>
-							<th>New customer on-boarding process followed (Need Assessment, Sow, SOP, Billing SOP, & VH to meet the customer</th>
-							<td>{% render_field form.pa_New_customer_boarding class="form-control" id="pa_New_customer_boarding"  %}</td>
-						</tr>
-                        <tr>
-							<th>Sales Program / Sales meetings / Quotation management</th>
-							<th>Meeting new customers</th>
-							<td>{% render_field form.pa_Meeting_new_customers class="form-control" id="pa_Meeting_new_customers"  %}</td>
-						</tr>
-                        <tr>
-							<th>Sales Program / Sales meetings / Quotation management</th>
-							<th>Attending all sales meeting</th>
-							<td>{% render_field form.pa_Attending_sales_meeting class="form-control" id="pa_Attending_sales_meeting"  %}</td>
-						</tr>
-                        <tr>
-							<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
-							<th>WMS updated with Budget</th>
-							<td>{% render_field form.pa_WMS_updated_with_Budget class="form-control" id="pa_WMS_updated_with_Budget"  %}</td>
-						</tr>
-                        <tr>
-							<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
-							<th>WMS updated with Actuals</th>
-							<td>{% render_field form.pa_WMS_updated_with_Actuals class="form-control" id="pa_WMS_updated_with_Actuals"  %}</td>
-						</tr>
-                        <tr>
-							<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
-							<th>P/L  - customer wise / unit wise / business model wise / location wise</th>
-							<td>{% render_field form.pa_PL_customer_wise_unit_wise_business_model_wise class="form-control" id="pa_PL_customer_wise_unit_wise_business_model_wise"  %}</td>
-						</tr>
-                        <tr>
-							<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
-							<th>Monthly Sales and P/L budget achieved or not</th>
-							<td>{% render_field form.pa_Monthly_Sales_pl_budget_achieved class="form-control" id="pa_Monthly_Sales_pl_budget_achieved"  %}</td>
-						</tr>
-                        <tr>
-							<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
-							<th>Budget Vs Actuals - Monthly Variance Report</th>
-							<td>{% render_field form.pa_Budget_Actuals_Monthly class="form-control" id="pa_Budget_Actuals_Monthly"  %}</td>
-						</tr>
-                        <tr>
-							<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
-							<th>MIS analysis meeting with Sony</th>
-							<td>{% render_field form.pa_MIS_analysis_meeting_Sony class="form-control" id="pa_MIS_analysis_meeting_Sony"  %}</td>
-						</tr>
-                        <tr>
-							<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
-							<th>Action points to arrive at based on MIS Analysis Meeting</th>
-							<td>{% render_field form.pa_Action_points_arrive_based_MIS_Analysis_Meeting class="form-control" id="pa_Action_points_arrive_based_MIS_Analysis_Meeting"  %}</td>
-						</tr>
-                        <tr>
-							<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
-							<th>Monthly reviews with presentations</th>
-							<td>{% render_field form.pa_Monthly_reviews_presentations class="form-control" id="pa_Monthly_reviews_presentations"  %}</td>
-						</tr>
-                        <tr>
-							<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
-							<th>Quarterly reviews with presentations</th>
-							<td>{% render_field form.pa_Quarterly_reviews_presentations class="form-control" id="pa_Quarterly_reviews_presentations"  %}</td>
-						</tr>
-                        <tr>
-							<th>Travel and Outstation Managemnet</th>
-							<th>Monthly visit  to all required locations</th>
-							<td>{% render_field form.pa_Monthly_visit_required_locations class="form-control" id="pa_Monthly_visit_required_locations"  %}</td>
-						</tr>
-                        <tr>
-							<th>Travel and Outstation Managemnet</th>
-							<th>Travel made to BLR as per agenda</th>
-							<td>{% render_field form.pa_Travel_made_BLR_per_agenda class="form-control" id="pa_Travel_made_BLR_per_agenda"  %}</td>
-						</tr>
-                        <tr>
-							<th>Travel and Outstation Managemnet</th>
-							<th>Travel request submitted one week in advance or as per customer requirement</th>
-							<td>{% render_field form.pa_Travel_request_submitted_one_week class="form-control" id="pa_Travel_request_submitted_one_week"  %}</td>
-						</tr>
-                        <tr>
-							<th>Travel and Outstation Managemnet</th>
-							<th>Details of travel sent by Email</th>
-							<td>{% render_field form.pa_Details_travel_sent_Email class="form-control" id="pa_Details_travel_sent_Email"  %}</td>
-						</tr>
-                        <tr>
-							<th>Travel and Outstation Managemnet</th>
-							<th>Travel report discussed with Director</th>
-							<td>{% render_field form.pa_Travel_report_discussed_Director class="form-control" id="pa_Travel_report_discussed_Director"  %}</td>
-						</tr>
-                        <tr>
-							<th>Warehouse Insurance</th>
-							<th>Insurance policy  valid throughout, Coordinating with Sony in case of ADDL insurance required</th>
-							<td>{% render_field form.pa_Insurance_policy_valid_throughout class="form-control" id="pa_Insurance_policy_valid_throughout"  %}</td>
-						</tr>
-                        <tr>
-							<th>Warehouse Insurance</th>
-							<th>Renewed in time</th>
-							<td>{% render_field form.pa_Renewed_time class="form-control" id="pa_Renewed_time"  %}</td>
-						</tr>
-                        <tr>
-							<th>Warehouse Insurance</th>
-							<th>All units are covered with adequate value</th>
-							<td>{% render_field form.pa_All_units_covered_adequate_value class="form-control" id="pa_All_units_covered_adequate_value"  %}</td>
-						</tr>
-                        <tr>
-							<th>Accounts Receivable</th>
-							<th>AR more than 15 days of credit period - customer to meet and update Director</th>
-							<td>{% render_field form.pa_AR_more_than_15_days_of_credit_period class="form-control" id="pa_AR_more_than_15_days_of_credit_period"  %}</td>
-						</tr>
-                        <tr>
-							<th>Accounts Receivable</th>
-							<th>Weekly AR meeting to be attended</th>
-							<td>{% render_field form.pa_Weekly_AR_meeting_attended class="form-control" id="pa_Weekly_AR_meeting_attended"  %}</td>
-						</tr>
-                        <tr>
-							<th>Accounts Receivable</th>
-							<th>Very precise and accurate remarks to be provided</th>
-							<td>{% render_field form.pa_Very_precise_accurate_remarks_provided class="form-control" id="pa_Very_precise_accurate_remarks_provided"  %}</td>
-						</tr>
-                        <tr>
-							<th>Accounts Receivable</th>
-							<th>AR more than 75 days to be NIL or involve Director</th>
-							<td>{% render_field form.pa_AR_more_than_75_days_NIL class="form-control" id="pa_AR_more_than_75_days_NIL"  %}</td>
-						</tr>
-                        <tr>
-							<th>Accounts Receivable</th>
-							<th>Bad-debts to be NIL</th>
-							<td>{% render_field form.pa_Bad_debts_NIL class="form-control" id="pa_Bad_debts_NIL"  %}</td>
-						</tr>
-                        <tr>
-							<th>Ops Audit Compliance</th>
-							<th>Internal audit score card @ 100%</th>
-							<td>{% render_field form.pa_Internal_audit_score_card class="form-control" id="pa_Internal_audit_score_card"  %}</td>
-						</tr>
-                        <tr>
-							<th>Vendor Management</th>
-							<th>Meeting Vendors -  Monthly Report</th>
-							<td>{% render_field form.pa_Meeting_Vendors_Monthly_Report class="form-control" id="pa_Meeting_Vendors_Monthly_Report"  %}</td>
-						</tr>
-                        <tr>
-							<th>Vendor Management</th>
-							<th>Vendors bills submitted in time</th>
-							<td>{% render_field form.pa_Vendors_bills_submitted_time class="form-control" id="pa_Vendors_bills_submitted_time"  %}</td>
-						</tr>
-                        <tr>
-							<th>Vendor Management</th>
-							<th>Data asked by Finance for processing PO, provided in time</th>
-							<td>{% render_field form.pa_Data_asked_Finance_processing_PO class="form-control" id="pa_Data_asked_Finance_processing_PO"  %}</td>
-						</tr>
-                        <tr>
-							<th>General</th>
-							<th>Daily Gate meeting with Supervisors and Labourers</th>
-							<td>{% render_field form.pa_Daily_Gate_meeting_Supervisors_Labourers class="form-control" id="pa_Daily_Gate_meeting_Supervisors_Labourers"  %}</td>
-						</tr>
+					<tr>
+						<th>Location</th>
+						<td>{% render_field form.pa_branch class="form-control" id="pa_branch" %}</td>
+					</tr>
+					<tr>
+						<th>Unit Reference</th>
+						<td>{% render_field form.pa_unit class="form-control" id="pa_unit" %}</td>
+					</tr>
+					<tr>
+						<th>Date</th>
+						<td>{% render_field form.pa_date type="date" class="form-control" id="pa_date" %}</td>
+					</tr>
+					<tr>
+						<th>Period of Audit Start Date</th>
+						<td>{% render_field form.pa_audit_start_date type="date" class="form-control" id="pa_audit_start_date" %}</td>
+					</tr>
 					</tbody>
 				</table>
+				<div class="container-fluid">
+					<div class="row">
+						<div class="col-6">
+							<table class="table table-bordered">
+								<thead class="thead-dark">
+								<tr>
+									<th>Topics</th>
+									<th>Check points</th>
+									<th>Scores</th>
+								</tr>
+								</thead>
+								<tbody>
+								<tr>
+									<th>Implementation of Takeaways and Directions</th>
+									<th>Listing the Take-aways and Directions (for Ex: CMP)</th>
+									<td>{% render_field form.pa_Listing_the_Take_ways_Directions class="form-control" id="pa_Listing_the_Take_ways_Directions"  %}</td>
+								</tr>
+								<tr>
+									<th>Implementation of Takeaways and Directions</th>
+									<th>Owner Defined and Trained</th>
+									<td>{% render_field form.pa_Owner_Defined_Trained class="form-control" id="pa_Owner_Defined_Trained"  %}</td>
+								</tr>
+								<tr>
+									<th>Implementation of Takeaways and Directions</th>
+									<th>Periodical Monitoring of this Program through the template provided</th>
+									<td>{% render_field form.pa_Periodical_Monitoring_template_provided class="form-control" id="pa_Periodical_Monitoring_template_provided"  %}</td>
+								</tr>
+								<tr>
+									<th>Implementation of Takeaways and Directions</th>
+									<th>Progress visibility</th>
+									<td>{% render_field form.pa_Progress_visibility class="form-control" id="pa_Progress_visibility" %}</td>
+								</tr>
+								<tr>
+									<th>Implementation of Takeaways and Directions</th>
+									<th>Process defined is followed</th>
+									<td>{% render_field form.pa_Process_defined_followed class="form-control" id="pa_Process_defined_followed"  %}</td>
+								</tr>
+								<tr>
+									<th>Implementation of Takeaways and Directions</th>
+									<th>Weekly reporting to Management on the progress</th>
+									<td>{% render_field form.pa_Weekly_reporting_Management_progress class="form-control" id="pa_Weekly_reporting_Management_progress"  %}</td>
+								</tr>
+								<tr>
+									<th>Implementation of Takeaways and Directions</th>
+									<th>Completed as per Timeline</th>
+									<td>{% render_field form.pa_Completed_Timeline class="form-control" id="pa_Completed_Timeline" %}</td>
+								</tr>
+								<tr>
+									<th>Implementation of Takeaways and Directions</th>
+									<th>Outcome reported to Management</th>
+									<td>{% render_field form.pa_Outcome_reported_Management class="form-control" id="pa_Outcome_reported_Management"  %}</td>
+								</tr>
+								<tr>
+									<th>Staff Attendance and Timely Reporting</th>
+									<th>Timely reporting of all staffs, labourers</th>
+									<td>{% render_field form.pa_Timely_reporting_staffs_labourers class="form-control" id="pa_Timely_reporting_staffs_labourers"  %}</td>
+								</tr>
+								<tr>
+									<th>Staff Attendance and Timely Reporting</th>
+									<th>Attendance thru Biometric  only & NO manual attendance (exceptions to be approved by HR/Authorised person for BLR)</th>
+									<td>{% render_field form.pa_Attendance_thru_Biometric class="form-control" id="pa_Attendance_thru_Biometric"  %}</td>
+								</tr>
+								<tr>
+									<th>Staff Attendance and Timely Reporting</th>
+									<th>Permissions slip provided for each instances</th>
+									<td>{% render_field form.pa_Permissions_slip_provided_instances class="form-control" id="pa_Permissions_slip_provided_instances"  %}</td>
+								</tr>
+								<tr>
+									<th>Staff Attendance and Timely Reporting</th>
+									<th>Monthly attendance provided to HR on 1st working day</th>
+									<td>{% render_field form.pa_Monthly_attendance_provided_HR_1st_working_day class="form-control" id="pa_Monthly_attendance_provided_HR_1st_working_day"  %}</td>
+								</tr>
+								<tr>
+									<th>Staff Attendance and Timely Reporting</th>
+									<th>Monthly closing process followed</th>
+									<td>{% render_field form.pa_Monthly_closing_process_followed class="form-control" id="pa_Monthly_closing_process_followed"  %}</td>
+								</tr>
+								<tr>
+									<th>Staff Attendance and Timely Reporting</th>
+									<th>New staff formalities followed</th>
+									<td>{% render_field form.pa_New_staff_formalities_followed class="form-control" id="pa_New_staff_formalities_followed"  %}</td>
+								</tr>
+								<tr>
+									<th>Staff Attendance and Timely Reporting</th>
+									<th>Resignation process followed</th>
+									<td>{% render_field form.pa_Resignation_process_followed class="form-control" id="pa_Resignation_process_followed"  %}</td>
+								</tr>
+								<tr>
+									<th>Extended Working Hours</th>
+									<th>Is there extended working hours than agreed</th>
+									<td>{% render_field form.pa_Is_extended_working_hours_agreed class="form-control" id="pa_Is_extended_working_hours_agreed"  %}</td>
+								</tr>
+								<tr>
+									<th>Extended Working Hours</th>
+									<th>Is total overtime exceeded the limit as per law</th>
+									<td>{% render_field form.pa_Is_overtime_exceeded_per_law class="form-control" id="pa_Is_overtime_exceeded_per_law"  %}</td>
+								</tr>
+								<tr>
+									<th>Extended Working Hours</th>
+									<th>Is the expenses billed back to customer</th>
+									<td>{% render_field form.pa_Is_expenses_billed_back_customer class="form-control" id="pa_Is_expenses_billed_back_customer"  %}</td>
+								</tr>
+								<tr>
+									<th>Additional Labour Deployed / Labour Reduction</th>
+									<th>Labour - Addition with DGM Approval</th>
+									<td>{% render_field form.pa_Labour_Addition_DGM_Approval class="form-control" id="pa_Labour_Addition_DGM_Approval"  %}</td>
+								</tr>
+								<tr>
+									<th>Additional Labour Deployed / Labour Reduction</th>
+									<th>Adequate Employee compensation insurance taken</th>
+									<td>{% render_field form.pa_Adequate_Employee_compensation_insurance_taken class="form-control" id="pa_Adequate_Employee_compensation_insurance_taken"  %}</td>
+								</tr>
+								<tr>
+									<th>Additional Labour Deployed / Labour Reduction</th>
+									<th>Reduction of labour with approval</th>
+									<td>{% render_field form.pa_Reduction_labour_approval class="form-control" id="pa_Reduction_labour_approval"  %}</td>
+								</tr>
+								<tr>
+									<th>Additional Labour Deployed / Labour Reduction</th>
+									<th>Finance informed for salary reduction</th>
+									<td>{% render_field form.pa_Finance_informed_salary_reduction class="form-control" id="pa_Finance_informed_salary_reduction"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>Cleanliness of Office and Warehouse</th>
+									<td>{% render_field form.pa_Cleanliness_Office_Warehouse class="form-control" id="pa_Cleanliness_Office_Warehouse"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>Dump seen in warehouse</th>
+									<td>{% render_field form.pa_Dump_seen_warehouse class="form-control" id="pa_Dump_seen_warehouse"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>Empty pallets kept in order</th>
+									<td>{% render_field form.pa_Empty_pallets_kept_order class="form-control" id="pa_Empty_pallets_kept_order"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>Pest control done - monthly</th>
+									<td>{% render_field form.pa_Pest_control_done_monthly class="form-control" id="pa_Pest_control_done_monthly" %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>Cob wires</th>
+									<td>{% render_field form.pa_Cob_wires class="form-control" id="pa_Cob_wires"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>Leakages</th>
+									<td>{% render_field form.pa_Leakages class="form-control" id="pa_Leakages"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>Is all pathways clean</th>
+									<td>{% render_field form.pa_Is_pathways_clean class="form-control" id="pa_Is_pathways_clean" %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>Fire Extinguisher is easily accessable, (Location & Signage)</th>
+									<td>{% render_field form.pa_Fire_Extinguisher_easily_accessable class="form-control" id="pa_Fire_Extinguisher_easily_accessable"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>Daily gate meeting / photos on cleanliness</th>
+									<td>{% render_field form.pa_Daily_gate_meeting_photos_cleanliness class="form-control" id="pa_Daily_gate_meeting_photos_cleanliness"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>First Aid box as per compliance standards (Monitor expiry date & refilling)</th>
+									<td>{% render_field form.pa_First_box_compliance_standards class="form-control" id="pa_First_box_compliance_standards"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse / Office Maintenance</th>
+									<th>Adequate Lighting and all lights are functional</th>
+									<td>{% render_field form.pa_Adequate_Lighting_lights_functional class="form-control" id="pa_Adequate_Lighting_lights_functional"  %}</td>
+								</tr>
+								<tr>
+									<th>Space Management</th>
+									<th>Physical cargo location and DSR matching</th>
+									<td>{% render_field form.pa_Physical_location_DSR_matching class="form-control" id="pa_Physical_location_DSR_matching"  %}</td>
+								</tr>
+								<tr>
+									<th>Space Management</th>
+									<th>No DG cargo handled without management approval</th>
+									<td>{% render_field form.pa_DG_cargo_handled_without_management_approval class="form-control" id="pa_DG_cargo_handled_without_management_approval"  %}</td>
+								</tr>
+								<tr>
+									<th>Space Management</th>
+									<th>Idle space reported to management in time</th>
+									<td>{% render_field form.pa_Idle_space_reported_management_time class="form-control" id="pa_Idle_space_reported_management_time"  %}</td>
+								</tr>
+								<tr>
+									<th>Space Management</th>
+									<th>Stacking done as per SOP agreed</th>
+									<td>{% render_field form.pa_Stacking_done_SOP_agreed class="form-control" id="pa_Stacking_done_SOP_agreed"  %}</td>
+								</tr>
+								<tr>
+									<th>Space Management</th>
+									<th>Inter change of Location reported and approved by DGM, update the revised location in the DSR</th>
+									<td>{% render_field form.pa_Inter_change_of_Location class="form-control" id="pa_Inter_change_of_Location"  %}</td>
+								</tr>
+								<tr>
+									<th>WMS and Reports</th>
+									<th>WMS usage - 100%</th>
+									<td>{% render_field form.pa_WMS_usage class="form-control" id="pa_WMS_usage"  %}</td>
+								</tr>
+								<tr>
+									<th>WMS and Reports</th>
+									<th>Any back date entries? (With approval & Negative of 20 marks)</th>
+									<td>{% render_field form.pa_Any_back_date_entries class="form-control" id="pa_Any_back_date_entries"  %}</td>
+								</tr>
+								<tr>
+									<th>WMS and Reports</th>
+									<th>AMC contract available for systems and tablets?</th>
+									<td>{% render_field form.pa_AMC_contract_available class="form-control" id="pa_AMC_contract_available"  %}</td>
+								</tr>
+								<tr>
+									<th>WMS and Reports</th>
+									<th>Periodical service done?</th>
+									<td>{% render_field form.pa_Periodical_service class="form-control" id="pa_Periodical_service"  %}</td>
+								</tr>
+								<tr>
+									<th>WMS and Reports</th>
+									<th>Reports shared as per calendar?</th>
+									<td>{% render_field form.pa_Reports_shared_per_calendar class="form-control" id="pa_Reports_shared_per_calendar"  %}</td>
+								</tr>
+								<tr>
+									<th>Customer Service / Retention / Development</th>
+									<th>DSR and Pre-alerts sent on all working days</th>
+									<td>{% render_field form.pa_DSR_Pre_alerts_working_days class="form-control" id="pa_DSR_Pre_alerts_working_days"  %}</td>
+								</tr>
+								<tr>
+									<th>Customer Service / Retention / Development</th>
+									<th>Email response time (within 1 hour)</th>
+									<td>{% render_field form.pa_Email_response_time class="form-control" id="pa_Email_response_time"  %}</td>
+								</tr>
+								<tr>
+									<th>Customer Service / Retention / Development</th>
+									<th>Escalations from customers - Yes / No</th>
+									<td>{% render_field form.pa_Escalations_customers class="form-control" id="pa_Escalations_customers"  %}</td>
+								</tr>
+								<tr>
+									<th>Customer Service / Retention / Development</th>
+									<th>Monthly reviews for KAM accounts</th>
+									<td>{% render_field form.pa_Monthly_reviews_KAM_accounts class="form-control" id="pa_Monthly_reviews_KAM_accounts"  %}</td>
+								</tr>
+								<tr>
+									<th>Customer Service / Retention / Development</th>
+									<th>Quarterly reviews for Non-KAM accounts</th>
+									<td>{% render_field form.pa_Quarterly_reviews_Non_KAM_accounts class="form-control" id="pa_Quarterly_reviews_Non_KAM_accounts"  %}</td>
+								</tr>
+								<tr>
+									<th>Customer Service / Retention / Development</th>
+									<th>Conversion of 2 Non-Key customers to Key customers</th>
+									<td>{% render_field form.pa_Conversion_customers_customers class="form-control" id="pa_Conversion_customers_customers"  %}</td>
+								</tr>
+								<tr>
+									<th>Customer Service / Retention / Development</th>
+									<th>Additional business from Existing customers</th>
+									<td>{% render_field form.pa_Additional_business_Existing_customers class="form-control" id="pa_Additional_business_Existing_customers"  %}</td>
+								</tr>
+								<tr>
+									<th>Customer Service / Retention / Development</th>
+									<th>Customer Claims - NIL</th>
+									<td>{% render_field form.pa_Customer_Claims_NIL class="form-control" id="pa_Customer_Claims_NIL"  %}</td>
+								</tr>
+								<tr>
+									<th>Customer Service / Retention / Development</th>
+									<th>KAM Program followed as per KAM manual</th>
+									<td>{% render_field form.pa_KAM_Program_followed_KAM_manual class="form-control" id="pa_KAM_Program_followed_KAM_manual"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>All shipments despatched with Invoice and Valid Eway bill</th>
+									<td>{% render_field form.pa_All_shipments_dispatched class="form-control" id="pa_All_shipments_dispatched"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>Clean POD obtained for all despatch (on Gatepass)</th>
+									<td>{% render_field form.pa_Clean_POD_obtained_all_dispatch class="form-control" id="pa_Clean_POD_obtained_all_dispatch"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>All PODs scanned (Scanned & saved in WMS)</th>
+									<td>{% render_field form.pa_All_PODs_scanned class="form-control" id="pa_All_PODs_scanned"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>Safety and Security compliance followed (ISO Process)</th>
+									<td>{% render_field form.pa_Safety_Security_compliance_followed class="form-control" id="pa_Safety_Security_compliance_followed"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>HVC checklist prepared & scanned in WMS (Full process to be defined)</th>
+									<td>{% render_field form.pa_HVC_checklist_prepared_scanned_WMS class="form-control" id="pa_HVC_checklist_prepared_scanned_WMS"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>Workmen compensation insurance available for all labourers</th>
+									<td>{% render_field form.pa_Workmen_compensation_insurance class="form-control" id="pa_Workmen_compensation_insurance"  %}</td>
+								</tr>
+
+								</tbody>
+							</table>
+						</div>
+						<div class="col-6">
+							<table class="table table-bordered">
+								<thead class="thead-dark">
+								<tr>
+									<th>Topics</th>
+									<th>Check points</th>
+									<th>Scores</th>
+								</tr>
+								</thead>
+								<tbody>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>E-Way bill - Ref number and Validity correctly mentioned in WMS</th>
+									<td>{% render_field form.pa_E_Way_bill_Ref_number_Validity class="form-control" id="pa_E_Way_bill_Ref_number_Validity"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>Customer & Vendor contracts available for all customers / vendors</th>
+									<td>{% render_field form.pa_Customer_Vendor_contracts_available class="form-control" id="pa_Customer_Vendor_contracts_available"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>Record keeping policy followed (Shipment Invoices, POD on gatepass for the previous month check out cargo to be handed over by every 10th to finance)</th>
+									<td>{% render_field form.pa_Record_keeping_policy_followed class="form-control" id="pa_Record_keeping_policy_followed"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>Shop & Establishment Compliance audit scores 100% (Training on S&e tobe provided toWH team)</th>
+									<td>{% render_field form.pa_Shop_Establishment_Compliance_audit_scores class="form-control" id="pa_Shop_Establishment_Compliance_audit_scores"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance - Documentation / E-way bill / Invoice</th>
+									<th>Only Approved vendors are engaged</th>
+									<td>{% render_field form.pa_Only_Approved_vendors_engaged class="form-control" id="pa_Only_Approved_vendors_engaged"  %}</td>
+								</tr>
+								<tr>
+									<th>Controls on Cross Labelling</th>
+									<th>Is double check done for all despatches?</th>
+									<td>{% render_field form.pa_Is_double_check_done_dispatches class="form-control" id="pa_Is_double_check_done_dispatches"  %}</td>
+								</tr>
+								<tr>
+									<th>Controls on Cross Labelling</th>
+									<th>WMS to have a has a provision for digital signature of two staffs on double check screen? (To discuss with Mr. Jose)</th>
+									<td>{% render_field form.pa_WMS_to_have_has_provision class="form-control" id="pa_WMS_to_have_has_provision"  %}</td>
+								</tr>
+								<tr>
+									<th>Stock</th>
+									<th>High value cargo - Daily opening and closing stock taken?</th>
+									<td>{% render_field form.pa_High_value_cargo_Daily_opening class="form-control" id="pa_High_value_cargo_Daily_opening"  %}</td>
+								</tr>
+								<tr>
+									<th>Stock</th>
+									<th>Others - Physical stock count taken daily?</th>
+									<td>{% render_field form.pa_Others_Physical_stock_count class="form-control" id="pa_Others_Physical_stock_count"  %}</td>
+								</tr>
+								<tr>
+									<th>Stock</th>
+									<th>Day end run for stock done -WMS</th>
+									<td>{% render_field form.pa_Day_run_stock_done_WMS class="form-control" id="pa_Day_run_stock_done_WMS"  %}</td>
+								</tr>
+								<tr>
+									<th>Stock</th>
+									<th>Closing value exceeding Insurance value</th>
+									<td>{% render_field form.pa_Closing_value_exceeding_Insurance class="form-control" id="pa_Closing_value_exceeding_Insurance"  %}</td>
+								</tr>
+								<tr>
+									<th>Stock</th>
+									<th>Excess value reported to Finance</th>
+									<td>{% render_field form.pa_Excess_value_reported_Finance class="form-control" id="pa_Excess_value_reported_Finance"  %}</td>
+								</tr>
+								<tr>
+									<th>Manual Entries - WMS</th>
+									<th>Prior approval obtained</th>
+									<td>{% render_field form.pa_Prior_approval_obtained class="form-control" id="pa_Prior_approval_obtained"  %}</td>
+								</tr>
+								<tr>
+									<th>Manual Entries - WMS</th>
+									<th>Regularised Subsequently</th>
+									<td>{% render_field form.pa_Regularised_Subsequently class="form-control" id="pa_Regularised_Subsequently"  %}</td>
+								</tr>
+								<tr>
+									<th>Manual Entries - WMS</th>
+									<th>Stock check done</th>
+									<td>{% render_field form.pa_Stock_check_done class="form-control" id="pa_Stock_check_done"  %}</td>
+								</tr>
+								<tr>
+									<th>Security Management</th>
+									<th>Valid contract in place?</th>
+									<td>{% render_field form.pa_Valid_contract_place class="form-control" id="pa_Valid_contract_place"  %}</td>
+								</tr>
+								<tr>
+									<th>Security Management</th>
+									<th>Attendance</th>
+									<td>{% render_field form.pa_Attendance class="form-control" id="pa_Attendance"  %}</td>
+								</tr>
+								<tr>
+									<th>Security Management</th>
+									<th>Reporting</th>
+									<td>{% render_field form.pa_Reporting class="form-control" id="pa_Reporting"  %}</td>
+								</tr>
+								<tr>
+									<th>Security Management</th>
+									<th>Continuous shifts</th>
+									<td>{% render_field form.pa_Continuous_shifts class="form-control" id="pa_Continuous_shifts"  %}</td>
+								</tr>
+								<tr>
+									<th>Security Management</th>
+									<th>Night partrolling</th>
+									<td>{% render_field form.pa_Night_partrolling class="form-control" id="pa_Night_partrolling"  %}</td>
+								</tr>
+								<tr>
+									<th>Security Management</th>
+									<th>Supervisor visits and meetings / MOM with proof</th>
+									<td>{% render_field form.pa_Supervisor_visits_meeting class="form-control" id="pa_Supervisor_visits_meeting"  %}</td>
+								</tr>
+								<tr>
+									<th>Security Management</th>
+									<th>WH Key management and log book</th>
+									<td>{% render_field form.pa_WH_Key_management class="form-control" id="pa_WH_Key_management"  %}</td>
+								</tr>
+								<tr>
+									<th>Procurement</th>
+									<th>Three quotes obtained</th>
+									<td>{% render_field form.pa_Three_quotes_obtained class="form-control" id="pa_Three_quotes_obtained"  %}</td>
+								</tr>
+								<tr>
+									<th>Procurement</th>
+									<th>Procurement done in time</th>
+									<td>{% render_field form.pa_Procurement_done_time class="form-control" id="pa_Procurement_done_time"  %}</td>
+								</tr>
+								<tr>
+									<th>Month end details / Invoicing details / WMS month end closing  / Reports to Management</th>
+									<th>Month end details as per template</th>
+									<td>{% render_field form.pa_Month_end_details_per_template class="form-control" id="pa_Month_end_details_per_template"  %}</td>
+								</tr>
+								<tr>
+									<th>Month end details / Invoicing details / WMS month end closing  / Reports to Management</th>
+									<th>WMS month end closing  & Billing details on or before 1rd</th>
+									<td>{% render_field form.pa_WMS_month_end_closing_Billing class="form-control" id="pa_WMS_month_end_closing_Billing"  %}</td>
+								</tr>
+								<tr>
+									<th>Month end details / Invoicing details / WMS month end closing  / Reports to Management</th>
+									<th>Providing Reports to management as per timeline agreed</th>
+									<td>{% render_field form.pa_Providing_Reports_management class="form-control" id="pa_Providing_Reports_management"  %}</td>
+								</tr>
+								<tr>
+									<th>Incident and Accident</th>
+									<th>Incident and Accident recorded</th>
+									<td>{% render_field form.pa_Incident_Accident_recorded class="form-control" id="pa_Incident_Accident_recorded"  %}</td>
+								</tr>
+								<tr>
+									<th>Incident and Accident</th>
+									<th>Reported to management immediately</th>
+									<td>{% render_field form.pa_Reported_management_immediately class="form-control" id="pa_Reported_management_immediately"  %}</td>
+								</tr>
+								<tr>
+									<th>Sales Program / Sales meetings / Quotation management</th>
+									<th>Sales calls as per weekly Sales planning</th>
+									<td>{% render_field form.pa_Sales_calls_weekly_Sales_planning class="form-control" id="pa_Sales_calls_weekly_Sales_planning"  %}</td>
+								</tr>
+								<tr>
+									<th>Sales Program / Sales meetings / Quotation management</th>
+									<th>Updating all sales calls in Sales software within time line(Sales call done today can be updated today & tomorrow only)</th>
+									<td>{% render_field form.pa_Updating_all_sales class="form-control" id="pa_Updating_all_sales"  %}</td>
+								</tr>
+								<tr>
+									<th>Sales Program / Sales meetings / Quotation management</th>
+									<th>New customer on-boarding process followed (Need Assessment, Sow, SOP, Billing SOP, & VH to meet the customer</th>
+									<td>{% render_field form.pa_New_customer_boarding class="form-control" id="pa_New_customer_boarding"  %}</td>
+								</tr>
+								<tr>
+									<th>Sales Program / Sales meetings / Quotation management</th>
+									<th>Meeting new customers</th>
+									<td>{% render_field form.pa_Meeting_new_customers class="form-control" id="pa_Meeting_new_customers"  %}</td>
+								</tr>
+								<tr>
+									<th>Sales Program / Sales meetings / Quotation management</th>
+									<th>Attending all sales meeting</th>
+									<td>{% render_field form.pa_Attending_sales_meeting class="form-control" id="pa_Attending_sales_meeting"  %}</td>
+								</tr>
+								<tr>
+									<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
+									<th>WMS updated with Budget</th>
+									<td>{% render_field form.pa_WMS_updated_with_Budget class="form-control" id="pa_WMS_updated_with_Budget"  %}</td>
+								</tr>
+								<tr>
+									<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
+									<th>WMS updated with Actuals</th>
+									<td>{% render_field form.pa_WMS_updated_with_Actuals class="form-control" id="pa_WMS_updated_with_Actuals"  %}</td>
+								</tr>
+								<tr>
+									<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
+									<th>P/L  - customer wise / unit wise / business model wise / location wise</th>
+									<td>{% render_field form.pa_PL_customer_wise_unit_wise_business_model_wise class="form-control" id="pa_PL_customer_wise_unit_wise_business_model_wise"  %}</td>
+								</tr>
+								<tr>
+									<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
+									<th>Monthly Sales and P/L budget achieved or not</th>
+									<td>{% render_field form.pa_Monthly_Sales_pl_budget_achieved class="form-control" id="pa_Monthly_Sales_pl_budget_achieved"  %}</td>
+								</tr>
+								<tr>
+									<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
+									<th>Budget Vs Actuals - Monthly Variance Report</th>
+									<td>{% render_field form.pa_Budget_Actuals_Monthly class="form-control" id="pa_Budget_Actuals_Monthly"  %}</td>
+								</tr>
+								<tr>
+									<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
+									<th>MIS analysis meeting with Sony</th>
+									<td>{% render_field form.pa_MIS_analysis_meeting_Sony class="form-control" id="pa_MIS_analysis_meeting_Sony"  %}</td>
+								</tr>
+								<tr>
+									<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
+									<th>Action points to arrive at based on MIS Analysis Meeting</th>
+									<td>{% render_field form.pa_Action_points_arrive_based_MIS_Analysis_Meeting class="form-control" id="pa_Action_points_arrive_based_MIS_Analysis_Meeting"  %}</td>
+								</tr>
+								<tr>
+									<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
+									<th>Monthly reviews with presentations</th>
+									<td>{% render_field form.pa_Monthly_reviews_presentations class="form-control" id="pa_Monthly_reviews_presentations"  %}</td>
+								</tr>
+								<tr>
+									<th>Budget Vs Actuals, MIS Analysis and Reviews</th>
+									<th>Quarterly reviews with presentations</th>
+									<td>{% render_field form.pa_Quarterly_reviews_presentations class="form-control" id="pa_Quarterly_reviews_presentations"  %}</td>
+								</tr>
+								<tr>
+									<th>Travel and Outstation Managemnet</th>
+									<th>Monthly visit  to all required locations</th>
+									<td>{% render_field form.pa_Monthly_visit_required_locations class="form-control" id="pa_Monthly_visit_required_locations"  %}</td>
+								</tr>
+								<tr>
+									<th>Travel and Outstation Managemnet</th>
+									<th>Travel made to BLR as per agenda</th>
+									<td>{% render_field form.pa_Travel_made_BLR_per_agenda class="form-control" id="pa_Travel_made_BLR_per_agenda"  %}</td>
+								</tr>
+								<tr>
+									<th>Travel and Outstation Managemnet</th>
+									<th>Travel request submitted one week in advance or as per customer requirement</th>
+									<td>{% render_field form.pa_Travel_request_submitted_one_week class="form-control" id="pa_Travel_request_submitted_one_week"  %}</td>
+								</tr>
+								<tr>
+									<th>Travel and Outstation Managemnet</th>
+									<th>Details of travel sent by Email</th>
+									<td>{% render_field form.pa_Details_travel_sent_Email class="form-control" id="pa_Details_travel_sent_Email"  %}</td>
+								</tr>
+								<tr>
+									<th>Travel and Outstation Managemnet</th>
+									<th>Travel report discussed with Director</th>
+									<td>{% render_field form.pa_Travel_report_discussed_Director class="form-control" id="pa_Travel_report_discussed_Director"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse Insurance</th>
+									<th>Insurance policy  valid throughout, Coordinating with Sony in case of ADDL insurance required</th>
+									<td>{% render_field form.pa_Insurance_policy_valid_throughout class="form-control" id="pa_Insurance_policy_valid_throughout"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse Insurance</th>
+									<th>Renewed in time</th>
+									<td>{% render_field form.pa_Renewed_time class="form-control" id="pa_Renewed_time"  %}</td>
+								</tr>
+								<tr>
+									<th>Warehouse Insurance</th>
+									<th>All units are covered with adequate value</th>
+									<td>{% render_field form.pa_All_units_covered_adequate_value class="form-control" id="pa_All_units_covered_adequate_value"  %}</td>
+								</tr>
+								<tr>
+									<th>Accounts Receivable</th>
+									<th>AR more than 15 days of credit period - customer to meet and update Director</th>
+									<td>{% render_field form.pa_AR_more_than_15_days_of_credit_period class="form-control" id="pa_AR_more_than_15_days_of_credit_period"  %}</td>
+								</tr>
+								<tr>
+									<th>Accounts Receivable</th>
+									<th>Weekly AR meeting to be attended</th>
+									<td>{% render_field form.pa_Weekly_AR_meeting_attended class="form-control" id="pa_Weekly_AR_meeting_attended"  %}</td>
+								</tr>
+								<tr>
+									<th>Accounts Receivable</th>
+									<th>Very precise and accurate remarks to be provided</th>
+									<td>{% render_field form.pa_Very_precise_accurate_remarks_provided class="form-control" id="pa_Very_precise_accurate_remarks_provided"  %}</td>
+								</tr>
+								<tr>
+									<th>Accounts Receivable</th>
+									<th>AR more than 75 days to be NIL or involve Director</th>
+									<td>{% render_field form.pa_AR_more_than_75_days_NIL class="form-control" id="pa_AR_more_than_75_days_NIL"  %}</td>
+								</tr>
+								<tr>
+									<th>Accounts Receivable</th>
+									<th>Bad-debts to be NIL</th>
+									<td>{% render_field form.pa_Bad_debts_NIL class="form-control" id="pa_Bad_debts_NIL"  %}</td>
+								</tr>
+								<tr>
+									<th>Ops Audit Compliance</th>
+									<th>Internal audit score card @ 100%</th>
+									<td>{% render_field form.pa_Internal_audit_score_card class="form-control" id="pa_Internal_audit_score_card"  %}</td>
+								</tr>
+								<tr>
+									<th>Vendor Management</th>
+									<th>Meeting Vendors -  Monthly Report</th>
+									<td>{% render_field form.pa_Meeting_Vendors_Monthly_Report class="form-control" id="pa_Meeting_Vendors_Monthly_Report"  %}</td>
+								</tr>
+								<tr>
+									<th>Vendor Management</th>
+									<th>Vendors bills submitted in time</th>
+									<td>{% render_field form.pa_Vendors_bills_submitted_time class="form-control" id="pa_Vendors_bills_submitted_time"  %}</td>
+								</tr>
+								<tr>
+									<th>Vendor Management</th>
+									<th>Data asked by Finance for processing PO, provided in time</th>
+									<td>{% render_field form.pa_Data_asked_Finance_processing_PO class="form-control" id="pa_Data_asked_Finance_processing_PO"  %}</td>
+								</tr>
+								<tr>
+									<th>General</th>
+									<th>Daily Gate meeting with Supervisors and Labourers</th>
+									<td>{% render_field form.pa_Daily_Gate_meeting_Supervisors_Labourers class="form-control" id="pa_Daily_Gate_meeting_Supervisors_Labourers"  %}</td>
+								</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
 				<div class="row">
 					<div class="col-1"></div>
 					<div class="col-10">
@@ -729,27 +748,75 @@
 <br>
 <!-- Category Count Table -->
 <div class="container-fluid">
-    <h4>Ops Audit Score Card</h4>
+	<h4>Performance Audit Score Card</h4>
 	<br>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Category</th>
-                <th>Actual Score (A=2)</th>
-                <th>Actual Score (B=1)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for category, scores in category_counts.items %}
-            <tr>
-                <td>{{ category }}</td>
-                <td>{{ scores.actual_score_A }}</td>
-                <td>{{ scores.actual_score_B }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+	<table class="table table-striped table-bordered">
+		<thead class="thead-dark">
+		<tr>
+			<th style="text-align: left;">Category</th>
+			<th>Actual Score (A=2)</th>
+			<th>Actual Score (B=1)</th>
+		</tr>
+		</thead>
+		<tbody>
+		{% for category, scores in category_counts.items %}
+		<tr>
+			<td style="text-align: left;">{{ category }}</td>
+			<td>{{ scores.actual_score_A }}</td>
+			<td>{{ scores.actual_score_B }}</td>
+		</tr>
+		{% endfor %}
+		</tbody>
+	</table>
 </div>
+<div class="container">
+	<div class="row">
+		<!-- First Column (First 12 items) -->
+		<div class="col-md-6">
+			<table class="table table-striped table-bordered">
+				<thead class="thead-dark">
+				<tr>
+					<th style="text-align: left;">Category</th>
+					<th>Actual Score (A=2)</th>
+					<th>Actual Score (B=1)</th>
+				</tr>
+				</thead>
+				<tbody>
+				{% for category, scores in category_counts.items|dictsort:0|slice:":12" %}
+				<tr>
+					<td style="text-align: left;">{{ category }}</td>
+					<td>{{ scores.actual_score_A }}</td>
+					<td>{{ scores.actual_score_B }}</td>
+				</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Second Column (Remaining items) -->
+		<div class="col-md-6">
+			<table class="table table-striped table-bordered">
+				<thead class="thead-dark">
+				<tr>
+					<th style="text-align: left;">Category</th>
+					<th>Actual Score (A=2)</th>
+					<th>Actual Score (B=1)</th>
+				</tr>
+				</thead>
+				<tbody>
+				{% for category, scores in category_counts.items|dictsort:0|slice:"12:" %}
+				<tr>
+					<td style="text-align: left;">{{ category }}</td>
+					<td>{{ scores.actual_score_A }}</td>
+					<td>{{ scores.actual_score_B }}</td>
+				</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
 <script>
 	$("#pa_branch").change(function () {
        var branchId = $(this).val();
@@ -775,43 +842,43 @@
 </script>
 
 <style>
-.summary-box {
-    padding: 8px;
-    border-radius: 10px;
-    color: white;
-    text-align: center;
-    font-weight: bold;
-    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
-}
+	.summary-box {
+        padding: 8px;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+        font-weight: bold;
+        box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+    }
 
-.bg-gradient-blue {
-    background: linear-gradient(to left, #1E3C72, #2A5298); /* Dark Blue */
-}
+    .bg-gradient-blue {
+        background: linear-gradient(to left, #1E3C72, #2A5298); /* Dark Blue */
+    }
 
-.bg-gradient-red {
-    background: linear-gradient(to right, #D31027, #EA384D); /* Bright Red */
-}
+    .bg-gradient-red {
+        background: linear-gradient(to right, #D31027, #EA384D); /* Bright Red */
+    }
 
-.bg-gradient-teal {
-    background: linear-gradient(to left, #136a8a, #267871); /* Deep Teal */
-}
+    .bg-gradient-teal {
+        background: linear-gradient(to left, #136a8a, #267871); /* Deep Teal */
+    }
 
 
-.bg-gradient-orange {
-    background: linear-gradient(to right, #FF8008, #FFC837); /* Deep Orange */
-}
+    .bg-gradient-orange {
+        background: linear-gradient(to right, #FF8008, #FFC837); /* Deep Orange */
+    }
 
-.bg-gradient-purple {
-    background: linear-gradient(to left, #6A11CB, #2575FC); /* Purple-Blue */
-}
+    .bg-gradient-purple {
+        background: linear-gradient(to left, #6A11CB, #2575FC); /* Purple-Blue */
+    }
 
-.bg-gradient-pink {
-    background: linear-gradient(to right, #ff758c, #ff7eb3); /* Soft Pink */
-}
+    .bg-gradient-pink {
+        background: linear-gradient(to right, #ff758c, #ff7eb3); /* Soft Pink */
+    }
 
-.bg-gradient-gold {
-    background: linear-gradient(to right, #D4AF37, #FFD700); /* Gold */
-}
+    .bg-gradient-gold {
+        background: linear-gradient(to right, #D4AF37, #FFD700); /* Gold */
+    }
 </style>
 
 

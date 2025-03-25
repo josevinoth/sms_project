@@ -1,60 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if form.instance.pk %} Edit {% else %} Add {% endif %} Pre Gatein</title>
-
-    <!-- Bootstrap 5 CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/css/styles.css">
-
-    <!-- FontAwesome for Icons -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .form-container {
-            max-width: 600px;
-            margin: 40px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .form-label {
-            font-weight: 600;
-        }
-        .form-control:focus {
-            border-color: #0d6efd;
-            box-shadow: 0px 0px 5px rgba(13, 110, 253, 0.3);
-        }
-        .btn-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .btn-custom {
-            font-weight: bold;
-        }
-        .page-indicator {
-            text-align: center;
-            font-weight: bold;
-            font-size: 18px;
-            color: #6c757d;
-            margin-bottom: 20px;
-        }
-        .progress {
-            height: 8px;
-        }
-        #page2 {
-            display: none;
-        }
-    </style>
-</head>
-<body>
+{% extends "asset_mgt_app/base_mbl.html" %}
+{% block content %}
 
 <div class="container">
     <div class="form-container">
@@ -67,9 +12,9 @@
         <div class="page-indicator">
             <span id="page-title">Page 1 of 2</span>
         </div>
-
+        <br>
         <h3 class="text-center mb-4">
-            <i class="fas fa-truck"></i> {% if form.instance.pk %} Edit {% else %} Add {% endif %} Pre Gatein truck details
+              Add Pre Gatein truck details
         </h3>
 
         <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate id="preGateinForm">
@@ -127,10 +72,10 @@
 
                 <!-- Next Button -->
                 <div class="btn-container">
-                    <a href="{% url 'gatein_pre_truck_mbl_cancel' %}" class="btn btn-secondary btn-custom">
+                    <a href="{% url 'gatein_pre_truck_mbl_cancel' %}" class="btn btn-danger float-right">
                         <i class="fas fa-times"></i> Cancel
                     </a>
-                    <button type="button" class="btn btn-primary btn-custom" onclick="nextPage()">
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="nextPage()">
                         <i class="fas fa-arrow-right"></i> Next
                     </button>
                 </div>
@@ -172,10 +117,10 @@
 
                 <!-- Next Button -->
                 <div class="btn-container">
-                    <button type="button" class="btn btn-primary btn-custom" onclick="previousPage()">
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="previousPage()">
                         <i class="fas fa-arrow-left"></i> Previous
                     </button>
-                    <button type="button" class="btn btn-primary btn-custom" onclick="nextPage()">
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="nextPage()">
                         <i class="fas fa-arrow-right"></i> Next
                     </button>
                 </div>
@@ -266,10 +211,10 @@
 
                 <!-- Previous and Save Button -->
                 <div class="btn-container">
-                    <button type="button" class="btn btn-primary btn-custom" onclick="previousPage()">
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="previousPage()">
                         <i class="fas fa-arrow-left"></i> Previous
                     </button>
-                    <button type="submit" class="btn btn-success btn-custom">
+                    <button type="submit" class="btn btn-success btn-sm-2">
                         <i class="fas fa-save"></i> Save
                     </button>
                 </div>
@@ -377,6 +322,5 @@
         });
 </script>
 
-</body>
-</html>
+{% endblock content %}
 
