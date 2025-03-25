@@ -747,28 +747,6 @@
 <hr>
 <br>
 <!-- Category Count Table -->
-<div class="container-fluid">
-	<h4>Performance Audit Score Card</h4>
-	<br>
-	<table class="table table-striped table-bordered">
-		<thead class="thead-dark">
-		<tr>
-			<th style="text-align: left;">Category</th>
-			<th>Actual Score (A=2)</th>
-			<th>Actual Score (B=1)</th>
-		</tr>
-		</thead>
-		<tbody>
-		{% for category, scores in category_counts.items %}
-		<tr>
-			<td style="text-align: left;">{{ category }}</td>
-			<td>{{ scores.actual_score_A }}</td>
-			<td>{{ scores.actual_score_B }}</td>
-		</tr>
-		{% endfor %}
-		</tbody>
-	</table>
-</div>
 <div class="container">
 	<div class="row">
 		<!-- First Column (First 12 items) -->
@@ -776,7 +754,10 @@
 			<table class="table table-striped table-bordered">
 				<thead class="thead-dark">
 				<tr>
-					<th style="text-align: left;">Category</th>
+					<th colspan="3" class="text-center bg-dark text-white">Performance Audit Score Card</th>
+				</tr>
+				<tr>
+					<th style="text-align: center;">Category</th>
 					<th>Actual Score (A=2)</th>
 					<th>Actual Score (B=1)</th>
 				</tr>
@@ -798,7 +779,10 @@
 			<table class="table table-striped table-bordered">
 				<thead class="thead-dark">
 				<tr>
-					<th style="text-align: left;">Category</th>
+					<th colspan="3" class="text-center bg-dark text-white">Performance Audit Score Card</th>
+				</tr>
+				<tr>
+					<th style="text-align: center;">Category</th>
 					<th>Actual Score (A=2)</th>
 					<th>Actual Score (B=1)</th>
 				</tr>
