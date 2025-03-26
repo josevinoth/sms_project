@@ -93,7 +93,7 @@
     <!--Stock Item List-->
     <div class="container-fluid row">
         <div class="col-md-1.5">
-            <a href="{% url 'stockpurchases_insert' %}" id="stock_purchase_item_add" class="btn btn-success btn-block btn-lg">
+            <a href="{% url 'stockpurchases_insert' %}" id="stock_purchase_item_add" class="btn btn-primary btn-block btn-lg">
                 <i class="fas fa-plus"></i> Add Stocks
             </a>
         </div>
@@ -221,7 +221,6 @@
 <script>
     function spv_stock_Purchasetype_change() {
         var jn = document.getElementById("spv_stock_Purchasetype").value;
-        alert(jn)
         if (jn == 1) {
             $('#spv_vendor_name').removeClass('disable_a_href');
             $('#spv_vendor_bill').removeClass('disable_a_href');

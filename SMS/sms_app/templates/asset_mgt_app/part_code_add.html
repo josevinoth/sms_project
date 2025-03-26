@@ -110,15 +110,11 @@
             var pc_uom = document.getElementById("pc_uom");
             var pc_con_length = document.getElementById("pc_con_length");
             var pc_diameter_width = document.getElementById("pc_diameter_width");
-
             if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
                 $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
                 $("#length_group, #width_group, #height_group").show();
-                pc_length.value = "";
                 pc_length.setAttribute("required", "required");  // Make it mandatory
-                pc_width.value = "";
                 pc_width.setAttribute("required", "required");  // Make it mandatory
-                pc_height.value = "";
                 pc_height.setAttribute("required", "required");  // Make it mandatory
             }
             else {
@@ -126,7 +122,9 @@
                 $("#length_group, #width_group, #height_group").hide();
                 pc_diameter_width.setAttribute("required", "required");  // Make it mandatory
                 pc_con_length.setAttribute("required", "required");  // Make it mandatory
-
+                pc_length.value = "";
+                pc_width.value = "";
+                pc_height.value = "";
             }
         }
 

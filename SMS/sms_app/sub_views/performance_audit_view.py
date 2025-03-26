@@ -52,7 +52,7 @@ def performanceaudit_add(request, perform_audit_id=0):
         "Security Management": {"fields": ["pa_Valid_contract_place", "pa_Attendance","pa_Reporting","pa_Continuous_shifts","pa_Night_partrolling",
                                            "pa_Supervisor_visits_meeting","pa_WH_Key_management"]},
         "Procurement": {"fields": ["pa_Three_quotes_obtained", "pa_Procurement_done_time",]},
-        "Month end details / Invoicing details / WMS month end closing  / Reports to Management": {"fields": ["pa_Month_end_details_per_template",
+        "Month end details / Invoicing details / WMS month end closing ": {"fields": ["pa_Month_end_details_per_template",
                                     "pa_WMS_month_end_closing_Billing","pa_Providing_Reports_management" ]},
         "Incident and Accident": {"fields": ["pa_Incident_Accident_recorded", "pa_Reported_management_immediately", ]},
         "Sales Program / Sales meetings / Quotation management": {"fields": ["pa_Sales_calls_weekly_Sales_planning", "pa_Updating_all_sales","pa_New_customer_boarding"

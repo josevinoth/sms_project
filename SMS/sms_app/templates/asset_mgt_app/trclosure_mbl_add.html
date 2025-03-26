@@ -1,56 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if form.instance.pk %} Edit {% else %} Add {% endif %} Trip Closure</title>
+{% extends "asset_mgt_app/base_mbl.html" %}
+{% block content %}
 
-    <!-- Bootstrap 5 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/css/styles.css">
-
-    <!-- FontAwesome -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
-    <!-- jQuery & Select2 -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .form-container {
-            max-width: 600px;
-            margin: 40px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .btn-custom {
-            width: 100%;
-            font-weight: bold;
-        }
-        .form-label {
-            font-weight: 600;
-        }
-        .form-control:focus {
-            border-color: #0d6efd;
-            box-shadow: 0px 0px 5px rgba(13, 110, 253, 0.3);
-        }
-        .select2-container {
-            width: 100% !important;  /* Ensure it takes full width */
-        }
-    </style>
-</head>
-<body>
 
 <div class="container">
     <div class="form-container">
         <h3 class="text-center mb-4">
-            <i class="fas fa-truck"></i> {% if form.instance.pk %} Edit {% else %} Add {% endif %} Trip Closure
+            {% if form.instance.pk %} Edit {% else %} Add {% endif %} Trip Closure
         </h3>
 
         <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
@@ -116,25 +71,19 @@
                 <label for="trm_attachment" class="form-label">Upload Attachment (Optional)</label>
                 <input type="file" id="trm_attachment" name="trm_attachment" class="form-control">
             </div>
-            <div class="row">
-                <div class="col-3">
-                    <button type="submit" class="btn btn-success btn-custom">
-                        <i class="fas fa-save"></i> Save
-                    </button>
-                </div>
-                <div class="col-6"></div>
-                <div class="col-3">
-                    <a href="{% url 'trclosure_mbl_list' %}" class="btn btn-secondary btn-custom mt-2">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
-                </div>
+
+                <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-success btn-sm-2">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <a href="{% url 'trclosure_mbl_list' %}" class="btn btn-danger float-right">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+
             </div>
         </form>
     </div>
 </div>
-
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Select2 Initialization -->
 <script>
@@ -163,5 +112,4 @@
     })();
 </script>
 
-</body>
-</html>
+{% endblock content %}
