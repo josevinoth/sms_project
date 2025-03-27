@@ -83,4 +83,8 @@ def part_code_delete(request, pc_id):
 def get_stock_descriptions(request):
     query = request.GET.get('q', '')  # Get search term
     descriptions = Stockdescription.objects.filter(stock_description__icontains=query).values("id", "stock_description")
-    return JsonResponse(list(descriptions), safe=False)
+
+    # Ensure uniqueness in case of duplicate descriptions
+    descriptions_list = list({desc["stock_description"]: desc for desc in descriptions}.values())
+
+    return JsonResponse(descriptions_list, safe=False)
