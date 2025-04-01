@@ -21,17 +21,29 @@
     .warehouse-budget {
         background-color: #2E3192;
         color: white;
+        font-size: 25px;
     }
     .warehouse-actuals {
         background-color: #062F7E;
         color: white;
+        font-size: 25px;
     }
     .income {
         background-color: #C6E0B4;
         font-weight: bold;
     }
+
+    .category {
+        background-color: #7b87cf;
+        border-color:black;
+        font-size: 18px;
+    }
+    .variance {
+        background-color: #ccb3ff;
+        font-weight: bold;
+    }
     .total {
-        background-color: #58ff58;
+        background-color: #53c653;
         font-weight: bold;
     }
     .expenses {
@@ -114,15 +126,11 @@
 <table border="1">
     <thead>
     <tr>
-        <th class="warehouse-actuals" colspan="15">Warehouse Actuals</th>
-        <th class="warehouse-budget" colspan="13">Warehouse Budget</th>
+        <th class="warehouse-budget" colspan="15">Warehouse Budget</th>
+        <th class="warehouse-actuals" colspan="13">Warehouse Actuals</th>
         <th class="warehouse-budget" colspan="13">Warehouse Variance</th>
     <tr>
         <th colspan="2">Warehouse</th>
-        {% for month in months %}
-        <th>{{ month }}</th>
-        {% endfor %}
-        <th>Total Expense</th>
         {% for month in months %}
         <th>{{ month }}</th>
         {% endfor %}
@@ -130,61 +138,52 @@
         {% for month in months %}
         <th>{{ month }}</th>
         {% endfor %}
-        <th>Difference</th>
+        <th>Total Actuals</th>
+        {% for month in months %}
+        <th>{{ month }}</th>
+        {% endfor %}
+        <th>Total Variance</th>
 
     </tr>
     </thead>
     <tbody>
-    {% for summary in operational_summary %}
-    <tr>
-        <td colspan="2">{{ summary.expense_type }}</td>
+
+    <tr class="category">
+        <td colspan="2"><strong>INCOME</strong></td>
         {% for month in months %}
-        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        <td><strong>{{ category_summaries.income_budget|get_item:forloop.counter|floatformat:0 }}</strong></td>
         {% endfor %}
-        <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
+        <td><strong>{{ category_totals.income_budget|floatformat:0 }}</strong></td>
         {% for month in months %}
-        <td>{{ summary.monthly_budgets|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        <td><strong>{{ category_summaries.income_expense|get_item:forloop.counter|floatformat:0 }}</strong></td>
         {% endfor %}
-        <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
+        <td><strong>{{ category_totals.income_expense|floatformat:0 }}</strong></td>
         {% for month in months %}
-        <td>{{ summary.monthly_variance|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        <td><strong>{{ category_summaries.income_variance|get_item:forloop.counter|floatformat:0 }}</strong></td>
         {% endfor %}
-        <td>{{ summary.total_variance|floatformat:0 }}</td>
+        <td><strong>{{ category_totals.income_variance|floatformat:0 }}</strong></td>
+
     </tr>
-    {% endfor %}
-    <tr class="total">
-        <td colspan="2"><strong>Month Totals</strong></td>
-        {% for month in months %}
-        <td><strong>{{ category_summaries.operational_expense|get_item:forloop.counter|floatformat:0 }}</strong></td>
-        {% endfor %}
-        <td><strong>{{ category_totals.operational_expense|floatformat:0 }}</strong></td>
-        {% for month in months %}
-        <td><strong>{{ category_summaries.operational_budget|get_item:forloop.counter|floatformat:0 }}</strong></td>
-        {% endfor %}
-        <td><strong>{{ category_totals.operational_budget|floatformat:0 }}</strong></td>
-        {% for month in months %}
-        <td><strong>{{ category_summaries.operational_variance|get_item:forloop.counter|floatformat:0 }}</strong></td>
-        {% endfor %}
-        <td><strong>{{ category_totals.operational_variance|floatformat:0 }}</strong></td>
-    </tr>
-    <tr><td style="background:#7b87cf;" colspan="20">INCOME</td></tr>
     {% for summary in income_summary %}
     <tr>
         <td colspan="2">{{ summary.expense_type }}</td>
         {% for month in months %}
-        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:1 }}</td>
-        {% endfor %}
-        <td>{{ summary.total_expense }}</td>
-        {% for month in months %}
         <td>{{ summary.monthly_budgets|get_item:forloop.counter|default:0 }}</td>
         {% endfor %}
-        <td>{{ summary.total_budget }}</td>
-        <td>{{ summary.difference }}</td>
-        <td>{{ summary.pl_percentage|floatformat:2 }}%</td>
+        <td class="income">{{ summary.total_budget }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="expenses">{{ summary.total_expense }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_variance|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+
     </tr>
     {% endfor %}
     <tr class="total">
-        <td><strong>Month Totals</strong></td>
+        <td colspan="2"><strong>INCOME TOTALS</strong></td>
         {% for month in months %}
         <td><strong>{{ category_summaries.income_expense|get_item:forloop.counter|floatformat:1 }}</strong></td>
         {% endfor %}
@@ -193,65 +192,243 @@
         <td><strong>{{ category_summaries.income_budget|get_item:forloop.counter|floatformat:1 }}</strong></td>
         {% endfor %}
         <td><strong>{{ category_totals.income_budget|floatformat:2 }}</strong></td>
-        <td><strong>{{ total_profit_loss|floatformat:2 }}</strong></td>
-        <td><strong>{{ total_pl_percentage | floatformat:1 }}%</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.income_variance|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.income_variance|floatformat:0 }}</strong></td>
+
     </tr>
-    </tbody>
-</table>
 
 
-
-<br>
-<table border="1">
-    <thead>
-    <tr>
-        <th>INCOME</th>
+    <tr class="category">
+        <td colspan="2"><strong>DEPARTMENT EXPENSES</strong></td>
         {% for month in months %}
-        <th>{{ month }}</th>
+        <td><strong>{{ category_summaries.department_budget|get_item:forloop.counter|floatformat:0 }}</strong></td>
         {% endfor %}
-        <th>Total Expense</th>
+        <td><strong>{{ category_totals.department_budget|floatformat:0 }}</strong></td>
         {% for month in months %}
-        <th>{{ month }}</th>
+        <td><strong>{{ category_summaries.department_expense|get_item:forloop.counter|floatformat:0 }}</strong></td>
         {% endfor %}
-        <th>Total Budget</th>
-        <th>Difference</th>
-        <th>P/L %</th>
+        <td><strong>{{ category_totals.department_expense|floatformat:0 }}</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.department_variance|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.department_variance|floatformat:0 }}</strong></td>
+
     </tr>
-    </thead>
-    <tbody>
-    {% for summary in income_summary %}
+    {% for summary in department_expenses_summary %}
     <tr>
-        <td>{{ summary.expense_type }}</td>
-        {% for month in months %}
-        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:1 }}</td>
-        {% endfor %}
-        <td>{{ summary.total_expense }}</td>
+        <td colspan="2">{{ summary.expense_type }}</td>
         {% for month in months %}
         <td>{{ summary.monthly_budgets|get_item:forloop.counter|default:0 }}</td>
         {% endfor %}
-        <td>{{ summary.total_budget }}</td>
-        <td>{{ summary.difference }}</td>
-        <td>{{ summary.pl_percentage|floatformat:2 }}%</td>
+        <td class="income">{{ summary.total_budget }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="expenses">{{ summary.total_expense }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_variance|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+
     </tr>
     {% endfor %}
 
-    <!-- Grand Total Row -->
+
+
+    <tr class="category">
+        <td colspan="2"><strong>EMPLOYEE BENEFITS</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.employee_budget|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.employee_budget|floatformat:0 }}</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.employee_expense|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.employee_expense|floatformat:0 }}</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.employee_variance|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.employee_variance|floatformat:0 }}</strong></td>
+
+    </tr>
+    {% for summary in employee_benefits_summary %}
     <tr>
-        <td><strong>Grand Total</strong></td>
+        <td colspan="2">{{ summary.expense_type }}</td>
         {% for month in months %}
-        <td><strong>
-            {{ income_summary|sum_monthly_values:month|floatformat:1 }}
-        </strong></td>
+        <td>{{ summary.monthly_budgets|get_item:forloop.counter|default:0 }}</td>
         {% endfor %}
-        <td><strong>{{ income_summary|sum_attribute:"total_expense"|floatformat:1 }}</strong></td>
+        <td class="income">{{ summary.total_budget }}</td>
         {% for month in months %}
-        <td><strong>{{ income_summary|sum_monthly_values:month|floatformat:1 }}</strong></td>
+        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td><strong>{{ income_summary|sum_attribute:"total_budget"|floatformat:1 }}</strong></td>
-        <td><strong>{{ income_summary|sum_attribute:"difference"|floatformat:1 }}</strong></td>
-        <td><strong>{{ income_summary|sum_attribute:"pl_percentage"|floatformat:2 }}%</strong></td>
+        <td class="expenses">{{ summary.total_expense }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_variance|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+
+    </tr>
+    {% endfor %}
+
+
+    <tr class="category">
+        <td colspan="2"><strong>INTEREST EXPENSES</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.interest_budget|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.interest_budget|floatformat:0 }}</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.interest_expense|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.interest_expense|floatformat:0 }}</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.interest_variance|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.interest_variance|floatformat:0 }}</strong></td>
+
+    </tr>
+    {% for summary in interest_summary %}
+    <tr>
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_budgets|get_item:forloop.counter|default:0 }}</td>
+        {% endfor %}
+        <td class="income">{{ summary.total_budget }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="expenses">{{ summary.total_expense }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_variance|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+
+    </tr>
+    {% endfor %}
+
+    <tr class="category">
+        <td colspan="2"><strong>OPERATIONAL EXPENSES</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.operational_budget|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.operational_budget|floatformat:0 }}</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.operational_expense|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.operational_expense|floatformat:0 }}</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.operational_variance|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.operational_variance|floatformat:0 }}</strong></td>
+    </tr>
+    {% for summary in operational_summary %}
+    <tr>
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_budgets|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_variance|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+
+
+
+    <tr class="category">
+        <td colspan="2"><strong>NON-OPERATIONAL EXPENSES</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.non_operational_budget|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.non_operational_budget|floatformat:0 }}</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.non_operational_expense|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.non_operational_expense|floatformat:0 }}</strong></td>
+        {% for month in months %}
+        <td><strong>{{ category_summaries.non_operational_variance|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ category_totals.non_operational_variance|floatformat:0 }}</strong></td>
+    </tr>
+    {% for summary in non_operational_summary %}
+    <tr>
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_budgets|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
+        {% for month in months %}
+        <td>{{ summary.monthly_variance|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+
+
+
+    <tr class="total">
+        <td colspan="2"><strong>Grand Total</strong></td>
+
+        {% for month in months %}
+        <td><strong>{{ grand_totals.monthly_budget|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ total_budget|floatformat:0 }}</strong></td>
+
+        {% for month in months %}
+        <td><strong>{{ grand_totals.monthly_expense|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ total_expense|floatformat:0 }}</strong></td>
+
+        {% for month in months %}
+        <td><strong>{{ grand_totals.monthly_profit_loss|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ total_profit_loss|floatformat:0 }}</strong></td>
     </tr>
 
+
+    <tr style="background:#ffcc66;">
+        <td colspan="2"><strong>Total Budget</strong></td>
+        {# Monthly Profit/Loss Percentage Totals #}
+        {% for month in months %}
+        <td><strong>{{ grand_totals.monthly_budget|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ total_budget|floatformat:0 }}</strong></td>
+    </tr>
+    <tr style="background:#c4ff4d;">
+        <td colspan="2"><strong>Total Expenses</strong></td>
+        {% for month in months %}
+        <td><strong>{{ grand_totals.monthly_expense|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ total_expense|floatformat:0 }}</strong></td>
+    </tr>
+
+
+    <tr style="background:#ffff1a;">
+        <td colspan="2"><strong>Profit/loss</strong></td>
+        {% for month in months %}
+        <td><strong>{{ grand_totals.monthly_profit_loss|get_item:forloop.counter|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ total_profit_loss|floatformat:0 }}</strong></td>
+    </tr>
+    <tr style="background:#ffff99;">
+        <td colspan="2"><strong>Profit/loss%</strong></td>
+        {% for month in months %}
+        <td><strong>{{ grand_totals.monthly_profit_loss_percentage|get_item:forloop.counter|floatformat:0 }}%</strong></td>
+        {% endfor %}
+        <td><strong>{{ total_profit_loss_percentage|floatformat:0 }}%</strong></td>
+    </tr>
 
     </tbody>
 </table>
