@@ -115,6 +115,7 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
 # List enquirynote
 @login_required(login_url='login_page')
 def enquirynote_list(request):
+    global trip_dict
     print("Inside Enquiry List")
 
     first_name = request.session.get('first_name')
@@ -167,6 +168,7 @@ def enquirynote_list(request):
 
     # Organize the data for the template
     enquiry_data = []
+    trip_dict=trip_dict
     for enquiry in page_obj:
         enquiry_data.append({
             'enquiry': enquiry,
