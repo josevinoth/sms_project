@@ -13,7 +13,7 @@ from django.core.paginator import Paginator
 
 
 @login_required(login_url='login_page')
-def gatein_pre_truck_mbl_add(request, gp_tm_id=0):
+def gatein_pre_truck_mbl_add(request, gatein_truck_mbl_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     # Fetch dropdown options
@@ -25,10 +25,10 @@ def gatein_pre_truck_mbl_add(request, gp_tm_id=0):
     storagecrosslabel = storagecrosslabelInfo.objects.all()
 
     if request.method == "GET":
-        if gp_tm_id == 0:
+        if gatein_truck_mbl_id == 0:
             form = PregateintruckmblForm()
         else:
-            gateinpretruck = get_object_or_404(Pregateintruckinfo, pk=gp_tm_id)
+            gateinpretruck = get_object_or_404(Pregateintruckinfo, pk=gatein_truck_mbl_id)
             form = PregateintruckmblForm(instance=gateinpretruck)
 
         return render(request, "asset_mgt_app/pregateintruck_mbl_add.html", {
@@ -44,10 +44,10 @@ def gatein_pre_truck_mbl_add(request, gp_tm_id=0):
         })
 
     else:
-        if gp_tm_id == 0:
+        if gatein_truck_mbl_id == 0:
             form = PregateintruckmblForm(request.POST)
         else:
-            gateinpretruck = get_object_or_404(Pregateintruckinfo, pk=gp_tm_id)
+            gateinpretruck = get_object_or_404(Pregateintruckinfo, pk=gatein_truck_mbl_id)
             form = PregateintruckmblForm(request.POST,instance=gateinpretruck)
 
 
@@ -92,13 +92,13 @@ def gatein_pre_truck_mbl_list(request):
 
 
 @login_required(login_url='login_page')
-def gatein_pre_truck_mbl_delete(request, gp_tm_id):
-    gateinpretruck = Pregateintruckinfo.objects.get(pk=gp_tm_id)
+def gatein_pre_truck_mbl_delete(request, gatein_truck_mbl_id):
+    gateinpretruck = Pregateintruckinfo.objects.get(pk=gatein_truck_mbl_id)
     gateinpretruck.delete()
     return redirect(request.META['HTTP_REFERER'])
 
 
 @login_required(login_url='login_page')
 def gatein_pre_truck_mbl_cancel(request,gpm_id=0):
-    gpm_id = request.session['ses_gpm_id']
+    gpm_id = request.session.get('ses_gpm_id')
     return redirect('/SMS/gatein_pre_mbl_edit/' + str(gpm_id))

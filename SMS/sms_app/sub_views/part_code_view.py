@@ -1,15 +1,22 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
 from django.db import IntegrityError
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+
 from ..forms import Part_codeForm
-from ..models import PkpartcodeInfo
+from ..models import PkpartcodeInfo, Stockdescription
 
 @login_required(login_url='login_page')
 def part_code_add(request, pc_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    part_code_list = PkpartcodeInfo.objects.all()
+    part_code_list = PkpartcodeInfo.objects.all().order_by('id')
+    page_number = request.GET.get('page')
+    paginator = Paginator(part_code_list, 50)
+    page_obj = paginator.get_page(page_number)
 
     if request.method == "GET":
         if pc_id == 0:
@@ -21,7 +28,8 @@ def part_code_add(request, pc_id=0):
             'form': form,
             'user_id': user_id,
             'first_name': first_name,
-            'part_code_list': part_code_list
+            'part_code_list': part_code_list,
+            'page_obj': page_obj
         })
 
     else:
@@ -39,8 +47,6 @@ def part_code_add(request, pc_id=0):
                 messages.error(request, 'Error: Part Code must be unique.')
         else:
             messages.error(request, 'Record Not Saved Successfully. Please check for errors.')
-
-            # Debugging: Display form errors
             for field, errors in form.errors.items():
                 for error in errors:
                     print(f"Error in {field}: {error}")
@@ -52,11 +58,33 @@ def part_code_add(request, pc_id=0):
 def part_code_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    context = {'part_code_list': PkpartcodeInfo.objects.all(),'user_id' :user_id, 'first_name': first_name}
+    partcode_list = PkpartcodeInfo.objects.all().order_by('id')
+
+    page_number = request.GET.get('page')
+    paginator = Paginator(partcode_list, 50)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'partcode_list': partcode_list,
+        'page_obj': page_obj,
+        'user_id': user_id,
+        'first_name': first_name
+    }
     return render(request, "asset_mgt_app/part_code_list.html", context)
 
 @login_required(login_url='login_page')
 def part_code_delete(request, pc_id):
     part_code = get_object_or_404(PkpartcodeInfo, pk=pc_id)
     part_code.delete()
+    messages.success(request, 'Part Code deleted successfully.')
     return redirect('/SMS/part_code_list')
+
+@login_required(login_url='login_page')
+def get_stock_descriptions(request):
+    query = request.GET.get('q', '')  # Get search term
+    descriptions = Stockdescription.objects.filter(stock_description__icontains=query).values("id", "stock_description")
+
+    # Ensure uniqueness in case of duplicate descriptions
+    descriptions_list = list({desc["stock_description"]: desc for desc in descriptions}.values())
+
+    return JsonResponse(descriptions_list, safe=False)
