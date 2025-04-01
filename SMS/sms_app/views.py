@@ -149,3 +149,6 @@ from .sub_views.trip_closure_mblview import trclosure_mbl_add,trclosure_mbl_list
 from .sub_views.gatein_pre_mbl_view import gatein_pre_mbl_add,gatein_pre_mbl_list,gatein_pre_mbl_delete
 from .sub_views.part_code_view import part_code_add,part_code_list,part_code_delete
 from .sub_views.pregateintruck_mbl_add_view import gatein_pre_truck_mbl_add,gatein_pre_truck_mbl_list,gatein_pre_truck_mbl_delete,gatein_pre_truck_mbl_cancel
+from .sub_views.warehouse_gatein_insert_mbl_view import gatein_add_mbl, gatein_list_mbl,gatein_delete_mbl
+from .sub_views.loadingbay_add_mbl_view import loadingbay_add_mbl, load_currency_value_mbl
+from .sub_views.goods_add_mbl_view import goods_mbl_list, goods_mbl_add,goods_mbl_delete,goods_mbl_update
