@@ -766,6 +766,7 @@ OPERATIONAL_EXPENSES_CATEGORIES = {
     "Diesel Expenses - Forklift": "bf_diesel_expenses_forklift",
     "Forklift Handling Expenses": "bf_forklift_handling_expenses",
     "Fumigation Expenses":"bf_fumigation_expenses",
+
 }
 NON_OPERATIONAL_EXPENSES_CATEGORIES = {
     "Non-Operational Expenses Fixed": "bf_oe_Fixed",
@@ -1153,6 +1154,12 @@ def budget_expense_mis(request):
     category_totals = {
         "income_budget": 0,
         "income_expense": 0,
+        "department_budget": 0,
+        "department_expense": 0,
+        "employee_budget": 0,
+        "employee_expense": 0,
+        "interest_budget": 0,
+        "interest_expense": 0,
         "operational_budget": 0,
         "operational_expense": 0,
         "non_operational_budget": 0,
@@ -1162,6 +1169,12 @@ def budget_expense_mis(request):
     category_summaries = {
         "income_budget": {i: 0 for i in range(1, 13)},
         "income_expense": {i: 0 for i in range(1, 13)},
+        "department_budget": {i: 0 for i in range(1, 13)},
+        "department_expense": {i: 0 for i in range(1, 13)},
+        "employee_budget": {i: 0 for i in range(1, 13)},
+        "employee_expense": {i: 0 for i in range(1, 13)},
+        "interest_budget": {i: 0 for i in range(1, 13)},
+        "interest_expense": {i: 0 for i in range(1, 13)},
         "operational_budget": {i: 0 for i in range(1, 13)},
         "operational_expense": {i: 0 for i in range(1, 13)},
         "non_operational_budget": {i: 0 for i in range(1, 13)},
@@ -1173,15 +1186,24 @@ def budget_expense_mis(request):
     for item in budget_summary:
         month = item["bf_updated_at__month"]
         income_total = sum(item[field] for field in INCOME_CATEGORIES.values() if field in item)
+        department_total = sum(item[field] for field in DEPARTMENT_EXPENSES_CATEGORIES.values() if field in item)
+        employee_total = sum(item[field] for field in EMPLOYEE_BENEFITS_CATEGORIES.values() if field in item)
+        interest_total = sum(item[field] for field in INTEREST_EXPENSES_CATEGORIES.values() if field in item)
         operational_total = sum(item[field] for field in OPERATIONAL_EXPENSES_CATEGORIES.values() if field in item)
         non_operational_total = sum(
             item[field] for field in NON_OPERATIONAL_EXPENSES_CATEGORIES.values() if field in item)
 
         category_summaries["income_budget"][month] = income_total
+        category_summaries["department_budget"][month] = department_total
+        category_summaries["employee_budget"][month] = employee_total
+        category_summaries["interest_budget"][month] = interest_total
         category_summaries["operational_budget"][month] = operational_total
         category_summaries["non_operational_budget"][month] = non_operational_total
 
         category_totals["income_budget"] += income_total
+        category_totals["department_budget"] += department_total
+        category_totals["employee_budget"] += employee_total
+        category_totals["interest_budget"] += interest_total
         category_totals["operational_budget"] += operational_total
         category_totals["non_operational_budget"] += non_operational_total
 
@@ -1196,17 +1218,41 @@ def budget_expense_mis(request):
         elif category in OPERATIONAL_EXPENSES_CATEGORIES:
             category_summaries["operational_expense"][month] += amount
             category_totals["operational_expense"] += amount
+        elif category in DEPARTMENT_EXPENSES_CATEGORIES:
+            category_summaries["department_expense"][month] += amount
+            category_totals["department_expense"] += amount
+        elif category in EMPLOYEE_BENEFITS_CATEGORIES:
+            category_summaries["employee_expense"][month] += amount
+            category_totals["employee_expense"] += amount
+        elif category in INTEREST_EXPENSES_CATEGORIES:
+            category_summaries["interest_expense"][month] += amount
+            category_totals["interest_expense"] += amount
         elif category in NON_OPERATIONAL_EXPENSES_CATEGORIES:
             category_summaries["non_operational_expense"][month] += amount
             category_totals["non_operational_expense"] += amount
 
     category_summaries["income_variance"] = {i: 0 for i in range(1, 13)}
+    category_summaries["department_variance"] = {i: 0 for i in range(1, 13)}
+    category_summaries["employee_variance"] = {i: 0 for i in range(1, 13)}
+    category_summaries["interest_variance"] = {i: 0 for i in range(1, 13)}
     category_summaries["operational_variance"] = {i: 0 for i in range(1, 13)}
     category_summaries["non_operational_variance"] = {i: 0 for i in range(1, 13)}
 
     for month in range(1, 13):
         category_summaries["income_variance"][month] = (
                 category_summaries["income_budget"].get(month, 0) - category_summaries["income_expense"].get(month, 0)
+        )
+
+        category_summaries["employee_variance"][month] = (
+                category_summaries["employee_budget"].get(month, 0) - category_summaries["employee_expense"].get(month, 0)
+        )
+
+        category_summaries["department_variance"][month] = (
+                category_summaries["department_budget"].get(month, 0) - category_summaries["department_expense"].get(month, 0)
+        )
+
+        category_summaries["interest_variance"][month] = (
+                category_summaries["interest_budget"].get(month, 0) - category_summaries["interest_expense"].get(month, 0)
         )
         category_summaries["operational_variance"][month] = (
                 category_summaries["operational_budget"].get(month, 0) - category_summaries["operational_expense"].get(
@@ -1220,6 +1266,18 @@ def budget_expense_mis(request):
                 category_totals["income_budget"] - category_totals["income_expense"]
         )
 
+        category_totals["department_variance"] = (
+                category_totals["department_budget"] - category_totals["department_expense"]
+        )
+
+        category_totals["employee_variance"] = (
+                category_totals["employee_budget"] - category_totals["employee_expense"]
+        )
+
+        category_totals["interest_variance"] = (
+                category_totals["interest_budget"] - category_totals["interest_expense"]
+        )
+
         category_totals["operational_variance"] = (
                 category_totals["operational_budget"] - category_totals["operational_expense"]
         )
@@ -1227,6 +1285,39 @@ def budget_expense_mis(request):
         category_totals["non_operational_variance"] = (
                 category_totals["non_operational_budget"] - category_totals["non_operational_expense"]
         )
+
+    grand_totals = {
+        "monthly_budget": {i: 0 for i in range(1, 13)},
+        "monthly_expense": {i: 0 for i in range(1, 13)},
+        "monthly_profit_loss": {i: 0 for i in range(1, 13)},
+        "monthly_profit_loss_percentage": {i: 0 for i in range(1, 13)}
+    }
+
+    # Calculate Grand Totals for Each Month
+    for month in range(1, 13):
+        grand_totals["monthly_budget"][month] = sum(
+            category_summaries[key][month] for key in category_summaries if "budget" in key)
+        grand_totals["monthly_expense"][month] = sum(
+            category_summaries[key][month] for key in category_summaries if "expense" in key)
+
+        # Profit/Loss = Budget - Expense
+        grand_totals["monthly_profit_loss"][month] = (
+                grand_totals["monthly_budget"][month] - grand_totals["monthly_expense"][month]
+        )
+
+        # Profit/Loss % = (Profit/Loss / Budget) * 100
+        if grand_totals["monthly_budget"][month] > 0:
+            grand_totals["monthly_profit_loss_percentage"][month] = ((grand_totals["monthly_profit_loss"][month] / grand_totals["monthly_budget"][month]) * 100)
+        else:
+            grand_totals["monthly_profit_loss_percentage"][month] = 0
+
+    # Calculate Overall Total Values
+    total_budget = sum(grand_totals["monthly_budget"].values())
+    total_expense = sum(grand_totals["monthly_expense"].values())
+    total_profit_loss = sum(grand_totals["monthly_profit_loss"].values())
+
+    # Overall Profit/Loss %
+    total_pl_percentage = (total_profit_loss / total_budget * 100) if total_budget > 0 else 0
 
     return render(request, "asset_mgt_app/fin_budget_expense_MIS.html", {
         "income_summary": income_summary,
@@ -1238,6 +1329,7 @@ def budget_expense_mis(request):
         "operational_summary": operational_summary,
         "non_operational_summary": non_operational_summary,
         "other_expenses_summary": other_expenses_summary,
+        "grand_totals": grand_totals,
         "total_budget": total_budget,
         "total_expense": total_expense,
         "total_profit_loss": total_profit_loss,

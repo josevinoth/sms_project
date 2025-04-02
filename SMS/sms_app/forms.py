@@ -128,5 +128,6 @@ from.sub_forms.salesmultipleitemForm_form import SalesmultipleitemForm
 from.sub_forms.gatein_pre_mblForm_form import gateinpre_mblForm
 from.sub_forms.part_code_Form import Part_codeForm
 from.sub_forms.pregateintruck_mbl_form import PregateintruckmblForm
+from.sub_forms.warehouse_gatein_insert_mblForm_form import GateinaddmblForm
 
 

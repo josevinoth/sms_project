@@ -650,6 +650,18 @@ urlpatterns = [
     path('gatein_pre_truck_mbl_cancel/', views.gatein_pre_truck_mbl_cancel, name='gatein_pre_truck_mbl_cancel'),
     path('get_stock_descriptions/', views.get_stock_descriptions, name='get_stock_descriptions'),
     path('timesheet_report/', views.timesheet_report, name='timesheet_report'),
+    path('vehicle_requested/', views.vehicle_requested, name='vehicle_requested'),
+    path('vehicle_type_counts/', views.vehicle_type_counts, name='vehicle_type_counts'),
+    path('vehicle_allotted/', views.vehicle_allotted, name='vehicle_allotted'),
+    path('consignmentdetail_cancel/', views.consignmentdetail_cancel, name='consignmentdetail_cancel'),
+    path('load_truck_details/', views.load_truck_details, name='load_truck_details'),
+    path('timesheet_report/', views.timesheet_report, name='timesheet_report'),
+    path('gatein_list_mbl/', views.gatein_list_mbl, name='gatein_list_mbl'),
+    path('gatein_insert_mbl/', views.gatein_add_mbl, name='gatein_insert_mbl'),
+    path('gatein_insert_mbl_edit/<int:gatein_id>/', views.gatein_add_mbl, name='gatein_insert_mbl_edit'),
+    path('gatein_insert_mbl_delete/<int:gatein_id>/', views.gatein_delete_mbl, name='gatein_insert_mbl_delete'),
+    path('loadingbay_add_mbl/', views.loadingbay_add_mbl, name='loadingbay_add_mbl'),
+    path('goods_mbl_insert', views.goods_mbl_add, name='goods_mbl_insert'),
 
 ]
 
