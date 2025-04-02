@@ -266,6 +266,14 @@ def na_dimension_add(request, na_dimension_id=0):
             else:
                 print("Main form not saved")
                 messages.error(request,"Record Not Updated Successfully")
+
+                # Display form errors
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        print(f"Error in {field}: {error}")
+                        messages.error(request, f"Error in {field}: {error}")
+
+            return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
         # return redirect('/SMS/needassessment_list')
         return redirect(request.META['HTTP_REFERER'])
 @login_required(login_url='login_page')

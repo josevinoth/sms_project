@@ -15,6 +15,7 @@ def part_code_add(request, pc_id=0):
     user_id = request.session.get('ses_userID')
     part_code_list = PkpartcodeInfo.objects.all().order_by('id')
     page_number = request.GET.get('page')
+    part_code=request.session['pc_code']
     paginator = Paginator(part_code_list, 50)
     page_obj = paginator.get_page(page_number)
 
@@ -29,7 +30,9 @@ def part_code_add(request, pc_id=0):
             'user_id': user_id,
             'first_name': first_name,
             'part_code_list': part_code_list,
-            'page_obj': page_obj
+            'page_obj': page_obj,
+            'part_code': part_code
+
         })
 
     else:
