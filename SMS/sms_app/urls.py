@@ -649,6 +649,7 @@ urlpatterns = [
     path('gatein_pre_truck_mbl_delete/<int:gp_tm_id>/', views.gatein_pre_truck_mbl_delete, name='gatein_pre_truck_mbl_delete'),
     path('gatein_pre_truck_mbl_cancel/', views.gatein_pre_truck_mbl_cancel, name='gatein_pre_truck_mbl_cancel'),
     path('get_stock_descriptions/', views.get_stock_descriptions, name='get_stock_descriptions'),
+    path('get_part_code/', views.get_part_code, name='get_part_code'),
     path('timesheet_report/', views.timesheet_report, name='timesheet_report'),
     path('vehicle_requested/', views.vehicle_requested, name='vehicle_requested'),
     path('vehicle_type_counts/', views.vehicle_type_counts, name='vehicle_type_counts'),

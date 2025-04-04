@@ -292,7 +292,6 @@
             {
         		$('#pkqt_stock_type').removeClass('disable_a_href');
                 var jn1=document.getElementById("pkqt_stock_type").value
-                alert(jn1)
                 if (jn1==1)
                 {
             		$('#pkqt_stock_description').removeClass('disable_a_href');
@@ -866,5 +865,37 @@
        }
 
 </script>
+<script>
 
+    // Enable select2 for part code field
+    $('#pkqt_part_code').select2({
+        ajax: {
+            url: "{% url 'get_part_code' %}",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term // Send search term
+                };
+            },
+            processResults: function (data) {
+                console.log("Received Data:", data); // Debugging
+                return {
+                    results: data.map(item => ({
+                        id: item.id,
+                        text: item.pc_code
+                    }))
+                };
+            },
+            error: function (xhr, status, error) {
+                console.error("AJAX Error:", error);
+                console.log("Response:", xhr.responseText); // Log full response
+            },
+            cache: true
+        },
+        placeholder: "Search Part Code",
+        minimumInputLength: 1,
+    });
+
+</script>
 {% endblock content %}

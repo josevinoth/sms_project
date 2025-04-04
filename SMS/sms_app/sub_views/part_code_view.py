@@ -13,9 +13,9 @@ from ..models import PkpartcodeInfo, Stockdescription
 def part_code_add(request, pc_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    part_code = request.session.get('pc_code', None)  # Returns None if 'pc_code' doesn't exist
     part_code_list = PkpartcodeInfo.objects.all().order_by('id')
     page_number = request.GET.get('page')
-    part_code=request.session['pc_code']
     paginator = Paginator(part_code_list, 50)
     page_obj = paginator.get_page(page_number)
 
@@ -91,3 +91,13 @@ def get_stock_descriptions(request):
     descriptions_list = list({desc["stock_description"]: desc for desc in descriptions}.values())
 
     return JsonResponse(descriptions_list, safe=False)
+
+@login_required(login_url='login_page')
+def get_part_code(request):
+    query = request.GET.get('q', '')
+    part_codes = PkpartcodeInfo.objects.filter(pc_code__icontains=query).values("id", "pc_code")
+
+    # Remove duplicates (though pc_code is already unique by model definition)
+    code_list = list({code["pc_code"]: code for code in part_codes}.values())
+
+    return JsonResponse(code_list, safe=False)

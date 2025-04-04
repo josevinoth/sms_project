@@ -52,7 +52,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Part Code</span>
 									</div>
-									{% render_field form.sp_part_code id="sp_part_code" onchange="fetchPartCodeDetails()" class="form-control " %}
+									{% render_field form.sp_part_code id="sp_part_code" onchange="fetchPartCodeDetails()" class="form-control select2" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -470,8 +470,7 @@
 
 </script>
 <script>
-	#enable this by removing 1 from sp
-    $('#sp1_stock_description').select2({
+    $('#sp_stock_description').select2({
     ajax: {
         url: "{% url 'get_stock_descriptions' %}",
         dataType: 'json',
@@ -497,4 +496,36 @@
 
 
 </script>
+<script>
+    // Enable select2 for part code field
+    $('#sp_part_code').select2({
+        ajax: {
+            url: "{% url 'get_part_code' %}",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term // Send search term
+                };
+            },
+            processResults: function (data) {
+                console.log("Received Data:", data); // Debugging
+                return {
+                    results: data.map(item => ({
+                        id: item.id,
+                        text: item.pc_code
+                    }))
+                };
+            },
+            error: function (xhr, status, error) {
+                console.error("AJAX Error:", error);
+                console.log("Response:", xhr.responseText); // Log full response
+            },
+            cache: true
+        },
+        placeholder: "Search Part Code",
+        minimumInputLength: 1,
+    });
+</script>
+
 {% endblock content %}
