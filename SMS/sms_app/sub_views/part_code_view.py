@@ -13,7 +13,6 @@ from ..models import PkpartcodeInfo, Stockdescription
 def part_code_add(request, pc_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    part_code = request.session.get('pc_code', None)  # Returns None if 'pc_code' doesn't exist
     part_code_list = PkpartcodeInfo.objects.all().order_by('id')
     page_number = request.GET.get('page')
     paginator = Paginator(part_code_list, 50)
@@ -31,8 +30,7 @@ def part_code_add(request, pc_id=0):
             'first_name': first_name,
             'part_code_list': part_code_list,
             'page_obj': page_obj,
-            'part_code': part_code
-
+            'part_code': part_code if pc_id != 0 else None
         })
 
     else:
@@ -44,10 +42,12 @@ def part_code_add(request, pc_id=0):
 
         if form.is_valid():
             try:
-                form.save()
+                instance = form.save(commit=False)
+                instance.pc_updated_by_id = user_id
+                instance.save()
                 messages.success(request, 'Record Saved Successfully')
-            except IntegrityError:
-                messages.error(request, 'Error: Part Code must be unique.')
+            except Exception as e:
+                messages.error(request, f'Error: {str(e)}')
         else:
             messages.error(request, 'Record Not Saved Successfully. Please check for errors.')
             for field, errors in form.errors.items():
@@ -84,13 +84,20 @@ def part_code_delete(request, pc_id):
 
 @login_required(login_url='login_page')
 def get_stock_descriptions(request):
-    query = request.GET.get('q', '')  # Get search term
-    descriptions = Stockdescription.objects.filter(stock_description__icontains=query).values("id", "stock_description")
+    query = request.GET.get('q', '')
+    descriptions = Stockdescription.objects.filter(
+        stock_description__icontains=query
+    ).values("id", "stock_description")
 
-    # Ensure uniqueness in case of duplicate descriptions
-    descriptions_list = list({desc["stock_description"]: desc for desc in descriptions}.values())
+    # Ensure uniqueness and format for Select2
+    descriptions_dict = {desc["stock_description"]: desc for desc in descriptions}
+    results = [
+        {"id": desc["id"], "text": desc["stock_description"]}
+        for desc in descriptions_dict.values()
+    ]
 
-    return JsonResponse(descriptions_list, safe=False)
+    return JsonResponse({"results": results})  # 👈 Wrapped in 'results' key
+
 
 @login_required(login_url='login_page')
 def get_part_code(request):
