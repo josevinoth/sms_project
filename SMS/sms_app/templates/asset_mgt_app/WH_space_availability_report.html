@@ -174,7 +174,6 @@ $(document).ready(function() {
  <script>
         Chart.register(ChartDataLabels);
 
-        // 📊 Data for Area Bar Chart
         var ctxArea = document.getElementById('areaChart').getContext('2d');
         new Chart(ctxArea, {
             type: 'bar',
@@ -219,7 +218,7 @@ $(document).ready(function() {
             }
         });
 
-        // 📊 Data for Volume Bar Chart
+
         var ctxVolume = document.getElementById('volumeChart').getContext('2d');
         new Chart(ctxVolume, {
             type: 'bar',
@@ -264,7 +263,7 @@ $(document).ready(function() {
             }
         });
 
-        // 🍩 Donut Chart for Available Area %
+
         var ctxDonut = document.getElementById('donutChart').getContext('2d');
         new Chart(ctxDonut, {
             type: 'doughnut',

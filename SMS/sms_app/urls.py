@@ -655,6 +655,7 @@ urlpatterns = [
     path('vehicle_allotted/', views.vehicle_allotted, name='vehicle_allotted'),
     path('consignmentdetail_cancel/', views.consignmentdetail_cancel, name='consignmentdetail_cancel'),
     path('load_truck_details/', views.load_truck_details, name='load_truck_details'),
+    path('fin_mis/', views.fin_mis, name='fin_mis'),
 ]
 
 
