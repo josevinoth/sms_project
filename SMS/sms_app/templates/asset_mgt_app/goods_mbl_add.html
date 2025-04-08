@@ -1,0 +1,434 @@
+{% extends "asset_mgt_app/base_mbl.html" %}
+{% block content %}
+
+<div class="container">
+    <div class="form-container">
+        <!-- Progress Bar -->
+        <div class="progress mb-3">
+            <div class="progress-bar bg-primary" role="progressbar" style="width: 50%;" id="progress-bar"></div>
+        </div>
+
+        <!-- Page Indicator -->
+        <div class="page-indicator">
+            <span id="page-title">Page 1 of 2</span>
+        </div>
+        <br>
+        <h3 class="text-center mb-4">
+              Add/Update Damage Check/After
+        </h3>
+
+        <div class="col-12 col-md-8">
+            <div class="col-12 col-md-3 mb-3">
+                <a href="{% url 'gatein_insert_mbl' %}" class="btn btn-success">Gate-in</a>            </div>
+            <div class="col-12 col-md-3 mb-3">
+                <a href="{% url 'goods_mbl_insert' %}" class="btn btn-success">Goods Receipt</a>            </div>
+            <div class="col-12 col-md-3 mb-3">
+                <a href="{% url 'loadingbay_add_mbl' %}" class="btn btn-success">inspection</a>            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate id="preGateinForm">
+            {% csrf_token %}
+
+            <!-- ==================== PAGE 1 ==================== -->
+            <div id="page1">
+                <div class="mb-3">
+                    <label for="wh_job_no" class="form-label">WH Job Number</label>
+                    <input type="text" id="wh_job_no" name="wh_job_no" class="form-control" value="{{ form.wh_job_no.value|default:'' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="wh_po_num" class="form-label">PO Number</label>
+                    <input type="text" id="wh_po_num" name="wh_po_num" class="form-control" value="{{ form.wh_po_num.value|default:'' }}" required>
+                    <div class="invalid-feedback">Please enter the gatein invoice</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="wh_goods_area" class="form-label">Required Area (Sq.Ft)</label>
+                    <input type="text" id="wh_goods_area" name="wh_goods_area" class="form-control" value="{{ form.wh_goods_area.value|default:'' }}" required>
+                    <div class="invalid-feedback">Please enter the gatein po num</div>
+                </div>
+                <div class="mb-3">
+                    <label for="wh_goods_volume_weight" class="form-label">Required Volume (Cu.Ft)</label>
+                    <input type="text" id="wh_goods_volume_weight" name="wh_goods_volume_weight" class="form-control" value="{{ form.wh_goods_volume_weight.value|default:'' }}" required>
+                    <div class="invalid-feedback">Please enter the gatein po num</div>
+                </div>
+                <div class="mb-3">
+                    <label for="wh_chargeable_weight" class="form-label">Volume Weight</label>
+                    <input type="text" id="wh_chargeable_weight" name="wh_chargeable_weight" class="form-control" value="{{ form.wh_chargeable_weight.value|default:'' }}" required>
+                    <div class="invalid-feedback">Please enter the gatein po num</div>
+                </div>
+
+                <!-- Next Button -->
+                <div class="btn-container">
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="nextPage()">
+                        <i class="fas fa-arrow-right"></i> Next
+                    </button>
+                </div>
+            </div>
+            <!-- ==================== PAGE 2 ==================== -->
+            <div id="page2">
+                <div class="mb-3">
+                    <label for="wh_cbm" class="form-label">CBM</label>
+                    <input type="text" id="wh_cbm" name="wh_cbm" class="form-control" value="{{ form.wh_cbm.value|default:'' }}" required>
+                    <div class="invalid-feedback">Please enter the gatein po num</div>
+                </div>
+                <div class="mb-3">
+                    <label for="wh_fumigation_process" class="form-label">Fumigation Done?</label>
+                    <select id="wh_fumigation_process" name="wh_fumigation_process" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Gstexcemption in Gstexcemption %}
+                        <option value="{{ Gstexcemption.id }}" {% if form.wh_fumigation_process.value == Gstexcemption.id %}selected{% endif %}>
+                            {{ Gstexcemption }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Documents Pouch</div>
+                </div>
+                <!-- Quantity (Integer) -->
+                <div class="mb-3">
+                    <label for="wh_fumigation_action" class="form-label">Fumigation Action?</label>
+                    <select id="wh_fumigation_action" name="wh_fumigation_action" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Fumigationaction in Fumigationaction %}
+                        <option value="{{ Fumigationaction.id }}" {% if form.wh_fumigation_action.value == Fumigationaction.id %}selected{% endif %}>
+                            {{ Fumigationaction }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Documents Pouch</div>
+                </div>
+
+                 <div class="mb-3">
+                    <label for="wh_fumigation_date" class="form-label">Fumigation Date</label>
+                    <input type="datetime-local" id="wh_fumigation_date" name="wh_fumigation_date" class="form-control" value="{{ form.wh_fumigation_date.value|default:'' }}" required>
+                    <div class="invalid-feedback">Please enter a destination</div>
+                </div>
+                 <div class="mb-3">
+                    <label for="wh_weights_deviation" class="form-label">Weight Deviation?</label>
+                    <select id="wh_weights_deviation" name="wh_weights_deviation" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Gstexcemption in Gstexcemption %}
+                        <option value="{{ Gstexcemption.id }}" {% if form.wh_weights_deviation.value == Gstexcemption.id %}selected{% endif %}>
+                            {{ Gstexcemption }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Manual Handling</div>
+                </div>
+                <!-- Next Button -->
+                <div class="btn-container">
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="previousPage()">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="nextPage()">
+                        <i class="fas fa-arrow-right"></i> Next
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== PAGE 3 ==================== -->
+            <div id="page3">
+
+                <!-- Quantity (Integer) -->
+               <div class="mb-3">
+                    <label for="wh_dimension_deviation" class="form-label">Dimension Deviation?</label>
+                    <select id="wh_dimension_deviation" name="wh_dimension_deviation" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Gstexcemption in Gstexcemption %}
+                        <option value="{{ Gstexcemption.id }}" {% if form.wh_dimension_deviation.value == Gstexcemption.id %}selected{% endif %}>
+                            {{ Gstexcemption }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Manual Handling</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="wh_no_of_units_deviation" class="form-label">Quantity Deviation?</label>
+                    <select id="wh_no_of_units_deviation" name="wh_no_of_units_deviation" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Gstexcemption in Gstexcemption %}
+                        <option value="{{ Gstexcemption.id }}" {% if form.wh_no_of_units_deviation.value == Gstexcemption.id %}selected{% endif %}>
+                            {{ Gstexcemption }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Manual Handling</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="wh_damages" class="form-label">Damages?</label>
+                    <select id="wh_damages" name="wh_damages" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Damage in Damage %}
+                        <option value="{{ Damage.id }}" {% if form.wh_damages.value == Damage.id %}selected{% endif %}>
+                            {{ Damage }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Manual Handling</div>
+                </div>
+              <div class="mb-3">
+                    <label for="wh_mismatches" class="form-label">Mismatches?</label>
+                    <select id="wh_mismatches" name="wh_mismatches" class="form-control" required>
+                        <option value="">-- Select Pre-GateIn --</option>
+                        {% for Gstexcemption in Gstexcemption %}
+                        <option value="{{ Gateinpreid.id }}" {% if form.wh_mismatches.value == Gstexcemption.id %}selected{% endif %}>
+                            {{ Gstexcemption }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Forklift.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="wh_comments" class="form-label">Comments</label>
+                    <input type="text" id="wh_comments" name="wh_comments" class="form-control" value="{{ form.wh_comments.value|default:'' }}" required>
+                    <div class="invalid-feedback">Please enter the driver Name</div>
+                </div>
+
+                <!-- Next Button -->
+                <div class="btn-container">
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="previousPage()">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="nextPage()">
+                        <i class="fas fa-arrow-right"></i> Next
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== PAGE 4 ==================== -->
+            <div id="page4">
+
+                <!-- Quantity (Integer) -->
+                <div class="mb-3">
+                    <label for="wh_branch" class="form-label">Warehouse Branch</label>
+                    <select id="wh_branch" name="wh_branch" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Location in Location %}
+                        <option value="{{ Location.id }}" {% if form.wh_branch.value == Location.id %}selected{% endif %}>
+                            {{ Location }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Crane</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="wh_unit" class="form-label">Warehouse Unit</label>
+                    <select id="wh_unit" name="wh_unit" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Unit in Unit %}
+                        <option value="{{ Unit.id }}" {% if form.wh_unit.value == Unit.id %}selected{% endif %}>
+                            {{ Unit }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Crane</div>
+                </div>
+                <div class="mb-3">
+                    <label for="wh_bay" class="form-label">Warehouse Bay</label>
+                    <select id="wh_bay" name="wh_bay" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Bay in Bay %}
+                        <option value="{{ Bay.id }}" {% if form.wh_bay.value == Bay.id %}selected{% endif %}>
+                            {{ Bay }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Crane</div>
+                </div>
+                <div class="mb-3">
+                    <label for="wh_stack_layer" class="form-label">Stacking Layer</label>
+                    <select id="wh_stack_layer" name="wh_stack_layer" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Stacking in Stacking %}
+                        <option value="{{ Stacking.id }}" {% if form.wh_stack_layer.value == Stacking.id %}selected{% endif %}>
+                            {{ Stacking }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Crane</div>
+                </div>
+                <div class="mb-3">
+                    <label for="wh_available_area" class="form-label">Available Area (Sq.ft)</label>
+                    <input type="text" id="wh_available_area" name="wh_available_area" class="form-control" value="{{ form.wh_available_area.value|default:'' }}" required>
+                    <div class="invalid-feedback">Please enter the driver Name</div>
+                </div>
+
+                <!-- Next Button -->
+                <div class="btn-container">
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="previousPage()">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="nextPage()">
+                        <i class="fas fa-arrow-right"></i> Next
+                    </button>
+                </div>
+            </div>
+
+          <!-- ==================== PAGE 5 ==================== -->
+            <div id="page5">
+
+                <!-- Quantity (Integer) -->
+                <div class="mb-3">
+                    <label for="wh_available_volume" class="form-label">Available Volume (Cu.ft)</label>
+                    <input type="text" id="wh_available_volume" name="wh_available_volume" class="form-control" value="{{ form.wh_available_volume.value|default:'' }}" required>
+                    <div class="invalid-feedback">Please enter a contact number</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="wh_check_in_out" class="form-label">Goods Status</label>
+                    <select id="wh_check_in_out" name="wh_check_in_out" class="form-control" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for Checkinout in Checkinout %}
+                        <option value="{{ Checkinout.id }}" {% if form.wh_check_in_out.value == Checkinout.id %}selected{% endif %}>
+                            {{ Checkinout }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a Crane</div>
+                </div>
+                <div class="mb-3">
+                    <label for="wh_checkin_time" class="form-label">Checked-In Time</label>
+                    <input type="datetime-local" id="wh_checkin_time" name="wh_checkin_time" class="form-control" value="{{ form.wh_checkin_time.value|default:'' }}" required>
+                    <div class="invalid-feedback">Please enter the gatein po num</div>
+                </div>
+
+                <input type="hidden" name="pregatein_updated_by" value="{{ user_id }}">
+                <!-- Next Button -->
+                <div class="btn-container">
+                    <button type="button" class="btn btn-primary btn-sm-2" onclick="previousPage()">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="submit" class="btn btn-success btn-sm-2">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let currentPage = 1;
+    const totalPages = 5;
+
+    function showPage(pageNumber) {
+        for (let i = 1; i <= totalPages; i++) {
+            document.getElementById('page' + i).style.display = 'none';
+        }
+
+        document.getElementById('page' + pageNumber).style.display = 'block';
+
+        document.getElementById('page-title').innerText = `Page ${pageNumber} of ${totalPages}`;
+        document.getElementById('progress-bar').style.width = `${(pageNumber / totalPages) * 100}%`;
+
+        document.getElementById('prev-btn').disabled = (pageNumber === 1);
+        document.getElementById('next-btn').disabled = (pageNumber === totalPages);
+    }
+
+    function nextPage() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            showPage(currentPage);
+        }
+    }
+
+    function previousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            showPage(currentPage);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        showPage(1);
+    });
+</script>
+
+<script>
+    (function () {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+
+
+<script>
+    $(document).ready(function() {
+                {
+                    var gatein_pre_updated_by = document.getElementById("gatein_pre_updated_by").value
+                    if (gatein_pre_updated_by == "")
+                    {
+                        document.getElementById("gatein_pre_updated_by").value='{{user_id}}'
+                    }
+                    else
+                    {
+                        document.getElementById("gatein_pre_updated_by").value=updated_by;
+                    }
+                }
+            });
+</script>
+
+
+
+<script>
+	$(document).ready(function() {
+            {
+                var lb_packing_list = document.getElementById("lb_packing_list").value
+                if (lb_packing_list == "1")
+                {
+                    $('#lb_pouch_yes').addClass('disable_a_href');
+                }
+                else
+                {
+                    $('#lb_pouch_yes').removeClass('disable_a_href');
+                }
+            }
+        });
+</script>
+
+<script>
+	$("#wh_branch").change(function () {
+ <!--      var url = $("#goods_add").attr("data-branches-url");-->
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#wh_unit').removeClass('disable_a_href');
+             $("#wh_unit").empty();
+             $('#wh_bay').empty().append("<option value='0'>--Select--</option>");
+             $("#wh_stack_layer").val($("#selectBox option:first").val());
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#wh_unit').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#wh_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
+</script>
+
+
+{% endblock content %}
+

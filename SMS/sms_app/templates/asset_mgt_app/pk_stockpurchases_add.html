@@ -52,7 +52,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Part Code</span>
 									</div>
-									{% render_field form.sp_part_code id="sp_part_code" onchange="fetchPartCodeDetails()" class="form-control " %}
+									{% render_field form.sp_part_code id="sp_part_code" onchange="fetchPartCodeDetails()" class="form-control select2" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -457,7 +457,7 @@
 	 function toggleFields() {
             var stockType = $("#sp_stock_type").val();
 
-            if (stockType == "1" || stockType == "4" ) {
+            if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
                 $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
                 $("#length_group, #width_group, #height_group").show();
 
@@ -470,31 +470,35 @@
 
 </script>
 <script>
-
-    $('#sp_stock_description').select2({
-    ajax: {
-        url: "{% url 'get_stock_descriptions' %}",
-        dataType: 'json',
-        delay: 250,
-        data: function (params) {
-            return { q: params.term };  // Pass search term
+    // Enable select2 for part code field
+    $('#sp_part_code').select2({
+        ajax: {
+            url: "{% url 'get_part_code' %}",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term // Send search term
+                };
+            },
+            processResults: function (data) {
+                console.log("Received Data:", data); // Debugging
+                return {
+                    results: data.map(item => ({
+                        id: item.id,
+                        text: item.pc_code
+                    }))
+                };
+            },
+            error: function (xhr, status, error) {
+                console.error("AJAX Error:", error);
+                console.log("Response:", xhr.responseText); // Log full response
+            },
+            cache: true
         },
-        processResults: function (data) {
-            console.log("Received Data:", data);  // Debugging
-            return {
-                results: data.map(item => ({ id: item.id, text: item.stock_description }))
-            };
-        },
-        error: function(xhr, status, error) {
-            console.error("AJAX Error:", error);
-            console.log("Response:", xhr.responseText);  // Log full response
-        },
-        cache: true
-    },
-    placeholder: "Search Stock Description",
-    minimumInputLength: 1
-});
-
-
+        placeholder: "Search Part Code",
+        minimumInputLength: 1,
+    });
 </script>
+
 {% endblock content %}

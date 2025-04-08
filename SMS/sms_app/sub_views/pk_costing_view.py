@@ -233,20 +233,16 @@ def costing_cancel(request):
 
 @login_required(login_url='login_page')
 def pk_item_search_page_costing(request):
-    stock_type = request.GET.get('stock_type')
-    stock_description = request.GET.get('stock_description')
-    length_req = request.GET.get('length_req')
-    width_req = request.GET.get('width_req')
-    height_req = request.GET.get('height_req')
+    # stock_type = request.GET.get('stock_type')
+    # stock_description = request.GET.get('stock_description')
+    # length_req = request.GET.get('length_req')
+    # width_req = request.GET.get('width_req')
+    part_code = request.GET.get('part_code')
+    # height_req = request.GET.get('height_req')
 
     # Query the database
     queryset = PkstockpurchasesInfo.objects.filter(
-        sp_quantity_reduced__gt=0,
-        sp_stock_description=stock_description if stock_description else '',
-        sp_stock_type=stock_type if stock_type else '',
-        sp_thick_height__gte=height_req if height_req else float('inf'),
-        sp_width__gte=width_req if width_req else float('inf'),
-        sp_length__gte=length_req if length_req else float('inf')
+        sp_part_code=part_code
     )
 
     # Function to format date
@@ -260,6 +256,7 @@ def pk_item_search_page_costing(request):
         'sp_stock_in_date',
         'sp_purchase_num',
         'sp_category__category',
+        'sp_part_code',
         'sp_stock_type__pk_stocktype',
         'sp_stock_description__stock_description',
         'sp_source__source',
