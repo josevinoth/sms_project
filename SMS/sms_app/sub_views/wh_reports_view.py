@@ -342,6 +342,24 @@ def wh_space_utilization_report(request):
         ),
     )
 
+    branch_labels = []
+    total_areas = []
+    occupied_areas = []
+    available_areas = []
+    total_volumes = []
+    occupied_volumes = []
+    available_volumes = []
+
+
+    for branch in branch_summary:
+        branch_labels.append(branch["lm_wh_location__loc_name"])
+        total_areas.append(branch["total_area"])
+        occupied_areas.append(branch["occupied_area"])
+        available_areas.append(branch["available_area"])
+        total_volumes.append(branch["total_volume"])
+        occupied_volumes.append(branch["occupied_volume"])
+        available_volumes.append(branch["available_volume"])
+
     context = {
         'utilization_summary': utilization_summary,
         'branch_summary': branch_summary,
@@ -355,6 +373,13 @@ def wh_space_utilization_report(request):
         'selected_unit': selected_unit,
         'selected_bay': selected_bay,
         'selected_businessmodel': selected_businessmodel,
+        'branch_labels': branch_labels,
+        'total_areas': total_areas,
+        'occupied_areas': occupied_areas,
+        'available_areas': available_areas,
+        'total_volumes': total_volumes,
+        'occupied_volumes': occupied_volumes,
+        'available_volumes': available_volumes,
     }
 
     return render(request, "asset_mgt_app/WH_space_utilization_report.html", context)

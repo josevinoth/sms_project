@@ -1,6 +1,7 @@
 from django.db import models
 
 from .excess_mod import ExcessStock
+from .part_code_mod import PkpartcodeInfo
 from ..models import PkpurchaseorderInfo,CustomerInfo,Nadimension,pk_stock_statusinfo,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
 
 class PkcostingInfo(models.Model):
@@ -50,6 +51,8 @@ class PkcostingInfo(models.Model):
     ct_exe_quantity_req = models.FloatField(blank=True, null=True, default=0.0)
     ct_exe_sqrt_req = models.FloatField(blank=True, null=True, default=0.0)
     ct_exe_value = models.FloatField(blank=True, null=True, default=0.0)
+    ct_part_code = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True,blank=True)
+
 
     class Meta:
         ordering = ["ct_cost_type"]

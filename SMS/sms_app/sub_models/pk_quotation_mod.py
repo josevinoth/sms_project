@@ -1,4 +1,6 @@
 from django.db import models
+
+from .part_code_mod import PkpartcodeInfo
 from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,Cusnewexist,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo,Nadimensiontype
 
 class PkquotationInfo(models.Model):
@@ -52,6 +54,10 @@ class PkquotationInfo(models.Model):
     pkqt_totalbox_cost = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_na_quantity = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_customer_new_name2 = models.CharField(blank=True, null=True, max_length=500)
+    pkqt_con_length = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_diameter_width = models.CharField(max_length=20, blank=True, null=True, default=0.0)
+    pkqt_part_code = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True,blank=True)
+
 
     class Meta:
         ordering = ["pkqt_cost_type"]

@@ -67,7 +67,11 @@
 
     </div>
 </div>
+
 <br>
+ <canvas id="areaChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
+<hr>
+    <canvas id="volumeChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
 
 <hr>
 
@@ -94,6 +98,7 @@
             <td>{{ branch.available_area|floatformat:2 }}</td>
             <td>{{ branch.total_volume|floatformat:2 }}</td>
             <td>{{ branch.occupied_volume|floatformat:2 }}</td>
+            <td>{{ branch.available_volume|floatformat:2 }}</td>
             <td>{{ branch.available_area_percentage|floatformat:2 }}%</td>
             <td>{{ branch.occupied_area_percentage|floatformat:2 }}%</td>
         </tr>
@@ -135,9 +140,100 @@ $(document).ready(function() {
 });
 </script>
 
-
-
 <script>
+        Chart.register(ChartDataLabels);
+
+        var ctxArea = document.getElementById('areaChart').getContext('2d');
+        new Chart(ctxArea, {
+            type: 'bar',
+            data: {
+                labels: {{ branch_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Total Area',
+                        data: {{ total_areas|safe }},
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Occupied Area',
+                        data: {{ occupied_areas|safe }},
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Available Area',
+                        data: {{ available_areas|safe }},
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    datalabels: {
+                        color: '#000',
+                        formatter: (value) => value.toFixed(1),
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold' }
+                    }
+                },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+
+        var ctxVolume = document.getElementById('volumeChart').getContext('2d');
+        new Chart(ctxVolume, {
+            type: 'bar',
+            data: {
+                labels: {{ branch_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Total Volume',
+                        data: {{ total_volumes|safe }},
+                        backgroundColor: 'rgba(255, 206, 86, 0.6)',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Occupied Volume',
+                        data: {{ occupied_volumes|safe }},
+                        backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Available Volume',
+                        data: {{ available_volumes|safe }},
+                        backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    datalabels: {
+                        color: '#000',
+                        formatter: (value) => value.toFixed(1),
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold' }
+                    }
+                },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+
+
 
     // Add event listeners to filters
     document.getElementById('branch-filter').addEventListener('change', updateFilters);

@@ -1,3 +1,7 @@
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
@@ -72,6 +76,14 @@
 									</div>
 									{% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control disable_a_href" %}
 								</div>
+							</div>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Part Code</span>
+									</div>
+									{% render_field form.ct_part_code id="ct_part_code" onchange="fetchPartCodeDetails()" class="form-control select2" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Stock Type</span>
@@ -84,8 +96,6 @@
 									</div>
 									{% render_field form.ct_stock_description id="ct_stock_description" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
-							</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Item</span>
@@ -100,23 +110,44 @@
 								</div>
 								<div class="row ">
 									<div class="col-9">
-										<div class="input-group input-group-sm mb-3">
+										<div class="input-group input-group-sm mb-3" id="height_group">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
 											</div>
 											{% render_field form.ct_height_req id="ct_height_req" onclick="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
-										<div class="input-group input-group-sm mb-3">
+										<div class="input-group input-group-sm mb-3" id="width_group">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Width Req (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
 											</div>
 											{% render_field form.ct_width_req id="ct_width_req" onclick="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
-										<div class="input-group input-group-sm mb-3">
+										<div class="col d-flex align-items-center justify-content-center">
+											<button id="search_wood" type="button" class="btn btn-primary btn-lg"><i class="fas fa-search"></i> Search Item</button>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-6">
+								<div class="row">
+									<div class="col-6">
+										<div class="input-group input-group-sm mb-3" id="length_group">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Length Req (ft) </span>
 											</div>
 											{% render_field form.ct_length_req id="ct_length_req" onclick="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3" id="uom_group">
+											<div class="input-group-prepend">
+												<span class="input-group-text">UOM</span>
+											</div>
+											{% render_field form.ct_uom id="ct_uom" class="form-control " %}
+										</div>
+										<div class="input-group input-group-sm mb-3" id="diameter_width_group">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Diameter/Width</span>
+											</div>
+											{% render_field form.ct_size id="ct_size" class="form-control disable_a_href" %}
 										</div>
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
@@ -136,73 +167,20 @@
 											</div>
 											{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control " %}
 										</div>
-
-										<div class="col d-flex align-items-center justify-content-center">
-											<button id="search_wood" type="button" class="btn btn-primary btn-lg"><i class="fas fa-search"></i> Search Item</button>
-										</div>
-									</div>
-								</div>
-							</div>
-							<div class="col-6">
-								<div class="bg-warning border border-2 border-warning rounded p-3">
-									<h3 class="text-white text-center align-middle rounded bg-info p-1">Available Stock</h3>
-									<div class="row">
-										<div class="col-6">									<div class="input-group input-group-sm mb-3">
+										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Height (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
+												<span class="input-group-text">Stock Purchase Number</span>
 											</div>
-											{% render_field form.ct_height id="ct_height" class="form-control disable_a_href" %}
+											{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
 										</div>
-											<div class="input-group input-group-sm mb-3">
-												<div class="input-group-prepend">
-													<span class="input-group-text">Width (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
-												</div>
-												{% render_field form.ct_width id="ct_width" class="form-control disable_a_href" %}
-											</div>
-											<div class="input-group input-group-sm mb-3">
-												<div class="input-group-prepend">
-													<span class="input-group-text">Length (Ft)</span>
-												</div>
-												{% render_field form.ct_length id="ct_length" class="form-control disable_a_href" %}
-											</div>
-											<div class="input-group input-group-sm mb-3">
-												<div class="input-group-prepend">
-													<span class="input-group-text">UOM</span>
-												</div>
-												{% render_field form.ct_uom id="ct_uom" class="form-control " %}
-											</div>
-										</div>
-										<div class="col-6">
-											<div class="input-group input-group-sm mb-3">
-												<div class="input-group-prepend">
-													<span class="input-group-text">Size</span>
-												</div>
-												{% render_field form.ct_size id="ct_size" class="form-control disable_a_href" %}
-											</div>
-											<div class="input-group input-group-sm mb-3">
-												<div class="input-group-prepend">
-													<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
-												</div>
-												{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
-											</div>
-											<div class="input-group input-group-sm mb-3">
-												<div class="input-group-prepend">
-													<span class="input-group-text">Stock Purchase Number</span>
-												</div>
-												{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
-											</div>
-										</div>
-									</div>
-								</div>
-								<br>
-								<div class="row">
-									<div class="col-6">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Item Quantity</span>
 											</div>
 											{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control " %}
 										</div>
+									</div>
+									<div class="col-6">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
@@ -221,8 +199,6 @@
 											</div>
 											<span id="ct_cft_sqft_req" class="form-control disable_a_href"></span>
 										</div>
-									</div>
-									<div class="col-6">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Total Cost</span>
@@ -375,8 +351,8 @@
             var jn=document.getElementById("ct_cost_type").value
             if ( jn==8)
             {
+                $('#ct_requirement').removeClass('disable_a_href');
                 document.getElementById("ct_stock_status").value=1
-                $('#ct_stock_type').removeClass('disable_a_href');
                 var jn1=document.getElementById("ct_stock_type").value
                 if (jn1==1)
                 {
@@ -919,19 +895,17 @@
                 var na_dimension_box_val = data.na_dimension_box_val;
                 var na_dimension_type_val = data.na_dimension_type;
                 var na_dimension_type_id_val = data.na_dimension_type_id;
-                document.getElementById("pkqt_dimension_type").value = na_dimension_type_val;
-                document.getElementById("pkqt_dimension_type_id").value = na_dimension_type_id_val;
+                document.getElementById("ct_dimension_type").value = na_dimension_type_val;
+                document.getElementById("ct_dimension_type_id").value = na_dimension_type_id_val;
                 var na_uom_val = data.na_uom;
                 var na_uom_id_val = data.na_uom_id;
-                document.getElementById("pkqt_uom_calc").value = na_uom_val;
+                document.getElementById("ct_uom_calc").value = na_uom_val;
                 var l = parseFloat(data.na_length);
                 document.getElementById("pkqt_l").value = l;
                 var w = parseFloat(data.na_width);
                 document.getElementById("pkqt_w").value = w;
                 var h = parseFloat(data.na_height);
                 document.getElementById("pkqt_h").value = h;
-                var na_quantity = parseFloat(data.na_quantity);
-                document.getElementById("ct_na_quantity").value = na_quantity;
                 calculateDimensions(na_uom_id_val,l,w,h);
             }
         });
@@ -977,5 +951,86 @@
         change_cost_type();
         load_pk_requirement_type();
     }
+</script>
+<script>
+	function fetchPartCodeDetails() {
+    var partCodeId = $('#ct_part_code').val();  // Get selected Part Code ID
+    $.ajax({
+        url: '{% url "fetch_part_code_details" %}',  // Ensure URL is mapped in Django
+        type: 'GET',
+        data: { 'part_code_id': partCodeId },  // Make sure param name matches the backend
+         dataType: 'json',
+            success: function(data) {
+                var pc_stock_type = data.pc_stock_type;
+                var pc_stock_type_id = data.pc_stock_type_id;
+                document.getElementById("ct_stock_type").value = pc_stock_type_id;
+               	var pc_stock_description = data.pc_stock_description;
+                var pc_stock_description_id = data.pc_stock_description_id;
+                document.getElementById("ct_stock_description").value = pc_stock_description_id;
+                var pc_uom_id = data.pc_uom_id;
+                document.getElementById("ct_uom").value = pc_uom_id;
+                var pc_length = parseFloat(data.pc_length);
+                document.getElementById("ct_length_req").value = pc_length;
+                var pc_width = parseFloat(data.pc_width);
+                document.getElementById("ct_width_req").value = pc_width;
+                var pc_height = parseFloat(data.pc_height);
+                document.getElementById("ct_height_req").value = pc_height;
+                var pc_size = parseFloat(data.pc_size);
+                document.getElementById("ct_size").value = pc_size;
+
+
+				toggleFields()
+            }
+        });
+    }
+</script>
+<script>
+	function toggleFields() {
+           var stockType = $("#ct_stock_type").val();
+
+            if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
+               $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
+               $("#length_group, #width_group, #height_group").show();
+
+           }
+           else {
+               $("#diameter_width_group, #con_length_group, #uom_group ").show();
+               $("#length_group, #width_group, #height_group").hide();
+           }
+       }
+
+</script>
+<script>
+
+    // Enable select2 for part code field
+    $('#ct_part_code').select2({
+        ajax: {
+            url: "{% url 'get_part_code' %}",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term // Send search term
+                };
+            },
+            processResults: function (data) {
+                console.log("Received Data:", data); // Debugging
+                return {
+                    results: data.map(item => ({
+                        id: item.id,
+                        text: item.pc_code
+                    }))
+                };
+            },
+            error: function (xhr, status, error) {
+                console.error("AJAX Error:", error);
+                console.log("Response:", xhr.responseText); // Log full response
+            },
+            cache: true
+        },
+        placeholder: "Search Part Code",
+        minimumInputLength: 1,
+    });
+
 </script>
 {% endblock content %}

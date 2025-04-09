@@ -636,6 +636,7 @@ urlpatterns = [
     path('part_code_list/', views.part_code_list, name='part_code_list'),
     path('part_code_delete/<int:pc_id>/', views.part_code_delete, name='part_code_delete'),
     path('get_stock_descriptions/', views.get_stock_descriptions, name='get_stock_descriptions'),
+    path('get_part_code/', views.get_part_code, name='get_part_code'),
     path('timesheet_report/', views.timesheet_report, name='timesheet_report'),
     path('vehicle_requested/', views.vehicle_requested, name='vehicle_requested'),
     path('vehicle_type_counts/', views.vehicle_type_counts, name='vehicle_type_counts'),
@@ -644,6 +645,7 @@ urlpatterns = [
     path('load_truck_details/', views.load_truck_details, name='load_truck_details'),
     path('timesheet_report/', views.timesheet_report, name='timesheet_report'),
 
+    path('fin_mis/', views.fin_mis, name='fin_mis'),
 ]
 
 
