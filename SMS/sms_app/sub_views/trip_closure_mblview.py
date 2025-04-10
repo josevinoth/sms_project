@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from ..forms import Trclosure_mblForm
 from ..models import Trclosure_mblInfo
 from ..sub_models.places_mod import Places
 from ..sub_models.trip_status_mod import Tripstatusinfo

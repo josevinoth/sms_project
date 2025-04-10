@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from ..forms import gateinpre_mblForm
 from ..models import Gatein_pre_info,Pregateintruckinfo
 from ..sub_models.location_info_mod import Location_info
 from ..sub_models.status_list_mod import StatusList

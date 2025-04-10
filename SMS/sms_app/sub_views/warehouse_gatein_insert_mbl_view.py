@@ -1,14 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from ..forms import GateinaddmblForm
 from ..models import Gatein_info
 from django.core.paginator import Paginator
-from ..sub_models.places_mod import Places
-from ..sub_models.trip_status_mod import Tripstatusinfo
-from ..sub_models.tripdetail_mod import TripdetailInfo
-
-
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.trbusinesstype_mod import TrbusinesstypeInfo
 from ..sub_models.customerdepartment_mod import CustomerdepartmentInfo

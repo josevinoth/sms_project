@@ -1,8 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from ..forms import PregateintruckmblForm
-from ..models import Pregateintruckinfo,HighvalueInfo
+from ..models import Pregateintruckinfo
 from ..sub_models.gatein_mod_pre import Gatein_pre_info
 from ..sub_models.vehicletype_mod import VehicletypeInfo
 from ..sub_models.typeofotl_mod import TypeofotlInfo
