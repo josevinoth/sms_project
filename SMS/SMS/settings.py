@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
+from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from django.contrib import messages
 # from decouple import config
@@ -84,9 +85,9 @@ WSGI_APPLICATION = 'SMS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sms_015',
+        'NAME': 'asset_mgt_013',
         'USER': 'postgres',
-        'PASSWORD': 'root',
+        'PASSWORD': '244613',
         'HOST': 'localhost'
     }
 }
@@ -143,12 +144,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # #Email feature
 # # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = config('EMAIL_HOST')
-# EMAIL_PORT = config('EMAIL_PORT', cast=int)
-# EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
-# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 DEPARTMENT_EMAILS = {
     'sales': {
@@ -177,7 +178,7 @@ DEPARTMENT_EMAILS = {
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'itadmin@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'F&059980193670ap',
+        'EMAIL_HOST_PASSWORD' : 'T/350967465402ak',
     }
 }
 
