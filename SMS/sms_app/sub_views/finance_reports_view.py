@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F,IntegerField
 from django.db.models import F, Subquery, OuterRef
-from django.db.models.functions import Coalesce,Round
+from django.db.models.functions import Coalesce,Round,ExtractMonth
 from django.utils import timezone
 from calendar import month_name
 from django.core.serializers import serialize
@@ -718,6 +718,18 @@ INCOME_CATEGORIES = {
     "Storage Expenses": "bf_Warehouse_Storage_Charges",
     "Unloading Expenses":"bf_Warehouse_Unloading_Charges",
 }
+WAREHOUSE_EXPENSE_FIELD_MAPPING = {
+    "Airport Handling Charges": None,  # If this isn't tracked in Warehouse_goods_info
+    "Forklift Handling Charges": "wh_forklift_cost",
+    "Crane Handling Charges": "wh_crane_cost",
+    "Handling Charges": "wh_total_loading_cost",  # Assuming this is overall handling
+    "Packing Expenses": None,
+    "Warehouse Handling Charges": "wh_total_loading_cost",  # Optional: reuse if no other field
+    "Warehouse Loading Charges": "wh_total_loading_cost",
+    "Storage Expenses": "wh_storage_cost_total",
+    "Unloading Expenses": None,  # Assuming not tracked
+}
+
 DEPARTMENT_EXPENSES_CATEGORIES = {
     "Audit Fee": "bf_audit_fees",
     "Bad Debts": "bf_bad_debts",
@@ -1560,6 +1572,8 @@ def fin_mis(request):
 
         return summary
 
+
+
     # Generate category-wise summaries
     income_summary = get_category_summary(INCOME_CATEGORIES,"Income ")
     department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES,"Department Expenses")
@@ -1568,6 +1582,123 @@ def fin_mis(request):
     operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES,"Operational Expenses ")
     non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES,"Non-Operational Expenses")
     other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES,"Other Expenses")
+
+    income_total_expense = income_summary[-1]["total_expense"]
+    income_total_budget = income_summary[-1]["total_budget"]
+    income_monthly_expenses = income_summary[-1]["monthly_expenses"]
+    income_monthly_budgets = income_summary[-1]["monthly_budgets"]
+    expense_summaries = [
+        department_expenses_summary,
+        employee_benefits_summary,
+        interest_summary,
+        operational_summary,
+        non_operational_summary,
+        other_expenses_summary,
+    ]
+
+    total_expense = sum([summary[-1]["total_expense"] for summary in expense_summaries])
+    total_budget = sum([summary[-1]["total_budget"] for summary in expense_summaries])
+    monthly_expense = {i: 0 for i in range(1, 13)}
+    monthly_budget = {i: 0 for i in range(1, 13)}
+    for summary in expense_summaries:
+        for month in range(1, 13):
+            monthly_expense[month] += summary[-1]["monthly_expenses"][month]
+            monthly_budget[month] += summary[-1]["monthly_budgets"][month]
+    net_actual_total = income_total_expense - total_expense
+    net_budget_total = income_total_budget - total_budget
+    net_variance_total = net_budget_total - net_actual_total
+    net_pl_percentage = (net_variance_total / net_budget_total * 100) if net_budget_total else 0.0
+
+    net_monthly_expense = {month: income_monthly_expenses[month] - monthly_expense[month] for month in range(1, 13)}
+    net_monthly_budget = {month: income_monthly_budgets[month] - monthly_budget[month] for month in range(1, 13)}
+    net_monthly_variance = {month: net_monthly_budget[month] - net_monthly_expense[month] for month in range(1, 13)}
+    net_income_summary = {
+        "expense_type": "Profit/Loss",
+        "monthly_expenses": net_monthly_expense,
+        "monthly_budgets": net_monthly_budget,
+        "monthly_variance": net_monthly_variance,
+        "total_expense": net_actual_total,
+        "total_budget": net_budget_total,
+        "total_variance": net_variance_total,
+        "pl_percentage": net_pl_percentage,
+        "is_total": True,
+    }
+    # Total % calculations
+    net_income_percentage = (net_actual_total / income_total_expense * 100) if income_total_expense else 0.0
+    net_budget_percentage = (net_budget_total / income_total_budget * 100) if income_total_budget else 0.0
+    net_variance_percentage = (net_variance_total / income_total_budget * 100) if income_total_budget else 0.0
+
+    # Monthly % calculations
+    net_income_monthly_percentage = {
+        month: (net_monthly_expense[month] / income_monthly_expenses[month] * 100)
+        if income_monthly_expenses[month] else 0.0
+        for month in range(1, 13)
+    }
+
+    net_budget_monthly_percentage = {
+        month: (net_monthly_budget[month] / income_monthly_budgets[month] * 100)
+        if income_monthly_budgets[month] else 0.0
+        for month in range(1, 13)
+    }
+
+    net_variance_monthly_percentage = {
+        month: (net_monthly_variance[month] / income_monthly_budgets[month] * 100)
+        if income_monthly_budgets[month] else 0.0
+        for month in range(1, 13)
+    }
+    net_income_summary["net_income_percentage"] = net_income_percentage
+    net_income_summary["net_budget_percentage"] = net_budget_percentage
+    net_income_summary["net_variance_percentage"] = net_variance_percentage
+
+    net_income_summary["net_income_monthly_percentage"] = net_income_monthly_percentage
+    net_income_summary["net_budget_monthly_percentage"] = net_budget_monthly_percentage
+    net_income_summary["net_variance_monthly_percentage"] = net_variance_monthly_percentage
+    net_income_summary_percentage = {
+        "expense_type": "Profit/Loss %",
+        "monthly_expenses": net_income_monthly_percentage,
+        "monthly_budgets": net_budget_monthly_percentage,
+        "monthly_variance": net_variance_monthly_percentage,
+        "total_expense": net_income_percentage,
+        "total_budget": net_budget_percentage,
+        "total_variance": net_variance_percentage,
+        "is_total": True,
+    }
+    grand_monthly_budgets = {i: 0 for i in range(1, 13)}
+    grand_monthly_expenses = {i: 0 for i in range(1, 13)}
+    grand_monthly_variance = {i: 0 for i in range(1, 13)}
+
+    for category_dict in [
+        income_summary,
+        department_expenses_summary,
+        employee_benefits_summary,
+        interest_summary,
+        operational_summary,
+        non_operational_summary,
+        other_expenses_summary,
+    ]:
+        for entry in category_dict:
+            if not entry.get("is_total"):  # Only accumulate actual categories, skip their own "Total" rows
+                continue
+            for month in range(1, 13):
+                grand_monthly_budgets[month] += entry["monthly_budgets"].get(month, 0)
+                grand_monthly_expenses[month] += entry["monthly_expenses"].get(month, 0)
+                grand_monthly_variance[month] += entry["monthly_variance"].get(month, 0)
+
+    total_budget = sum(grand_monthly_budgets.values())
+    total_expense = sum(grand_monthly_expenses.values())
+    total_variance = sum(grand_monthly_variance.values())
+    grand_totals_summary = {
+        "expense_type": "Grand Totals",
+        "monthly_budgets": grand_monthly_budgets,
+        "monthly_expenses": grand_monthly_expenses,
+        "monthly_variance": grand_monthly_variance,
+        "total_budget": total_budget,
+        "total_expense": total_expense,
+        "total_variance": total_variance,
+        "is_total": True,
+    }
+
+
 
     overall_monthly_expenses = {i: 0 for i in range(1, 13)}
     overall_monthly_budgets = {i: 0 for i in range(1, 13)}
@@ -1627,5 +1758,388 @@ def fin_mis(request):
         "overall_monthly_budgets": overall_monthly_budgets,
         "overall_monthly_variances": overall_monthly_variances,
         "overall_monthly_pl_percentage": overall_monthly_pl_percentage,
+        "net_income_summary" :net_income_summary,
+        "net_income_summary_percentage": net_income_summary_percentage,
+        "grand_totals_summary": grand_totals_summary,
+
+    })
+
+def fin_mis_income(request):
+    first_name = request.session.get("first_name")
+    selected_branch = request.GET.get("branch")
+    selected_unit = request.GET.get("unit")
+    selected_company = request.GET.get("company")
+    from_date = request.GET.get("from_date")
+    to_date = request.GET.get("to_date")
+    selected_year = request.GET.get("year")
+    if selected_year:
+        try:
+            selected_year = int(selected_year)
+        except ValueError:
+            selected_year = None
+    else:
+        selected_year = None
+
+    years = list(
+        ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
+        .distinct()
+    )
+
+    branches = Location_info.objects.all()
+    units = UnitInfo.objects.values_list("unit_name", flat=True).distinct()
+    companies = Business_Sol_info.objects.values_list("bvm_business", flat=True).distinct()
+    years = list(
+        ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
+        .distinct()
+    )
+
+    if selected_branch:
+        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list("unit_name", flat=True).distinct()
+
+    expenses_filter = {}
+    budget_filter = {}
+    warehouse_filter = {}
+
+    if selected_year:
+        expenses_filter["exp_ext_updated_on__year"] = selected_year
+        budget_filter["bf_updated_at__year"] = selected_year
+        warehouse_filter["wh_checkin_time__year"] = selected_year
+    if selected_company:
+        expenses_filter["exp_ext_expense_number__exp_business__bvm_business"] = selected_company
+        budget_filter["bf_company__bvm_business"] = selected_company
+
+    if selected_branch:
+        expenses_filter["exp_ext_branch__loc_name"] = selected_branch
+        budget_filter["bf_location__loc_name"] = selected_branch
+        warehouse_filter["wh_branch__loc_name"] = selected_branch
+    if selected_unit:
+        expenses_filter["exp_ext_unit__unit_name"] = selected_unit
+        budget_filter["bf_unit_reference__unit_name"] = selected_unit
+        warehouse_filter["wh_unit__unit_name"] = selected_unit
+    if from_date:
+        from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+        expenses_filter["exp_ext_updated_on__gte"] = from_date
+        budget_filter["bf_updated_at__gte"] = from_date
+        warehouse_filter["wh_checkin_time__gte"] = from_date
+
+    if to_date:
+        to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+        expenses_filter["exp_ext_updated_on__lte"] = to_date
+        budget_filter["bf_updated_at__lte"] = to_date
+        warehouse_filter["wh_checkin_time__lte"] = to_date
+
+    warehouse_queryset = (
+        Warehouse_goods_info.objects
+        .filter(**warehouse_filter)
+        .annotate(month=ExtractMonth("wh_checkin_time"))
+        .values("month")
+        .annotate(**{
+            f"{field}_sum": Sum(field) for field in WAREHOUSE_EXPENSE_FIELD_MAPPING.values() if field
+        })
+
+    )
+
+    warehouse_income_expense_dict = {
+        category: {i: 0 for i in range(1, 13)} for category in INCOME_CATEGORIES.keys()
+    }
+
+    for row in warehouse_queryset:
+        month = row.get("month")
+        if not month:
+            continue
+
+        for category, field in WAREHOUSE_EXPENSE_FIELD_MAPPING.items():
+            if not field:
+                continue
+            value = row.get(f"{field}_sum", 0.0) or 0.0
+            if category in warehouse_income_expense_dict:
+                warehouse_income_expense_dict[category][month] += value
+
+    expense_summary = (
+        ExpenseExtinfo.objects.filter(**expenses_filter)
+        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_updated_on__month")
+        .annotate(total_expense=Sum("exp_ext_amount"))
+        .order_by("exp_ext_updated_on__month")
+    )
+
+    expense_dict = {category: {i: 0 for i in range(1, 13)} for category in set(INCOME_CATEGORIES.keys())}
+    for item in expense_summary:
+        category = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
+        month = item["exp_ext_updated_on__month"]
+        expense_dict.setdefault(category, {i: 0 for i in range(1, 13)})
+        expense_dict[category][month] += item["total_expense"]
+
+    budget_summary = (
+        BudgetInfo.objects.filter(**budget_filter)
+        .values("bf_updated_at__month")
+        .annotate(**{field: Sum(field) for field in BUDGET_FIELD_MAPPING.values() if field is not None})
+    )
+
+    budget_dict_by_month = {}
+    for item in budget_summary:
+        month = item["bf_updated_at__month"]
+        for category, field in BUDGET_FIELD_MAPPING.items():
+            if field:
+                if category not in budget_dict_by_month:
+                    budget_dict_by_month[category] = {i: 0 for i in range(1, 13)}
+                budget_dict_by_month[category][month] = item.get(field, 0.0)
+
+    budget_totals = BudgetInfo.objects.filter(**budget_filter).aggregate(
+        **{field: Sum(field) for field in BUDGET_FIELD_MAPPING.values() if field is not None}
+    )
+
+    budget_dict = {
+        category: budget_totals.get(field, 0.0) if field else 0.0
+        for category, field in BUDGET_FIELD_MAPPING.items()
+    }
+
+    def get_category_summary(category_mapping, category_name, custom_expense_dict=None):
+        summary = []
+        expense_source = custom_expense_dict or expense_dict
+
+        grand_monthly_expenses = {i: 0 for i in range(1, 13)}
+        grand_monthly_budgets = {i: 0 for i in range(1, 13)}
+        grand_total_expense = 0
+        grand_total_budget = 0
+
+        for category, field in category_mapping.items():
+            monthly_expenses = expense_source.get(category, {i: 0 for i in range(1, 13)})
+            monthly_budgets = budget_dict_by_month.get(category, {i: 0 for i in range(1, 13)})
+            monthly_variance = {month: monthly_budgets[month] - monthly_expenses[month] for month in range(1, 13)}
+
+            total_expense = sum(monthly_expenses.values())
+            total_budget = sum(monthly_budgets.values())
+            total_variance = total_budget - total_expense
+            pl_percentage = (total_variance / total_budget * 100) if total_budget > 0 else 0.0
+
+            for month in range(1, 13):
+                grand_monthly_expenses[month] += monthly_expenses[month]
+                grand_monthly_budgets[month] += monthly_budgets[month]
+
+            grand_total_expense += total_expense
+            grand_total_budget += total_budget
+
+            summary.append({
+                "expense_type": category,
+                "monthly_expenses": monthly_expenses,
+                "monthly_budgets": monthly_budgets,
+                "monthly_variance": monthly_variance,
+                "total_expense": total_expense,
+                "total_budget": total_budget,
+                "total_variance": total_variance,
+                "pl_percentage": pl_percentage,
+            })
+
+        grand_monthly_variance = {
+            month: grand_monthly_budgets[month] - grand_monthly_expenses[month] for month in range(1, 13)
+        }
+        grand_total_variance = grand_total_budget - grand_total_expense
+        grand_pl_percentage = (grand_total_variance / grand_total_budget * 100) if grand_total_budget > 0 else 0.0
+
+        summary.append({
+            "expense_type": f"Total {category_name}",
+            "monthly_expenses": grand_monthly_expenses,
+            "monthly_budgets": grand_monthly_budgets,
+            "monthly_variance": grand_monthly_variance,
+            "total_expense": grand_total_expense,
+            "total_budget": grand_total_budget,
+            "total_variance": grand_total_variance,
+            "pl_percentage": grand_pl_percentage,
+            "is_total": True,
+        })
+
+        return summary
+
+    # Generate category-wise summaries
+    income_summary = get_category_summary(INCOME_CATEGORIES,"Income ")
+    department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES,"Department Expenses")
+    employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES,"Employee Benefits")
+    interest_summary = get_category_summary(INTEREST_EXPENSES_CATEGORIES,"Interest Expenses")
+    operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES,"Operational Expenses ")
+    non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES,"Non-Operational Expenses")
+    other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES,"Other Expenses")
+    income_summary = get_category_summary(
+        {k: v for k, v in INCOME_CATEGORIES.items() if WAREHOUSE_EXPENSE_FIELD_MAPPING.get(k)},
+        "Income",
+    )
+
+    income_total_expense = income_summary[-1]["total_expense"]
+    income_total_budget = income_summary[-1]["total_budget"]
+    income_monthly_expenses = income_summary[-1]["monthly_expenses"]
+    income_monthly_budgets = income_summary[-1]["monthly_budgets"]
+    expense_summaries = [
+        department_expenses_summary,
+        employee_benefits_summary,
+        interest_summary,
+        operational_summary,
+        non_operational_summary,
+        other_expenses_summary,
+    ]
+
+    total_expense = sum([summary[-1]["total_expense"] for summary in expense_summaries])
+    total_budget = sum([summary[-1]["total_budget"] for summary in expense_summaries])
+    monthly_expense = {i: 0 for i in range(1, 13)}
+    monthly_budget = {i: 0 for i in range(1, 13)}
+    for summary in expense_summaries:
+        for month in range(1, 13):
+            monthly_expense[month] += summary[-1]["monthly_expenses"][month]
+            monthly_budget[month] += summary[-1]["monthly_budgets"][month]
+    net_actual_total = income_total_expense - total_expense
+    net_budget_total = income_total_budget - total_budget
+    net_variance_total = net_budget_total - net_actual_total
+    net_pl_percentage = (net_variance_total / net_budget_total * 100) if net_budget_total else 0.0
+
+    net_monthly_expense = {month: income_monthly_expenses[month] - monthly_expense[month] for month in range(1, 13)}
+    net_monthly_budget = {month: income_monthly_budgets[month] - monthly_budget[month] for month in range(1, 13)}
+    net_monthly_variance = {month: net_monthly_budget[month] - net_monthly_expense[month] for month in range(1, 13)}
+    net_income_summary = {
+        "expense_type": "Profit/Loss",
+        "monthly_expenses": net_monthly_expense,
+        "monthly_budgets": net_monthly_budget,
+        "monthly_variance": net_monthly_variance,
+        "total_expense": net_actual_total,
+        "total_budget": net_budget_total,
+        "total_variance": net_variance_total,
+        "pl_percentage": net_pl_percentage,
+        "is_total": True,
+    }
+    # Total % calculations
+    net_income_percentage = (net_actual_total / income_total_expense * 100) if income_total_expense else 0.0
+    net_budget_percentage = (net_budget_total / income_total_budget * 100) if income_total_budget else 0.0
+    net_variance_percentage = (net_variance_total / income_total_budget * 100) if income_total_budget else 0.0
+
+    # Monthly % calculations
+    net_income_monthly_percentage = {
+        month: (net_monthly_expense[month] / income_monthly_expenses[month] * 100)
+        if income_monthly_expenses[month] else 0.0
+        for month in range(1, 13)
+    }
+
+    net_budget_monthly_percentage = {
+        month: (net_monthly_budget[month] / income_monthly_budgets[month] * 100)
+        if income_monthly_budgets[month] else 0.0
+        for month in range(1, 13)
+    }
+
+    net_variance_monthly_percentage = {
+        month: (net_monthly_variance[month] / income_monthly_budgets[month] * 100)
+        if income_monthly_budgets[month] else 0.0
+        for month in range(1, 13)
+    }
+    net_income_summary["net_income_percentage"] = net_income_percentage
+    net_income_summary["net_budget_percentage"] = net_budget_percentage
+    net_income_summary["net_variance_percentage"] = net_variance_percentage
+
+    net_income_summary["net_income_monthly_percentage"] = net_income_monthly_percentage
+    net_income_summary["net_budget_monthly_percentage"] = net_budget_monthly_percentage
+    net_income_summary["net_variance_monthly_percentage"] = net_variance_monthly_percentage
+    net_income_summary_percentage = {
+        "expense_type": "Profit/Loss %",
+        "monthly_expenses": net_income_monthly_percentage,
+        "monthly_budgets": net_budget_monthly_percentage,
+        "monthly_variance": net_variance_monthly_percentage,
+        "total_expense": net_income_percentage,
+        "total_budget": net_budget_percentage,
+        "total_variance": net_variance_percentage,
+        "is_total": True,
+    }
+    grand_monthly_budgets = {i: 0 for i in range(1, 13)}
+    grand_monthly_expenses = {i: 0 for i in range(1, 13)}
+    grand_monthly_variance = {i: 0 for i in range(1, 13)}
+
+    for category_dict in [
+        income_summary,
+        department_expenses_summary,
+        employee_benefits_summary,
+        interest_summary,
+        operational_summary,
+        non_operational_summary,
+        other_expenses_summary,
+    ]:
+        for entry in category_dict:
+            if not entry.get("is_total"):  # Only accumulate actual categories, skip their own "Total" rows
+                continue
+            for month in range(1, 13):
+                grand_monthly_budgets[month] += entry["monthly_budgets"].get(month, 0)
+                grand_monthly_expenses[month] += entry["monthly_expenses"].get(month, 0)
+                grand_monthly_variance[month] += entry["monthly_variance"].get(month, 0)
+
+    total_budget = sum(grand_monthly_budgets.values())
+    total_expense = sum(grand_monthly_expenses.values())
+    total_variance = sum(grand_monthly_variance.values())
+    grand_totals_summary = {
+        "expense_type": "Grand Totals",
+        "monthly_budgets": grand_monthly_budgets,
+        "monthly_expenses": grand_monthly_expenses,
+        "monthly_variance": grand_monthly_variance,
+        "total_budget": total_budget,
+        "total_expense": total_expense,
+        "total_variance": total_variance,
+        "is_total": True,
+    }
+
+
+
+    overall_monthly_expenses = {i: 0 for i in range(1, 13)}
+    overall_monthly_budgets = {i: 0 for i in range(1, 13)}
+
+    for category_expenses in expense_dict.values():
+        for month, amount in category_expenses.items():
+            overall_monthly_expenses[month] += amount
+
+    for category_budgets in budget_dict_by_month.values():
+        for month, amount in category_budgets.items():
+            overall_monthly_budgets[month] += amount
+
+    overall_monthly_variances = {
+        month: overall_monthly_budgets[month] - overall_monthly_expenses[month]
+        for month in range(1, 13)
+    }
+    overall_monthly_pl_percentage = {
+        month: (overall_monthly_variances[month] / overall_monthly_budgets[month] * 100)
+        if overall_monthly_budgets[month] > 0 else 0.0
+        for month in range(1, 13)
+    }
+
+    total_budget = sum(value if value is not None else 0.0 for value in budget_dict.values())
+    total_expense = sum(
+        sum(monthly_values.values()) for monthly_values in expense_dict.values()
+    )
+
+    total_profit_loss = total_budget - total_expense
+    total_pl_percentage = (total_profit_loss / total_budget * 100) if total_budget > 0 else 0.0
+
+    return render(request, "asset_mgt_app/fin_MIS.html", {
+        "income_summary": income_summary,
+        "department_expenses_summary": department_expenses_summary,
+        "employee_benefits_summary": employee_benefits_summary,
+        "interest_summary": interest_summary,
+        "operational_summary": operational_summary,
+        "non_operational_summary": non_operational_summary,
+        "other_expenses_summary": other_expenses_summary,
+
+        "total_budget": total_budget,
+        "total_expense": total_expense,
+        "total_profit_loss": total_profit_loss,
+        "total_pl_percentage": total_pl_percentage,
+        "months": [month_name[i] for i in range(1, 13)],
+        "branches": branches,
+        "units": units,
+        "companies": companies,
+        "years": years,
+        "selected_year": selected_year,
+        "selected_company": selected_company,
+        "selected_branch": selected_branch,
+        "selected_unit": selected_unit,
+        "first_name": first_name,
+        "from_date": request.GET.get("from_date", ""),
+        "to_date": request.GET.get("to_date", ""),
+        "overall_monthly_expenses": overall_monthly_expenses,
+        "overall_monthly_budgets": overall_monthly_budgets,
+        "overall_monthly_variances": overall_monthly_variances,
+        "overall_monthly_pl_percentage": overall_monthly_pl_percentage,
+        "net_income_summary" :net_income_summary,
+        "net_income_summary_percentage": net_income_summary_percentage,
+        "grand_totals_summary": grand_totals_summary,
 
     })

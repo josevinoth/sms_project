@@ -268,6 +268,65 @@
     {% endfor %}
 
 
+    <tr class="total-row total-income">
+        <td>{{ grand_totals_summary.expense_type }}</td>
+
+        {% for month in months %}
+        <td>{{ grand_totals_summary.monthly_budgets|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income">{{ grand_totals_summary.total_budget|floatformat:0 }}</td>
+
+        {% for month in months %}
+        <td>{{ grand_totals_summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="expenses">{{ grand_totals_summary.total_expense|floatformat:0 }}</td>
+
+        {% for month in months %}
+        <td>{{ grand_totals_summary.monthly_variance|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance">{{ grand_totals_summary.total_variance|floatformat:0 }}</td>
+    </tr>
+
+
+    <tr class="total-row total-income">
+        <td>{{ net_income_summary.expense_type }}</td>
+
+        {% for month in months %}
+        <td>{{ net_income_summary.monthly_budgets|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income">{{ net_income_summary.total_budget|floatformat:0 }}</td>
+
+        {% for month in months %}
+        <td>{{ net_income_summary.monthly_expenses|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="expenses">{{ net_income_summary.total_expense|floatformat:0 }}</td>
+
+        {% for month in months %}
+        <td>{{ net_income_summary.monthly_variance|get_item:forloop.counter|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance">{{ net_income_summary.total_variance|floatformat:0 }}</td>
+    </tr>
+
+    <tr class="total-row total-income">
+        <td>{{ net_income_summary_percentage.expense_type }}</td>
+
+        {% for month in months %}
+        <td>{{ net_income_summary_percentage.monthly_budgets|get_item:forloop.counter|default:0|floatformat:0 }}%</td>
+        {% endfor %}
+        <td class="income">{{ net_income_summary_percentage.total_budget|floatformat:0 }}%</td>
+
+        {% for month in months %}
+        <td>{{ net_income_summary_percentage.monthly_expenses|get_item:forloop.counter|default:0|floatformat:0 }}%</td>
+        {% endfor %}
+        <td class="expenses">{{ net_income_summary_percentage.total_expense|floatformat:0 }}%</td>
+
+        {% for month in months %}
+        <td>{{ net_income_summary_percentage.monthly_variance|get_item:forloop.counter|default:0|floatformat:0 }}%</td>
+        {% endfor %}
+        <td class="variance">{{ net_income_summary_percentage.total_variance|floatformat:0 }}%</td>
+    </tr>
+
+
     </tbody>
 </table>
 <hr>
@@ -313,27 +372,69 @@
         {% for month in months %}
         <td><strong>{{ overall_monthly_pl_percentage|get_item:forloop.counter|floatformat:0 }}%</strong></td>
         {% endfor %}
-        <td><strong>{{ total_profit_loss_percentage|floatformat:0 }}%</strong></td>
+        <td><strong>{{ total_pl_percentage|floatformat:0 }}%</strong></td>
     </tr>
     </tbody>
 
 </table>
-
-
-
-<hr>
 <script>
-    // Initialize DataTable
-    $(document).ready(function() {
-        $('#fin_table').DataTable({
-            scrollY: "800px",
-            scrollX: true,
-            scrollCollapse: true,
-            order: [1, 'desc'],
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
-        });
+  $(document).ready(function () {
+    $('#fin_table').DataTable({
+        scrollY: "600px",
+        scrollX: true,
+        scrollCollapse: true,
+        ordering: false,
+        dom: 'lBfrtip',
+        buttons: [
+            'copy',
+            'print',
+            {
+    extend: 'csvHtml5',
+    text: 'CSV',
+    filename: 'Warehouse_Budget_Report',
+    exportOptions: {
+        columns: ':visible'
+    },
+    customize: function (csv) {
+        const topHeader = [
+            'Warehouse',
+            ...Array(12).fill('Budget'),
+            'Total Budget',
+            ...Array(12).fill('Actuals'),
+            'Total Actuals',
+            ...Array(12).fill('Variance'),
+            'Total Variance'
+        ];
+        return topHeader.join(',') + '\n' + csv;
+    }
+},
+
+            {
+    extend: 'excelHtml5',
+    text: 'Excel',
+    filename: 'Warehouse_Budget_Report',
+    exportOptions: {
+        columns: ':visible'
+    },
+    customize: function (xlsx) {
+        let sheet = xlsx.xl.worksheets['sheet1.xml'];
+        let firstRow = `
+            <row r="1">
+                <c t="inlineStr" r="A1"><is><t>Warehouse</t></is></c>
+                <c t="inlineStr" r="B1"><is><t colspan="12"> Budget</t></is></c>
+                <c t="inlineStr" r="O1"><is><t colspan="12">Actuals</t></is></c>
+                <c t="inlineStr" r="AB1"><is><t colspan="12">Variance</t></is></c>
+            </row>
+        `;
+        // Insert the new first row before the existing first row
+        sheet.childNodes[0].childNodes[1].innerHTML = firstRow + sheet.childNodes[0].childNodes[1].innerHTML;
+    }
+}
+
+        ]
     });
+});
+
 
      document.getElementById('branch-filter').addEventListener('change', updateFilters);
     document.getElementById('unit-filter').addEventListener('change', updateFilters);
