@@ -52,8 +52,8 @@ def stockpurchases_add(request, stockpurchases_id=0):
                 new_record.save(update_fields=['sp_purchase_num'])  # Efficient update
 
                 messages.success(request, 'Record created successfully.')
-                return redirect(f'/SMS/stockpurchases_update/{last_id}')  # Redirect using last_id
-
+                # return redirect(f'/SMS/stockpurchases_update/{last_id}')  # Redirect using last_id
+                return redirect('/SMS/stockpurchases_insert')
             else:
                 # Form is invalid, display an error
                 messages.error(request, 'Form is not valid.')
@@ -72,7 +72,7 @@ def stockpurchases_add(request, stockpurchases_id=0):
                 messages.error(request, 'Form is not valid.')
 
             return redirect(request.META['HTTP_REFERER'])
-
+            # return redirect('/SMS/stockpurchases_insert')
         # forms_data = request.POST  # Capture all form data (including cloned forms)
         #
         # # Loop through the forms data and save each form
