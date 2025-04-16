@@ -52,7 +52,7 @@ def stockpurchases_add(request, stockpurchases_id=0):
                 new_record.save(update_fields=['sp_purchase_num'])  # Efficient update
 
                 messages.success(request, 'Record created successfully.')
-                return redirect(f'/SMS/stockpurchases_update/{last_id}')  # Redirect using last_id
+                return redirect(f'/SMS/stockpurchases_insert')  # Redirect using last_id
 
             else:
                 # Form is invalid, display an error

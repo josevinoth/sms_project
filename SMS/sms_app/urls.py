@@ -412,6 +412,7 @@ urlpatterns = [
     path('vehicle_allotment_nav/<int:vehicle_allotment_id>', views.vehicle_allotment_nav, name='vehicle_allotment_nav'),  # nav vehicle_allotment
     path('search/', views.get_queryset, name='search'),  # View Gate-in search
     path('pre_gatein_search/', views.pre_gatein_search, name='pre_gatein_search'),  # View pre Gate-in search
+    path('partcode_search/', views.partcode_search, name='partcode_search'),  # View pre Gate-in search
     path('sales_search/', views.sales_search, name='sales_search'),  # View pre Sales search
     path('sales_comments_search/', views.sales_comments_search, name='sales_comments_search'),  # View pre Sales comments search
     path('dispatch_search/', views.dispatch_search, name='dispatch_search'),  # View dispatch search
@@ -663,6 +664,7 @@ urlpatterns = [
     path('gatein_insert_mbl_delete/<int:gatein_id>/', views.gatein_delete_mbl, name='gatein_insert_mbl_delete'),
     path('loadingbay_add_mbl/', views.loadingbay_add_mbl, name='loadingbay_add_mbl'),
     path('goods_mbl_insert', views.goods_mbl_add, name='goods_mbl_insert'),
+    path('export_partcodes_excel', views.export_partcodes_excel, name='export_partcodes_excel'),
 
 ]
 

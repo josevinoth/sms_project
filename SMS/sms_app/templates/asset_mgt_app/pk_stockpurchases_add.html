@@ -106,7 +106,7 @@
                                 </div>
 							</div>
 							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3"  id="weight_group">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Weight (Kg)</span>
 									</div>
@@ -253,171 +253,100 @@
 </script>
 <script>
 	function change_charge_type() {
-		var jn = document.getElementById("sp_stock_type").value;
+    const jn = parseInt(document.getElementById("sp_stock_type").value);
+    const jn1 = parseInt(document.getElementById("sp_part_code").value);
 
-		if (jn == 1) {
-			var jn1 = document.getElementById("sp_stock_description").value;
-			if (jn1 == 11) {
-				// Enable weight and disable other size fields
-				$('#sp_weight').removeClass('disable_a_href');
-				$('#sp_cft, #sp_total_cft').addClass('disable_a_href');
-				$('#sp_uom, #sp_size').removeClass('disable_a_href');
+    const weight = parseFloat(document.getElementById("sp_weight").value) || 0;
+    const rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+    const gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+    const quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
 
-				var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
-				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-				var price = rate * weight;
-				document.getElementById("sp_price").value = price.toFixed(2);
+    const set_price_details = (price) => {
+        const gst_amount = price * (gst / 100);
+        const total_bill_amount = price + gst_amount;
+        document.getElementById("sp_price").value = price.toFixed(2);
+        document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
+        document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
+    };
 
-				// Reset other size-related fields to 0
-				document.getElementById("sp_width").value = 0.0;
-				document.getElementById("sp_length").value = 0.0;
-				document.getElementById("sp_thick_height").value = 0.0;
-				document.getElementById("sp_cft").value = 0.0;
-				document.getElementById("sp_total_cft").value = 0.0;
+    // For part codes 8990 - 8994
+    if ([8990, 8991, 8992, 8993, 8994].includes(jn1)) {
+        if (jn === 1) {
+            $('#sp_weight').removeClass('disable_a_href');
+            $('#sp_cft, #sp_total_cft, #sp_uom, #sp_size, #sp_length, #sp_width, #sp_thick_height').addClass('disable_a_href');
+            set_price_details(rate * weight);
+        } else {
+            $('#sp_weight').addClass('disable_a_href');
+            $('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');
+            $('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
 
-				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-				var gst_amount = price * (gst / 100);
-				document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
+            document.getElementById("sp_uom").value = "";
+            document.getElementById("sp_size").value = 0;
 
-				var total_bill_amount = price + gst_amount;
-				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-			} else {
-				// Disable weight and enable other size fields
-				$('#sp_weight').addClass('disable_a_href');
-				$('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');
-				$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
+            const length = parseFloat(document.getElementById("sp_length").value) || 0;
+            const height = parseFloat(document.getElementById("sp_thick_height").value) || 0;
+            const width = parseFloat(document.getElementById("sp_width").value) || 0;
 
-				document.getElementById("sp_uom").value = "";
-				document.getElementById("sp_size").value = 0;
-				var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
-				var length = parseFloat(document.getElementById("sp_length").value) || 0;
-				var height = parseFloat(document.getElementById("sp_thick_height").value) || 0;
-				var width = parseFloat(document.getElementById("sp_width").value) || 0;
-				var cft = (length * height * width) / 144;
-				document.getElementById("sp_cft").value = cft.toFixed(2);
+            const cft = (length * height * width) / 144;
+            const total_cft = cft * quantity;
 
-				var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-				var total_cft = cft * quantity;
-				document.getElementById("sp_total_cft").value = total_cft.toFixed(2);
+            document.getElementById("sp_cft").value = cft.toFixed(2);
+            document.getElementById("sp_total_cft").value = total_cft.toFixed(2);
 
-				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-				var price = rate * total_cft;
-				document.getElementById("sp_price").value = price.toFixed(2);
+            set_price_details(rate * total_cft);
+        }
+    }
 
-				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-				var gst_amount = price * (gst / 100);
-				document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
+    else if (jn === 4 || jn === 6) {
+        $('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');
+        $('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
+        document.getElementById("sp_uom").value = "";
+        document.getElementById("sp_size").value = 0;
 
-				var total_bill_amount = price + gst_amount;
-				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-			}
-		} else if (jn == 4) {
-			// Logic for jn == 4
-			$('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');
-			$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
-			document.getElementById("sp_uom").value = "";
-			document.getElementById("sp_size").value = 0;
+        const length = parseFloat(document.getElementById("sp_length").value) || 0;
+        const width = parseFloat(document.getElementById("sp_width").value) || 0;
+        const cft = length * width;
+        const total_cft = cft * quantity;
 
-			var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
-			var length = parseFloat(document.getElementById("sp_length").value) || 0;
-			var width = parseFloat(document.getElementById("sp_width").value) || 0;
-			var cft = length * width;
-			document.getElementById("sp_cft").value = cft.toFixed(2);
+        document.getElementById("sp_cft").value = cft.toFixed(2);
+        document.getElementById("sp_total_cft").value = total_cft.toFixed(2);
 
-			var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-			var total_cft = cft * quantity;
-			document.getElementById("sp_total_cft").value = total_cft.toFixed(2);
+        set_price_details(rate * total_cft);
+    }
 
-			var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-			var price = rate * total_cft;
-			document.getElementById("sp_price").value = price.toFixed(2);
+    else if (jn === 2) {
+        $('#sp_thick_height').addClass('disable_a_href');
+        if ([14, 15, 23, 38, 39, 44, 45, 46].includes(jn1)) {
+            $('#sp_length, #sp_width').removeClass('disable_a_href');
+            $('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
 
-			var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-			var gst_amount = price * (gst / 100);
-			document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
+            document.getElementById("sp_uom").value = "";
+            document.getElementById("sp_size").value = 0;
 
-			var total_bill_amount = price + gst_amount;
-			document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-		} else if (jn == 2) {
-			// Logic for jn == 2
-			$('#sp_thick_height').addClass('disable_a_href');
-			var jn1 = document.getElementById("sp_stock_description").value;
+            const length = parseFloat(document.getElementById("sp_length").value) || 0;
+            const width = parseFloat(document.getElementById("sp_width").value) || 0;
+            const cft = length * width;
+            const total_cft = cft * quantity;
 
-			if ([14, 15, 23, 38, 39, 44, 45, 46].includes(parseInt(jn1))) {
-				$('#sp_length, #sp_width').removeClass('disable_a_href');
-				$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
+            document.getElementById("sp_cft").value = cft.toFixed(2);
+            document.getElementById("sp_total_cft").value = total_cft.toFixed(2);
 
-				document.getElementById("sp_uom").value = "";
-				document.getElementById("sp_size").value = 0;
+            set_price_details(rate * total_cft);
+        } else {
+            $('#sp_length, #sp_width').addClass('disable_a_href');
+            $('#sp_uom, #sp_size').removeClass('disable_a_href');
 
-				var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
-				var length = parseFloat(document.getElementById("sp_length").value) || 0;
-				var width = parseFloat(document.getElementById("sp_width").value) || 0;
-				var cft = length * width;
-				document.getElementById("sp_cft").value = cft.toFixed(2);
+            set_price_details(rate * quantity);
+        }
+    }
 
-				var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-				var total_cft = cft * quantity;
-				document.getElementById("sp_total_cft").value = total_cft.toFixed(2);
+    else {
+        $('#sp_thick_height, #sp_length, #sp_width, #sp_cft, #sp_total_cft').addClass('disable_a_href');
+        $('#sp_uom, #sp_size').removeClass('disable_a_href');
 
-				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-				var price = rate * total_cft;
-				document.getElementById("sp_price").value = price.toFixed(2);
-
-				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-				var gst_amount = price * (gst / 100);
-				document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
-
-				var total_bill_amount = price + gst_amount;
-				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-			} else {
-				$('#sp_length, #sp_width').addClass('disable_a_href');
-				$('#sp_uom, #sp_size').removeClass('disable_a_href');
-
-				var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-				var price = rate * quantity;
-				document.getElementById("sp_price").value = price.toFixed(2);
-
-				// Reset fields
-				document.getElementById("sp_width").value = 0.0;
-				document.getElementById("sp_length").value = 0.0;
-				document.getElementById("sp_thick_height").value = 0.0;
-				document.getElementById("sp_cft").value = 0.0;
-				document.getElementById("sp_total_cft").value = 0.0;
-
-				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-				var gst_amount = price * (gst / 100);
-				document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
-
-				var total_bill_amount = price + gst_amount;
-				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-			}
-		} else {
-			// Default case for other jn values
-			$('#sp_thick_height, #sp_length, #sp_width, #sp_cft, #sp_total_cft').addClass('disable_a_href');
-			$('#sp_uom, #sp_size').removeClass('disable_a_href');
-
-			var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-			var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-			var price = rate * quantity;
-			document.getElementById("sp_price").value = price.toFixed(2);
-
-			// Reset fields
-			document.getElementById("sp_width").value = 0.0;
-			document.getElementById("sp_length").value = 0.0;
-			document.getElementById("sp_thick_height").value = 0.0;
-			document.getElementById("sp_cft").value = 0.0;
-			document.getElementById("sp_total_cft").value = 0.0;
-
-			var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
-			var gst_amount = price * (gst / 100);
-			document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
-
-			var total_bill_amount = price + gst_amount;
-			document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-		}
-	}
+        set_price_details(rate * quantity);
+    }
+}
 </script>
 <script>
 	function fetchPartCodeDetails() {
