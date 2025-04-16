@@ -715,19 +715,19 @@ INCOME_CATEGORIES = {
     "Packing Expenses": "bf_Packing_Charges",
     "Warehouse Handling Charges": "bf_Warehouse_Handling_Charges",
     "Warehouse Loading Charges": "bf_Warehouse_Loading_Charges",
-    "Storage Expenses": "bf_Warehouse_Storage_Charges",
-    "Unloading Expenses":"bf_Warehouse_Unloading_Charges",
+    "Warehouse Storage Charges": "bf_Warehouse_Storage_Charges",
+    "Warehouse Unloading Charges":"bf_Warehouse_Unloading_Charges",
 }
 WAREHOUSE_EXPENSE_FIELD_MAPPING = {
     "Airport Handling Charges": None,  # If this isn't tracked in Warehouse_goods_info
     "Forklift Handling Charges": "wh_forklift_cost",
     "Crane Handling Charges": "wh_crane_cost",
-    "Handling Charges": "wh_total_loading_cost",  # Assuming this is overall handling
+    "Handling Charges": None,  # Assuming this is overall handling
     "Packing Expenses": None,
-    "Warehouse Handling Charges": "wh_total_loading_cost",  # Optional: reuse if no other field
+    "Warehouse Handling Charges": None,  # Optional: reuse if no other field
     "Warehouse Loading Charges": "wh_total_loading_cost",
-    "Storage Expenses": "wh_storage_cost_total",
-    "Unloading Expenses": None,  # Assuming not tracked
+    "Warehouse Storage Charges": "wh_storage_cost_total",
+    "Warehouse Unloading Charges": None,  # Assuming not tracked
 }
 
 DEPARTMENT_EXPENSES_CATEGORIES = {
@@ -1764,7 +1764,7 @@ def fin_mis(request):
 
     })
 
-def fin_mis_income(request):
+def fin_mis_warehouse(request):
     first_name = request.session.get("first_name")
     selected_branch = request.GET.get("branch")
     selected_unit = request.GET.get("unit")
@@ -1840,7 +1840,8 @@ def fin_mis_income(request):
     )
 
     warehouse_income_expense_dict = {
-        category: {i: 0 for i in range(1, 13)} for category in INCOME_CATEGORIES.keys()
+        category: {i: 0 for i in range(1, 13)}
+        for category in INCOME_CATEGORIES.keys()
     }
 
     for row in warehouse_queryset:
@@ -1850,10 +1851,9 @@ def fin_mis_income(request):
 
         for category, field in WAREHOUSE_EXPENSE_FIELD_MAPPING.items():
             if not field:
-                continue
+                continue  # Nothing to sum
             value = row.get(f"{field}_sum", 0.0) or 0.0
-            if category in warehouse_income_expense_dict:
-                warehouse_income_expense_dict[category][month] += value
+            warehouse_income_expense_dict[category][month] += value
 
     expense_summary = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
@@ -1907,10 +1907,10 @@ def fin_mis_income(request):
             monthly_budgets = budget_dict_by_month.get(category, {i: 0 for i in range(1, 13)})
             monthly_variance = {month: monthly_budgets[month] - monthly_expenses[month] for month in range(1, 13)}
 
-            total_expense = sum(monthly_expenses.values())
-            total_budget = sum(monthly_budgets.values())
-            total_variance = total_budget - total_expense
-            pl_percentage = (total_variance / total_budget * 100) if total_budget > 0 else 0.0
+            total_expense = round(sum(monthly_expenses.values()), 0)
+            total_budget = round(sum(monthly_budgets.values()), 0)
+            total_variance = round(total_budget - total_expense, 0)
+            pl_percentage = round((total_variance / total_budget * 100), 2) if total_budget > 0 else 0.0
 
             for month in range(1, 13):
                 grand_monthly_expenses[month] += monthly_expenses[month]
@@ -1951,7 +1951,6 @@ def fin_mis_income(request):
         return summary
 
     # Generate category-wise summaries
-    income_summary = get_category_summary(INCOME_CATEGORIES,"Income ")
     department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES,"Department Expenses")
     employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES,"Employee Benefits")
     interest_summary = get_category_summary(INTEREST_EXPENSES_CATEGORIES,"Interest Expenses")
@@ -1959,8 +1958,9 @@ def fin_mis_income(request):
     non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES,"Non-Operational Expenses")
     other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES,"Other Expenses")
     income_summary = get_category_summary(
-        {k: v for k, v in INCOME_CATEGORIES.items() if WAREHOUSE_EXPENSE_FIELD_MAPPING.get(k)},
+        INCOME_CATEGORIES,
         "Income",
+        custom_expense_dict=warehouse_income_expense_dict
     )
 
     income_total_expense = income_summary[-1]["total_expense"]
@@ -2109,7 +2109,7 @@ def fin_mis_income(request):
     total_profit_loss = total_budget - total_expense
     total_pl_percentage = (total_profit_loss / total_budget * 100) if total_budget > 0 else 0.0
 
-    return render(request, "asset_mgt_app/fin_MIS.html", {
+    return render(request, "asset_mgt_app/fin_mis_warehouse.html", {
         "income_summary": income_summary,
         "department_expenses_summary": department_expenses_summary,
         "employee_benefits_summary": employee_benefits_summary,
