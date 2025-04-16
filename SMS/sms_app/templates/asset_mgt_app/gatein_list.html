@@ -3,29 +3,29 @@
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
         <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
+        <div class="col-12 col-md-12 col-lg-2 rounded text-center bg-info">
             <h3>Warehouse Job List</h3>
         </div>
         <div class="col-5"></div>
     </div>
 </div>
 <div class="container-fluid row">
-    <div class="col-md-1">
+    <div class="col-6 col-md-6 col-lg-1">
         <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
-    <div class="col-md-1">
+    <div class="col-6 col-md-6 col-lg-1">
         <a href="{% url 'gatein_insert' %}" class="btn btn-success btn-block btn-lg">
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
-    <div class="col-md-2">
+    <div class="col-6 col-md-6 col-lg-2 p-3">
         <a href="{% url 'gatein_list' %}" class="btn btn-warning btn-block btn-lg">
             <i class="fa fa-eye" aria-hidden="true"></i> Show All
         </a>
     </div>
-    <div class="col-md-1">
+    <div class="col-6 col-md-8 col-lg-1">
         <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'search' %}" method="get">
             <div class="form-group">
                 <input type="search" class="form-control" id="pre_gate_in" placeholder="Pre Gate-In" name="pre_gate_in">
@@ -52,7 +52,7 @@
             <th></th>
             <th></th>
         </tr>
-        <tr>
+        <tr class="d-none d-md-table-row">
             <th>ID</th>
             <th>Created On</th>
             <th>Pre-Gate_In</th>
@@ -66,21 +66,31 @@
         </thead>
         <tbody>
         {% for gateininfo in page_obj %}
-        <tr>
-            <td> {{gateininfo.id}}</td>
-            <td> {{gateininfo.gatein_created_at}}</td>
-            <td> {{gateininfo.gatein_pre_id}}</td>
-            <td> {{gateininfo.gatein_job_no}}</td>
-            <td> {{gateininfo.gatein_invoice}}</td>
-            <td> {{gateininfo.gatein_customer}}</td>
-            <td> {{gateininfo.gatein_updated_at}}</td>
-            <td> {{gateininfo.gatein_updated_by}}</td>
-            <td>
+        <tr class="d-block d-md-table-row mb-3 mb-md-0 border rounded shadow-sm p-2">
+            <td class="d-flex d-md-table-cell justify-content-between">
+                <span class="fw-bold d-md-none me-2">ID :</span>{{gateininfo.id}}</td>
+            <td class="d-flex d-md-table-cell justify-content-between">
+                <span class="fw-bold d-md-none me-2">Created On :</span>{{gateininfo.gatein_created_at}}</td>
+            <td class="d-flex d-md-table-cell justify-content-between">
+                <span class="fw-bold d-md-none me-2">Pre-Gate_In :</span>{{gateininfo.gatein_pre_id}}</td>
+            <td class="d-flex d-md-table-cell justify-content-between">
+                <span class="fw-bold d-md-none me-2">Job Number :</span>{{gateininfo.gatein_job_no}}</td>
+            <td class="d-flex d-md-table-cell justify-content-between">
+                <span class="fw-bold d-md-none me-2">Shipper Inovice Number :</span>{{gateininfo.gatein_invoice}}</td>
+            <td class="d-flex d-md-table-cell justify-content-between">
+                <span class="fw-bold d-md-none me-2">Customer Name :</span>{{gateininfo.gatein_customer}}</td>
+            <td class="d-flex d-md-table-cell justify-content-between">
+                <span class="fw-bold d-md-none me-2">Updated ON :</span>{{gateininfo.gatein_updated_at}}</td>
+            <td class="d-flex d-md-table-cell justify-content-between">
+                <span class="fw-bold d-md-none me-2">Updated BY :</span>{{gateininfo.gatein_updated_by}}</td>
+            <td class="d-flex d-md-table-cell justify-content-between">
+                <span class="fw-bold d-md-none me-2">Edit :</span>
                 <a class="btn btn-primary" href="{% url 'gatein_update' gateininfo.id %}" >
                     <i class="far fa-edit"></i>
                 </a>
             </td>
-            <td>
+            <td class="d-flex d-md-table-cell justify-content-between">
+                <span class="fw-bold d-md-none me-2">Delete:</span>
                 <form action="{% url 'gatein_delete' gateininfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">

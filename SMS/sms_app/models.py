@@ -198,5 +198,4 @@ from .sub_models.opsauditscorecard_mod import OpsauditscorecardInfo
 from .sub_models.ab_info_mod import ABInfo
 from .sub_models.performance_audit_mod import PerformanceauditInfo
 from .sub_models.salesmultipleitem_mod import SalesmultipleitemInfo
-from .sub_models.trip_closure_mbl import Trclosure_mblInfo
 from .sub_models.part_code_mod import PkpartcodeInfo

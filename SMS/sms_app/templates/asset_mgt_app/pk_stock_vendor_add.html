@@ -105,6 +105,7 @@
             <tr>
                 <th>Created On</th>
                 <th>Bill/Return/New Order Number</th>
+                <th>Part Code</th>
                 <th>Stock Purchases Number</th>
                 <th>Category</th>
                 <th>Stock Type</th>
@@ -129,7 +130,8 @@
             {% for stockpurchasesinfo in stockpurchases_list %}
             <tr>
                 <td> {{stockpurchasesinfo.sp_created_at}}</td>
-                <td> {{stockpurchasesinfo.sp_vendor_bill}}</td>
+                <td> {{stockpurchasesinfo.sp_vendor_bill_id}}</td>
+                <td> {{stockpurchasesinfo.sp_part_code}}</td>
                 <td> {{stockpurchasesinfo.sp_purchase_num}}</td>
                 <td> {{stockpurchasesinfo.sp_category}}</td>
                 <td> {{stockpurchasesinfo.sp_stock_type}}</td>
