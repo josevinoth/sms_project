@@ -106,7 +106,7 @@
 								</div>
 							</div>
 							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3"  id="weight_group">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Weight (Kg)</span>
 									</div>
@@ -120,16 +120,16 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity</span>
+										<!--										<span class="input-group-text">CFT/SQFT</span>-->
+										<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Plywood SQFT"></i></span>
 									</div>
-									{% render_field form.sp_quantity id="sp_quantity" onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.sp_cft id="sp_cft" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<!--										<span class="input-group-text">CFT/SQFT</span>-->
-										<span class="input-group-text">Unit CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Plywood SQFT"></i></span>
+										<span class="input-group-text">Quantity</span>
 									</div>
-									{% render_field form.sp_cft id="sp_cft" class="form-control " %}
+									{% render_field form.sp_quantity id="sp_quantity" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -254,14 +254,16 @@
 <script>
 	function change_charge_type() {
 		var jn = document.getElementById("sp_stock_type").value;
-		if (jn == 1)
-		{
-			var jn1 = document.getElementById("sp_stock_description").value;
 
-			if (jn1 == 11)
-			{
+		if (jn == 1) {
+
+			var jn1 = document.getElementById("sp_stock_description").value;
+			if (jn1 == "8989" || jn1 == "8990" || jn1 == "8991" || jn1 == "8992" || jn1 == "8993"|| jn1 == "8994") {
 				// Enable weight and disable other size fields
+				$("#diameter_width_group, #con_length_group , #uom_group ,#length_group, #width_group, #height_group" ).hide();
+				$("weight_group").show();
 				$('#sp_weight').removeClass('disable_a_href');
+				$('#sp_quantity').addClass('disable_a_href');
 				$('#sp_cft, #sp_total_cft').addClass('disable_a_href');
 				$('#sp_uom, #sp_size').removeClass('disable_a_href');
 
@@ -283,12 +285,12 @@
 
 				var total_bill_amount = price + gst_amount;
 				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-			}
-			else
-			{
+			} else {
+				$("#diameter_width_group, #con_length_group , #uom_group " ).hide();
+                $("#length_group, #width_group, #height_group").show();
 				// Disable weight and enable other size fields
 				$('#sp_weight').addClass('disable_a_href');
-<!--				$('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');-->
+				$('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');
 				$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
 
 				document.getElementById("sp_uom").value = "";
@@ -315,12 +317,9 @@
 				var total_bill_amount = price + gst_amount;
 				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
 			}
-		}
-		else if (jn == 4)
-		{
-			var jn1 = document.getElementById("sp_stock_description").value;
+		} else if (jn == 4) {
 			// Logic for jn == 4
-<!--			$('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');-->
+			$('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');
 			$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
 			document.getElementById("sp_uom").value = "";
 			document.getElementById("sp_size").value = 0;
@@ -345,9 +344,7 @@
 
 			var total_bill_amount = price + gst_amount;
 			document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-		}
-		else if (jn == 2)
-		{
+		} else if (jn == 2) {
 			// Logic for jn == 2
 			$('#sp_thick_height').addClass('disable_a_href');
 			var jn1 = document.getElementById("sp_stock_description").value;
@@ -379,9 +376,7 @@
 
 				var total_bill_amount = price + gst_amount;
 				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-			}
-			else
-			{
+			} else {
 				$('#sp_length, #sp_width').addClass('disable_a_href');
 				$('#sp_uom, #sp_size').removeClass('disable_a_href');
 
@@ -404,9 +399,7 @@
 				var total_bill_amount = price + gst_amount;
 				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
 			}
-		}
-		else
-		{
+		} else {
 			// Default case for other jn values
 			$('#sp_thick_height, #sp_length, #sp_width, #sp_cft, #sp_total_cft').addClass('disable_a_href');
 			$('#sp_uom, #sp_size').removeClass('disable_a_href');
@@ -461,29 +454,30 @@
                 var pc_con_length = parseFloat(data.pc_con_length);
                 document.getElementById("sp_con_length").value = pc_con_length;
 
+				change_charge_type()
 				toggleFields()
             }
         });
     }
 </script>
 <script>
-	function toggleFields() {
-           var stockType = $("#sp_stock_type").val();
+	 function toggleFields() {
+            var stockType = $("#sp_stock_type").val();
 
-           if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
-               $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
-               $("#length_group, #width_group, #height_group").show();
+            if  (stockType == "1" ||stockType == "4" || stockType == "5" || stockType == "6") {
+                $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
+                $("#length_group, #width_group, #height_group").show();
 
-           }
-           else {
-               $("#diameter_width_group, #con_length_group, #uom_group ").show();
-               $("#length_group, #width_group, #height_group").hide();
-           }
-       }
+            }
+            else {
+                $("#diameter_width_group, #con_length_group, #uom_group ").show();
+                $("#length_group, #width_group, #height_group").hide();
+            }
+        }
 
 </script>
 <script>
-	// Enable select2 for part code field
+    // Enable select2 for part code field
     $('#sp_part_code').select2({
         ajax: {
             url: "{% url 'get_part_code' %}",

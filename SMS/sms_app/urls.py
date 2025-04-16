@@ -412,6 +412,7 @@ urlpatterns = [
     path('vehicle_allotment_nav/<int:vehicle_allotment_id>', views.vehicle_allotment_nav, name='vehicle_allotment_nav'),  # nav vehicle_allotment
     path('search/', views.get_queryset, name='search'),  # View Gate-in search
     path('pre_gatein_search/', views.pre_gatein_search, name='pre_gatein_search'),  # View pre Gate-in search
+    path('partcode_search/', views.partcode_search, name='partcode_search'),  # View pre Gate-in search
     path('sales_search/', views.sales_search, name='sales_search'),  # View pre Sales search
     path('sales_comments_search/', views.sales_comments_search, name='sales_comments_search'),  # View pre Sales comments search
     path('dispatch_search/', views.dispatch_search, name='dispatch_search'),  # View dispatch search
@@ -644,7 +645,6 @@ urlpatterns = [
     path('consignmentdetail_cancel/', views.consignmentdetail_cancel, name='consignmentdetail_cancel'),
     path('load_truck_details/', views.load_truck_details, name='load_truck_details'),
     path('timesheet_report/', views.timesheet_report, name='timesheet_report'),
-
     path('fin_mis/', views.fin_mis, name='fin_mis'),
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
 ]
