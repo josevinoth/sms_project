@@ -646,6 +646,7 @@ urlpatterns = [
     path('load_truck_details/', views.load_truck_details, name='load_truck_details'),
     path('timesheet_report/', views.timesheet_report, name='timesheet_report'),
     path('fin_mis/', views.fin_mis, name='fin_mis'),
+    path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
 ]
 
 
