@@ -57,7 +57,8 @@ class PkquotationInfo(models.Model):
     pkqt_con_length = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_diameter_width = models.CharField(max_length=20, blank=True, null=True, default=0.0)
     pkqt_part_code = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True,blank=True)
-
+    pkqt_weight = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_weight_sqft = models.FloatField(blank=True, null=True, default=0.0)
 
     class Meta:
         ordering = ["pkqt_cost_type"]

@@ -104,18 +104,14 @@
 									</div>
 									{% render_field form.pkqt_itemdescription id="pkqt_itemdescription" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
-								<div class="row ">
-									<div class="col-9">
-										<div class="input-group input-group-sm mb-3"  id="height_group">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
-											</div>
-											{% render_field form.pkqt_height_req id="pkqt_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										</div>
-										<div class="col d-flex align-items-center justify-content-center">
-											<button id="search_wood" type="button" class="btn btn-lg btn-primary"><i class="fas fa-search"></i> Search Item</button>
-										</div>
+								<div class="input-group input-group-sm mb-3"  id="height_group">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
 									</div>
+									{% render_field form.pkqt_height_req id="pkqt_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="col d-flex align-items-center justify-content-center">
+									<button id="search_wood" type="button" class="btn btn-lg btn-primary"><i class="fas fa-search"></i> Search Item</button>
 								</div>
 							</div>
 							<div class="col-3">
@@ -142,6 +138,18 @@
 										<span class="input-group-text">Diameter/Width</span>
 									</div>
 									{% render_field form.pkqt_size id="pkqt_size" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3"  id="weight_group">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weight (Kg)</span>
+									</div>
+									{% render_field form.pkqt_weight id="pkqt_weight" onchange="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3" id="weight_sq_group">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weight/(Sq.mt or mt)</span>
+									</div>
+									{% render_field form.pkqt_weight_sqft id="pkqt_weight_sqft" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -226,6 +234,7 @@
 		{% include "asset_mgt_app/calculation_card.html" %}
 	</div>
 </div>
+<br>
 <div id="pk_item_search_page_costing">
 	{% include "asset_mgt_app/pk_item_search_page_costing.html" %}
 </div>
@@ -296,7 +305,7 @@
             {
         		$('#pkqt_stock_type').removeClass('disable_a_href');
                 var jn1=document.getElementById("pkqt_stock_type").value
-                if (jn1==1)
+                if (jn1==1 || jn1==5)
                 {
             		$('#pkqt_stock_description').removeClass('disable_a_href');
                     $('#pkqt_uom').addClass('disable_a_href');
@@ -319,7 +328,7 @@
                     var totalboxCost = totalCost * na_quantity;
                     document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
                 }
-                else if (jn1==4)
+                else if (jn1==4 || jn1==6)
                 {
           			$('#pkqt_item').removeClass('disable_a_href');
           			$('#pkqt_itemdescription').removeClass('disable_a_href');
@@ -426,7 +435,7 @@
 						}
   				  }
             }
-            else if (jn==4)
+            else if (jn==4 )
             {
                 $('#pkqt_stock_type').addClass('disable_a_href');
                 $('#pkqt_stock_description').addClass('disable_a_href');
@@ -630,6 +639,8 @@
                 var h = parseFloat(data.na_height);
                 document.getElementById("pkqt_h").value = h;
                 var na_uom_val = data.na_uom;
+                var na_uom_id_val = data.na_uom_id;
+                alert(na_uom_val)
                 document.getElementById("pkqt_uom_calc").value = na_uom_val;
                 calculateDimensions(na_uom_id_val,l,w,h);
             }
@@ -703,9 +714,9 @@
                     tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
                     tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
                     tableHtml += '<td>' + results[i].sp_source__source + '</td>';
-                    tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
-                    tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
-                    tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
+                    tableHtml += '<td>' + results[i].sp_thick_height + '</td>';
+                    tableHtml += '<td>' + results[i].sp_width + '</td>';
+                    tableHtml += '<td>' + results[i].sp_length + '</td>';
                     tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
                     tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
                     tableHtml += '<td>' + results[i].sp_rate + '</td>';
@@ -850,12 +861,12 @@
            var stockType = $("#pkqt_stock_type").val();
 
             if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
-               $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
+               $("#diameter_width_group, #con_length_group , #uom_group, #weight_group, #weight_sq_group " ).hide();
                $("#length_group, #width_group, #height_group").show();
 
            }
            else {
-               $("#diameter_width_group, #con_length_group, #uom_group ").show();
+               $("#diameter_width_group, #con_length_group, #uom_group, weight_group, weight_sq_group ").show();
                $("#length_group, #width_group, #height_group").hide();
            }
        }
@@ -863,7 +874,7 @@
 </script>
 <script>
 
-    // Enable select2 for part code field
+	// Enable select2 for part code field
     $('#pkqt_part_code').select2({
         ajax: {
             url: "{% url 'get_part_code' %}",
