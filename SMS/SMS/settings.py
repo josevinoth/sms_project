@@ -142,6 +142,9 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, ''),)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+FASTAG_AUTH = config("FASTAG_AUTH")
+WALLET_ID = config("WALLET_ID")
+
 # #Email feature
 # # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
