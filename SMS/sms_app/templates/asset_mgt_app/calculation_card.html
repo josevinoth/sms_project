@@ -2,137 +2,155 @@
 {% block content %}
 
 <div class="container">
-	<div class="card ">
-		<div class="card-header bg-warning text-dark text-center"><h3>Calculation</h3></div>
-		<div class="card-body" id="dimension_type">
+	<div class="row">
+		<div class="col">
+			<div class="card ">
+				<div class="card-header bg-warning text-dark text-center"><h3>Calculation</h3></div>
+				<div class="card-body" id="dimension_type">
 
-			<!-- Dimension Type Field -->
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">Dimension Type</span>
+					<!-- Dimension Type Field -->
+					<div class="input-group input-group-sm mb-3">
+						<div class="input-group-prepend">
+							<span class="input-group-text">Dimension Type</span>
+						</div>
+						<input type="text" id="pkqt_dimension_type" class="form-control disable_a_href">
+					</div>
+
+					<input type="text" id="pkqt_dimension_type_id" class="form-control" style="display: none;">
+					<div class="row">
+						<div class="col-6">
+
+							<!-- UOM Field -->
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">UOM</span>
+								</div>
+								<input type="text" id="pkqt_uom_calc" class="form-control disable_a_href">
+							</div>
+
+							<!-- Input fields for Length, Width, Height -->
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Length</span>
+								</div>
+								<input type="number" id="pkqt_l" class="form-control disable_a_href">
+							</div>
+						</div>
+						<div class="col-6">
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Width</span>
+								</div>
+								<input type="number" id="pkqt_w" class="form-control disable_a_href">
+							</div>
+
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Height</span>
+								</div>
+								<input type="number" id="pkqt_h" class="form-control disable_a_href">
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-6">
+								<fieldset>
+									<legend style="white-space: nowrap;">Box ID Clearance</legend>
+									<div class="mb-3" >
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Length:</span>
+											</div>
+											<input type="number" id="pkqt_box_id_clearance_l" class="form-control" value="0">
+										</div>
+
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Width:</span>
+											</div>
+											<input type="number" id="pkqt_box_id_clearance_w" class="form-control" value="0">
+										</div>
+
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Height:</span>
+											</div>
+											<input type="number" id="pkqt_box_id_clearance_h" class="form-control" value="0">
+										</div>
+									</div>
+								</fieldset>
+							</div>
+							<div class="col-6">
+								<fieldset>
+									<legend style="white-space: nowrap;">Box OD Clearance</legend>
+									<div class="mb-3" >
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Length:</span>
+											</div>
+											<input type="number" id="pkqt_box_od_clearance_l" class="form-control" value="0">
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Width:</span>
+											</div>
+											<input type="number" id="pkqt_box_od_clearance_w" class="form-control" value="0">
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Height:</span>
+											</div>
+											<input type="number" id="pkqt_box_od_clearance_h" class="form-control" value="0">
+										</div>
+									</div>
+								</fieldset>
+							</div>
+						</div>
+					</div>
+					<!-- Table to display calculated values -->
+					<h3 class="text-center" style="text-decoration: underline;">Box OD Dimensions</h3>
+					<table class="table table-sm table-bordered">
+						<thead>
+						<tr class="text-center bg-warning">
+							<th></th>
+							<th>Length</th>
+							<th>Width</th>
+							<th>Height</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td class="bg-warning">cm</td>
+							<td><input type="text" id="length_cm" class="form-control form-control-sm" readonly></td>
+							<td><input type="text" id="width_cm" class="form-control form-control-sm" readonly></td>
+							<td><input type="text" id="height_cm" class="form-control form-control-sm" readonly></td>
+						</tr>
+						<tr>
+							<td class="bg-warning">inch</td>
+							<td><input type="text" id="length_in" class="form-control form-control-sm" readonly></td>
+							<td><input type="text" id="width_in" class="form-control form-control-sm" readonly></td>
+							<td><input type="text" id="height_in" class="form-control form-control-sm" readonly></td>
+						</tr>
+						<tr>
+							<td class="bg-warning">feet</td>
+							<td><input type="text" id="length_ft" class="form-control form-control-sm" readonly></td>
+							<td><input type="text" id="width_ft" class="form-control form-control-sm" readonly></td>
+							<td><input type="text" id="height_ft" class="form-control form-control-sm" readonly></td>
+						</tr>
+						</tbody>
+					</table>
+
+					<!-- Button to trigger calculation -->
+					<div class="d-flex justify-content-end mt-3">
+						<button class="btn btn-primary" onclick="pk_store_na_dimension_id()">Calculate</button>
+					</div>
 				</div>
-				<input type="text" id="pkqt_dimension_type" class="form-control disable_a_href">
-			</div>
-
-			<input type="text" id="pkqt_dimension_type_id" class="form-control" style="display: none;">
-
-
-			<!-- UOM Field -->
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">UOM</span>
-				</div>
-				<input type="text" id="pkqt_uom_calc" class="form-control disable_a_href">
-			</div>
-
-			<!-- Input fields for Length, Width, Height -->
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">Length</span>
-				</div>
-				<input type="number" id="pkqt_l" class="form-control disable_a_href">
-			</div>
-
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">Width</span>
-				</div>
-				<input type="number" id="pkqt_w" class="form-control disable_a_href">
-			</div>
-
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">Height</span>
-				</div>
-				<input type="number" id="pkqt_h" class="form-control disable_a_href">
-			</div>
-
-			<!-- Box ID Clearance Fields -->
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">Box ID Clearance Length:</span>
-				</div>
-				<input type="number" id="pkqt_box_id_clearance_l" class="form-control" value="0">
-			</div>
-
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">Box ID Clearance Width:</span>
-				</div>
-				<input type="number" id="pkqt_box_id_clearance_w" class="form-control" value="0">
-			</div>
-
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">Box ID Clearance Height:</span>
-				</div>
-				<input type="number" id="pkqt_box_id_clearance_h" class="form-control" value="0">
-			</div>
-
-			<!-- Box OD Clearance Fields -->
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">Box OD Clearance Length:</span>
-				</div>
-				<input type="number" id="pkqt_box_od_clearance_l" class="form-control" value="0">
-			</div>
-
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">Box OD Clearance Width:</span>
-				</div>
-				<input type="number" id="pkqt_box_od_clearance_w" class="form-control" value="0">
-			</div>
-
-			<div class="input-group input-group-sm mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text">Box OD Clearance Height:</span>
-				</div>
-				<input type="number" id="pkqt_box_od_clearance_h" class="form-control" value="0">
-			</div>
-			<!-- Table to display calculated values -->
-			<h3 class="text-center" style="text-decoration: underline;">Box OD Dimensions</h3>
-			<table class="table table-sm table-bordered">
-				<thead>
-				<tr class="text-center bg-warning">
-					<th></th>
-					<th>Length</th>
-					<th>Width</th>
-					<th>Height</th>
-				</tr>
-				</thead>
-				<tbody>
-				<tr>
-					<td class="bg-warning">cm</td>
-					<td><input type="text" id="length_cm" class="form-control form-control-sm" readonly></td>
-					<td><input type="text" id="width_cm" class="form-control form-control-sm" readonly></td>
-					<td><input type="text" id="height_cm" class="form-control form-control-sm" readonly></td>
-				</tr>
-				<tr>
-					<td class="bg-warning">inch</td>
-					<td><input type="text" id="length_in" class="form-control form-control-sm" readonly></td>
-					<td><input type="text" id="width_in" class="form-control form-control-sm" readonly></td>
-					<td><input type="text" id="height_in" class="form-control form-control-sm" readonly></td>
-				</tr>
-				<tr>
-					<td class="bg-warning">feet</td>
-					<td><input type="text" id="length_ft" class="form-control form-control-sm" readonly></td>
-					<td><input type="text" id="width_ft" class="form-control form-control-sm" readonly></td>
-					<td><input type="text" id="height_ft" class="form-control form-control-sm" readonly></td>
-				</tr>
-				</tbody>
-			</table>
-
-			<!-- Button to trigger calculation -->
-			<div class="d-flex justify-content-end mt-3">
-				<button class="btn btn-primary" onclick="pk_store_na_dimension_id()">Calculate</button>
 			</div>
 		</div>
 	</div>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+	document.addEventListener("DOMContentLoaded", function() {
         // List of input IDs
         let inputFields = [
             "pkqt_dimension_type", "pkqt_dimension_type_id", "pkqt_uom_calc",
@@ -164,8 +182,7 @@
 <script>
 	function calculateDimensions(na_uom_id_val, l, w, h) {
         var dimension_type = parseInt(document.getElementById("pkqt_dimension_type_id").value);
-        var UOM = parseInt(na_uom_id_val); // Convert UOM to integer
-
+		var UOM = parseInt(na_uom_id_val);
         // Clearance values
         var box_id_clearance_l = parseFloat(document.getElementById("pkqt_box_id_clearance_l").value) || 0;
         var box_id_clearance_w = parseFloat(document.getElementById("pkqt_box_id_clearance_w").value) || 0;

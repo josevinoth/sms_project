@@ -222,6 +222,7 @@ def pk_store_na_dimension_id(request):
     na_dimension_type =str(a.nad_dimension_type)
     na_dimension_type_id = str(a.nad_dimension_type.id)
     na_uom=str(a.nad_uom)
+    na_uom_id=str(a.nad_uom.id)
     na_length=str(a.nad_length)
     na_width=str(a.nad_width)
     na_height = str(a.nad_height)
@@ -233,6 +234,7 @@ def pk_store_na_dimension_id(request):
         'na_dimension_type': na_dimension_type,
         'na_dimension_type_id': na_dimension_type_id,
         'na_uom': na_uom,
+        'na_uom_id': na_uom_id,
         'na_length': na_length,
         'na_width': na_width,
         'na_height': na_height,
