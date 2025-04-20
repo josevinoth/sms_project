@@ -85,13 +85,18 @@ def part_code_delete(request, pc_id):
 
 @login_required(login_url='login_page')
 def get_stock_descriptions(request):
-    query = request.GET.get('q', '')  # Get search term
-    descriptions = Stockdescription.objects.filter(stock_description__icontains=query).values("id", "stock_description")
+    query = request.GET.get('q', '')
+    descriptions = Stockdescription.objects.filter(stock_description__icontains=query).values('id', 'stock_description')
 
-    # Ensure uniqueness in case of duplicate descriptions
-    descriptions_list = list({desc["stock_description"]: desc for desc in descriptions}.values())
+    # Remove duplicates based on description
+    seen = set()
+    unique_descriptions = []
+    for d in descriptions:
+        if d["stock_description"] not in seen:
+            seen.add(d["stock_description"])
+            unique_descriptions.append({"id": d["id"], "text": d["stock_description"]})
 
-    return JsonResponse(descriptions_list, safe=False)
+    return JsonResponse({"results": unique_descriptions})
 
 @login_required(login_url='login_page')
 def get_part_code(request):
@@ -102,48 +107,6 @@ def get_part_code(request):
     code_list = list({code["pc_code"]: code for code in part_codes}.values())
 
     return JsonResponse(code_list, safe=False)
-
-@login_required(login_url='login_page')
-def export_partcodes_excel(request):
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    )
-    response['Content-Disposition'] = 'attachment; filename=PartCodes.xlsx'
-
-    workbook = openpyxl.Workbook()
-    sheet = workbook.active
-    sheet.title = 'Part Codes'
-
-    # Add headers
-    headers = [
-        'Part Code', 'Stock Description', 'Length', 'Width', 'Height',
-        'Unit of Measure', 'Stock Type', 'Created At', 'Updated At', 'Updated By',
-        'Conversion Length', 'Diameter Width'
-    ]
-    sheet.append(headers)
-
-    partcodes = PkpartcodeInfo.objects.all().select_related(
-        'pc_stock_description', 'pc_uom', 'pc_stock_type', 'pc_updated_by'
-    )
-
-    for pc in partcodes:
-        sheet.append([
-            pc.pc_code,
-            pc.pc_stock_description.stock_description if pc.pc_stock_description else '',
-            pc.pc_length,
-            pc.pc_width,
-            pc.pc_height,
-            pc.pc_uom.uom_name if pc.pc_uom else '',
-            pc.pc_stock_type.stock_type if pc.pc_stock_type else '',
-            pc.pc_created_at.strftime('%Y-%m-%d %H:%M:%S') if pc.pc_created_at else '',
-            pc.pc_updated_at.strftime('%Y-%m-%d %H:%M:%S') if pc.pc_updated_at else '',
-            pc.pc_updated_by.username if pc.pc_updated_by else '',
-            pc.pc_con_length,
-            pc.pc_diameter_width,
-        ])
-
-    workbook.save(response)
-    return response
 
 
 @login_required(login_url='login_page')

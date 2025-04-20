@@ -52,6 +52,7 @@ class PkcostingInfo(models.Model):
     ct_exe_sqrt_req = models.FloatField(blank=True, null=True, default=0.0)
     ct_exe_value = models.FloatField(blank=True, null=True, default=0.0)
     ct_part_code = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True,blank=True)
+    ct_uom_calc = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='',related_name='ct_uom_calc', db_column='ct_uom_calc', limit_choices_to={'id__in': [1,2,3,4]},blank=True,null=True)
 
 
     class Meta:

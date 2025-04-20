@@ -108,24 +108,20 @@
 									</div>
 									{% render_field form.ct_itemdescription id="ct_itemdescription" class="form-control disable_a_href" %}
 								</div>
-								<div class="row ">
-									<div class="col-9">
-										<div class="input-group input-group-sm mb-3" id="height_group">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
-											</div>
-											{% render_field form.ct_height_req id="ct_height_req" onclick="change_cost_type()" class="form-control disable_a_href" %}
-										</div>
-										<div class="input-group input-group-sm mb-3" id="width_group">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Width Req (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
-											</div>
-											{% render_field form.ct_width_req id="ct_width_req" onclick="change_cost_type()" class="form-control disable_a_href" %}
-										</div>
-										<div class="col d-flex align-items-center justify-content-center">
-											<button id="search_wood" type="button" class="btn btn-primary btn-lg"><i class="fas fa-search"></i> Search Item</button>
-										</div>
+								<div class="input-group input-group-sm mb-3" id="height_group">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
 									</div>
+									{% render_field form.ct_height_req id="ct_height_req" onclick="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3" id="width_group">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Width Req (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
+									</div>
+									{% render_field form.ct_width_req id="ct_width_req" onclick="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
+								<div class="col d-flex align-items-center justify-content-center">
+									<button id="search_wood" type="button" class="btn btn-primary btn-lg"><i class="fas fa-search"></i> Search Item</button>
 								</div>
 							</div>
 							<div class="col-6">
@@ -331,6 +327,8 @@
             {
                 document.getElementById("ct_customer_new_name").value = customer_new_name;
             }
+            var ct_requirement_id = $('#ct_requirement').val();
+			alert(ct_requirement_id)
 
         pk_store_na_dimension_id();
         $("#search_wood").on("click", function() {
@@ -766,9 +764,9 @@
                         tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
                         tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
                         tableHtml += '<td>' + results[i].sp_source__source + '</td>';
-                        tableHtml += '<td>' + results[i].sp_thick_height_reduced + '</td>';
-                        tableHtml += '<td>' + results[i].sp_width_reduced + '</td>';
-                        tableHtml += '<td>' + results[i].sp_length_reduced + '</td>';
+                        tableHtml += '<td>' + results[i].sp_thick_height + '</td>';
+                        tableHtml += '<td>' + results[i].sp_width + '</td>';
+                        tableHtml += '<td>' + results[i].sp_length + '</td>';
                         tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
                         tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
                         tableHtml += '<td>' + results[i].sp_rate + '</td>';
@@ -891,21 +889,26 @@
             dataType: 'json',
             success: function(data) {
  	     	    var na_dimension_box_val=data.na_dimension_box_val;
+ 	     	    alert(na_dimension_box_val)
  		       	document.getElementById("ct_requirement_size").value=na_dimension_box_val;
-                var na_dimension_box_val = data.na_dimension_box_val;
                 var na_dimension_type_val = data.na_dimension_type;
+                alert(na_dimension_type_val)
                 var na_dimension_type_id_val = data.na_dimension_type_id;
                 document.getElementById("ct_dimension_type").value = na_dimension_type_val;
-                document.getElementById("ct_dimension_type_id").value = na_dimension_type_id_val;
-                var na_uom_val = data.na_uom;
-                var na_uom_id_val = data.na_uom_id;
-                document.getElementById("ct_uom_calc").value = na_uom_val;
+                var na_quantity = parseFloat(data.na_quantity);
+                alert(na_quantity)
+                document.getElementById("ct_na_quantity").value = na_quantity;
                 var l = parseFloat(data.na_length);
                 document.getElementById("pkqt_l").value = l;
                 var w = parseFloat(data.na_width);
                 document.getElementById("pkqt_w").value = w;
                 var h = parseFloat(data.na_height);
                 document.getElementById("pkqt_h").value = h;
+                var na_uom_val = data.na_uom;
+                alert(na_uom_val)
+                var na_uom_id_val = data.na_uom_id;
+                alert(na_uom_id_val)
+                document.getElementById("ct_uom_calc").value = na_uom_val;
                 calculateDimensions(na_uom_id_val,l,w,h);
             }
         });
@@ -1002,7 +1005,7 @@
 </script>
 <script>
 
-    // Enable select2 for part code field
+	// Enable select2 for part code field
     $('#ct_part_code').select2({
         ajax: {
             url: "{% url 'get_part_code' %}",
