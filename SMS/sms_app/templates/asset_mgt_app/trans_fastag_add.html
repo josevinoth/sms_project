@@ -1,55 +1,26 @@
-{% extends "asset_mgt_app/base.html" %}
-{% load widget_tweaks %}
-{% block content %}
-{% load crispy_forms_tags %}
-<div class="container">
-        <h2 class="mb-4">FASTag Toll Enquiry</h2>
-
-        <form method="post" class="row g-3">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">Search</button>
-            </div>
-        </form>
-
-        {% if result %}
-            <hr>
-            <h4>Result</h4>
-            {% if result.transactions %}
-                <table class="table table-bordered mt-3">
-                    <thead>
-                        <tr>
-                            <th>Toll Plaza</th>
-                            <th>Txn Time</th>
-                            <th>Amount</th>
-                            <th>Vehicle Number</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for txn in result.transactions %}
-                        <tr>
-                            <td>{{ txn.tollPlaza }}</td>
-                            <td>{{ txn.txnTime }}</td>
-                            <td>{{ txn.amount }}</td>
-                            <td>{{ txn.vehicleNumber }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% elif result.error %}
-                <div class="alert alert-danger">{{ result.error }}</div>
-            {% else %}
-                <div class="alert alert-warning">{{ result.responseMessage }}</div>
-            {% endif %}
-        {% endif %}
-    </div>
-<script>
-	$(document).ready(function() {
-        status_update()
-        document.getElementById("ar_updated_by").value ='{{user_id}}';
-    });
-</script>
-
-{% endblock content %}
-
+{% if result.data %}
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Txn Amount</th>
+                <th>Txn Time</th>
+                <th>Mode</th>
+                <th>Vehicle Number</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for txn in result.data %}
+            <tr>
+                <td>{{ txn.txnAmt }}</td>
+                <td>{{ txn.reqTime }}</td>
+                <td>{{ txn.txnMode }}</td>
+                <td>{{ txn.vehicleNumber }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% elif result.error %}
+    <div class="alert alert-danger">{{ result.error }}</div>
+{% else %}
+    <div class="alert alert-warning">{{ result.resMessage }}</div>
+{% endif %}
