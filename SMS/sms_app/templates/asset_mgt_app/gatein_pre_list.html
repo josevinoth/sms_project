@@ -36,13 +36,13 @@
     </div>
 </div>
 
-
 <hr>
 <div class="container-fluid">
-    <div class="table-responsive-sm">
+    <div class="table-responsive">
         <table id="gatein_list" class="table align-middle table-bordered">
             <thead class="table-dark">
             <tr>
+                <th></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Pre-Gate-In"></th>
@@ -51,10 +51,11 @@
                 <th><input type="text" class="form-control filter-input" placeholder="Search Driver Names"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Updated On"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Updated By"></th>
-                <th></th>
-                <th></th>
+                               <th></th>
             </tr>
             <tr class="d-none d-md-table-row">
+                <th>Edit</th>
+                <th>Delete</th>
                 <th>ID</th>
                 <th>Created On</th>
                 <th>Pre-Gate-In #</th>
@@ -63,36 +64,24 @@
                 <th>Driver Names</th>
                 <th>Updated On</th>
                 <th>Updated By</th>
-                <th>Edit</th>
-                <th>Delete</th>
             </thead>
             <tbody>
             {% for gateinpreinfo in page_obj %}
-            <tr class="d-block d-md-table-row mb-3 mb-md-0 border rounded shadow-sm p-2">
-                <td  class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">ID :</span>{{gateinpreinfo.id}}</td>
-                <td class="d-flex d-md-table-cell justify-content-between" >
-                    <span class="fw-bold d-md-none me-2">Created On :</span>{{gateinpreinfo.gatein_pre_created_at}}</td>
-                <td  class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Pre-Gate-In # :</span>{{gateinpreinfo.gatein_pre_number}}</td>
-                <td  class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Branch:</span>{{gateinpreinfo.gatein_pre_branch}}</td>
-                <td  class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Truck Numbers :</span>{{gateinpreinfo.gatein_pre_truck_number}}</td>
-                <td  class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Driver Names :</span>{{gateinpreinfo.gatein_pre_driver_name}}</td>
-                <td  class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Updated On:</span>{{gateinpreinfo.gatein_pre_updated_at}}</td>
-                <td  class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Updated By :</span>{{gateinpreinfo.gatein_pre_updated_by}}</td>
-                <td  class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Edit :</span>
-                    <a class="btn btn-primary" href="{% url 'gatein_pre_update' gateinpreinfo.id %}" >
+            <tr>
+                <td>
+                    <a href="{% url 'gatein_pre_update' gateinpreinfo.id %}" class="btn btn-primary">
                         <i class="far fa-edit"></i>
                     </a>
                 </td>
-                <td  class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Delete :</span>
+                <td> {{gateinpreinfo.id}}</td>
+                <td> {{gateinpreinfo.gatein_pre_created_at}}</td>
+                <td> {{gateinpreinfo.gatein_pre_number}}</td>
+                <td> {{gateinpreinfo.gatein_pre_branch}}</td>
+                <td> {{gateinpreinfo.gatein_pre_truck_number}}</td>
+                <td> {{gateinpreinfo.gatein_pre_driver_name}}</td>
+                <td> {{gateinpreinfo.gatein_pre_updated_at}}</td>
+                <td> {{gateinpreinfo.gatein_pre_updated_by}}</td>
+                <td>
                     <form action="{% url 'gatein_pre_delete' gateinpreinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">
@@ -106,8 +95,8 @@
         </table>
     </div>
 </div>
-        <div class="table-responsive">
-            <div class="pagination">
+<div class="table-responsive">
+    <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
             <a class="btn btn-warning" href="?page=1">First</a>
@@ -123,56 +112,31 @@
             <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
         {% endif %}
     </span>
-            </div>
-        </div>
-        <script>
-            $(document).ready(function() {
-            var table = $('#gatein_list').DataTable({
-            order: [[0, 'desc']],
-            scrollX: false,
-            responsive: true,
-            dom: "<'row mb-2'<'col-md-6 d-flex align-items-center gap-2'B l><'col-md-6 text-end'f>>" +
-             "<'row'<'col-12'tr>>" +
-             "<'row mt-2'<'col-md-6'i><'col-md-6'p>>",
-            buttons: [
-                {
-                extend: 'excelHtml5',
-                text: 'Excel',
-                exportOptions: {
-                columns: ':visible',
-                format: {
-                body: function (data, row, column, node) {
-                return $(node).text().replace(/^\s*\w.*?:\s*/, '').trim();
-                }
-               }
-            }
-            },
-            {
-            extend: 'csvHtml5',
-            text: 'CSV',
-            exportOptions: {
-            columns: ':visible',
-            format: {
-            body: function (data, row, column, node) {
-            return $(node).text().replace(/^\s*\w.*?:\s*/, '').trim();
-            }
-           }
-        }
-    },
-    'print'
-    ]
-     });
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+    var table = $('#gatein_list').DataTable({
+    order: [[0, 'desc']],
+    scrollX: true,
+    responsive: true,
+    dom: 'lBfrtip',
+    buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ],
+});
+ $('.dataTables_length').css('float', 'right');
 
-                // Apply search to each column
-                $('.filter-input').on('keyup change', function () {
-                    var columnIndex = $(this).parent().index(); // Get correct column index
-                    table.column(columnIndex).search(this.value).draw();
-                });
+        // Apply search to each column
+        $('.filter-input').on('keyup change', function () {
+            var columnIndex = $(this).parent().index(); // Get correct column index
+            table.column(columnIndex).search(this.value).draw();
+        });
 
-                // Prevent sorting when clicking inside the filter input
-                $('#gatein_list thead input').on('click', function(e) {
-                    e.stopPropagation();
-                });
-            });
-        </script>
-        {% endblock content %}
+        // Prevent sorting when clicking inside the filter input
+        $('#gatein_list thead input').on('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+</script>
+{% endblock content %}
