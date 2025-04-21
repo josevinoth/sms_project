@@ -139,15 +139,21 @@
 									</div>
 									{% render_field form.pkqt_size id="pkqt_size" class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Weight/CFT/Sqft Req <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
+									</div>
+									{% render_field form.pkqt_sqrt_req id="pkqt_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+								</div>
 								<div class="input-group input-group-sm mb-3"  id="weight_group">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Weight (Kg)</span>
+										<span class="input-group-text">Weight Convertion </span>
 									</div>
-									{% render_field form.pkqt_weight id="pkqt_weight" onchange="change_cost_type()" class="form-control disable_a_href" %}
+									{% render_field form.pkqt_weight_convention id="pkqt_weight_convention" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3" id="weight_sq_group">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Weight/(Sq.mt or mt)</span>
+										<span class="input-group-text">Weight Convention value</span>
 									</div>
 									{% render_field form.pkqt_weight_sqft id="pkqt_weight_sqft" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
@@ -159,30 +165,30 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">CFT/Sqft Req <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
-									</div>
-									{% render_field form.pkqt_sqrt_req id="pkqt_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Days/Hours</span>
 									</div>
 									{% render_field form.pkqt_days id="pkqt_days" onchange="change_cost_type()" class="form-control " %}
 								</div>
 							</div>
 							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Purchase Number</span>
+								<fieldset style="width:100%;">
+									<legend style="white-space: nowrap;">Stock Info</legend>
+									<div class="mb-3" >
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Stock Purchase Number</span>
+											</div>
+											{% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Available Quantity</span>
+											</div>
+											{% render_field form.pkqt_quantity id="pkqt_quantity"  class="form-control " %}
+										</div>
 									</div>
-									{% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Item Quantity</span>
-									</div>
-									{% render_field form.pkqt_quantity id="pkqt_quantity" onchange="change_cost_type()" class="form-control " %}
-								</div>
+								</fieldset>
+								<br>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
@@ -201,6 +207,7 @@
 									</div>
 									<span id="pkqt_cft_sqft_req" class="form-control disable_a_href"></span>
 								</div>
+								<input type="hidden" id="hidden_pc_stock_description">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Cost (INR)</span>
@@ -296,6 +303,7 @@
 			var CFT_Sqft_Req_unit = parseFloat(document.getElementById("pkqt_sqrt_req").value);
 			var job_type_qty = parseFloat(document.getElementById("pkqt_na_quantity").value);
 			var CFT_Sqft_Req_total = parseFloat(CFT_Sqft_Req_unit * job_type_qty);
+			let desc = document.getElementById("hidden_pc_stock_description").value;
 
 			// Set the calculated value to the span
 			document.getElementById("pkqt_cft_sqft_req").innerText = CFT_Sqft_Req_total;
@@ -380,14 +388,14 @@
                     document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
 
 					var stock_desc = document.getElementById("pkqt_stock_description").value;
-					if (stock_desc == 9046 || stock_desc == 9036|| stock_desc == 9037 || stock_desc == 9038 || stock_desc == 9039 || stock_desc == 9040 || stock_desc == 9111|| stock_desc == 9112 || stock_desc == 9113|| stock_desc == 9114|| stock_desc == 9115|| stock_desc == 9116|| stock_desc == 9117 ) {
+					if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")|| desc.startsWith("Tar")) {
 						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
 						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
 						var heig_ft = parseFloat(document.getElementById("height_ft").value) || 0;
+						var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
 						var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
 
-						var sqft = ((len_ft * wid_ft * 2) + (wid_ft * heig_ft * 2) + (len_ft * heig_ft * 2)) * quantity_req;
-						document.getElementById("pkqt_sqrt_req").value = sqft.toFixed(2);
+						document.getElementById("pkqt_sqrt_req").value = total_sqft;
 
 						var totalCost = rate * sqft;
 						document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
@@ -687,6 +695,7 @@
             tableHtml += '<th>Width</th>';
             tableHtml += '<th>Length</th>';
             tableHtml += '<th>CFT</th>';
+            tableHtml += '<th>Weight Convention</th>';
             tableHtml += '<th>Quantity</th>';
             tableHtml += '<th>Rate/Qty (CFT)</th>';
             tableHtml += '<th>UOM</th>';
@@ -717,7 +726,8 @@
                     tableHtml += '<td>' + results[i].sp_width + '</td>';
                     tableHtml += '<td>' + results[i].sp_length + '</td>';
                     tableHtml += '<td>' + results[i].sp_cft_reduced + '</td>';
-                    tableHtml += '<td>' + results[i].sp_quantity_reduced + '</td>';
+                    tableHtml += '<td>' + results[i].sp_weight_convention__pk_weight_convention + '</td>';
+                    tableHtml += '<td>' + results[i].sp_quantity + '</td>';
                     tableHtml += '<td>' + results[i].sp_rate + '</td>';
                     tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
                     tableHtml += '<td>' + results[i].sp_size + '</td>';
@@ -745,11 +755,21 @@
 
         var selectedRow = $(this).closest('tr');
         var stockId = selectedRow.find('td:eq(0)').text();
-        var height = selectedRow.find('td:eq(10)').text();
-        var width = selectedRow.find('td:eq(11)').text();
-        var length = selectedRow.find('td:eq(12)').text();
-        var cft = selectedRow.find('td:eq(13)').text();
-        var rateCFT = selectedRow.find('td:eq(14)').text();
+        var height = selectedRow.find('td:eq(9)').text();
+        var width = selectedRow.find('td:eq(10)').text();
+        var length = selectedRow.find('td:eq(11)').text();
+        var cft = selectedRow.find('td:eq(12)').text();
+		var weight_convention_text = selectedRow.find('td:eq(13)').text().trim();
+		var weight_select = $("#pkqt_weight_convention");
+
+		// Loop through options and match by text (case-insensitive)
+		weight_select.find("option").each(function () {
+			if ($(this).text().trim().toLowerCase() === weight_convention_text.toLowerCase()) {
+				weight_select.val($(this).val()).trigger('change');
+			}
+		});
+        var quantity = selectedRow.find('td:eq(14)').text();
+        var rateCFT = selectedRow.find('td:eq(15)').text();
         var uom_id = selectedRow.find('.hidden-column').text();
 
         $("#pkqt_stock_purchase_number").val(stockId);
@@ -757,6 +777,8 @@
         $("#pkqt_width").val(width);
         $("#pkqt_height").val(height);
         $("#pkqt_cft").val(cft);
+        $("#pkqt_weight_convention").val(weight_convention);
+        $("#pkqt_quantity").val(quantity);
         $("#pkqt_rate").val(rateCFT);
         $("#pkqt_uom").val(uom_id);
 
@@ -836,6 +858,8 @@
                 var pc_stock_type_id = data.pc_stock_type_id;
                 document.getElementById("pkqt_stock_type").value = pc_stock_type_id;
                	var pc_stock_description = data.pc_stock_description;
+               	document.getElementById("hidden_pc_stock_description").value = data.pc_stock_description;
+
                 var pc_stock_description_id = data.pc_stock_description_id;
                 document.getElementById("pkqt_stock_description").value = pc_stock_description_id;
                 var pc_uom_id = data.pc_uom_id;
@@ -849,7 +873,7 @@
                 var pc_size = parseFloat(data.pc_size);
                 document.getElementById("pkqt_size").value = pc_size;
 
-
+        		change_cost_type();
 				toggleFields()
             }
         });

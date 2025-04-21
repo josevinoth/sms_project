@@ -2,6 +2,7 @@ from django.db import models
 from django.urls import reverse
 
 from .part_code_mod import PkpartcodeInfo
+from .pkweightconvention_mod import Pkweightconvention
 from .stock_purchase_status_mod import PkstockpurchaseStatus
 from ..models import PkstockvebdorInfo,MyUser,Category,Pkstocktype,Source,Stockdescription,Unitofmeasure
 
@@ -41,6 +42,8 @@ class PkstockpurchasesInfo(models.Model):
     sp_status = models.ForeignKey(PkstockpurchaseStatus, on_delete=models.CASCADE, null=True,blank=True)
     sp_part_code = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True,blank=True)
     sp_con_length = models.FloatField(blank=True, null=True, default=0.0)
+    sp_weight_convention = models.ForeignKey(Pkweightconvention, on_delete=models.CASCADE, null=True,blank=True)
+
 
     class Meta:
         ordering = ["sp_purchase_num"]

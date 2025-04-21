@@ -20,3 +20,4 @@ class PkquotationForm(forms.ModelForm):
         self.fields['pkqt_itemdescription'].empty_label = "--Select--"
         self.fields['pkqt_stock_purchase_number'].empty_label = "--Select--"
         self.fields['pkqt_part_code'].empty_label = "--Select--"
+        self.fields['pkqt_weight_convention'].empty_label = "--Select--"

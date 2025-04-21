@@ -62,5 +62,14 @@
         </tbody>
     </table>
 </div>
-
+<script>
+    $(document).ready(function() {
+    $('#pk_item_search_costing_list').DataTable({
+<!--        scrollY: "400px",-->
+        scrollX: true,
+        order: [0, 'desc' ],
+        dom: 'Bfrtip',
+    });
+} );
+</script>
 {% endblock content %}

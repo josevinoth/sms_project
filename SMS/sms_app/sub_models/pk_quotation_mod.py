@@ -1,6 +1,7 @@
 from django.db import models
 
 from .part_code_mod import PkpartcodeInfo
+from .pkweightconvention_mod import Pkweightconvention
 from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,Cusnewexist,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo,Nadimensiontype
 
 class PkquotationInfo(models.Model):
@@ -59,6 +60,8 @@ class PkquotationInfo(models.Model):
     pkqt_part_code = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True,blank=True)
     pkqt_weight = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_weight_sqft = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_weight_convention = models.ForeignKey(Pkweightconvention, on_delete=models.CASCADE, null=True,blank=True)
+
 
     class Meta:
         ordering = ["pkqt_cost_type"]
