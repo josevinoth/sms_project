@@ -125,6 +125,4 @@ from .sub_forms.OpsauditscorecardForm_Form import OpsauditscorecardForm
 from .sub_forms.performance_auditForm_form import PerformanceauditForm
 from.sub_forms.salesmultipleitemForm_form import SalesmultipleitemForm
 from.sub_forms.part_code_Form import Part_codeForm
-
-
-
+from .sub_forms.trans_fastag_forms import trans_fastag_form

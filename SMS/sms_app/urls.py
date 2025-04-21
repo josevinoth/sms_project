@@ -647,6 +647,7 @@ urlpatterns = [
     path('timesheet_report/', views.timesheet_report, name='timesheet_report'),
     path('fin_mis/', views.fin_mis, name='fin_mis'),
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
+    path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
 ]
 
 

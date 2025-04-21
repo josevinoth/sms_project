@@ -1,0 +1,237 @@
+{% extends "asset_mgt_app/base_mbl.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-3 page active" id="page1">
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Enquiry Number</span>
+                </div>
+                {% render_field tripclosure_form.tr_enquirynumber id="tr_enquirynumber" class="form-control disable_a_href" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Consignment Number</span>
+                </div>
+                {% render_field tripclosure_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control disable_a_href" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Trip Number</span>
+                </div>
+                {% render_field tripclosure_form.tr_tripnumber id="tr_tripnumber" class="form-control disable_a_href" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Trip Category</span>
+                </div>
+                {% render_field tripclosure_form.tr_category id="tr_category" class="form-control disable_a_href" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Customer Ref no </span>
+                </div>
+                {% render_field tripclosure_form.tr_customerref id="tr_customerref" class="form-control " %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Vehicle Type Requested</span>
+                </div>
+                {% render_field tripclosure_form.tr_vehicletype id="tr_vehicletype" class="form-control disable_a_href" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Vehicle Source</span>
+                </div>
+                {% render_field tripclosure_form.tr_vehiclesource id="tr_vehiclesource" class="form-control disable_a_href" %}
+            </div>
+
+        </div>
+        <div class="col-lg-3 page" id="page2">
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Vehicle Number</span>
+                </div>
+                {% render_field tripclosure_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control disable_a_href" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Vehicle Type Placed</span>
+                </div>
+                {% render_field tripclosure_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control disable_a_href" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Departed Location</span>
+                </div>
+                {% render_field tripclosure_form.tr_departedlocation id="tr_departedlocation" class="form-control disable_a_href" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Reported Location</span>
+                </div>
+                {% render_field tripclosure_form.tr_reportedlocation id="tr_reportedlocation" class="form-control disable_a_href" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Trip Charges</span>
+                </div>
+                {% render_field tripclosure_form.tc_tripcost id="tc_tripcost" class="form-control disable_a_href" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Parking Charges</span>
+                </div>
+                {% render_field tripclosure_form.tc_parkingcost class="form-control" %}
+            </div>
+
+        </div>
+        <div class="col-lg-3 page" id="page3">
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Toll Charges</span>
+                </div>
+                {% render_field tripclosure_form.tc_tollcost class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Loading Charges</span>
+                </div>
+                {% render_field tripclosure_form.tc_loadingcost class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Unloading Charges</span>
+                </div>
+                {% render_field tripclosure_form.tc_unloadingcost class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Weighment Charges</span>
+                </div>
+                {% render_field tripclosure_form.tc_weighmentcost id="tc_weighmentcost" class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Handling Charges</span>
+                </div>
+                {% render_field tripclosure_form.tc_handlingcost id="tc_handlingcost" class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">IOU</span>
+                </div>
+                {% render_field tripclosure_form.tr_iou id="tr_iou" class="form-control" %}
+            </div>
+
+        </div>
+        <div class="col-lg-3 page" id="page4">
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Trip Charges</span>
+                </div>
+                {% render_field tripclosurefiles_form.tcf_trip_cost id="tcf_trip_cost" class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Parking Charges</span>
+                </div>
+                {% render_field tripclosurefiles_form.tcf_parking_cost id="tcf_parking_cost" class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Toll Charges</span>
+                </div>
+                {% render_field tripclosurefiles_form.tcf_toll_cost id="tcf_toll_cost" class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Loading Charges</span>
+                </div>
+                {% render_field tripclosurefiles_form.tcf_loading_cost id="tcf_loading_cost" class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Un-Loading Charges</span>
+                </div>
+                {% render_field tripclosurefiles_form.tcf_unloading_cost id="tcf_unloading_cost" class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Weighment Charges</span>
+                </div>
+                {% render_field tripclosurefiles_form.tcf_weighment_cost id="tcf_weighment_cost" class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Handling Charges</span>
+                </div>
+                {% render_field tripclosurefiles_form.tcf_handling_cost id="tcf_handling_cost" class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">POD</span>
+                </div>
+                {% render_field tripclosurefiles_form.tcf_pod id="tcf_pod" class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Trip Status</span>
+                </div>
+                <select name="tc_financestatus" id="tc_financestatus" class="form-control">
+                    <option value="2">--Select--</option>
+                    {% for item in status_list  %}
+                    <option value="{{item.id}}">{{item.status}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% render_field tripclosure_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
+            {% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
+
+            <button class="btn btn-danger" onclick="cancelForm()">Cancel</button>
+            <button class="btn btn-success" onclick="submitForm()">Submit</button>
+        </div>
+    </div>
+    <div class="navigation text-center mt-3">
+        <button class="btn btn-secondary" onclick="prevPage()" id="prevBtn" disabled>Previous</button>
+        <button class="btn btn-primary" onclick="nextPage()" id="nextBtn">Next</button>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    const totalPages = 4;
+
+    function showPage() {
+        document.querySelectorAll('.page').forEach((page, index) => {
+            page.classList.toggle('active', index + 1 === currentPage);
+        });
+        document.getElementById('prevBtn').disabled = (currentPage === 1);
+        document.getElementById('nextBtn').style.display = (currentPage === totalPages) ? 'none' : 'inline-block';
+    }
+
+    function nextPage() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            showPage();
+        }
+    }
+
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            showPage();
+        }
+    }
+
+    function submitForm() {
+        alert("Form submitted!");
+    }
+
+    function cancelForm() {
+        alert("Form cancelled!");
+    }
+</script>
+{% endblock content %}

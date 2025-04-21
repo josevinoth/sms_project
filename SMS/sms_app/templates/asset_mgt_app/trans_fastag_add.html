@@ -1,0 +1,26 @@
+{% if result.data %}
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Txn Amount</th>
+                <th>Txn Time</th>
+                <th>Mode</th>
+                <th>Vehicle Number</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for txn in result.data %}
+            <tr>
+                <td>{{ txn.txnAmt }}</td>
+                <td>{{ txn.reqTime }}</td>
+                <td>{{ txn.txnMode }}</td>
+                <td>{{ txn.vehicleNumber }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% elif result.error %}
+    <div class="alert alert-danger">{{ result.error }}</div>
+{% else %}
+    <div class="alert alert-warning">{{ result.resMessage }}</div>
+{% endif %}
