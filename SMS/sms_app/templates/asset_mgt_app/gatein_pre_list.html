@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_mobile.html" %}
 {% block content %}
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
@@ -9,42 +9,39 @@
         <div class="col-5"></div>
     </div>
 </div>
-<div class="container-fluid row" style="padding-left:500px;">
-    <div class="col-12 col-md-8 col-lg-2">
-        <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'pre_gatein_search' %}" method="get">
-            <div class="form-group">
-                <input type="search" class="form-control" id="pre_gate_in" placeholder="Pre Gate-In" name="pre_gate_in">
-                <input type="search" class="form-control" id="truck_number" placeholder="Truck Number" name="truck_number">
-                <input type="search" class="form-control" id="driver_name" placeholder="Driver Name" name="driver_name">
-                <button class="btn btn-primary" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
-            </div>
-        </form>
+<div class="container-fluid">
+    <div class="row g-2 justify-content-start align-items-start flex-wrap">
+        <div class="col-12 col-md-4 col-lg-5 d-flex justify-content-start gap-2">
+            <a href="{% url 'home_page' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <a href="{% url 'gatein_pre_insert' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Add
+            </a>
+            <a href="{% url 'gatein_pre_list' %}" class="btn btn-warning">
+                <i class="fa fa-eye"></i> Show All
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4 justify-content-start">
+            <form class="d-flex flex-column flex-md-row gap-2" action="{% url 'pre_gatein_search' %}" method="get">
+                <input type="search" class="form-control" placeholder="Pre Gate-In" name="pre_gate_in">
+                <input type="search" class="form-control" placeholder="Truck Number" name="truck_number">
+                <input type="search" class="form-control" placeholder="Driver Name" name="driver_name">
+                <button class="btn btn-primary d-inline-flex align-items-center justify-content-center" type="submit">
+                    <i class="fa fa-search me-1"></i> Search
+                </button>
+            </form>
+        </div>
     </div>
 </div>
-<br>
-<div class="container-fluid row" style="padding:15px;">
-    <div class="col-6 col-md-8 col-lg-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-    <div class="col-6 col-md-8 col-lg-1">
-        <a href="{% url 'gatein_pre_insert' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
-    <br>
-    <div class="col-10 col-md-8 col-lg-2 p-3">
-        <a href="{% url 'gatein_pre_list' %}" class="btn btn-warning btn-block btn-lg">
-            <i class="fa fa-eye" aria-hidden="true"></i> Show All
-        </a>
-    </div>
-</div>
+
+
 <hr>
 <div class="container-fluid">
-    <div class="table-responsive">
+    <div class="table-responsive-sm">
         <table id="gatein_list" class="table align-middle table-bordered">
-            <thead class="thead-dark">
+            <thead class="table-dark">
             <tr>
                 <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
@@ -107,6 +104,8 @@
             {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
         <div class="table-responsive">
             <div class="pagination">
     <span class="step-links">
@@ -128,12 +127,41 @@
         </div>
         <script>
             $(document).ready(function() {
-                var table = $('#gatein_list').DataTable({
-                    order: [[0, 'desc']],
-                    scrollX: false,
-                    dom: 'lBfrtip',
-                    buttons: ['copy', 'csv', 'excel', 'print'],
-                });
+            var table = $('#gatein_list').DataTable({
+            order: [[0, 'desc']],
+            scrollX: false,
+            responsive: true,
+            dom: "<'row mb-2'<'col-md-6 d-flex align-items-center gap-2'B l><'col-md-6 text-end'f>>" +
+             "<'row'<'col-12'tr>>" +
+             "<'row mt-2'<'col-md-6'i><'col-md-6'p>>",
+            buttons: [
+                {
+                extend: 'excelHtml5',
+                text: 'Excel',
+                exportOptions: {
+                columns: ':visible',
+                format: {
+                body: function (data, row, column, node) {
+                return $(node).text().replace(/^\s*\w.*?:\s*/, '').trim();
+                }
+               }
+            }
+            },
+            {
+            extend: 'csvHtml5',
+            text: 'CSV',
+            exportOptions: {
+            columns: ':visible',
+            format: {
+            body: function (data, row, column, node) {
+            return $(node).text().replace(/^\s*\w.*?:\s*/, '').trim();
+            }
+           }
+        }
+    },
+    'print'
+    ]
+     });
 
                 // Apply search to each column
                 $('.filter-input').on('keyup change', function () {
