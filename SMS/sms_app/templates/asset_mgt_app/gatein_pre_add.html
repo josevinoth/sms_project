@@ -3,19 +3,18 @@
 {% block content %}
 <div class="container-fluid py-3">
     <div class="d-flex align-items-center justify-content-center flex-nowrap gap-2">
-        <div class="bg-info text-white rounded px-3 py-2">
-            <h5 class="mb-0 fw-semibold" style="font-size: 1rem;"
-                class="fs-6 fs-md-4">
-                <span class="d-inline d-md-none" style="font-size: 0.8rem;">Add/Update Gate-In</span>
-                <span class="d-none d-md-inline" style="font-size: 1.5rem;">Add/Update Gate-In</span>
-            </h5>
-        </div>
+
+        <div class="bg-info text-white rounded px-3 py-2 flex-shrink-0">
+    <h5 class="fs-5 fs-md-4 mb-0">
+        <span class="text-nowrap">Add/Update Gate-In</span>
+    </h5>
+</div>
+
 
         <button id="email_alert" type="button" onclick="email_message_fn()"
-            class="btn btn-warning d-flex align-items-center"
-            data-bs-toggle="modal" data-bs-target="#sendEmailModal"
-            style="font-size: 0.8rem; padding: 0.4rem 0.75rem;">
-            <i class="fas fa-envelope-square me-2"></i>
+            class="btn btn-warning d-flex align-items-center flex-shrink-0"
+            data-bs-toggle="modal" data-bs-target="#sendEmailModal">
+            <i class="fas fa-envelope-square me-2 fs-6 fs-md-4 text-nowrap"></i>
             Email Alert
             <span class="badge bg-danger ms-2">{{gatein_pre_email_count}}</span>
         </button>
@@ -41,6 +40,8 @@
 	<div class="col">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3">
+
+
 				<div class="card-body bg-light" >
 					<form method="POST" action="" enctype="multipart/form-data">
 						{% csrf_token %}
