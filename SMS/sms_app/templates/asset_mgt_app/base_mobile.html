@@ -51,25 +51,46 @@
 <body style="background-color: #99ccff ">
 
 <!-- Header Section -->
-<div class="header_style mb-2 text-white p-2">
+<div class="header_style bg-dark text-white py-2">
     <div class="container-fluid">
-        <div class="row text-center">
-            <div class="title_style col-3">
-                <h1 style="font-weight:Bold;"><a href="{% url 'home_page' %}" class="btn btn-dark"><i class="fas fa-home"></i></a></h1>
+        <div class="row align-items-center">
+
+            <!-- Left: Home Icon -->
+            <div class="col-2 text-center">
+                <a href="{% url 'home_page' %}" class="btn btn-dark p-1 mobile-small-btn">
+                    <i class="fas fa-home fa-lg mobile-small-icon"></i>
+                </a>
             </div>
-            <div class="col-6">
-                <h1 style="font-weight: Bold;"><img src="/media/Company_Logo.png" style="width:50px;height:60px;padding:2px;margin-right:10px;">BVM Management System</h1>
+
+            <!-- Center: Logo + Title -->
+            <div class="col-8 d-flex align-items-center justify-content-center">
+                <img src="/media/Company_Logo.png" alt="Logo"
+                     class="me-2 mobile-logo" style="width:40px;height:50px;">
+                <div class="text-center">
+                    <h1 class="mb-0 d-none d-md-block" style="font-size:2rem; font-weight:bold;">
+                        BVM Management System
+                    </h1>
+                    <h6 class="mb-0 d-block d-md-none mobile-small-text fw-bold">
+                        BVM Management System
+                    </h6>
+                </div>
             </div>
-            <div class="col-2">
-                <h6>Hi, {{ first_name }}</h6>
-                <h6 style="color:red">{{ role }}</h6>
+
+            <!-- Right: User Info + Logout -->
+            <div class="col-2 text-center">
+                <div class="d-none d-md-block">
+                    <small>Hi, {{ first_name }}</small><br>
+                    <small class="text-danger">{{ role }}</small>
+                </div>
+                <a href="{% url 'logout_page' %}" class="btn btn-dark p-1 mt-1 mobile-small-btn">
+                    <i class="fas fa-sign-out-alt fa-lg mobile-small-icon"></i>
+                </a>
             </div>
-            <div class="col-1">
-                <h1><a href="{% url 'logout_page' %}" class="btn btn-dark "><i class="fas fa-sign-out-alt"></i></a></h1>
-            </div>
+
         </div>
     </div>
 </div>
+
 
 <!-- Content Section -->
 <div class="container-fluid pt-2 pb-5">
@@ -113,4 +134,25 @@
 
 
 </body>
+<style>
+    /* Custom tweaks for mobile */
+    @media (max-width: 767.98px) {
+        .mobile-small-text {
+            font-size: 0.8rem !important;
+        }
+        .mobile-small-icon {
+            font-size: 1rem !important;
+        }
+        .mobile-small-btn {
+            padding: 2px 6px !important;
+        }
+        .mobile-logo {
+            width: 30px !important;
+            height: 35px !important;
+        }
+    }
+</style>
+
+
+
 </html>
