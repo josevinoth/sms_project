@@ -146,3 +146,4 @@ from .sub_views.performance_audit_view import performanceaudit_add,performanceau
 from .sub_views.gate_meeting_add_view import gatemeeting_add,gatemeeting_list,gatemeeting_delete,gate_meeting_send_email
 from .sub_views.transport_nav_view import transport_nav
 from .sub_views.part_code_view import part_code_add,part_code_list,part_code_delete,get_stock_descriptions,get_part_code,partcode_search
+from .sub_views.trans_fastag_view import fastag_enquiry_view
