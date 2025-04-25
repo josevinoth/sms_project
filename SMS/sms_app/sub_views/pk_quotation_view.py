@@ -109,8 +109,8 @@ def pk_quotation_add(request, quotation_id=0):
                             messages.error(request, 'Invalid quantity value. It should be a number.')
 
                             # ✅ Store selected values in session even when validation fails
-                            request.session['last_cost_type'] = form.cleaned_data.get(
-                                'pkqt_cost_type').id if form.cleaned_data.get('pkqt_cost_type') else None
+                            # request.session['last_cost_type'] = form.cleaned_data.get(
+                            #     'pkqt_cost_type').id if form.cleaned_data.get('pkqt_cost_type') else None
 
                             return redirect(request.META['HTTP_REFERER'])
 
