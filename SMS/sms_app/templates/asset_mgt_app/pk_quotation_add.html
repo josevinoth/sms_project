@@ -147,7 +147,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Purchased Value<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
+										<span class="input-group-text">Quantity Req</span>
+									</div>
+									{% render_field form.pkqt_quantity_req id="pkqt_quantity_req" onchange="change_cost_type()" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Required Value<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
 									</div>
 									{% render_field form.pkqt_sqrt_req id="pkqt_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
@@ -162,12 +168,6 @@
 										<span class="input-group-text">Convertion Value</span>
 									</div>
 									{% render_field form.pkqt_weight_sqft id="pkqt_weight_sqft" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity Req</span>
-									</div>
-									{% render_field form.pkqt_quantity_req id="pkqt_quantity_req" onchange="change_cost_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -190,7 +190,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text">Available Quantity</span>
 											</div>
-											{% render_field form.pkqt_quantity id="pkqt_quantity"  class="form-control " %}
+											{% render_field form.pkqt_quantity id="pkqt_quantity"  class="form-control disable_a_href" %}
 										</div>
 									</div>
 								</fieldset>
@@ -332,9 +332,9 @@
                     var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
                     var height_req = parseFloat(document.getElementById("pkqt_height_req").value) || 0;
                     var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
-                    var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
                     var cft_req = (length_req*width_req*height_req/144)*quantity_req;
                     document.getElementById("pkqt_sqrt_req").value=cft_req.toFixed(2)
+                    var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 
                     var totalCost = rate * cft_req;
                     document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
@@ -373,7 +373,7 @@
 
 					if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")|| desc.startsWith("Tar")) {
 						$('#pkqt_quantity_req').addClass('disable_a_href');
-						$('#pkqt_quantity_req').addClass('disable_a_href');
+						$('#pkqt_sqrt_req').removeClass('disable_a_href');
 						$('#pkqt_days').addClass('disable_a_href');
 						var len_ft = parseFloat(document.getElementById("length_ft").value) || 0;
 						var wid_ft = parseFloat(document.getElementById("width_ft").value) || 0;
