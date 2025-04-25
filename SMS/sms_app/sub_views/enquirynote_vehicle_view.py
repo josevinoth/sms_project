@@ -37,7 +37,7 @@ def enquirynotevehicle_add(request,enquirynotevehicle_id=0):
                 print("enquirynotevehicle Form is Valid")
                 last_id = (Enquirynotevehicle.objects.latest('id')).id
                 messages.success(request, 'Record Updated Successfully')
-                return redirect('/SMS/enquirynotevehicle_update/'+str(last_id))
+                return redirect('/SMS/enquirynotevehicle_insert/')
             else:
                 print("enquirynotevehicle Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')

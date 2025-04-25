@@ -161,26 +161,40 @@ def fetch_part_code_details(request):
         return JsonResponse({'error': 'Part code ID is required'}, status=400)
 
     try:
-        part_code = get_object_or_404(PkpartcodeInfo, pk=part_code_id)
+        # Use select_related to optimize foreign key fetching
+        part_code = PkpartcodeInfo.objects.select_related(
+            'pc_stock_type',
+            'pc_stock_description',
+            'pc_uom',
+            'pc_stock_description__stock_received',
+            'pc_stock_description__stock_Consumption'
+        ).get(pk=part_code_id)
 
-        # Ensure ForeignKey fields exist before accessing .id
-        pc_stock_type_id = part_code.pc_stock_type.id if part_code.pc_stock_type else None
-        pc_stock_description_id = part_code.pc_stock_description.id if part_code.pc_stock_description else None
-        pc_uom_id = part_code.pc_uom.id if part_code.pc_uom else None
+        stock_desc = part_code.pc_stock_description
+        stock_received = stock_desc.stock_received if stock_desc and stock_desc.stock_received else None
+        stock_consumption = stock_desc.stock_Consumption if stock_desc and stock_desc.stock_Consumption else None
 
         data = {
             'pc_stock_type': str(part_code.pc_stock_type) if part_code.pc_stock_type else '',
-            'pc_stock_type_id': pc_stock_type_id,
-            'pc_stock_description': str(part_code.pc_stock_description) if part_code.pc_stock_description else '',
-            'pc_stock_description_id': pc_stock_description_id,
+            'pc_stock_type_id': part_code.pc_stock_type.id if part_code.pc_stock_type else None,
+            'pc_stock_description': str(stock_desc) if stock_desc else '',
+            'pc_stock_description_id': stock_desc.id if stock_desc else None,
             'pc_uom': str(part_code.pc_uom) if part_code.pc_uom else '',
-            'pc_uom_id': pc_uom_id,
+            'pc_uom_id': part_code.pc_uom.id if part_code.pc_uom else None,
             'pc_length': part_code.pc_length,
             'pc_width': part_code.pc_width,
             'pc_height': part_code.pc_height,
             'pc_size': part_code.pc_diameter_width,
             'pc_con_length': part_code.pc_con_length,
+
+            # Stock Received & Consumption UOMs
+            'stock_received': str(stock_received) if stock_received else '',
+            'stock_received_id': stock_received.id if stock_received else None,
+            'stock_consumption': str(stock_consumption) if stock_consumption else '',
+            'stock_consumption_id': stock_consumption.id if stock_consumption else None,
         }
+
         return JsonResponse(data)
     except PkpartcodeInfo.DoesNotExist:
         return JsonResponse({'error': 'Part code not found'}, status=404)
+

@@ -108,22 +108,27 @@
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3"  id="weight_group">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Weight (Kg)</span>
+										<span class="input-group-text">UOM-Purchased Type </span>
 									</div>
-									{% render_field form.sp_weight id="sp_weight" onchange="change_charge_type()" class="form-control disable_a_href" %}
+									{% render_field form.sp_weight_convention id="sp_weight_convention" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Weight/(Sq.mt or mt)</span>
+										<span class="input-group-text">Purchased value <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Plywood SQFT"></i></span>
+									</div>
+									{% render_field form.sp_cft id="sp_cft" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3" >
+									<div class="input-group-prepend">
+										<span class="input-group-text">UOM-Consumption Type</span>
+									</div>
+									{% render_field form.sp_weight_Consumption id="sp_weight_Consumption" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Convertion Value</span>
 									</div>
 									{% render_field form.sp_weight_sqft id="sp_weight_sqft" onchange="change_charge_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<!--										<span class="input-group-text">CFT/SQFT</span>-->
-										<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Plywood SQFT"></i></span>
-									</div>
-									{% render_field form.sp_cft id="sp_cft" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -133,7 +138,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total CFT/SQFT</span>
+										<span class="input-group-text">Total Value</span>
 									</div>
 									{% render_field form.sp_total_cft  id="sp_total_cft" class="form-control " %}
 								</div>
@@ -142,7 +147,7 @@
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<!--										<span class="input-group-text">Rate (INR)</span>-->
-										<span class="input-group-text">Rate CFT/SQFT/KG <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood enter Rate/CFT. For other enter Rate/Qty.For Reused wood enter Rate/KG"></i></span>
+										<span class="input-group-text">Rate<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood,Plywood enter Rate/CFT. For Consumbales enter Rate/sq.mt.For Reused wood enter Rate/KG"></i></span>
 									</div>
 									{% render_field form.sp_rate id="sp_rate" onchange="change_charge_type()" class="form-control " %}
 								</div>
@@ -179,12 +184,14 @@
 							</div>
 							{% render_field form.sp_updated_by id="sp_updated_by" hidden="True" class="form-control" %}
 						</div>
+						<input type="hidden" id="hidden_pc_stock_description">
 						<div class="input-group input-group-sm mb-3">
 							<div class="input-group-prepend">
 								<span class="input-group-text">Remarks</span>
 							</div>
 							{% render_field form.sp_remarks id="sp_remarks" class="form-control" %}
 						</div>
+
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
@@ -254,20 +261,21 @@
 <script>
 	function change_charge_type() {
 		var jn = document.getElementById("sp_stock_type").value;
+		let desc = document.getElementById("hidden_pc_stock_description").value;
 
-		if (jn == 1) {
+		if (jn == 1 || jn == 5) {
 
 			var jn1 = document.getElementById("sp_stock_description").value;
 			if (jn1 == "8989" || jn1 == "8990" || jn1 == "8991" || jn1 == "8992" || jn1 == "8993"|| jn1 == "8994") {
 				// Enable weight and disable other size fields
 				$("#diameter_width_group, #con_length_group , #uom_group ,#length_group, #width_group, #height_group" ).hide();
 				$("weight_group").show();
-				$('#sp_weight').removeClass('disable_a_href');
 				$('#sp_quantity').addClass('disable_a_href');
-				$('#sp_cft, #sp_total_cft').addClass('disable_a_href');
+				$('#sp_cft').removeClass('disable_a_href');
+				$('#sp_total_cft').addClass('disable_a_href');
 				$('#sp_uom, #sp_size').removeClass('disable_a_href');
 
-				var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
+				var weight = parseFloat(document.getElementById("sp_cft").value) || 0;
 				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
 				var price = rate * weight;
 				document.getElementById("sp_price").value = price.toFixed(2);
@@ -276,7 +284,6 @@
 				document.getElementById("sp_width").value = 0.0;
 				document.getElementById("sp_length").value = 0.0;
 				document.getElementById("sp_thick_height").value = 0.0;
-				document.getElementById("sp_cft").value = 0.0;
 				document.getElementById("sp_total_cft").value = 0.0;
 
 				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
@@ -295,7 +302,6 @@
 
 				document.getElementById("sp_uom").value = "";
 				document.getElementById("sp_size").value = 0;
-				var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
 				var length = parseFloat(document.getElementById("sp_length").value) || 0;
 				var height = parseFloat(document.getElementById("sp_thick_height").value) || 0;
 				var width = parseFloat(document.getElementById("sp_width").value) || 0;
@@ -317,7 +323,9 @@
 				var total_bill_amount = price + gst_amount;
 				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
 			}
-		} else if (jn == 4) {
+		} else if (jn == 4 || jn == 6) {
+			$("#diameter_width_group, #con_length_group , #uom_group " ).hide();
+            $("#length_group, #width_group, #height_group").show();
 			// Logic for jn == 4
 			$('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');
 			$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
@@ -344,31 +352,29 @@
 
 			var total_bill_amount = price + gst_amount;
 			document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-		} else if (jn == 2) {
+		}
+		else if (jn == 2) {
 			// Logic for jn == 2
 			$('#sp_thick_height').addClass('disable_a_href');
 			var jn1 = document.getElementById("sp_stock_description").value;
+			if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")|| desc.startsWith("Tar")) {
+				$("#diameter_width_group, #con_length_group , #uom_group ,#length_group, #width_group, #height_group" ).hide();
+				$("weight_group").show();
+				$('#sp_quantity').addClass('disable_a_href');
+				$('#sp_cft').removeClass('disable_a_href');
+				$('#sp_total_cft').addClass('disable_a_href');
+				$('#sp_uom, #sp_size').removeClass('disable_a_href');
 
-			if ([14, 15, 23, 38, 39, 44, 45, 46].includes(parseInt(jn1))) {
-				$('#sp_length, #sp_width').removeClass('disable_a_href');
-				$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
-
-				document.getElementById("sp_uom").value = "";
-				document.getElementById("sp_size").value = 0;
-
-				var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
-				var length = parseFloat(document.getElementById("sp_length").value) || 0;
-				var width = parseFloat(document.getElementById("sp_width").value) || 0;
-				var cft = length * width;
-				document.getElementById("sp_cft").value = cft.toFixed(2);
-
-				var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
-				var total_cft = cft * quantity;
-				document.getElementById("sp_total_cft").value = total_cft.toFixed(2);
-
+				var weight = parseFloat(document.getElementById("sp_cft").value) || 0;
 				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-				var price = rate * total_cft;
+				var price = rate * weight;
 				document.getElementById("sp_price").value = price.toFixed(2);
+
+				// Reset other size-related fields to 0
+				document.getElementById("sp_width").value = 0.0;
+				document.getElementById("sp_length").value = 0.0;
+				document.getElementById("sp_thick_height").value = 0.0;
+				document.getElementById("sp_total_cft").value = 0.0;
 
 				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
 				var gst_amount = price * (gst / 100);
@@ -376,7 +382,34 @@
 
 				var total_bill_amount = price + gst_amount;
 				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
-			} else {
+			}
+			else if(desc.includes("Belt")){
+				$("#diameter_width_group, #con_length_group , #uom_group ,#length_group, #width_group, #height_group" ).hide();
+				$("weight_group").show();
+				$('#sp_quantity').addClass('disable_a_href');
+				$('#sp_cft').removeClass('disable_a_href');
+				$('#sp_total_cft').addClass('disable_a_href');
+				$('#sp_uom, #sp_size').removeClass('disable_a_href');
+
+				var weight = parseFloat(document.getElementById("sp_weight_sqft").value) || 0;
+				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
+				var price = rate * weight;
+				document.getElementById("sp_price").value = price.toFixed(2);
+
+				// Reset other size-related fields to 0
+				document.getElementById("sp_width").value = 0.0;
+				document.getElementById("sp_length").value = 0.0;
+				document.getElementById("sp_thick_height").value = 0.0;
+				document.getElementById("sp_total_cft").value = 0.0;
+
+				var gst = parseFloat(document.getElementById("sp_gst").value) || 0;
+				var gst_amount = price * (gst / 100);
+				document.getElementById("sp_gst_amount").value = gst_amount.toFixed(2);
+
+				var total_bill_amount = price + gst_amount;
+				document.getElementById("sp_totalbill_amount").value = total_bill_amount.toFixed(2);
+			}
+			else {
 				$('#sp_length, #sp_width').addClass('disable_a_href');
 				$('#sp_uom, #sp_size').removeClass('disable_a_href');
 
@@ -427,38 +460,58 @@
 </script>
 <script>
 	function fetchPartCodeDetails() {
-    var partCodeId = $('#sp_part_code').val();  // Get selected Part Code ID
+    var partCodeId = $('#sp_part_code').val();
+
+    if (!partCodeId) return;
 
     $.ajax({
-        url: '{% url "fetch_part_code_details" %}',  // Ensure URL is mapped in Django
+        url: '{% url "fetch_part_code_details" %}',
         type: 'GET',
-        data: { 'part_code_id': partCodeId },  // Make sure param name matches the backend
-         dataType: 'json',
-            success: function(data) {
-                var pc_stock_type = data.pc_stock_type;
-                var pc_stock_type_id = data.pc_stock_type_id;
-                document.getElementById("sp_stock_type").value = pc_stock_type_id;
-               	var pc_stock_description = data.pc_stock_description;
-                var pc_stock_description_id = data.pc_stock_description_id;
-                document.getElementById("sp_stock_description").value = pc_stock_description_id;
-                var pc_uom_id = data.pc_uom_id;
-                document.getElementById("sp_uom").value = pc_uom_id;
-                var pc_length = parseFloat(data.pc_length);
-                document.getElementById("sp_length").value = pc_length;
-                var pc_width = parseFloat(data.pc_width);
-                document.getElementById("sp_width").value = pc_width;
-                var pc_height = parseFloat(data.pc_height);
-                document.getElementById("sp_thick_height").value = pc_height;
-                var pc_size = parseFloat(data.pc_size);
-                document.getElementById("sp_size").value = pc_size;
-                var pc_con_length = parseFloat(data.pc_con_length);
-                document.getElementById("sp_con_length").value = pc_con_length;
+        data: { 'part_code_id': partCodeId },
+        dataType: 'json',
+        success: function(data) {
+            document.getElementById("sp_stock_type").value = data.pc_stock_type_id || '';
+            document.getElementById("sp_stock_description").value = data.pc_stock_description_id || '';
+            document.getElementById("hidden_pc_stock_description").value = data.pc_stock_description || '';
+            document.getElementById("sp_uom").value = data.pc_uom_id || '';
+            document.getElementById("sp_length").value = parseFloat(data.pc_length) || 0.0;
+            document.getElementById("sp_width").value = parseFloat(data.pc_width) || 0.0;
+            document.getElementById("sp_thick_height").value = parseFloat(data.pc_height) || 0.0;
+            document.getElementById("sp_size").value = data.pc_size || '';
+            document.getElementById("sp_con_length").value = parseFloat(data.pc_con_length) || 0.0;
 
-				change_charge_type()
-				toggleFields()
+            const weightConvField = document.getElementById("sp_weight_convention");
+            const weightConsField = document.getElementById("sp_weight_Consumption");
+            const weightSqftField = document.getElementById("sp_weight_sqft");
+
+            if (data.stock_received_id && weightConvField) {
+                weightConvField.value = data.stock_received_id;
             }
-        });
-    }
+            if (data.stock_consumption_id && weightConsField) {
+                weightConsField.value = data.stock_consumption_id;
+            }
+
+            if (
+                data.stock_received_id &&
+                data.stock_consumption_id &&
+                data.stock_received_id === data.stock_consumption_id
+            ) {
+                weightSqftField.value = 1;
+                $('#sp_weight_sqft').addClass('disable_a_href');
+            } else {
+                weightSqftField.value = 1;
+                $('#sp_weight_sqft').removeClass('disable_a_href');
+            }
+
+            change_charge_type();
+            toggleFields();
+        },
+        error: function(xhr, status, error) {
+            console.error('Failed to fetch part code details:', error);
+        }
+    });
+}
+
 </script>
 <script>
 	 function toggleFields() {

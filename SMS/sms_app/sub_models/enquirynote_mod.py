@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils import timezone
+
 from ..models import Tr_triptype_Info,MovementtypeInfo,Tr_businesstype_Info,CustomerInfo,CustomerdepartmentInfo,MyUser,VehiclecategoryInfo,VehicletypeInfo,StatusList,Places
 
 class EnquirynoteInfo(models.Model):
@@ -15,9 +17,9 @@ class EnquirynoteInfo(models.Model):
     en_tripdetails = models.CharField(max_length=1000, null=True,blank=True)
     en_vehicle_allotment = models.CharField(max_length=1000, null=True,blank=True)
     en_tripclosure = models.CharField(max_length=1000, null=True,blank=True)
-    en_pickupdatetime =  models.DateTimeField(null=True, blank=True)
-    en_business_type = models.ForeignKey(Tr_businesstype_Info, on_delete=models.CASCADE, default="",null=True,blank=True)
-    en_movement_type = models.ForeignKey(MovementtypeInfo, on_delete=models.CASCADE, default="",null=True,blank=True)
+    en_pickupdatetime = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    en_business_type = models.ForeignKey(Tr_businesstype_Info, on_delete=models.CASCADE, default=1,null=True,blank=True)
+    en_movement_type = models.ForeignKey(MovementtypeInfo, on_delete=models.CASCADE, default=1,null=True,blank=True)
     en_trip_type = models.ForeignKey(Tr_triptype_Info, on_delete=models.CASCADE, default="",null=True,blank=True)
     en_fromlocaion = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='en_fromlocaion',db_column='en_fromlocaion', null=True, blank=True)
     en_tolocation = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='en_tolocation',db_column='en_tolocation', null=True, blank=True)
