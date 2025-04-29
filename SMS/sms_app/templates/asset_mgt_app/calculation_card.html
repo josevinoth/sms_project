@@ -1,310 +1,250 @@
-{% load widget_tweaks %} <!-- This line loads the widget_tweaks tag library -->
+{% load widget_tweaks %}
+
 {% block content %}
-
 <div class="container">
-	<div class="row">
-		<div class="col">
-			<div class="card ">
-				<div class="card-header bg-warning text-dark text-center"><h3>Calculation</h3></div>
-				<div class="card-body" id="dimension_type">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header bg-warning text-dark text-center"><h3>Calculation</h3></div>
+                <div class="card-body" id="dimension_type">
 
-					<!-- Dimension Type Field -->
-					<div class="input-group input-group-sm mb-3">
-						<div class="input-group-prepend">
-							<span class="input-group-text">Dimension Type</span>
-						</div>
-						<input type="text" id="pkqt_dimension_type" class="form-control disable_a_href">
-					</div>
+                    <!-- Dimension Type Field -->
+                    <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Dimension Type</span>
+                        </div>
+                        <input type="text" id="pkqt_dimension_type" class="form-control disable_a_href">
+                    </div>
 
-					<input type="text" id="pkqt_dimension_type_id" class="form-control" style="display: none;">
-					<div class="row">
-						<div class="col-6">
+                    <input type="text" id="pkqt_dimension_type_id" class="form-control" style="display: none;">
 
-							<!-- UOM Field -->
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">UOM</span>
-								</div>
-								<input type="text" id="pkqt_uom_calc" class="form-control disable_a_href">
-							</div>
+                    <div class="row">
+                        <div class="col-6">
 
-							<!-- Input fields for Length, Width, Height -->
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Length</span>
-								</div>
-								<input type="number" id="pkqt_l" class="form-control disable_a_href">
-							</div>
-						</div>
-						<div class="col-6">
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Width</span>
-								</div>
-								<input type="number" id="pkqt_w" class="form-control disable_a_href">
-							</div>
+                            <!-- UOM Field -->
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">UOM</span>
+                                </div>
+                                <input type="text" id="pkqt_uom_calc" class="form-control disable_a_href">
+                            </div>
 
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Height</span>
-								</div>
-								<input type="number" id="pkqt_h" class="form-control disable_a_href">
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-6">
-								<fieldset style="width:100%;margin-left:10%">
-									<legend style="white-space: nowrap;">Box ID Clearance</legend>
-									<div class="mb-3" >
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Length:</span>
-											</div>
-											<input type="number" id="pkqt_box_id_clearance_l" class="form-control" value="0">
-										</div>
+                            <!-- Input fields for Length, Width, Height -->
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Length</span>
+                                </div>
+                                <input type="number" id="pkqt_l" class="form-control disable_a_href">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Width</span>
+                                </div>
+                                <input type="number" id="pkqt_w" class="form-control disable_a_href">
+                            </div>
 
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Width:</span>
-											</div>
-											<input type="number" id="pkqt_box_id_clearance_w" class="form-control" value="0">
-										</div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Height</span>
+                                </div>
+                                <input type="number" id="pkqt_h" class="form-control disable_a_href">
+                            </div>
+                        </div>
+                    </div>
 
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Height:</span>
-											</div>
-											<input type="number" id="pkqt_box_id_clearance_h" class="form-control" value="0">
-										</div>
-									</div>
-								</fieldset>
-							</div>
-							<div class="col-6">
-								<fieldset  style="width:100%;margin-left:-10%">
-									<legend style="white-space: nowrap;">Box OD Clearance</legend>
-									<div class="mb-3" >
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Length:</span>
-											</div>
-											<input type="number" id="pkqt_box_od_clearance_l" class="form-control" value="0">
-										</div>
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Width:</span>
-											</div>
-											<input type="number" id="pkqt_box_od_clearance_w" class="form-control" value="0">
-										</div>
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Height:</span>
-											</div>
-											<input type="number" id="pkqt_box_od_clearance_h" class="form-control" value="0">
-										</div>
-									</div>
-								</fieldset>
-							</div>
-						</div>
-					</div>
-					<!-- Table to display calculated values -->
-					<h3 class="text-center" style="text-decoration: underline;">Box OD Dimensions</h3>
-					<table class="table table-sm table-bordered">
-						<thead>
-						<tr class="text-center bg-warning">
-							<th></th>
-							<th>Length</th>
-							<th>Width</th>
-							<th>Height</th>
-						</tr>
-						</thead>
-						<tbody>
-						<tr>
-							<td class="bg-warning">cm</td>
-							<td><input type="text" id="length_cm" class="form-control form-control-sm" readonly></td>
-							<td><input type="text" id="width_cm" class="form-control form-control-sm" readonly></td>
-							<td><input type="text" id="height_cm" class="form-control form-control-sm" readonly></td>
-						</tr>
-						<tr>
-							<td class="bg-warning">inch</td>
-							<td><input type="text" id="length_in" class="form-control form-control-sm" readonly></td>
-							<td><input type="text" id="width_in" class="form-control form-control-sm" readonly></td>
-							<td><input type="text" id="height_in" class="form-control form-control-sm" readonly></td>
-						</tr>
-						<tr>
-							<td class="bg-warning">feet</td>
-							<td><input type="text" id="length_ft" class="form-control form-control-sm" readonly></td>
-							<td><input type="text" id="width_ft" class="form-control form-control-sm" readonly></td>
-							<td><input type="text" id="height_ft" class="form-control form-control-sm" readonly></td>
-						</tr>
-						</tbody>
-					</table>
-					<table class="table table-sm table-bordered">
-						<thead>
-						<tr class="text-center bg-warning">
-							<th>Quantity</th>
-							<th>Sq.ft</th>
-							<th>Total Sq.ft</th>
-						</tr>
-						</thead>
-						<tbody>
-						<tr>
-							<td><input type="number" class="form-control" id="quantity" ></td>
-							<td><input type="text" class="form-control" id="sqft" readonly></td>
-							<td><input type="text" class="form-control" id="total_sqft" readonly></td>
-						</tr>
-						</tbody>
-					</table>
+                    <div class="row">
+                        <div class="col-6">
+                            <fieldset style="width:100%;margin-left:10%">
+                                <legend style="white-space: nowrap;">Box ID Clearance</legend>
+                                <div class="mb-3">
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Length:</span>
+                                        </div>
+                                        <input type="number" id="pkqt_box_id_clearance_l" class="form-control" value="0">
+                                    </div>
 
-					<!-- Button to trigger calculation -->
-					<div class="d-flex justify-content-end mt-3">
-						<button class="btn btn-primary" onclick="pk_store_na_dimension_id()">Calculate</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Width:</span>
+                                        </div>
+                                        <input type="number" id="pkqt_box_id_clearance_w" class="form-control" value="0">
+                                    </div>
+
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Height:</span>
+                                        </div>
+                                        <input type="number" id="pkqt_box_id_clearance_h" class="form-control" value="0">
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                        <div class="col-6">
+                            <fieldset style="width:100%;margin-left:-10%">
+                                <legend style="white-space: nowrap;">Box OD Clearance</legend>
+                                <div class="mb-3">
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Length:</span>
+                                        </div>
+                                        <input type="number" id="pkqt_box_od_clearance_l" class="form-control" value="0">
+                                    </div>
+
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Width:</span>
+                                        </div>
+                                        <input type="number" id="pkqt_box_od_clearance_w" class="form-control" value="0">
+                                    </div>
+
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Height:</span>
+                                        </div>
+                                        <input type="number" id="pkqt_box_od_clearance_h" class="form-control" value="0">
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+
+                    <!-- Table to display calculated values -->
+                    <h3 class="text-center" style="text-decoration: underline;">Box OD Dimensions</h3>
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                        <tr class="text-center bg-warning">
+                            <th></th>
+                            <th>Length</th>
+                            <th>Width</th>
+                            <th>Height</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="bg-warning">cm</td>
+                            <td><input type="text" id="length_cm" class="form-control form-control-sm" readonly></td>
+                            <td><input type="text" id="width_cm" class="form-control form-control-sm" readonly></td>
+                            <td><input type="text" id="height_cm" class="form-control form-control-sm" readonly></td>
+                        </tr>
+                        <tr>
+                            <td class="bg-warning">inch</td>
+                            <td><input type="text" id="length_in" class="form-control form-control-sm" readonly></td>
+                            <td><input type="text" id="width_in" class="form-control form-control-sm" readonly></td>
+                            <td><input type="text" id="height_in" class="form-control form-control-sm" readonly></td>
+                        </tr>
+                        <tr>
+                            <td class="bg-warning">feet</td>
+                            <td><input type="text" id="length_ft" class="form-control form-control-sm" readonly></td>
+                            <td><input type="text" id="width_ft" class="form-control form-control-sm" readonly></td>
+                            <td><input type="text" id="height_ft" class="form-control form-control-sm" readonly></td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Quantity and Sqft Table -->
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                        <tr class="text-center bg-warning">
+                            <th>Quantity</th>
+                            <th>Sq.ft</th>
+                            <th>Total Sq.ft</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td><input type="number" class="form-control" id="quantity" onchange="calculateTotalSqft()"></td>
+                            <td><input type="text" class="form-control" id="sqft" readonly></td>
+                            <td><input type="text" class="form-control" id="total_sqft" readonly></td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Button to trigger calculation -->
+                    <div class="d-flex justify-content-end mt-3">
+                        <button class="btn btn-primary" onclick="run_all_calculations()">Calculate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-	document.addEventListener("DOMContentLoaded", function() {
-        // List of input IDs
-        let inputFields = [
-            "pkqt_dimension_type", "pkqt_dimension_type_id", "pkqt_uom_calc",
-            "pkqt_l", "pkqt_w", "pkqt_h",
-            "pkqt_box_id_clearance_l", "pkqt_box_id_clearance_w", "pkqt_box_id_clearance_h",
-            "pkqt_box_od_clearance_l", "pkqt_box_od_clearance_w", "pkqt_box_od_clearance_h",
-            "length_cm", "width_cm", "height_cm",
-            "length_in", "width_in", "height_in",
-            "length_ft", "width_ft", "height_ft",
-            "quantity", "sqft", "total_sqft"
-        ];
 
-        // Restore values from localStorage
-        inputFields.forEach(id => {
-            let savedValue = localStorage.getItem(id);
-            if (savedValue !== null) {
-                document.getElementById(id).value = savedValue;
-            }
-        });
 
-        // Save values on input change
-        inputFields.forEach(id => {
-            document.getElementById(id).addEventListener("input", function() {
-                localStorage.setItem(id, this.value);
-            });
-        });
-    });
-</script>
+    function pk_store_na_dimension_id() {
+        var l = parseFloat(document.getElementById("pkqt_l").value);
+        var w = parseFloat(document.getElementById("pkqt_w").value);
+        var h = parseFloat(document.getElementById("pkqt_h").value);
+        var uom_val = document.getElementById("pkqt_uom_calc").value;
 
-<script>
-	function calculateDimensions(na_uom_id_val, l, w, h) {
-    var dimension_type = parseInt(document.getElementById("pkqt_dimension_type_id").value);
-    var UOM = parseInt(na_uom_id_val);
-
-    var box_id_clearance_l = parseFloat(document.getElementById("pkqt_box_id_clearance_l").value) || 0;
-    var box_id_clearance_w = parseFloat(document.getElementById("pkqt_box_id_clearance_w").value) || 0;
-    var box_id_clearance_h = parseFloat(document.getElementById("pkqt_box_id_clearance_h").value) || 0;
-
-    var box_od_clearance_l = parseFloat(document.getElementById("pkqt_box_od_clearance_l").value) || 0;
-    var box_od_clearance_w = parseFloat(document.getElementById("pkqt_box_od_clearance_w").value) || 0;
-    var box_od_clearance_h = parseFloat(document.getElementById("pkqt_box_od_clearance_h").value) || 0;
-
-    var l_box_od, w_box_od, h_box_od;
-
-    if (dimension_type === 1) {
-        $('#pkqt_box_id_clearance_l, #pkqt_box_id_clearance_w, #pkqt_box_id_clearance_h, #pkqt_box_od_clearance_l, #pkqt_box_od_clearance_w, #pkqt_box_od_clearance_h').removeClass('disable_a_href');
-        l_box_od = l + box_id_clearance_l + box_od_clearance_l;
-        w_box_od = w + box_id_clearance_w + box_od_clearance_w;
-        h_box_od = h + box_id_clearance_h + box_od_clearance_h;
-    } else if (dimension_type === 2) {
-        $('#pkqt_box_id_clearance_l, #pkqt_box_id_clearance_w, #pkqt_box_id_clearance_h').addClass('disable_a_href');
-        document.getElementById("pkqt_box_id_clearance_l").value = 0;
-        document.getElementById("pkqt_box_id_clearance_w").value = 0;
-        document.getElementById("pkqt_box_id_clearance_h").value = 0;
-        l_box_od = l + box_od_clearance_l;
-        w_box_od = w + box_od_clearance_w;
-        h_box_od = h + box_od_clearance_h;
-    } else {
-        $('#pkqt_box_id_clearance_l, #pkqt_box_id_clearance_w, #pkqt_box_id_clearance_h, #pkqt_box_od_clearance_l, #pkqt_box_od_clearance_w, #pkqt_box_od_clearance_h').addClass('disable_a_href');
-        document.getElementById("pkqt_box_id_clearance_l").value = 0;
-        document.getElementById("pkqt_box_id_clearance_w").value = 0;
-        document.getElementById("pkqt_box_id_clearance_h").value = 0;
-        document.getElementById("pkqt_box_od_clearance_l").value = 0;
-        document.getElementById("pkqt_box_od_clearance_w").value = 0;
-        document.getElementById("pkqt_box_od_clearance_h").value = 0;
-        l_box_od = l;
-        w_box_od = w;
-        h_box_od = h;
+        calculateDimensions(uom_val, l, w, h);
     }
 
-    var l_cm, w_cm, h_cm;
-    var l_in, w_in, h_in;
-    var l_ft, w_ft, h_ft;
+    function calculateDimensions(na_uom_id_val, l, w, h) {
+        var dimension_type = parseInt(document.getElementById("pkqt_dimension_type_id").value);
+        var UOM = parseInt(na_uom_id_val);
 
-    if (UOM == 1) { // feet
-        l_cm = (l_box_od * 30.48).toFixed(2);
-        w_cm = (w_box_od * 30.48).toFixed(2);
-        h_cm = (h_box_od * 30.48).toFixed(2);
+        var box_id_clearance_l = parseFloat(document.getElementById("pkqt_box_id_clearance_l").value) || 0;
+        var box_id_clearance_w = parseFloat(document.getElementById("pkqt_box_id_clearance_w").value) || 0;
+        var box_id_clearance_h = parseFloat(document.getElementById("pkqt_box_id_clearance_h").value) || 0;
+        var box_od_clearance_l = parseFloat(document.getElementById("pkqt_box_od_clearance_l").value) || 0;
+        var box_od_clearance_w = parseFloat(document.getElementById("pkqt_box_od_clearance_w").value) || 0;
+        var box_od_clearance_h = parseFloat(document.getElementById("pkqt_box_od_clearance_h").value) || 0;
 
-        l_in = (l_box_od * 12).toFixed(2);
-        w_in = (w_box_od * 12).toFixed(2);
-        h_in = (h_box_od * 12).toFixed(2);
+        // Perform dimension calculations based on the selected UOM
+        let l_cm = l + box_id_clearance_l + box_od_clearance_l;
+        let w_cm = w + box_id_clearance_w + box_od_clearance_w;
+        let h_cm = h + box_id_clearance_h + box_od_clearance_h;
 
-        l_ft = l_box_od.toFixed(2);
-        w_ft = w_box_od.toFixed(2);
-        h_ft = h_box_od.toFixed(2);
-    } else if (UOM == 2) { // inches
-        l_cm = (l_box_od * 2.54).toFixed(2);
-        w_cm = (w_box_od * 2.54).toFixed(2);
-        h_cm = (h_box_od * 2.54).toFixed(2);
+        if (UOM === 1) { // CM
+            l_cm = l + box_id_clearance_l + box_od_clearance_l;
+            w_cm = w + box_id_clearance_w + box_od_clearance_w;
+            h_cm = h + box_id_clearance_h + box_od_clearance_h;
+        } else if (UOM === 2) { // INCH
+            l_cm = l * 2.54 + box_id_clearance_l * 2.54 + box_od_clearance_l * 2.54;
+            w_cm = w * 2.54 + box_id_clearance_w * 2.54 + box_od_clearance_w * 2.54;
+            h_cm = h * 2.54 + box_id_clearance_h * 2.54 + box_od_clearance_h * 2.54;
+        }
 
-        l_in = l_box_od.toFixed(2);
-        w_in = w_box_od.toFixed(2);
-        h_in = h_box_od.toFixed(2);
+        // Set the calculated values in the respective fields
+        document.getElementById("length_cm").value = l_cm.toFixed(2);
+        document.getElementById("width_cm").value = w_cm.toFixed(2);
+        document.getElementById("height_cm").value = h_cm.toFixed(2);
 
-        l_ft = (l_box_od / 12).toFixed(2);
-        w_ft = (w_box_od / 12).toFixed(2);
-        h_ft = (h_box_od / 12).toFixed(2);
-    } else if (UOM == 3) { // centimeters
-        l_cm = l_box_od.toFixed(2);
-        w_cm = w_box_od.toFixed(2);
-        h_cm = h_box_od.toFixed(2);
+        // Convert to inches and feet as well
+        document.getElementById("length_in").value = (l_cm / 2.54).toFixed(2);
+        document.getElementById("width_in").value = (w_cm / 2.54).toFixed(2);
+        document.getElementById("height_in").value = (h_cm / 2.54).toFixed(2);
 
-        l_in = (l_box_od / 2.54).toFixed(2);
-        w_in = (w_box_od / 2.54).toFixed(2);
-        h_in = (h_box_od / 2.54).toFixed(2);
+        document.getElementById("length_ft").value = (l_cm / 30.48).toFixed(2);
+        document.getElementById("width_ft").value = (w_cm / 30.48).toFixed(2);
+        document.getElementById("height_ft").value = (h_cm / 30.48).toFixed(2);
 
-        l_ft = (l_box_od / 30.48).toFixed(2);
-        w_ft = (w_box_od / 30.48).toFixed(2);
-        h_ft = (h_box_od / 30.48).toFixed(2);
+        calculateTotalSqft();
     }
 
-    // Assign to fields
-    document.getElementById("length_cm").value = l_cm;
-    document.getElementById("width_cm").value = w_cm;
-    document.getElementById("height_cm").value = h_cm;
+    function calculateTotalSqft() {
+        var length_ft = parseFloat(document.getElementById("length_ft").value) || 0;
+        var width_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+        var quantity = parseInt(document.getElementById("quantity").value) || 0;
 
-    document.getElementById("length_in").value = l_in;
-    document.getElementById("width_in").value = w_in;
-    document.getElementById("height_in").value = h_in;
+        // Calculate Sqft per box
+        var sqft = length_ft * width_ft;
+        document.getElementById("sqft").value = sqft.toFixed(2);
 
-    document.getElementById("length_ft").value = l_ft;
-    document.getElementById("width_ft").value = w_ft;
-    document.getElementById("height_ft").value = h_ft;
+        // Calculate Total Sqft
+        var total_sqft = sqft * quantity;
+        document.getElementById("total_sqft").value = total_sqft.toFixed(2);
+    }
 
-    // Optional: Auto-fill quantity and sqft
-    let qty = document.getElementById("quantity");
-    if (qty && qty.value == "") qty.value = 1;
-
-    let sqft = document.getElementById("sqft");
-    let total_sqft = document.getElementById("total_sqft");
-    let calc_sqft = ((l_ft * w_ft) || 0).toFixed(2);
-    let calc_total = (calc_sqft * (qty.value || 1)).toFixed(2);
-
-    if (sqft) sqft.value = calc_sqft;
-    if (total_sqft) total_sqft.value = calc_total;
+    function run_all_calculations() {
+    pk_store_na_dimension_id();
+    pk_store_po_dimension_id();
 }
 
 </script>
-
-{% endblock content%}
+{% endblock %}

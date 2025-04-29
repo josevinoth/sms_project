@@ -52,7 +52,9 @@ class PkcostingInfo(models.Model):
     ct_exe_sqrt_req = models.FloatField(blank=True, null=True, default=0.0)
     ct_exe_value = models.FloatField(blank=True, null=True, default=0.0)
     ct_part_code = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True,blank=True)
-
+    ct_weight_sqft = models.FloatField(blank=True, null=True, default=0.0)
+    ct_weight_received = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE,related_name='ct_weight_received', db_column='ct_weight_received',null=True, blank=True)
+    ct_weight_Consumption = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE,related_name='ct_weight_Consumption',db_column='ct_weight_Consumption', null=True, blank=True)
 
     class Meta:
         ordering = ["ct_cost_type"]

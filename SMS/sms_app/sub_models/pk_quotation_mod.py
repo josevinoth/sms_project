@@ -49,7 +49,7 @@ class PkquotationInfo(models.Model):
     pkqt_box_od_clearance_w = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_box_od_clearance_h = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_uom_calc = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='',related_name='pkqt_uom_calc', db_column='pkqt_uom_calc', limit_choices_to={'id__in': [1,2,3,4]},blank=True,null=True)
-    pkqt_quantity_req= models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_quantity_req= models.FloatField(blank=True, null=True, default=1)
     pkqt_sqrt_req = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_cft_req = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_totalbox_cost = models.FloatField(blank=True, null=True, default=0.0)
