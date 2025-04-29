@@ -5,15 +5,16 @@ import hashlib
 from django.shortcuts import render
 from datetime import datetime
 from ..forms import trans_fastag_form
+from decouple import config
 
-WALLET_ID = "W0122122713156600041"
-MERCHANT_ID = "HDFCWL"
-REQUEST_SOURCE = "SPINC"
-SECRET_KEY = "OnePay#Test123"
+WALLET_ID = config("FASTAG_WALLET_ID")
+MERCHANT_ID = config("FASTAG_MERCHANT_ID")
+REQUEST_SOURCE = config("FASTAG_SOURCE")
+SECRET_KEY = config("FASTAG_SECRET")
 
-def generate_checksum(message: str, secret_key: str) -> str:
-    byte_key = secret_key.encode()
-    message = message.encode()
+def generate_checksum(message: str, secret: str) -> str:
+    byte_key = bytes(secret, 'utf-8')
+    message = bytes(message, 'utf-8')
     return hmac.new(byte_key, message, hashlib.sha256).hexdigest().upper()
 
 def fastag_enquiry_view(request):
@@ -33,29 +34,26 @@ def fastag_enquiry_view(request):
             payload = {
                 "requestID": request_id,
                 "requestTime": request_time,
-                "merchantID": MERCHANT_ID,
+                "merchantID": MERCHANT_ID,  # e.g., HDFCWL
                 "walletId": WALLET_ID,
-                "requestSource": REQUEST_SOURCE,
+                "requestSource": REQUEST_SOURCE,  # e.g., SPINC
                 "fromDate": from_date,
                 "toDate": to_date,
                 "vehicleNumber": vehicle,
                 "contactNumber": contact
             }
-            # Generate checksum
-            checksum_input = request_id + WALLET_ID + request_time + MERCHANT_ID + REQUEST_SOURCE
-            checksum = generate_checksum(checksum_input, SECRET_KEY)
 
-            # Prepare headers
+            # ✅ Add this here — checksum calculation
+            message = request_id + WALLET_ID + request_time + MERCHANT_ID + REQUEST_SOURCE
+            checksum = generate_checksum(message, SECRET_KEY)
+
+            # Prepare headers with calculated checksum
             headers = {
                 'Content-Type': 'application/json',
                 'Authorization': f'onepay:{checksum}'
             }
 
-            # Debug logs (optional)
-            print("Payload:", payload)
-            print("Checksum string:", checksum_input)
-            print("Generated checksum:", checksum)
-
+            # Send the request
             try:
                 response = requests.post(
                     "https://1paytag.hdfcbank.com/walletmware/api/wallet/txn/tollenquiry",
@@ -63,10 +61,11 @@ def fastag_enquiry_view(request):
                     headers=headers
                 )
                 result = response.json()
-                print("API response:", result)
+                print("RAW API RESPONSE:", response.text)
             except requests.exceptions.RequestException as e:
                 result = {"error": str(e)}
     else:
         form = trans_fastag_form()
 
     return render(request, 'asset_mgt_app/trans_fastag_add.html', {'form': form, 'result': result})
+

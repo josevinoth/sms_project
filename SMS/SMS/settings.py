@@ -15,7 +15,7 @@ from pathlib import Path
 from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from django.contrib import messages
-# from decouple import config
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -85,9 +85,9 @@ WSGI_APPLICATION = 'SMS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sms_015',
+        'NAME': 'asset_mgt_013',
         'USER': 'postgres',
-        'PASSWORD': 'root',
+        'PASSWORD': '244613',
         'HOST': 'localhost'
     }
 }

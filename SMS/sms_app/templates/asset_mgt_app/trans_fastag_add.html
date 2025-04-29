@@ -1,0 +1,82 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">FASTag Toll Enquiry</h2>
+
+    <form method="post" class="card p-4 shadow-sm bg-white">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.vehicleNumber.label_tag }} {{ form.vehicleNumber }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.contactNumber.label_tag }} {{ form.contactNumber }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.fromDate.label_tag }} {{ form.fromDate }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.toDate.label_tag }} {{ form.toDate }}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    {% if result %}
+    <hr>
+    {% if result.data %}
+    <h4 class="mt-4">FASTag Transactions</h4>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped mt-3">
+            <thead>
+            <tr>
+                <th>Wallet Post Time</th>
+                <th>Plaza Reader Time</th>
+                <th>Date Time</th>
+                <th>Transaction ID</th>
+                <th>Original Txn ID</th>
+                <th>Tag Sequence No</th>
+                <th>Toll Plaza Name</th>
+                <th>Vehicle No</th>
+                <th>VC Class</th>
+                <th>Lane ID</th>
+                <th>Lane Direction</th>
+                <th>Amount</th>
+                <th>Toll ID</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for txn in result.data %}
+            <tr>
+                <td>{{ txn.walletPostTime }}</td>
+                <td>{{ txn.plazaReaderTime }}</td>
+                <td>{{ txn.txnTime }}</td>
+                <td>{{ txn.txnId }}</td>
+                <td>{{ txn.originalTxnId }}</td>
+                <td>{{ txn.tagSequenceNo }}</td>
+                <td>{{ txn.tollPlazaName }}</td>
+                <td>{{ txn.vehicleNumber }}</td>
+                <td>{{ txn.vcClass }}</td>
+                <td>{{ txn.laneId }}</td>
+                <td>{{ txn.laneDirection }}</td>
+                <td>{{ txn.amount }}</td>
+                <td>{{ txn.tollId }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif result.error %}
+    <div class="alert alert-danger mt-4">
+        <strong>Error:</strong> {{ result.error }}
+    </div>
+    {% else %}
+    <div class="alert alert-warning mt-4">
+        {{ result.responseMessage|default:"No transactions found." }}
+    </div>
+    {% endif %}
+    {% endif %}
+
+</div>
+{% endblock content %}
