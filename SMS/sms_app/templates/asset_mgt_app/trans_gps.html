@@ -1,0 +1,25 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<h2>Vehicle Position Data</h2>
+{% if vehicle_data %}
+<table>
+    <tr>
+        <th>Latitude</th>
+        <th>Longitude</th>
+        <th>Speed</th>
+        <th>Timestamp</th>
+    </tr>
+    {% for data in vehicle_data %}
+    <tr>
+        <td>{{ data.latitude }}</td>
+        <td>{{ data.longitude }}</td>
+        <td>{{ data.speed }}</td>
+        <td>{{ data.timestamp }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No data available for the vehicle.</p>
+{% endif %}
+{% endblock content %}
