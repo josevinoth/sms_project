@@ -255,6 +255,11 @@ def na_dimension_add(request, na_dimension_id=0):
                 messages.success(request, "Record Updated Successfully")
             else:
                 print("Main form not saved")
+                # Display form errors
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        print(f"Error in {field}: {error}")
+                        messages.error(request, f"Error in {field}: {error}")
                 messages.error(request, "Record Not Updated Successfully")
         else:
             na_dimensioninfo = Nadimension.objects.get(pk=na_dimension_id)
@@ -265,6 +270,11 @@ def na_dimension_add(request, na_dimension_id=0):
                 messages.success(request,"Record Updated Successfully")
             else:
                 print("Main form not saved")
+                # Display form errors
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        print(f"Error in {field}: {error}")
+                        messages.error(request, f"Error in {field}: {error}")
                 messages.error(request,"Record Not Updated Successfully")
 
                 # Display form errors
