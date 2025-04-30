@@ -64,6 +64,11 @@ def pk_retrival_add(request,retrival_id=0):
                     return redirect(request.META['HTTP_REFERER'])
             else:
                 print("retrival Form is Not Valid")
+                # Display form errors
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        print(f"Error in {field}: {error}")
+                        messages.error(request, f"Error in {field}: {error}")
                 messages.error(request, 'Record Not Updated Successfully')
             return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/pk_retrival_list')

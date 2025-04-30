@@ -213,6 +213,7 @@
 									</div>
 									{% render_field form.ct_stock_status id="ct_stock_status" class="form-control " %}
 								</div>
+								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control " %}
 							</div>
 						</div>
 							<div class="row">
@@ -238,7 +239,7 @@
 	</div>
 </form>
 
-<div id="pk_item_search_page_costing">
+<div id="pk_item_search_page_costing" class="container-fluid">
 	{% include "asset_mgt_app/pk_item_search_page_costing.html" %}
 </div>
 
