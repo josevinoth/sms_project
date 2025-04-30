@@ -147,3 +147,4 @@ from .sub_views.gate_meeting_add_view import gatemeeting_add,gatemeeting_list,ga
 from .sub_views.transport_nav_view import transport_nav
 from .sub_views.part_code_view import part_code_add,part_code_list,part_code_delete,get_stock_descriptions,get_part_code,partcode_search
 from .sub_views.trans_fastag_view import fastag_enquiry_view
+from .sub_views.trans_gps import get_vehicle_position

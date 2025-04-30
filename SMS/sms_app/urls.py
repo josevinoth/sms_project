@@ -648,6 +648,7 @@ urlpatterns = [
     path('fin_mis/', views.fin_mis, name='fin_mis'),
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
     path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
+    path('vehicle_position/<str:vehicle_number>/', views.get_vehicle_position, name='vehicle_position'),
 ]
 
 
