@@ -252,7 +252,7 @@ def pk_item_search_page_costing(request):
     # Serialize the queryset to JSON with date formatting
     results = list(queryset.values(
         'id',
-        'sp_vendor_bill',
+        'sp_vendor_bill_id',
         'sp_stock_in_date',
         'sp_purchase_num',
         'sp_category__category',

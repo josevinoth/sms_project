@@ -37,7 +37,7 @@ class PkcostingInfo(models.Model):
                                          db_column='ct_customer_name', blank=True, null=True)
     ct_customer_po = models.ForeignKey(PkpurchaseorderInfo, on_delete=models.PROTECT, related_name='ct_customer_po',
                                        db_column='ct_customer_po', blank=True, null=True)
-    ct_quantity_req= models.FloatField(blank=True, null=True, default=0.0)
+    ct_quantity_req= models.FloatField(blank=True, null=True, default=1)
     ct_sqrt_req = models.FloatField(blank=True, null=True, default=0.0)
     ct_totalbox_cost = models.FloatField(blank=True, null=True, default=0.0)
     ct_na_quantity = models.FloatField(blank=True, null=True, default=0.0)

@@ -24,3 +24,5 @@ class PkcostingForm(forms.ModelForm):
         self.fields['ct_stock_purchase_number'].empty_label = "--Select--"
         self.fields['ct_excess_status'].empty_label = "--Select--"
         self.fields['ct_grn'].empty_label = "--Select--"
+        self.fields['ct_weight_received'].empty_label = "--Select--"
+        self.fields['ct_weight_Consumption'].empty_label = "--Select--"
