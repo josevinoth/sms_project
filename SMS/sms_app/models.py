@@ -200,3 +200,4 @@ from .sub_models.performance_audit_mod import PerformanceauditInfo
 from .sub_models.salesmultipleitem_mod import SalesmultipleitemInfo
 from .sub_models.part_code_mod import PkpartcodeInfo
 from .sub_models.pkweightconvention_mod import Pkweightconvention
+from .sub_models.pk_wood_description import Pkwooddescription
