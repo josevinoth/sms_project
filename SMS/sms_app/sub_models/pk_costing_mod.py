@@ -11,7 +11,7 @@ class PkcostingInfo(models.Model):
     ct_height = models.FloatField(blank=True, null=True,default=0.0)
     ct_cft = models.FloatField(blank=True, null=True,default=0.0)
     ct_rate = models.FloatField(blank=True, null=True,default=0.0)
-    ct_days= models.IntegerField(blank=True, null=True,default=0)
+    ct_days= models.IntegerField(blank=True, null=True,default=1)
     ct_total_cost = models.FloatField(blank=True, null=True,default=0.0)
     ct_created_at = models.DateTimeField(null=True, auto_now_add=True)
     ct_updated_at = models.DateTimeField(null=True, auto_now=True)
