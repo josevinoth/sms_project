@@ -14,7 +14,7 @@ class PkstockpurchasesInfo(models.Model):
     sp_width = models.FloatField(blank=True, null=True,default=0.0)
     sp_length= models.FloatField(blank=True, null=True,default=0.0)
     sp_cft = models.FloatField(blank=True, null=True,default=0.0)
-    sp_quantity= models.FloatField(blank=True, null=True,default=0.0)
+    sp_quantity= models.FloatField(blank=True, null=True,default=1)
     sp_total_cft = models.FloatField(blank=True, null=True,default=0.0)
     sp_gst = models.FloatField(blank=True, null=True,default=0.0)
     sp_gst_amount = models.FloatField(blank=True, null=True,default=0.0)

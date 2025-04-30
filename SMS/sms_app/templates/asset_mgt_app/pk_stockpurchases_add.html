@@ -356,18 +356,19 @@
 		else if (jn == 2) {
 			// Logic for jn == 2
 			$('#sp_thick_height').addClass('disable_a_href');
+            $('#sp_quantity').removeClass('disable_a_href');
+			var quantity = parseFloat(document.getElementById("sp_quantity").value) || 0;
 			var jn1 = document.getElementById("sp_stock_description").value;
 			if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")|| desc.startsWith("Tar")) {
 				$("#diameter_width_group, #con_length_group , #uom_group ,#length_group, #width_group, #height_group" ).hide();
 				$("weight_group").show();
-				$('#sp_quantity').addClass('disable_a_href');
 				$('#sp_cft').removeClass('disable_a_href');
 				$('#sp_total_cft').addClass('disable_a_href');
 				$('#sp_uom, #sp_size').removeClass('disable_a_href');
 
 				var weight = parseFloat(document.getElementById("sp_cft").value) || 0;
 				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-				var price = rate * weight;
+				var price = rate * weight * quantity;
 				document.getElementById("sp_price").value = price.toFixed(2);
 
 				// Reset other size-related fields to 0
@@ -386,14 +387,13 @@
 			else if(desc.includes("Belt")){
 				$("#diameter_width_group, #con_length_group , #uom_group ,#length_group, #width_group, #height_group" ).hide();
 				$("weight_group").show();
-				$('#sp_quantity').addClass('disable_a_href');
 				$('#sp_cft').removeClass('disable_a_href');
 				$('#sp_total_cft').addClass('disable_a_href');
 				$('#sp_uom, #sp_size').removeClass('disable_a_href');
 
 				var weight = parseFloat(document.getElementById("sp_weight_sqft").value) || 0;
 				var rate = parseFloat(document.getElementById("sp_rate").value) || 0;
-				var price = rate * weight;
+				var price = rate * weight * quantity;
 				document.getElementById("sp_price").value = price.toFixed(2);
 
 				// Reset other size-related fields to 0

@@ -1,4 +1,6 @@
 from django.db import models
+
+from .pk_wood_description import Pkwooddescription
 from ..models import Nadimension,Nadimensiontype,PkpurchaseorderInfo,Unitofmeasure,Natypeofreq,Pkstocktype,Stockdescription,PkneedassessmentInfo,MyUser
 
 class POdimension(models.Model):
@@ -11,7 +13,7 @@ class POdimension(models.Model):
     pod_updated_at = models.DateTimeField(null=True, auto_now=True)
     pod_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='pod_updated_by',db_column='pod_updated_by')
     pod_wood_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE,limit_choices_to={'id__in': [1, 4]})
-    pod_wood_description = models.ForeignKey(Stockdescription, on_delete=models.CASCADE, default='',blank=True,null=True)
+    pod_wood_description = models.ForeignKey(Pkwooddescription, on_delete=models.CASCADE, default='',blank=True,null=True)
     pod_job_weight = models.FloatField( default=0.0)
     pod_type_of_req = models.ForeignKey(Natypeofreq, on_delete=models.CASCADE)
     pod_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='', limit_choices_to={'id__in': [1,2,3,4]},blank=True,null=True)

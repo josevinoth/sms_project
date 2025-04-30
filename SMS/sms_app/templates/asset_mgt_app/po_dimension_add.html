@@ -21,7 +21,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quotation Item Number</span>
 									</div>
-									{% render_field form.pod_nad id="pod_nad" onchange="updatePodItem()" class="form-control" %}
+									{% render_field form.pod_nad id="pod_nad" onchange="load_pk_requirement_type()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -171,7 +171,7 @@ load_pk_requirement_type();
       var wood_type = $(this).val();
       $('#pod_wood_description').removeClass('disable_a_href');
            $.ajax({
-        url: '{% url 'load_stock_description' %}',
+        url: '{% url "load_stock_description" %}',
         data: {
           'stock_type': wood_type,
         },
@@ -206,30 +206,38 @@ function plywood_thickness() {
 }
 </script>
 <script>
-function load_pk_requirement_type() {
-		var pod_assess_num = $('#pod_assess_num').val();
-		$.ajax({
-       	url: '{% url "pk_get_pk_requirement_type" %}', // URL of the Django view
+	function load_pk_requirement_type() {
+    var pod_assess_num = $('#pod_assess_num').val();
+    var selectedNAD = $('#pod_nad').val();  // Preserve selected value
+
+    $.ajax({
+        url: '{% url "pk_get_pk_requirement_type" %}',
         type: 'GET',
-        data: {'ct_assessment_num_id': pod_assess_num},
+        data: { 'ct_assessment_num_id': pod_assess_num },
         dataType: 'json',
         success: function(data) {
-                $('#pod_nad').empty();
-        		$('#pod_nad').empty().append("<option value='0'>--Select--</option>");
-                var pkqt_requirement_name = data.requirement_type_val;
-                var pkqt_requirement_id=data.requirement_type_id;
-                var len = (pkqt_requirement_id).length;
+            $('#pod_nad').empty().append("<option value='0'>--Select--</option>");
 
-        		for( var i = 0; i<len; i++){
-        		$("#pod_nad").append("<option value='"+pkqt_requirement_id[i]+"'>"+pkqt_requirement_name[i]+"</option>");
-			}
-            },
-        });
+            var pkqt_requirement_name = data.requirement_type_val;
+            var pkqt_requirement_id = data.requirement_type_id;
+
+            for (var i = 0; i < pkqt_requirement_id.length; i++) {
+                var option = $("<option>")
+                    .val(pkqt_requirement_id[i])
+                    .text(pkqt_requirement_name[i]);
+                if (pkqt_requirement_id[i] == selectedNAD) {
+                    option.attr("selected", "selected");  // Re-select
+                }
+                $("#pod_nad").append(option);
+            }
+
+            updatePodItem(); // Keep item text updated
+        }
+    });
 }
 </script>
 <script>
 function updatePodItem() {
-    // Get the text of the selected option in the #pod_nad dropdown
     var selectedText = $('#pod_nad option:selected').text();
 
     // Update the PO Item Number input field with the selected text
