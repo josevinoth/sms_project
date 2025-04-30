@@ -228,18 +228,25 @@
     }
 
     function calculateTotalSqft() {
-        var length_ft = parseFloat(document.getElementById("length_ft").value) || 0;
-        var width_ft = parseFloat(document.getElementById("width_ft").value) || 0;
-        var quantity = parseInt(document.getElementById("quantity").value) || 0;
+    var length_ft = parseFloat(document.getElementById("length_ft").value) || 0;
+    var width_ft = parseFloat(document.getElementById("width_ft").value) || 0;
 
-        // Calculate Sqft per box
-        var sqft = length_ft * width_ft;
-        document.getElementById("sqft").value = sqft.toFixed(2);
+    var quantityInput = document.getElementById("quantity");
+    var quantity = parseInt(quantityInput.value);
 
-        // Calculate Total Sqft
-        var total_sqft = sqft * quantity;
-        document.getElementById("total_sqft").value = total_sqft.toFixed(2);
+    if (isNaN(quantity) || quantity <= 0) {
+        quantity = 1;
+        quantityInput.value = 1;  // Update the input field to show 1
     }
+
+    // Calculate Sqft per box
+    var sqft = length_ft * width_ft;
+    document.getElementById("sqft").value = sqft.toFixed(2);
+
+    // Calculate Total Sqft
+    var total_sqft = sqft * quantity;
+    document.getElementById("total_sqft").value = total_sqft.toFixed(2);
+}
 
     function run_all_calculations() {
     pk_store_na_dimension_id();

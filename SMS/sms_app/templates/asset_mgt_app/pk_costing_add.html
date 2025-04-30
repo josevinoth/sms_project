@@ -378,8 +378,8 @@
     var CFT_Sqft_Req_total = CFT_Sqft_Req_unit * job_type_qty;
     document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total;
 
-    var jn = document.getElementById("ct_cost_type").value;
-    var jn1 = document.getElementById("ct_stock_type").value;
+    var jn = parseInt(document.getElementById("ct_cost_type").value);
+    var jn1 = parseInt(document.getElementById("ct_stock_type").value);
     var desc = document.getElementById("hidden_pc_stock_description").value;
     var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
     var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
@@ -387,11 +387,11 @@
     var excess_qt = parseFloat(document.getElementById("ct_exe_quantity_req").value) || 0;
     var excess_cft = parseFloat(document.getElementById("ct_exe_sqrt_req").value) || 0;
 
-    if (jn == 8) {
+    if (jn === 8) {
         $('#ct_requirement').removeClass('disable_a_href');
         document.getElementById("ct_stock_status").value = 1;
 
-        if (jn1 == 1 || jn1 == 5) {
+        if (jn1 === 1 || jn1 === 5) {
             $('#ct_stock_description').removeClass('disable_a_href');
             $('#ct_uom').addClass('disable_a_href');
             $('#ct_quantity_req').removeClass('disable_a_href');
@@ -408,7 +408,7 @@
             calculateCosts(rate, cft, na_quantity, excess_cft, excess_qt);
         }
 
-        else if (jn1 == 4 || jn1 == 6) {
+        else if (jn1 === 4 || jn1 === 6) {
             $('#ct_item, #ct_itemdescription, #ct_stock_description').removeClass('disable_a_href');
             $('#ct_uom, #ct_sqrt_req, #ct_days').addClass('disable_a_href');
             document.getElementById("ct_days").value = 0;
@@ -421,28 +421,28 @@
             calculateCosts(rate, sqft, na_quantity, excess_cft, excess_qt);
         }
 
-        else if (jn1 == 2) {
+        else if (jn1 === 2) {
             $('#ct_uom').addClass('disable_a_href');
-			$('#ct_sqrt_req').removeClass('disable_a_href');
+            $('#ct_sqrt_req').removeClass('disable_a_href');
 
             if (desc.startsWith("Alu") || desc.startsWith("VC") || desc.startsWith("Air") || desc.startsWith("Foam") || desc.startsWith("Tar")) {
-                $('#ct_sqrt_req').removeClass('disable_a_href');
-				$('#ct_uom').addClass('disable_a_href');
                 $('#ct_days').addClass('disable_a_href');
                 let ct_weight = parseFloat(document.getElementById("ct_weight_sqft").value) || 0;
-				let quantity = parseFloat(document.getElementById("ct_quantity_req").value) || 1;
+                let quantity = parseFloat(document.getElementById("ct_quantity_req").value) || 1;
                 document.getElementById("ct_sqrt_req").value = total_sqft.toFixed(2);
                 let weight_cost = rate * total_sqft * ct_weight * quantity;
                 document.getElementById("ct_total_cost").value = weight_cost.toFixed(2);
                 document.getElementById("ct_totalbox_cost").value = (weight_cost * na_quantity).toFixed(2);
                 document.getElementById("ct_exe_value").value = (rate * excess_cft * excess_qt).toFixed(2);
             }
+
             else if (desc.includes("Belt")) {
                 $('#pkqt_sqrt_req').removeClass('disable_a_href');
                 let sqft = parseFloat(document.getElementById("ct_sqrt_req").value) || 0;
                 let quantity = parseFloat(document.getElementById("ct_quantity_req").value) || 1;
                 calculateCosts(rate, sqft * quantity, na_quantity, excess_cft, excess_qt);
             }
+
             else {
                 let quantity = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
                 calculateCosts(rate, quantity, na_quantity, excess_cft, excess_qt);
@@ -450,7 +450,7 @@
         }
     }
 
-    else if (jn == 4) {
+    else if (jn === 4) {
         $('#ct_stock_type, #ct_stock_description').addClass('disable_a_href');
         document.getElementById("ct_stock_type").value = "";
         document.getElementById("ct_stock_description").value = "";
@@ -468,16 +468,19 @@
         document.getElementById("ct_sqrt_req").value = sqft.toFixed(2);
     }
 
-    else if (jn == 5 || jn == 6) {
-        $('#ct_stock_type, #ct_stock_description').addClass('disable_a_href');
+    else if (jn === 5 || jn === 6) {
+        $('#ct_stock_type, #ct_stock_description, #ct_uom, #ct_item').addClass('disable_a_href');
         document.getElementById("ct_stock_type").value = "";
         document.getElementById("ct_stock_description").value = "";
 
         $('#ct_quantity_req').removeClass('disable_a_href');
-        if (jn == 6) $('#ct_days').addClass('disable_a_href');
+        if (jn === 6) {
+            $('#ct_days').removeClass('disable_a_href');
+        }
 
+        let days = parseFloat(document.getElementById("ct_days").value) || 0;
         let quantity = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
-        calculateCosts(rate, quantity, na_quantity, excess_cft, excess_qt);
+        calculateCosts(rate, days * quantity, na_quantity, excess_cft, excess_qt);
     }
 }
 
