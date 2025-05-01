@@ -376,7 +376,7 @@
     var CFT_Sqft_Req_unit = parseFloat(document.getElementById("ct_sqrt_req").value);
     var job_type_qty = parseFloat(document.getElementById("ct_na_quantity").value);
     var CFT_Sqft_Req_total = CFT_Sqft_Req_unit * job_type_qty;
-    document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total;
+    document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total.toFixed(2);
 
     var jn = parseInt(document.getElementById("ct_cost_type").value);
     var jn1 = parseInt(document.getElementById("ct_stock_type").value);
@@ -546,7 +546,6 @@
 </script>
 
 <script>
-
 	function search_wood() {
     var stock_description = $("#ct_stock_description").val();
     var stock_type = $("#ct_stock_type").val();
@@ -859,39 +858,39 @@
 			$("#length_group, #width_group, #height_group").hide();
 		}
 	}
-
 </script>
 <script>
 
 	// Enable select2 for part code field
-	$('#ct_part_code').select2({
-		ajax: {
-			url: "{% url 'get_part_code' %}",
-			dataType: 'json',
-			delay: 250,
-			data: function (params) {
-				return {
-					q: params.term // Send search term
-				};
-			},
-			processResults: function (data) {
-				console.log("Received Data:", data); // Debugging
-				return {
-					results: data.map(item => ({
-						id: item.id,
-						text: item.pc_code
-					}))
-				};
-			},
-			error: function (xhr, status, error) {
-				console.error("AJAX Error:", error);
-				console.log("Response:", xhr.responseText); // Log full response
-			},
-			cache: true
-		},
-		placeholder: "Search Part Code",
-		minimumInputLength: 1,
-	});
+    $('#ct_part_code').select2({
+        ajax: {
+            url: "{% url 'get_part_code' %}",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term // Send search term
+                };
+            },
+            processResults: function (data) {
+                console.log("Received Data:", data); // Debugging
+                return {
+                    results: data.map(item => ({
+                        id: item.id,
+                        text: item.pc_code
+                    }))
+                };
+            },
+            error: function (xhr, status, error) {
+                console.error("AJAX Error:", error);
+                console.log("Response:", xhr.responseText); // Log full response
+            },
+            cache: true
+        },
+        placeholder: "Search Part Code",
+        minimumInputLength: 1,
+    });
+
 
 </script>
 {% endblock content %}

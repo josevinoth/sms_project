@@ -40,7 +40,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Cost Type</span>
 									</div>
-									{% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control" %}
+									{% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -52,7 +52,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Job Type Quantity</span>
 									</div>
-									{% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control" %}
+									{% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -84,7 +84,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Item Name</span>
 									</div>
-									{% render_field form.ct_item id="ct_item" onchange="changeItemDescription()" class="form-control " %}
+									{% render_field form.ct_item id="ct_item" onchange="changeItemDescription()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -119,7 +119,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">UOM</span>
 									</div>
-									{% render_field form.ct_uom id="ct_uom" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.ct_uom id="ct_uom" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3" id="diameter_width_group">
 									<div class="input-group-prepend">
@@ -161,7 +161,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Days/Hours</span>
 									</div>
-									{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control " %}
+									{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
 							</div>
 							<div class="col-3">
@@ -187,7 +187,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
 									</div>
-									{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
+									{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -232,7 +232,6 @@
 							<a href="{% url 'pk_retrival_list' %}" class="btn btn-danger float-right">
 								<i class="fas fa-times"></i> Cancel
 							</a>
-
 					</div>
 			</div>
 		</div>
