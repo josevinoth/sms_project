@@ -1,9 +1,14 @@
+import json
+
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from ..forms import ConsignmentgoodsaddForm,ConsignmentdetailaddForm
-from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo
+from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,Stock_type
 from django.shortcuts import render, redirect
 from django.contrib import messages
+
 
 
 @login_required(login_url='login_page')
@@ -17,6 +22,15 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             form = ConsignmentgoodsaddForm()
             consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
+            existing_invoices = (
+                ConsignmentgoodsInfo.objects
+                .filter(cg_consignmentnumber=consignment_detail_id)
+                .values_list('cg_consignerinvoice', flat=True)
+                .exclude(cg_consignerinvoice__isnull=True)
+                .exclude(cg_consignerinvoice__exact='')
+                .distinct()
+            )
+
         else:
             consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
             consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
@@ -27,6 +41,7 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             'con_det_form': con_det_form,
             'first_name': first_name,
             'user_id': user_id,
+            'existing_invoices': existing_invoices,
             'consignmentdetail_id': consignment_detail_id,
             'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignment_detail_id),
         }
@@ -100,3 +115,19 @@ def consignmentgoods_back(request):
     return redirect('/SMS/consignmentdetail_nav/' + str(enquirynote_id))
     # return redirect('/SMS/consignmentgoods_nav/' + str(consignmentgoods_id_val))
 
+
+@csrf_exempt
+def add_description(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        name = data.get('stock_type')
+        if name:
+            # Check if it already exists (optional)
+            existing = Stock_type.objects.filter(name__iexact=name).first()
+            if existing:
+                return JsonResponse({'id': existing.id, 'stock_type': existing.name})
+
+            # Save new description
+            new_desc = Stock_type.objects.create(name=name)
+            return JsonResponse({'id': new_desc.id, 'stock_type': new_desc.name})
+    return JsonResponse({'error': 'Invalid request'}, status=400)

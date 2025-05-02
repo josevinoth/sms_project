@@ -1,11 +1,16 @@
+
+
 from django.db import models
+from django.utils import timezone
+
 from ..models import EnquirynoteInfo,Vehicle_allotmentInfo,CustomerInfo,MyUser,GST_payable_info,StatusList
 
 class ConsignmentdetailInfo(models.Model):
     co_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE,blank=True,null=True)
     co_vehicelnumber = models.CharField(max_length=20,blank=True,null=True)
+    co_vehicletype = models.CharField(max_length=100, blank=True, null=True)
     co_consignmentnumber = models.CharField(max_length=20,blank=True,null=True)
-    co_consignmentdate = models.DateField(blank=True,null=True)
+    co_consignmentdate = models.DateField(default=timezone.now,blank=True,null=True)
     co_customer = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE,blank=True,null=True)
     co_containerdescription = models.CharField(max_length=10,default = '',null=True,blank=True)
     co_freight_amount = models.CharField(max_length=100,default = 'As Agreed',null=True,blank=True)
