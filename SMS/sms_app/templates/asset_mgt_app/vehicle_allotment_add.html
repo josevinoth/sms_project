@@ -30,6 +30,9 @@
 												<span class="input-group-text">Vehicle Type Requested</span>
 											</div>
 											{% render_field vehicle_allotment_form.va_vehicletype id="va_vehicletype" onfocus="vehicle_requested()" class="form-control" %}
+										<div class="input-group-append">
+                                                <span class="input-group-text">Qty: <span id="vehicle_quantity_display">0</span></span>
+                                            </div>
 										</div>
 									</div>
 									<div class="col-2">
@@ -77,8 +80,8 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number (Market)</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control" %}
-								</div>
+								{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control market-input" maxlength="10" pattern="[A-Z0-9]{10}" title="Enter exactly 10 uppercase letters or digits" %}
+</div>
 							</div>
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
@@ -269,7 +272,6 @@
        });
      });
 </script>
-
 <script>
 	$("#va_vehiclenumber").change(function () {
  <!--      var url = $("#vehicle_allotment").attr("data-load_driver_details-url");-->
@@ -296,33 +298,55 @@
        });
      });
 </script>
-
 <script>
 	function vehicle_requested() {
-     var enquiry_number = '{{enquiry_num_id}}';
-     $.ajax({
-         url: '{% url "vehicle_requested" %}',
-         type: 'GET', // Explicitly define the request type
-         data: {
-             'enquiry_number': enquiry_number,
-         },
-         success: function (data) {
-             var requested_vehicles = JSON.parse(data)["requested_vehicles"];
-             var requested_vehicles_id = JSON.parse(data)["requested_vehicles_id"];
-             var len1 = requested_vehicles.length;
+    var enquiry_number = '{{ enquiry_num_id }}';
 
-			$("#va_vehicletype").empty()
-             $("#va_vehicletype").empty().append("<option value=''>--Select--</option>");
+    $.ajax({
+        url: '{% url "vehicle_requested" %}',
+        type: 'GET',
+        data: {
+            'enquiry_number': enquiry_number,
+        },
+        success: function (data) {
+            var vehicles = data.vehicles;
 
-             for (var k = 0; k < len1; k++) {
-                 $("#va_vehicletype").append("<option value='" + requested_vehicles_id[k] + "'>" + requested_vehicles[k] + "</option>");
-             }
-         },
-         error: function (xhr, status, error) {
-             console.error("AJAX Error:", status, error);
-         }
-     });
- }
+            var $dropdown = $("#va_vehicletype");
+            $dropdown.empty().append("<option value=''>--Select--</option>");
+
+            vehicles.forEach(function (v) {
+                $dropdown.append("<option value='" + v.id + "'>" + v.name + "</option>");
+            });
+
+            $dropdown.off("change").on("change", function () {
+                var vehicleTypeId = $(this).val();
+                if (vehicleTypeId) {
+                    fetchVehicleQuantity(vehicleTypeId);
+                } else {
+                    $("#vehicle_quantity_display").text("0");
+                }
+            });
+        },
+        error: function (xhr, status, error) {
+            console.error("AJAX Error:", status, error);
+        }
+    });
+}
+</script>
+<script>
+	function fetchVehicleQuantity(vehicleTypeId) {
+    const enquiryId = "{{ enquiry_num_id }}";
+
+    fetch(`/SMS/get_remaining_quantity/${enquiryId}/${vehicleTypeId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("vehicle_quantity_display").innerText = data.remaining || 0;
+        })
+        .catch(error => {
+            console.error("Error fetching remaining quantity:", error);
+        });
+}
+
 </script>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
@@ -361,5 +385,50 @@
 			na_vehicle_type.removeAttribute("required");  // Make it non-mandatory
     	}
 	}
+</script>
+<script>
+    function loadAvailableVehicleNumbers() {
+        const placed = $("#va_vehicletype_placed").val();
+        const source = $("#va_vehiclesource").val();
+
+        if (placed && source) {
+            $.ajax({
+                url: "{% url 'load_vehicle_number' %}",
+                data: {
+                    vehicletype_placed: placed,
+                    vehicletype_source: source
+                },
+                success: function(data) {
+                    const dropdown = $("#va_vehiclenumber");
+                    dropdown.empty();
+
+                    const numbers = data.vehicle_number_list;
+                    const ids = data.vehicle_number_list_id;
+
+                    if (numbers.length === 0) {
+                        dropdown.append(`<option value="">No available vehicles</option>`);
+                        dropdown.prop("disabled", true);
+                    } else {
+                        dropdown.append(`<option value="">Select vehicle</option>`);
+                        for (let i = 0; i < numbers.length; i++) {
+                            dropdown.append(`<option value="${ids[i]}">${numbers[i]}</option>`);
+                        }
+                        dropdown.prop("disabled", false);
+                    }
+                }
+            });
+        }
+    }
+
+    $("#va_vehicletype_placed, #va_vehiclesource").on('change', loadAvailableVehicleNumbers);
+
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("va_vehiclenumber_mkt");
+    input.addEventListener("input", function () {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+    });
+});
 </script>
 {% endblock content %}

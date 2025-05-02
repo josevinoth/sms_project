@@ -14,12 +14,19 @@
 										<span class="input-group-text">Consignment Number</span>
 									</div>
 									{% render_field form.cg_consignmentnumber id="cg_consignmentnumber" class="form-control disable_a_href" %}
+
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner Invoice</span>
 									</div>
 									{% render_field form.cg_consignerinvoice id="cg_consignerinvoice" class="form-control" %}
+									<select class="form-control" id="existingInvoiceSelect">
+										<option value="">Serach</option>
+										{% for invoice in existing_invoices %}
+										<option value="{{ invoice }}">{{ invoice }}</option>
+										{% endfor %}
+									</select>
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -61,29 +68,31 @@
 								</div>
 							</div>
 							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Arrival Date & Time</span>
-									</div>
-									{% render_field form.cg_arrival_date type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unloading Date & Time</span>
-									</div>
-									{% render_field form.cg_unloading_date type="Datetime-local" class="form-control" %}
-								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Description</span>
 									</div>
-									{% render_field form.cg_description id="cg_description" class="form-control" %}
+									<select id="cg_description" name="cg_description" class="form-control">
+										<option value="">-- Select Description --</option>
+										{% for item in form.fields.cg_description.queryset %}
+										<option value="{{ item.id }}" {% if item.id == selected_id %}selected{% endif %}>
+											{{ item.stock_type }}
+										</option>
+										{% endfor %}
+									</select>
+									<input type="text" id="new_description" class="form-control d-none" placeholder="Enter new description">
+
+									<div class="input-group-append">
+										<button type="button" class="btn btn-outline-secondary" id="toggleAddBtn">Add</button>
+									</div>
 								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Eway bill No.</span>
 									</div>
-									{% render_field form.cg_ebillno class="form-control" %}
+									{% render_field form.cg_ebillno id="cg_ebillno" class="form-control" maxlength="12" pattern="[A-Z0-9]{12}" title="Enter exactly 12 uppercase letters or digits" %}
 								</div>
 							</div>
 							<div class="col-3">
@@ -101,13 +110,19 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity</span>
+										<span class="input-group-text">Total Quantity</span>
 									</div>
 									{% render_field form.cg_qty class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Weight (kg)</span>
+										<span class="input-group-text">Loaded Quantity</span>
+									</div>
+									{% render_field form.cg_loaded_qty class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Invoice Weight</span>
 									</div>
 									{% render_field form.cg_weight class="form-control" %}
 								</div>
@@ -148,7 +163,7 @@
 			<th>Consigner Invoice</th>
 			<th>Value in INR</th>
 			<th>No. of Pieces</th>
-			<th>Weight (kg)</th>
+			<th>Invoice Weight</th>
 			<th>E-Bill No.</th>
 			<th>Date of Issue</th>
 			<th>Date of Validity</th>
@@ -204,5 +219,61 @@
         ]
     });
       });
+</script>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+        const input = document.getElementById("cg_ebillno");
+        input.addEventListener("input", function () {
+            this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+        });
+    });
+</script>
+<script>
+	document.getElementById('toggleAddBtn').addEventListener('click', function () {
+        const select = document.getElementById('cg_description');
+        const input = document.getElementById('new_description');
+        const button = this;
+
+        if (input.classList.contains('d-none')) {
+            // Switch to input mode
+            select.classList.add('d-none');
+            input.classList.remove('d-none');
+            input.focus();
+            button.textContent = 'Save';
+        } else {
+            // Save new description
+            const newDesc = input.value.trim();
+            if (newDesc === '') return;
+
+            fetch('/SMS/add-description/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',  // Ensure {% csrf_token %} is rendered somewhere
+                },
+                body: JSON.stringify({ stock_type: newDesc })  // KEY FIXED HERE
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.id) {
+                    const option = new Option(data.stock_type, data.id, true, true);
+                    select.add(option);
+
+                    input.value = '';
+                    input.classList.add('d-none');
+                    select.classList.remove('d-none');
+                    button.textContent = 'Add';
+                }
+            });
+        }
+    });
+</script>
+<script>
+	document.getElementById('existingInvoiceSelect').addEventListener('change', function() {
+        const selectedInvoice = this.value;
+        if (selectedInvoice) {
+            document.getElementById('cg_consignerinvoice').value = selectedInvoice;
+        }
+    });
 </script>
 {% endblock content %}
