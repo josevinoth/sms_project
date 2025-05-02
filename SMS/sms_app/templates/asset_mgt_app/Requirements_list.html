@@ -41,21 +41,21 @@
         <thead class="thead-dark">
         <tr>
             <th></th>
-            <th><input type="text" class="form-control" placeholder="Search Created On"></th>
-            <th><input type="text" class="form-control" placeholder="Search Requirement"></th>
-            <th><input type="text" class="form-control" placeholder="Search Backlogs"></th>
-            <th><input type="text" class="form-control" placeholder="Search Module"></th>
-            <th><input type="text" class="form-control" placeholder="Search Phase"></th>
-            <th><input type="text" class="form-control" placeholder="Search Raised By"></th>
-            <th><input type="text" class="form-control" placeholder="Search Raised On"></th>
-            <th><input type="text" class="form-control" placeholder="Search Bug/Improvements"></th>
-            <th><input type="text" class="form-control" placeholder="Search Implemented On"></th>
-            <th><input type="text" class="form-control" placeholder="Search Implemented By"></th>
-            <th><input type="text" class="form-control" placeholder="Search Status"></th>
-            <th><input type="text" class="form-control" placeholder="Search Remarks"></th>
-            <th><input type="text" class="form-control" placeholder="Search Updated On"></th>
-            <th><input type="text" class="form-control" placeholder="Search Updated By"></th>
             <th></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Requirement"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Backlogs"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Module"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Phase"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Raised By"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Raised On"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Bug/Improvements"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Implemented On"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Implemented By"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Status"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Remarks"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Updated On"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Updated By"></th>
             <th></th>
         </tr>
         <tr>
@@ -76,39 +76,40 @@
             <th>Updated On</th>
             <th>Updated By</th>
             <th>Delete</th>
-        </tr>
+
         </thead>
         <tbody>
         {% for requirementsinfo in page_obj %}
-        <tr>
-            <td>{{ requirementsinfo.id }} </td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'requirements_update' requirementsinfo.id %}">
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
-            <td>{{ requirementsinfo.req_created_at }}</td>
-            <td>{{ requirementsinfo.req_number }}</td>
-            <td>{{ requirementsinfo.req_backlogs }}</td>
-            <td>{{ requirementsinfo.req_module }}</td>
-            <td>{{ requirementsinfo.req_phase }}</td>
-            <td>{{ requirementsinfo.req_owner }}</td>
-            <td>{{ requirementsinfo.req_raisedon }}</td>
-            <td>{{ requirementsinfo.req_bugimprove }}</td>
-            <td>{{ requirementsinfo.req_implementedon }}</td>
-            <td>{{ requirementsinfo.req_implementedby }}</td>
-            <td>{{ requirementsinfo.req_status }}</td>
-            <td>{{ requirementsinfo.req_remarks }}</td>
-            <td>{{ requirementsinfo.req_updated_at }}</td>
-            <td>{{ requirementsinfo.req_updated_by }}</td>
-            <td>
-                <form action="{% url 'requirements_delete' requirementsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
+
+        <td>{{ requirementsinfo.id }} </td>
+        <td>
+            <a class="btn btn-primary" href="{% url 'requirements_update' requirementsinfo.id %}">
+                <i class="far fa-edit"></i>
+            </a>
+        </td>
+        <td>{{ requirementsinfo.req_created_at }}</td>
+        <td>{{ requirementsinfo.req_number }}</td>
+        <td>{{ requirementsinfo.req_backlogs }}</td>
+        <td>{{ requirementsinfo.req_module }}</td>
+        <td>{{ requirementsinfo.req_phase }}</td>
+        <td>{{ requirementsinfo.req_owner }}</td>
+        <td>{{ requirementsinfo.req_raisedon }}</td>
+        <td>{{ requirementsinfo.req_bugimprove }}</td>
+        <td>{{ requirementsinfo.req_implementedon }}</td>
+        <td>{{ requirementsinfo.req_implementedby }}</td>
+        <td>{{ requirementsinfo.req_status }}</td>
+        <td>{{ requirementsinfo.req_remarks }}</td>
+        <td>{{ requirementsinfo.req_updated_at }}</td>
+        <td>{{ requirementsinfo.req_updated_by }}</td>
+
+        <td>
+            <form action="{% url 'requirements_delete' requirementsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </form>
+        </td>
         </tr>
         {% endfor %}
         </tbody>
@@ -139,11 +140,16 @@
         buttons: ['copy', 'csv', 'excel', 'print']
     });
 
-    // Apply column-wise search correctly
-    $('#requirements_list thead input').on('keyup change', function () {
-        let colIdx = $(this).closest('th').index();  // Get correct index
-        table.column(colIdx).search(this.value).draw();
-    });
+            // Apply search to each column
+        $('.filter-input').on('keyup change', function () {
+            var columnIndex = $(this).parent().index(); // Get correct column index
+            table.column(columnIndex).search(this.value).draw();
+        });
+
+        // Prevent sorting when clicking inside the filter input
+        $('#requirements_list thead input').on('click', function(e) {
+            e.stopPropagation();
+        });
 });
 
 </script>

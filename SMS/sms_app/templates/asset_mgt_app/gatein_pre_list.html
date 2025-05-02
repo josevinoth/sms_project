@@ -104,8 +104,8 @@
         </table>
     </div>
 </div>
-        <div class="table-responsive">
-            <div class="pagination">
+<div class="table-responsive">
+    <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
             <a class="btn btn-warning" href="?page=1">First</a>
@@ -121,28 +121,28 @@
             <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
         {% endif %}
     </span>
-            </div>
-        </div>
-        <script>
-            $(document).ready(function() {
-            var table = $('#gatein_list').DataTable({
-            order: [[0, 'desc']],
-            scrollX: false,
-            responsive: true,
-            dom: 'lBfrtip',
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+    var table = $('#gatein_list').DataTable({
+    order: [[0, 'desc']],
+    scrollX: false,
+    responsive: true,
+    dom: 'lBfrtip',
 
-     });
+});
 
-                // Apply search to each column
-                $('.filter-input').on('keyup change', function () {
-                    var columnIndex = $(this).parent().index(); // Get correct column index
-                    table.column(columnIndex).search(this.value).draw();
-                });
+        // Apply search to each column
+        $('.filter-input').on('keyup change', function () {
+            var columnIndex = $(this).parent().index(); // Get correct column index
+            table.column(columnIndex).search(this.value).draw();
+        });
 
-                // Prevent sorting when clicking inside the filter input
-                $('#gatein_list thead input').on('click', function(e) {
-                    e.stopPropagation();
-                });
-            });
-        </script>
-        {% endblock content %}
+        // Prevent sorting when clicking inside the filter input
+        $('#gatein_list thead input').on('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+</script>
+{% endblock content %}
