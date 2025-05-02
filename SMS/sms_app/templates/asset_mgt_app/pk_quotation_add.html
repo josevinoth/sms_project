@@ -600,17 +600,18 @@
 
 </script>
 <script>
-	function search_wood_ct() {
-    var stock_description = $("#ct_stock_description").val();
-    var stock_type = $("#ct_stock_type").val();
-    var length_req = parseFloat($("#ct_length_req").val());
-    var width_req = parseFloat($("#ct_width_req").val());
-    var height_req = parseFloat($("#ct_height_req").val());
-    var part_code = $("#ct_part_code").val();
-    var includeContainer = $('#ct_item_search_page_costing');
+
+	function search_wood() {
+    var stock_description = $("#pkqt_stock_description").val();
+    var stock_type = $("#pkqt_stock_type").val();
+    var length_req = parseFloat($("#pkqt_length_req").val());
+    var width_req = parseFloat($("#pkqt_width_req").val());
+    var height_req = parseFloat($("#pkqt_height_req").val());
+    var part_code = $("#pkqt_part_code").val();
+    var includeContainer = $('#pk_item_search_page_costing');
 
     $.ajax({
-        url: '{% url "ct_item_search_page_costing" %}',  // Change URL name to match your Django URL config
+        url: '{% url "pk_item_search_page_costing" %}',
         data: {
             'stock_type': stock_type,
             'stock_description': stock_description,
@@ -620,22 +621,22 @@
             'part_code': part_code
         },
         success: function (results) {
-            var tableHtml = '<table id="stockTableCt" class="table table-striped table-bordered">';
+            var tableHtml = '<table id="stockTable" class="table table-striped table-bordered">';
             tableHtml += '<thead class="thead-dark">';
             tableHtml += '<tr>';
             tableHtml += '<th>ID</th>';
             tableHtml += '<th>Vendor Bill</th>';
             tableHtml += '<th>Date</th>';
-            tableHtml += '<th>Stock Purchase Number</th>';
+            tableHtml += '<th>Stock Purchases Number</th>';
             tableHtml += '<th>Part Code</th>';
             tableHtml += '<th>Stock Type</th>';
-            tableHtml += '<th>Description</th>';
-            tableHtml += '<th>Height</th>';
+            tableHtml += '<th>Stock Description</th>';
+            tableHtml += '<th>Thick/Height</th>';
             tableHtml += '<th>Width</th>';
             tableHtml += '<th>Length</th>';
             tableHtml += '<th>CFT</th>';
             tableHtml += '<th>Quantity</th>';
-            tableHtml += '<th>Rate</th>';
+            tableHtml += '<th>Rate/Qty (CFT)</th>';
             tableHtml += '<th>UOM</th>';
             tableHtml += '<th>Size</th>';
             tableHtml += '<th>Select</th>';
@@ -648,22 +649,22 @@
                     var row = results[i];
                     tableHtml += '<tr>';
                     tableHtml += '<td>' + row.id + '</td>';
-                    tableHtml += '<td>' + (row.sp_vendor_bill_id || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_stock_in_date || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_purchase_num || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_part_code__pc_code || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_stock_type__pk_stocktype || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_stock_description__stock_description || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_thick_height || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_width || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_length || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_cft || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_quantity || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_rate || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_uom__unit_of_measure || '') + '</td>';
-                    tableHtml += '<td>' + (row.sp_size || '') + '</td>';
-                    tableHtml += '<td><a href="#" class="btn btn-primary select-stock-ct" ' +
-                        'data-id="' + row.sp_purchase_num + '" ' +
+                    tableHtml += '<td>' + row.sp_vendor_bill_id + '</td>';
+                    tableHtml += '<td>' + row.sp_stock_in_date + '</td>';
+                    tableHtml += '<td>' + row.sp_purchase_num + '</td>';
+                    tableHtml += '<td>' + row.sp_part_code__pc_code + '</td>';
+                    tableHtml += '<td>' + row.sp_stock_type__pk_stocktype + '</td>';
+                    tableHtml += '<td>' + row.sp_stock_description__stock_description + '</td>';
+                    tableHtml += '<td>' + row.sp_thick_height + '</td>';
+                    tableHtml += '<td>' + row.sp_width + '</td>';
+                    tableHtml += '<td>' + row.sp_length + '</td>';
+                    tableHtml += '<td>' + row.sp_cft + '</td>';
+                    tableHtml += '<td>' + row.sp_quantity + '</td>';
+                    tableHtml += '<td>' + row.sp_rate + '</td>';
+                    tableHtml += '<td>' + row.sp_uom__unit_of_measure + '</td>';
+                    tableHtml += '<td>' + row.sp_size + '</td>';
+                    tableHtml += '<td><a href="#" class="btn btn-primary select-stock" ' +
+                        'data-id="' + row.id + '" ' +
                         'data-length="' + row.sp_length + '" ' +
                         'data-width="' + row.sp_width + '" ' +
                         'data-height="' + row.sp_thick_height + '" ' +
@@ -677,36 +678,39 @@
             }
 
             tableHtml += '</tbody></table>';
-            includeContainer.html('<div style="max-height: 400px; overflow-y: auto;">' + tableHtml + '</div>');
+            includeContainer.html('<div id="scrollable-stock-table" style="max-height: 400px; overflow-y: auto;">' + tableHtml + '</div>');
 
-            if ($.fn.DataTable.isDataTable('#stockTableCt')) {
-                $('#stockTableCt').DataTable().destroy();
+            if ($.fn.DataTable.isDataTable('#stockTable')) {
+                $('#stockTable').DataTable().destroy();
             }
-            $('#stockTableCt').DataTable();
+            $('#stockTable').DataTable();
         }
     });
 
-    includeContainer.on('click', 'a.select-stock-ct', function (e) {
+    includeContainer.on('click', 'a.select-stock', function (e) {
         e.preventDefault();
 
+        // Use data-* attributes
         var stockId = $(this).data('id');
-        var length = $(this).data('length');
-        var width = $(this).data('width');
         var height = $(this).data('height');
+        var width = $(this).data('width');
+        var length = $(this).data('length');
         var cft = $(this).data('cft');
         var quantity = $(this).data('quantity');
         var rate = $(this).data('rate');
         var uom = $(this).data('uom');
 
-        $("#ct_stock_purchase_number").val(stockId);
-        $("#ct_length").val(length);
-        $("#ct_width").val(width);
-        $("#ct_height").val(height);
-        $("#ct_cft").val(cft);
-        $("#ct_quantity").val(quantity);
-        $("#ct_rate").val(rate);
-        $("#ct_uom").val(uom).trigger('change');
+        // Set form fields
+        $("#pkqt_stock_purchase_number").val(stockId);
+        $("#pkqt_length").val(length);
+        $("#pkqt_width").val(width);
+        $("#pkqt_height").val(height);
+        $("#pkqt_cft").val(cft);
+        $("#pkqt_quantity").val(quantity);
+        $("#pkqt_rate").val(rate);
+        $("#pkqt_uom").val(uom);
 
+        // Trigger any dependent changes
         change_cost_type();
     });
 }

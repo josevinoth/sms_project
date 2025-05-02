@@ -58,6 +58,8 @@ class PkcostingInfo(models.Model):
     ct_weight_Consumption = models.ForeignKey(Unitofmeasure, on_delete=models.PROTECT,
                                               related_name='ct_weight_Consumption', db_column='ct_weight_Consumption',
                                               null=True, blank=True)
+    ct_cft_sqft_req = models.FloatField(blank=True, null=True, default=0.0)
+
 
     class Meta:
         ordering = ["ct_cost_type"]

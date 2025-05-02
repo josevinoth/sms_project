@@ -217,7 +217,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text">Total CFT/SQFT Required</span>
 											</div>
-											<span id="ct_cft_sqft_req" class="form-control disable_a_href"></span>
+											{% render_field form.ct_cft_sqft_req id="ct_cft_sqft_req" readonly="True" class="form-control disable_a_href" %}
 										</div>
 										<input type="hidden" id="hidden_pc_stock_description">
 										<div class="input-group input-group-sm mb-3">
@@ -376,7 +376,7 @@
     var CFT_Sqft_Req_unit = parseFloat(document.getElementById("ct_sqrt_req").value);
     var job_type_qty = parseFloat(document.getElementById("ct_na_quantity").value);
     var CFT_Sqft_Req_total = CFT_Sqft_Req_unit * job_type_qty;
-    document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total.toFixed(2);
+    document.getElementById("ct_cft_sqft_req").value = CFT_Sqft_Req_total.toFixed(2);
 
     var jn = parseInt(document.getElementById("ct_cost_type").value);
     var jn1 = parseInt(document.getElementById("ct_stock_type").value);
@@ -613,7 +613,7 @@
             }
 
             tableHtml += '</tbody></table>';
-			includeContainer.html('<div id="scrollable-stock-table" style="max-height: 400px; overflow-y: auto;">' + tableHtml + '</div>');
+            includeContainer.html('<div id="scrollable-stock-table" style="max-height: 400px; overflow-y: auto;">' + tableHtml + '</div>');
 
             if ($.fn.DataTable.isDataTable('#stockTable')) {
                 $('#stockTable').DataTable().destroy();
@@ -622,18 +622,37 @@
         }
     });
 
-    includeContainer.on('click', 'a.btn-primary', function (e) {
+    includeContainer.off('click').on('click', 'a.btn-primary', function (e) {
         e.preventDefault();
 
         var selectedRow = $(this).closest('tr');
-        var stockId = selectedRow.find('td:eq(0)').text();
-        var height = selectedRow.find('td:eq(9)').text();
-        var width = selectedRow.find('td:eq(10)').text();
-        var length = selectedRow.find('td:eq(11)').text();
-        var cft = selectedRow.find('td:eq(12)').text();
-        var quantity = selectedRow.find('td:eq(13)').text();
-        var rateCFT = selectedRow.find('td:eq(14)').text();
-        var uom_id = selectedRow.find('td:eq(15)').text();
+        var stockId = selectedRow.find('td:eq(0)').text().trim();
+        var vendorBill = selectedRow.find('td:eq(1)').text().trim();
+        var stockDate = selectedRow.find('td:eq(2)').text().trim();
+        var purchaseNumber = selectedRow.find('td:eq(3)').text().trim();
+        var partCode = selectedRow.find('td:eq(4)').text().trim();
+        var stockType = selectedRow.find('td:eq(5)').text().trim();
+        var stockDesc = selectedRow.find('td:eq(6)').text().trim();
+        var height = selectedRow.find('td:eq(7)').text().trim();
+        var width = selectedRow.find('td:eq(8)').text().trim();
+        var length = selectedRow.find('td:eq(9)').text().trim();
+        var cft = selectedRow.find('td:eq(10)').text().trim();
+        var quantity = selectedRow.find('td:eq(11)').text().trim();
+        var rateCFT = selectedRow.find('td:eq(12)').text().trim();
+        var uom = selectedRow.find('td:eq(13)').text().trim();
+
+        // Set values in form fields
+        $("#ct_stock_purchase_number").val(stockId);
+        $("#ct_length").val(length);
+        $("#ct_width").val(width);
+        $("#ct_height").val(height);
+        $("#ct_cft").val(cft);
+        $("#ct_quantity").val(quantity);
+        $("#ct_rate").val(rateCFT);
+        $("#ct_uom").val(uom);
+        $("#ct_weight_sqft").val(weight_converted); // Make sure this is calculated/set before
+
+        // Handle select fields
         var weight_select = $("#ct_weight_received");
         var weight_select1 = $("#ct_weight_Consumption");
 
@@ -642,25 +661,17 @@
                 weight_select.val($(this).val()).trigger('change');
             }
         });
+
         weight_select1.find("option").each(function () {
             if ($(this).text().trim().toLowerCase() === weight_consumption_text.toLowerCase()) {
                 weight_select1.val($(this).val()).trigger('change');
             }
         });
 
-        $("#ct_stock_purchase_number").val(stockId);
-        $("#ct_length").val(length);
-        $("#ct_width").val(width);
-        $("#ct_height").val(height);
-        $("#ct_cft").val(cft);
-        $("#ct_uom").val(uom_id);
-        $("#ct_weight_sqft").val(weight_converted);
-        $("#ct_quantity").val(quantity);
-        $("#ct_rate").val(rateCFT);
-
-        change_cost_type();  // Your custom function
+        change_cost_type(); // Call your custom logic
     });
 }
+
 </script>
 <script>
 	function changeItemDescription() {
