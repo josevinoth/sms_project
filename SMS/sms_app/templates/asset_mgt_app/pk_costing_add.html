@@ -366,6 +366,7 @@
             if ( jn==8)
             {
         		$('#ct_stock_type').addClass('disable_a_href');
+				$('#ct_quantity_req').removeClass('disable_a_href');
 				$('#ct_item').removeClass('disable_a_href');
 				$('#ct_sqrt_req').removeClass('disable_a_href');
 				$('#ct_days').addClass('disable_a_href');
@@ -376,8 +377,7 @@
                 if (jn1==1 || jn1==5)
                 {
             		$('#ct_stock_description').addClass('disable_a_href');
-                    $('#ct_quantity').removeClass('disable_a_href');
-                    $('#ct_sqrt_req').addClass('disable_a_href');
+                    $('#ct_sqrt_req').removeClass('disable_a_href');
 
                     var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
                     var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
@@ -433,7 +433,7 @@
           			$('#ct_itemdescription').removeClass('disable_a_href');
             		$('#ct_stock_description').addClass('disable_a_href');
 					$('#ct_uom').addClass('disable_a_href');
-					$('#ct_quantity').removeClass('disable_a_href');
+					$('#ct_quantity_req').removeClass('disable_a_href');
 					$('#ct_days').addClass('disable_a_href');
 					document.getElementById("ct_days").value = 0;
 
