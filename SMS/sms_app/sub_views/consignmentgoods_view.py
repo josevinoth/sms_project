@@ -18,18 +18,18 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
     consignment_detail_id = request.session.get('ses_consignment_detail_id')
     print('consignment_detail_id', consignment_detail_id)
     if request.method == "GET":
+        existing_invoices = (
+            ConsignmentgoodsInfo.objects
+            .filter(cg_consignmentnumber=consignment_detail_id)
+            .values_list('cg_consignerinvoice', flat=True)
+            .exclude(cg_consignerinvoice__isnull=True)
+            .exclude(cg_consignerinvoice__exact='')
+            .distinct()
+        )
         if consignmentgoods_id == 0:
             form = ConsignmentgoodsaddForm()
             consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
-            existing_invoices = (
-                ConsignmentgoodsInfo.objects
-                .filter(cg_consignmentnumber=consignment_detail_id)
-                .values_list('cg_consignerinvoice', flat=True)
-                .exclude(cg_consignerinvoice__isnull=True)
-                .exclude(cg_consignerinvoice__exact='')
-                .distinct()
-            )
 
         else:
             consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
