@@ -36,8 +36,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Type</span>
 									</div>
-									<input type="text" id="vehicle_type_field" name="vehicle_type_field" class="form-control disable_a_href" value="{{ vehicle_type }}">
-
+									{% render_field con_det_form.co_vehicletype id="co_vehicletype" class="form-control disable_a_href" %}
 								</div>
 							</div>
 
@@ -292,7 +291,7 @@
                     .then(response => response.json())
                     .then(data => {
                         const vehicleType = data.vehicle_type || 'Not Found';
-                        document.getElementById('vehicle_type_field').value = vehicleType;
+                        document.getElementById('co_vehicletype').value = vehicleType;
 
                         updateFieldsBasedOnVehicleType(vehicleType);
                     })
