@@ -11,7 +11,7 @@ class PkquotationInfo(models.Model):
     pkqt_height = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_cft = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_rate = models.FloatField(blank=True, null=True, default=0.0)
-    pkqt_days = models.FloatField(blank=True, null=True, default=0)
+    pkqt_days = models.FloatField(blank=True, null=True, default=1)
     pkqt_total_cost = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_created_at = models.DateTimeField(null=True, auto_now_add=True)
     pkqt_updated_at = models.DateTimeField(null=True, auto_now=True)
@@ -59,7 +59,7 @@ class PkquotationInfo(models.Model):
     pkqt_diameter_width = models.CharField(max_length=20, blank=True, null=True, default=0.0)
     pkqt_part_code = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True,blank=True)
     pkqt_weight = models.FloatField(blank=True, null=True, default=0.0)
-    pkqt_weight_sqft = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_weight_sqft = models.FloatField(blank=True, null=True, default=1)
     pkqt_weight_received = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE,related_name='pkqt_weight_received', db_column='pkqt_weight_received',null=True, blank=True)
     pkqt_weight_Consumption = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE,related_name='pkqt_weight_Consumption', db_column='pkqt_weight_Consumption',null=True, blank=True)
 
