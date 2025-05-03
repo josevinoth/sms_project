@@ -80,19 +80,35 @@
 									</div>
 									{% render_field tripclosure_form.tr_reportedlocation id="tr_reportedlocation" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Charges</span>
 									</div>
 									{% render_field tripclosure_form.tc_tripcost id="tc_tripcost" class="form-control disable_a_href" %}
+									</div>
+									</div>
+										<div class="col-2">
+									<input type="checkbox" id="tc_tripcost_id" style="transform: scale(1.5);">
 								</div>
-								<div class="input-group input-group-sm mb-3">
+										</div>
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Parking Charges</span>
 									</div>
 									{% render_field tripclosure_form.tc_parkingcost class="form-control" %}
 								</div>
-							</div>
+									</div>
+									<div class="col-2">
+									<input type="checkbox" id="tc_parkingcost" style="transform: scale(1.5);">
+								</div>
+								</div>
+
+								</div>
+
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">

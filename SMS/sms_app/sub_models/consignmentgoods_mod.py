@@ -16,6 +16,7 @@ class ConsignmentgoodsInfo(models.Model):
     cg_width = models.IntegerField(blank=True, null=True, default=0)
     cg_length = models.IntegerField(blank=True, null=True, default=0)
     cg_qty = models.IntegerField(default=0)
+    cg_loaded_qty = models.IntegerField(default=0)
     cg_weight = models.IntegerField(default=0)
     cg_lastmodifiedby = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,blank=True)
     cg_created_at = models.DateTimeField(null=True,blank=True, auto_now_add=True)

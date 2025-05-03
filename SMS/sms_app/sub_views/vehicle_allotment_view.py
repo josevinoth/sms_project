@@ -167,18 +167,21 @@ def load_vehicle_source(request):
 def load_vehicle_number(request):
     vehicletype_placed = request.GET.get('vehicletype_placed')
     vehicletype_source = request.GET.get('vehicletype_source')
-    vehicle_data = VehiclemasterInfo.objects.filter(
+
+    # Get already allotted vehicle IDs
+    used_vehicle_ids = Vehicle_allotmentInfo.objects.values_list('va_vehiclenumber_id', flat=True)
+
+    # Exclude them from dropdown
+    available_vehicles = VehiclemasterInfo.objects.filter(
         vm_vehicletype=vehicletype_placed,
         vm_ownership=vehicletype_source
-    ).values_list('vm_registrationnumber', 'id')
+    ).exclude(id__in=used_vehicle_ids).values_list('vm_registrationnumber', 'id')
 
-    vehicle_number_list = [data[0] for data in vehicle_data]
-    vehicle_number_list_id = [data[1] for data in vehicle_data]
-    data = {
-        'vehicle_number_list': vehicle_number_list,
-        'vehicle_number_list_id': vehicle_number_list_id,
-    }
-    return HttpResponse(json.dumps(data))
+    return JsonResponse({
+        'vehicle_number_list': [v[0] for v in available_vehicles],
+        'vehicle_number_list_id': [v[1] for v in available_vehicles]
+    })
+
 
 @login_required(login_url='login_page')
 def load_driver_details(request):
@@ -209,18 +212,58 @@ def vehicle_type_counts(request):
     print('count_dict :', count_dict)
     return JsonResponse({'vehicle_counts': count_dict})
 
+from django.db.models import Sum
+
 @login_required(login_url='login_page')
 def vehicle_requested(request):
     enquiry_number = request.GET.get('enquiry_number')
-    requested_vehicles = list(Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_number)
-                              .select_related('env_vehicletype')
-                              .values_list('env_vehicletype__vt_vehicletype', flat=True))
 
-    requested_vehicles_id = list(Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_number)
-                                 .values_list('env_vehicletype__id', flat=True))
+    requested_vehicles = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_number)\
+        .values('env_vehicletype__id', 'env_vehicletype__vt_vehicletype')\
+        .annotate(requested_qty=Sum('env_quantity'))
 
-    data = {
-        'requested_vehicles': requested_vehicles,
-        'requested_vehicles_id': requested_vehicles_id,
-    }
-    return HttpResponse(json.dumps(data))
+    vehicle_list = []
+
+    for rv in requested_vehicles:
+        vehicle_type_id = rv['env_vehicletype__id']
+        vehicle_type_name = rv['env_vehicletype__vt_vehicletype']
+        requested_qty = rv['requested_qty']
+
+        # FIXED: Use va_enquirynumber_id instead of nested lookup
+        allotted_qty = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber_id=enquiry_number,
+            va_vehicletype_id=vehicle_type_id
+        ).count()
+
+        remaining = requested_qty - allotted_qty
+
+        if remaining > 0:
+            vehicle_list.append({
+                'id': vehicle_type_id,
+                'name': vehicle_type_name,
+                'remaining': remaining
+            })
+
+    return JsonResponse({'vehicles': vehicle_list})
+
+
+def get_remaining_quantity(request, enquiry_id, vehicle_type_id):
+    enquiry_number = request.GET.get('enquiry_number')
+    try:
+        # Total requested
+        requested = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id=enquiry_id,
+            env_vehicletype_id=vehicle_type_id
+        ).aggregate(total=Sum('env_quantity'))['total'] or 0
+
+        # Count of allotted vehicles of the same type
+        allotted = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber_id=enquiry_id,
+            va_vehicletype_id=vehicle_type_id
+        ).count()
+
+        remaining = requested - allotted
+        return JsonResponse({'remaining': max(remaining, 0)})
+
+    except Exception as e:
+        return JsonResponse({'remaining': 0, 'error': str(e)})

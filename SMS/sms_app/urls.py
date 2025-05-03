@@ -649,6 +649,10 @@ urlpatterns = [
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
     path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
     path('vehicle_position/<str:vehicle_number>/', views.get_vehicle_position, name='vehicle_position'),
+    path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
+         name='get_remaining_quantity'),
+    path('SMS/get-vehicle-type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),
+    path('add-description/', views.add_description, name='add_description'),
 ]
 
 

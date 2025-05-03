@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 import json
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 
@@ -47,12 +47,14 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         if consignmentdetail_id == 0:
             con_det_form = ConsignmentdetailaddForm()
             form = ConsignmentgoodsaddForm()
+            vehicle_type = ""
         else:
             request.session['ses_consignment_detail_id'] = consignmentdetail_id
             enquiry_num = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id).co_enquirynumber
             consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
             form = ConsignmentgoodsaddForm()
+            vehicle_type = consignmentdetail.co_vehicletype
 
         context = {
             'first_name': first_name,
@@ -67,6 +69,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'consignmentgoods_id_val': consignmentgoods_id_val,
             'consignmentdetail_list': ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id),
             'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentdetail_id),
+            'vehicle_type': vehicle_type,
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
@@ -74,12 +77,14 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         con_det_form = ConsignmentdetailaddForm(request.POST)
 
         if con_det_form.is_valid():
+            vehicle_type = request.POST.get('vehicle_type_field')
             if consignmentdetail_id == 0:
                 last_id = ConsignmentdetailInfo.objects.latest('id').id if ConsignmentdetailInfo.objects.exists() else 0
                 cons_num_next = f"CON_{1000000 if last_id == 0 else int(ConsignmentdetailInfo.objects.get(id=last_id).co_consignmentnumber.replace('CON_', '')) + 1}"
 
                 consignment_detail = con_det_form.save()
                 consignment_detail.co_consignmentnumber = cons_num_next
+                consignment_detail.co_vehicletype = vehicle_type
                 consignment_detail.save()
 
                 for field, errors in con_det_form.errors.items():
@@ -92,6 +97,8 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
                 con_det_form = ConsignmentdetailaddForm(request.POST, instance=consignmentdetail)
                 if con_det_form.is_valid():
+                    consignment_detail = con_det_form.save(commit=False)  # <-- Don't save yet
+                    consignment_detail.co_vehicletype = vehicle_type
                     con_det_form.save()
                     enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
                     consignmentdetail_list = list(ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id).values_list('co_consignmentnumber', flat=True))
@@ -171,7 +178,7 @@ def consignment_note_pdf(request,consignment_note_id=0):
         return HttpResponse('We has some error <pre>' + html + '</pre>')
     return response
 
-from django.http import JsonResponse
+
 
 @login_required(login_url='login_page')
 def vehicle_allotted(request):
@@ -187,16 +194,43 @@ def vehicle_allotted(request):
         Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number)
         .values_list('va_vehiclenumber_mkt', flat=True)
     )
-    # Combine lists and filter out None or blank values
+
     final_vehicle_list = [v for v in (requested_vehicles + requested_vehicles_market) if v]
+
+    used_vehicles = list(
+        ConsignmentdetailInfo.objects.exclude(pk=consignmentdetail_id_val)
+        .values_list('co_vehicelnumber', flat=True)
+    )
+
+    available_vehicle_list = [v for v in final_vehicle_list if v not in used_vehicles]
     try:
         selected_vehicles = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id_val).co_vehicelnumber
     except ConsignmentdetailInfo.DoesNotExist:
         selected_vehicles = None  # Or set a default value
-    return JsonResponse({'final_vehicle_list': final_vehicle_list,'selected_vehicles':selected_vehicles})
+    return JsonResponse({'final_vehicle_list': available_vehicle_list,'selected_vehicles':selected_vehicles})
+
 
 @login_required(login_url='login_page')
 def consignmentdetail_cancel(request):
     first_name = request.session.get('first_name')
     enquiry_num_id = request.session.get('ses_enqiury_num_id')
     return redirect('/SMS/consignmentdetail_nav/'+ str(enquiry_num_id))
+
+
+@login_required(login_url='login_page')
+def get_vehicle_type(request, vehicle_id):
+    try:
+        vehicle_master = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_id)
+        allotment = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber=vehicle_master).first()
+    except VehiclemasterInfo.DoesNotExist:
+
+        allotment = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber_mkt=vehicle_id).first()
+
+    if allotment and allotment.va_vehicletype_placed:
+        vehicle_type = allotment.va_vehicletype_placed.vt_vehicletype
+    else:
+        vehicle_type = None
+
+    return JsonResponse({'vehicle_type': vehicle_type})
+
+
