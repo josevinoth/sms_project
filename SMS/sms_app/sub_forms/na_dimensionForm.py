@@ -1,5 +1,5 @@
 from django import forms
-from ..models import Nadimension
+from ..models import Nadimension,Pkstocktype
 
 class NadimensionForm(forms.ModelForm):
     class Meta:
@@ -12,6 +12,7 @@ class NadimensionForm(forms.ModelForm):
         self.fields['nad_type_of_req'].empty_label = "--Select--"
         self.fields['nad_uom'].empty_label = "--Select--"
         self.fields['nad_plywood_thickness'].empty_label = "--Select--"
-        self.fields['nad_wood_type'].empty_label = "--Select--"
-        self.fields['nad_wood_description'].empty_label = "--Select--"
+        self.fields['nad_wood_type'].queryset = Pkstocktype.objects.filter(id__in=[1, 4])
+        # self.fields['nad_wood_type'].empty_label = "--Select--"
+        # self.fields['nad_wood_description'].empty_label = "--Select--"
         self.fields['nad_dimension_type'].empty_label = "--Select--"
