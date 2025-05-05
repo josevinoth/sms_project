@@ -27,7 +27,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Requirement Type</span>
 									</div>
-									{% render_field form.nad_type_of_req id="nad_type_of_req" class="form-control" %}
+									{% render_field form.nad_type_of_req id="nad_type_of_req" onchange="requirement_type()" class="form-control" %}
 								</div>
 							</div>
 							<div class="col-3">
@@ -123,7 +123,8 @@
 	$(document).ready(function() {
         document.getElementById("nad_updated_by").value ='{{user_id}}';
         document.getElementById("nad_assess_num").value ='{{na_assessment_num_id}}';
-        plywood_thickness()
+        plywood_thickness();
+		requirement_type();
         });
 </script>
 <script>
@@ -161,6 +162,22 @@
       else
         {
             $('#nad_plywood_thickness').addClass('disable_a_href');
+          }
+      endif
+    }
+</script>
+<script>
+	function requirement_type() {
+      var requirement=document.getElementById("nad_type_of_req").value
+      if (requirement==7)
+        {
+            $('#nad_wood_type').addClass('disable_a_href');
+            $('#nad_wood_description').addClass('disable_a_href');
+        }
+      else
+        {
+			$('#nad_wood_type').removeClass('disable_a_href');
+            $('#nad_wood_description').removeClass('disable_a_href');
           }
       endif
     }
