@@ -128,37 +128,34 @@
         });
 </script>
 <script>
-	$(document).ready(function() {
-        // Initialize DataTables
-        $('#yourTableId').DataTable({
-            // DataTable options
-        });
-
-        // Initialize Multiselect for Type of Lifting
-        $('#nad_wood_type').multiselect({
-            includeSelectAllOption: true,
-            enableFiltering: true,
-            enableCaseInsensitiveFiltering: true,
-            buttonWidth: '418px',  // Increase the width of the button
-			nonSelectedText: 'Select Wood Type',
-            buttonClass: 'custom-multiselect-button',
-            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
-            dropUp: false
-        });
-
-        // Initialize Multiselect for Special Requirements
-        $('#nad_wood_description').multiselect({
-            includeSelectAllOption: true,
-            enableFiltering: true,
-            enableCaseInsensitiveFiltering: true,
-            buttonWidth: '418px',
-            nonSelectedText: 'Select Wood Description',
-            buttonClass: 'custom-multiselect-button',
-            maxHeight: 250, // Set a max height for the dropdown with a scrollbar
-            dropUp: false
-        });
-
+	$(document).ready(function () {
+    $('#yourTableId').DataTable({
+        responsive: true // Enables responsive DataTables
     });
+
+    $('#nad_wood_type').multiselect({
+        includeSelectAllOption: true,
+        enableFiltering: true,
+        enableCaseInsensitiveFiltering: true,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select Wood Type ',
+        buttonClass: 'custom-multiselect-button',
+        maxHeight: 250,
+        dropUp: false
+    });
+
+    $('#nad_wood_description').multiselect({
+        includeSelectAllOption: true,
+        enableFiltering: true,
+        enableCaseInsensitiveFiltering: true,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select Wood Description',
+        buttonClass: 'custom-multiselect-button',
+        maxHeight: 250,
+        dropUp: false
+    });
+});
+
 </script>
 <script>
 	$("#nad_wood_type").change(function () {
@@ -204,15 +201,15 @@
       var requirement=document.getElementById("nad_type_of_req").value
       if (requirement==7)
         {
-            $('#nad_wood_type').addClass('disable_a_href');
-            $('#nad_wood_description').addClass('disable_a_href');
+           $('#nad_wood_type').multiselect('disable');
+		   $('#nad_wood_description').multiselect('disable');
+
         }
       else
         {
-			$('#nad_wood_type').removeClass('disable_a_href');
-            $('#nad_wood_description').removeClass('disable_a_href');
-          }
-      endif
+			$('#nad_wood_type').multiselect('enable');
+			$('#nad_wood_description').multiselect('enable');
+		}
     }
 </script>
 
