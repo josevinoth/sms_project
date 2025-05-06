@@ -329,10 +329,7 @@
 			// Logic for jn == 4
 			$('#sp_thick_height, #sp_length, #sp_width').removeClass('disable_a_href');
 			$('#sp_cft, #sp_total_cft, #sp_uom, #sp_size').addClass('disable_a_href');
-			document.getElementById("sp_uom").value = "";
-			document.getElementById("sp_size").value = 0;
 
-			var weight = parseFloat(document.getElementById("sp_weight").value) || 0;
 			var length = parseFloat(document.getElementById("sp_length").value) || 0;
 			var width = parseFloat(document.getElementById("sp_width").value) || 0;
 			var cft = length * width;

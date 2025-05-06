@@ -387,7 +387,7 @@
 						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2);
 					}
 
-					else if (desc.includes("Belt") || desc.startsWith("Tar")) {
+					else if (desc.includes("Belt") ||desc.startsWith("Strech") ||desc.startsWith("DESICCANT") || desc.startsWith("Tar")) {
 						var pkqt_sqrt_req = parseFloat(document.getElementById("pkqt_sqrt_req").value) || 0;
 						var totalCost = rate  * pkqt_sqrt_req * quantity_req;
                     	document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2);

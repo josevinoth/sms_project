@@ -1,7 +1,9 @@
 from django.db import models
 
+from .na_consumables_mod import Naconsumables
 from .pk_wood_description import Pkwooddescription
-from ..models import Unitofmeasure,Natypeofreq,Pkstocktype,Stockdescription,PkneedassessmentInfo,MyUser,Nadimensiontype
+from .vehicletype_mod import VehicletypeInfo
+from ..models import Unitofmeasure,Natypeofreq,Pkstocktype,PkneedassessmentInfo,MyUser,Nadimensiontype
 
 class Nadimension(models.Model):
     nad_assess_num = models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='')
@@ -25,6 +27,8 @@ class Nadimension(models.Model):
     nad_item=models.CharField(max_length=100,null=True,blank=True)
     nad_dimension_type = models.ForeignKey(Nadimensiontype,on_delete=models.CASCADE,default='')
     nad_clearance = models.FloatField(max_length=100,null=True,blank=True, default=2)
+    nad_consumables = models.ForeignKey(Naconsumables, on_delete=models.CASCADE, blank=True, null=True,default=None)
+    nad_vechicle_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, blank=True, null=True,default=None)
 
     class Meta:
         ordering = ["nad_assess_num"]

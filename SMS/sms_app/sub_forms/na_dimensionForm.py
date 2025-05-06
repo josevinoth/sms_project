@@ -14,3 +14,5 @@ class NadimensionForm(forms.ModelForm):
         self.fields['nad_plywood_thickness'].empty_label = "--Select--"
         self.fields['nad_wood_type'].queryset = Pkstocktype.objects.filter(id__in=[1, 4])
         self.fields['nad_dimension_type'].empty_label = "--Select--"
+        self.fields['nad_consumables'].empty_label = "--Select--"
+        self.fields['nad_vechicle_type'].empty_label = "--Select--"

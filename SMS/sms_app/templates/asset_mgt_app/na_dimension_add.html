@@ -31,19 +31,31 @@
 								</div>
 							</div>
 							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="wood_type">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Type</span>
 									</div>
 									{% render_field form.nad_wood_type id="nad_wood_type" onchange="plywood_thickness()" class="form-control" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="wood_desc">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Description</span>
 									</div>
 									{% render_field form.nad_wood_description id="nad_wood_description" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="consumables">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consumables</span>
+									</div>
+									{% render_field form.nad_consumables id="nad_consumables" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3" id="vehicle_type">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Type</span>
+									</div>
+									{% render_field form.nad_vechicle_type id="nad_vechicle_type" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3" id="uom">
 									<div class="input-group-prepend">
 										<span class="input-group-text">UOM</span>
 									</div>
@@ -203,14 +215,23 @@
         {
            $('#nad_wood_type').multiselect('disable');
 		   $('#nad_wood_description').multiselect('disable');
-
-        }
+		    $("#consumables, #vehicle_type,#wood_type, #wood_desc, #uom " ).hide();
+		}
+	  else if(requirement==12){
+		  $("#consumables " ).show();
+		  $("#wood_type, #wood_desc, #uom, #vehicle_type").hide();
+	  }
+	  else if(requirement==13){
+		  $("#consumables, #vehicle_type " ).show();
+		  $("#wood_type, #wood_desc, #uom").hide();
+	  }
       else
         {
 			$('#nad_wood_type').multiselect('enable');
 			$('#nad_wood_description').multiselect('enable');
+			 $("#consumables, #vehicle_type " ).hide();
+			$("#wood_type, #wood_desc, #uom").show();
 		}
     }
 </script>
-
 {% endblock content %}
