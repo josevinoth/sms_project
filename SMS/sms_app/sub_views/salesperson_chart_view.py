@@ -121,7 +121,7 @@ def monthly_summary(request):
             distinct=True
         ),
 
-        business_won=Count(('s_bus_won_not'), filter=Q(s_bus_won_not=1)),
+        business_won=Count('id', filter=Q(s_bus_won_not=1), distinct=True),
     )
 
     sales_calls = Sales_Comments_Info.objects.filter(
@@ -306,7 +306,7 @@ def salesperson_productivity_performance(request):
             distinct=True
         ),
 
-        business_won=Count(('s_bus_won_not'), filter=Q(s_bus_won_not=1)),
+        business_won=Count('id', filter=Q(s_bus_won_not=1), distinct=True),
     )
 
     sales_calls = Sales_Comments_Info.objects.filter(
@@ -889,7 +889,7 @@ def salesperson_wise_chart(request):
             output_field=IntegerField()
         ),
         won_count=Subquery(SalesInfo.objects.filter(
-            s_updated_by=OuterRef('sc_updated_by'), s_bus_won_not=1).values('s_updated_by').annotate(count=Count('id')).values('count')[:1],
+            s_updated_by=OuterRef('sc_updated_by'), s_bus_won_not=1).values('s_updated_by').annotate(count=Count('id'),distinct=True).values('count')[:1],
             output_field=IntegerField()
         ),
         performance_percentage=Case(
@@ -1040,7 +1040,7 @@ def salesperson_wise_table(request):
             distinct=True
         ),
 
-        business_won=Count(('s_bus_won_not'),filter=Q(s_bus_won_not=1)),
+        business_won=Count('id', filter=Q(s_bus_won_not=1), distinct=True),
     )
 
     sales_calls = Sales_Comments_Info.objects.filter(

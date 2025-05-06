@@ -83,62 +83,97 @@
 								<div class="row">
 									<div class="col-10">
 										<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Charges</span>
-									</div>
-									{% render_field tripclosure_form.tc_tripcost id="tc_tripcost" class="form-control disable_a_href" %}
-									</div>
-									</div>
-										<div class="col-2">
-									<input type="checkbox" id="tc_tripcost_id" style="transform: scale(1.5);">
-								</div>
+											<div class="input-group-prepend">
+												<span class="input-group-text">Trip Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_tripcost id="tc_tripcost" class="form-control disable_a_href" %}
 										</div>
+									</div>
+									<div class="col-2">
+										<input type="checkbox" id="tc_tripcost_id">
+									</div>
+								</div>
 								<div class="row">
 									<div class="col-10">
 										<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Parking Charges</span>
-									</div>
-									{% render_field tripclosure_form.tc_parkingcost class="form-control" %}
-								</div>
+											<div class="input-group-prepend">
+												<span class="input-group-text">Parking Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_parkingcost class="form-control" %}
+										</div>
 									</div>
 									<div class="col-2">
-									<input type="checkbox" id="tc_parkingcost" style="transform: scale(1.5);">
-								</div>
+										<input type="checkbox" id="tc_parkingcost">
+									</div>
 								</div>
 
-								</div>
+							</div>
 
 							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Toll Charges</span>
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Toll Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_tollcost class="form-control" %}
+										</div>
 									</div>
-									{% render_field tripclosure_form.tc_tollcost class="form-control" %}
+									<div class="col-2">
+										<input type="checkbox" id="tc_tollcost">
+									</div>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Loading Charges</span>
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Loading Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_loadingcost class="form-control" %}
+										</div>
 									</div>
-									{% render_field tripclosure_form.tc_loadingcost class="form-control" %}
+									<div class="col-2">
+										<input type="checkbox" id="tc_loadingcost">
+									</div>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unloading Charges</span>
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Unloading Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_unloadingcost class="form-control" %}
+										</div>
 									</div>
-									{% render_field tripclosure_form.tc_unloadingcost class="form-control" %}
+									<div class="col-2">
+										<input type="checkbox" id="tc_unloadingcost">
+									</div>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Weighment Charges</span>
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Weighment Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_weighmentcost id="tc_weighmentcost" class="form-control" %}
+										</div>
 									</div>
-									{% render_field tripclosure_form.tc_weighmentcost id="tc_weighmentcost" class="form-control" %}
+									<div class="col-2">
+										<input type="checkbox" id="tc_weighmentcost">
+									</div>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Handling Charges</span>
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Handling Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_handlingcost id="tc_handlingcost" class="form-control" %}
+										</div>
 									</div>
-									{% render_field tripclosure_form.tc_handlingcost id="tc_handlingcost" class="form-control" %}
+									<div class="col-2">
+										<input type="checkbox" id="tc_handlingcost">
+									</div>
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -203,7 +238,7 @@
 									<select name="tc_financestatus" id="tc_financestatus" class="form-control">
 										<option value="2">--Select--</option>
 										{% for item in status_list  %}
-											<option value="{{item.id}}">{{item.status}}</option>
+										<option value="{{item.id}}">{{item.status}}</option>
 										{% endfor %}
 									</select>
 								</div>
@@ -234,25 +269,25 @@
 	{% include "asset_mgt_app/tripclosure_list_woh.html" %}
 </form>
 <script>
-$(document).ready(function() {
-	document.getElementById("tr_updated_by").value ='{{user_id}}';
-	document.getElementById("tc_financestatus").value ='{{status_selected}}';
-	trip_status=document.getElementById("tc_financestatus").value
-	var tr_enquirynumber_val=document.getElementById("tr_enquirynumber").value;
-	if (tr_enquirynumber_val=="")
-	{
-		document.getElementById("tr_enquirynumber").value ='{{enquiry_num}}';
-	}
-	else
-	{
-		document.getElementById("tr_enquirynumber").value =tr_enquirynumber_val;
-	}
-	getRoRate();
+	$(document).ready(function() {
+        document.getElementById("tr_updated_by").value ='{{user_id}}';
+        document.getElementById("tc_financestatus").value ='{{status_selected}}';
+        trip_status=document.getElementById("tc_financestatus").value
+        var tr_enquirynumber_val=document.getElementById("tr_enquirynumber").value;
+        if (tr_enquirynumber_val=="")
+        {
+            document.getElementById("tr_enquirynumber").value ='{{enquiry_num}}';
+        }
+        else
+        {
+            document.getElementById("tr_enquirynumber").value =tr_enquirynumber_val;
+        }
+        getRoRate();
 
- });
+     });
 </script>
 <script>
-    function getRoRate() {
+	function getRoRate() {
         var selectedFromLocation = $("#tr_departedlocation").val();
         var selectedToLocation = $("#tr_reportedlocation").val();
         var selectedVehicleType = $("#tr_vehicletype_placed").val();
@@ -270,7 +305,7 @@ $(document).ready(function() {
                 'enquirynumber': selectedEnquiryNumber,
             },
             success: function(data) {
-            	if (data.ro_rate === 0) {
+                if (data.ro_rate === 0) {
                     $("#tc_tripcost").val('0');
                     alert("Trip Charges not available in master. In this case it is set to '0'");
                 }

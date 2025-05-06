@@ -27,6 +27,14 @@
             <div class="form-group">
                 <input type="search" class="form-control" id="sales_number" placeholder="Sales Number" name="sales_number">
                 <button class="btn btn-primary" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
+            <div class="form-group mx-1 ml-5">
+                    <label for="from-date" class="mr-1"><b>From:</b></label>
+                    <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+                </div>
+                <div class="form-group mx-1 ml-3">
+                    <label for="to-date" class="mr-1"><b>To:</b></label>
+                    <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+                </div>
             </div>
         </form>
     </div>
@@ -141,6 +149,32 @@
             }
         });
     });
+</script>
+<script>
+
+    document.getElementById('from-date').addEventListener('change', updateFilters);
+    document.getElementById('to-date').addEventListener('change', updateFilters);
+
+    function updateFilters() {
+
+        const fromDate = document.getElementById('from-date').value;
+        const toDate = document.getElementById('to-date').value;
+        const url = new URL(window.location.href);
+
+        if (fromDate) {
+            url.searchParams.set('from_date', fromDate);
+        } else {
+            url.searchParams.delete('from_date');
+        }
+
+        if (toDate) {
+            url.searchParams.set('to_date', toDate);
+        } else {
+            url.searchParams.delete('to_date');
+        }
+
+        window.location.href = url.toString();
+    }
 </script>
 
 {% endblock content %}

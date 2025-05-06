@@ -19,15 +19,24 @@ from ..sub_models.customer_mod import CustomerInfo
 def sales_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id=RoleInfo.objects.get(role_name=role).id
 
+    sales_data_query = SalesInfo.objects.all()
+    if from_date:
+        sales_data_query = sales_data_query.filter(s_updated_at__date__gte=from_date)
+    if to_date:
+        sales_data_query = sales_data_query.filter(s_updated_at__date__lte=to_date)
+
     if role_id==3:
-        sales_list= (SalesInfo.objects.all()).order_by('-s_created_at')
+        sales_list= sales_data_query.order_by('-s_created_at')
     elif role_id==1:
-        sales_list = (SalesInfo.objects.all()).order_by('-s_created_at')
+        sales_list = sales_data_query.order_by('-s_created_at')
     else:
-        sales_list = (SalesInfo.objects.filter(s_created_by=user_id)).order_by('-s_created_at')
+        sales_list = (sales_data_query.filter(s_created_by=user_id)).order_by('-s_created_at')
+
     page_number = request.GET.get('page')
     paginator = Paginator(sales_list, 10000)
     page_obj = paginator.get_page(page_number)
@@ -36,6 +45,8 @@ def sales_list(request):
         'first_name': first_name,
         'role': role,
         'page_obj': page_obj,
+        'from_date': from_date,
+        'to_date': to_date,
     }
     return render(request, "asset_mgt_app/sales_list.html", context)
 
@@ -184,16 +195,23 @@ def sales_comments_add(request, sales_comments_id=0):
 def sales_comments_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
 
     # Get user's role
     user_ext = User_extInfo.objects.get(user=user_id)
     role_id = RoleInfo.objects.get(role_name=user_ext.emp_role).id
 
+    sales_data_query = Sales_Comments_Info.objects.all()
+    if from_date:
+        sales_data_query = sales_data_query.filter(sc_updated_at__date__gte=from_date)
+    if to_date:
+        sales_data_query = sales_data_query.filter(sc_updated_at__date__lte=to_date)
     # Filtering based on role
     if role_id in [1, 3]:  # Role ID 1 & 3 should see all records
-        sales_comments_list = Sales_Comments_Info.objects.all().order_by('-sc_created_at')  # Latest created at first
+        sales_comments_list = sales_data_query.order_by('-sc_created_at')  # Latest created at first
     else:
-        sales_comments_list = Sales_Comments_Info.objects.filter(sc_updated_by=user_id).order_by('-sc_created_at')
+        sales_comments_list = sales_data_query.filter(sc_updated_by=user_id).order_by('-sc_created_at')
 
     # Paginate results
     paginator = Paginator(sales_comments_list, 10000)  # Large number to ensure all results load
@@ -206,6 +224,8 @@ def sales_comments_list(request):
         'user_id': user_id,
         'first_name': first_name,
         'page_obj': page_obj,  # Paginated data for the table
+        'from_date': from_date,
+        'to_date': to_date,
     }
     return render(request, "asset_mgt_app/sales_comments_list.html", context)
 @login_required(login_url='login_page')
