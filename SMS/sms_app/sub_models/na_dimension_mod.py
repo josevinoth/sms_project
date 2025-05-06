@@ -1,7 +1,9 @@
 from django.db import models
 
+from .na_consumables_mod import Naconsumables
 from .pk_wood_description import Pkwooddescription
-from ..models import Unitofmeasure,Natypeofreq,Pkstocktype,Stockdescription,PkneedassessmentInfo,MyUser,Nadimensiontype
+from .vehicletype_mod import VehicletypeInfo
+from ..models import Unitofmeasure,Natypeofreq,Pkstocktype,PkneedassessmentInfo,MyUser,Nadimensiontype
 
 class Nadimension(models.Model):
     nad_assess_num = models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='')
@@ -12,8 +14,10 @@ class Nadimension(models.Model):
     nad_created_at = models.DateTimeField(null=True, auto_now_add=True)
     nad_updated_at = models.DateTimeField(null=True, auto_now=True)
     nad_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='nad_updated_by',db_column='nad_updated_by')
-    nad_wood_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE,limit_choices_to={'id__in': [1, 4]})
-    nad_wood_description = models.ForeignKey(Pkwooddescription, on_delete=models.PROTECT, default='',blank=True,null=True)
+    # nad_wood_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE,limit_choices_to={'id__in': [1, 4]})
+    nad_wood_type = models.ManyToManyField(Pkstocktype,blank=True)
+    # nad_wood_description = models.ForeignKey(Pkwooddescription, on_delete=models.PROTECT, default='',blank=True,null=True)
+    nad_wood_description = models.ManyToManyField(Pkwooddescription,blank=True)
     nad_job_weight = models.FloatField( default=0.0)
     nad_type_of_req = models.ForeignKey(Natypeofreq, on_delete=models.CASCADE)
     nad_uom = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE, default='', limit_choices_to={'id__in': [1,2,3,4]},blank=True,null=True)
@@ -23,6 +27,8 @@ class Nadimension(models.Model):
     nad_item=models.CharField(max_length=100,null=True,blank=True)
     nad_dimension_type = models.ForeignKey(Nadimensiontype,on_delete=models.CASCADE,default='')
     nad_clearance = models.FloatField(max_length=100,null=True,blank=True, default=2)
+    nad_consumables = models.ForeignKey(Naconsumables, on_delete=models.CASCADE, blank=True, null=True,default=None)
+    nad_vechicle_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, blank=True, null=True,default=None)
 
     class Meta:
         ordering = ["nad_assess_num"]

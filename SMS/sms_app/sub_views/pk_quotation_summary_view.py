@@ -46,6 +46,13 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             quotation_list = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id)
 
             # Aggregate costs
+            def get_aggregate_cft(assessment_id, cost_type, stock_types=None):
+                filter_kwargs = {'pkqt_assessment_num': assessment_id, 'pkqt_cost_type': cost_type}
+                if stock_types:
+                    filter_kwargs['pkqt_stock_type__in'] = stock_types
+                cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(Sum('pkqt_sqrt_req'))[
+                    'pkqt_sqrt_req__sum']
+                return round(cost, 2) if cost is not None else 0.0
             def get_aggregate_cost(assessment_id, cost_type, stock_types=None):
                 filter_kwargs = {'pkqt_assessment_num': assessment_id, 'pkqt_cost_type': cost_type}
                 if stock_types:
@@ -55,12 +62,12 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 return round(cost, 2) if cost is not None else 0.0
 
             wood_cost = get_aggregate_cost(needassessment_id, 8, [1, 4])
-            total_cft = get_aggregate_cost(needassessment_id, 8, [1])
+            total_cft = get_aggregate_cft(needassessment_id, 8, [1])
             engineer_cost = get_aggregate_cost(needassessment_id, 2)
             packing_labour_cost = get_aggregate_cost(needassessment_id, 3)
             labour_cost = packing_labour_cost
             crane_cost = get_aggregate_cost(needassessment_id, 6)
-            ht_cost = get_aggregate_cost(needassessment_id, 5)
+            ht_cost = get_aggregate_cost(needassessment_id, 8, [1])
             management_cost = get_aggregate_cost(needassessment_id, 7)
             material_cost = get_aggregate_cost(needassessment_id, 8, [2])
             transport_cost = get_aggregate_cost(needassessment_id, 4)

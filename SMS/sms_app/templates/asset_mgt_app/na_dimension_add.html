@@ -27,23 +27,35 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Requirement Type</span>
 									</div>
-									{% render_field form.nad_type_of_req id="nad_type_of_req" class="form-control" %}
+									{% render_field form.nad_type_of_req id="nad_type_of_req" onchange="requirement_type()" class="form-control" %}
 								</div>
 							</div>
 							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="wood_type">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Type</span>
 									</div>
 									{% render_field form.nad_wood_type id="nad_wood_type" onchange="plywood_thickness()" class="form-control" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="wood_desc">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Description</span>
 									</div>
 									{% render_field form.nad_wood_description id="nad_wood_description" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-3" id="consumables">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consumables</span>
+									</div>
+									{% render_field form.nad_consumables id="nad_consumables" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3" id="vehicle_type">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Type</span>
+									</div>
+									{% render_field form.nad_vechicle_type id="nad_vechicle_type" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3" id="uom">
 									<div class="input-group-prepend">
 										<span class="input-group-text">UOM</span>
 									</div>
@@ -123,8 +135,39 @@
 	$(document).ready(function() {
         document.getElementById("nad_updated_by").value ='{{user_id}}';
         document.getElementById("nad_assess_num").value ='{{na_assessment_num_id}}';
-        plywood_thickness()
+        plywood_thickness();
+		requirement_type();
         });
+</script>
+<script>
+	$(document).ready(function () {
+    $('#yourTableId').DataTable({
+        responsive: true // Enables responsive DataTables
+    });
+
+    $('#nad_wood_type').multiselect({
+        includeSelectAllOption: true,
+        enableFiltering: true,
+        enableCaseInsensitiveFiltering: true,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select Wood Type ',
+        buttonClass: 'custom-multiselect-button',
+        maxHeight: 250,
+        dropUp: false
+    });
+
+    $('#nad_wood_description').multiselect({
+        includeSelectAllOption: true,
+        enableFiltering: true,
+        enableCaseInsensitiveFiltering: true,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select Wood Description',
+        buttonClass: 'custom-multiselect-button',
+        maxHeight: 250,
+        dropUp: false
+    });
+});
+
 </script>
 <script>
 	$("#nad_wood_type").change(function () {
@@ -165,5 +208,30 @@
       endif
     }
 </script>
-
+<script>
+	function requirement_type() {
+      var requirement=document.getElementById("nad_type_of_req").value
+      if (requirement==7)
+        {
+           $('#nad_wood_type').multiselect('disable');
+		   $('#nad_wood_description').multiselect('disable');
+		    $("#consumables, #vehicle_type,#wood_type, #wood_desc, #uom " ).hide();
+		}
+	  else if(requirement==12){
+		  $("#consumables " ).show();
+		  $("#wood_type, #wood_desc, #uom, #vehicle_type").hide();
+	  }
+	  else if(requirement==13){
+		  $("#consumables, #vehicle_type " ).show();
+		  $("#wood_type, #wood_desc, #uom").hide();
+	  }
+      else
+        {
+			$('#nad_wood_type').multiselect('enable');
+			$('#nad_wood_description').multiselect('enable');
+			 $("#consumables, #vehicle_type " ).hide();
+			$("#wood_type, #wood_desc, #uom").show();
+		}
+    }
+</script>
 {% endblock content %}

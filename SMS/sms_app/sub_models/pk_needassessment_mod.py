@@ -21,7 +21,6 @@ class PkneedassessmentInfo(models.Model):
     # Updated field to ManyToMany for multi-select functionality
     na_type_of_access = models.ManyToManyField(Natypeofaccess,blank=True)
 
-    na_consumables = models.ManyToManyField(Stockdescription,blank=True)
     na_created_at = models.DateTimeField(null=True, auto_now_add=True)
     na_updated_at = models.DateTimeField(null=True, auto_now=True)
     na_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='na_updated_by', db_column='na_updated_by', null=True)

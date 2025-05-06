@@ -335,7 +335,7 @@
                     var height_req = parseFloat(document.getElementById("pkqt_height_req").value) || 0;
                     var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
                     var cft_req = (length_req*width_req*height_req/144)*quantity_req;
-                    document.getElementById("pkqt_sqrt_req").value=cft_req.toFixed(2)
+                    document.getElementById("pkqt_sqrt_req").value=cft_req.toFixed(3)
                     var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 
                     var totalCost = rate * cft_req;
@@ -346,18 +346,16 @@
                 }
                 else if (jn1==4 || jn1==6)
                 {
-          			$('#pkqt_item').removeClass('disable_a_href');
-          			$('#pkqt_itemdescription').removeClass('disable_a_href');
             		$('#pkqt_stock_description').addClass('disable_a_href');
 					$('#pkqt_uom').addClass('disable_a_href');
 					$('#pkqt_quantity').removeClass('disable_a_href');
 					$('#pkqt_sqrt_req').addClass('disable_a_href');
 					$('#pkqt_days').addClass('disable_a_href');
-					document.getElementById("pkqt_days").value = 0;
 
 					var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
 					var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
 					var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+					var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 					var cft_req = length_req * width_req * quantity_req;
 					document.getElementById("pkqt_sqrt_req").value = cft_req.toFixed(2);
 
@@ -375,7 +373,7 @@
                 		var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 						var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
 
-					if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")|| desc.startsWith("Tar")) {
+					if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")) {
 						$('#pkqt_quantity_req').addClass('disable_a_href');
 						$('#pkqt_sqrt_req').removeClass('disable_a_href');
 						$('#pkqt_days').addClass('disable_a_href');
@@ -389,7 +387,7 @@
 						document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2);
 					}
 
-					else if (desc.includes("Belt")) {
+					else if (desc.includes("Belt") ||desc.startsWith("Strech") ||desc.startsWith("DESICCANT") || desc.startsWith("Tar")) {
 						var pkqt_sqrt_req = parseFloat(document.getElementById("pkqt_sqrt_req").value) || 0;
 						var totalCost = rate  * pkqt_sqrt_req * quantity_req;
                     	document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2);
@@ -600,7 +598,6 @@
 
 </script>
 <script>
-
 	function search_wood() {
     var stock_description = $("#pkqt_stock_description").val();
     var stock_type = $("#pkqt_stock_type").val();
@@ -708,7 +705,6 @@
         $("#pkqt_cft").val(cft);
         $("#pkqt_quantity").val(quantity);
         $("#pkqt_rate").val(rate);
-        $("#pkqt_uom").val(uom);
 
         // Trigger any dependent changes
         change_cost_type();

@@ -47,7 +47,7 @@
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Type Of Packing</span>
+										<span class="input-group-text">Scope Of Work</span>
 									</div>
 									{% render_field form.na_type_of_pack1 id="na_type_of_pack1" class="form-control " onchange="package_type_change()" %}
 								</div>
@@ -101,12 +101,6 @@
 									</div>
 									{% render_field form.na_delivery_location id="na_delivery_location" class="form-control " %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Type</span>
-									</div>
-									{% render_field form.na_vehicle_type id="na_vehicle_type" class="form-control disable_a_href" %}
-								</div>
 							</div>
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
@@ -118,13 +112,7 @@
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Consumables</span>
-									</div>
-									{% render_field form.na_consumables id="na_consumables" class="form-control"  %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Packing Field</span>
+										<span class="input-group-text">Packing Location</span>
 									</div>
 									{% render_field form.na_packing_field id="na_packing_field" class="form-control " %}
 								</div>
@@ -300,7 +288,7 @@
             includeSelectAllOption: true,
             enableFiltering: true,
             enableCaseInsensitiveFiltering: true,
-            buttonWidth: '418px',  // Increase the width of the button
+			buttonWidth: '100%',
 			nonSelectedText: 'Select Types of Lifting',
             buttonClass: 'custom-multiselect-button',
             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
@@ -312,8 +300,8 @@
             includeSelectAllOption: true,
             enableFiltering: true,
             enableCaseInsensitiveFiltering: true,
-            buttonWidth: '418px',
-            nonSelectedText: 'Select Special Requirements',
+			buttonWidth: '100%',
+            nonSelectedText: 'Select Requirements',
             buttonClass: 'custom-multiselect-button',
             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
             dropUp: false
@@ -324,7 +312,7 @@
             includeSelectAllOption: true,
             enableFiltering: true,
             enableCaseInsensitiveFiltering: true,
-            buttonWidth: '418px',
+			buttonWidth: '100%',
             nonSelectedText: 'Select Wood Norms',
             buttonClass: 'custom-multiselect-button',
             maxHeight: 250, // Set a max height for the dropdown with a scrollbar
@@ -335,7 +323,7 @@
             includeSelectAllOption: true,
             enableFiltering: true,
             enableCaseInsensitiveFiltering: true,
-            buttonWidth: '418px',
+			buttonWidth: '100%',
             nonSelectedText: 'Select Consumables',
             buttonClass: 'custom-multiselect-button',
             maxHeight: 250, // Set a max height for the dropdown with a scrollbar

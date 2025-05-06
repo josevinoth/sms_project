@@ -1,5 +1,5 @@
 from django import forms
-from ..models import PkneedassessmentInfo
+from ..models import PkneedassessmentInfo,StatusList
 
 class PkneedassessmentForm(forms.ModelForm):
 
@@ -19,4 +19,5 @@ class PkneedassessmentForm(forms.ModelForm):
         self.fields['na_vehicle_type'].empty_label = "--Select--"
         self.fields['na_packing_field'].empty_label = "--Select--"
         self.fields['na_updated_by'].empty_label = "--Select--"
+        self.fields['na_status'].queryset = StatusList.objects.filter(id__in=[5, 6])
         self.fields['na_status'].empty_label = "--Select--"

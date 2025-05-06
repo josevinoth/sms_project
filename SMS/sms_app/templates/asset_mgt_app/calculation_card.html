@@ -63,21 +63,19 @@
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Length:</span>
                                         </div>
-                                        <input type="number" id="pkqt_box_id_clearance_l" class="form-control" value="0">
+                                        <input type="number" id="pkqt_box_id_clearance_l" class="form-control" value="0" required>
                                     </div>
-
                                     <div class="input-group input-group-sm mb-3">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Width:</span>
                                         </div>
-                                        <input type="number" id="pkqt_box_id_clearance_w" class="form-control" value="0">
+                                        <input type="number" id="pkqt_box_id_clearance_w" class="form-control" value="0" required>
                                     </div>
-
                                     <div class="input-group input-group-sm mb-3">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Height:</span>
                                         </div>
-                                        <input type="number" id="pkqt_box_id_clearance_h" class="form-control" value="0">
+                                        <input type="number" id="pkqt_box_id_clearance_h" class="form-control" value="0" required>
                                     </div>
                                 </div>
                             </fieldset>
@@ -90,21 +88,19 @@
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Length:</span>
                                         </div>
-                                        <input type="number" id="pkqt_box_od_clearance_l" class="form-control" value="0">
+                                        <input type="number" id="pkqt_box_od_clearance_l" class="form-control" value="0" required>
                                     </div>
-
                                     <div class="input-group input-group-sm mb-3">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Width:</span>
                                         </div>
-                                        <input type="number" id="pkqt_box_od_clearance_w" class="form-control" value="0">
+                                        <input type="number" id="pkqt_box_od_clearance_w" class="form-control" value="0" required>
                                     </div>
-
                                     <div class="input-group input-group-sm mb-3">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Height:</span>
                                         </div>
-                                        <input type="number" id="pkqt_box_od_clearance_h" class="form-control" value="0">
+                                        <input type="number" id="pkqt_box_od_clearance_h" class="form-control" value="0" required>
                                     </div>
                                 </div>
                             </fieldset>
@@ -173,8 +169,36 @@
 </div>
 
 <script>
+	document.addEventListener("DOMContentLoaded", function() {
+        // List of input IDs
+        let inputFields = [
+            "pkqt_dimension_type", "pkqt_dimension_type_id", "pkqt_uom_calc",
+            "pkqt_l", "pkqt_w", "pkqt_h",
+            "pkqt_box_id_clearance_l", "pkqt_box_id_clearance_w", "pkqt_box_id_clearance_h",
+            "pkqt_box_od_clearance_l", "pkqt_box_od_clearance_w", "pkqt_box_od_clearance_h",
+            "length_cm", "width_cm", "height_cm",
+            "length_in", "width_in", "height_in",
+            "length_ft", "width_ft", "height_ft",
+            "quantity", "sqft", "total_sqft"
+        ];
 
+        // Restore values from localStorage
+        inputFields.forEach(id => {
+            let savedValue = localStorage.getItem(id);
+            if (savedValue !== null) {
+                document.getElementById(id).value = savedValue;
+            }
+        });
 
+        // Save values on input change
+        inputFields.forEach(id => {
+            document.getElementById(id).addEventListener("input", function() {
+                localStorage.setItem(id, this.value);
+            });
+        });
+    });
+</script>
+<script>
     function pk_store_na_dimension_id() {
         var l = parseFloat(document.getElementById("pkqt_l").value);
         var w = parseFloat(document.getElementById("pkqt_w").value);
@@ -227,21 +251,22 @@
         calculateTotalSqft();
     }
 
-    function calculateTotalSqft() {
-    var length_ft = parseFloat(document.getElementById("length_ft").value) || 0;
-    var width_ft = parseFloat(document.getElementById("width_ft").value) || 0;
+        function calculateTotalSqft() {
+        var length_ft = parseFloat(document.getElementById("length_ft").value) || 0;
+        var height_ft = parseFloat(document.getElementById("height_ft").value) || 0;
+        var width_ft = parseFloat(document.getElementById("width_ft").value) || 0;
 
-    var quantityInput = document.getElementById("quantity");
-    var quantity = parseInt(quantityInput.value);
+        var quantityInput = document.getElementById("quantity");
+        var quantity = parseInt(quantityInput.value);
 
-    if (isNaN(quantity) || quantity <= 0) {
-        quantity = 1;
-        quantityInput.value = 1;  // Update the input field to show 1
-    }
+        if (isNaN(quantity) || quantity <= 0) {
+            quantity = 1;
+            quantityInput.value = 1;  // Update the input field to show 1
+        }
 
-    // Calculate Sqft per box
-    var sqft = length_ft * width_ft;
-    document.getElementById("sqft").value = sqft.toFixed(2);
+        // Calculate Sqft per box
+        var sqft = (length_ft * height_ft * 2)+(height_ft * width_ft * 2)+(length_ft * width_ft * 2);
+        document.getElementById("sqft").value = sqft.toFixed(2);
 
     // Calculate Total Sqft
     var total_sqft = sqft * quantity;
