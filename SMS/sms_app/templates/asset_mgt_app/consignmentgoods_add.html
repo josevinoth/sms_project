@@ -20,14 +20,15 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner Invoice</span>
 									</div>
-									{% render_field form.cg_consignerinvoice id="cg_consignerinvoice" class="form-control" %}
-									<select class="form-control" id="existingInvoiceSelect">
-										<option value="">Serach</option>
+									<input list="invoiceList" id="cg_consignerinvoice" name="cg_consignerinvoice"
+										   class="form-control" value="{{ form.cg_consignerinvoice.value|default:'' }}">
+									<datalist id="invoiceList">
 										{% for invoice in existing_invoices %}
-										<option value="{{ invoice }}">{{ invoice }}</option>
-										{% endfor %}
-									</select>
+										<option value="{{ invoice }}">
+											{% endfor %}
+									</datalist>
 								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consigner Invoice Date</span>
@@ -73,21 +74,41 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Description</span>
 									</div>
-									<select id="cg_description" name="cg_description" class="form-control">
-										<option value="">-- Select Description --</option>
-										{% for item in form.fields.cg_description.queryset %}
-										<option value="{{ item.id }}" {% if item.id == selected_id %}selected{% endif %}>
-											{{ item.stock_type }}
-										</option>
-										{% endfor %}
-									</select>
-									<input type="text" id="new_description" class="form-control d-none" placeholder="Enter new description">
-
+									{% render_field form.cg_description class="form-control" id="cg_description" %}
 									<div class="input-group-append">
-										<button type="button" class="btn btn-outline-secondary" id="toggleAddBtn">Add</button>
+										<button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#addDescriptionModal">
+											Add
+										</button>
 									</div>
 								</div>
-
+								<!-- Add Description Modal -->
+								<div class="modal fade" id="addDescriptionModal" tabindex="-1" role="dialog" aria-labelledby="addDescriptionModalLabel" aria-hidden="true">
+									<div class="modal-dialog" role="document">
+										<form id="add-description-form" method="POST" action="{% url 'add_description' %}">
+											{% csrf_token %}
+											<div class="modal-content">
+												<div class="modal-header">
+													<h5 class="modal-title">Add Description</h5>
+													<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+														<span aria-hidden="true">&times;</span>
+													</button>
+												</div>
+												<div class="modal-body">
+													<div class="input-group input-group-sm mb-3">
+														<div class="input-group-prepend">
+															<span class="input-group-text">Description:</span>
+														</div>
+														<input type="text" class="form-control" name="cg_description" id="new_cg_description" required>
+													</div>
+												</div>
+												<div class="modal-footer">
+													<button type="submit" class="btn btn-primary">Add</button>
+													<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+												</div>
+											</div>
+										</form>
+									</div>
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Eway bill No.</span>
@@ -229,45 +250,41 @@
     });
 </script>
 <script>
-	document.getElementById('toggleAddBtn').addEventListener('click', function () {
-        const select = document.getElementById('cg_description');
-        const input = document.getElementById('new_description');
-        const button = this;
+	document.getElementById('add-description-form').addEventListener('submit', function (e) {
+        e.preventDefault();
 
-        if (input.classList.contains('d-none')) {
-            // Switch to input mode
-            select.classList.add('d-none');
-            input.classList.remove('d-none');
-            input.focus();
-            button.textContent = 'Save';
-        } else {
-            // Save new description
-            const newDesc = input.value.trim();
-            if (newDesc === '') return;
+        let description = document.getElementById('new_cg_description').value;
 
-            fetch('/SMS/add-description/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}',  // Ensure {% csrf_token %} is rendered somewhere
-                },
-                body: JSON.stringify({ stock_type: newDesc })  // KEY FIXED HERE
+        fetch("{% url 'add_description' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: new URLSearchParams({
+                'cg_description': description
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.id) {
-                    const option = new Option(data.stock_type, data.id, true, true);
-                    select.add(option);
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.stock_type) {
+                alert('Description added: ' + data.stock_type);
+                $('#addDescriptionModal').modal('hide');
 
-                    input.value = '';
-                    input.classList.add('d-none');
-                    select.classList.remove('d-none');
-                    button.textContent = 'Add';
-                }
-            });
-        }
+                const select = document.getElementById('cg_description');
+                const option = document.createElement('option');
+                option.value = data.id;              // Correct ID
+                option.textContent = data.stock_type; // Text label
+                option.selected = true;              // Pre-select the new option
+                select.appendChild(option);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
     });
+
 </script>
+
 <script>
 	document.getElementById('existingInvoiceSelect').addEventListener('change', function() {
         const selectedInvoice = this.value;

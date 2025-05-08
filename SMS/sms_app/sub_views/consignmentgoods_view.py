@@ -36,6 +36,7 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
             form = ConsignmentgoodsaddForm(instance=consignmentgoods)
+            form.fields['cg_description'].queryset = Stock_type.objects.all()
         context = {
             'form': form,
             'con_det_form': con_det_form,
@@ -52,14 +53,19 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             form = ConsignmentgoodsaddForm(request.POST)
         else:
             consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
-            form = ConsignmentgoodsaddForm(request.POST,instance=consignmentgoods)
-        if form.is_valid() :
+            form = ConsignmentgoodsaddForm(request.POST, instance=consignmentgoods)
+
+        form.fields['cg_description'].queryset = Stock_type.objects.all()
+        print("cg_description in POST:", request.POST.get('cg_description'))
+        print("Available Stock_type IDs:", list(Stock_type.objects.values_list('id', flat=True)))
+
+        if form.is_valid():
             form.save()
             messages.success(request, 'Record  Updated Successfully')
-            print("Consignment Goods form is valid")
+            print("Consignment Goods form is valid", form.errors)
             return redirect(request.META['HTTP_REFERER'])
         else:
-            print("Consignment Goods form is not valid")
+            print("Consignment Goods form is not valid", form.errors)
             messages.error(request, 'Record Not Updated Successfully')
             return redirect(request.META['HTTP_REFERER'])
 
@@ -116,18 +122,13 @@ def consignmentgoods_back(request):
     # return redirect('/SMS/consignmentgoods_nav/' + str(consignmentgoods_id_val))
 
 
-@csrf_exempt
 def add_description(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        name = data.get('stock_type')
+        name = request.POST.get('cg_description')
         if name:
-            # Check if it already exists (optional)
             existing = Stock_type.objects.filter(name__iexact=name).first()
             if existing:
                 return JsonResponse({'id': existing.id, 'stock_type': existing.name})
-
-            # Save new description
             new_desc = Stock_type.objects.create(name=name)
             return JsonResponse({'id': new_desc.id, 'stock_type': new_desc.name})
     return JsonResponse({'error': 'Invalid request'}, status=400)
