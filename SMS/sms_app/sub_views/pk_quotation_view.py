@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models.aggregates import Sum
 from django.http import JsonResponse
 from ..forms import PkquotationForm
 from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo,Costtype,Pkstocktype,Stockdescription,pk_itemInfo,pk_itemdescriptionInfo
@@ -61,6 +62,8 @@ def pk_quotation_add(request, quotation_id=0):
                 'role': role,
                 'role_id': role_id,
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
+                'total_cft_display': request.session.get('total_cft_display', 0),  # ✅ ADD THIS LINE
+
             }
         else:
             print("Inside PK quotation get edit")
@@ -127,6 +130,26 @@ def pk_quotation_add(request, quotation_id=0):
                         #     return redirect(request.META['HTTP_REFERER'])
 
                         form.save()
+
+                        quotation = form.save()
+
+                        # Extract relevant fields
+                        cost_type = quotation.pkqt_cost_type.id
+                        stock_type = quotation.pkqt_stock_type.id
+                        assessment_id = quotation.pkqt_assessment_num.id
+
+                        # ✅ Only for cost_type = 8 and stock_type = 1
+                        if cost_type == 8 and stock_type == 1:
+                            total_cft = PkquotationInfo.objects.filter(
+                                pkqt_assessment_num=assessment_id,
+                                pkqt_cost_type=8,
+                                pkqt_stock_type=1
+                            ).aggregate(Sum('pkqt_sqrt_req'))['pkqt_sqrt_req__sum'] or 0.0
+
+                            request.session['total_cft_display'] = round(total_cft, 2)
+                        else:
+                            request.session['total_cft_display'] = 0.0
+
                         print("Quotation form is valid and stock updated.")
                         messages.success(request, 'Stock Updated Successfully')
 

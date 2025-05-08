@@ -53,6 +53,7 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(Sum('pkqt_sqrt_req'))[
                     'pkqt_sqrt_req__sum']
                 return round(cost, 2) if cost is not None else 0.0
+
             def get_aggregate_cost(assessment_id, cost_type, stock_types=None):
                 filter_kwargs = {'pkqt_assessment_num': assessment_id, 'pkqt_cost_type': cost_type}
                 if stock_types:
@@ -67,7 +68,12 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             packing_labour_cost = get_aggregate_cost(needassessment_id, 3)
             labour_cost = packing_labour_cost
             crane_cost = get_aggregate_cost(needassessment_id, 6)
-            ht_cost = get_aggregate_cost(needassessment_id, 8, [1])
+            ht_cost = PkquotationInfo.objects.filter(
+                pkqt_assessment_num=needassessment_id,
+                pkqt_cost_type=5
+            ).aggregate(Sum('pkqt_total_cost'))['pkqt_total_cost__sum'] or 0.0
+
+            ht_cost = round(ht_cost, 2)
             management_cost = get_aggregate_cost(needassessment_id, 7)
             material_cost = get_aggregate_cost(needassessment_id, 8, [2])
             transport_cost = get_aggregate_cost(needassessment_id, 4)

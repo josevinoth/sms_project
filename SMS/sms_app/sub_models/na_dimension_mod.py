@@ -25,7 +25,7 @@ class Nadimension(models.Model):
     nad_cost_unit=models.FloatField(default=0.0,null=True,blank=True)
     nad_cost_total=models.FloatField(default=0.0,null=True,blank=True)
     nad_item=models.CharField(max_length=100,null=True,blank=True)
-    nad_dimension_type = models.ForeignKey(Nadimensiontype,on_delete=models.CASCADE,default='')
+    nad_dimension_type = models.ForeignKey(Nadimensiontype,on_delete=models.CASCADE,default='4')
     nad_clearance = models.FloatField(max_length=100,null=True,blank=True, default=2)
     nad_consumables = models.ForeignKey(Naconsumables, on_delete=models.CASCADE, blank=True, null=True,default=None)
     nad_vechicle_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, blank=True, null=True,default=None)
