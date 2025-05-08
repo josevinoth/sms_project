@@ -62,6 +62,8 @@ class PkquotationInfo(models.Model):
     pkqt_weight_sqft = models.FloatField(blank=True, null=True, default=1)
     pkqt_weight_received = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE,related_name='pkqt_weight_received', db_column='pkqt_weight_received',null=True, blank=True)
     pkqt_weight_Consumption = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE,related_name='pkqt_weight_Consumption', db_column='pkqt_weight_Consumption',null=True, blank=True)
+    pkqt_total_cft_display = models.FloatField(blank=True, null=True, default=0.0)
+
 
     class Meta:
         ordering = ["pkqt_cost_type"]
