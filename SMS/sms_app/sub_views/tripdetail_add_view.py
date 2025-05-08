@@ -37,15 +37,24 @@ def tripdetail_nav(request,tripdetail_id=0):
 def tripdetail_add(request,tripdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    enquiry_num_id = request.session.get('ses_enqiury_id')
     if request.method == "GET":
         if tripdetail_id == 0:
             print("I am inside Get add tripdetails")
             trip_det_form = TripdetailaddForm()
+            previous_trip = TripdetailInfo.objects.filter(tr_enquirynumber_id=enquiry_num_id).order_by('-tr_created_at').first()
+            if previous_trip and previous_trip.tr_reportedlocation:
+                trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
+
+            else:
+                print("No previous trip or reported location found.")
+
             tripclosurefiles_form = TripclosurefilesForm()
             enquiry_num_id = request.session.get('ses_enqiury_id')
             status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3])
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
-            status_selected =1
+            status_selected = 1
+
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
