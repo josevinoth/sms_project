@@ -653,6 +653,12 @@ urlpatterns = [
          name='get_remaining_quantity'),
     path('SMS/get-vehicle-type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),
     path('add-description/', views.add_description, name='add_description'),
+    path('fleet_management_view/', views.fleet_management_view, name='fleet_management_view'),
+    path('vendorratemaster_list/', views.vendorratemaster_list, name='vendorratemaster_list'),
+    path('vendorratemaster_insert', views.vendorratemaster_add, name='vendorratemaster_insert'),
+    path('vendorratemaster_update/<int:vendorratemaster_id>/', views.vendorratemaster_add, name='vendorratemaster_update'),
+    path('vendorratemaster_delete/<int:vendorratemaster_id>/', views.vendorratemaster_delete, name='vendorratemaster_delete'),
+
 ]
 
 

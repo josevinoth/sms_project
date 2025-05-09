@@ -201,3 +201,4 @@ from .sub_models.salesmultipleitem_mod import SalesmultipleitemInfo
 from .sub_models.part_code_mod import PkpartcodeInfo
 from .sub_models.pkweightconvention_mod import Pkweightconvention
 from .sub_models.pk_wood_description import Pkwooddescription
+from .sub_models.vendorratemaster_mod import VendorratemasterInfo

@@ -5,7 +5,7 @@ from django.db.models import Q
 
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm,TripdetailaddForm
-from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo
+from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,VehiclemasterInfo
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 import json
@@ -358,3 +358,46 @@ def load_truck_details(request):
         data = {"error": "Consignment number not found"}
 
     return JsonResponse(data)
+
+
+def fleet_management_view(request):
+    vehicles = VehiclemasterInfo.objects.all()
+    vehicle_status_list = []
+
+    for vehicle in vehicles:
+        trip = TripdetailInfo.objects.filter(tr_vehiclenumber=vehicle.vm_registrationnumber).order_by(
+            '-tr_created_at').first()
+
+        if trip:
+            status = {
+                'registration_number': vehicle.vm_registrationnumber,
+                'driver_name': trip.tr_drivername,
+                'from_location': trip.tr_departedlocation.place_name if trip.tr_departedlocation else None,
+                'to_location': trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else None,
+                'vehicle_type': trip.tr_vehicletype_placed.vt_vehicletype if trip.tr_vehicletype_placed else None,
+                'vehicle_source': trip.tr_vehiclesource.ow_ownership if trip.tr_vehiclesource else None,
+                'departed_date': trip.tr_departeddate,
+                'reported_date': trip.tr_reporteddate,
+                'trip_status': trip.tc_financestatus.status if trip.tc_financestatus else 'Unknown',
+                'trip_number': trip.tr_tripnumber,
+                'status': 'In Trip'
+            }
+        else:
+            status = {
+                'registration_number': vehicle.vm_registrationnumber,
+                'driver_name': '',
+                'from_location': '',
+                'to_location': '',
+                'trip_status': '',
+                'trip_number': '',
+                'vehicle_type': '',
+                'vehicle_source': '',
+                'departed_date': '',
+                'reported_date': '',
+                'status': 'Available'
+            }
+
+        vehicle_status_list.append(status)
+
+    return render(request, "asset_mgt_app/fleet_management.html", {'vehicle_status_list': vehicle_status_list})
+

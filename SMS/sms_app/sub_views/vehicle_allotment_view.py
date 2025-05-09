@@ -168,16 +168,14 @@ def load_vehicle_number(request):
     vehicletype_placed = request.GET.get('vehicletype_placed')
     vehicletype_source = request.GET.get('vehicletype_source')
 
-    # Get vehicle numbers used in active trips (status = 1)
     active_vehicle_numbers = TripdetailInfo.objects.filter(
         tc_financestatus_id=1,
         tr_vehiclenumber__isnull=False
     ).values_list('tr_vehiclenumber', flat=True)
 
-    # Get vehicle IDs already allotted
     used_vehicle_ids = Vehicle_allotmentInfo.objects.values_list('va_vehiclenumber_id', flat=True)
+    used_vehicle_ids = [vid for vid in used_vehicle_ids if vid is not None]
 
-    # Filter vehicles by type and ownership, exclude those already used or active
     available_vehicles = VehiclemasterInfo.objects.filter(
         vm_vehicletype=vehicletype_placed,
         vm_ownership=vehicletype_source
@@ -191,7 +189,6 @@ def load_vehicle_number(request):
         'vehicle_number_list': [v[0] for v in available_vehicles],
         'vehicle_number_list_id': [v[1] for v in available_vehicles]
     })
-
 
 
 @login_required(login_url='login_page')

@@ -1,0 +1,70 @@
+{% extends "asset_mgt_app/base.html" %}
+
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-3 rounded text-center bg-info">
+            <h3>Fleet Management</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+<hr>
+<div class="container-fluid">
+    <table  id="fleet_management" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+
+                <th>Registration Number</th>
+                <th>Trip Number</th>
+                <th>Vehicle Type</th>
+                <th>Vehicle Source</th>
+                <th>Driver Name</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Departed Date</th>
+                <th>Reported Date</th>
+                <th>Status</th>
+                <th>Trip Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vehicle in vehicle_status_list %}
+            <tr class="{% if vehicle.status == 'Available' %}available{% else %}in-trip{% endif %}">
+                <td>{{ vehicle.registration_number }}</td>
+                <td>{{ vehicle.trip_number }}</td>
+                <td>{{ vehicle.vehicle_type }}</td>
+                <td>{{ vehicle.vehicle_source }}</td>
+                <td>{{ vehicle.driver_name }}</td>
+                <td>{{ vehicle.from_location }}</td>
+                <td>{{ vehicle.to_location }}</td>
+                <td>{{ vehicle.departed_date }}</td>
+                <td>{{ vehicle.reported_date }}</td>
+                <td>{{ vehicle.status }}</td>
+                <td>{{ vehicle.trip_status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function() {
+    $('#fleet_management').DataTable({
+        order: [0, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
+} );
+</script>
+{% endblock content %}

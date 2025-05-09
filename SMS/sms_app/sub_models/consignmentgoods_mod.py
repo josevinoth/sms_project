@@ -9,7 +9,7 @@ class ConsignmentgoodsInfo(models.Model):
     cg_consignerinvoice_date = models.DateField()
     cg_consignervalue = models.IntegerField(default='')
     cg_valueininr = models.IntegerField(default='')
-    cg_ebillno = models.CharField(max_length=10,default = '')
+    cg_ebillno = models.CharField(max_length=12,default = '')
     cg_dateofissue = models.DateField(blank=True,null=True)
     cg_dateofvalidity = models.DateField(blank=True,null=True)
     cg_height = models.IntegerField(blank=True, null=True, default=0)
