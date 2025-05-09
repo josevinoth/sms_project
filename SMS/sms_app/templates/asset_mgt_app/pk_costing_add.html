@@ -158,7 +158,256 @@
 											{% render_field form.ct_quantity_req id="ct_quantity_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
 										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Required Value <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
+											</div>
+											{% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3" >
+											<div class="input-group-prepend">
+												<span class="input-group-text">UOM-Consumption Type</span>
+											</div>
+											{% render_field form.ct_weight_Consumption id="ct_weight_Consumption" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3" >
+											<div class="input-group-prepend">
+												<span class="input-group-text">Convertion Value</span>
+											</div>
+											{% render_field form.ct_weight_sqft id="ct_weight_sqft" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Days/Hours</span>
+											</div>
+											{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control " %}
+										</div>
+									</div>
+									<div class="col-6">
+										<fieldset style="width:100%;">
+											<legend style="white-space: nowrap;">Stock Info</legend>
+											<div class="mb-3" >
+												<div class="input-group input-group-sm mb-3">
+													<div class="input-group-prepend">
+														<span class="input-group-text">Stock Purchase Number</span>
+													</div>
+													{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
+												</div>
+												<div class="input-group input-group-sm mb-3">
+													<div class="input-group-prepend">
+														<span class="input-group-text">Item Quantity</span>
+													</div>
+													{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control disable_a_href" %}
+												</div>
+											</div>
+										</fieldset>
+										<br>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
+											</div>
+											{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Unit Cost</span>
+											</div>
+											{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Total CFT/SQFT Required</span>
+											</div>
+											{% render_field form.ct_cft_sqft_req id="ct_cft_sqft_req" readonly="True" class="form-control disable_a_href" %}
+										</div>
+										<input type="hidden" id="hidden_pc_stock_description">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Total Cost</span>
+											</div>
+											{% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Stock Status</span>
+											</div>
+											{% render_field form.ct_stock_status id="ct_stock_status" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Excess Value</span>
+											</div>
+											{% render_field form.ct_exe_value id="ct_exe_value" class="form-control disable_a_href" %}
+										</div>
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Excess Stock Status</span>
+											</div>
+											{% render_field form.ct_excess_status id="ct_excess_status" class="form-control disable_a_href" %}
+										</div>
+										{% render_field form.ct_exe_height_req id="ct_exe_height_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_exe_width_req id="ct_exe_width_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_exe_length_req id="ct_exe_length_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_exe_quantity_req id="ct_exe_quantity_req"  hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_exe_sqrt_req id="ct_exe_sqrt_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
+										{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						{% if form.errors %}
+						<div class="alert alert-danger">
+							<ul>
+								{% for field, errors in form.errors.items %}
+								<li>{{ field }}: {{ errors|join:", " }}</li>
+								{% endfor %}
+							</ul>
+						</div>
+						{% endif %}
+						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'costing_cancel' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="col-3">
+		{% include "asset_mgt_app/calculation_card.html" %}
+	</div>
 
+</div>
+
+<div id="pk_item_search_page_costing">
+	{% include "asset_mgt_app/pk_item_search_page_costing.html" %}
+</div>
+
+{% include "asset_mgt_app/pk_costing_list_WOH.html" %}
+
+<script>
+	$(document).ready(function() {
+    document.getElementById("ct_updated_by").value = '{{user_id}}';
+    var stock_status = document.getElementById("ct_stock_status").value;
+    var assessment_num = document.getElementById("ct_assessment_num").value;
+    var customer_name = document.getElementById("ct_customer_name").value;
+    var customer_new_name = document.getElementById("ct_customer_new_name").value;
+    var customer_po = document.getElementById("ct_customer_po").value;
+
+    if (stock_status == 2) {
+        $('#costing_form').addClass('disable_a_href');
+        alert("User Cannot edit the form since stock is supplied");
+    }
+    else if (stock_status == 4) {
+        $('#costing_form').addClass('disable_a_href');
+        alert("User Cannot edit the form since stock is received");
+    }
+    else {
+        $('#costing_form').removeClass('disable_a_href');
+    }
+
+    if (assessment_num == "") {
+        document.getElementById("ct_assessment_num").value = '{{na_assessment_num_id}}';
+    }
+    else {
+        document.getElementById("ct_assessment_num").value = assessment_num;
+    }
+
+    if (customer_po == "") {
+        document.getElementById("ct_customer_po").value = '{{ses_customer_po_id}}';
+    }
+    else {
+        document.getElementById("ct_customer_po").value = customer_po;
+    }
+
+    if (customer_name == "") {
+        document.getElementById("ct_customer_name").value = '{{na_customer_name_id}}';
+    }
+    else {
+        document.getElementById("ct_customer_name").value = customer_name;
+    }
+    if (customer_new_name == "") {
+        document.getElementById("ct_customer_new_name").value = '{{na_customer_new_name_id}}';
+    }
+    else {
+        document.getElementById("ct_customer_new_name").value = customer_new_name;
+    }
+
+    pk_store_po_dimension_id();
+    $("#search_wood").on("click", function() {
+        search_wood();
+    });
+});
+
+</script>
+
+<script>
+	function change_cost_type() {
+			var CFT_Sqft_Req_unit = parseFloat(document.getElementById("ct_sqrt_req").value);
+			var job_type_qty = parseFloat(document.getElementById("ct_na_quantity").value);
+			var CFT_Sqft_Req_total = parseFloat(CFT_Sqft_Req_unit * job_type_qty);
+			let desc = document.getElementById("hidden_pc_stock_description").value;
+			var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
+			// Set the calculated value to the span
+			document.getElementById("ct_cft_sqft_req").value = CFT_Sqft_Req_total.toFixed(2);
+
+            var jn=document.getElementById("ct_cost_type").value;
+			$('#ct_item').addClass('disable_a_href');
+            if ( jn==8)
+            {
+        		$('#ct_stock_type').addClass('disable_a_href');
+				$('#ct_quantity_req').removeClass('disable_a_href');
+				$('#ct_item').removeClass('disable_a_href');
+				$('#ct_sqrt_req').removeClass('disable_a_href');
+				$('#ct_days').addClass('disable_a_href');
+                var jn1=document.getElementById("ct_stock_type").value
+				var ct_weight_sqft = parseFloat(document.getElementById("ct_weight_sqft").value) || 0;
+				var ct_days = parseFloat(document.getElementById("ct_days").value) || 0;
+
+                if (jn1==1 || jn1==5)
+                {
+            		$('#ct_stock_description').addClass('disable_a_href');
+                    $('#ct_sqrt_req').removeClass('disable_a_href');
+
+                    var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
+                    var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
+                    var height_req = parseFloat(document.getElementById("ct_height_req").value) || 0;
+                    var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+                    var cft_req = (length_req*width_req*height_req/144)*quantity_req;
+                    document.getElementById("ct_sqrt_req").value=cft_req.toFixed(2)
+                    var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+
+                    var totalCost = rate * cft_req * ct_weight_sqft * ct_days;
+                    document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
+                    var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+                    var totalboxCost = totalCost * na_quantity;
+                    document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2)
+                }
+                else if (jn1 == 2)
+                {
+						var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 1;
+                		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+						var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
+
+					if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")|| desc.startsWith("Tar")) {
+						$('#ct_quantity_req').addClass('disable_a_href');
+						document.getElementById("ct_sqrt_req").value = total_sqft.toFixed(2);
+						var totalCost = rate * total_sqft * ct_weight_sqft * ct_days * quantity_req;
+						document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+						var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
+						var totalboxCost = totalCost * na_quantity;
+						document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2);
+					}
 
 					else if (desc.includes("Belt")) {
 						var ct_sqrt_req = parseFloat(document.getElementById("ct_sqrt_req").value) || 0;
@@ -691,7 +940,5 @@
         placeholder: "Search Part Code",
         minimumInputLength: 1,
     });
-
-
 </script>
 {% endblock content %}
