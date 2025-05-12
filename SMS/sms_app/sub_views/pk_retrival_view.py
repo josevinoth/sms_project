@@ -45,20 +45,22 @@ def pk_retrival_add(request, retrival_id=0):
             if form.is_valid():
                 stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
                 requested_qty = request.POST.get('ct_quantity_req')
+                print(requested_qty)
 
                 if stock_purchase_num_id:
                     stock_purchase_obj = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
                     stock_purchase_num = stock_purchase_obj.sp_purchase_num
-                    available_qty = stock_purchase_obj.sp_quantity_reduced or 0
-
+                    available_qty = stock_purchase_obj.sp_quantity or 0
+                    print(available_qty)
                     if float(requested_qty) > float(available_qty):
                         messages.error(request, 'Available quantity is less than requested quantity')
                         return redirect(request.META['HTTP_REFERER'])
                     else:
                         stock_status = retrival.ct_stock_status.id
-                        if stock_status == 1:
+                        print("Stock Status ID:", stock_status)
+
+                        if stock_status == 2:
                             form.save()
-                            # Reduce stock quantity
                             stock_purchase_obj.sp_quantity_reduced = float(available_qty) - float(requested_qty)
                             stock_purchase_obj.save()
 

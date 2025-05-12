@@ -152,12 +152,12 @@ def costing_add(request, costing_id=0):
 def update_reduced_dimensions(stock_purchase_num,last_id):
     requested_qty = PkcostingInfo.objects.get(pk=last_id).ct_quantity_req
     requested_cft = PkcostingInfo.objects.get(pk=last_id).ct_sqrt_req
-    prev_qty = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_quantity_reduced
-    prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft_reduced
+    prev_qty = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_quantity
+    prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft
     current_qty = prev_qty - requested_qty
     current_cft = prev_cft - requested_cft
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=round(current_cft,2))
+    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity=current_qty)
+    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft=round(current_cft,2))
 
 def append_reduced_dimensions(stock_purchase_num,costing_id):
     length = PkcostingInfo.objects.get(pk=costing_id).ct_length

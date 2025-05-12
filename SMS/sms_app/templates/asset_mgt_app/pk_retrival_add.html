@@ -1,6 +1,14 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<div class="container-fluid row">
+    <div class="col-6 col-md-3 col-lg-1 ">
+        <a href="{% url 'pk_retrival_list' %}" class="btn btn-warning btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+<br>
 <form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
 	{% csrf_token %}
 	<div class="row">
@@ -51,7 +59,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Job Type Quantity</span>
 									</div>
-									{% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control" %}
+									{% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -281,7 +289,6 @@
 		var CFT_Sqft_Req_unit = parseFloat(document.getElementById("ct_sqrt_req").value);
 		var job_type_qty = parseFloat(document.getElementById("ct_na_quantity").value);
 		var CFT_Sqft_Req_total = parseFloat(CFT_Sqft_Req_unit * job_type_qty);
-
 		// Set the calculated value to the span
 		document.getElementById("ct_cft_sqft_req").innerText = CFT_Sqft_Req_total.toFixed(2);
 
@@ -298,7 +305,7 @@
 		{
 			$('#ct_stock_status').removeClass('disable_a_href');
 		}
-		pk_store_na_dimension_id();
+		pk_store_po_dimension_id();
 		$("#search_wood").on("click", function() {
 			search_wood();
 		});
@@ -311,7 +318,6 @@
     }
 </script>
 <script>
-
 	function search_wood() {
     var stock_description = $("#ct_stock_description").val();
     var stock_type = $("#ct_stock_type").val();
@@ -354,26 +360,36 @@
             tableHtml += '</tr></thead><tbody>';
 
             if (results.length === 0) {
-                tableHtml += '<tr><td colspan="20" class="text-center">No stock found for the given criteria.</td></tr>';
+                tableHtml += '<tr><td colspan="16" class="text-center">No stock found for the given criteria.</td></tr>';
             } else {
                 for (var i = 0; i < results.length; i++) {
+                    var row = results[i];
                     tableHtml += '<tr>';
-                    tableHtml += '<td>' + results[i].id + '</td>';
-                    tableHtml += '<td>' + results[i].sp_vendor_bill + '</td>';
-                    tableHtml += '<td>' + results[i].sp_stock_in_date + '</td>';
-                    tableHtml += '<td>' + results[i].sp_purchase_num + '</td>';
-                    tableHtml += '<td>' + results[i].sp_part_code__pc_code + '</td>';
-                    tableHtml += '<td>' + results[i].sp_stock_type__pk_stocktype + '</td>';
-                    tableHtml += '<td>' + results[i].sp_stock_description__stock_description + '</td>';
-                    tableHtml += '<td>' + results[i].sp_thick_height + '</td>';
-                    tableHtml += '<td>' + results[i].sp_width + '</td>';
-                    tableHtml += '<td>' + results[i].sp_length + '</td>';
-                    tableHtml += '<td>' + results[i].sp_cft + '</td>';
-                    tableHtml += '<td>' + results[i].sp_quantity + '</td>';
-                    tableHtml += '<td>' + results[i].sp_rate + '</td>';
-                    tableHtml += '<td>' + results[i].sp_uom__unit_of_measure + '</td>';
-                    tableHtml += '<td>' + results[i].sp_size + '</td>';
-                    tableHtml += '<td><a class="btn btn-primary"><i class="far fa-edit"></i> Select</a></td>';
+                    tableHtml += '<td>' + row.id + '</td>';
+                    tableHtml += '<td>' + row.sp_vendor_bill_id + '</td>';
+                    tableHtml += '<td>' + row.sp_stock_in_date + '</td>';
+                    tableHtml += '<td>' + row.sp_purchase_num + '</td>';
+                    tableHtml += '<td>' + row.sp_part_code__pc_code + '</td>';
+                    tableHtml += '<td>' + row.sp_stock_type__pk_stocktype + '</td>';
+                    tableHtml += '<td>' + row.sp_stock_description__stock_description + '</td>';
+                    tableHtml += '<td>' + row.sp_thick_height + '</td>';
+                    tableHtml += '<td>' + row.sp_width + '</td>';
+                    tableHtml += '<td>' + row.sp_length + '</td>';
+                    tableHtml += '<td>' + row.sp_cft + '</td>';
+                    tableHtml += '<td>' + row.sp_quantity + '</td>';
+                    tableHtml += '<td>' + row.sp_rate + '</td>';
+                    tableHtml += '<td>' + row.sp_uom__unit_of_measure + '</td>';
+                    tableHtml += '<td>' + row.sp_size + '</td>';
+                    tableHtml += '<td><a href="#" class="btn btn-primary select-stock" ' +
+                        'data-id="' + row.id + '" ' +
+                        'data-length="' + row.sp_length + '" ' +
+                        'data-width="' + row.sp_width + '" ' +
+                        'data-height="' + row.sp_thick_height + '" ' +
+                        'data-cft="' + row.sp_cft + '" ' +
+                        'data-quantity="' + row.sp_quantity + '" ' +
+                        'data-rate="' + row.sp_rate + '" ' +
+                        'data-uom="' + row.sp_uom__unit_of_measure + '"' +
+                        '>Select</a></td>';
                     tableHtml += '</tr>';
                 }
             }
@@ -388,53 +404,33 @@
         }
     });
 
-    includeContainer.off('click').on('click', 'a.btn-primary', function (e) {
+    includeContainer.on('click', 'a.select-stock', function (e) {
         e.preventDefault();
 
-        var selectedRow = $(this).closest('tr');
-        var stockId = selectedRow.find('td:eq(0)').text().trim();
-        var vendorBill = selectedRow.find('td:eq(1)').text().trim();
-        var stockDate = selectedRow.find('td:eq(2)').text().trim();
-        var purchaseNumber = selectedRow.find('td:eq(3)').text().trim();
-        var partCode = selectedRow.find('td:eq(4)').text().trim();
-        var stockType = selectedRow.find('td:eq(5)').text().trim();
-        var stockDesc = selectedRow.find('td:eq(6)').text().trim();
-        var height = selectedRow.find('td:eq(7)').text().trim();
-        var width = selectedRow.find('td:eq(8)').text().trim();
-        var length = selectedRow.find('td:eq(9)').text().trim();
-        var cft = selectedRow.find('td:eq(10)').text().trim();
-        var quantity = selectedRow.find('td:eq(11)').text().trim();
-        var rateCFT = selectedRow.find('td:eq(12)').text().trim();
-        var uom = selectedRow.find('td:eq(13)').text().trim();
+        // Use data-* attributes
+        var stockId = $(this).data('id');
+        var height = $(this).data('height');
+        var width = $(this).data('width');
+        var length = $(this).data('length');
+        var cft = $(this).data('cft');
+        var quantity = $(this).data('quantity');
+        var rate = $(this).data('rate');
+        var uom = $(this).data('uom');
 
-        // Set values in form fields
+        // Set form fields
         $("#ct_stock_purchase_number").val(stockId);
         $("#ct_length").val(length);
         $("#ct_width").val(width);
         $("#ct_height").val(height);
         $("#ct_cft").val(cft);
         $("#ct_quantity").val(quantity);
-        $("#ct_rate").val(rateCFT);
-        $("#ct_weight_sqft").val(weight_converted); // Make sure this is calculated/set before
+        $("#ct_rate").val(rate);
 
-        // Handle select fields
-        var weight_select = $("#ct_weight_received");
-        var weight_select1 = $("#ct_weight_Consumption");
-
-        weight_select.find("option").each(function () {
-            if ($(this).text().trim().toLowerCase() === weight_convention_text.toLowerCase()) {
-                weight_select.val($(this).val()).trigger('change');
-            }
-        });
-
-        weight_select1.find("option").each(function () {
-            if ($(this).text().trim().toLowerCase() === weight_consumption_text.toLowerCase()) {
-                weight_select1.val($(this).val()).trigger('change');
-            }
-        });
-        change_cost_type(); // Call your custom logic
+        // Trigger any dependent changes
+        change_cost_type();
     });
 }
+
 </script>
 <script>
 	function change_cost_type() {
@@ -484,7 +480,7 @@
                 		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
 						var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
 
-					if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")|| desc.startsWith("Tar")) {
+					if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")){
 						$('#ct_quantity_req').addClass('disable_a_href');
 						document.getElementById("ct_sqrt_req").value = total_sqft.toFixed(2);
 						var totalCost = rate * total_sqft * ct_weight_sqft * ct_days * quantity_req;
@@ -494,7 +490,7 @@
 						document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2);
 					}
 
-					else if (desc.includes("Belt")) {
+					else if (desc.includes("Belt") ||desc.startsWith("Strech") ||desc.startsWith("DESICCANT") || desc.startsWith("Tar")) {
 						var ct_sqrt_req = parseFloat(document.getElementById("ct_sqrt_req").value) || 0;
 						var totalCost = rate  * ct_sqrt_req * quantity_req;
                     	document.getElementById("ct_total_cost").value=totalCost.toFixed(2);
@@ -623,6 +619,44 @@
 	}
 </script>
 <script>
+	function pk_store_po_dimension_id() {
+		var ct_requirement_id = $('#ct_requirement').val();
+		var ct_customer_po = $('#ct_customer_po').val();
+		$.ajax({
+			url: '{% url "pk_store_po_dimension_id" %}',
+			type: 'GET',
+			data: {'ct_requirement_id': ct_requirement_id,'ct_customer_po':ct_customer_po},
+			dataType: 'json',
+			success: function(data) {
+				var po_dimension_box_val=data.po_dimension_box_val;
+				document.getElementById("ct_requirement_size").value=po_dimension_box_val;
+				var po_dimension_type_val = data.pod_dimension_type;
+				document.getElementById("pkqt_dimension_type").value = po_dimension_type_val;
+				var po_quantity = parseFloat(data.pod_quantity);
+				document.getElementById("ct_na_quantity").value = po_quantity;
+				var l = parseFloat(data.pod_length);
+				document.getElementById("pkqt_l").value = l;
+				var w = parseFloat(data.pod_width);
+				document.getElementById("pkqt_w").value = w;
+				var h = parseFloat(data.pod_height);
+				document.getElementById("pkqt_h").value = h;
+				var po_uom_val = data.pod_uom;
+				var na_uom_id_val = data.na_uom_id;
+				document.getElementById("pkqt_uom_calc").value = po_uom_val;
+				calculateDimensions(na_uom_id_val,l,w,h);
+
+				var jn1 = parseInt($('#ct_stock_type').val());
+            	var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
+
+				if (jn1 === 2) {
+					document.getElementById("ct_sqrt_req").value = total_sqft.toFixed(2);
+				}
+			}
+		});
+	}
+
+</script>
+<script>
 	function load_pk_requirement_type() {
 		var ct_assessment_num_id = $('#ct_assessment_num').val();
 		$.ajax({
@@ -717,7 +751,6 @@
 				if (data.stock_consumption_id && weightConsField) {
 					weightConsField.value = data.stock_consumption_id;
 				}
-
 				if (
 						data.stock_received_id &&
 						data.stock_consumption_id &&
@@ -749,7 +782,6 @@
 			$("#length_group, #width_group, #height_group").hide();
 		}
 	}
-
 </script>
 <script>
 	// Enable select2 for part code field
