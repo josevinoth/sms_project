@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from ..forms import VendorratemasteraddForm
-from ..models import VendorratemasterInfo
+from ..models import VendorratemasterInfo1
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
@@ -13,23 +13,23 @@ def vendorratemaster_add(request,vendorratemaster_id=0):
         if vendorratemaster_id == 0:
             form = VendorratemasteraddForm()
         else:
-            vendorratemaster = VendorratemasterInfo.objects.get(pk=vendorratemaster_id)
+            vendorratemaster = VendorratemasterInfo1.objects.get(pk=vendorratemaster_id)
             form = VendorratemasteraddForm(instance=vendorratemaster)
         return render(request, "asset_mgt_app/vendorratemaster_add.html", {'form': form,'first_name': first_name,'user_id':user_id,})
     else:
         form = VendorratemasteraddForm(request.POST)
         if form.is_valid():
             # Check for duplicates before saving
-            vr_fromlocation = form.cleaned_data['vr_fromlocation']
-            vr_tolocation = form.cleaned_data['vr_tolocation']
-            vr_vehicletype = form.cleaned_data['vr_vehicletype']
-            vr_vendor = form.cleaned_data['vr_vendor']
-            vr_vehiclecategory = form.cleaned_data['vr_vehiclecategory']
-            vr_touchpoint = form.cleaned_data['vr_touchpoint']
-            vr_touchpoint2 = form.cleaned_data['vr_touchpoint2']
-            vr_touchpoint3 = form.cleaned_data['vr_touchpoint3']
-            vr_touchpoint4 = form.cleaned_data['vr_touchpoint4']
-            if not VendorratemasterInfo.objects.filter(vr_fromlocation=vr_fromlocation,vr_tolocation=vr_tolocation,vr_vehicletype=vr_vehicletype,vr_vendor=vr_vendor,vr_vehiclecategory=vr_vehiclecategory,vr_touchpoint=vr_touchpoint,vr_touchpoint2=vr_touchpoint2,vr_touchpoint3=vr_touchpoint3,vr_touchpoint4=vr_touchpoint4).exclude(id=vendorratemaster_id).exists():
+            vr1_fromlocation = form.cleaned_data['vr1_fromlocation']
+            vr1_tolocation = form.cleaned_data['vr1_tolocation']
+            vr1_vehicletype = form.cleaned_data['vr1_vehicletype']
+            vr1_vendor = form.cleaned_data['vr1_vendor']
+            vr1_vehiclecategory = form.cleaned_data['vr1_vehiclecategory']
+            vr1_touchpoint = form.cleaned_data['vr1_touchpoint']
+            vr1_touchpoint2 = form.cleaned_data['vr1_touchpoint2']
+            vr1_touchpoint3 = form.cleaned_data['vr1_touchpoint3']
+            vr1_touchpoint4 = form.cleaned_data['vr1_touchpoint4']
+            if not VendorratemasterInfo1.objects.filter(vr1_fromlocation=vr1_fromlocation,vr1_tolocation=vr1_tolocation,vr1_vehicletype=vr1_vehicletype,vr1_vendor=vr1_vendor,vr1_vehiclecategory=vr1_vehiclecategory,vr1_touchpoint=vr1_touchpoint,vr1_touchpoint2=vr1_touchpoint2,vr1_touchpoint3=vr1_touchpoint3,vr1_touchpoint4=vr1_touchpoint4).exclude(id=vendorratemaster_id).exists():
                 if vendorratemaster_id == 0:
                     new_rate = form.save()
                     print("Vendor Route Rate master Form saved")
@@ -38,7 +38,7 @@ def vendorratemaster_add(request,vendorratemaster_id=0):
                     # return redirect(url)
                     return redirect('/SMS/vendorratemaster_list')
                 else:
-                    vendorratemaster = VendorratemasterInfo.objects.get(pk=vendorratemaster_id)
+                    vendorratemaster = VendorratemasterInfo1.objects.get(pk=vendorratemaster_id)
                     form = VendorratemasteraddForm(request.POST, instance=vendorratemaster)
                     form.save()
                     print("Transport Route Rate master Form saved")
@@ -57,12 +57,12 @@ def vendorratemaster_add(request,vendorratemaster_id=0):
 @login_required(login_url='login_page')
 def vendorratemaster_list(request):
     first_name = request.session.get('first_name')
-    context = {'vendorratemaster_list' : VendorratemasterInfo.objects.all(),'first_name': first_name}
+    context = {'vendorratemaster_list' : VendorratemasterInfo1.objects.all(),'first_name': first_name}
     return render(request,"asset_mgt_app/vendorratemaster_list.html",context)
 
 #Delete vendorratemaster
 @login_required(login_url='login_page')
 def vendorratemaster_delete(request,vendorratemaster_id):
-    vendorratemaster = VendorratemasterInfo.objects.get(pk=vendorratemaster_id)
+    vendorratemaster = VendorratemasterInfo1.objects.get(pk=vendorratemaster_id)
     vendorratemaster.delete()
     return redirect('/SMS/vendorratemaster_list')

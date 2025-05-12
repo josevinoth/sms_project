@@ -16,19 +16,19 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Vehicle Type</span>
 								</div>
-								{% render_field form.vr_vehicletype class="form-control" %}
+								{% render_field form.vr1_vehicletype class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Vehicle Category</span>
 								</div>
-								{% render_field form.vr_vehiclecategory class="form-control" %}
+								{% render_field form.vr1_vehiclecategory class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">From Location</span>
 								</div>
-								{% render_field form.vr_fromlocation id="vr_fromlocation"  class="form-control" %}
+								{% render_field form.vr1_fromlocation id="vr1_fromlocation"  class="form-control" %}
 							</div>
 							</div>
 							<div class="col-3">
@@ -36,19 +36,19 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Touch Point 1</span>
 								</div>
-								{% render_field form.vr_touchpoint id="vr_touchpoint" class="form-control" %}
+								{% render_field form.vr1_touchpoint id="vr1_touchpoint" class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Touch Point 2</span>
 								</div>
-								{% render_field form.vr_touchpoint2 id="vr_touchpoint2" class="form-control" %}
+								{% render_field form.vr1_touchpoint2 id="vr1_touchpoint2" class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Touch Point 3 </span>
 								</div>
-								{% render_field form.vr_touchpoint3 id="vr_touchpoint3" class="form-control" %}
+								{% render_field form.vr1_touchpoint3 id="vr1_touchpoint3" class="form-control" %}
 							</div>
 							</div>
 							<div class="col-3">
@@ -56,19 +56,19 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Touch Point 4</span>
 								</div>
-								{% render_field form.vr_touchpoint4 id="vr_touchpoint4" class="form-control" %}
+								{% render_field form.vr1_touchpoint4 id="vr1_touchpoint4" class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">To Location</span>
 								</div>
-								{% render_field form.vr_tolocation id="vr_tolocation" class="form-control" %}
+								{% render_field form.vr1_tolocation id="vr1_tolocation" class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Vendor</span>
 								</div>
-								{% render_field form.vr_vendor id="vr_vendor" class="form-control" %}
+								{% render_field form.vr1_vendor id="vr1_vendor" class="form-control" %}
 							</div>
 							</div>
 							<div class="col-3">
@@ -76,10 +76,10 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Rate</span>
 								</div>
-								{% render_field form.vr_rate class="form-control" %}
+								{% render_field form.vr1_rate class="form-control" %}
 							</div>
 							</div>
-							{% render_field form.vr_updated_by id="vr_updated_by" hidden="True" class="form-control" %}
+							{% render_field form.vr1_updated_by id="vr1_updated_by" hidden="True" class="form-control" %}
 						</div>
 						<div class="row">
 							<div class="col-1"></div>
@@ -105,7 +105,7 @@
 </form>
 <script>
 $(document).ready(function() {
-	document.getElementById("vr_updated_by").value ='{{user_id}}';
+	document.getElementById("vr1_updated_by").value ='{{user_id}}';
 	});
 </script>
 {% endblock content %}

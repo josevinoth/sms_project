@@ -42,15 +42,15 @@
     <tbody>
         {% for vendorratemasterinfo in vendorratemaster_list %}
             <tr>
-                <td> {{vendorratemasterinfo.vr_created_at}}</td>
-                <td> {{vendorratemasterinfo.vr_fvrmlocation}}</td>
-                <td> {{vendorratemasterinfo.vr_tolocation}}</td>
-                <td> {{vendorratemasterinfo.vr_vehicletype}}</td>
-                <td> {{vendorratemasterinfo.vr_vehiclecategory}}</td>
-                <td> {{vendorratemasterinfo.vr_vendor}}</td>
-                <td> {{vendorratemasterinfo.vr_rate}}</td>
-                <td> {{vendorratemasterinfo.vr_updated_at}}</td>
-                <td> {{vendorratemasterinfo.vr_updated_by}}</td>
+                <td> {{vendorratemasterinfo.vr1_created_at}}</td>
+                <td> {{vendorratemasterinfo.vr1_fromlocation}}</td>
+                <td> {{vendorratemasterinfo.vr1_tolocation}}</td>
+                <td> {{vendorratemasterinfo.vr1_vehicletype}}</td>
+                <td> {{vendorratemasterinfo.vr1_vehiclecategory}}</td>
+                <td> {{vendorratemasterinfo.vr1_vendor}}</td>
+                <td> {{vendorratemasterinfo.vr1_rate}}</td>
+                <td> {{vendorratemasterinfo.vr1_updated_at}}</td>
+                <td> {{vendorratemasterinfo.vr1_updated_by}}</td>
                 <td>
 
                     <a class="btn btn-primary" href="{% url 'vendorratemaster_update' vendorratemasterinfo.id %}" >
