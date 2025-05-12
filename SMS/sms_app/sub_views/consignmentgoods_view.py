@@ -56,9 +56,6 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             form = ConsignmentgoodsaddForm(request.POST, instance=consignmentgoods)
 
         form.fields['cg_description'].queryset = Stock_type.objects.all()
-        print("cg_description in POST:", request.POST.get('cg_description'))
-        print("Available Stock_type IDs:", list(Stock_type.objects.values_list('id', flat=True)))
-
         if form.is_valid():
             form.save()
             messages.success(request, 'Record  Updated Successfully')
@@ -126,9 +123,9 @@ def add_description(request):
     if request.method == 'POST':
         name = request.POST.get('cg_description')
         if name:
-            existing = Stock_type.objects.filter(name__iexact=name).first()
+            existing = Stock_type.objects.filter(stock_type__iexact=name).first()
             if existing:
-                return JsonResponse({'id': existing.id, 'stock_type': existing.name})
-            new_desc = Stock_type.objects.create(name=name)
-            return JsonResponse({'id': new_desc.id, 'stock_type': new_desc.name})
+                return JsonResponse({'id': existing.id, 'stock_type': existing.stock_type})
+            new_desc = Stock_type.objects.create(stock_type=name)
+            return JsonResponse({'id': new_desc.id, 'stock_type': new_desc.stock_type})
     return JsonResponse({'error': 'Invalid request'}, status=400)
