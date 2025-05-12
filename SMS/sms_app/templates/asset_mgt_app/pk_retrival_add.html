@@ -1,6 +1,14 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<div class="container-fluid row">
+    <div class="col-6 col-md-3 col-lg-1 ">
+        <a href="{% url 'pk_retrival_list' %}" class="btn btn-warning btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+<br>
 <form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
 	{% csrf_token %}
 	<div class="row">
