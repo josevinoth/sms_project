@@ -52,7 +52,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Job Type Quantity</span>
 									</div>
-									{% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control disable_a_href" %}
+									{% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control disable_a_href disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -104,9 +104,6 @@
 									</div>
 									{% render_field form.ct_width_req id="ct_width_req" onclick="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
-								<div class="col d-flex align-items-center justify-content-center">
-									<button id="search_wood" type="button" class="btn btn-primary btn-lg"><i class="fas fa-search"></i> Search Item</button>
-								</div>
 							</div>
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3" id="length_group">
@@ -127,7 +124,7 @@
 									</div>
 									{% render_field form.ct_size id="ct_size" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3"  >
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">UOM-Purchased Type</span>
 									</div>
@@ -145,13 +142,13 @@
 									</div>
 									{% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3" >
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">UOM-Consumption Type</span>
 									</div>
 									{% render_field form.ct_weight_Consumption id="ct_weight_Consumption" class="form-control disable_a_href" %}
 								</div>
-								<div class="input-group input-group-sm mb-3" >
+								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Convertion Value</span>
 									</div>

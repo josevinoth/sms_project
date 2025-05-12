@@ -68,7 +68,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Job Type Quantity</span>
 									</div>
-									{% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control" %}
+									{% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -399,7 +399,7 @@
                 		var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
 						var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
 
-					if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")|| desc.startsWith("Tar")) {
+					if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")){
 						$('#ct_quantity_req').addClass('disable_a_href');
 						document.getElementById("ct_sqrt_req").value = total_sqft.toFixed(2);
 						var totalCost = rate * total_sqft * ct_weight_sqft * ct_days * quantity_req;
@@ -409,7 +409,7 @@
 						document.getElementById("ct_totalbox_cost").value=totalboxCost.toFixed(2);
 					}
 
-					else if (desc.includes("Belt")) {
+					else if (desc.includes("Belt") ||desc.startsWith("Strech") ||desc.startsWith("DESICCANT") || desc.startsWith("Tar")) {
 						var ct_sqrt_req = parseFloat(document.getElementById("ct_sqrt_req").value) || 0;
 						var totalCost = rate  * ct_sqrt_req * quantity_req;
                     	document.getElementById("ct_total_cost").value=totalCost.toFixed(2);
@@ -440,6 +440,8 @@
 					var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
 					var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
 					var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+					var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+
 					var cft_req = length_req * width_req * quantity_req;
 					document.getElementById("ct_sqrt_req").value = cft_req.toFixed(2);
 
