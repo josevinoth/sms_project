@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_1.html" %}
 {% load widget_tweaks %}
 {% block content %}
 <div class="col-md-1">
@@ -69,8 +69,9 @@
 		<!--		<div class="col-1"></div>-->
 	</div>
 </form>
+{% block scripts %}
 <script>
-	$(document).ready(function() {
+	document.addEventListener("DOMContentLoaded", function() {
         var gatein_status_id = '{{gatein_status}}';
         var loadingbay_status_id='{{loadingbay_status}}';
         var damage_before_status_id='{{damage_before_status}}';
@@ -123,4 +124,5 @@
             }
       });
 </script>
+{% endblock %}
 {% endblock content %}
