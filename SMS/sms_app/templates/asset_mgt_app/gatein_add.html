@@ -1,9 +1,8 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
 <div class="col-5 col-md-2 col-lg-1">
-
-	<a href="{% url 'search' %}" class="btn btn-primary btn-block">
+	<a href="{% url 'search' %}" class="btn btn-primary btn-block btn-lg">
 		<i class="fas fa-arrow-left"></i> Back
 	</a>
 </div>
@@ -224,7 +223,7 @@
 									{% endfor %}
 								</div>
 							</div>
-							<div class="col-1 p-2"></div>
+							<div class="col-1 p-3"></div>
 						</div>
 						<button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Save</button>
 					</div>
