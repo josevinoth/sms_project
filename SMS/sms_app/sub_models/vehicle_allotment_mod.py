@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import EnquirynoteInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo
+from ..models import EnquirynoteInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo,Vendor_info
 
 class Vehicle_allotmentInfo(models.Model):
     va_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE)
@@ -18,7 +18,10 @@ class Vehicle_allotmentInfo(models.Model):
     va_created_at = models.DateTimeField(null=True, auto_now_add=True)
     va_updated_by = models.ForeignKey(MyUser, related_name='va_updated_by', db_column='va_updated_by',on_delete=models.CASCADE, null=True)
     va_remarks=models.TextField(max_length=300,blank=True, null=True)
-    va_vendor_name=models.CharField(max_length=100,blank=True, null=True)
+    va_vendor = models.ForeignKey(Vendor_info,on_delete=models.CASCADE, default='',blank=True, null=True)
+    va_buy = models.FloatField(max_length=100,null=True,blank=True)
+    va_sale = models.FloatField(max_length=100,null=True,blank=True)
+
 
     def __str__(self):
         return str(self.va_vehiclenumber) if self.va_vehiclenumber else "Unknown vehicle"

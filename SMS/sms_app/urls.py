@@ -658,6 +658,8 @@ urlpatterns = [
     path('vendorratemaster_insert', views.vendorratemaster_add, name='vendorratemaster_insert'),
     path('vendorratemaster_update/<int:vendorratemaster_id>/', views.vendorratemaster_add, name='vendorratemaster_update'),
     path('vendorratemaster_delete/<int:vendorratemaster_id>/', views.vendorratemaster_delete, name='vendorratemaster_delete'),
+    path('get_vendor_buy_rate/', views.get_vendor_buy_rate, name='get_vendor_buy_rate'),
+    path('get_vendor_sale_rate/', views.get_vendor_sale_rate, name='get_vendor_sale_rate'),
 
 ]
 
