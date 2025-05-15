@@ -2,81 +2,78 @@
 {% load widget_tweaks %}
 {% block content %}
 <div class="col-5 col-md-2 p-2 col-lg-1">
-	<a href="{% url 'search' %}" class="btn btn-primary btn-block">
+	<a href="{% url 'search' %}" class="btn btn-primary">
 		<i class="fas fa-arrow-left"></i> Back
 	</a>
 </div>
-<div class="row">
-	<div class="col-2"></div>
-	<div class="col-12 col-md-10 col-lg-12 p-2">
-		<div class="gap-2 d-md-flex justify-content-md-center flex-wrap">
-			{% if gatein_list %}
-			{% for gateininfo in gatein_list %}
-			<a class="btn  border border-dark mb-2 disable_a_href" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
-			{% endfor %}
-			{% else %}
-			<a class="btn  border border-dark mb-2 disable_a_href" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
-			{% endif %}
+<div class="col-12 col-md-10 col-lg-12 p-2">
+	<div class="gap-2 d-md-flex justify-content-md-center flex-wrap">
+		{% if gatein_list %}
+		{% for gateininfo in gatein_list %}
+		<a class="btn  border border-dark mb-2 disable_a_href" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn  border border-dark mb-2 disable_a_href" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
+		{% endif %}
 
-			{% if loadingbay_list %}
-			{% for loadingbayinfo in loadingbay_list %}
-			<a class="btn  border border-dark mb-2 disable_a_href" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
-			{% endfor %}
-			{% else %}
-			<a class="btn  border border-dark mb-2 disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
-			{% endif %}
+		{% if loadingbay_list %}
+		{% for loadingbayinfo in loadingbay_list %}
+		<a class="btn  border border-dark mb-2 disable_a_href" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn  border border-dark mb-2 disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
+		{% endif %}
 
-			<a class="btn  border focus border-dark mb-2 disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
+		<a class="btn  border focus border-dark mb-2 disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
 
-			{% if damagereport_list %}
-			{% for damagecheckinfo in damagereport_list %}
-			<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check</a>
-			{% endfor %}
-			{% else %}
-			<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check</a>
-			{% endif %}
+		{% if damagereport_list %}
+		{% for damagecheckinfo in damagereport_list %}
+		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check</a>
+		{% endif %}
 
-			<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
-			<a class="btn  border border-dark mb-2 disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
+		<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
+		<a class="btn  border border-dark mb-2 disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
+	</div>
+</div>
+
+<hr>
+<div class="container-fluid">
+	<div class="row justify-content-center mb-3">
+		<div class="col-6 col-md-auto mb-2">
+			<button type="button" class="btn btn-info w-100">
+				Goods Qty (Invoice)
+				<h4><span class="badge bg-light text-dark ms-2">{{gatein_no_of_pkg_val}}</span></h4>
+			</button>
+		</div>
+		<div class="col-6 col-md-auto mb-2">
+			<button type="button" class="btn btn-info w-100">
+				Goods Qty (Check-In)
+				<h4><span class="badge bg-light text-dark ms-2">{{goods_checkin_count}}</span></h4>
+			</button>
+		</div>
+		<div class="col-6 col-md-auto mb-2">
+			<button type="button" class="btn btn-info w-100">
+				Goods Weight (Invoice)
+				<h4><span class="badge bg-light text-dark ms-2">{{gatein_weight_val}}</span></h4>
+			</button>
+		</div>
+		<div class="col-6 col-md-auto mb-2">
+			<button type="button" class="btn btn-info w-100">
+				Goods Weight (Check-In)
+				<h4><span class="badge bg-light text-dark ms-2">{{goods_checkin_weight}}</span></h4>
+			</button>
 		</div>
 	</div>
-	<div class="col-2"></div>
 </div>
-<hr>
-<div class="row justify-content-center mb-3">
-	<div class="col-6 col-md-auto mb-2">
-		<button type="button" class="btn btn-info w-100">
-			Goods Qty (Invoice)
-			<h4><span class="badge bg-light text-dark ms-2">{{gatein_no_of_pkg_val}}</span></h4>
-		</button>
-	</div>
-	<div class="col-6 col-md-auto mb-2">
-		<button type="button" class="btn btn-info w-100">
-			Goods Qty (Check-In)
-			<h4><span class="badge bg-light text-dark ms-2">{{goods_checkin_count}}</span></h4>
-		</button>
-	</div>
-	<div class="col-6 col-md-auto mb-2">
-		<button type="button" class="btn btn-info w-100">
-			Goods Weight (Invoice)
-			<h4><span class="badge bg-light text-dark ms-2">{{gatein_weight_val}}</span></h4>
-		</button>
-	</div>
-	<div class="col-6 col-md-auto mb-2">
-		<button type="button" class="btn btn-info w-100">
-			Goods Weight (Check-In)
-			<h4><span class="badge bg-light text-dark ms-2">{{goods_checkin_weight}}</span></h4>
-		</button>
-	</div>
-</div>
-
 <div class="row">
 	<div class="col">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 				<div class="card-header text-center">
 					<div class="row align-items-center text-center">
-
 						<div class="col-12 col-md-3 mb-2 mb-md-0">
 							<button type="button" onclick="email_message_fn()" class="btn btn-warning w-100" data-toggle="modal" data-target=".bd-example-modal-lg">
 								<i class="fas fa-envelope-square"></i> Email To Customer
@@ -89,8 +86,8 @@
 										<div class="modal-header bg-info">
 											<h5 class="modal-title" id="sendEmailModalLabel">Send Email</h5>											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
+												<span aria-hidden="true">&times;</span>
+											</button>
 										</div>
 										<div class="modal-body text-dark">
 											<!-- Email Form -->
@@ -349,36 +346,36 @@
 							</div>
 						</div>
 						<hr>
-						<div class="row g-3">
-							<div class="col-auto">
+						<div class="row g-2">
+							<div class="col-6 col-md-auto">
 								<label for="wh_goods_package_type" class="form-label bg-info text-white px-2 rounded d-block w-100 text-center">Package Type</label>
 								{% render_field goods_form.wh_goods_package_type id="wh_goods_package_type" onchange="package_type_chng()" class="form-control form-control-sm" %}
 							</div>
-							<div class="col-auto">
+							<div class="col-6 col-md-auto">
 								<label for="uom" class="form-label bg-info text-white px-2 rounded d-block w-100 text-center">Unit Of Measure</label>
 								{% render_field goods_form.wh_uom id="uom" class="form-control form-control-sm" onchange="chargeable_weight_fn()" %}
 							</div>
-							<div class="col-auto">
+							<div class="col-6 col-md-auto">
 								<label for="no_of_piece" class="form-label bg-info text-white px-2 rounded d-block w-100 text-center">Number of Pieces</label>
 								{% render_field goods_form.wh_goods_pieces id="no_of_piece" class="form-control form-control-sm" onchange="chargeable_weight_fn()" %}
 							</div>
-							<div class="col-auto">
+							<div class="col-6 col-md-auto">
 								<label for="length" class="form-label bg-info text-white px-2 rounded d-block w-100 text-center">Length</label>
 								{% render_field goods_form.wh_goods_length id="length" class="form-control form-control-sm" onchange="chargeable_weight_fn()" %}
 							</div>
-							<div class="col-auto">
+							<div class="col-6 col-md-auto">
 								<label for="width" class="form-label bg-info text-white px-2 rounded d-block w-100 text-center">Width</label>
 								{% render_field goods_form.wh_goods_width id="width" class="form-control form-control-sm" onchange="chargeable_weight_fn()" %}
 							</div>
-							<div class="col-auto">
+							<div class="col-6 col-md-auto">
 								<label for="height" class="form-label bg-info text-white px-2 rounded d-block w-100 text-center">Height</label>
 								{% render_field goods_form.wh_goods_height id="height" class="form-control form-control-sm" onchange="chargeable_weight_fn()" %}
 							</div>
-							<div class="col-auto">
+							<div class="col-6 col-md-auto">
 								<label for="weight" class="form-label bg-info text-white px-2 rounded d-block w-100 text-center">Weight (Physical)</label>
 								{% render_field goods_form.wh_goods_weight id="weight" class="form-control form-control-sm" %}
 							</div>
-							<div class="col-auto">
+							<div class="col-6 col-md-auto">
 								<label for="wh_goods_status" class="form-label bg-info text-white px-2 rounded d-block w-100 text-center">Job Status</label>
 								{% render_field goods_form.wh_goods_status id="wh_goods_status" class="form-control" %}
 							</div>

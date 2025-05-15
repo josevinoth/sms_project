@@ -240,17 +240,25 @@ def sales_search(request):
     first_name = request.session.get('first_name')
     sales_number = request.GET.get('sales_number')
     user_id = request.session.get('ses_userID')
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id = RoleInfo.objects.get(role_name=role).id
+    sales_data_query = SalesInfo.objects.all()
+    if from_date:
+        sales_data_query = sales_data_query.filter(s_updated_at__date__gte=from_date)
+    if to_date:
+        sales_data_query = sales_data_query.filter(s_updated_at__date__lte=to_date)
+
     if not sales_number:
         sales_number = ""
 
     if role_id == 3:
-        sales_list = SalesInfo.objects.filter((Q(s_sale_number__icontains=sales_number)) | (Q(s_sale_number__isnull=True))).order_by('-s_created_at')
+        sales_list = sales_data_query.filter((Q(s_sale_number__icontains=sales_number)) | (Q(s_sale_number__isnull=True))).order_by('-s_created_at')
     elif role_id == 1:
-        sales_list = SalesInfo.objects.filter((Q(s_sale_number__icontains=sales_number)) | (Q(s_sale_number__isnull=True))).order_by('-s_created_at')
+        sales_list = sales_data_query.filter((Q(s_sale_number__icontains=sales_number)) | (Q(s_sale_number__isnull=True))).order_by('-s_created_at')
     else:
-        sales_list = SalesInfo.objects.filter((Q(s_sale_number__icontains =sales_number,s_created_by=user_id))|(Q(s_sale_number__isnull=True,s_created_by=user_id))).order_by('-s_created_at')
+        sales_list = sales_data_query.filter((Q(s_sale_number__icontains =sales_number,s_created_by=user_id))|(Q(s_sale_number__isnull=True,s_created_by=user_id))).order_by('-s_created_at')
 
     page_number = request.GET.get('page')
     paginator = Paginator(sales_list, 50)
@@ -259,6 +267,8 @@ def sales_search(request):
         # 'sales_list': sales_list,
         'first_name': first_name,
         'page_obj': page_obj,
+        'from_date': from_date,
+        'to_date': to_date,
         }
     return render(request, "asset_mgt_app/sales_list.html", context)
 
@@ -267,18 +277,24 @@ def sales_comments_search(request):
     first_name = request.session.get('first_name')
     sales_number = request.GET.get('sales_number')
     user_id = request.session.get('ses_userID')
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id = RoleInfo.objects.get(role_name=role).id
-
+    sales_data_query = Sales_Comments_Info.objects.all()
+    if from_date:
+        sales_data_query = sales_data_query.filter(sc_updated_at__date__gte=from_date)
+    if to_date:
+        sales_data_query = sales_data_query.filter(sc_updated_at__date__lte=to_date)
     if not sales_number:
         sales_number = ""
 
     if role_id == 3:
-        sales_comments_list = (Sales_Comments_Info.objects.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('-sc_created_at')
+        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('-sc_created_at')
     elif role_id == 1:
-        sales_comments_list = (Sales_Comments_Info.objects.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('-sc_created_at')
+        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('-sc_created_at')
     else:
-        sales_comments_list = (Sales_Comments_Info.objects.filter(Q(sc_sales_number__s_sale_number__icontains =sales_number,sc_updated_by=user_id)|Q(sc_sales_number__s_sale_number__isnull=True,sc_updated_by=user_id))).order_by('-sc_created_at')
+        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains =sales_number,sc_updated_by=user_id)|Q(sc_sales_number__s_sale_number__isnull=True,sc_updated_by=user_id))).order_by('-sc_created_at')
 
     page_number = request.GET.get('page')
     paginator = Paginator(sales_comments_list, 50)
@@ -287,6 +303,8 @@ def sales_comments_search(request):
         # 'sales_list': sales_list,
         'first_name': first_name,
         'page_obj': page_obj,
+        'from_date': from_date,
+        'to_date': to_date,
         }
     return render(request, "asset_mgt_app/sales_comments_list.html", context)
 

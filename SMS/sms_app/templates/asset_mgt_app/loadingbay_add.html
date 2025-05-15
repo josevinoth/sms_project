@@ -2,12 +2,10 @@
 {% load widget_tweaks %}
 {% block content %}
 <div class="col-5 col-md-2 col-lg-1" >
-	<a href="{% url 'search' %}" class="btn btn-primary btn-block">
+	<a href="{% url 'search' %}" class="btn btn-primary">
 		<i class="fas fa-arrow-left"></i> Back
 	</a>
 </div>
-<div class="row">
-	<div class="col-2"></div>
 	<div class="col-12 col-md-10 col-lg-12 p-2">
 		<div class="gap-2 d-md-flex justify-content-md-center flex-wrap">
 			{% if gatein_list %}
@@ -40,8 +38,7 @@
 			<a class="btn  border border-dark mb-2 disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
 		</div>
 	</div>
-	<div class="col-2"></div>
-</div>
+
 <hr>
 <form method="POST" action="" enctype="multipart/form-data" id="loadingbay_add" data-currency_value-url="{% url 'load_currency_value' %}">
 	{% csrf_token %}

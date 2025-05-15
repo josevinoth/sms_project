@@ -1,45 +1,45 @@
-{% extends "asset_mgt_app/base_mobile.html" %}
+{% extends "asset_mgt_app/base_1.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<div class="container-fluid py-3">
-    <div class="d-flex align-items-center justify-content-center flex-nowrap gap-2">
 
-        <div class="bg-info text-white rounded px-3 py-2 flex-shrink-0">
-    <h5 class="fs-5 fs-md-4 mb-0">
-        <span class="text-nowrap">Add/Update Gate-In</span>
-    </h5>
-</div>
-
-
-        <button id="email_alert" type="button" onclick="email_message_fn()"
-            class="btn btn-warning d-flex align-items-center flex-shrink-0"
-            data-bs-toggle="modal" data-bs-target="#sendEmailModal">
-            <i class="fas fa-envelope-square me-2 fs-6 fs-md-4 text-nowrap"></i>
-            Email Alert
-            <span class="badge bg-danger ms-2">{{gatein_pre_email_count}}</span>
-        </button>
-        <div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-info">
-                        <h5 class="modal-title" id="sendEmailModalLabel">Email Alert</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body text-dark">
-                        {% include "asset_mgt_app/gate_in_send_email.html" %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-</div>
 
 
 <div class="row">
 	<div class="col">
 		<div class="container-fluid">
-			<div class="card text-white bg-info mb-3">
+			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+				<div class="col-12 card-header text-center">
+    <div class="row align-items-center">
+        <div class="col-12 col-md-10 text-center">
+            <h3>Add/Update Gate-In</h3>
+        </div>
+        <div class="col-12 col-md-2 text-md-right text-center">
+            <button id="email_alert" type="button" onclick="email_message_fn()"
+                    class="btn btn-warning d-inline-flex align-items-center"
+                    data-toggle="modal" data-target="#sendEmailModal">
+                <i class="fas fa-envelope-square mr-2"></i>
+                Email Alert
+                <span class="badge badge-danger ml-2">{{ gatein_pre_email_count }}</span>
+            </button>
+        </div>
+    </div>
+</div>
+<!-- Email Modal (outside card-header) -->
+				<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-lg">
+						<div class="modal-content">
+							<div class="modal-header bg-info">
+								<h5 class="modal-title" id="sendEmailModalLabel">Email Alert</h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body text-dark">
+								{% include "asset_mgt_app/gate_in_send_email.html" %}
+							</div>
+						</div>
+					</div>
+				</div>
 
 
 				<div class="card-body bg-light" >
@@ -106,6 +106,7 @@
 	</div>
 </div>
 
+
 <div class="container-fluid row">
 	<div class="col-5 col-md-6 col-lg-2">
 		<a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-success btn-block ">
@@ -116,77 +117,64 @@
 <hr>
 <div class="container-fluid">
 	<div class="table-responsive">
-	<table id="pregateintruck_list" class="table align-middle table-bordered">
-		<thead class="table-dark">
-		<tr class="d-none d-md-table-row">
-			<th>Created On</th>
-			<th>Pre-Gate-In #</th>
-			<th>Transporter</th>
-			<th>Truck Number</th>
-			<th>Truck Type</th>
-			<th>Driver Name</th>
-			<th>Driver Number</th>
-			<th>Driver DL Number</th>
-			<th>OTL Type</th>
-			<th>OTL Number</th>
-			<th>Updated On</th>
-			<th>Updated By</th>
-			<th>Edit</th>
-			<th>Delete</th>
-		</thead>
-		<tbody>
-		{% for pregateintruckinfo in pregateintruck_list %}
-		<tr class="d-block d-md-table-row mb-3 mb-md-0 border rounded shadow-sm p-2">
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Created On :</span>{{pregateintruckinfo.pregatein_created_at}}
-			</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Pre-Gate-In # :</span>{{pregateintruckinfo.pregatein_number}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Transporter :</span>{{pregateintruckinfo.pregatein_transporter}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Truck Number :</span>{{pregateintruckinfo.pregatein_truck_number}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Truck Type :</span>{{pregateintruckinfo.pregatein_truck_type}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Driver Name :</span>{{pregateintruckinfo.pregatein_driver}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Driver Number :</span>{{pregateintruckinfo.pregatein_contact_number}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Driver DL Number :</span>{{pregateintruckinfo.pregatein_dl_number}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">OTL Type :</span>{{pregateintruckinfo.pregatein_otl_type}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">OTL Number :</span>{{pregateintruckinfo.pregatein_otl}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Updated On :</span>{{pregateintruckinfo.pregatein_updated_at}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Updated By :</span>{{pregateintruckinfo.pregatein_updated_by}}</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Edit :</span>
-				<a class="btn btn-primary" href="{% url 'pregateintruck_update' pregateintruckinfo.id %}" >
-					<i class="far fa-edit"></i>
-				</a>
-			</td>
-			<td class="d-flex d-md-table-cell justify-content-between">
-				<span class="fw-bold d-md-none me-2">Delete :</span>
-				<form action="{% url 'pregateintruck_delete' pregateintruckinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-					{% csrf_token %}
-					<button type="submit" class="btn btn-danger">
-						<i class="fas fa-trash-alt"></i>
-					</button>
-				</form>
-			</td>
-		</tr>
-		{% endfor %}
-		</tbody>
-	</table>
+		<table id="pregateintruck_list" class="table align-middle table-bordered nowrap">
+			<thead class="table-dark">
+			<tr>
+				<th>Created On</th>
+				<th>Pre-Gate-In #</th>
+				<th>Transporter</th>
+				<th>Truck Number</th>
+				<th>Truck Type</th>
+				<th>Driver Name</th>
+				<th>Driver Number</th>
+				<th>Driver DL Number</th>
+				<th>OTL Type</th>
+				<th>OTL Number</th>
+				<th>Updated On</th>
+				<th>Updated By</th>
+				<th>Edit</th>
+				<th>Delete</th>
+			</thead>
+			<tbody>
+			{% for pregateintruckinfo in pregateintruck_list %}
+			<tr>
+				<td>{{pregateintruckinfo.pregatein_created_at}}</td>
+				<td>{{pregateintruckinfo.pregatein_number}}</td>
+				<td>{{pregateintruckinfo.pregatein_transporter}}</td>
+				<td>{{pregateintruckinfo.pregatein_truck_number}}</td>
+				<td>{{pregateintruckinfo.pregatein_truck_type}}</td>
+				<td>{{pregateintruckinfo.pregatein_driver}}</td>
+				<td>{{pregateintruckinfo.pregatein_contact_number}}</td>
+				<td>{{pregateintruckinfo.pregatein_dl_number}}</td>
+				<td>{{pregateintruckinfo.pregatein_otl_type}}</td>
+				<td>{{pregateintruckinfo.pregatein_otl}}</td>
+				<td>{{pregateintruckinfo.pregatein_updated_at}}</td>
+				<td>{{pregateintruckinfo.pregatein_updated_by}}</td>
+				<td>
+					<a class="btn btn-primary" href="{% url 'pregateintruck_update' pregateintruckinfo.id %}" >
+						<i class="far fa-edit"></i>
+					</a>
+				</td>
+				<td>
+					<form action="{% url 'pregateintruck_delete' pregateintruckinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+						{% csrf_token %}
+						<button type="submit" class="btn btn-danger">
+							<i class="fas fa-trash-alt"></i>
+						</button>
+					</form>
+				</td>
+			</tr>
+			{% endfor %}
+			</tbody>
+		</table>
 	</div>
 </div>
+
 <script>
-	$(document).ready(function() {
+	document.addEventListener("DOMContentLoaded", function() {
     $('#gatein_list').DataTable({
         order: [1, 'desc' ],
+        responsive: true,
         dom: 'lBfrtip',
         buttons: [
             'copy', 'csv', 'excel','print'
