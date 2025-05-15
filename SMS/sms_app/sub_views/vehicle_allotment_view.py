@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
 from ..forms import VehicleallotmentForm
-from ..models import Enquirynotevehicle,TripdetailInfo,OwnershipInfo,VehiclemasterInfo,EnquirynoteInfo,Vehicle_allotmentInfo
+from ..models import Enquirynotevehicle,TripdetailInfo,OwnershipInfo,VehiclemasterInfo,EnquirynoteInfo,Vehicle_allotmentInfo,VendorratemasterInfo1, RtratemasterInfo
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 
@@ -220,7 +220,6 @@ def vehicle_type_counts(request):
     print('count_dict :', count_dict)
     return JsonResponse({'vehicle_counts': count_dict})
 
-from django.db.models import Sum
 
 @login_required(login_url='login_page')
 def vehicle_requested(request):
@@ -275,3 +274,62 @@ def get_remaining_quantity(request, enquiry_id, vehicle_type_id):
 
     except Exception as e:
         return JsonResponse({'remaining': 0, 'error': str(e)})
+
+@login_required(login_url='login_page')
+def get_vendor_buy_rate(request):
+    vehicle_id = request.GET.get('vehicle_id')  # This is actually a vehicle type ID, not the Vehicle_allotmentInfo ID
+    vendor_id = request.GET.get('vendor_id')
+    enquiry_id = request.session.get('ses_enqiury_id')
+
+    print("vehicle_id:", vehicle_id)
+    print("vendor_id:", vendor_id)
+    print("enquiry_id:", enquiry_id)
+
+
+    enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)
+
+
+    # Filter for the matching vendor rate
+    rate = VendorratemasterInfo1.objects.filter(
+        vr1_vendor_id=vendor_id,
+        vr1_fromlocation=enquiry.en_fromlocaion,
+        vr1_tolocation=enquiry.en_tolocation,
+        vr1_vehicletype=vehicle_id  # This is likely a ForeignKey ID
+    ).first()
+
+    buy_rate = str(rate.vr1_rate) if rate else "0"
+    print("Buy Rate:", buy_rate)
+
+    data = {
+        'buy_rate': buy_rate,
+    }
+    return JsonResponse(data)
+@login_required(login_url='login_page')
+def get_vendor_sale_rate(request):
+    vehicle_id = request.GET.get('vehicle_id')  # This is actually a vehicle type ID, not the Vehicle_allotmentInfo ID
+    vendor_id = request.GET.get('vendor_id')
+    enquiry_id = request.session.get('ses_enqiury_id')
+
+    print("vehicle_id:", vehicle_id)
+    print("vendor_id:", vendor_id)
+    print("enquiry_id:", enquiry_id)
+
+
+    enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)
+
+
+    # Filter for the matching vendor rate
+    rate = RtratemasterInfo.objects.filter(
+        ro_customer=enquiry.en_customername,
+        ro_fromlocation=enquiry.en_fromlocaion,
+        ro_tolocation=enquiry.en_tolocation,
+        ro_vehicletype=vehicle_id  # This is likely a ForeignKey ID
+    ).first()
+
+    sale_rate = str(rate.ro_rate) if rate else "0"
+    print("sale_rate Rate:", sale_rate)
+
+    data = {
+        'sale_rate': sale_rate,
+    }
+    return JsonResponse(data)

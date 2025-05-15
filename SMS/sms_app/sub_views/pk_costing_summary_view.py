@@ -42,10 +42,10 @@ def costingsummary_add(request,costingsummary_id=0):
             request.session['ses_costing_summary_id'] = costingsummary_id
             form = PkcostingsummaryForm(instance=costingsummary)
             costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_customer_po=customer_po_id)
-            excess_stock = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_num,
-                                                        ct_customer_po=customer_po_id).values_list('ct_excess_status',
+            Invoice = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_num,
+                                                        ct_customer_po=customer_po_id).values_list('ct_stock_status',
                                                                                                    flat=True)
-            if all(status in [4, 5] for status in excess_stock) and len(excess_stock) > 0:
+            if all(status in [4 ] for status in Invoice) and len(Invoice) > 0:
                 output = 1
             else:
                 output = 0
