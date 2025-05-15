@@ -1,4 +1,15 @@
 {% block content %}
+<style>
+.dataTables_length label {
+    color: #000080;
+    font-weight: bold;
+}
+.dataTables_filter label {
+    color: #000080;
+    font-weight: bold;
+}
+}
+</style>
 <div class="container-fluid row">
     <!--    <div class="col-md-1">-->
     <!--      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
@@ -13,7 +24,8 @@
 </div>
 <hr>
 <div class="container-fluid">
-    <table  id="goods_list" class="table table-striped table-bordered">
+    <div class="table-responsive">
+    <table  id="goods_list" class="table table-striped table-bordered nowrap">
         <thead class="thead-dark">
         <tr>
             <th>WH Job Number</th>
@@ -69,14 +81,17 @@
         {% endfor %}
         </tbody>
     </table>
+        </div>
 </div>
+{% block scripts %}
 <script>
-    $(document).ready(function() {
+    document.addEventListener("DOMContentLoaded", function() {
     $('#goods_list').DataTable(
         {
         scrollY: "600px",
         scrollX: true,
         scrollCollapse: true,
+        responsive: true,
         dom: 'lBfrtip',
         order: [0, 'desc' ],
         buttons: [
@@ -85,5 +100,6 @@
     } );
 } );
 </script>
+{% endblock %}
 {% endblock content %}
 

@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_1.html" %}
 
 {% block content %}
 <div class="container-fluid" style="padding:15px;">
@@ -23,8 +23,8 @@
     </div>
 </div>
 <hr>
-<div class="container-fluid">
-    <table id="customer_list" class="table table-striped table-bordered">
+<div class="table-responsive">
+    <table id="customer_list" class="table table-striped table-bordered nowrap">
         <thead class="thead-dark">
         <tr>
             <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
@@ -90,9 +90,10 @@
     </table>
 </div>
 <script>
-    $(document).ready(function() {
+    document.addEventListener("DOMContentLoaded", function() {
         var table = $('#customer_list').DataTable({
             order: [[0, 'desc']],
+            responsive: true,
             scrollX: false,
             dom: 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'print'],

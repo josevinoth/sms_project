@@ -1,9 +1,9 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_1.html" %}
 {% load widget_tweaks %}
 {% block content %}
-
 <div class="col-5 col-md-2 col-lg-1">
-	<a href="{% url 'search' %}" class="btn btn-primary btn-block btn-lg">
+
+	<a href="{% url 'search' %}" class="btn btn-primary btn-block">
 		<i class="fas fa-arrow-left"></i> Back
 	</a>
 </div>
@@ -76,7 +76,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer</span>
 									</div>
-									{% render_field gatein_form.gatein_customer id="gatein_customer" class="form-control" %}
+									{% render_field gatein_form.gatein_customer id="gatein_customer" class="form-control form-control-sm" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -233,7 +233,7 @@
 		</div>
 	</div>
 </form>
-
+{% block scripts %}
 <script>
 	$(document).ready(function() {
         var gatein_status_id = '{{gatein_status}}';
@@ -352,6 +352,8 @@
 
     });
 </script>
+
+
 <script>
 	$("#gatein_pre_id").change(function () {
       var pre_gatein_val = $(this).find(":selected").text();
@@ -431,12 +433,12 @@
     });
 </script>
 <script>
-	$(document).ready(function() {
+    $(window).on('load', function () {
         $('#gatein_pre_id').selectpicker({
             liveSearch: true,
             noneSelectedText: 'Search Pre-GateIn'
         });
     });
 </script>
-
+{% endblock %}
 {% endblock content %}

@@ -20,3 +20,4 @@ Requirements/*
 
 # Do not ignore __init__.py files
 # (No rule here to ignore __init__.py)
+.idea/vcs.xml
