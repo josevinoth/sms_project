@@ -53,15 +53,23 @@
                 <img src="/media/Company_Logo.png" alt="Logo" class="me-2 mobile-logo" style="width:40px;height:50px;">
                 <div class="text-center">
                     <h1 class="mb-0 d-none d-md-block" style="font-size:2rem; font-weight:bold;">BVM Management System</h1>
-                    <h6 class="mb-0 d-block d-md-none mobile-small-text fw-bold">BVM Management System</h6>
+                    <h5 class="mb-0 d-block d-md-none mobile-small-text fw-bold">BVM Management System</h5>
                 </div>
             </div>
 
             <div class="col-2 text-center">
-                <div class="d-none d-md-block">
-                    <small>Hi, {{ first_name }}</small><br>
-                    <small class="text-danger">{{ role }}</small>
-                </div>
+                <!-- Desktop only -->
+<div class="d-none d-md-block text-center">
+    Hi, {{ first_name }}<br>
+    <small class="text-danger">{{ role }}</small>
+
+</div>
+
+<!-- Mobile only -->
+<div class="d-block d-md-none text-center">
+    <small>{{ first_name }}</small><br>
+</div>
+
                 <a href="{% url 'logout_page' %}" class="btn btn-dark p-1 mt-1 mobile-small-btn">
                     <i class="fas fa-sign-out-alt fa-lg mobile-small-icon"></i>
                 </a>
