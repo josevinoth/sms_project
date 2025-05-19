@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_1.html" %}
 {% load widget_tweaks %}
 {% block content %}
 <form method="POST" enctype="multipart/form-data">
@@ -8,11 +8,13 @@
             <div class="container-fluid">
                 <div class="card text-white bg-info mb-3" style="max-width: 100%;">
                     <div class="card-header text-center">
+                        <div class="col-12 col-md-10 text-center">
                         <h3>Add/Update High Value Check</h3>
+                            </div>
                     </div>
                     <div class="card-body bg-light">
                         <div class="row">
-                            <div class="col-3">
+                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Location</span>
@@ -44,7 +46,7 @@
                                     {% render_field form.hc_shipper id="hc_shipper" class="form-control" %}
                                 </div>
                             </div>
-                            <div class="col-3">
+                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Customer Reference Number</span>
@@ -76,7 +78,7 @@
                                     {% render_field form.hc_no_of_pcs id="hc_no_of_pcs" class="form-control" %}
                                 </div>
                             </div>
-                            <div class="col-3">
+                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend" style="width:35%;">
                                         <span class="input-group-text" style="width:100%;">Condition Of Cargo Received</span>
@@ -108,7 +110,7 @@
                                     {% render_field form.hc_truck_validation id="hc_truck_validation" class="form-control" %}
                                 </div>
                             </div>
-                            <div class="col-3">
+                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend" style="width:40%;">
                                         <span class="input-group-text" style="width:100%;">Shipment Information Received</span>
@@ -135,7 +137,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="input-group input-group-sm mb-3">
+                        <div class="input-group input-group-sm mb-3 p-2">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Remarks</span>
                             </div>

@@ -107,72 +107,22 @@
 
 <div class="container-fluid row">
 	<div class="col-5 col-md-6 col-lg-2">
-		<a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-success btn-block ">
+		<a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-success">
 			<i class="fas fa-plus"></i> Add
 		</a>
 	</div>
 </div>
 <hr>
-<div class="container-fluid">
-	<div class="table-responsive">
-		<table id="pregateintruck_list" class="table align-middle table-bordered nowrap">
-			<thead class="table-dark">
-			<tr>
-				<th>Created On</th>
-				<th>Pre-Gate-In #</th>
-				<th>Transporter</th>
-				<th>Truck Number</th>
-				<th>Truck Type</th>
-				<th>Driver Name</th>
-				<th>Driver Number</th>
-				<th>Driver DL Number</th>
-				<th>OTL Type</th>
-				<th>OTL Number</th>
-				<th>Updated On</th>
-				<th>Updated By</th>
-				<th>Edit</th>
-				<th>Delete</th>
-			</thead>
-			<tbody>
-			{% for pregateintruckinfo in pregateintruck_list %}
-			<tr>
-				<td>{{pregateintruckinfo.pregatein_created_at}}</td>
-				<td>{{pregateintruckinfo.pregatein_number}}</td>
-				<td>{{pregateintruckinfo.pregatein_transporter}}</td>
-				<td>{{pregateintruckinfo.pregatein_truck_number}}</td>
-				<td>{{pregateintruckinfo.pregatein_truck_type}}</td>
-				<td>{{pregateintruckinfo.pregatein_driver}}</td>
-				<td>{{pregateintruckinfo.pregatein_contact_number}}</td>
-				<td>{{pregateintruckinfo.pregatein_dl_number}}</td>
-				<td>{{pregateintruckinfo.pregatein_otl_type}}</td>
-				<td>{{pregateintruckinfo.pregatein_otl}}</td>
-				<td>{{pregateintruckinfo.pregatein_updated_at}}</td>
-				<td>{{pregateintruckinfo.pregatein_updated_by}}</td>
-				<td>
-					<a class="btn btn-primary" href="{% url 'pregateintruck_update' pregateintruckinfo.id %}" >
-						<i class="far fa-edit"></i>
-					</a>
-				</td>
-				<td>
-					<form action="{% url 'pregateintruck_delete' pregateintruckinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-						{% csrf_token %}
-						<button type="submit" class="btn btn-danger">
-							<i class="fas fa-trash-alt"></i>
-						</button>
-					</form>
-				</td>
-			</tr>
-			{% endfor %}
-			</tbody>
-		</table>
-	</div>
-</div>
+{% include "asset_mgt_app/gateintruck_list_woh.html" %}
 
+
+{% block scripts %}
 <script>
 	document.addEventListener("DOMContentLoaded", function() {
     $('#gatein_list').DataTable({
         order: [1, 'desc' ],
         responsive: true,
+        scrollX: false,
         dom: 'lBfrtip',
         buttons: [
             'copy', 'csv', 'excel','print'
@@ -191,6 +141,6 @@
     document.getElementById("gatein_pre_branch").value ='{{user_branch_id}}';
 } );
 </script>
-
+{% endblock scripts %}
 
 {% endblock content %}

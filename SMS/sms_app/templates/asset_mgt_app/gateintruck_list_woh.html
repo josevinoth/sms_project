@@ -1,0 +1,79 @@
+{% block content %}
+<div class="container-fluid">
+    <div class="table-responsive">
+        <table id="pregateintruck_list" class="table table-striped table-bordered nowrap">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Created On</th>
+                    <th>Pre-Gate-In #</th>
+                    <th>Transporter</th>
+                    <th>Truck Number</th>
+                    <th>Truck Type</th>
+                    <th>Driver Name</th>
+                    <th>Driver Number</th>
+                    <th>Driver DL Number</th>
+                    <th>OTL Type</th>
+                    <th>OTL Number</th>
+                    <th>Updated On</th>
+                    <th>Updated By</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pregateintruckinfo in pregateintruck_list %}
+                <tr>
+                    <td>{{pregateintruckinfo.pregatein_created_at}}</td>
+                    <td>{{pregateintruckinfo.pregatein_number}}</td>
+                    <td>{{pregateintruckinfo.pregatein_transporter}}</td>
+                    <td>{{pregateintruckinfo.pregatein_truck_number}}</td>
+                    <td>{{pregateintruckinfo.pregatein_truck_type}}</td>
+                    <td>{{pregateintruckinfo.pregatein_driver}}</td>
+                    <td>{{pregateintruckinfo.pregatein_contact_number}}</td>
+                    <td>{{pregateintruckinfo.pregatein_dl_number}}</td>
+                    <td>{{pregateintruckinfo.pregatein_otl_type}}</td>
+                    <td>{{pregateintruckinfo.pregatein_otl}}</td>
+                    <td>{{pregateintruckinfo.pregatein_updated_at}}</td>
+                    <td>{{pregateintruckinfo.pregatein_updated_by}}</td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-1">
+                        <a class="btn btn-primary" href="{% url 'pregateintruck_update' pregateintruckinfo.id %}">
+                            <i class="far fa-edit"></i>
+                        </a>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-1">
+                        <form action="{% url 'pregateintruck_delete' pregateintruckinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+    $('#pregateintruck_list').DataTable(
+        {
+        scrollY: "600px",
+        scrollX: false,
+        scrollCollapse: true,
+        responsive: true,
+        dom: 'lBfrtip',
+        order: [0, 'desc' ],
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    } );
+} );
+</script>
+{% endblock %}
+{% endblock content %}
