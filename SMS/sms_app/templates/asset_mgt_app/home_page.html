@@ -9,6 +9,7 @@
             </button>
             <div class="collapse d-md-block" id="sidebarMenu">
                 <div class="sidenav ">
+
                     <div class="nav_header_style">
                         <h1>Welcome !</h1>
                     </div>
@@ -215,8 +216,11 @@
                 </div>
             </div>
         </div>
+
         <div class="col-12 col-md-10 pt-3">
+
             <div class="row">
+                <!-- Card 1 -->
                 <div class="col-6 col-sm-6 col-md-3 mb-3">
                     <div class="card text-white mb-3 text-center bg-primary">
                         <div class="card-header">Products</div>
@@ -327,7 +331,7 @@
         </div>
     </div>
 </div>
-{% block scripts %}
+
 <script>
     var coll = document.getElementsByClassName("collapsible");
 var i;
@@ -351,6 +355,7 @@ for (i = 0; i < coll.length; i++) {
         var department = '{{ department }}';
         var user_id='{{user_id}}';
         var bussiness_solution = '{{ bussiness_solution }}';
+        const bussiness_solution_id = {{ bussiness_solution_id|default:0 }};
         // Function to remove disable_a_href class
         function enableElement(elementId) {
             $('#' + elementId).removeClass('disable_a_href');
@@ -421,20 +426,19 @@ for (i = 0; i < coll.length; i++) {
                 disableElement('finance');
             }
 
-            if (bussiness_solution === 'BVM Storage Solutions')
+            if (bussiness_solution_id === 1)
             {
                 enableElement('warehouse'); // Enable warehouse for BVM Storage Solutions
             }
-            else if (bussiness_solution === 'BVM Pack Solutions')
+            else if (bussiness_solution_id === 3)
             {
                 enableElement('packing'); // Enable packing for BVM Pack Solutions
             }
-            else if (bussiness_solution === 'BVM Trans Solutions')
+            else if (bussiness_solution_id === 2)
             {
                 enableElement('transport'); // Enable transport for BVM Trans Solutions
             }
         }
     });
 </script>
-{% endblock scripts %}
 {% endblock content %}

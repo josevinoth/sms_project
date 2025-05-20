@@ -13,6 +13,7 @@ from datetime import timedelta
 def home_page(request):
     first_name=request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    user_ext = User_extInfo.objects.get(user=user_id)
     role=User_extInfo.objects.get(user=user_id).emp_role
     department=User_extInfo.objects.get(user=user_id).department
     bussiness_solution=User_extInfo.objects.get(user=user_id).emp_organisation
@@ -53,6 +54,7 @@ def home_page(request):
                'user_id': user_id,
                'department': department,
                'bussiness_solution': bussiness_solution,
+               'bussiness_solution_id': user_ext.emp_organisation.id,
                'wh_job_count': wh_job_count,
                'wh_check_in_jobs_2': wh_check_in_jobs_2,
                'open_requirements': open_requirements,
