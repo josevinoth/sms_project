@@ -18,6 +18,24 @@
     <table id="shipper_invoice_master_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+
+            <th></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search WH Job Number"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Shipper Invoice"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Voucher Number"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Pre Gatein Number"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Dispatch Number"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Stock Number"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Customer Name"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Customer Type"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search No of Pieces"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Weight"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search In Time"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Out Time"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search No of Days"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Goods Status"></th>
+        </tr>
+        <tr>
             <th>Select Stock</th>
             <th>WH Job Number</th>
             <th>Shipper Invoice</th>
@@ -83,6 +101,16 @@ $(document).ready(function () {
         dom: 'lBfrtip',
         scrollX: true,
     });
+    // Apply search to each column
+        $('.filter-input').on('keyup change', function () {
+            var columnIndex = $(this).parent().index(); // Get correct column index
+            table.column(columnIndex).search(this.value).draw();
+        });
+
+        // Prevent sorting when clicking inside the filter input
+        $('#requirements_list thead input').on('click', function(e) {
+            e.stopPropagation();
+        });
 
     // Handle form submission event
     $('#add_btn').on('click', function () {
