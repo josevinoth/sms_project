@@ -7,7 +7,6 @@
         padding: 4px;
     }
 }
-
 </style>
 <div class="container-fluid row">
     <div class=" col-6 col-md-3">
@@ -37,7 +36,7 @@
 </div>
 
 <hr>
-<div class="col-md-1.5">
+<div class="col-md-2">
     <a href="" id='remove_btn' class="btn btn-success" onclick="return confirm('Are you sure to Re-Check-In this stock?');">
         <i class="fas fa-plus"></i> Re-Check-In
     </a>
@@ -100,8 +99,8 @@
 </div>
 <script>
     $(document).ready(function (){
-          var table = new DataTable('#dispatch_goods_list', {
-    responsive: {
+          var table=new DataTable('#dispatch_goods_list', {
+            responsive: {
         details: {
             type: 'inline', // or 'column' for child row
             target: 0       // First column reserved for details control
@@ -125,37 +124,39 @@
     },
     order: [[2, 'asc']], // Adjust because WH Job Number is now at index 2
     dom: 'lBfrtip',
-    scrollX: false
+    scrollX: false,
+   });
+       // Handle form submission event
+       $('#remove_btn').on('click', function () {
+    let selectedRows = table.rows({ selected: true });
+    let selectedData = selectedRows.data();
+
+    if (selectedData.length === 0) {
+        alert('Please select at least one stock item.');
+        return;
+    }
+
+    let selectedIds = [];
+    for (let i = 0; i < selectedData.length; i++) {
+        selectedIds.push(selectedData[i][3]); // WH Stock Number assumed at column index 3
+    }
+    let selectedIndexes = table.rows({ selected: true }).indexes();
+    $.ajax({
+        url: '{% url "dispatch_remove_goods" %}',
+        type: 'GET',
+        data: {
+            'myList[]': selectedIds
+        },
+        success: function(response) {
+            alert('Stock rechecked successfully.');
+            table.rows(selectedIndexes).remove().draw(false);
+        },
+        error: function () {
+            alert('Failed to recheck. Please try again.');
+        }
+    });
 });
 
-       // Handle form submission event
-       $('#remove_btn').on('click', function(){
-              var rows_selected = table.column(0).selected();
-              let selectedValues = table.rows( { selected: true } ).data();
-              var len1=( selectedValues ).length;
-              console.log( len1 );
-              var len=( selectedValues[0] ).length;
-              console.log( selectedValues );
-              console.log( selectedValues[0] );
-              console.log( len );
-              var elements = [];
-              for (var i = 0; i < len1; i++) {
-                    console.log(selectedValues[i][2]);
-                    elements.push(selectedValues[i][2]);
-                }
-            var elements_list=elements;
-       $.ajax({
-            url: '{% url 'dispatch_remove_goods' %}',
-            type: 'GET',
-            data: {
-                'myList[]': elements_list,  // This will encode the list as URL parameters
-            },
-            success: function(response) {
-                // Handle the response from the Django view
-            },
-       });
-
-       });
     });
 </script>
 <script>

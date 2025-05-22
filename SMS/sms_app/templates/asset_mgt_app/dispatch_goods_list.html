@@ -1,6 +1,6 @@
 {% block content %}
-<div class=" col-12 col-md-6 col-lg-3">
-    <a href="{% url 'dispatch_goods_list' %}" class="btn btn-warning">
+<div class=" col-12 col-md-6 col-lg-3 mt-3">
+    <a href="{% url 'dispatch_goods_list' %}" class="btn btn-warning btn-lg">
         <i class="fas fa-plus"></i> Add/Remove Stocks
     </a>
 </div>
@@ -50,14 +50,19 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#dispatch_goods_list_new').DataTable({
-        scrollX: false,
+    const table = $('#dispatch_goods_list_new').DataTable({
+        scrollX: true,
         responsive: true,
-        order: [1, 'desc' ],
+        autoWidth: false,
+        order: [0, 'desc'],
         dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+
+    $(window).on('resize', function () {
+        setTimeout(function () {
+            table.columns.adjust().responsive.recalc();
+        }, 300);
     });
 } );
 </script>

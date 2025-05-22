@@ -34,7 +34,6 @@
 </div>
     </div>
 <hr>
-<div class="container-fluid">
     <div class="table-responsive">
     <table id="dispatch_list" class="table table-striped table-bordered nowrap">
         <thead class="thead-dark">
@@ -102,7 +101,6 @@
         </tbody>
     </table>
         </div>
-</div>
     <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
@@ -121,16 +119,22 @@
     </span>
     </div>
 <script>
-$(document).ready(function() {
-    $('#dispatch_list').DataTable({
+$(document).ready(function () {
+    var table = $('#dispatch_list').DataTable({
         responsive: true,
-        scrollX: false,
-        order: [1, 'desc' ],
+        scrollX: true,
+        autoWidth: false,
+        order: [1, 'desc'],
         dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+
+    $(window).on('resize', function () {
+        setTimeout(function () {
+            table.columns.adjust().responsive.recalc();
+        }, 300);
     });
 });
+
 </script>
 {% endblock content %}
