@@ -38,10 +38,11 @@
     <table id="dispatch_list" class="table table-striped table-bordered nowrap">
         <thead class="thead-dark">
         <tr>
-            <th>Created On</th>
-            <th>Gate Pass</th>
+            <th></th>
             <th>Edit</th>
+            <th>Created On</th>
             <th>Dispatch Number</th>
+            <th>Gate Pass</th>
             <th>Customer Name</th>
             <th>Transporter</th>
             <th>Truck Number</th>
@@ -53,20 +54,13 @@
             <th>Status</th>
             <th>Updated By</th>
             <th>Updated On</th>
+
             <th>Delete</th>
         </thead>
         <tbody>
         {% for dispatchinfo in page_obj %}
         <tr>
-            <td> {{dispatchinfo.dispatch_created_at}}</td>
-            <td>
-                <div class="d-flex justify-content-center gap-1">
-                <a class="btn btn-warning" href="{% url 'dispatch_gatepass_pdf_download' dispatchinfo.id %}" >
-                    <i class="fas fa-luggage-cart"></i>
-                </a>
-                </div>
-            </td>
-
+            <td></td>
             <td>
                 <div class="d-flex justify-content-center gap-1">
                 <a class="btn btn-primary" href="{% url 'dispatch_update' dispatchinfo.id %}" >
@@ -74,7 +68,15 @@
                 </a>
                 </div>
             </td>
+            <td> {{dispatchinfo.dispatch_created_at}}</td>
             <td> {{dispatchinfo.dispatch_num}}</td>
+            <td>
+                <div class="d-flex justify-content-center gap-1">
+                <a class="btn btn-warning" href="{% url 'dispatch_gatepass_pdf_download' dispatchinfo.id %}" >
+                    <i class="fas fa-luggage-cart"></i>
+                </a>
+                </div>
+            </td>
             <td> {{dispatchinfo.dispatch_customer}}</td>
             <td> {{dispatchinfo.dispatch_transporter}}</td>
             <td> {{dispatchinfo.dispatch_truck_number}}</td>
@@ -86,9 +88,6 @@
             <td> {{dispatchinfo.dispatch_status}}</td>
             <td> {{dispatchinfo.dispatch_updated_by}}</td>
             <td> {{dispatchinfo.dispatch_updated_at}}</td>
-
-
-
             <td>
                 <form action="{% url 'dispatch_delete' dispatchinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
@@ -133,7 +132,7 @@ $(document).ready(function () {
     $(window).on('resize', function () {
         setTimeout(function () {
             table.columns.adjust().responsive.recalc();
-        }, 300);
+        }, 300); // delay to allow layout to settle
     });
 });
 
