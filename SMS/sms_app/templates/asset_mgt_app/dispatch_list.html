@@ -39,6 +39,8 @@
         <thead class="thead-dark">
         <tr>
             <th>Created On</th>
+            <th>Gate Pass</th>
+            <th>Edit</th>
             <th>Dispatch Number</th>
             <th>Customer Name</th>
             <th>Transporter</th>
@@ -51,28 +53,12 @@
             <th>Status</th>
             <th>Updated By</th>
             <th>Updated On</th>
-            <th>Gate Pass</th>
-            <th>Edit</th>
             <th>Delete</th>
         </thead>
         <tbody>
         {% for dispatchinfo in page_obj %}
         <tr>
             <td> {{dispatchinfo.dispatch_created_at}}</td>
-            <td> {{dispatchinfo.dispatch_num}}</td>
-            <td> {{dispatchinfo.dispatch_customer}}</td>
-            <td> {{dispatchinfo.dispatch_transporter}}</td>
-            <td> {{dispatchinfo.dispatch_truck_number}}</td>
-            <td> {{dispatchinfo.dispatch_truck_type}}</td>
-            <td> {{dispatchinfo.dispatch_cargo_picked}}</td>
-            <td> {{dispatchinfo.dispatch_sticker_pasted_bvm}}</td>
-            <td> {{dispatchinfo.dispatch_invoice_list}}</td>
-            <td> {{dispatchinfo.dispatch_job_num_list}}</td>
-            <td> {{dispatchinfo.dispatch_status}}</td>
-            <td> {{dispatchinfo.dispatch_updated_by}}</td>
-            <td> {{dispatchinfo.dispatch_updated_at}}</td>
-
-
             <td>
                 <div class="d-flex justify-content-center gap-1">
                 <a class="btn btn-warning" href="{% url 'dispatch_gatepass_pdf_download' dispatchinfo.id %}" >
@@ -88,6 +74,21 @@
                 </a>
                 </div>
             </td>
+            <td> {{dispatchinfo.dispatch_num}}</td>
+            <td> {{dispatchinfo.dispatch_customer}}</td>
+            <td> {{dispatchinfo.dispatch_transporter}}</td>
+            <td> {{dispatchinfo.dispatch_truck_number}}</td>
+            <td> {{dispatchinfo.dispatch_truck_type}}</td>
+            <td> {{dispatchinfo.dispatch_cargo_picked}}</td>
+            <td> {{dispatchinfo.dispatch_sticker_pasted_bvm}}</td>
+            <td> {{dispatchinfo.dispatch_invoice_list}}</td>
+            <td> {{dispatchinfo.dispatch_job_num_list}}</td>
+            <td> {{dispatchinfo.dispatch_status}}</td>
+            <td> {{dispatchinfo.dispatch_updated_by}}</td>
+            <td> {{dispatchinfo.dispatch_updated_at}}</td>
+
+
+
             <td>
                 <form action="{% url 'dispatch_delete' dispatchinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                     {% csrf_token %}
