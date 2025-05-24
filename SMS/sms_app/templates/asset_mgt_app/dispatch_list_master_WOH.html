@@ -1,13 +1,5 @@
 {% block content %}
-<style>
-    @media (max-width: 576px) {
-    #dispatch_master_list td, #dispatch_master_list th {
-        font-size: 11px;
-        padding: 4px;
-    }
-}
 
-</style>
 <hr>
 
     <!--    <div class="col-md-1">-->
@@ -22,7 +14,6 @@
     </div>
 
 <br>
-<div class="container-fluid">
     <table  id="dispatch_master_list" class="table table-striped table-bordered nowrap">
         <thead class="thead-dark">
         <tr>
@@ -79,7 +70,6 @@
         {% endfor %}
         </tbody>
     </table>
-</div>
 <!--<script>-->
 <!--    $(document).ready(function() {-->
 <!--    $('#dispatch_master_list').DataTable();-->
