@@ -1,0 +1,37 @@
+{% extends "asset_mgt_app/report_header_landscape.html" %}
+{% block content %}
+<div>
+    <table class='report_details'>
+        <tr>
+            <td colspan="3">
+                <h1 style="color:red;">BVM PACK SOLUTIONS PVT LTD</h1>
+                <p>Address: 70, Adam Nagar Road, Nagalkeni, Chrompet, Chennai 600 044</p>
+            </td>
+            <td colspan="1">
+                <img src="media/Company_Logo.png" alt="Company Logo" class="centered-image" style="height: 80px;">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h3>Lorry Hire Challan</h3>
+            </td>
+        </tr>
+    </table>
+
+    <table class='report_details'>
+        <tr><th>Consignment No</th><td>{{ consignment.co_consignmentnumber }}</td></tr>
+        <tr><th>Date</th><td>{{ consignment.co_consignmentdate }}</td></tr>
+        <tr><th>Vendor name</th><td>{{ vehicle.va_vendor }}</td></tr>
+        <tr><th>Vehicle No</th><td>{{ enquiry.en_fromlocaion}}</td></tr>
+        <tr><th>Vehicle No</th><td>{{ consignment.co_vehicelnumber }}</td></tr>
+        <tr><th>Vehicle Type</th><td>{{ consignment.co_vehicletype }}</td></tr>
+        <tr><th>Customer</th><td>{{ consignment.co_customer }}</td></tr>
+        <tr><th>Container Description</th><td>{{ consignment.co_containerdescription }}</td></tr>
+        <tr><th>Freight Amount</th><td>{{ consignment.co_freight_amount }}</td></tr>
+        <tr><th>Seal No</th><td>{{ consignment.co_seal_number }}</td></tr>
+        <tr><th>Container No</th><td>{{ consignment.co_container_number }}</td></tr>
+        <tr><th>Remarks</th><td>{{ consignment.co_remarks }}</td></tr>
+        <tr><th>Date Generated</th><td>{{ today_date }}</td></tr>
+    </table>
+</div>
+{% endblock content %}
