@@ -253,27 +253,27 @@ def get_vehicle_type(request, vehicle_id):
         vehicle_type = None
 
     return JsonResponse({'vehicle_type': vehicle_type})
+
 @login_required(login_url='login_page')
 def consignment_pdf_download(request):
     consignment_id = request.session.get('ses_consignment_detail_id')
-    enquiry_num = request.session.get('enquiry_num_id')
+    enquiry_num = request.session.get('ses_enqiury_num_id')
+    print("in pdf function")
+    print(enquiry_num)
+    print(consignment_id)
 
-    if not consignment_id:
-        return HttpResponse("Consignment ID not found in session.", status=400)
-
-    if not enquiry_num:
-        return HttpResponse("Enquiry number not found in session.", status=400)
-
-    consignment = get_object_or_404(ConsignmentdetailInfo, pk=consignment_id)
-    enquiry = get_object_or_404(EnquirynoteInfo, en_enquirynumber=enquiry_num)
+    enquiry = EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num)
+    print(enquiry)
     vehicle = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num)
+    consignment = get_object_or_404(ConsignmentdetailInfo, pk=consignment_id)
+    # enquiry = get_object_or_404(EnquirynoteInfo, en_enquirynumber=enquiry_num)
 
     today = datetime.now().strftime("%d-%b-%Y")
 
     context = {
         'vehicle': vehicle,
         'consignment': consignment,
-        'enquiry': enquiry,
+        # 'enquiry': enquiry,
         'today_date': today,
     }
 

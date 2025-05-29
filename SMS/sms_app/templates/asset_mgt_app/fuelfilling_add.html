@@ -52,15 +52,15 @@
 								</div>
                                 <div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text"> City</span>
-									</div>
-									{% render_field form.ff_city id="ff_city" class="form-control " %}
-								</div>
-                                <div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text"> Location</span>
 									</div>
-									{% render_field form.ff_loaction id="ff_loaction" class="form-control disable_a_href" %}
+									{% render_field form.ff_location id="ff_location" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">State</span>
+									</div>
+									{% render_field form.ff_state id="ff_state" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -99,43 +99,79 @@
 	</div>
 </form>
 <script>
-$(document).ready(function() {
-	document.getElementById("ff_updated_by").value ='{{user_id}}';
-	});
-</script>
+  $(document).ready(function () {
+    document.getElementById("ff_updated_by").value = '{{ user_id }}';
 
-<script>
-   $("#ff_city").change(function () {
-      var cityId = $(this).val();
-      alert(cityId)
+    // Auto update ff_state and ff_location on ff_bunk_name change
+    $('#ff_bunk_name').on('change', function () {
+      const bunkName = $('#ff_bunk_name option:selected').text().trim();
+
+      if (!bunkName) {
+        $('#ff_state').val('');
+        $('#ff_location').val('');
+        return;
+      }
+
       $.ajax({
-        url: '{% url 'load_location' %}',
-        data: {
-          'cityId_1': cityId,
+        url: "{% url 'fetch_bunk_details' %}",
+        data: { bunk_name: bunkName },
+        dataType: 'json',
+        success: function (data) {
+          if (!data.error) {
+            $('#ff_state').val(data.bunk_state || '');
+            $('#ff_location').val(data.bunk_location_name || '');
+          } else {
+            alert(data.error);
+            $('#ff_state').val('');
+            $('#ff_location').val('');
+          }
         },
-		success: function (data) {
-			console.log(data);
-			$('#ff_loaction').removeClass('disable_a_href');
-			$('#ff_loaction').empty().append("<option value='0'>--Select--</option>");
-        	var location_name=JSON.parse(data)["location_list"];
-        	var location_id=JSON.parse(data)["location_id_list"];
-        	var len = (location_name).length;
-        	$('#ff_loaction').empty().append("<option value='0'>--Select--</option>");
-        	for( var i = 0; i<len; i++){
-        		$("#ff_loaction").append("<option value='"+location_id[i]+"'>"+location_name[i]+"</option>");
-			}
+        error: function (xhr, status, error) {
+          console.error("AJAX Error:", error);
+          $('#ff_state').val('');
+          $('#ff_location').val('');
         }
       });
     });
+
+    // Dynamic location load example if ff_city dropdown is available
+    $('#ff_city').change(function () {
+      const cityId = $(this).val();
+
+      if (!cityId) return;
+
+      $.ajax({
+        url: '{% url "load_location" %}',
+        data: {
+          'cityId_1': cityId,
+        },
+        success: function (data) {
+          const response = JSON.parse(data);
+          const locationNames = response.location_list || [];
+          const locationIds = response.location_id_list || [];
+
+          const $locationField = $('#ff_location');
+          $locationField.removeClass('disable_a_href');
+          $locationField.empty().append("<option value=''>--Select--</option>");
+
+          for (let i = 0; i < locationNames.length; i++) {
+            $locationField.append(`<option value="${locationIds[i]}">${locationNames[i]}</option>`);
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("Location Load Error:", error);
+        }
+      });
+    });
+  });
+
+  function change_charge_type() {
+    const ratePerLitre = parseFloat(document.getElementById("ff_fuel_rate").value) || 0;
+    const filledLitre = parseFloat(document.getElementById("ff_filled_ltr").value) || 0;
+    const fuelPrice = filledLitre * ratePerLitre;
+    document.getElementById("ff_fuel_price").value = fuelPrice.toFixed(2);
+  }
 </script>
 
 
-<script>
-function change_charge_type() {
-var rate_per_litre=parseFloat(document.getElementById("ff_fuel_rate").value) || 0;
-var filled_litre=parseFloat(document.getElementById("ff_filled_ltr").value) || 0;
-var fuel_price=filled_litre*rate_per_litre
-document.getElementById("ff_fuel_price").value=fuel_price.toFixed(2)
-}
-</script>
 {% endblock content %}
