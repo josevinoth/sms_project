@@ -55,6 +55,7 @@ def vehicle_allotment_add(request,vehicle_allotment_id=0):
                 'vehicle_allotment_form': vehicle_allotment_form,
                 'enquiry_num_id': enquiry_num_id,
                 'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id),
+                'va': vehicle_allotment,
             }
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", context)
     else:

@@ -14,3 +14,4 @@ class VehicleallotmentForm(forms.ModelForm):
         self.fields['va_vehicletype'].empty_label = "--Select--"
         self.fields['va_vehiclenumber'].empty_label = "--Select--"
         self.fields['va_vendor'].empty_label = "--Select--"
+        self.fields['va_status'].empty_label = "--Select--"
