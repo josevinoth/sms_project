@@ -1,56 +1,60 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import json
 
 from ..forms import FuelfillingForm
-from ..models import Fuelfillinginfo,Places
-from django.shortcuts import render, redirect
+from ..models import Fuelfillinginfo,Places,Bunkname
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
 @login_required(login_url='login_page')
-def fuelfilling_add(request,fuelfilling_id=0):
+def fuelfilling_add(request, fuelfilling_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
 
-    if request.method == "GET":
-        if fuelfilling_id == 0:
-            form = FuelfillingForm()
-        else:
-            fuelfilling=Fuelfillinginfo.objects.get(pk=fuelfilling_id)
-            form = FuelfillingForm(instance=fuelfilling)
-        context={
-                'form': form,
-                'first_name': first_name,
-                'user_id': user_id,
-                }
-        return render(request, "asset_mgt_app/fuelfilling_add.html", context)
+    # If editing, fetch the existing instance
+    if fuelfilling_id != 0:
+        fuelfilling = get_object_or_404(Fuelfillinginfo, pk=fuelfilling_id)
     else:
-        if fuelfilling_id == 0:
-            form = FuelfillingForm(request.POST)
-            if form.is_valid():
-                form.save()
-                print("Fuelfillinginfo Form is Valid")
-                last_id = (Fuelfillinginfo.objects.latest('id')).id
-                messages.success(request, 'Record Updated Successfully')
-                # return redirect(request.META['HTTP_REFERER'])
-                return redirect('/SMS/fuelfilling_update/' + str(last_id))
+        fuelfilling = None
+
+    if request.method == "POST":
+        form = FuelfillingForm(request.POST, instance=fuelfilling)
+
+        if form.is_valid():
+            instance = form.save()
+            if fuelfilling is None:
+                print("Fuelfillinginfo Form is Valid - New Record")
+                messages.success(request, 'Fuel Filling Record Added Successfully')
+                return redirect('/SMS/fuelfilling_update/' + str(instance.id))
             else:
-                print("Fuelfillinginfo Form is Not Valid")
-                messages.error(request, 'Record Not Updated Successfully')
-                return redirect(request.META['HTTP_REFERER'])
+                print("Fuelfillinginfo Form is Valid - Updated Record")
+                messages.success(request, 'Fuel Filling Record Updated Successfully')
+                return redirect(request.META.get('HTTP_REFERER', '/'))
         else:
-            fuelfilling = Fuelfillinginfo.objects.get(pk=fuelfilling_id)
-            form = FuelfillingForm(request.POST,instance=fuelfilling)
-            if form.is_valid():
-                form.save()
-                print("FuelfillingForm Form is Valid")
-                messages.success(request, 'Record Updated Successfully')
-            else:
-                print("FuelfillingForm Form is Not Valid")
-                messages.error(request, 'Record Not Updated Successfully')
-            return redirect(request.META['HTTP_REFERER'])
+            print("Fuelfillinginfo Form is Not Valid")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"Error in {field}: {error}")
+                    messages.error(request, f"{field}: {error}")
+            # fall through to render the form with errors below
+
+    else:
+        # GET request
+        form = FuelfillingForm(instance=fuelfilling)
+
+    context = {
+        'form': form,
+        'first_name': first_name,
+        'user_id': user_id,
+    }
+    return render(request, "asset_mgt_app/fuelfilling_add.html", context)
+
+                # return redirect(request.META['HTTP_REFERER'])
+
         # return redirect('/SMS/requirements_list')
+
 
 # List fuelfilling
 @login_required(login_url='login_page')
@@ -85,3 +89,17 @@ def load_location(request):
     }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))
+
+@login_required(login_url='login_page')
+def fetch_bunk_details(request):
+    bunk_name = request.GET.get('bunk_name', '')
+    if bunk_name:
+        try:
+            bunk = Bunkname.objects.get(bunk_name=bunk_name)
+            return JsonResponse({
+                'bunk_state': bunk.bunk_state or '',
+                'bunk_location_name': bunk.bunk_location_name or '',
+            })
+        except Bunkname.DoesNotExist:
+            return JsonResponse({'error': 'Bunk not found'})
+    return JsonResponse({'error': 'No bunk name provided'})

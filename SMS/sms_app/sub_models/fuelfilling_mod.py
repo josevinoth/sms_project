@@ -13,8 +13,8 @@ class Fuelfillinginfo(models.Model):
     ff_created_at = models.DateField(null=True, auto_now_add=True)
     ff_updated_at = models.DateField(null=True, auto_now=True)
     ff_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='ff_updated_by',db_column='ff_updated_by', null=True)
-    ff_city = models.ForeignKey(City, on_delete=models.CASCADE, default='')
-    ff_loaction = models.ForeignKey(Places, on_delete=models.CASCADE, default='')
+    ff_location = models.CharField(max_length=255, blank=True, null=True, verbose_name="ff_location")
+    ff_state = models.CharField(max_length=255, blank=True, null=True, verbose_name="ff_state")
 
     class Meta:
         ordering = ["ff_vehicle_num"]

@@ -202,3 +202,4 @@ from .sub_models.part_code_mod import PkpartcodeInfo
 from .sub_models.pkweightconvention_mod import Pkweightconvention
 from .sub_models.pk_wood_description import Pkwooddescription
 from .sub_models.vendorratemaster1_mod import VendorratemasterInfo1
+from .sub_models.location_master_gmap_mod import LocationMaster

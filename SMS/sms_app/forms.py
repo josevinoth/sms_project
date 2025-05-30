@@ -127,3 +127,4 @@ from.sub_forms.salesmultipleitemForm_form import SalesmultipleitemForm
 from.sub_forms.part_code_Form import Part_codeForm
 from .sub_forms.trans_fastag_forms import trans_fastag_form
 from .sub_forms.vendorratemaster_Form import VendorratemasteraddForm
+from .sub_forms.Locationmaster_form import LocationMasterForm

@@ -72,21 +72,27 @@
             <!-- Consignment Number -->
             <td>
                 {% if data.vehicles and data.vehicles|length > 0 %}
-                {% if data.consignments and data.consignments|length > 0 %}
+                {% for vehicle in data.vehicles %}
+                {% with vehicle_num=vehicle %}
+                {% with cons_found=0 %}
                 {% for consignment in data.consignments %}
+                {% if consignment.co_vehicelnumber == vehicle_num %}
                 <a class="link" href="{% url 'consignmentdetail_nav' data.enquiry.id %}">
                     {{ consignment.co_consignmentnumber }}
-                </a>
-                <br>
+                </a><br>
+                {% with cons_found=1 %}{% endwith %}
+                {% endif %}
+                {% endfor %}
+
+                {% if cons_found == 0 %}
+                <a class="link" href="{% url 'consignmentdetail_nav' data.enquiry.id %}?vehicle_number={{ vehicle_num }}" style="color: red;">
+                    Create new
+                </a><br>
+                {% endif %}
+                {% endwith %}
+                {% endwith %}
                 {% endfor %}
                 {% else %}
-                <!-- If vehicle exists but no consignment, enable "No Consignment" -->
-                <a class="link" href="{% url 'consignmentdetail_nav' data.enquiry.id %}" style="color: red;">
-                    No Consignment
-                </a>
-                {% endif %}
-                {% else %}
-                <!-- If no vehicle exists, disable "No Consignment" -->
                 <a class="link disable_a_href_list" href="#" style="pointer-events: none; color: gray;">
                     No Consignment
                 </a>
@@ -95,29 +101,45 @@
 
             <!-- Trip Number -->
             <td>
-                {% if data.consignments and data.trips %}
+                {% if data.vehicles and data.vehicles|length > 0 %}
+                {% for vehicle in data.vehicles %}
+                {% if data.trips and data.trips|length > 0 %}
+                {% with trip_found=0 %}
                 {% for trip_num, trip_status, trip_status_id in data.trips %}
                 <a class="link" href="{% url 'tripdetail_nav' data.enquiry.id %}">{{ trip_num }}</a><br>
+                {% with trip_found=1 %}{% endwith %}
                 {% endfor %}
-                {% elif data.consignments %}
-                <a class="link " href="{% url 'tripdetail_nav' data.enquiry.id %}">No Trip</a>
+                {% if not trip_found %}
+                <a class="link" href="{% url 'tripdetail_nav' data.enquiry.id %}" style="color: red;">
+                    No Trip
+                </a><br>
+                {% endif %}
+                {% endwith %}
                 {% else %}
-                <a class="link disable_a_href_list" href="#" style="pointer-events: none; color: gray;">No Trip</a>
+                <a class="link" href="{% url 'tripdetail_nav' data.enquiry.id %}" style="color: red;">
+                    No Trip
+                </a><br>
+                {% endif %}
+                {% endfor %}
+                {% else %}
+                <a class="link disable_a_href_list" href="#" style="pointer-events: none; color: gray;">
+                    No Trip
+                </a>
                 {% endif %}
             </td>
 
             <!-- Trip Settlement -->
             <td>
                 {% if data.trips %}
-                    {% for trip_num, trip_status,trip_status_id in data.trips %}
-                        {% if trip_status_id == 1 or trip_status_id == 5 %}
-                            <a class="link disable_a_href_list" href="{% url 'tripclosure_nav' data.enquiry.id %}" style="pointer-events: none; color: gray;">{{trip_status}}</a><br>
-                        {% else %}
-                            <a class="link" href="{% url 'tripclosure_nav' data.enquiry.id %}">{{trip_status}}</a><br>
-                        {% endif %}
-                    {% endfor %}
+                {% for trip_num, trip_status,trip_status_id in data.trips %}
+                {% if trip_status_id == 1 or trip_status_id == 5 %}
+                <a class="link disable_a_href_list" href="{% url 'tripclosure_nav' data.enquiry.id %}" style="pointer-events: none; color: gray;">{{trip_status}}</a><br>
                 {% else %}
-                    <a class="link disable_a_href_list" href="{% url 'tripclosure_nav' data.enquiry.id %}" style="pointer-events: none; color: gray;">No Settlement</a>
+                <a class="link" href="{% url 'tripclosure_nav' data.enquiry.id %}">{{trip_status}}</a><br>
+                {% endif %}
+                {% endfor %}
+                {% else %}
+                <a class="link disable_a_href_list" href="{% url 'tripclosure_nav' data.enquiry.id %}" style="pointer-events: none; color: gray;">No Settlement</a>
                 {% endif %}
             </td>
 
@@ -162,14 +184,14 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#enquirynote_list').DataTable({
-        order: [0, 'desc' ],
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
-    });
-} );
+        $('#enquirynote_list').DataTable({
+            order: [0, 'desc' ],
+            dom: 'lBfrtip',
+            buttons: [
+                'copy', 'csv', 'excel','print'
+            ]
+        });
+    } );
 </script>
 
 {% endblock content %}

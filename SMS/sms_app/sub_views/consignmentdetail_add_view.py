@@ -3,33 +3,49 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 import json
 from django.http import HttpResponse, JsonResponse
-from django.template.loader import get_template
+from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
 
 from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
 from ..models import VehiclemasterInfo,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from datetime import datetime
+
 
 @login_required(login_url='login_page')
-def consignmentdetail_nav(request,consignmentdetail_id=0):
+def consignmentdetail_nav(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     print("I am inside Get add consignmentdetails")
-    enquiry_num = EnquirynoteInfo.objects.get(pk=consignmentdetail_id).en_enquirynumber
+
     enquiry_num_id = consignmentdetail_id
-    request.session['ses_enqiury_num'] = enquiry_num
     request.session['ses_enqiury_num_id'] = enquiry_num_id
-    consignmentdetail_list=ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
-    print('enquiry_num',enquiry_num)
+
+    enquiry_obj = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+    enquiry_num = enquiry_obj.en_enquirynumber
+    request.session['ses_enqiury_num'] = enquiry_num
+    vehicle_id_param = request.GET.get('vehicle_number')
+
+    consignmentdetail_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+
+    con_det_form = ConsignmentdetailaddForm()
+    form = ConsignmentgoodsaddForm()
+
     context = {
         'first_name': first_name,
         'user_id': user_id,
+        'con_det_form': con_det_form,
+        'form': form,
         'enquiry_num': enquiry_num,
         'enquiry_num_id': enquiry_num_id,
         'consignmentdetail_list': consignmentdetail_list,
-        'consignmentdetail_id': consignmentdetail_id,
+        'consignmentgoods_list': [],
+        'vehicle_type': '',
+        'vehicle_id_param': vehicle_id_param,
+        'consignmentdetail_id': 0,
+        'consignmentgoods_id_val': request.session.get('ses_consignment_id'),
     }
-    return render(request, "asset_mgt_app/consignmentdetail_nav.html", context)
+    return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 @login_required(login_url='login_page')
 def consignmentdetail_add(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
@@ -37,6 +53,8 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     enquiry_num = request.session.get('ses_enqiury_num')
     enquiry_num_id = request.session.get('ses_enqiury_num_id')
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
+    vehicle_id_param = request.GET.get('vehicle_number')
+
 
     customer = EnquirynoteInfo.objects.get(pk=enquiry_num_id).en_customername
     customer_obj = CustomerInfo.objects.get(cu_name=customer)
@@ -70,6 +88,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'consignmentdetail_list': ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id),
             'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentdetail_id),
             'vehicle_type': vehicle_type,
+            'vehicle_id_param': vehicle_id_param,
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
@@ -184,6 +203,8 @@ def consignment_note_pdf(request,consignment_note_id=0):
 def vehicle_allotted(request):
     enquiry_number = request.GET.get('enquiry_number')
     consignmentdetail_id_val = request.GET.get('consignmentdetail_id_val')
+    vehicle_number_param = request.GET.get('vehicle_number', '')
+
     print(consignmentdetail_id_val)
     requested_vehicles = list(
         Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number)
@@ -207,7 +228,7 @@ def vehicle_allotted(request):
         selected_vehicles = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id_val).co_vehicelnumber
     except ConsignmentdetailInfo.DoesNotExist:
         selected_vehicles = None  # Or set a default value
-    return JsonResponse({'final_vehicle_list': available_vehicle_list,'selected_vehicles':selected_vehicles})
+    return JsonResponse({'final_vehicle_list': available_vehicle_list,'selected_vehicles':vehicle_number_param})
 
 
 @login_required(login_url='login_page')
@@ -233,4 +254,40 @@ def get_vehicle_type(request, vehicle_id):
 
     return JsonResponse({'vehicle_type': vehicle_type})
 
+@login_required(login_url='login_page')
+def consignment_pdf_download(request):
+    consignment_id = request.session.get('ses_consignment_detail_id')
+    enquiry_num = request.session.get('ses_enqiury_num_id')
+    print("in pdf function")
+    print(enquiry_num)
+    print(consignment_id)
 
+    enquiry = EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num)
+    print(enquiry)
+    vehicle = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num)
+    consignment = get_object_or_404(ConsignmentdetailInfo, pk=consignment_id)
+    # enquiry = get_object_or_404(EnquirynoteInfo, en_enquirynumber=enquiry_num)
+
+    today = datetime.now().strftime("%d-%b-%Y")
+
+    context = {
+        'vehicle': vehicle,
+        'consignment': consignment,
+        # 'enquiry': enquiry,
+        'today_date': today,
+    }
+
+    file_name = f"Consignment_{consignment.co_consignmentnumber}.pdf"
+    template_path = 'asset_mgt_app/lorryhirechallan_pdf_template.html'
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+
+    template = get_template(template_path)
+    html = template.render(context)
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse('Error generating PDF <pre>' + html + '</pre>')
+
+    return response

@@ -6,7 +6,16 @@
 	<div class="col">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-				<div class="card-header text-center"><h3>Add/Update Consignment Details</h3></div>
+				<div class="row">
+					<div class="col-9">
+						<div class="card-header text-center"><h3>Add/Update Consignment Details</h3></div></div>
+					<div class="col-3">
+						<br>
+						<a href="{% url 'consignment_pdf_download' %}" class="btn btn-warning">
+							Lorry Hire Challan
+						</a>
+					</div>
+				</div>
 				<div class="card-body bg-light" >
 					<form method="POST" action="">
 						{% csrf_token %}
@@ -171,165 +180,171 @@
 
 <script>
 	$(document).ready(function() {
-        document.getElementById("co_lastmodifiedby").value ='{{user_id}}';
-        document.getElementById("cg_lastmodifiedby").value ='{{user_id}}';
-        var enquiry_num_id=document.getElementById("co_enquirynumber").value
-        document.getElementById("cg_consignmentnumber").value ='{{consignmentdetail_id}}';
-        if (enquiry_num_id=="")
-            {
-                document.getElementById("co_enquirynumber").value ='{{enquiry_num_id}}';
-            }
-        else
-            {
-                document.getElementById("co_enquirynumber").value =enquiry_num_id;
-            }
-        var customer=document.getElementById("co_customer").value
-        if (customer=="")
-            {
-                document.getElementById("co_customer").value='{{customer_id}}';
-            }
-        var customer_code=document.getElementById("co_customercode").value
-        if (customer_code=="")
-            {
-                document.getElementById("co_customercode").value='{{ customer_code }}';
-            }
+		document.getElementById("co_lastmodifiedby").value ='{{user_id}}';
+		document.getElementById("cg_lastmodifiedby").value ='{{user_id}}';
+		var enquiry_num_id=document.getElementById("co_enquirynumber").value
+		document.getElementById("cg_consignmentnumber").value ='{{consignmentdetail_id}}';
+		if (enquiry_num_id=="")
+		{
+			document.getElementById("co_enquirynumber").value ='{{enquiry_num_id}}';
+		}
+		else
+		{
+			document.getElementById("co_enquirynumber").value =enquiry_num_id;
+		}
+		var customer=document.getElementById("co_customer").value
+		if (customer=="")
+		{
+			document.getElementById("co_customer").value='{{customer_id}}';
+		}
+		var customer_code=document.getElementById("co_customercode").value
+		if (customer_code=="")
+		{
+			document.getElementById("co_customercode").value='{{ customer_code }}';
+		}
 
-        var consignmentnumber = document.getElementById("co_consignmentnumber").value;
+		var consignmentnumber = document.getElementById("co_consignmentnumber").value;
 		if (consignmentnumber=="")
 		{
 			$('#consignment_goods_id').addClass('disable_a_href');
 		}
 		var consignment_num = document.getElementById("cg_consignmentnumber").value;
-        if (consignment_num=="")
-        	{
-        	document.getElementById("cg_consignmentnumber").value ="{{consignment_detail_id}}";
-            }
-            else
-            {
-        	document.getElementById("cg_consignmentnumber").value =consignment_num;
-            }
-            vehicle_allotted();
-      });
+		if (consignment_num=="")
+		{
+			document.getElementById("cg_consignmentnumber").value ="{{consignment_detail_id}}";
+		}
+		else
+		{
+			document.getElementById("cg_consignmentnumber").value =consignment_num;
+		}
+		vehicle_allotted();
+	});
 </script>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
-        if (window.location.href.includes("consignmentgoods_insert")) {
-            // Enable fields
-            $('#consignment_goods_id')
-                .removeClass('disable_a_href')
-                .prop('disabled', false);
+		if (window.location.href.includes("consignmentgoods_insert")) {
+			// Enable fields
+			$('#consignment_goods_id')
+					.removeClass('disable_a_href')
+					.prop('disabled', false);
 
-                $('#consignment_details_id')
-                .addClass('disable_a_href')
-                .prop('disabled', false);
+			$('#consignment_details_id')
+					.addClass('disable_a_href')
+					.prop('disabled', false);
 
-                $('#consignment_details_submit')
-                .addClass('disable_a_href')
-                .prop('disabled', false);
-        }
-        else if (window.location.href.includes("consignmentgoods_update")) {
-            // Enable fields
-            $('#consignment_goods_id')
-                .removeClass('disable_a_href')
-                .prop('disabled', false);
-        }
-        else {
-            // Disable fields if on any other page
-            $('#consignment_goods_id')
-                .addClass('disable_a_href')
-                .prop('disabled', true);
-        }
-    });
+			$('#consignment_details_submit')
+					.addClass('disable_a_href')
+					.prop('disabled', false);
+		}
+		else if (window.location.href.includes("consignmentgoods_update")) {
+			// Enable fields
+			$('#consignment_goods_id')
+					.removeClass('disable_a_href')
+					.prop('disabled', false);
+		}
+		else {
+			// Disable fields if on any other page
+			$('#consignment_goods_id')
+					.addClass('disable_a_href')
+					.prop('disabled', true);
+		}
+	});
 </script>
 <script>
 	function vehicle_allotted() {
-        var enquiry_number = document.getElementById("co_enquirynumber").value.trim();
-        var consignmentdetail_id_val = '{{consignmentdetail_id}}';
+		var enquiry_number = document.getElementById("co_enquirynumber").value.trim();
+		var consignmentdetail_id_val = '{{consignmentdetail_id}}';
 
-        if (!enquiry_number) {
-            console.warn("Enquiry number is empty. Skipping request.");
-            return;
-        }
+		if (!enquiry_number) {
+			console.warn("Enquiry number is empty. Skipping request.");
+			return;
+		}
 
-        $.ajax({
-            url: '{% url "vehicle_allotted" %}',
-            type: 'GET',
-            data: {
-                'enquiry_number': enquiry_number,
-                'consignmentdetail_id_val': consignmentdetail_id_val
-            },
-            success: function (data) {
-                var final_vehicle_list = data.final_vehicle_list || [];
-                var selectedVehicle = data.selected_vehicles || "";
+		$.ajax({
+			url: '{% url "vehicle_allotted" %}',
+			type: 'GET',
+			data: {
+				'enquiry_number': enquiry_number,
+				'consignmentdetail_id_val': consignmentdetail_id_val
+			},
+			success: function (data) {
+				var final_vehicle_list = data.final_vehicle_list || [];
+				var selectedVehicle = data.selected_vehicles || "";
 
-                $("#co_vehicelnumber").empty();
-                $("#co_vehicelnumber").append("<option value=''>--Select--</option>");
+				$("#co_vehicelnumber").empty();
+				$("#co_vehicelnumber").append("<option value=''>--Select--</option>");
 
-                final_vehicle_list.forEach(function(vehicle) {
-                    var isSelected = vehicle === selectedVehicle ? "selected" : "";
-                    $("#co_vehicelnumber").append("<option value='" + vehicle + "' " + isSelected + ">" + vehicle + "</option>");
-                });
+				final_vehicle_list.forEach(function(vehicle) {
+					var isSelected = vehicle === selectedVehicle ? "selected" : "";
+					$("#co_vehicelnumber").append("<option value='" + vehicle + "' " + isSelected + ">" + vehicle + "</option>");
+				});
 
-                bind_vehicle_type_fetch();
-            },
-            error: function (xhr, status, error) {
-                console.error("AJAX Error:", status, error);
-            }
-        });
-    }
+				bind_vehicle_type_fetch();
+			},
+			error: function (xhr, status, error) {
+				console.error("AJAX Error:", status, error);
+			}
+		});
+	}
 </script>
 <script>
 	const getVehicleTypeUrl = '{% url "get_vehicle_type" "VEHICLE_ID_PLACEHOLDER" %}';
 
-    function bind_vehicle_type_fetch() {
-        document.getElementById('co_vehicelnumber').addEventListener('change', function () {
-            const vehicleId = this.value;
-            if (vehicleId) {
-                const url = getVehicleTypeUrl.replace("VEHICLE_ID_PLACEHOLDER", vehicleId);
+	function bind_vehicle_type_fetch() {
+		document.getElementById('co_vehicelnumber').addEventListener('change', function () {
+			const vehicleId = this.value;
+			if (vehicleId) {
+				const url = getVehicleTypeUrl.replace("VEHICLE_ID_PLACEHOLDER", vehicleId);
 
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        const vehicleType = data.vehicle_type || 'Not Found';
-                        document.getElementById('co_vehicletype').value = vehicleType;
+				fetch(url)
+						.then(response => response.json())
+						.then(data => {
+							const vehicleType = data.vehicle_type || 'Not Found';
+							document.getElementById('co_vehicletype').value = vehicleType;
 
-                        updateFieldsBasedOnVehicleType(vehicleType);
-                    })
-                    .catch(error => console.error("Error fetching vehicle type:", error));
-            }
-        });
-    }
+							updateFieldsBasedOnVehicleType(vehicleType);
+						})
+						.catch(error => console.error("Error fetching vehicle type:", error));
+			}
+		});
+	}
 </script>
 <script>
 	function updateFieldsBasedOnVehicleType(vehicleType) {
-        const sealField = $('#co_seal_number');
-        const containerNumberField = $('#co_container_number');
-        const containerDescriptionField = $('#co_containerdescription');
+		const sealField = $('#co_seal_number');
+		const containerNumberField = $('#co_container_number');
+		const containerDescriptionField = $('#co_containerdescription');
 
-        if (vehicleType.toLowerCase().includes('closed')) {
+		if (vehicleType.toLowerCase().includes('closed')) {
 
-            sealField.prop('disabled', false).removeClass('disable_a_href');
-            containerNumberField.prop('disabled', true).addClass('disable_a_href');
-            containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
+			sealField.prop('disabled', false).removeClass('disable_a_href');
+			containerNumberField.prop('disabled', true).addClass('disable_a_href');
+			containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
 
-        } else if (vehicleType.toLowerCase().includes('trailer')) {
+		} else if (vehicleType.toLowerCase().includes('trailer')) {
 
-            sealField.prop('disabled', false).removeClass('disable_a_href');
-            containerNumberField.prop('disabled', false).removeClass('disable_a_href');
-            containerDescriptionField.prop('disabled', false).removeClass('disable_a_href');
+			sealField.prop('disabled', false).removeClass('disable_a_href');
+			containerNumberField.prop('disabled', false).removeClass('disable_a_href');
+			containerDescriptionField.prop('disabled', false).removeClass('disable_a_href');
 
-        } else if (vehicleType.toLowerCase().includes('open')) {
+		} else if (vehicleType.toLowerCase().includes('open')) {
 
-            sealField.prop('disabled', true).addClass('disable_a_href');
-            containerNumberField.prop('disabled', true).addClass('disable_a_href');
-            containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
+			sealField.prop('disabled', true).addClass('disable_a_href');
+			containerNumberField.prop('disabled', true).addClass('disable_a_href');
+			containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
 
-        } else {
+		} else {
 
-            sealField.prop('disabled', true).addClass('disable_a_href');
-            containerNumberField.prop('disabled', true).addClass('disable_a_href');
-            containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
-        }
-    }
+			sealField.prop('disabled', true).addClass('disable_a_href');
+			containerNumberField.prop('disabled', true).addClass('disable_a_href');
+			containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
+		}
+	}
 </script>
+<script>
+		window.addEventListener('DOMContentLoaded', function () {
+		vehicle_allotted();
+	});
+</script>
+
 {% endblock content %}

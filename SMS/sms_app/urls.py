@@ -660,6 +660,12 @@ urlpatterns = [
     path('vendorratemaster_delete/<int:vendorratemaster_id>/', views.vendorratemaster_delete, name='vendorratemaster_delete'),
     path('get_vendor_buy_rate/', views.get_vendor_buy_rate, name='get_vendor_buy_rate'),
     path('get_vendor_sale_rate/', views.get_vendor_sale_rate, name='get_vendor_sale_rate'),
+    path('consignment_pdf_download/', views.consignment_pdf_download, name='consignment_pdf_download'),
+    path('location_master_add/', views.location_master_add, name='location_master_add'),
+    path('location_master_edit/<int:loc_id>/', views.location_master_add, name='location_master_edit'),
+    path('location_master_delete/<int:loc_id>/', views.location_master_delete, name='location_master_delete'),
+    path('location_master_list/', views.location_master_list, name='location_master_list'),
+    path('fetch_bunk_details/', views.fetch_bunk_details, name='fetch_bunk_details'),
 
 ]
 
