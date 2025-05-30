@@ -14,7 +14,7 @@
 								<i class="fas fa-plus"></i> Add
 							</a>
 							<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}"
-							   class="btn btn-warning ml-2 {% if va.va_status != "Completed" %}disable_a_href{% endif %}">
+							   class="btn btn-warning ml-2 {% if va.va_status.status_title != "Completed" %}disable_a_href{% endif %}">
 							<i class="fas fa-truck-loading"></i> Empty Trip
 							</a>
 						</div>
