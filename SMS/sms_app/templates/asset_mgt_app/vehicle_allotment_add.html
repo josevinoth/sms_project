@@ -1,6 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+
 <form method="POST" action="" id="vehicle_allotment" data-vehicle_source-url="{% url 'load_vehicle_source' %}">
 	{% csrf_token %}
 	<div class="row">
@@ -11,6 +12,10 @@
 						<div class="d-flex align-items-center"><h3>Add Vehicle Allotment</h3>
 							<a href="{% url 'vehicle_allotment_insert' %}" class="btn btn-primary ml-3">
 								<i class="fas fa-plus"></i> Add
+							</a>
+							<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}"
+							   class="btn btn-warning ml-2 {% if va.va_status.status_title != "Completed" %}disable_a_href{% endif %}">
+							<i class="fas fa-truck-loading"></i> Empty Trip
 							</a>
 						</div>
 					</div>
@@ -102,14 +107,15 @@
 									</div>
 									{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" pattern="\d{10}" maxlength="10" minlength="10" class+="form-control" title="Driver Number must be exactly 10 digits" %}
 								</div>
-							</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver License</span>
 									</div>
 									{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control " %}
 								</div>
+							</div>
+							<div class="col-3">
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">License Expiry</span>
@@ -128,6 +134,14 @@
 									</div>
 									{% render_field vehicle_allotment_form.va_sale id="va_sale" class="form-control" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Status</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_status id="va_status" class="form-control" %}
+								</div>
+
+
 								{% render_field vehicle_allotment_form.va_updated_by id="va_updated_by" hidden="True" class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-3 container-fluid">
@@ -477,4 +491,6 @@
 	}
 
 </script>
+
+
 {% endblock content %}

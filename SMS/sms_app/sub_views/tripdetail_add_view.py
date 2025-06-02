@@ -41,7 +41,30 @@ def tripdetail_add(request,tripdetail_id=0):
     if request.method == "GET":
         if tripdetail_id == 0:
             print("I am inside Get add tripdetails")
-            trip_det_form = TripdetailaddForm()
+            vehicle_allotment_id = request.GET.get('vehicle_allotment_id')
+
+            initial_data = {}
+            if vehicle_allotment_id:
+                try:
+                    va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
+
+                    initial_data = {
+                        'tr_vehiclenumber': va.va_vehiclenumber,
+                        'tr_drivername': va.va_drivername,
+                        'tr_vehicletype': va.va_vehicletype,
+                        'tr_vehiclesource':va.va_vehiclesource,
+                        'tr_vehicletype_placed':va.va_vehicletype_placed,
+                        'tr_drivernumber':va.va_drivernumber,
+                        'tr_driver_lic':va.va_driver_lic,
+                        'tr_category': 2,
+                    }
+                except Vehicle_allotmentInfo.DoesNotExist:
+                    pass
+            trip_det_form = TripdetailaddForm(initial=initial_data)
+            if vehicle_allotment_id:
+                trip_det_form.fields['tr_category'].widget.attrs['readonly'] = True
+
+
             previous_trip = TripdetailInfo.objects.filter(tr_enquirynumber_id=enquiry_num_id).order_by('-tr_created_at').first()
             if previous_trip and previous_trip.tr_reportedlocation:
                 trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
@@ -78,7 +101,12 @@ def tripdetail_add(request,tripdetail_id=0):
             status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3])
             status_selected = (TripdetailInfo.objects.get(pk=tripdetail_id).tc_financestatus.id)
             print('status_selected',status_selected)
-            consignment_selected = (TripdetailInfo.objects.get(pk=tripdetail_id).tr_consignmentnumber.id)
+            trip_instance = TripdetailInfo.objects.get(pk=tripdetail_id)
+            #consignment_selected = (TripdetailInfo.objects.get(pk=tripdetail_id).tr_consignmentnumber.id)
+            if trip_instance.tr_consignmentnumber:
+                consignment_selected = trip_instance.tr_consignmentnumber.id
+            else:
+                consignment_selected = None
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
             context = {
                 'first_name': first_name,
@@ -97,9 +125,12 @@ def tripdetail_add(request,tripdetail_id=0):
         if tripdetail_id == 0:
             print("I am inside post add tripdetails")
             trip_det_form = TripdetailaddForm(request.POST,request.FILES)
+            vehicle_allotment_id = request.POST.get('vehicle_allotment_id')
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES)
             enquiry_num = request.session.get('ses_enqiury_id')
             cosnignment_number=request.POST.get('tr_consignmentnumber')
+            if vehicle_allotment_id:
+                va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
             if trip_det_form.is_valid():
                 # enquiry_number = request.GET.get('enquiry_number')
                 # consignment_number = request.GET.get('consignment_number')
@@ -107,19 +138,30 @@ def tripdetail_add(request,tripdetail_id=0):
                 # vehicle_number=TripdetailInfo.objects.get(pk=tripdetail_id).tr_vehiclenumber
                 # print('consignment_number',consignment_number)
                 # print('vehicle_number',vehicle_number)
-                trip_status_list=list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num,tr_consignmentnumber=cosnignment_number).values_list('tc_financestatus',flat=True))
-                print('trip_status_list',trip_status_list)
-                for i in trip_status_list:
-                    if i==1:
-                        messages.error(request, 'Please close the open Trip against this enquiry and try to create new Trip')
-                        return redirect(request.META['HTTP_REFERER'])
+                if cosnignment_number:
+                    trip_status_list = list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num,tr_consignmentnumber=cosnignment_number).values_list('tc_financestatus', flat=True))
+
+                    for i in trip_status_list:
+                        if i == 1:
+                            messages.error(request,
+                                           'Please close the open Trip against this enquiry and try to create new Trip')
+                            return redirect(request.META['HTTP_REFERER'])
                     else:
                         pass
-                try:
-                    last_id = TripdetailInfo.objects.latest('id').id
-                    trip_num_next = str('TN_') + str(int(((TripdetailInfo.objects.get(id=last_id)).tr_tripnumber).replace('TN_', '')) + 1)
-                except ObjectDoesNotExist:
-                    trip_num_next = str('TN_') + str(1000000)
+                # SAFELY GENERATE trip_num_next
+                trip_num_next = 'TN_1000000'  # default fallback
+
+                latest_trip = TripdetailInfo.objects.exclude(tr_tripnumber__isnull=True).exclude(
+                    tr_tripnumber='').order_by('-id').first()
+
+                if latest_trip and latest_trip.tr_tripnumber and latest_trip.tr_tripnumber.startswith('TN_'):
+                    try:
+                        last_number = int(latest_trip.tr_tripnumber.replace('TN_', ''))
+                        trip_num_next = f'TN_{last_number + 1}'
+                    except (ValueError, TypeError):
+                        # If parsing fails, keep fallback value
+                        pass
+
                 trip_det_form.save()
                 tripclosurefiles_form.save()
                 print("Main Form is Valid")
