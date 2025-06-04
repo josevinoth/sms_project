@@ -12,8 +12,9 @@
     </tr>
     {% for data in vehicle_data %}
     <tr>
-        <td>{{ data.latitude }}</td>
-        <td>{{ data.longitude }}</td>
+    <tr>
+        <td>{{ data.lat }}</td>        <!-- Correct -->
+        <td>{{ data.lon }}</td>        <!-- Correct -->
         <td>{{ data.speed }}</td>
         <td>{{ data.timestamp }}</td>
     </tr>
