@@ -11,41 +11,26 @@ from ..models import VehiclemasterInfo,Vehicle_allotmentInfo,ConsignmentgoodsInf
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
 
-
 @login_required(login_url='login_page')
-def consignmentdetail_nav(request, consignmentdetail_id=0):
+def consignmentdetail_nav(request,consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     print("I am inside Get add consignmentdetails")
-
+    enquiry_num = EnquirynoteInfo.objects.get(pk=consignmentdetail_id).en_enquirynumber
     enquiry_num_id = consignmentdetail_id
-    request.session['ses_enqiury_num_id'] = enquiry_num_id
-
-    enquiry_obj = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
-    enquiry_num = enquiry_obj.en_enquirynumber
     request.session['ses_enqiury_num'] = enquiry_num
-    vehicle_id_param = request.GET.get('vehicle_number')
-
-    consignmentdetail_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
-
-    con_det_form = ConsignmentdetailaddForm()
-    form = ConsignmentgoodsaddForm()
-
+    request.session['ses_enqiury_num_id'] = enquiry_num_id
+    consignmentdetail_list=ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+    print('enquiry_num',enquiry_num)
     context = {
         'first_name': first_name,
         'user_id': user_id,
-        'con_det_form': con_det_form,
-        'form': form,
         'enquiry_num': enquiry_num,
         'enquiry_num_id': enquiry_num_id,
         'consignmentdetail_list': consignmentdetail_list,
-        'consignmentgoods_list': [],
-        'vehicle_type': '',
-        'vehicle_id_param': vehicle_id_param,
-        'consignmentdetail_id': 0,
-        'consignmentgoods_id_val': request.session.get('ses_consignment_id'),
+        'consignmentdetail_id': consignmentdetail_id,
     }
-    return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
+    return render(request, "asset_mgt_app/consignmentdetail_nav.html", context)
 @login_required(login_url='login_page')
 def consignmentdetail_add(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
@@ -53,8 +38,6 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     enquiry_num = request.session.get('ses_enqiury_num')
     enquiry_num_id = request.session.get('ses_enqiury_num_id')
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
-    vehicle_id_param = request.GET.get('vehicle_number')
-
 
     customer = EnquirynoteInfo.objects.get(pk=enquiry_num_id).en_customername
     customer_obj = CustomerInfo.objects.get(cu_name=customer)
@@ -88,7 +71,6 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'consignmentdetail_list': ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id),
             'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentdetail_id),
             'vehicle_type': vehicle_type,
-            'vehicle_id_param': vehicle_id_param,
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
@@ -258,22 +240,26 @@ def get_vehicle_type(request, vehicle_id):
 def consignment_pdf_download(request):
     consignment_id = request.session.get('ses_consignment_detail_id')
     enquiry_num = request.session.get('ses_enqiury_num_id')
+    en_fromlocation = request.session.get('ses_en_fromlocation')
+    en_tolocation = request.session.get('ses_en_tolocation')
+
     print("in pdf function")
-    print(enquiry_num)
-    print(consignment_id)
+    print("Enquiry ID:", enquiry_num)
+    print("Consignment ID:", consignment_id)
+    print("From Location:", en_fromlocation)
+    print("To Location:", en_tolocation)
 
     enquiry = EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num)
-    print(enquiry)
     vehicle = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num)
     consignment = get_object_or_404(ConsignmentdetailInfo, pk=consignment_id)
-    # enquiry = get_object_or_404(EnquirynoteInfo, en_enquirynumber=enquiry_num)
 
     today = datetime.now().strftime("%d-%b-%Y")
 
     context = {
         'vehicle': vehicle,
         'consignment': consignment,
-        # 'enquiry': enquiry,
+        'en_fromlocation': en_fromlocation,
+        'en_tolocation': en_tolocation,
         'today_date': today,
     }
 

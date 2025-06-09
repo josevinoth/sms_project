@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
+from .places_mod import Places
 from ..models import EnquirynoteInfo,Vehicle_allotmentInfo,CustomerInfo,MyUser,GST_payable_info,StatusList
 
 class ConsignmentdetailInfo(models.Model):
@@ -23,6 +24,8 @@ class ConsignmentdetailInfo(models.Model):
     co_cusrefnum_check = models.BooleanField(blank=True,null=True)
     co_remarks = models.TextField(max_length=500, null=True, blank=True)
     co_customercode = models.CharField(max_length=100,default = '')
+    co_fromlocaion = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='co_fromlocaion',db_column='co_fromlocaion', null=True, blank=True)
+    co_tolocation = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='co_tolocation',db_column='co_tolocation', null=True, blank=True)
 
     def __str__(self):
         return self.co_consignmentnumber
