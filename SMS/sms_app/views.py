@@ -150,3 +150,4 @@ from .sub_views.trans_fastag_view import fastag_enquiry_view
 from .sub_views.trans_gps import get_vehicle_position
 from .sub_views.vendorratemaster_add_view import vendorratemaster_add,vendorratemaster_list,vendorratemaster_delete
 from .sub_views.Location_master_view import location_master_add,location_master_list,location_master_delete
+from .sub_views.trip_approval_view import trip_approval_view,update_trip_approval

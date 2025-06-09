@@ -666,6 +666,8 @@ urlpatterns = [
     path('location_master_delete/<int:loc_id>/', views.location_master_delete, name='location_master_delete'),
     path('location_master_list/', views.location_master_list, name='location_master_list'),
     path('fetch_bunk_details/', views.fetch_bunk_details, name='fetch_bunk_details'),
+    path('trip_approval_view/', views.trip_approval_view, name='trip_approval_view'),
+    path('trip-approval/update/<int:trip_id>/', views.update_trip_approval, name='update_trip_approval'),
 
 ]
 
