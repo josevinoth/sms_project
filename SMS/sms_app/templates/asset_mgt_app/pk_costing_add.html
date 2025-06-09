@@ -56,7 +56,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Cost Type</span>
 									</div>
-									{% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control" %}
+									{% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler(); updateStockStatus();" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -232,23 +232,6 @@
 											</div>
 											{% render_field form.ct_stock_status id="ct_stock_status" class="form-control disable_a_href" %}
 										</div>
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Excess Value</span>
-											</div>
-											{% render_field form.ct_exe_value id="ct_exe_value" class="form-control disable_a_href" %}
-										</div>
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Excess Stock Status</span>
-											</div>
-											{% render_field form.ct_excess_status id="ct_excess_status" class="form-control disable_a_href" %}
-										</div>
-										{% render_field form.ct_exe_height_req id="ct_exe_height_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										{% render_field form.ct_exe_width_req id="ct_exe_width_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										{% render_field form.ct_exe_length_req id="ct_exe_length_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										{% render_field form.ct_exe_quantity_req id="ct_exe_quantity_req"  hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										{% render_field form.ct_exe_sqrt_req id="ct_exe_sqrt_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
 									</div>
 								</div>
@@ -943,4 +926,21 @@
         minimumInputLength: 1,
     });
 </script>
+<script>
+  function updateStockStatus() {
+    const costType = document.getElementById('ct_cost_type');
+    const stockStatus = document.getElementById('ct_stock_status');
+
+    if (!costType || !stockStatus) return;
+
+    const costTypeValue = parseInt(costType.value);
+
+    if (costTypeValue === 8) {
+      stockStatus.value = 1;
+    } else {
+      stockStatus.value = 4;
+    }
+  }
+</script>
+
 {% endblock content %}

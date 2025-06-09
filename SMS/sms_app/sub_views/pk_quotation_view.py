@@ -62,7 +62,7 @@ def pk_quotation_add(request, quotation_id=0):
                 'role': role,
                 'role_id': role_id,
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
-                'total_cft_display': request.session.get('total_cft_display', 0),  # ✅ ADD THIS LINE
+                'total_cft_display': request.session.get('total_cft_display', 0),
 
             }
         else:
@@ -145,7 +145,7 @@ def pk_quotation_add(request, quotation_id=0):
                                 pkqt_cost_type=8,
                                 pkqt_stock_type=1
                             ).aggregate(Sum('pkqt_sqrt_req'))['pkqt_sqrt_req__sum'] or 0.0
-
+                            print("total_cft",total_cft)
                             request.session['total_cft_display'] = round(total_cft, 2)
                         else:
                             request.session['total_cft_display'] = 0.0
@@ -156,10 +156,28 @@ def pk_quotation_add(request, quotation_id=0):
                     except PkstockpurchasesInfo.DoesNotExist:
                         pass  # Ignore if stock purchase number is not found
                 else:
-                    form.save()
+                    quotation=form.save()
+                    # Extract relevant fields
+                    cost_type = quotation.pkqt_cost_type.id
+                    stock_type = quotation.pkqt_stock_type.id
+                    assessment_id = quotation.pkqt_assessment_num.id
+
+                    # ✅ Only for cost_type = 8 and stock_type = 1
+                    if cost_type == 8 and stock_type == 1:
+                        total_cft = PkquotationInfo.objects.filter(
+                            pkqt_assessment_num=assessment_id,
+                            pkqt_cost_type=8,
+                            pkqt_stock_type=1
+                        ).aggregate(Sum('pkqt_sqrt_req'))['pkqt_sqrt_req__sum'] or 0.0
+                        print("total_cft", total_cft)
+                        request.session['total_cft_display'] = round(total_cft, 2)
+                    else:
+                        request.session['total_cft_display'] = 0.0
+
                     messages.warning(request, 'Stock saved without Stock Purchase Number')
             else:
                 form.save()
+
                 messages.success(request, 'Quotation Updated Successfully')
 
             # ✅ Store selected values in session after a successful form save
