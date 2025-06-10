@@ -50,10 +50,10 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
 
     else:
         if consignmentgoods_id == 0:
-            form = ConsignmentgoodsaddForm(request.POST)
+            form = ConsignmentgoodsaddForm(request.POST, request.FILES)
         else:
             consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
-            form = ConsignmentgoodsaddForm(request.POST, instance=consignmentgoods)
+            form = ConsignmentgoodsaddForm(request.POST, request.FILES, instance=consignmentgoods)
 
         form.fields['cg_description'].queryset = Stock_type.objects.all()
         if form.is_valid():

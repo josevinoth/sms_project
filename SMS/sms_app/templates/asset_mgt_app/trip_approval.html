@@ -1,0 +1,86 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+{% load currency_format %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Trip Approval</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    </div>
+<hr>
+    <table id="trip_approval_table" class="table table-bordered table-sm">
+    <thead class="thead-dark">
+        <tr>
+            <th>Trip No</th>
+            <th>Consignment No</th>
+            <th>Ewaybill No</th>
+            <th>Ewaybill Attachment</th>
+            <th>Invoice No</th>
+            <th>Invoice Attachment</th>
+            <th>Approval</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for trip in trip_list %}
+            {% for consignment in consignment_map|get_item:trip.id %}
+            <tr>
+                <td>{{ trip.tr_tripnumber }}</td>
+                <td>{{ trip.tr_consignmentnumber }}</td>
+                <td>{{ consignment.cg_ebillno }}</td>
+                <td>
+                    {% if consignment.cg_ewaybill_att %}
+                        <a href="{{ consignment.cg_ewaybill_att.url }}" target="_blank">Download</a>
+                    {% else %} No File {% endif %}
+                </td>
+                <td>{{ consignment.cg_consignerinvoice }}</td>
+                <td>
+                    {% if consignment.cg_invoice_att %}
+                        <a href="{{ consignment.cg_invoice_att.url }}" target="_blank">Download</a>
+                    {% else %} No File {% endif %}
+                </td>
+                <td>
+    <form method="post" action="{% url 'update_trip_approval' trip.id %}">
+        {% csrf_token %}
+        <select name="ta_approval_status" class="form-control form-control-sm" required>
+            <option value="" disabled selected>--Select--</option>
+            {% for status in status_list %}
+                <option value="{{ status.id }}"
+                    {% if trip.tr_approval and trip.tr_approval.ta_approval_status.id == status.id %}
+                        selected
+                    {% endif %}>{{ status }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-sm btn-primary mt-1">Update</button>
+    </form>
+</td>
+
+            </tr>
+            {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    $(document).ready(function() {
+    $('#trip_approval_table').DataTable({
+        order: [0, 'desc' ],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel','print'
+        ]
+    });
+} );
+</script>
+{% endblock content %}
