@@ -407,6 +407,7 @@ urlpatterns = [
     path('pk_costing_get_customer/', views.pk_costing_get_customer, name='pk_costing_get_customer'),  # costing_summary_check_unique_field
     path('vehicle_allotment_list/', views.vehicle_allotment_list, name='vehicle_allotment_list'),  # List vehicle_allotment
     path('vehicle_allotment_insert/', views.vehicle_allotment_add, name='vehicle_allotment_insert'),  # Add vehicle_allotment
+    path('vehicle_allotment_update_enquiry/<int:enquiry_id>/<str:vehicle_number>/', views.vehicle_allotment_enquiry, name='vehicle_allotment_update_enquiry'),  # update vehicle_allotment
     path('vehicle_allotment_update/<int:vehicle_allotment_id>', views.vehicle_allotment_add, name='vehicle_allotment_update'),  # update vehicle_allotment
     path('vehicle_allotment_delete/<int:vehicle_allotment_id>', views.vehicle_allotment_delete, name='vehicle_allotment_delete'),  # delete vehicle_allotment
     path('vehicle_allotment_nav/<int:vehicle_allotment_id>', views.vehicle_allotment_nav, name='vehicle_allotment_nav'),  # nav vehicle_allotment
