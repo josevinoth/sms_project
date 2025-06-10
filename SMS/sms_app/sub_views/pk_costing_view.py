@@ -1,6 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Sum
 
 from ..forms import ModifyDimensionsForm,CostingSearchForm,PkcostingForm
 from ..models import POdimension,Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo,Costtype,Pkstocktype,Stockdescription,pk_itemInfo,pk_itemdescriptionInfo
@@ -60,6 +61,8 @@ def costing_add(request, costing_id=0):
             'ses_customer_po_id': ses_customer_po_id,
             'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id, ct_customer_po=ses_customer_po_id),
             'excess_costing_list': PkcostingInfo.objects.all(),
+            'total_cft_display': request.session.get('ct_total_cft_display', 0),
+
         }
         return render(request, "asset_mgt_app/pk_costing_add.html", context)
 
@@ -110,7 +113,25 @@ def costing_add(request, costing_id=0):
                         #     # Stock quantity is valid, proceed to save
                         #     form.save()
                         #     messages.success(request, 'Stock Updated Successfully')
-                        form.save()
+                        # form.save()
+                        # No stock purchase number provided, still save the record
+                        costing = form.save()
+                        # Extract relevant fields
+                        cost_type = costing.ct_cost_type.id
+                        stock_type = costing.ct_stock_type.id
+                        assessment_id = costing.ct_assessment_num.id
+
+                        if cost_type == 8 and stock_type == 1:
+                            total_cft = PkcostingInfo.objects.filter(
+                                ct_assessment_num=assessment_id,
+                                ct_cost_type=8,
+                                ct_stock_type=1
+                            ).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum'] or 0.0
+                            print("total_cft", total_cft)
+                            request.session['ct_total_cft_display'] = round(total_cft, 2)
+                        else:
+                            request.session['ct_total_cft_display'] = 0.0
+
                         print("Costing form is valid and stock updated.")
                         messages.success(request, 'Stock Updated Successfully')
                     except PkstockpurchasesInfo.DoesNotExist:
@@ -118,7 +139,23 @@ def costing_add(request, costing_id=0):
 
                 else:
                     # No stock purchase number provided, still save the record
-                    form.save()
+                    costing=form.save()
+                    # Extract relevant fields
+                    cost_type = costing.ct_cost_type.id
+                    stock_type = costing.ct_stock_type.id
+                    assessment_id = costing.ct_assessment_num.id
+
+                    if cost_type == 8 and stock_type == 1:
+                        total_cft = PkcostingInfo.objects.filter(
+                            ct_assessment_num=assessment_id,
+                            ct_cost_type=8,
+                            ct_stock_type=1
+                        ).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum'] or 0.0
+                        print("total_cft", total_cft)
+                        request.session['ct_total_cft_display'] = round(total_cft, 2)
+                    else:
+                        request.session['ct_total_cft_display'] = 0.0
+
                     messages.success(request, 'Record Saved Successfully')
             else:
                 # If cost type is not stock-related, save the record

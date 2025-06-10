@@ -59,7 +59,7 @@ def costingsummary_add(request,costingsummary_id=0):
             # print(wood_cost)
             PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_wood_cost=wood_cost)
 
-            total_cft = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8,ct_stock_type=1).aggregate(Sum('ct_cft'))['ct_cft__sum']
+            total_cft = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8,ct_stock_type=1).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum']
             if total_cft is not None:
                 total_cft = round(total_cft, 2)
             else:

@@ -59,6 +59,7 @@ class PkcostingInfo(models.Model):
                                               related_name='ct_weight_Consumption', db_column='ct_weight_Consumption',
                                               null=True, blank=True)
     ct_cft_sqft_req = models.FloatField(blank=True, null=True, default=0.0)
+    ct_total_cft_display = models.FloatField(blank=True, null=True, default=0.0)
 
 
     class Meta:

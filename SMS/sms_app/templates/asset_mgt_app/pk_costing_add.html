@@ -163,6 +163,13 @@
 											</div>
 											{% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
 										</div>
+										<div class="input-group input-group-sm mb-3" id="total_cft">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Total CFT</span>
+											</div>
+											{% render_field form.ct_total_cft_display id="ct_total_cft_display" value=total_cft_display onchange="change_cost_type()" class="form-control disable_a_href" %}
+										</div>
+
 										<div class="input-group input-group-sm mb-3" >
 											<div class="input-group-prepend">
 												<span class="input-group-text">UOM-Consumption Type</span>
@@ -467,7 +474,10 @@
                 $('#ct_days').addClass('disable_a_href');
                 var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
                 var quantity = parseInt(document.getElementById("ct_quantity_req").value) || 0;
-                var totalCost = rate * quantity;
+       			document.getElementById("ct_total_cft_display").value = "{{ total_cft_display }}";
+				var total_cft = parseFloat(document.getElementById("ct_total_cft_display").value) || 0;
+
+                var totalCost = rate * total_cft;
                 document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
                 var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
                 var totalboxCost = totalCost * na_quantity;
@@ -927,20 +937,20 @@
     });
 </script>
 <script>
-  function updateStockStatus() {
-    const costType = document.getElementById('ct_cost_type');
-    const stockStatus = document.getElementById('ct_stock_status');
+	function updateStockStatus() {
+      const costType = document.getElementById('ct_cost_type');
+      const stockStatus = document.getElementById('ct_stock_status');
 
-    if (!costType || !stockStatus) return;
+      if (!costType || !stockStatus) return;
 
-    const costTypeValue = parseInt(costType.value);
+      const costTypeValue = parseInt(costType.value);
 
-    if (costTypeValue === 8) {
-      stockStatus.value = 1;
-    } else {
-      stockStatus.value = 4;
+      if (costTypeValue === 8) {
+        stockStatus.value = 1;
+      } else {
+        stockStatus.value = 4;
+      }
     }
-  }
 </script>
 
 {% endblock content %}
