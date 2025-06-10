@@ -41,7 +41,7 @@ class TripdetailInfo(models.Model):
     tr_iou = models.ForeignKey(iou_info, related_name='tr_iou', db_column='tr_iou', on_delete=models.CASCADE, null=True,blank=True)
     tr_dock_in_time = models.DateTimeField(null=True, blank=True)
     tr_dock_out_time = models.DateTimeField(null=True, blank=True)
-
+    tr_approval = models.ForeignKey('sms_app.Trip_approval_info', on_delete=models.SET_NULL, null=True, blank=True)
 
     tc_tripcost = models.FloatField(default=0.0)
     tc_parkingcost = models.FloatField(default=0.0)
@@ -54,6 +54,7 @@ class TripdetailInfo(models.Model):
     tc_financestatus = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE,blank=True,null=True)
     tc_pod_attachment = models.FileField(upload_to=trip_attach_path, null=True,blank=True)
     tr_customerref = models.CharField(max_length=30,null=True,blank=True)
+
 
 
     class Meta:

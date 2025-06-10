@@ -5,7 +5,7 @@
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 				<div class="card-body bg-light" id="consignment_goods_id">
-					<form method="POST" action="">
+					<form method="POST" action="" enctype="multipart/form-data">
 						{% csrf_token %}
 						<div class="row">
 							<div class="col-3">
@@ -87,6 +87,18 @@
 										<span class="input-group-text">Eway bill No.</span>
 									</div>
 									{% render_field form.cg_ebillno id="cg_ebillno" class="form-control" maxlength="12" pattern="[A-Z0-9]{12}" title="Enter exactly 12 uppercase letters or digits" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Eway Bill Attachment</span>
+									</div>
+									{% render_field form.cg_ewaybill_att id="cg_ewaybill_att" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Invoice Attachment</span>
+									</div>
+									{% render_field form.cg_invoice_att id="cg_invoice_att" class="form-control" %}
 								</div>
 							</div>
 							<div class="col-3">
@@ -252,38 +264,50 @@
 </script>
 <script>
 	document.getElementById('add-description-form').addEventListener('submit', function (e) {
-        e.preventDefault();
+    e.preventDefault();
 
-        let description = document.getElementById('new_cg_description').value;
+    let description = document.getElementById('new_cg_description').value.trim();
 
-        fetch("{% url 'add_description' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': '{{ csrf_token }}',
-            },
-            body: new URLSearchParams({
-                'cg_description': description
-            })
+    fetch("{% url 'add_description' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: new URLSearchParams({
+            'cg_description': description
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.stock_type) {
-                alert('Description added: ' + data.stock_type);
-                $('#addDescriptionModal').modal('hide');
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.stock_type) {
+            alert('Description added: ' + data.stock_type);
+            $('#addDescriptionModal').modal('hide');
 
-                const select = document.getElementById('cg_description');
+            const select = document.getElementById('cg_description');
+            const exists = Array.from(select.options).some(
+                option => option.textContent.trim().toLowerCase() === data.stock_type.trim().toLowerCase()
+            );
+
+            if (!exists) {
                 const option = document.createElement('option');
-                option.value = data.id;              // Correct ID
-                option.textContent = data.stock_type; // Text label
-                option.selected = true;              // Pre-select the new option
+                option.value = data.id;
+                option.textContent = data.stock_type;
+                option.selected = true;
                 select.appendChild(option);
             } else {
-                alert('Error: ' + data.error);
+                // Option already exists, just select it
+                Array.from(select.options).forEach(option => {
+                    if (option.textContent.trim().toLowerCase() === data.stock_type.trim().toLowerCase()) {
+                        option.selected = true;
+                    }
+                });
             }
-        });
+        } else {
+            alert('Error: ' + data.error);
+        }
     });
-
+});
 </script>
 
 <script>

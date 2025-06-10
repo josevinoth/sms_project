@@ -1,25 +1,89 @@
 {% extends "asset_mgt_app/base.html" %}
-{% load widget_tweaks %}
+{% load static %}
 {% block content %}
-<h2>Vehicle Position Data</h2>
-{% if vehicle_data %}
-<table>
-    <tr>
-        <th>Latitude</th>
-        <th>Longitude</th>
-        <th>Speed</th>
-        <th>Timestamp</th>
-    </tr>
-    {% for data in vehicle_data %}
-    <tr>
-        <td>{{ data.latitude }}</td>
-        <td>{{ data.longitude }}</td>
-        <td>{{ data.speed }}</td>
-        <td>{{ data.timestamp }}</td>
-    </tr>
-    {% endfor %}
-</table>
-{% else %}
-<p>No data available for the vehicle.</p>
-{% endif %}
-{% endblock content %}
+
+<div class="row">
+  <div class="col">
+    <div class="container-fluid">
+      <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+        <div class="row">
+          <div class="col-10 d-flex align-items-center justify-content-center">
+            <div class="card-header text-center w-100">
+              <h3>Vehicle Position Tracker</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body bg-light">
+          <form method="POST" class="mb-3">
+            {% csrf_token %}
+            <div class="row border border-5 rounded border-primary m-2 p-2">
+              <div class="col-md-6">
+                <div class="input-group input-group-sm mb-3">
+                  <label class="input-group-text" for="vehicle_number">Select Vehicle</label>
+                  <select name="vehicle_number" id="vehicle_number" class="form-select" required>
+                    <option value="">-- Select --</option>
+                    {% for v in vehicle_data %}
+                      <option value="{{ v.number }}" {% if v.number == selected_number %}selected{% endif %}>
+                        {{ v.number }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-success">Track</button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          {% if error %}
+            <div class="alert alert-danger">Error: {{ error }}</div>
+          {% endif %}
+
+          {% if selected_data %}
+            <div class="card mt-3">
+              <div class="card-header bg-success text-white">
+                Vehicle: {{ selected_data.number }}
+              </div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item text-dark"><strong>Speed:</strong> {{ selected_data.speed }} km/h</li>
+                <li class="list-group-item text-dark"><strong>Status:</strong> {{ selected_data.status }}</li>
+                <li class="list-group-item text-dark"><strong>Timestamp:</strong> {{ selected_data.timestamp }}</li>
+              </ul>
+            </div>
+
+            <div id="map" style="height: 400px; width: 100%; margin-top: 20px;"></div>
+
+            <!-- Leaflet CSS & JS -->
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" />
+            <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+
+            <script>
+              document.addEventListener("DOMContentLoaded", function () {
+                const lat = parseFloat("{{ selected_data.lat|default:'0' }}");
+                const lon = parseFloat("{{ selected_data.lon|default:'0' }}");
+
+                if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
+                  const map = L.map("map").setView([lat, lon], 16);
+
+                  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    maxZoom: 19,
+                    attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+                  }).addTo(map);
+
+                  L.marker([lat, lon])
+                    .addTo(map)
+                    .bindPopup(`<b>{{ selected_data.number }}</b><br>{{ selected_data.timestamp }}<br>Speed: {{ selected_data.speed }} km/h`)
+                    .openPopup();
+                }
+              });
+            </script>
+          {% else %}
+            <p class="text-muted">No vehicle selected or data unavailable.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
