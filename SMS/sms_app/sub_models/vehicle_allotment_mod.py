@@ -21,7 +21,7 @@ class Vehicle_allotmentInfo(models.Model):
     va_vendor = models.ForeignKey(Vendor_info,on_delete=models.CASCADE, default='',blank=True, null=True)
     va_buy = models.FloatField(max_length=100,null=True,blank=True)
     va_sale = models.FloatField(max_length=100,null=True,blank=True)
-    va_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default='')
+    va_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=5,blank=True,null=True)
 
 
     def __str__(self):

@@ -1,12 +1,33 @@
 import json
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Sum
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Sum, Q
 from ..forms import VehicleallotmentForm
 from ..models import Enquirynotevehicle,TripdetailInfo,OwnershipInfo,VehiclemasterInfo,EnquirynoteInfo,Vehicle_allotmentInfo,VendorratemasterInfo1, RtratemasterInfo
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 
+
+@login_required(login_url='login_page')
+def vehicle_allotment_enquiry(request, enquiry_id, vehicle_number):
+    # You can now use enquiry_id and vehicle_number
+    enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
+    print('vehicle_number',vehicle_number)
+    try:
+        vehicle_number_id = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_number).id
+    except VehiclemasterInfo.DoesNotExist:
+        vehicle_number_id = None
+    print('vehicle_number_id',vehicle_number_id)
+    # Example: filter vehicle allotment by both
+    vehicle_allotment = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry).filter(Q(va_vehiclenumber_mkt=vehicle_number) | Q(va_vehiclenumber=vehicle_number_id)).first()  # get first matching record or None
+    if vehicle_allotment:
+        # Redirect to the update URL with the found vehicle_allotment id
+        return redirect('vehicle_allotment_update', vehicle_allotment_id=vehicle_allotment.id)
+    else:
+        # Handle case when no allotment found, e.g. redirect to a create page or show error
+        # For example, redirect to a create page:
+        return redirect('vehicle_allotment_insert')  # Adjust this as per your URL names
 
 @login_required(login_url='login_page')
 def vehicle_allotment_nav(request,vehicle_allotment_id=0):
@@ -29,19 +50,21 @@ def vehicle_allotment_nav(request,vehicle_allotment_id=0):
 def vehicle_allotment_add(request,vehicle_allotment_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    enquiry_num_id = request.session.get('ses_enqiury_id')
-
     if request.method == "GET":
         if vehicle_allotment_id == 0:
             print("I am inside Get add vehicle_allotments")
             enquiry_num_id = request.session.get('ses_enqiury_id')
             vehicle_allotment_form = VehicleallotmentForm()
+            try:
+                vehicle_allotment_list= Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id)
+            except ObjectDoesNotExist:
+                vehicle_allotment_list = []
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
                 'vehicle_allotment_form': vehicle_allotment_form,
                 'enquiry_num_id': enquiry_num_id,
-                'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id),
+                'vehicle_allotment_list': vehicle_allotment_list,
             }
         else:
             print("I am inside Get edit vehicle_allotments")
