@@ -81,18 +81,21 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
             print("I am inside post add Enuirynote")
             form = EnquirynoteaddForm(request.POST)
             if form.is_valid():
-                try:
-                    last_id = EnquirynoteInfo.objects.latest('id').id
-                    enquiry_num_next = str('EN_') + str(int(((EnquirynoteInfo.objects.get(id=last_id)).en_enquirynumber).replace('EN_', '')) + 1)
-                except ObjectDoesNotExist:
-                    enquiry_num_next = str('EN_') + str(1000000)
-                form.save()
+                # Save form but do not commit immediately
+                instance = form.save(commit=False)
+                instance.save()  # ID is generated after this
+
+                # Generate enquiry number based on current instance ID
+                enquiry_num_next = f"EN_{1000000 + instance.id}"
+
+                # Update the enquiry number and save
+                instance.en_enquirynumber = enquiry_num_next
+                instance.save(update_fields=['en_enquirynumber'])
+
                 print("Enquiry Main Form Saved")
-                last_id = EnquirynoteInfo.objects.latest('id').id
-                EnquirynoteInfo.objects.filter(id=last_id).update(en_enquirynumber=enquiry_num_next)
                 messages.success(request, 'Record Updated Successfully')
-                enquiry_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num_next).id
-                return redirect('/SMS/enquirynote_update/' + str(enquiry_id))
+
+                return redirect(f'/SMS/enquirynote_update/{instance.id}')
             else:
                 print("Enquiry Main Form not Saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
