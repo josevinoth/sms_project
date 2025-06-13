@@ -36,8 +36,8 @@ def home_page(request):
     customer_contract_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30,ca_status=1))
     customer_rate_due_count = len(Customerattach.objects.filter(ca_rate_due_days__lte=30,ca_status=1))
     total_dues = customer_contract_due_count + customer_rate_due_count
-    approval_count = TripdetailInfo.objects.filter(
-        Q(tr_approval__isnull=True)).count()
+    approval_count = TripdetailInfo.objects.filter(Q(tr_approval__isnull=True)).count()
+
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
