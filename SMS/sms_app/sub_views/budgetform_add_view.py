@@ -36,7 +36,68 @@ def budgetform_add(request,budget_id=0):
             budget = BudgetInfo.objects.get(pk=budget_id)
             form = BudgetForm(request.POST, instance=budget)
         if form.is_valid():
-            form.save()
+            instance = form.save(commit=False)
+
+            # Add the corp staff calculation logic here:
+            instance.bf_corp_staff = (
+                    (instance.bf_bonus_corp_staff or 0) +
+                    (instance.bf_EDLI_contribution_corp_staff or 0) +
+                    (instance.bf_employer_contribution_to_ESI_corp_staff or 0) +
+                    (instance.bf_employer_contribution_to_PF_corp_staff or 0)+
+                    (instance.bf_EPF_admin_charges_corp_staff or 0) +
+                    (instance.bf_gratuity_corp_staff or 0) +
+                    (instance.bf_salaries_wages_corp_staff or 0)
+            )
+            instance.bf_dept_staff = (
+                    (instance.bf_bonus_staff or 0) +
+                    (instance.bf_EDLI_contribution_staff or 0) +
+                    (instance.bf_employer_contribution_to_ESI_staff or 0) +
+                    (instance.bf_employer_contribution_to_ESI_staff or 0) +
+                    (instance.bf_EPF_admin_charges_staff or 0) +
+                    (instance.bf_gratuity_staff or 0) +
+                    (instance.bf_salaries_wages_staff or 0)
+            )
+            instance.bf_fixed = (
+                    (instance.bf_depreciation or 0) +
+                    (instance.bf_software_AMC_charges or 0) +
+                    (instance.bf_insurance_warehouse or 0) +
+                    (instance.bf_rates_taxes or 0) +
+                    (instance.bf_rent_premises or 0) +
+                    (instance.bf_security_service_charges or 0) +
+                    (instance.bf_manpower_supply_expenses or 0)
+            )
+            instance.bf_variable = (
+                    (instance.bf_crane_handling_expenses or 0) +
+                    (instance.bf_diesel_expenses_forklift or 0) +
+                    (instance.bf_forklift_handling_expenses or 0) +
+                    (instance.bf_fumigation_expenses or 0)
+            )
+            instance.bf_oe_Fixed = (
+                    (instance.bf_housekeeping_salary or 0) +
+                    (instance.bf_insurance_corp_staff or 0) +
+                    (instance.bf_insurance_staff or 0) +
+                    (instance.bf_internet_data_card_expenses or 0) +
+                    (instance.bf_rent_plant_machinery or 0) +
+                    (instance.bf_system_amc or 0)
+            )
+            instance.bf_oe_variable = (
+                    (instance.bf_advertisement_business_promotion or 0) +
+                    (instance.bf_conveyance_expenses or 0) +
+                    (instance.bf_diesel_expenses_gense or 0) +
+                    (instance.bf_handling_expenses or 0) +
+                    (instance.bf_hotel_boarding_lodging_expenses or 0) +
+                    (instance.bf_office_repairs_maintenance or 0) +
+                    (instance.bf_office_supplies_general_expenses or 0)+
+                    (instance.bf_postage_courier or 0) +
+                    (instance.bf_power_fuel or 0) +
+                    (instance.bf_printing_stationery or 0) +
+                    (instance.bf_service_maintenance_expenses or 0) +
+                    (instance.bf_staff_welfare_staff or 0) +
+                    (instance.bf_telephone_mobile_expenses or 0) +
+                    (instance.bf_training_expenses or 0) +
+                    (instance.bf_travelling_expenses or 0)
+            )
+            instance.save()
             if budget_id == 0:
                 messages.success(request, 'Record Saved Successfully')
             else:

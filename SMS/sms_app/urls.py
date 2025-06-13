@@ -668,7 +668,8 @@ urlpatterns = [
     path('fetch_bunk_details/', views.fetch_bunk_details, name='fetch_bunk_details'),
     path('trip_approval_view/', views.trip_approval_view, name='trip_approval_view'),
     path('trip-approval/update/<int:trip_id>/', views.update_trip_approval, name='update_trip_approval'),
-
+    path('add_consigner/', views.add_consigner, name='add_consigner'),
+    path('add_consignee/', views.add_consignee, name='add_consignee'),
 ]
 
 

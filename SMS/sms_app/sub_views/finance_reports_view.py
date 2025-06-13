@@ -35,12 +35,12 @@ def branch_profit_loss(request):
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
-        expenses_filter['exp_ext_updated_on__gte'] = from_date
+        expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
         invoices_filter['wh_checkin_time__gte'] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
-        expenses_filter['exp_ext_updated_on__lte'] = to_date
+        expenses_filter['exp_ext_expense_number__exp_service_start_date__lte'] = to_date
         invoices_filter['wh_checkin_time__lte'] = to_date
 
     expenses_data = (
@@ -140,12 +140,12 @@ def branch_unit_profit_loss(request):
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
-        expenses_filter['exp_ext_updated_on__gte'] = from_date
+        expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
         invoices_filter['wh_checkin_time__gte'] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
-        expenses_filter['exp_ext_updated_on__lte'] = to_date
+        expenses_filter['exp_ext_expense_number__exp_service_start_date__lte'] = to_date
         invoices_filter['wh_checkin_time__lte'] = to_date
 
     expenses_data = (
@@ -260,9 +260,9 @@ def businessmodel_PL(request):
     if unit_filter:
         expense_queryset = expense_queryset.filter(exp_ext_unit__unit_name=unit_filter)
     if from_date:
-        expense_queryset = expense_queryset.filter(exp_ext_updated_on__gte=from_date)
+        expense_queryset = expense_queryset.filter(exp_ext_expense_number__exp_service_start_date__gte=from_date)
     if to_date:
-        expense_queryset = expense_queryset.filter(exp_ext_updated_on__lte=to_date)
+        expense_queryset = expense_queryset.filter(exp_ext_expense_number__exp_service_start_date__lte=to_date)
 
     expense_data = (
         expense_queryset.values(
@@ -349,10 +349,10 @@ def customerwise_PL(request):
 
     if from_date:
         invoice_filters &= Q(wh_checkin_time__gte=from_date)
-        expense_filters &= Q(exp_ext_updated_on__gte=from_date)
+        expense_filters &= Q(exp_ext_expense_number__exp_service_start_date__gte=from_date)
     if to_date:
         invoice_filters &= Q(wh_checkin_time__lte=to_date)
-        expense_filters &= Q(exp_ext_updated_on__lte=to_date)
+        expense_filters &= Q(exp_ext_expense_number__exp_service_start_date__lte=to_date)
 
     total_expenses_subquery = ExpenseExtinfo.objects.filter(
         exp_ext_branch=OuterRef('wh_branch')
@@ -463,9 +463,9 @@ def fin_profit_loss_view(request):
     if unit_filter:
         expense_queryset = expense_queryset.filter(exp_ext_unit__unit_name=unit_filter)
     if from_date:
-        expense_queryset = expense_queryset.filter(exp_ext_updated_on__gte=from_date)
+        expense_queryset = expense_queryset.filter(exp_ext_expense_number__exp_service_start_date__gte=from_date)
     if to_date:
-        expense_queryset = expense_queryset.filter(exp_ext_updated_on__lte=to_date)
+        expense_queryset = expense_queryset.filter(exp_ext_expense_number__exp_service_start_date__lte=to_date)
 
     expense_data = (
         expense_queryset.values(
@@ -550,11 +550,11 @@ def expenses_report(request):
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
-        expense_summary = expense_summary.filter(exp_ext_updated_on__gte=from_date)
+        expense_summary = expense_summary.filter(exp_ext_expense_number__exp_service_start_date__gte=from_date)
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
-        expense_summary = expense_summary.filter(exp_ext_updated_on__lte=to_date)
+        expense_summary = expense_summary.filter(exp_ext_expense_number__exp_service_start_date__lte=to_date)
     if company_filter:
         expense_summary = expense_summary.filter(
             exp_ext_expense_number__exp_business__bvm_business=company_filter
@@ -952,12 +952,12 @@ def budget_expense(request):
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
-        expenses_filter['exp_ext_updated_on__gte'] = from_date
+        expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
         budget_filter['bf_updated_at__gte'] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
-        expenses_filter['exp_ext_updated_on__lte'] = to_date
+        expenses_filter['exp_ext_expense_number__exp_service_start_date__lte'] = to_date
         budget_filter['bf_updated_at__lte'] = to_date
 
     # Get total expenses per category
@@ -1051,7 +1051,7 @@ def budget_expense_mis(request):
         selected_year = None
 
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
@@ -1059,7 +1059,7 @@ def budget_expense_mis(request):
     units = UnitInfo.objects.values_list("unit_name", flat=True).distinct()
     companies = Business_Sol_info.objects.values_list("bvm_business", flat=True).distinct()
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
@@ -1070,7 +1070,7 @@ def budget_expense_mis(request):
     budget_filter = {}
 
     if selected_year:
-        expenses_filter["exp_ext_updated_on__year"] = selected_year
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__year"] = selected_year
         budget_filter["bf_updated_at__year"] = selected_year
     if selected_company:
         expenses_filter["exp_ext_expense_number__exp_business__bvm_business"] = selected_company
@@ -1086,25 +1086,26 @@ def budget_expense_mis(request):
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
-        expenses_filter["exp_ext_updated_on__gte"] = from_date
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__gte"] = from_date
         budget_filter["bf_updated_at__gte"] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
-        expenses_filter["exp_ext_updated_on__lte"] = to_date
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__lte"] = to_date
         budget_filter["bf_updated_at__lte"] = to_date
 
     expense_summary = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
-        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_updated_on__month")
+        .exclude(exp_ext_expense_number__exp_service_start_date__isnull=True)
+        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_expense_number__exp_service_start_date__month")
         .annotate(total_expense=Sum("exp_ext_amount"))
-        .order_by("exp_ext_updated_on__month")
+        .order_by("exp_ext_expense_number__exp_service_start_date__month")
     )
 
     expense_dict = {category: {i: 0 for i in range(1, 13)} for category in set(INCOME_CATEGORIES.keys())}
     for item in expense_summary:
         category = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
-        month = item["exp_ext_updated_on__month"]
+        month = item["exp_ext_expense_number__exp_service_start_date__month"]
         expense_dict.setdefault(category, {i: 0 for i in range(1, 13)})  # Initialize if missing
         expense_dict[category][month] += item["total_expense"]  # Ensure cumulative sum if duplicate entries exist
 
@@ -1249,7 +1250,7 @@ def budget_expense_mis(request):
         category_totals["non_operational_budget"] += non_operational_total
 
     for item in expense_summary:
-        month = item["exp_ext_updated_on__month"]
+        month = item["exp_ext_expense_number__exp_service_start_date__month"]
         category = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
         amount = item["total_expense"]
 
@@ -1435,7 +1436,7 @@ def fin_mis(request):
         selected_year = None
 
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
@@ -1443,7 +1444,7 @@ def fin_mis(request):
     units = UnitInfo.objects.values_list("unit_name", flat=True).distinct()
     companies = Business_Sol_info.objects.values_list("bvm_business", flat=True).distinct()
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
@@ -1454,7 +1455,7 @@ def fin_mis(request):
     budget_filter = {}
 
     if selected_year:
-        expenses_filter["exp_ext_updated_on__year"] = selected_year
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__year"] = selected_year
         budget_filter["bf_updated_at__year"] = selected_year
     if selected_company:
         expenses_filter["exp_ext_expense_number__exp_business__bvm_business"] = selected_company
@@ -1470,25 +1471,26 @@ def fin_mis(request):
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
-        expenses_filter["exp_ext_updated_on__gte"] = from_date
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__gte"] = from_date
         budget_filter["bf_updated_at__gte"] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
-        expenses_filter["exp_ext_updated_on__lte"] = to_date
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__lte"] = to_date
         budget_filter["bf_updated_at__lte"] = to_date
 
     expense_summary = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
-        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_updated_on__month")
+        .exclude(exp_ext_expense_number__exp_service_start_date__isnull=True)
+        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_expense_number__exp_service_start_date__month")
         .annotate(total_expense=Sum("exp_ext_amount"))
-        .order_by("exp_ext_updated_on__month")
+        .order_by("exp_ext_expense_number__exp_service_start_date__month")
     )
 
     expense_dict = {category: {i: 0 for i in range(1, 13)} for category in set(INCOME_CATEGORIES.keys())}
     for item in expense_summary:
         category = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
-        month = item["exp_ext_updated_on__month"]
+        month = item["exp_ext_expense_number__exp_service_start_date__month"]
         expense_dict.setdefault(category, {i: 0 for i in range(1, 13)})
         expense_dict[category][month] += item["total_expense"]
 
@@ -1781,7 +1783,7 @@ def fin_mis_warehouse(request):
         selected_year = None
 
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
@@ -1789,7 +1791,7 @@ def fin_mis_warehouse(request):
     units = UnitInfo.objects.values_list("unit_name", flat=True).distinct()
     companies = Business_Sol_info.objects.values_list("bvm_business", flat=True).distinct()
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_updated_on', 'year').values_list('exp_ext_updated_on__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
@@ -1801,7 +1803,7 @@ def fin_mis_warehouse(request):
     warehouse_filter = {}
 
     if selected_year:
-        expenses_filter["exp_ext_updated_on__year"] = selected_year
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__year"] = selected_year
         budget_filter["bf_updated_at__year"] = selected_year
         warehouse_filter["wh_checkin_time__year"] = selected_year
     if selected_company:
@@ -1818,13 +1820,13 @@ def fin_mis_warehouse(request):
         warehouse_filter["wh_unit__unit_name"] = selected_unit
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
-        expenses_filter["exp_ext_updated_on__gte"] = from_date
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__gte"] = from_date
         budget_filter["bf_updated_at__gte"] = from_date
         warehouse_filter["wh_checkin_time__gte"] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
-        expenses_filter["exp_ext_updated_on__lte"] = to_date
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__lte"] = to_date
         budget_filter["bf_updated_at__lte"] = to_date
         warehouse_filter["wh_checkin_time__lte"] = to_date
 
@@ -1857,15 +1859,16 @@ def fin_mis_warehouse(request):
 
     expense_summary = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
-        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_updated_on__month")
+        .exclude(exp_ext_expense_number__exp_service_start_date__isnull=True)
+        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_expense_number__exp_service_start_date__month")
         .annotate(total_expense=Sum("exp_ext_amount"))
-        .order_by("exp_ext_updated_on__month")
+        .order_by("exp_ext_expense_number__exp_service_start_date__month")
     )
 
     expense_dict = {category: {i: 0 for i in range(1, 13)} for category in set(INCOME_CATEGORIES.keys())}
     for item in expense_summary:
         category = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
-        month = item["exp_ext_updated_on__month"]
+        month = item["exp_ext_expense_number__exp_service_start_date__month"]
         expense_dict.setdefault(category, {i: 0 for i in range(1, 13)})
         expense_dict[category][month] += item["total_expense"]
 
@@ -1914,10 +1917,17 @@ def fin_mis_warehouse(request):
 
             for month in range(1, 13):
                 grand_monthly_expenses[month] += monthly_expenses[month]
-                grand_monthly_budgets[month] += monthly_budgets[month]
+
+                if category_name in ["Employee Benefits", "Operational Expenses", "Non-Operational Expenses"]:
+                    grand_monthly_budgets[month] += monthly_budgets[month]/2
+                else:
+                    grand_monthly_budgets[month] += monthly_budgets[month]
 
             grand_total_expense += total_expense
-            grand_total_budget += total_budget
+            if category_name in ["Employee Benefits", "Operational Expenses", "Non-Operational Expenses"]:
+                grand_total_budget += total_budget/2
+            else:
+                grand_total_budget += total_budget
 
             summary.append({
                 "expense_type": category,
@@ -1954,7 +1964,7 @@ def fin_mis_warehouse(request):
     department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES,"Department Expenses")
     employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES,"Employee Benefits")
     interest_summary = get_category_summary(INTEREST_EXPENSES_CATEGORIES,"Interest Expenses")
-    operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES,"Operational Expenses ")
+    operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES,"Operational Expenses")
     non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES,"Non-Operational Expenses")
     other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES,"Other Expenses")
     income_summary = get_category_summary(
