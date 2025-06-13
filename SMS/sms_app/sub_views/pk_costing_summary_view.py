@@ -59,7 +59,7 @@ def costingsummary_add(request,costingsummary_id=0):
             # print(wood_cost)
             PkcostingsummaryInfo.objects.filter(cs_assessment_num=needassessment_id).update(cs_wood_cost=wood_cost)
 
-            total_cft = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8,ct_stock_type=1).aggregate(Sum('ct_cft'))['ct_cft__sum']
+            total_cft = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_cost_type=8,ct_stock_type=1).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum']
             if total_cft is not None:
                 total_cft = round(total_cft, 2)
             else:
@@ -246,6 +246,7 @@ def pk_costing_summary_check_unique_field(request):
 def pk_bvm_invoice_pdf(request,invoice_id=0):
     needassessment_id = request.session.get('na_assessment_id')
     costing_summary_id = request.session.get('ses_costing_summary_id')
+    cs_po_num = request.session.get('ses_customer_po_id')
     address=PkcostingsummaryInfo.objects.get(pk=costing_summary_id).cs_address
     cost_includes=PkcostingsummaryInfo.objects.get(pk=costing_summary_id).cs_cost_includes
     notes=PkcostingsummaryInfo.objects.get(pk=costing_summary_id).cs_notes
@@ -253,32 +254,32 @@ def pk_bvm_invoice_pdf(request,invoice_id=0):
     client_scope=PkcostingsummaryInfo.objects.get(pk=costing_summary_id).cs_client_scope
     bvm_scope=PkcostingsummaryInfo.objects.get(pk=costing_summary_id).cs_bvm_scope
     needassessment_num=PkneedassessmentInfo.objects.get(pk=needassessment_id).na_assessment_num
-    invoices=POdimension.objects.filter(pod_assess_num=needassessment_id)
+    invoices=PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_customer_po=cs_po_num)
     # get requirement type from need assessment dimension model
-    na_req=POdimension.objects.filter(pod_assess_num=needassessment_id)
+    na_req=PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id)
     # na_req=Nadimension.objects.filter(nad_assess_num=needassessment_id)
     po_number = PkcostingsummaryInfo.objects.get(pk=costing_summary_id).cs_customer_po
     margin = PkcostingsummaryInfo.objects.get(pk=costing_summary_id).cs_margin
     total_sum=0
-    print('na_req',na_req)
     for i in na_req:
-        k=i.pod_nad.id
+        k=i.ct_requirement.id
         print('k',k)
-        qty=i.pod_quantity
+        qty=i.ct_na_quantity
         total_cost_wom=PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id,ct_requirement=k).aggregate(total_cost=Sum('ct_total_cost'))['total_cost'] or 0
         print('total_cost_wom',total_cost_wom)
         total_cost=total_cost_wom+(total_cost_wom*margin/100)
         try:
-            POdimension.objects.filter(pod_nad=k).update(pod_cost_unit=round(total_cost,2))
+            PkcostingInfo.objects.filter(ct_requirement=k).update(ct_total_cost=round(total_cost, 2))
         except:
-            POdimension.objects.filter(pod_nad=k).update(pod_cost_unit=0)
+            PkcostingInfo.objects.filter(ct_requirement=k).update(ct_total_cost=0)
         try:
-            POdimension.objects.filter(pod_nad=k).update(pod_cost_total=round(total_cost*qty,2))
+            PkcostingInfo.objects.filter(ct_requirement=k).update(ct_totalbox_cost=round(total_cost * qty, 2))
         except:
-            POdimension.objects.filter(pod_nad=k).update(pod_cost_unit=0)
+            PkcostingInfo.objects.filter(ct_requirement=k).update(ct_total_cost=0)
         # total_sum=round((total_sum+total_cost),2)
     print('needassessment_id',needassessment_id)
-    totalbox_cost = POdimension.objects.filter(pod_assess_num=needassessment_id).aggregate(totalbox_cost=Sum('pod_cost_total'))['totalbox_cost'] or 0
+    totalbox_cost = PkcostingInfo.objects.filter(ct_requirement=needassessment_id).aggregate(totalbox_cost=Sum('ct_totalbox_cost'))['totalbox_cost'] or 0
+    print(totalbox_cost)
     gst_val=PkcostingsummaryInfo.objects.get(pk=costing_summary_id).cs_gst
     gst=round(totalbox_cost*gst_val/100,2)
     final_cost=round((totalbox_cost+gst),2)

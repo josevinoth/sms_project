@@ -1,49 +1,98 @@
-import xml.etree.ElementTree as ET
-
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import JsonResponse
+import xml.etree.ElementTree as ET
 import requests
-import certifi
 
-@login_required(login_url='login_page')
-def get_vehicle_position(request, vehicle_number):
-    print(f"Requesting position for vehicle: {vehicle_number}")  # Debugging line
+from ..models import TripdetailInfo
 
-    url = "https://track.trackmyvehicle.in/events/data.xml"
-    params = {
-        'account': 'Bvm Storage Solutions Pvt ltd',
-        'user': 'apilink',
-        'password': 'pass@123',
-        'vehicle': vehicle_number,  # Pass the vehicle number
-        'limit': 1
-    }
+# 🔒 Add this to suppress SSL warnings in DEBUG mode
+import urllib3
+from django.conf import settings
 
+if settings.DEBUG:
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+def track_vehicle_position(request):
+    # Send list of in-trip vehicle numbers to template
+    in_trip_numbers = list(
+        TripdetailInfo.objects.filter(tr_approval=1)
+        .values_list('tr_vehiclenumber', flat=True)
+    )
+    print(in_trip_numbers)
+    return render(request, "asset_mgt_app/trans_gps.html", {
+        'in_trip_numbers': in_trip_numbers
+    })
+
+def get_vehicle_data(request):
+    api_url = (
+        "https://track.trackmyvehicle.in/events/data.xml"
+        "?account=Bvm%20Storage%20Solutions%20Pvt%20ltd"
+        "&user=apilink"
+        "&password=pass@123"
+        "&group=all"
+        "&limit=50"
+    )
+
+    def normalize(num):
+        return num.strip().upper().replace(" ", "").replace("-", "") if num else ""
+
+    # DB values
+    in_trip_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=1).values_list('tr_vehiclenumber', flat=True)))
+    available_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=8).values_list('tr_vehiclenumber', flat=True)))
+
+    print("✅ Normalized in-trip numbers from DB:", in_trip_numbers)
+    print("✅ Normalized available numbers from DB:", available_numbers)
+
+    vehicle_data = []
     try:
-        response = requests.get(url, params=params, verify=False)
-
-        print(f"Response Status Code: {response.status_code}")  # Debugging line
-        print(f"Response Content: {response.content.decode('utf-8')}")  # Debugging line
-
+        response = requests.get(api_url, verify=False, timeout=10)
         if response.status_code == 200:
             root = ET.fromstring(response.content)
-            vehicle_data = []
 
-            for child in root.findall(".//event"):
-                vehicle_info = {
-                    'latitude': child.find('latitude').text if child.find('latitude') is not None else '',
-                    'longitude': child.find('longitude').text if child.find('longitude') is not None else '',
-                    'speed': child.find('speed').text if child.find('speed') is not None else '',
-                    'timestamp': child.find('timestamp').text if child.find('timestamp') is not None else '',
-                }
-                vehicle_data.append(vehicle_info)
+            for device in root.findall(".//Device"):
+                raw_number = device.findtext("Description", "").strip()
+                normalized_number = normalize(raw_number)
 
-            return render(request, 'asset_mgt_app/trans_gps.html', {'vehicle_data': vehicle_data})
+                event = device.find("EventData")
+                if not event:
+                    continue
 
-        else:
-            return render(request, 'error.html', {'error_message': 'Failed to retrieve data from the API'})
+                lat = event.findtext("GPSPoint_lat", "").strip()
+                lon = event.findtext("GPSPoint_lon", "").strip()
+                speed = event.findtext("Speed", "").strip()
+                status_code = event.findtext("StatusCode", "").strip()
+                timestamp = event.findtext("Timestamp", "").strip()
 
-    except requests.exceptions.SSLError as e:
-        return HttpResponse(f"SSL Error: {str(e)}", status=500)
+                running_status = "Stopped"
+                if status_code.lower() == "moving":
+                    running_status = "Moving"
+                elif status_code.lower() == "idle":
+                    running_status = "Idle"
+
+                # Debug: show each normalized device number
+                print(f"📦 API Number: '{raw_number}' → Normalized: '{normalized_number}'")
+
+                if normalized_number in in_trip_numbers:
+                    trip_status = "in_trip"
+                elif normalized_number in available_numbers:
+                    trip_status = "workshop"
+                else:
+                    trip_status = "available"
+
+                if lat and lon:
+                    vehicle_data.append({
+                        "number": raw_number,
+                        "lat": lat,
+                        "lon": lon,
+                        "speed": speed,
+                        "status": trip_status,
+                        "running_status": running_status,
+                        "timestamp": timestamp,
+                    })
+
     except Exception as e:
-        return HttpResponse(f"Unexpected Error: {str(e)}", status=500)
+        return JsonResponse({"error": str(e)}, status=500)
+
+    print(f"🚚 Total vehicles returned: {len(vehicle_data)}")
+    return JsonResponse(vehicle_data, safe=False)

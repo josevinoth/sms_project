@@ -1,85 +1,85 @@
-{% extends "asset_mgt_app/report_header_landscape.html" %}
-{% block content %}
-<div>
-    <table class='report_details'>
-        <tr>
-            <td colspan="3">
-                <h1 style="color:red;">BVM PACK SOLUTIONS PVT LTD</h1>
-                <p>Address 70, Adam Nagar Road Nagalkeni, Chrompet Chennai 600 044</p>
-            </td>
-            <td colspan="1">
-                <img src="media/Company_Logo.png" alt="home" class="centered-image">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="4">
-                <h3>INVOICE FOR PACKING SERVICE</h3>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="1">
-                <b>Address:</b> {{address}}
-            </td>
-            <td colspan="1">
-                <b>Quotation Date:</b> {{today_date}}
-            </td>
-            <td colspan="1">
-                <b>Customer Purchase Order Number:</b> {{po_number}}
-            </td>
-        </tr>
-    </table>
-    <br>
-    <small> Refer to our discussion, please find our offer for packing service at your premises</small>
-    <hr class="report_hrItem"/>
-    <table class='report_details'>
-        <tr>
-            <th>Item</th>
-            <th>Description</th>
-            <th>UOM</th>
-            <th>Length</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>Unit Cost (INR)</th>
-            <th>Qty</th>
-            <th>Total Cost (INR)</th>
-        </tr>
-        {% for invoice in invoices %}
-        <tr>
-            <td>{{invoice.pod_item}}</td>
-            <td>{{invoice.pod_type_of_req}}</td>
-            <td>{{invoice.pod_uom}}</td>
-            <td>{{invoice.pod_length}}</td>
-            <td>{{invoice.pod_width}}</td>
-            <td>{{invoice.pod_height}}</td>
-            <td>{{invoice.pod_cost_unit}}</td>
-            <td>{{invoice.pod_quantity}}</td>
-            <td>{{invoice.pod_cost_total}}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <table class='report_details'>
-        <tr>
-            <td colspan="7"></td>
-            <td colspan="1"><b>Total Cost</b></td>
-            <td colspan="1">
-                <b>{{total_sum}}</b>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="7"></td>
-            <td colspan="1"><b>TAXES AT ACTUAL {{gst_val}} %</b></td>
-            <td colspan="1">
-                <b>{{gst}}</b>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="7"></td>
-            <td colspan="1"><b>Final Cost</b></td>
-            <td colspan="1">
-                <b>{{final_cost}}</b>
-            </td>
-        </tr>
-    </table>
+    {% extends "asset_mgt_app/report_header_landscape.html" %}
+    {% block content %}
+    <div>
+        <table class='report_details'>
+            <tr>
+                <td colspan="3">
+                    <h1 style="color:red;">BVM PACK SOLUTIONS PVT LTD</h1>
+                    <p>Address 70, Adam Nagar Road Nagalkeni, Chrompet Chennai 600 044</p>
+                </td>
+                <td colspan="1">
+                    <img src="media/Company_Logo.png" alt="home" class="centered-image">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <h3>INVOICE FOR PACKING SERVICE</h3>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <b>Address:</b> {{address}}
+                </td>
+                <td colspan="1">
+                    <b>Quotation Date:</b> {{today_date}}
+                </td>
+                <td colspan="1">
+                    <b>Customer Purchase Order Number:</b> {{po_number}}
+                </td>
+            </tr>
+        </table>
+        <br>
+        <small> Refer to our discussion, please find our offer for packing service at your premises</small>
+        <hr class="report_hrItem"/>
+        <table class='report_details'>
+            <tr>
+                <th>Item</th>
+                <th>Description</th>
+                <th>UOM</th>
+                <th>Length</th>
+                <th>Width</th>
+                <th>Height</th>
+                <th>Unit Cost (INR)</th>
+                <th>Qty</th>
+                <th>Total Cost (INR)</th>
+            </tr>
+            {% for invoice in invoices %}
+            <tr>
+                <td>{{invoice.ct_requirement}}</td>
+                <td>{{invoice.ct_requirement_size}}</td>
+                <td>{{invoice.ct_uom}}</td>
+                <td>{{invoice.ct_length_req}}</td>
+                <td>{{invoice.ct_width_req}}</td>
+                <td>{{invoice.ct_height_req}}</td>
+                <td>{{invoice.ct_total_cost}}</td>
+                <td>{{invoice.ct_quantity}}</td>
+                <td>{{invoice.ct_totalbox_cost}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <table class='report_details'>
+            <tr>
+                <td colspan="7"></td>
+                <td colspan="1"><b>Total Cost</b></td>
+                <td colspan="1">
+                    <b>{{total_sum}}</b>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7"></td>
+                <td colspan="1"><b>TAXES AT ACTUAL {{gst_val}} %</b></td>
+                <td colspan="1">
+                    <b>{{gst}}</b>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7"></td>
+                <td colspan="1"><b>Final Cost</b></td>
+                <td colspan="1">
+                    <b>{{final_cost}}</b>
+                </td>
+            </tr>
+        </table>
 
-</div>
-{% endblock content %}
+    </div>
+    {% endblock content %}

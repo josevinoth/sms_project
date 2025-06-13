@@ -43,17 +43,23 @@ def needassessment_add(request,needassessment_id=0):
             form = PkneedassessmentForm(request.POST,request.FILES)
             if form.is_valid():
                 # Generate Random Assessment number
+                # Save the form but don't commit immediately
+                instance = form.save(commit=False)
+                instance.save()  # Now the ID is generated
+
+                # Generate assessment number based on the instance's ID
                 try:
-                    last_id = PkneedassessmentInfo.objects.latest('id').id
-                    assessment_num_next = str('Assess_') + str(int(((PkneedassessmentInfo.objects.get(id=last_id)).na_assessment_num).replace('Assess_', '')) + 1)
-                except ObjectDoesNotExist:
-                    assessment_num_next = str('Assess_') + str(randint(10000, 99999))
-                form.save()
-                print("needassessment Form is Valid")
-                last_id = (PkneedassessmentInfo.objects.latest('id')).id
-                PkneedassessmentInfo.objects.filter(id=last_id).update(na_assessment_num=assessment_num_next)
+                    assessment_num_next = f"Assess_{1000000 + instance.id}"
+                except Exception:
+                    # Fallback in rare case of error
+                    assessment_num_next = f"Assess_{randint(10000, 99999)}"
+
+                # Update the field and save only that field
+                instance.na_assessment_num = assessment_num_next
+                instance.save(update_fields=['na_assessment_num'])
+
                 messages.success(request, 'Record Updated Successfully')
-                return redirect('/SMS/needassessment_update/'+ str(last_id))
+                return redirect(f'/SMS/needassessment_update/{instance.id}')
             else:
                 print("needassessment Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')

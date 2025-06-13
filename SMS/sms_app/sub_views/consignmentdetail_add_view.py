@@ -80,19 +80,14 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         if con_det_form.is_valid():
             vehicle_type = request.POST.get('vehicle_type_field')
             if consignmentdetail_id == 0:
-                last_id = ConsignmentdetailInfo.objects.latest('id').id if ConsignmentdetailInfo.objects.exists() else 0
-                cons_num_next = f"CON_{1000000 if last_id == 0 else int(ConsignmentdetailInfo.objects.get(id=last_id).co_consignmentnumber.replace('CON_', '')) + 1}"
+                consignment_detail = con_det_form.save(commit=False)
+                consignment_detail.save()  # Save to generate ID
 
-                consignment_detail = con_det_form.save()
-                consignment_detail.co_consignmentnumber = cons_num_next
+                # Generate consignment number based on its own ID
+                consignment_detail.co_consignmentnumber = f"CON_{1000000 + consignment_detail.id}"
                 consignment_detail.co_vehicletype = vehicle_type
-                consignment_detail.save()
+                consignment_detail.save(update_fields=['co_consignmentnumber', 'co_vehicletype'])
 
-                for field, errors in con_det_form.errors.items():
-                    for error in errors:
-                        print(f"Error in {field}: {error}")
-                        messages.error(request, f"Error in {field}: {error}")
-                messages.success(request, 'Record Updated Successfully')
                 return redirect(f'/SMS/consignmentdetail_update/{consignment_detail.id}')
             else:
                 consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
@@ -110,9 +105,13 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
 
                 # return redirect('/SMS/consignmentdetail_list/')
                 return redirect(request.META['HTTP_REFERER'])
-
-        messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
-        return redirect(request.META['HTTP_REFERER'])
+        else:
+            for field, errors in con_det_form.errors.items():
+                for error in errors:
+                    print(f"Error in {field}: {error}")
+                    messages.error(request, f"Error in {field}: {error}")
+            messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
+            return redirect(request.META['HTTP_REFERER'])
 
 # List consignmentdetail
 @login_required(login_url='login_page')
@@ -199,18 +198,18 @@ def vehicle_allotted(request):
     )
 
     final_vehicle_list = [v for v in (requested_vehicles + requested_vehicles_market) if v]
-
+    print('final_vehicle_list',final_vehicle_list)
     used_vehicles = list(
-        ConsignmentdetailInfo.objects.exclude(pk=consignmentdetail_id_val)
+        ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_number)
         .values_list('co_vehicelnumber', flat=True)
     )
-
+    print('used_vehicles',used_vehicles)
     available_vehicle_list = [v for v in final_vehicle_list if v not in used_vehicles]
     try:
         selected_vehicles = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id_val).co_vehicelnumber
     except ConsignmentdetailInfo.DoesNotExist:
         selected_vehicles = None  # Or set a default value
-    return JsonResponse({'final_vehicle_list': available_vehicle_list,'selected_vehicles':vehicle_number_param})
+    return JsonResponse({'final_vehicle_list': available_vehicle_list,'selected_vehicles':selected_vehicles})
 
 
 @login_required(login_url='login_page')

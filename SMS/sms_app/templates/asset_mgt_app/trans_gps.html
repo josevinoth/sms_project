@@ -1,25 +1,117 @@
 {% extends "asset_mgt_app/base.html" %}
-{% load widget_tweaks %}
+{% load static %}
 {% block content %}
-<h2>Vehicle Position Data</h2>
-{% if vehicle_data %}
-<table>
-    <tr>
-        <th>Latitude</th>
-        <th>Longitude</th>
-        <th>Speed</th>
-        <th>Timestamp</th>
-    </tr>
-    {% for data in vehicle_data %}
-    <tr>
-        <td>{{ data.latitude }}</td>
-        <td>{{ data.longitude }}</td>
-        <td>{{ data.speed }}</td>
-        <td>{{ data.timestamp }}</td>
-    </tr>
-    {% endfor %}
-</table>
-{% else %}
-<p>No data available for the vehicle.</p>
-{% endif %}
-{% endblock content %}
+
+<!-- FontAwesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<div class="container-fluid p-3">
+  <div class="card shadow">
+    <div class="card-header bg-info text-white text-center">
+      <h4>Vehicle Position Tracker</h4>
+    </div>
+
+    <div class="text-center mt-3">
+      <label for="statusFilter" class="form-label fw-bold">Status:</label>
+      <select id="statusFilter" class="form-select d-inline-block" style="width: 200px;">
+        <option value="all" selected>All</option>
+        <option value="in_trip">In Trip</option>
+        <option value="available">Available</option>
+        <option value="workshop">Workshop</option>
+      </select>
+    </div>
+
+    <div class="card-body p-0">
+      <div id="map" style="height: 600px; width: 100%;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+<style>
+  .custom-div-icon i {
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  const map = L.map("map").setView([12.9716, 77.5946], 6);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors',
+  }).addTo(map);
+
+  const runningIcons = {
+    Moving: L.divIcon({
+      className: 'custom-div-icon',
+      html: '<i class="fa-solid fa-truck" style="color: green; font-size: 28px;"></i>',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32],
+    }),
+    Idle: L.divIcon({
+      className: 'custom-div-icon',
+      html: '<i class="fa-solid fa-truck" style="color: orange; font-size: 28px;"></i>',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32],
+    }),
+    Stopped: L.divIcon({
+      className: 'custom-div-icon',
+      html: '<i class="fa-solid fa-truck" style="color: red; font-size: 28px;"></i>',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32],
+    }),
+  };
+
+  function loadVehicleData(filter = "all") {
+    fetch("/SMS/get-vehicle-data/")
+      .then(res => res.json())
+      .then(data => {
+        map.eachLayer(layer => {
+          if (layer instanceof L.Marker) map.removeLayer(layer);
+        });
+
+        data.forEach(vehicle => {
+          if (filter !== "all" && vehicle.status !== filter) return;
+
+          const lat = parseFloat(vehicle.lat);
+          const lon = parseFloat(vehicle.lon);
+          const icon = runningIcons[vehicle.running_status] || runningIcons.Stopped;
+
+          if (!isNaN(lat) && !isNaN(lon)) {
+            L.marker([lat, lon], { icon: icon })
+              .addTo(map)
+              .bindPopup(`
+                <b>${vehicle.number}</b><br>
+                Status: ${vehicle.status.replace("_", " ").toUpperCase()}<br>
+                Running: ${vehicle.running_status}<br>
+                Speed: ${vehicle.speed} km/h<br>
+                ${vehicle.timestamp}
+              `);
+          }
+        });
+      })
+      .catch(err => console.error("Error loading vehicle data:", err));
+  }
+
+  loadVehicleData();
+
+  // Auto refresh every 15 seconds
+  setInterval(() => {
+    const currentFilter = document.getElementById("statusFilter").value;
+    loadVehicleData(currentFilter);
+  }, 15000);
+
+  document.getElementById("statusFilter").addEventListener("change", function () {
+    loadVehicleData(this.value);
+  });
+</script>
+
+{% endblock %}

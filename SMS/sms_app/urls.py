@@ -407,6 +407,7 @@ urlpatterns = [
     path('pk_costing_get_customer/', views.pk_costing_get_customer, name='pk_costing_get_customer'),  # costing_summary_check_unique_field
     path('vehicle_allotment_list/', views.vehicle_allotment_list, name='vehicle_allotment_list'),  # List vehicle_allotment
     path('vehicle_allotment_insert/', views.vehicle_allotment_add, name='vehicle_allotment_insert'),  # Add vehicle_allotment
+    path('vehicle_allotment_update_enquiry/<int:enquiry_id>/<str:vehicle_number>/', views.vehicle_allotment_enquiry, name='vehicle_allotment_update_enquiry'),  # update vehicle_allotment
     path('vehicle_allotment_update/<int:vehicle_allotment_id>', views.vehicle_allotment_add, name='vehicle_allotment_update'),  # update vehicle_allotment
     path('vehicle_allotment_delete/<int:vehicle_allotment_id>', views.vehicle_allotment_delete, name='vehicle_allotment_delete'),  # delete vehicle_allotment
     path('vehicle_allotment_nav/<int:vehicle_allotment_id>', views.vehicle_allotment_nav, name='vehicle_allotment_nav'),  # nav vehicle_allotment
@@ -648,7 +649,8 @@ urlpatterns = [
     path('fin_mis/', views.fin_mis, name='fin_mis'),
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
     path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
-    path('vehicle_position/<str:vehicle_number>/', views.get_vehicle_position, name='vehicle_position'),
+    path("track_vehicle/", views.track_vehicle_position, name="track_vehicle_position"),
+    path("get-vehicle-data/", views.get_vehicle_data, name="get_vehicle_data"),
     path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
          name='get_remaining_quantity'),
     path('SMS/get-vehicle-type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),
