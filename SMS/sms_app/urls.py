@@ -650,7 +650,8 @@ urlpatterns = [
     path('fin_mis/', views.fin_mis, name='fin_mis'),
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
     path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
-    path('vehicle_position/', views.track_vehicle_position, name='vehicle_position'),
+    path("track_vehicle/", views.track_vehicle_position, name="track_vehicle_position"),
+    path("get-vehicle-data/", views.get_vehicle_data, name="get_vehicle_data"),
     path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
          name='get_remaining_quantity'),
     path('SMS/get-vehicle-type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),
@@ -670,7 +671,8 @@ urlpatterns = [
     path('fetch_bunk_details/', views.fetch_bunk_details, name='fetch_bunk_details'),
     path('trip_approval_view/', views.trip_approval_view, name='trip_approval_view'),
     path('trip-approval/update/<int:trip_id>/', views.update_trip_approval, name='update_trip_approval'),
-
+    path('add_consigner/', views.add_consigner, name='add_consigner'),
+    path('add_consignee/', views.add_consignee, name='add_consignee'),
 ]
 
 

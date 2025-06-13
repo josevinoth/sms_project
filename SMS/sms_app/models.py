@@ -168,6 +168,8 @@ from .sub_models.fuel_vendor_mod import Fuelvendor
 from .sub_models.bunk_name_mod import Bunkname
 from .sub_models.fuelfilling_mod import Fuelfillinginfo
 from .sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+from .sub_models.consignee_info_mod import ConsigneeInfo
+from .sub_models.consigner_info_mod import ConsignerInfo
 from .sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from .sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
 from .sub_models.pk_stockpurchases_mod import PkstockpurchasesInfo
