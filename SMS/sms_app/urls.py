@@ -157,6 +157,7 @@ urlpatterns = [
     path('enquirynote_insert', views.enquirynote_add, name='enquirynote_insert'),  # Add enquirynote
     path('enquirynote_update/<int:enquirynote_id>/', views.enquirynote_add, name='enquirynote_update'),  # Update enquirynote
     path('enquirynote_delete/<int:enquirynote_id>/', views.enquirynote_delete, name='enquirynote_delete'),  # Delete enquirynote
+    path('consignmentdetail_enquiry/<int:enquiry_id>/<str:consignment_number>/', views.consignmentdetail_enquiry, name='consignmentdetail_enquiry'),  # List consignmentdetail,
     path('consignmentdetail_list/', views.consignmentdetail_list, name='consignmentdetail_list'),  # List consignmentdetail,
     path('consignmentdetail_insert', views.consignmentdetail_add, name='consignmentdetail_insert'),  # Add consignmentdetail
     path('consignmentdetail_update/<int:consignmentdetail_id>/', views.consignmentdetail_add, name='consignmentdetail_update'),  # Update consignmentdetail

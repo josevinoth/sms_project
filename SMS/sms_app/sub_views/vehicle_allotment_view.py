@@ -27,6 +27,7 @@ def vehicle_allotment_enquiry(request, enquiry_id, vehicle_number):
     else:
         # Handle case when no allotment found, e.g. redirect to a create page or show error
         # For example, redirect to a create page:
+        request.session['enquiry_num_id'] = enquiry_id
         return redirect('vehicle_allotment_insert')  # Adjust this as per your URL names
 
 @login_required(login_url='login_page')
@@ -47,14 +48,16 @@ def vehicle_allotment_nav(request,vehicle_allotment_id=0):
     return render(request, "asset_mgt_app/vehicle_allotment_add.html", context)
 
 @login_required(login_url='login_page')
-def vehicle_allotment_add(request,vehicle_allotment_id=0):
+def vehicle_allotment_add(request,vehicle_allotment_id=0,enquiry_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     if request.method == "GET":
         if vehicle_allotment_id == 0:
             print("I am inside Get add vehicle_allotments")
-            enquiry_num_id = request.session.get('ses_enqiury_id')
+            enquiry_num_id = request.session.get('enquiry_num_id')
+            enquiry_num_id = enquiry_num_id
             vehicle_allotment_form = VehicleallotmentForm()
+            print('enquiry_num_id',enquiry_num_id)
             try:
                 vehicle_allotment_list= Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id)
             except ObjectDoesNotExist:

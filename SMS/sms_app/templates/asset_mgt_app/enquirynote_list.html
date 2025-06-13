@@ -58,17 +58,16 @@
             <!-- Vehicle Number -->
             <td>
                 {% if data.enquiry.id %}  {# Ensure enquiry exists #}
-                {# Always show "Add New" link first #}
-                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id 'none' %}" style="color: red;">Add New</a><br>
-                {# If vehicles are assigned, list them #}
-                {% if data.vehicles %}
-                {% for vehicle in data.vehicles %}
-                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id vehicle %}">{{ vehicle }}</a><br>
-                {% endfor %}
-                {% endif %}
-
+                    {# Always show "Add New" link first #}
+                    <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id 'none' %}" style="color: red;">Add New</a><br>
+                    {# If vehicles are assigned, list them #}
+                    {% if data.vehicles %}
+                        {% for vehicle in data.vehicles %}
+                            <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id vehicle %}">{{ vehicle }}</a><br>
+                        {% endfor %}
+                    {% endif %}
                 {% else %}
-                <a class="link disable_a_href_list" style="color: red;">Add New</a>  {# Disable link when no enquiry exists #}
+                    <a class="link disable_a_href_list" style="color: red;">Add New</a>  {# Disable link when no enquiry exists #}
                 {% endif %}
             </td>
 
@@ -76,7 +75,7 @@
             <td>
     {% if data.vehicles and data.vehicles|length > 0 %}
         {# Show Add New at top, once only, using first vehicle #}
-        <a class="link" href="{% url 'consignmentdetail_insert' %}" style="color: red;">
+        <a class="link" href="{% url 'consignmentdetail_enquiry' data.enquiry.id 'none' %}" style="color: red;">
             Add new
         </a><br>
 
@@ -84,7 +83,7 @@
         {% for vehicle in data.vehicles %}
             {% for consignment in data.consignments %}
                 {% if consignment.co_vehicelnumber == vehicle %}
-                    <a class="link" href="{% url 'consignmentdetail_update' consignment.id %}">
+                    <a class="link" href="{% url 'consignmentdetail_enquiry' data.enquiry.id consignment.id %}">
                         {{ consignment.co_consignmentnumber }}
                     </a><br>
                 {% endif %}
