@@ -208,7 +208,7 @@ def tripdetail_add(request,tripdetail_id=0):
             tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES, instance=tripclosure_files)
 
-            enquiry_num = request.session.get('ses_enqiury_id')
+            enquiry_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_enquirynumber.id
             if trip_det_form.is_valid():
                 trip_det_form.save()
                 tripclosurefiles_form.save()
