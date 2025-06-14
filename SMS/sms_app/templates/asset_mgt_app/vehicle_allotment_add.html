@@ -230,39 +230,6 @@
 		});
 	});
 </script>
-<!--<script>-->
-<!--	$("#va_vehicletype_placed").change(function () {-->
-<!--       var url = $("#vehicle_allotment").attr("data-load_vehicle_source-url");-->
-<!--       var vehicletype_placed = $(this).val();-->
-
-<!--       document.getElementById("va_vehiclenumber").value=""-->
-<!--       document.getElementById("va_drivername").value=""-->
-<!--       document.getElementById("va_drivernumber").value=""-->
-<!--       document.getElementById("va_driver_lic").value=""-->
-<!--       document.getElementById("va_driver_lic_expiry").value=""-->
-<!--       $.ajax-->
-<!--       ({-->
-<!--         url: '{% url 'load_vehicle_source' %}',-->
-<!--         data:-->
-<!--         {-->
-<!--           'vehicletype_placed': vehicletype_placed,-->
-<!--         },-->
-<!--         success: function (data)-->
-<!--         {-->
-<!--             $('#va_vehiclesource').removeClass('disable_a_href');-->
-<!--             var vehicle_source_name=JSON.parse(data)["vehicle_source_name"]-->
-<!--             var vehicle_source_id=JSON.parse(data)["vehicle_source_id"]-->
-<!--             var len1 = (vehicle_source_id).length;-->
-<!--             $("#va_vehiclesource").empty();-->
-<!--             $('#va_vehiclesource').empty().append("<option value=''>&#45;&#45;Select&#45;&#45;</option>");-->
-<!--             for( var j = 0; j<len1; j++)-->
-<!--             {-->
-<!--                 $("#va_vehiclesource").append("<option value='"+vehicle_source_id[j]+"'>"+vehicle_source_name[j]+"</option>");-->
-<!--             }-->
-<!--         }-->
-<!--       });-->
-<!--     });-->
-<!--</script>-->
 
 <script>
 	$("#va_vehiclesource").change(function () {
@@ -400,15 +367,24 @@
 	function market_vehicle_enable_disable()
 	{
 		var vehicle_source = document.getElementById("va_vehiclesource").value;
-		if (vehicle_source == 3) {
+		alert(vehicle_source);
+		if (vehicle_source == 3)
+		{
 			$('#va_vehiclenumber_mkt').removeClass('disable_a_href');
+			$('#va_vendor').removeClass('disable_a_href');
+			$('#va_buy').removeClass('disable_a_href');
+			$('#va_sale').removeClass('disable_a_href');
 			na_vehicle_type.setAttribute("required", "required");  // Make it mandatory
 		}
 		else
 		{
 			$('#va_vehiclenumber_mkt').addClass('disable_a_href');
+			$('#va_vendor').addClass('disable_a_href');
+			$('#va_buy').addClass('disable_a_href');
+			$('#va_sale').addClass('disable_a_href');
 			na_vehicle_type.value = "";
 			na_vehicle_type.removeAttribute("required");  // Make it non-mandatory
+
 		}
 	}
 </script>

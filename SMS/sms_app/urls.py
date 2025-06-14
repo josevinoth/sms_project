@@ -181,6 +181,7 @@ urlpatterns = [
     path('vehicletype_insert', views.vehicletype_add, name='vehicletype_insert'),  # Add vehicletype
     path('vehicletype_update/<int:vehicletype_id>/', views.vehicletype_add, name='vehicletype_update'),  # Update vehicletype
     path('vehicletype_delete/<int:vehicletype_id>/', views.vehicletype_delete, name='vehicletype_delete'),  # Delete vehicletype
+    path('tripdetail_enquiry/<int:enquiry_id>/<str:trip_num>/', views.tripdetail_enquiry, name='tripdetail_enquiry'),  # tripdetail_enquiry,
     path('tripdetail_list/', views.tripdetail_list, name='tripdetail_list'),  # List tripdetail,
     path('tripdetail_insert', views.tripdetail_add, name='tripdetail_insert'),  # Add tripdetail
     path('tripdetail_update/<int:tripdetail_id>/', views.tripdetail_add, name='tripdetail_update'),  # Update tripdetail

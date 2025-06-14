@@ -6,9 +6,24 @@ from django.db.models import Q
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm,TripdetailaddForm
 from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,VehiclemasterInfo
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 import json
+@login_required(login_url='login_page')
+def tripdetail_enquiry(request, enquiry_id, trip_num):
+    # Fetch the enquiry object (optional - only needed if you want to verify or log it)
+    enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
+
+    # If no trip is associated, store enquiry ID in session and redirect to insert
+    if trip_num == 'none' or trip_num == '':
+        request.session['ses_enqiury_id'] = enquiry_id
+        return redirect('tripdetail_insert')  # Define this URL in urls.py
+    else:
+        trip_id = TripdetailInfo.objects.get(tr_tripnumber=trip_num).id
+        print('trip_id:', trip_id)
+        # If trip_id is provided, redirect to update
+        return redirect('tripdetail_update', tripdetail_id=trip_id)  # tripdetail_id is a keyword argument in the URL
+
 @login_required(login_url='login_page')
 def tripdetail_nav(request,tripdetail_id=0):
     first_name = request.session.get('first_name')
