@@ -2,13 +2,17 @@ from django.shortcuts import render, get_object_or_404, redirect
 from ..models import TripdetailInfo, ConsignmentgoodsInfo, approval_status_info, Trip_approval_info
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Q
 
 @login_required(login_url='login_page')
 def trip_approval_view(request):
     trip_list = TripdetailInfo.objects.select_related(
         'tr_consignmentnumber',
-        'tr_approval'
-    ).all()
+        'tr_approval',
+        'tr_approval__ta_approval_status'
+    ).filter( Q(tr_consignmentnumber__isnull=False),
+        Q(tr_approval__ta_approval_status__id=3) | Q(tr_approval__isnull=True)
+    )
 
     consignment_map = {
         trip.id: ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=trip.tr_consignmentnumber)
@@ -40,6 +44,10 @@ def update_trip_approval(request, trip_id):
 
         approval.save()
         trip.tr_approval = approval
+
+        if status_obj.approval_name == "Approved":
+            trip.tc_financestatus_id = 1
+
         trip.save()
 
         messages.success(request, "Approval updated.")

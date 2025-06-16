@@ -25,6 +25,8 @@
             <th>Trip No</th>
             <th>Consignment No</th>
             <th>Ewaybill No</th>
+            <th>Ewaybill Issue</th>
+            <th>Ewaybill Validity</th>
             <th>Ewaybill Attachment</th>
             <th>Invoice No</th>
             <th>Invoice Attachment</th>
@@ -38,6 +40,8 @@
                 <td>{{ trip.tr_tripnumber }}</td>
                 <td>{{ trip.tr_consignmentnumber }}</td>
                 <td>{{ consignment.cg_ebillno }}</td>
+                <td>{{ consignment.cg_dateofissue }}</td>
+                <td>{{ consignment.cg_dateofvalidity }}</td>
                 <td>
                     {% if consignment.cg_ewaybill_att %}
                         <a href="{{ consignment.cg_ewaybill_att.url }}" target="_blank">Download</a>
@@ -53,15 +57,22 @@
     <form method="post" action="{% url 'update_trip_approval' trip.id %}">
         {% csrf_token %}
         <select name="ta_approval_status" class="form-control form-control-sm" required>
-            <option value="" disabled selected>--Select--</option>
-            {% for status in status_list %}
-                <option value="{{ status.id }}"
-                    {% if trip.tr_approval and trip.tr_approval.ta_approval_status.id == status.id %}
-                        selected
-                    {% endif %}>{{ status }}
-                </option>
-            {% endfor %}
-        </select>
+    {% for status in status_list %}
+        <option value="{{ status.id }}"
+            {% if trip.tr_approval %}
+                {% if trip.tr_approval.ta_approval_status.id == status.id %}
+                    selected
+                {% endif %}
+            {% else %}
+                {% if status.id == 3 %}
+                    selected
+                {% endif %}
+            {% endif %}>
+            {{ status }}
+        </option>
+    {% endfor %}
+</select>
+
         <button type="submit" class="btn btn-sm btn-primary mt-1">Update</button>
     </form>
 </td>
