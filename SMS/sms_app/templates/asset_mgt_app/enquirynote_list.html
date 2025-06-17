@@ -66,7 +66,6 @@
                 <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id vehicle %}">{{ vehicle }}</a><br>
                 {% endfor %}
                 {% endif %}
-
                 {% else %}
                 <a class="link disable_a_href_list" style="color: red;">Add New</a>  {# Disable link when no enquiry exists #}
                 {% endif %}
@@ -74,57 +73,57 @@
 
             <!-- Consignment Number -->
             <td>
-    {% if data.vehicles and data.vehicles|length > 0 %}
-        {# Show Add New at top, once only, using first vehicle #}
-        <a class="link" href="{% url 'consignmentdetail_insert' %}" style="color: red;">
-            Add new
-        </a><br>
-
-        {# Loop through consignments only (not showing vehicle number) #}
-        {% for vehicle in data.vehicles %}
-            {% for consignment in data.consignments %}
-                {% if consignment.co_vehicelnumber == vehicle %}
-                    <a class="link" href="{% url 'consignmentdetail_update' consignment.id %}">
-                        {{ consignment.co_consignmentnumber }}
-                    </a><br>
-                {% endif %}
-            {% endfor %}
-        {% endfor %}
-    {% else %}
-        <a class="link disable_a_href_list" href="#" style="pointer-events: none; color: gray;">
-            Add New
-        </a>
-    {% endif %}
-</td>
-
-            <!-- Trip Number -->
-            <td>
                 {% if data.vehicles and data.vehicles|length > 0 %}
+                {# Show Add New at top, once only, using first vehicle #}
+                <a class="link" href="{% url 'consignmentdetail_enquiry' data.enquiry.id 'none' %}" style="color: red;">
+                    Add new
+                </a><br>
+
+                {# Loop through consignments only (not showing vehicle number) #}
                 {% for vehicle in data.vehicles %}
-                {% if data.trips and data.trips|length > 0 %}
-                {% with trip_found=0 %}
-                {% for trip_num, trip_status, trip_status_id in data.trips %}
-                <a class="link" href="{% url 'tripdetail_nav' data.enquiry.id %}">{{ trip_num }}</a><br>
-                {% with trip_found=1 %}{% endwith %}
+                {% for consignment in data.consignments %}
+                {% if consignment.co_vehicelnumber == vehicle %}
+                <a class="link" href="{% url 'consignmentdetail_enquiry' data.enquiry.id consignment.id %}">
+                    {{ consignment.co_consignmentnumber }}
+                </a><br>
+                {% endif %}
                 {% endfor %}
-                {% if not trip_found %}
-                <a class="link" href="{% url 'tripdetail_nav' data.enquiry.id %}" style="color: red;">
-                    Add New
-                </a><br>
-                {% endif %}
-                {% endwith %}
-                {% else %}
-                <a class="link" href="{% url 'tripdetail_nav' data.enquiry.id %}" style="color: red;">
-                    Add New
-                </a><br>
-                {% endif %}
                 {% endfor %}
                 {% else %}
                 <a class="link disable_a_href_list" href="#" style="pointer-events: none; color: gray;">
-                    No Trip
+                    Add New
                 </a>
                 {% endif %}
             </td>
+
+            <td>
+                {# Add New Trip Link on Top — Enabled only if consignment exists #}
+                {% if data.consignments and data.consignments|length > 0 %}
+                <a class="link" href="{% url 'tripdetail_enquiry' data.enquiry.id 'none' %}" style="color: red;">
+                    Add New
+                </a><br>
+                {% else %}
+                <a class="link disable_a_href_list" href="#" style="pointer-events: none; color: gray;">
+                    Add New
+                </a><br>
+                {% endif %}
+
+                {# List Consignments and Trips under each #}
+                {% if data.consignments and data.consignments|length > 0 %}
+                {% for consignment in data.consignments %}
+                <div>
+                    {% if data.trips and data.trips|length > 0 %}
+                    {% for trip_num, trip_status, trip_status_id in data.trips %}
+                    <a class="link" href="{% url 'tripdetail_enquiry' data.enquiry.id trip_num %}">{{ trip_num }}</a>
+                    {% endfor %}
+                    {% else %}
+                    <span style="color: gray;">No Trips</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% endif %}
+            </td>
+
 
             <!-- Trip Settlement -->
             <td>

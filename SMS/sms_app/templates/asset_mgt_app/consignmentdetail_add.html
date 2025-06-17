@@ -276,10 +276,18 @@
                 $("#co_vehicelnumber").empty();
                 $("#co_vehicelnumber").append("<option value=''>--Select--</option>");
 
-                final_vehicle_list.forEach(function(vehicle) {
-                    var isSelected = vehicle === selectedVehicle ? "selected" : "";
-                    $("#co_vehicelnumber").append("<option value='" + vehicle + "' " + isSelected + ">" + vehicle + "</option>");
-                });
+                if (selectedVehicle !== "") {
+    				$("#co_vehicelnumber").append(
+        			"<option value='" + selectedVehicle + "' selected>" + selectedVehicle + "</option>"
+    			);
+				}
+				else
+				{
+    				final_vehicle_list.forEach(function(vehicle) {
+        			$("#co_vehicelnumber").append(
+            		"<option value='" + vehicle + "'>" + vehicle + "</option>");
+    			});
+				}
 
                 bind_vehicle_type_fetch();
             },

@@ -147,10 +147,9 @@
                         <!--        <a href="{% url 'vehicle_allotment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Allotment </a>-->
                         <a href="{% url 'tripdetail_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip Detail </a>
                         <a href="{% url 'tripclosure_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip Closure </a>
-                        <a href="{% url 'track_vehicle_position' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GPS </a>
                         <a href="{% url 'fuelfilling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fuel Filling </a>
                         <a href="{% url 'vehicle_availability' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Vehicle Availability </a>
-                        <a href="{% url 'trip_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Trip Approval </a>
+                        <a id="tripapproval" href="{% url 'trip_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Trip Approval <span class="badge bg-danger p-2 blink">{{ approval_count }}</span></a>
                         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> TMS Misc</button>
                         <div class="content">
                             <a href="{% url 'location_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Location Master </a>
@@ -441,6 +440,14 @@ for (i = 0; i < coll.length; i++) {
             {
                 enableElement('transport'); // Enable transport for BVM Trans Solutions
             }
+        }
+        if (user_id==1 || user_id==57 || user_id==86 || user_id==93)
+        {
+            $('#tripapproval').css('display', 'block');
+        }
+        else
+        {
+            $('#tripapproval').css('display', 'none');
         }
     });
 </script>

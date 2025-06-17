@@ -3,7 +3,7 @@ from django.contrib.messages.context_processors import messages
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.utils import timezone
-from ..models import Customerattach,PkcostingInfo,RequirementsInfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info
+from ..models import Customerattach,PkcostingInfo,RequirementsInfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info,TripdetailInfo
 from django.shortcuts import render, redirect
 from django.db.models import Sum, Q
 from datetime import timedelta
@@ -36,6 +36,10 @@ def home_page(request):
     customer_contract_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30,ca_status=1))
     customer_rate_due_count = len(Customerattach.objects.filter(ca_rate_due_days__lte=30,ca_status=1))
     total_dues = customer_contract_due_count + customer_rate_due_count
+    approval_count = TripdetailInfo.objects.filter( Q(tr_consignmentnumber__isnull=False),
+        Q(tr_approval__isnull=True) | Q(tr_approval__ta_approval_status__id=3)
+    ).count()
+
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
@@ -64,7 +68,8 @@ def home_page(request):
                'count_acceptance': count_acceptance,
                'customer_contract_due_count': customer_contract_due_count,
                'customer_rate_due_count': customer_rate_due_count,
-               'total_dues': total_dues
+               'total_dues': total_dues,
+               'approval_count':approval_count
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 

@@ -10,6 +10,18 @@ from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
 from ..models import VehiclemasterInfo,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
+@login_required(login_url='login_page')
+def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
+    # You can now use enquiry_id and vehicle_number
+    enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
+    print('consignment_number',consignment_number)
+
+    if consignment_number=='none' or consignment_number=='':
+        request.session['enquiry_num_id'] = enquiry_id
+        return redirect('consignmentdetail_insert')  # Adjust this as per your URL names
+    else:
+        # Redirect to the update URL with the found vehicle_allotment id
+        return redirect('consignmentdetail_update', consignmentdetail_id=consignment_number)
 
 @login_required(login_url='login_page')
 def consignmentdetail_nav(request,consignmentdetail_id=0):
@@ -36,7 +48,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     enquiry_num = request.session.get('ses_enqiury_num')
-    enquiry_num_id = request.session.get('ses_enqiury_num_id')
+    enquiry_num_id = request.session.get('enquiry_num_id')
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
 
     customer = EnquirynoteInfo.objects.get(pk=enquiry_num_id).en_customername
@@ -209,6 +221,8 @@ def vehicle_allotted(request):
         selected_vehicles = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id_val).co_vehicelnumber
     except ConsignmentdetailInfo.DoesNotExist:
         selected_vehicles = None  # Or set a default value
+    print('selected_vehicles',selected_vehicles)
+    print('available_vehicle_list',available_vehicle_list)
     return JsonResponse({'final_vehicle_list': available_vehicle_list,'selected_vehicles':selected_vehicles})
 
 

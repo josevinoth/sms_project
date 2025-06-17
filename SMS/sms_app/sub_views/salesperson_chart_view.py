@@ -112,16 +112,17 @@ def monthly_summary(request):
         total_actual_customers=Count('s_customer_name', distinct=False),
         total_new_customers=Count('s_customer_new_name', distinct=False),
         total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True),
-        total_quotes=Count(
-            's_updated_by__salesmultipleiteminfo',
-            filter=Q(
-                s_updated_by__salesmultipleiteminfo__sm_lastmodifiedby=F('s_updated_by'))
-                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__gte=from_date) if from_date else Q())
-                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__lte=to_date) if to_date else Q()),
-            distinct=True
-        ),
-
         business_won=Count('id', filter=Q(s_bus_won_not=1), distinct=True),
+    )
+    quotes_data = SalesmultipleitemInfo.objects.filter(
+        sm_lastmodifiedby__user_extinfo__department__dept_name="Sales",
+        sm_lastmodifiedby__is_active=True,
+        **({'sm_updated_at__gte': from_date} if from_date else {}),
+        **({'sm_updated_at__lte': to_date} if to_date else {})
+    ).values(
+        'sm_lastmodifiedby__id', 'sm_lastmodifiedby__first_name'
+    ).annotate(
+        total_quotes=Count('id', distinct=True)
     )
 
     sales_calls = Sales_Comments_Info.objects.filter(
@@ -151,7 +152,8 @@ def monthly_summary(request):
         list(target['st_sales_person__id'] for target in target_data) +
         list(actual['s_updated_by__id'] for actual in actual_data) +
         list(call['sc_updated_by__id'] for call in sales_calls) +
-        list(revenue['br_sale_person__id'] for revenue in actual_revenue)
+        list(revenue['br_sale_person__id'] for revenue in actual_revenue)+
+        list(quote['sm_lastmodifiedby__id'] for quote in quotes_data)
     )
 
     for salesperson_id in salesperson_ids:
@@ -168,6 +170,9 @@ def monthly_summary(request):
             (rev['br_sale_person__first_name'] for rev in actual_revenue if
              rev['br_sale_person__id'] == salesperson_id),
             "Unknown"
+        ) or next(
+        (q['sm_lastmodifiedby__first_name'] for q in quotes_data if q['sm_lastmodifiedby__id'] == salesperson_id),
+        "Unknown"
         )
 
         # Fetch target, actuals, and calls
@@ -175,9 +180,10 @@ def monthly_summary(request):
         actual = next((a for a in actual_data if a['s_updated_by__id'] == salesperson_id), {})
         calls = next((c for c in sales_calls if c['sc_updated_by__id'] == salesperson_id), {})
         revenue = next((rev for rev in actual_revenue if rev['br_sale_person__id'] == salesperson_id), {})
+        quotes = next((q for q in quotes_data if q['sm_lastmodifiedby__id'] == salesperson_id), {})
 
         total_sales_calls = calls.get('total_sales_calls', 0) or 0
-        total_quotes = actual.get('total_quotes', 0) or 0
+        total_quotes = quotes.get('total_quotes', 0) or 0
         business_won = actual.get('business_won', 0) or 0
 
         performance_percentage = round((total_quotes / total_sales_calls) * 100) if total_sales_calls else 0
@@ -297,16 +303,19 @@ def salesperson_productivity_performance(request):
         total_actual_customers=Count('s_customer_name', distinct=False),
         total_new_customers=Count('s_customer_new_name', distinct=False),
         total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True),
-        total_quotes=Count(
-            's_updated_by__salesmultipleiteminfo',
-            filter=Q(
-                s_updated_by__salesmultipleiteminfo__sm_lastmodifiedby=F('s_updated_by'))
-                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__gte=from_date) if from_date else Q())
-                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__lte=to_date) if to_date else Q()),
-            distinct=True
-        ),
 
         business_won=Count('id', filter=Q(s_bus_won_not=1), distinct=True),
+    )
+
+    quotes_data = SalesmultipleitemInfo.objects.filter(
+        sm_lastmodifiedby__user_extinfo__department__dept_name="Sales",
+        sm_lastmodifiedby__is_active=True,
+        **({'sm_updated_at__gte': from_date} if from_date else {}),
+        **({'sm_updated_at__lte': to_date} if to_date else {})
+    ).values(
+        'sm_lastmodifiedby__id', 'sm_lastmodifiedby__first_name'
+    ).annotate(
+        total_quotes=Count('id', distinct=True)
     )
 
     sales_calls = Sales_Comments_Info.objects.filter(
@@ -336,7 +345,8 @@ def salesperson_productivity_performance(request):
         list(target['st_sales_person__id'] for target in target_data) +
         list(actual['s_updated_by__id'] for actual in actual_data) +
         list(call['sc_updated_by__id'] for call in sales_calls) +
-        list(revenue['br_sale_person__id'] for revenue in actual_revenue)
+        list(revenue['br_sale_person__id'] for revenue in actual_revenue)+
+        list(quote['sm_lastmodifiedby__id'] for quote in quotes_data)
     )
     sales_data = []
     performance_percentages = []
@@ -356,15 +366,19 @@ def salesperson_productivity_performance(request):
             (rev['br_sale_person__first_name'] for rev in actual_revenue if
              rev['br_sale_person__id'] == salesperson_id),
             "Unknown"
+        ) or next(
+        (q['sm_lastmodifiedby__first_name'] for q in quotes_data if q['sm_lastmodifiedby__id'] == salesperson_id),
+        "Unknown"
         )
 
         target = next((t for t in target_data if t['st_sales_person__id'] == salesperson_id), {})
         actual = next((a for a in actual_data if a['s_updated_by__id'] == salesperson_id), {})
         calls = next((c for c in sales_calls if c['sc_updated_by__id'] == salesperson_id), {})
         revenue = next((rev for rev in actual_revenue if rev['br_sale_person__id'] == salesperson_id), {})
+        quotes = next((q for q in quotes_data if q['sm_lastmodifiedby__id'] == salesperson_id), {})
 
         total_sales_calls = calls.get('total_sales_calls', 0) or 0
-        total_quotes = actual.get('total_quotes', 0) or 0
+        total_quotes = quotes.get('total_quotes', 0) or 0
         business_won = actual.get('business_won', 0) or 0
 
         performance_percentage = round((total_quotes / total_sales_calls) * 100, ) if total_sales_calls > 0 else 0
@@ -1031,16 +1045,17 @@ def salesperson_wise_table(request):
         total_actual_customers=Count('s_customer_name', distinct=False),
         total_new_customers=Count('s_customer_new_name', distinct=False),
         total_existing_customers=Count('s_customer_name', filter=~Q(s_customer_name=210), distinct=True),
-        total_quotes=Count(
-            's_updated_by__salesmultipleiteminfo',
-            filter=Q(
-                s_updated_by__salesmultipleiteminfo__sm_lastmodifiedby=F('s_updated_by'))
-                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__gte=from_date) if from_date else Q())
-                   & (Q(s_updated_by__salesmultipleiteminfo__sm_updated_at__lte=to_date) if to_date else Q()),
-            distinct=True
-        ),
-
         business_won=Count('id', filter=Q(s_bus_won_not=1), distinct=True),
+    )
+    quotes_data = SalesmultipleitemInfo.objects.filter(
+        sm_lastmodifiedby__user_extinfo__department__dept_name="Sales",
+        sm_lastmodifiedby__is_active=True,
+        **({'sm_updated_at__gte': from_date} if from_date else {}),
+        **({'sm_updated_at__lte': to_date} if to_date else {})
+    ).values(
+        'sm_lastmodifiedby__id', 'sm_lastmodifiedby__first_name'
+    ).annotate(
+        total_quotes=Count('id', distinct=True)
     )
 
     sales_calls = Sales_Comments_Info.objects.filter(
@@ -1070,7 +1085,8 @@ def salesperson_wise_table(request):
         list(target['st_sales_person__id'] for target in target_data) +
         list(actual['s_updated_by__id'] for actual in actual_data) +
         list(call['sc_updated_by__id'] for call in sales_calls) +
-        list(revenue['br_sale_person__id'] for revenue in actual_revenue)
+        list(revenue['br_sale_person__id'] for revenue in actual_revenue)+
+        list(quote['sm_lastmodifiedby__id'] for quote in quotes_data)
     )
     call_type_summary = []
     call_nature_summary = []
@@ -1089,6 +1105,9 @@ def salesperson_wise_table(request):
         ) or next(
             (rev['br_sale_person__first_name'] for rev in actual_revenue if rev['br_sale_person__id'] == salesperson_id),
             "Unknown"
+        ) or next(
+        (q['sm_lastmodifiedby__first_name'] for q in quotes_data if q['sm_lastmodifiedby__id'] == salesperson_id),
+        "Unknown"
         )
 
         # Fetch target, actuals, and calls
@@ -1096,9 +1115,10 @@ def salesperson_wise_table(request):
         actual = next((a for a in actual_data if a['s_updated_by__id'] == salesperson_id), {})
         calls = next((c for c in sales_calls if c['sc_updated_by__id'] == salesperson_id), {})
         revenue = next((rev for rev in actual_revenue if rev['br_sale_person__id'] == salesperson_id), {})
+        quotes = next((q for q in quotes_data if q['sm_lastmodifiedby__id'] == salesperson_id), {})
 
         total_sales_calls = calls.get('total_sales_calls', 0) or 0
-        total_quotes = actual.get('total_quotes', 0) or 0
+        total_quotes = quotes.get('total_quotes', 0) or 0
         business_won = actual.get('business_won', 0) or 0
 
         performance_percentage = round((total_quotes / total_sales_calls) * 100, ) if total_sales_calls > 0 else 0

@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from ..forms import ConsignmentgoodsaddForm,ConsignmentdetailaddForm
-from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,Stock_type
+from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,Stock_type,ConsigneeInfo,ConsignerInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
@@ -129,3 +129,36 @@ def add_description(request):
             new_desc = Stock_type.objects.create(stock_type=name)
             return JsonResponse({'id': new_desc.id, 'stock_type': new_desc.stock_type})
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@csrf_exempt
+def add_consigner(request):
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        if not name:
+            return JsonResponse({"success": False, "error": "Consigner name cannot be empty."})
+
+        existing = ConsignerInfo.objects.filter(consigner_name__iexact=name).first()
+        if existing:
+            return JsonResponse({"success": True, "id": existing.id, "name": existing.consigner_name})
+
+        new = ConsignerInfo.objects.create(consigner_name=name)
+        return JsonResponse({"success": True, "id": new.id, "name": new.consigner_name})
+
+    return JsonResponse({"success": False, "error": "Invalid request."})
+
+@csrf_exempt
+def add_consignee(request):
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        if not name:
+            return JsonResponse({"success": False, "error": "Consignee name cannot be empty."})
+
+        existing = ConsigneeInfo.objects.filter(consignee_name__iexact=name).first()
+        if existing:
+            return JsonResponse({"success": False,"id": existing.id,"name": existing.consignee_name,"error": "This consignee already exists."})
+
+        new = ConsigneeInfo.objects.create(consignee_name=name)
+        return JsonResponse({"success": True,"id": new.id,"name": new.consignee_name})
+
+    return JsonResponse({"success": False, "error": "Invalid request"})

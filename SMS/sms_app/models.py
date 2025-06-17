@@ -162,12 +162,16 @@ from .sub_models.po_dimension_mod import POdimension
 from .sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
 from .sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
+from .sub_models.approval_status_mod import approval_status_info
+from .sub_models.trip_approval_info_mod import Trip_approval_info
 from .sub_models.tripdetail_mod import TripdetailInfo,Trip_category_info,Trip_closure_files_Info
 from .sub_models.test_info_mod import TestInfo
 from .sub_models.fuel_vendor_mod import Fuelvendor
 from .sub_models.bunk_name_mod import Bunkname
 from .sub_models.fuelfilling_mod import Fuelfillinginfo
 from .sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+from .sub_models.consignee_info_mod import ConsigneeInfo
+from .sub_models.consigner_info_mod import ConsignerInfo
 from .sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from .sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
 from .sub_models.pk_stockpurchases_mod import PkstockpurchasesInfo
@@ -203,5 +207,3 @@ from .sub_models.pkweightconvention_mod import Pkweightconvention
 from .sub_models.pk_wood_description import Pkwooddescription
 from .sub_models.vendorratemaster1_mod import VendorratemasterInfo1
 from .sub_models.location_master_gmap_mod import LocationMaster
-from .sub_models.approval_status_mod import approval_status_info
-from .sub_models.trip_approval_info_mod import Trip_approval_info

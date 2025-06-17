@@ -6,9 +6,24 @@ from django.db.models import Q
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm,TripdetailaddForm
 from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,VehiclemasterInfo
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 import json
+@login_required(login_url='login_page')
+def tripdetail_enquiry(request, enquiry_id, trip_num):
+    # Fetch the enquiry object (optional - only needed if you want to verify or log it)
+    enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
+
+    # If no trip is associated, store enquiry ID in session and redirect to insert
+    if trip_num == 'none' or trip_num == '':
+        request.session['ses_enqiury_id'] = enquiry_id
+        return redirect('tripdetail_insert')  # Define this URL in urls.py
+    else:
+        trip_id = TripdetailInfo.objects.get(tr_tripnumber=trip_num).id
+        print('trip_id:', trip_id)
+        # If trip_id is provided, redirect to update
+        return redirect('tripdetail_update', tripdetail_id=trip_id)  # tripdetail_id is a keyword argument in the URL
+
 @login_required(login_url='login_page')
 def tripdetail_nav(request,tripdetail_id=0):
     first_name = request.session.get('first_name')
@@ -74,9 +89,12 @@ def tripdetail_add(request,tripdetail_id=0):
             tripclosurefiles_form = TripclosurefilesForm()
             enquiry_num_id = request.session.get('ses_enqiury_id')
             trip_list = TripdetailInfo.objects.select_related('tr_approval', 'tr_approval__ta_approval_status').filter(tr_enquirynumber=enquiry_num_id)
-            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3])
+            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3,8])
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
-            status_selected = 1
+            status_selected = 8
+            is_empty_trip = False
+            if initial_data.get('tr_category') == 2 and not initial_data.get('tr_consignmentnumber'):
+                is_empty_trip = True
 
             context = {
                 'first_name': first_name,
@@ -89,6 +107,7 @@ def tripdetail_add(request,tripdetail_id=0):
                 'consignment_list': consignment_list,
                 'status_selected': status_selected,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
+                'is_empty_trip':is_empty_trip
             }
         else:
             trip_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_tripnumber
@@ -100,11 +119,11 @@ def tripdetail_add(request,tripdetail_id=0):
             tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
             trip_list = TripdetailInfo.objects.select_related('tr_approval', 'tr_approval__ta_approval_status').filter(tr_enquirynumber=enquiry_num_id)
-            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3])
+            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3,8])
             #status_selected = (TripdetailInfo.objects.get(pk=tripdetail_id).tc_financestatus.id)
 
             trip_instance = TripdetailInfo.objects.get(pk=tripdetail_id)
-            status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else None
+            status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else 8
             print('status_selected', status_selected)
             #consignment_selected = (TripdetailInfo.objects.get(pk=tripdetail_id).tr_consignmentnumber.id)
             if trip_instance.tr_consignmentnumber:
@@ -112,6 +131,10 @@ def tripdetail_add(request,tripdetail_id=0):
             else:
                 consignment_selected = None
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+
+            is_empty_trip = False
+            if trip_instance.tr_category == 2 and not trip_instance.tr_consignmentnumber:
+                is_empty_trip = True
 
             context = {
                 'first_name': first_name,
@@ -125,6 +148,7 @@ def tripdetail_add(request,tripdetail_id=0):
                 'consignment_selected': consignment_selected,
                 'consignment_list': consignment_list,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
+                'is_empty_trip':is_empty_trip
             }
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
     else:
@@ -172,7 +196,9 @@ def tripdetail_add(request,tripdetail_id=0):
                         # If parsing fails, keep fallback value
                         pass
 
-                trip_det_form.save()
+                trip = trip_det_form.save(commit=False)
+                trip.tc_financestatus_id = 8
+                trip.save()
                 tripclosurefiles_form.save()
                 print("Main Form is Valid")
                 last_id = TripdetailInfo.objects.latest('id').id
@@ -193,7 +219,7 @@ def tripdetail_add(request,tripdetail_id=0):
             tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES, instance=tripclosure_files)
 
-            enquiry_num = request.session.get('ses_enqiury_id')
+            enquiry_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_enquirynumber.id
             if trip_det_form.is_valid():
                 trip_det_form.save()
                 tripclosurefiles_form.save()

@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import iou_info,EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehicletypeInfo,OwnershipInfo,Places,Tripstatusinfo
+from ..models import Trip_approval_info,iou_info,EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehicletypeInfo,OwnershipInfo,Places,Tripstatusinfo
 
 def trip_attach_path(instance, filename):
     return 'PODattachfiles/{0}/{1}'.format(instance.tr_tripnumber, filename)
@@ -41,7 +41,7 @@ class TripdetailInfo(models.Model):
     tr_iou = models.ForeignKey(iou_info, related_name='tr_iou', db_column='tr_iou', on_delete=models.CASCADE, null=True,blank=True)
     tr_dock_in_time = models.DateTimeField(null=True, blank=True)
     tr_dock_out_time = models.DateTimeField(null=True, blank=True)
-    tr_approval = models.ForeignKey('sms_app.Trip_approval_info', on_delete=models.SET_NULL, null=True, blank=True)
+    tr_approval = models.ForeignKey(Trip_approval_info, on_delete=models.SET_NULL, null=True, blank=True)
 
     tc_tripcost = models.FloatField(default=0.0)
     tc_parkingcost = models.FloatField(default=0.0)

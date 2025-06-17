@@ -157,6 +157,7 @@ urlpatterns = [
     path('enquirynote_insert', views.enquirynote_add, name='enquirynote_insert'),  # Add enquirynote
     path('enquirynote_update/<int:enquirynote_id>/', views.enquirynote_add, name='enquirynote_update'),  # Update enquirynote
     path('enquirynote_delete/<int:enquirynote_id>/', views.enquirynote_delete, name='enquirynote_delete'),  # Delete enquirynote
+    path('consignmentdetail_enquiry/<int:enquiry_id>/<str:consignment_number>/', views.consignmentdetail_enquiry, name='consignmentdetail_enquiry'),  # List consignmentdetail,
     path('consignmentdetail_list/', views.consignmentdetail_list, name='consignmentdetail_list'),  # List consignmentdetail,
     path('consignmentdetail_insert', views.consignmentdetail_add, name='consignmentdetail_insert'),  # Add consignmentdetail
     path('consignmentdetail_update/<int:consignmentdetail_id>/', views.consignmentdetail_add, name='consignmentdetail_update'),  # Update consignmentdetail
@@ -180,6 +181,7 @@ urlpatterns = [
     path('vehicletype_insert', views.vehicletype_add, name='vehicletype_insert'),  # Add vehicletype
     path('vehicletype_update/<int:vehicletype_id>/', views.vehicletype_add, name='vehicletype_update'),  # Update vehicletype
     path('vehicletype_delete/<int:vehicletype_id>/', views.vehicletype_delete, name='vehicletype_delete'),  # Delete vehicletype
+    path('tripdetail_enquiry/<int:enquiry_id>/<str:trip_num>/', views.tripdetail_enquiry, name='tripdetail_enquiry'),  # tripdetail_enquiry,
     path('tripdetail_list/', views.tripdetail_list, name='tripdetail_list'),  # List tripdetail,
     path('tripdetail_insert', views.tripdetail_add, name='tripdetail_insert'),  # Add tripdetail
     path('tripdetail_update/<int:tripdetail_id>/', views.tripdetail_add, name='tripdetail_update'),  # Update tripdetail
@@ -670,7 +672,8 @@ urlpatterns = [
     path('fetch_bunk_details/', views.fetch_bunk_details, name='fetch_bunk_details'),
     path('trip_approval_view/', views.trip_approval_view, name='trip_approval_view'),
     path('trip-approval/update/<int:trip_id>/', views.update_trip_approval, name='update_trip_approval'),
-
+    path('add_consigner/', views.add_consigner, name='add_consigner'),
+    path('add_consignee/', views.add_consignee, name='add_consignee'),
 ]
 
 
