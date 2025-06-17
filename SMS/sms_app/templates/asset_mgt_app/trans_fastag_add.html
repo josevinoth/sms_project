@@ -1,82 +1,80 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
-{% block content %}
-<div class="container">
-    <h2 class="mb-4">FASTag Toll Enquiry</h2>
 
-    <form method="post" class="card p-4 shadow-sm bg-white">
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-4">FASTag Toll Enquiry</h3>
+
+    <form method="post" class="card p-4 shadow-sm bg-white mb-4">
         {% csrf_token %}
         <div class="row">
             <div class="col-md-6 mb-3">
-                {{ form.vehicleNumber.label_tag }} {{ form.vehicleNumber }}
+                {{ form.vehicleNumber.label_tag }}
+                {{ form.vehicleNumber|add_class:"form-control" }}
             </div>
             <div class="col-md-6 mb-3">
-                {{ form.contactNumber.label_tag }} {{ form.contactNumber }}
+                {{ form.contactNumber.label_tag }}
+                {{ form.contactNumber|add_class:"form-control" }}
             </div>
             <div class="col-md-6 mb-3">
-                {{ form.fromDate.label_tag }} {{ form.fromDate }}
+                {{ form.fromDate.label_tag }}
+                {{ form.fromDate|add_class:"form-control" }}
             </div>
             <div class="col-md-6 mb-3">
-                {{ form.toDate.label_tag }} {{ form.toDate }}
+                {{ form.toDate.label_tag }}
+                {{ form.toDate|add_class:"form-control" }}
             </div>
         </div>
         <button type="submit" class="btn btn-primary">Search</button>
     </form>
 
-    {% if result %}
-    <hr>
-    {% if result.data %}
-    <h4 class="mt-4">FASTag Transactions</h4>
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped mt-3">
-            <thead>
-            <tr>
-                <th>Wallet Post Time</th>
-                <th>Plaza Reader Time</th>
-                <th>Date Time</th>
-                <th>Transaction ID</th>
-                <th>Original Txn ID</th>
-                <th>Tag Sequence No</th>
-                <th>Toll Plaza Name</th>
-                <th>Vehicle No</th>
-                <th>VC Class</th>
-                <th>Lane ID</th>
-                <th>Lane Direction</th>
-                <th>Amount</th>
-                <th>Toll ID</th>
-            </tr>
+   {% if txn_list %}
+    <h4 class="mt-4" style="color: #2c3e50;">Transaction Summary</h4>
+    <p>
+        <strong style="color: #34495e;">Total Transactions:</strong>
+        <span style="font-weight: bold; color: #27ae60;">{{ toll_count }}</span>
+    </p>
+    <p>
+        <strong style="color: #34495e;">Total Amount:</strong>
+        <span style="font-weight: bold; color: #2980b9;">₹{{ total_amount|floatformat:2 }}</span>
+    </p>
+
+
+    <div class="table-responsive mt-3">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Vehicle Number</th>
+                    <th>Txn ID</th>
+                    <th>Plaza</th>
+                    <th>Vehicle</th>
+                    <th>Amount</th>
+                    <th>Lane</th>
+                </tr>
             </thead>
             <tbody>
-            {% for txn in result.data %}
-            <tr>
-                <td>{{ txn.walletPostTime }}</td>
-                <td>{{ txn.plazaReaderTime }}</td>
-                <td>{{ txn.txnTime }}</td>
-                <td>{{ txn.txnId }}</td>
-                <td>{{ txn.originalTxnId }}</td>
-                <td>{{ txn.tagSequenceNo }}</td>
-                <td>{{ txn.tollPlazaName }}</td>
-                <td>{{ txn.vehicleNumber }}</td>
-                <td>{{ txn.vcClass }}</td>
-                <td>{{ txn.laneId }}</td>
-                <td>{{ txn.laneDirection }}</td>
-                <td>{{ txn.amount }}</td>
-                <td>{{ txn.tollId }}</td>
-            </tr>
-            {% endfor %}
+                {% for txn in txn_list %}
+                <tr>
+                    <td>{{ txn.txnPostedtime }}</td>
+                    <td>{{ txn.vehicleNo }}</td>
+                    <td>{{ txn.originalTxnId }}</td>
+                    <td>{{ txn.tollplazaname }}</td>
+                    <td>{{ txn.vehicleDesc }}</td>
+                    <td>₹{{ txn.txnAmt|floatformat:2 }}</td>
+                    <td>{{ txn.laneId }}</td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
-    {% elif result.error %}
-    <div class="alert alert-danger mt-4">
-        <strong>Error:</strong> {{ result.error }}
-    </div>
-    {% else %}
-    <div class="alert alert-warning mt-4">
-        {{ result.responseMessage|default:"No transactions found." }}
-    </div>
-    {% endif %}
+
+    {% elif result.success and not txn_list %}
+    <div class="alert alert-info mt-4">No transactions found for the selected criteria.</div>
     {% endif %}
 
+    {% if result.error %}
+    <div class="alert alert-danger mt-4">{{ result.error }}</div>
+    {% endif %}
 </div>
-{% endblock content %}
+{% endblock %}

@@ -107,7 +107,7 @@
   setInterval(() => {
     const currentFilter = document.getElementById("statusFilter").value;
     loadVehicleData(currentFilter);
-  }, 15000);
+  }, 10000);
 
   document.getElementById("statusFilter").addEventListener("change", function () {
     loadVehicleData(this.value);
