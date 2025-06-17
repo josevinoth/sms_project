@@ -1,24 +1,12 @@
 import requests
-import hmac
-import hashlib
 from django.shortcuts import render
 from datetime import datetime
-from decouple import config
-from ..forms import trans_fastag_form
-
-# Load from .env
-WALLET_ID = config("FASTAG_WALLET_ID")
-MERCHANT_ID = config("FASTAG_MERCHANT_ID")
-REQUEST_SOURCE = config("FASTAG_SOURCE", default="BD")
-SECRET_KEY = config("FASTAG_SECRET")
-
-def generate_checksum(message: str, secret: str) -> str:
-    return 'C223611027:95ef659313847c7485d43d66b8c5b9e8b817c9c136d2798333c5df693b6efc2a'
+from ..forms import trans_fastag_form  # Adjust import if needed
 
 def fastag_enquiry_view(request):
     result = {}
     txn_list = []
-    total_amount = 0
+    total_amount = 0.0
     toll_count = 0
 
     if request.method == 'POST':
@@ -29,28 +17,22 @@ def fastag_enquiry_view(request):
             from_date = form.cleaned_data['fromDate'].strftime("%Y%m%d") + " 000000"
             to_date = form.cleaned_data['toDate'].strftime("%Y%m%d") + " 235959"
 
-            request_id = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
-            request_time = datetime.now().strftime("%Y%m%d%H%M")
-
             payload = {
-                "requestID": request_id,
-                "requestTime": request_time,
-                "merchantID": MERCHANT_ID,
-                "walletId": WALLET_ID,
-                "requestSource": REQUEST_SOURCE,
+                "requestID": datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3],
+                "requestTime": datetime.now().strftime("%Y%m%d%H%M"),
+                "merchantID": "HDFCWL",
+                "walletId": "W0122122713156600041",
+                "requestSource": "BD",
                 "fromDate": from_date,
                 "toDate": to_date,
                 "vehicleNumber": vehicle,
                 "contactNumber": contact
             }
 
-            # Prepare message for checksum
-            message = request_id + WALLET_ID + request_time + MERCHANT_ID + REQUEST_SOURCE
-            checksum = generate_checksum(message, SECRET_KEY)
-
             headers = {
-                'Authorization': f'onepay:{checksum}',
-                'Content-Type': 'application/json'
+                'Authorization': 'C223611027:95ef659313847c7485d43d66b8c5b9e8b817c9c136d2798333c5df693b6efc2a',
+                'Content-Type': 'application/json',
+                'salt': '95ef659313847c7485d43d66b8c5b9e8b817c9c136d2798333c5df693b6efc2a'
             }
 
             try:
@@ -62,36 +44,51 @@ def fastag_enquiry_view(request):
                 )
 
                 if response.status_code == 200:
-                    try:
-                        result = response.json()
-                    except Exception:
-                        result = {"error": "Failed to decode JSON from API."}
-                        return render(request, 'asset_mgt_app/trans_fastag_add.html', {
-                            'form': form, 'result': result
-                        })
+                    api_data = response.json()
+                    res_code = api_data.get("resCode", "").strip().upper()
+                    res_msg = api_data.get("resMessage", "")
+                    txn_list = api_data.get("data", [])
+                    print("DEBUG resCode:", repr(api_data.get("resCode")))
+                    print("DEBUG resMessage:", repr(api_data.get("resMessage")))
+                    print("DEBUG txn_list type:", type(api_data.get("data")))
 
-                    # Handle success and fallback messages
-                    if result.get("resCode") == "WMESUC001":
-                        txn_list = result.get("data", [])
+                    print(f"res_code = {res_code}, txn_list count = {len(txn_list)}")
+
+                    if res_code in [res_code, "SUCCESS"] and isinstance(txn_list, list):
                         toll_count = len(txn_list)
-                        total_amount = sum(float(txn.get("amount", 0)) for txn in txn_list)
-                        result["success"] = result.get("resMessage", "Success")
-                    else:
-                        result["error"] = result.get("resMessage", "No transactions found.")
+                        total_amount = 0.0
 
+                        for idx, txn in enumerate(txn_list):
+                            raw_amt = txn.get("txnAmt", "0")
+                            try:
+                                amount = float(str(raw_amt).strip())
+                                print(f"[{idx}] txnAmt = {amount}")
+                                total_amount += amount
+                            except Exception as e:
+                                print(f"[{idx}] Failed to parse txnAmt={raw_amt}: {e}")
+
+                        result["success"] = f"{res_msg}: {toll_count} transactions"
+                        result["error"] = None
+                    else:
+                        result["success"] = None
+                        result["error"] = f"API ERROR: {res_msg or 'No message'}"
                 else:
-                    result = {"error": f"API returned status {response.status_code}: {response.text}"}
+                    result = {
+                        "success": None,
+                        "error": f"API returned status {response.status_code}: {response.text}"
+                    }
 
             except requests.exceptions.RequestException as e:
-                result = {"error": str(e)}
-
+                result = {"success": None, "error": str(e)}
     else:
         form = trans_fastag_form()
+
+    print("✅ Final total_amount to template:", total_amount)
 
     return render(request, 'asset_mgt_app/trans_fastag_add.html', {
         'form': form,
         'result': result,
         'txn_list': txn_list,
         'toll_count': toll_count,
-        'total_amount': total_amount
+        'total_amount': total_amount,
     })
