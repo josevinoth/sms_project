@@ -41,8 +41,8 @@ def get_vehicle_data(request):
     in_trip_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=1).values_list('tr_vehiclenumber', flat=True)))
     available_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=8).values_list('tr_vehiclenumber', flat=True)))
 
-    print("✅ Normalized in-trip numbers from DB:", in_trip_numbers)
-    print("✅ Normalized available numbers from DB:", available_numbers)
+    # print("✅ Normalized in-trip numbers from DB:", in_trip_numbers)
+    # print("✅ Normalized available numbers from DB:", available_numbers)
 
     vehicle_data = []
     try:
@@ -71,7 +71,7 @@ def get_vehicle_data(request):
                     running_status = "Idle"
 
                 # Debug: show each normalized device number
-                print(f"📦 API Number: '{raw_number}' → Normalized: '{normalized_number}'")
+                # print(f"📦 API Number: '{raw_number}' → Normalized: '{normalized_number}'")
 
                 if normalized_number in in_trip_numbers:
                     trip_status = "in_trip"
@@ -94,5 +94,4 @@ def get_vehicle_data(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-    print(f"🚚 Total vehicles returned: {len(vehicle_data)}")
     return JsonResponse(vehicle_data, safe=False)
