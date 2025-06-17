@@ -476,6 +476,7 @@
                 var quantity = parseInt(document.getElementById("ct_quantity_req").value) || 0;
        			document.getElementById("ct_total_cft_display").value = "{{ total_cft_display }}";
 				var total_cft = parseFloat(document.getElementById("ct_total_cft_display").value) || 0;
+				alert(total_cft)
 
                 var totalCost = rate * total_cft;
                 document.getElementById("ct_total_cost").value=totalCost.toFixed(2)
