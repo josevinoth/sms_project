@@ -158,14 +158,14 @@ def enquirynote_list(request):
         else:
             vehicle_dict.setdefault(enq_id, []).append("No Vehicle")  # Add fallback
 
-        trip_data = TripdetailInfo.objects.filter(tr_enquirynumber_id__in=enquiry_ids).values_list('tr_enquirynumber','tr_tripnumber','tc_financestatus__status','tc_financestatus')
+        trip_data = TripdetailInfo.objects.filter(tr_enquirynumber_id__in=enquiry_ids).values_list('tr_enquirynumber','tr_consignmentnumber__co_consignmentnumber','tr_tripnumber','tc_financestatus__status','tc_financestatus')
 
         # Convert trip data into a dictionary for easy lookup
         trip_dict = {}
 
-        for enq_id, trip_num, trip_status,trip_status_id in trip_data:
+        for enq_id, trip_num,trip_cons, trip_status,trip_status_id in trip_data:
             if trip_num:
-                trip_dict.setdefault(enq_id, []).append((trip_num, trip_status,trip_status_id))
+                trip_dict.setdefault(enq_id, []).append((trip_num, trip_cons, trip_status,trip_status_id))
             else:
                 trip_dict.setdefault(enq_id, []).append(("No Trip", "Not Applicable"))
 

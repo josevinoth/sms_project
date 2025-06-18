@@ -123,8 +123,11 @@ def tripdetail_add(request,tripdetail_id=0):
             #status_selected = (TripdetailInfo.objects.get(pk=tripdetail_id).tc_financestatus.id)
 
             trip_instance = TripdetailInfo.objects.get(pk=tripdetail_id)
-            status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else 8
-            print('status_selected', status_selected)
+            try:
+                status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else 8
+                print('status_selected', status_selected)
+            except ObjectDoesNotExist:
+                status_selected = None
             #consignment_selected = (TripdetailInfo.objects.get(pk=tripdetail_id).tr_consignmentnumber.id)
             if trip_instance.tr_consignmentnumber:
                 consignment_selected = trip_instance.tr_consignmentnumber.id
