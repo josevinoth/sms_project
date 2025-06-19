@@ -180,8 +180,9 @@
 									{% with trip=trip_det_form.instance %}
 									<select name="tc_financestatus" id="tc_financestatus" class="form-control"
 											{% if not is_empty_trip %}
-											{% if not trip.tr_approval or trip.tr_approval.ta_approval_status.approval_name != "Approved" %}
-											disabled
+											{% if not trip.tr_approval or trip.tr_approval.ta_approval_status != 1 %}
+
+
 											{% endif %}
 											{% endif %}>
 										{% for item in status_list %}
@@ -197,8 +198,8 @@
 									</select>
 
 									{% if not is_empty_trip %}
-									{% if not trip.tr_approval or trip.tr_approval.ta_approval_status.approval_name != "Approved" %}
-									<small class="text-danger">Trip cannot be started until it is approved.</small>
+									{% if not trip.tr_approval or trip.tr_approval.ta_approval_status == 1 %}
+									<small class="text-danger hide">Trip cannot be started until it is approved.</small>
 									{% endif %}
 									{% endif %}
 									{% endwith %}
