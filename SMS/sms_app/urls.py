@@ -676,5 +676,3 @@ urlpatterns = [
     path('add_consigner/', views.add_consigner, name='add_consigner'),
     path('add_consignee/', views.add_consignee, name='add_consignee'),
 ]
-
-
