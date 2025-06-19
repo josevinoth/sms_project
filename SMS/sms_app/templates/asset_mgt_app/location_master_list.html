@@ -29,6 +29,7 @@
     <table id="location_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>Map Name</th>
             <th>Location Name</th>
             <th>State</th>
             <th>Latitude</th>
@@ -41,6 +42,7 @@
         {% for loc in location_list %}
         <tr>
             <td>{{ loc.location_name }}</td>
+            <td>{{ loc.locationame }}</td>
             <td>{{ loc.state }}</td>
             <td>{{ loc.latitude }}</td>
             <td>{{ loc.longitude }}</td>

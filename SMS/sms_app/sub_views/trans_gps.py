@@ -5,7 +5,6 @@ import requests
 
 from ..models import TripdetailInfo
 
-# 🔒 Add this to suppress SSL warnings in DEBUG mode
 import urllib3
 from django.conf import settings
 
@@ -14,15 +13,8 @@ if settings.DEBUG:
 
 
 def track_vehicle_position(request):
-    # Send list of in-trip vehicle numbers to template
-    in_trip_numbers = list(
-        TripdetailInfo.objects.filter(tr_approval=1)
-        .values_list('tr_vehiclenumber', flat=True)
-    )
-    print(in_trip_numbers)
-    return render(request, "asset_mgt_app/trans_gps.html", {
-        'in_trip_numbers': in_trip_numbers
-    })
+    return render(request, "asset_mgt_app/trans_gps.html")
+
 
 def get_vehicle_data(request):
     api_url = (
@@ -37,12 +29,9 @@ def get_vehicle_data(request):
     def normalize(num):
         return num.strip().upper().replace(" ", "").replace("-", "") if num else ""
 
-    # DB values
     in_trip_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=1).values_list('tr_vehiclenumber', flat=True)))
-    available_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=8).values_list('tr_vehiclenumber', flat=True)))
-
-    # print("✅ Normalized in-trip numbers from DB:", in_trip_numbers)
-    # print("✅ Normalized available numbers from DB:", available_numbers)
+    available_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=2).values_list('tr_vehiclenumber', flat=True)))
+    workshop_number = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=8).values_list('tr_vehiclenumber', flat=True)))
 
     vehicle_data = []
     try:
@@ -70,12 +59,9 @@ def get_vehicle_data(request):
                 elif status_code.lower() == "idle":
                     running_status = "Idle"
 
-                # Debug: show each normalized device number
-                # print(f"📦 API Number: '{raw_number}' → Normalized: '{normalized_number}'")
-
                 if normalized_number in in_trip_numbers:
                     trip_status = "in_trip"
-                elif normalized_number in available_numbers:
+                elif normalized_number in workshop_number:
                     trip_status = "workshop"
                 else:
                     trip_status = "available"
