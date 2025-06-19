@@ -674,6 +674,7 @@ urlpatterns = [
     path('trip-approval/update/<int:trip_id>/', views.update_trip_approval, name='update_trip_approval'),
     path('add_consigner/', views.add_consigner, name='add_consigner'),
     path('add_consignee/', views.add_consignee, name='add_consignee'),
+    path('partial_dispatch/', views.dispatch_partial_goods, name='dispatch_partial_goods'),
 ]
 
 

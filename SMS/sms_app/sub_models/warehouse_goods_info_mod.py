@@ -65,7 +65,4 @@ class Warehouse_goods_info(models.Model):
     wh_total_invoice_cost = models.FloatField(blank=True, null=True, default=0.0)
     wh_truck_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, null=True,blank=True)
     wh_dispatch_id= models.ForeignKey(Dispatch_info, on_delete=models.CASCADE, null=True,blank=True)
-
-
-
-
+    wh_dispatch_qty = models.FloatField(blank=True, null=True,default=0.0)
