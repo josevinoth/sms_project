@@ -52,7 +52,7 @@
 									</div>
 									{% render_field form.cg_consignee class="form-control" id="cg_consignee" %}
 									<div class="input-group-append">
-										<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addConsigneeModal">Add</button>
+										<button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#addConsigneeModal">Add</button>
 									</div>
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -96,20 +96,6 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Eway Bill Attachment</span>
-									</div>
-									{% render_field form.cg_ewaybill_att id="cg_ewaybill_att" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice Attachment</span>
-									</div>
-									{% render_field form.cg_invoice_att id="cg_invoice_att" class="form-control" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">Date Of Issue</span>
 									</div>
 									{% render_field form.cg_dateofissue type="Date" class="form-control" %}
@@ -120,6 +106,8 @@
 									</div>
 									{% render_field form.cg_dateofvalidity type="Date" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Quantity</span>
@@ -139,6 +127,25 @@
 									{% render_field form.cg_weight class="form-control" %}
 								</div>
 								{% render_field form.cg_lastmodifiedby id="cg_lastmodifiedby" hidden="True" class="form-control" %}
+							</div>
+							<div class="container-fluid row">
+								<div class="col-1"></div>
+								<div class="col-5 bg-dark p-2 mb-2 mr-1 rounded-sm text-white">
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Eway Bill Attachment</span>
+										</div>
+										{% render_field form.cg_ewaybill_att id="cg_ewaybill_att" class="form-control" %}
+									</div>
+								</div>
+								<div class="col-5 bg-dark p-2 mb-2 rounded-sm text-white">
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend bg-da">
+											<span class="input-group-text">Invoice Attachment</span>
+										</div>
+										{% render_field form.cg_invoice_att id="cg_invoice_att" class="form-control" %}
+									</div>
+								</div>
 							</div>
 						</div>
 						<div class="row">

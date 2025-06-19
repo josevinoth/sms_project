@@ -2,8 +2,9 @@
 {% load static %}
 {% block content %}
 
-<!-- FontAwesome -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
 <div class="container-fluid p-3">
   <div class="card shadow">
@@ -11,25 +12,54 @@
       <h4>Vehicle Position Tracker</h4>
     </div>
 
-    <div class="text-center mt-3">
-      <label for="statusFilter" class="form-label fw-bold">Status:</label>
-      <select id="statusFilter" class="form-select d-inline-block" style="width: 200px;">
-        <option value="all" selected>All</option>
-        <option value="in_trip">In Trip</option>
-        <option value="available">Available</option>
-        <option value="workshop">Workshop</option>
-      </select>
+    <div class="row mt-3 mb-3 justify-content-center">
+      <div class="col-md-3">
+        <label for="statusFilter" class="form-label fw-bold">Status:</label>
+        <select id="statusFilter" class="form-select">
+          <option value="all" selected>All</option>
+          <option value="in_trip">In Trip</option>
+          <option value="available">Available</option>
+          <option value="workshop">Workshop</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="vehicleNumberFilter" class="form-label fw-bold">Vehicle Number:</label>
+        <select id="vehicleNumberFilter" class="form-select">
+          <option value="all" selected>All</option>
+        </select>
+      </div>
     </div>
 
     <div class="card-body p-0">
       <div id="map" style="height: 600px; width: 100%;"></div>
     </div>
+
+    <div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Vehicle List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+    <table id="vehicle_gps_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Status</th>
+            <th>Number</th>
+            <th>Running</th>
+            <th>Speed</th>
+            <th>Last Updated</th>
+          </tr>
+        </thead>
+        <tbody id="vehicle-table-body">
+          <!-- Filled dynamically -->
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
-
-<!-- Leaflet CSS and JS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
 <style>
   .custom-div-icon i {
@@ -40,7 +70,6 @@
 
 <script>
   const map = L.map("map").setView([12.9716, 77.5946], 6);
-
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors',
@@ -70,16 +99,45 @@
     }),
   };
 
-  function loadVehicleData(filter = "all") {
-    fetch("/SMS/get-vehicle-data/")
+  let lastVehicleData = [];
+
+  function populateVehicleNumberDropdown(vehicleData, statusFilter = "all") {
+    const vehicleNumberSelect = document.getElementById("vehicleNumberFilter");
+    const selectedValue = vehicleNumberSelect.value || "all";
+
+    vehicleNumberSelect.innerHTML = '<option value="all" selected>All</option>';
+    const filtered = statusFilter === "all" ? vehicleData : vehicleData.filter(v => v.status === statusFilter);
+    const numbers = [...new Set(filtered.map(v => v.number))].sort();
+
+    numbers.forEach(num => {
+      const opt = document.createElement("option");
+      opt.value = num;
+      opt.textContent = num;
+      vehicleNumberSelect.appendChild(opt);
+    });
+
+    if (numbers.includes(selectedValue)) {
+      vehicleNumberSelect.value = selectedValue;
+    }
+  }
+
+  function loadVehicleData(statusFilter = "all", vehicleNumberFilter = "all") {
+    fetch("/SMS/get_vehicle_data/")
       .then(res => res.json())
       .then(data => {
+        lastVehicleData = data;
+        populateVehicleNumberDropdown(data, statusFilter);
+
         map.eachLayer(layer => {
           if (layer instanceof L.Marker) map.removeLayer(layer);
         });
 
+        const tableBody = document.getElementById("vehicle-table-body");
+        tableBody.innerHTML = "";
+
         data.forEach(vehicle => {
-          if (filter !== "all" && vehicle.status !== filter) return;
+          if (statusFilter !== "all" && vehicle.status !== statusFilter) return;
+          if (vehicleNumberFilter !== "all" && vehicle.number !== vehicleNumberFilter) return;
 
           const lat = parseFloat(vehicle.lat);
           const lon = parseFloat(vehicle.lon);
@@ -96,22 +154,52 @@
                 ${vehicle.timestamp}
               `);
           }
+
+          const row = `
+            <tr>
+              <td>${vehicle.status.replace("_", " ").toUpperCase()}</td>
+              <td>${vehicle.number}</td>
+              <td>${vehicle.running_status}</td>
+              <td>${vehicle.speed} km/h</td>
+              <td>${vehicle.timestamp}</td>
+            </tr>
+          `;
+          tableBody.insertAdjacentHTML("beforeend", row);
         });
       })
       .catch(err => console.error("Error loading vehicle data:", err));
   }
 
+  // Load first time
   loadVehicleData();
 
-  // Auto refresh every 15 seconds
+  // Refresh every 10s
   setInterval(() => {
-    const currentFilter = document.getElementById("statusFilter").value;
-    loadVehicleData(currentFilter);
-  }, 15000);
+    const status = document.getElementById("statusFilter").value;
+    const number = document.getElementById("vehicleNumberFilter").value;
+    loadVehicleData(status, number);
+  }, 10000);
 
+  // Events
   document.getElementById("statusFilter").addEventListener("change", function () {
-    loadVehicleData(this.value);
+    loadVehicleData(this.value, "all");
   });
+
+  document.getElementById("vehicleNumberFilter").addEventListener("change", function () {
+    const status = document.getElementById("statusFilter").value;
+    loadVehicleData(status, this.value);
+  });
+</script>
+<script>
+    $(document).ready(function() {
+    $('#vehicle_gps_list').DataTable({
+         order: [0, 'asc' ],
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ],
+    });
+} );
 </script>
 
 {% endblock %}

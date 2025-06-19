@@ -3,9 +3,23 @@ from django.http import JsonResponse
 
 from ..forms import TripclosurefilesForm,TripclosureaddForm
 from ..models import RtratemasterInfo,User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,Tripstatusinfo
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-
+@login_required(login_url='login_page')
+def tripclosure_enquiry(request,enquiry_id,trip_num):
+    # Fetch the enquiry object (optional - only needed if you want to verify or log it)
+    enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
+    print('enquiry_id',enquiry_id)
+    print('trip_num',trip_num)
+    # If no trip is associated, store enquiry ID in session and redirect to insert
+    if trip_num == 'none' or trip_num == '':
+        request.session['ses_enqiury_id'] = enquiry_id
+        return redirect('tripdetail_insert')  # Define this URL in urls.py
+    else:
+        trip_id = TripdetailInfo.objects.get(tr_tripnumber=trip_num).id
+        print('trip_id:', trip_id)
+        # If trip_id is provided, redirect to update
+        return redirect('tripdetail_update', tripdetail_id=trip_id)  # tripdetail_id is a keyword argument in the URL
 @login_required(login_url='login_page')
 def tripclosure_nav(request,tripclosure_id=0):
     first_name = request.session.get('first_name')

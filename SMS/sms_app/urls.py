@@ -200,6 +200,7 @@ urlpatterns = [
     path('tripclosure_insert', views.tripclosure_add, name='tripclosure_insert'),  # Add tripclosure
     path('tripclosure_update/<int:tripclosure_id>/', views.tripclosure_add, name='tripclosure_update'),  # Update tripclosure
     path('tripclosure_nav/<int:tripclosure_id>/', views.tripclosure_nav, name='tripclosure_nav'),  # Nav tripclosure
+    path('tripclosure_enquiry/<int:enquiry_id>/<str:trip_num>/', views.tripclosure_enquiry, name='tripclosure_enquiry'),# tripclosure_enquiry,
     path('tripclosure_delete/<int:tripclosure_id>/', views.tripclosure_delete, name='tripclosure_delete'),  # Delete tripclosure
     path('vhmanufacturer_list/', views.vhmanufacturer_list, name='vhmanufacturer_list'),  # List vhmanufacturer,
     path('vhmanufacturer_insert', views.vhmanufacturer_add, name='vhmanufacturer_insert'),  # Add vhmanufacturer
@@ -652,7 +653,7 @@ urlpatterns = [
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
     path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
     path("track_vehicle/", views.track_vehicle_position, name="track_vehicle_position"),
-    path("get-vehicle-data/", views.get_vehicle_data, name="get_vehicle_data"),
+    path("get_vehicle_data/", views.get_vehicle_data, name="get_vehicle_data"),
     path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
          name='get_remaining_quantity'),
     path('SMS/get-vehicle-type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),

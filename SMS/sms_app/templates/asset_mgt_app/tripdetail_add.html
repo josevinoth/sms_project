@@ -180,8 +180,9 @@
 									{% with trip=trip_det_form.instance %}
 									<select name="tc_financestatus" id="tc_financestatus" class="form-control"
 											{% if not is_empty_trip %}
-											{% if not trip.tr_approval or trip.tr_approval.ta_approval_status.approval_name != "Approved" %}
-											disabled
+											{% if not trip.tr_approval or trip.tr_approval.ta_approval_status != 1 %}
+
+
 											{% endif %}
 											{% endif %}>
 										{% for item in status_list %}
@@ -197,15 +198,15 @@
 									</select>
 
 									{% if not is_empty_trip %}
-									{% if not trip.tr_approval or trip.tr_approval.ta_approval_status.approval_name != "Approved" %}
-									<small class="text-danger">Trip cannot be started until it is approved.</small>
+									{% if not trip.tr_approval or trip.tr_approval.ta_approval_status == 1 %}
+									<small class="text-danger hide">Trip cannot be started until it is approved.</small>
 									{% endif %}
 									{% endif %}
 									{% endwith %}
 
 								</div>
 							</div>
-							<div class="col-12 col-lg-6 p-3">
+							<div class="container-fluid col-12 col-lg-5 p-3 bg-dark mb-2 mt-2 rounded-sm text-white">
 								<div class="input-group input-group-sm mb-3 bg-dark block">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Attachment</span>
@@ -213,7 +214,7 @@
 									{% render_field trip_det_form.tc_pod_attachment id="tc_pod_attachment" class="form-control disable_a_href" %}
 								</div>
 							</div>
-							<div class="col-12 col-lg-6 p-3">
+							<div class="container-fluid col-12 col-lg-5 p-3 mb-2 mt-2 rounded-sm text-white">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">POD Number</span>
