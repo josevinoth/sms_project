@@ -2,39 +2,43 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<form method="POST" action="">
+<form method="POST">
   {% csrf_token %}
   <div class="row">
     <div class="col-3"></div>
     <div class="col-6">
       <div class="container-fluid">
-        <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+        <div class="card text-white bg-info mb-3">
           <div class="card-header text-center">
             <h3>Add / Update Location</h3>
           </div>
           <div class="card-body bg-light">
 
-            <!-- Location Name -->
             <div class="input-group input-group-sm mb-3 position-relative">
               <div class="input-group-prepend">
-                <span class="input-group-text">Location Name</span>
+                <span class="input-group-text">Map Name</span>
               </div>
               {% render_field form.location_name class="form-control" id="autocomplete" %}
               <ul id="autocomplete-list" class="list-group position-absolute w-100" style="z-index: 1000;"></ul>
             </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Location name</span>
+              </div>
+              {% render_field form.locationame class="form-control" id="locationame" %}
+            </div>
+
             <div class="input-group input-group-sm mb-3">
               <div class="input-group-prepend">
                 <span class="input-group-text">State</span>
               </div>
               {% render_field form.state class="form-control" id="state" readonly="readonly" %}
             </div>
-            <!-- Latitude -->
+
             <div class="input-group input-group-sm mb-3">
               <div class="input-group-prepend">
                 <span class="input-group-text">Latitude</span>
@@ -42,7 +46,6 @@
               {% render_field form.latitude class="form-control" id="latitude" %}
             </div>
 
-            <!-- Longitude -->
             <div class="input-group input-group-sm mb-3">
               <div class="input-group-prepend">
                 <span class="input-group-text">Longitude</span>
@@ -50,41 +53,51 @@
               {% render_field form.longitude class="form-control" id="longitude" %}
             </div>
 
-            <!-- Map -->
             <div class="form-group mt-3">
               <label>Location Map</label>
               <div id="map" style="height: 400px; width: 100%;"></div>
             </div>
 
-            <button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+            <div class="row">
+              <div class="col-1"></div>
+              <div class="col-10">
+                <div class="message text-center">
+                  {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="col-1"></div>
+            </div>
+
+            <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Submit</button>
             <a href="{% url 'location_master_list' %}" class="btn btn-danger float-right">
               <i class="fas fa-times"></i> Cancel
             </a>
+
           </div>
         </div>
       </div>
-      <div class="col-3"></div>
-    </div></div>
+    </div>
+    <div class="col-3"></div>
+  </div>
 </form>
+
 <script>
   const apiKey = "89671dcc09aa4a788d734c46d2d97c29";
-
   const input = document.getElementById("autocomplete");
   const latInput = document.getElementById("latitude");
   const lngInput = document.getElementById("longitude");
   const stateInput = document.getElementById("state");
+  const shortNameInput = document.getElementById("locationame");
   const suggestionList = document.getElementById("autocomplete-list");
 
-  // Initialize Leaflet map centered on India by default
   const map = L.map("map").setView([20.5937, 78.9629], 5);
-
   L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-carto/{z}/{x}/{y}.png?apiKey=${apiKey}`, {
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map);
 
   const marker = L.marker([0, 0]).addTo(map);
-
-  // On page load: if latitude and longitude exist (edit mode), center map and marker there
   const initialLat = parseFloat(latInput.value);
   const initialLng = parseFloat(lngInput.value);
   if (!isNaN(initialLat) && !isNaN(initialLng)) {
@@ -93,11 +106,9 @@
   }
 
   let debounceTimeout;
-
   input.addEventListener("input", function () {
     const query = input.value.trim();
     clearTimeout(debounceTimeout);
-
     if (query.length < 3) {
       suggestionList.innerHTML = "";
       return;
@@ -108,7 +119,6 @@
         .then(response => response.json())
         .then(data => {
           suggestionList.innerHTML = "";
-
           data.features.forEach(feature => {
             const li = document.createElement("li");
             li.className = "list-group-item list-group-item-action";
@@ -119,21 +129,13 @@
               const lon = feature.properties.lon;
               const properties = feature.properties;
 
-              // Fill inputs
               input.value = properties.formatted;
+              shortNameInput.value = properties.city || properties.suburb || properties.locality || properties.name || "";
               latInput.value = lat;
               lngInput.value = lon;
-
-              // Extract state from properties (Geoapify returns state info under 'state' or 'state_code')
-              if (properties.state) {
-                stateInput.value = properties.state;
-              } else {
-                stateInput.value = ""; // clear if not found
-              }
+              stateInput.value = properties.state || "";
 
               suggestionList.innerHTML = "";
-
-              // Update map view & marker
               map.setView([lat, lon], 14);
               marker.setLatLng([lat, lon]);
             });
@@ -145,11 +147,21 @@
     }, 300);
   });
 
-  // Close suggestion list when clicking outside input or suggestions
+  // Click outside to close suggestion box
   document.addEventListener("click", function (e) {
     if (!input.contains(e.target) && !suggestionList.contains(e.target)) {
       suggestionList.innerHTML = "";
     }
   });
+
+  // Allow placing marker by clicking map
+  map.on('click', function (e) {
+    const lat = e.latlng.lat.toFixed(8);
+    const lon = e.latlng.lng.toFixed(8);
+    latInput.value = lat;
+    lngInput.value = lon;
+    marker.setLatLng([lat, lon]);
+  });
 </script>
+
 {% endblock %}
