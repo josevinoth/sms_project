@@ -34,7 +34,7 @@ def tripdetail_nav(request,tripdetail_id=0):
     enquiry_num_id = tripdetail_id
     request.session['ses_enqiury_id'] = enquiry_num_id
     tripdetail_list=TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
-    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3])
+    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3,8])
     consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
     context = {
         'first_name': first_name,
@@ -91,11 +91,6 @@ def tripdetail_add(request,tripdetail_id=0):
             trip_list = TripdetailInfo.objects.select_related('tr_approval', 'tr_approval__ta_approval_status').filter(tr_enquirynumber=enquiry_num_id)
             status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3,8])
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
-            status_selected = 8
-            is_empty_trip = False
-            if initial_data.get('tr_category') == 2 and not initial_data.get('tr_consignmentnumber'):
-                is_empty_trip = True
-
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
@@ -105,9 +100,7 @@ def tripdetail_add(request,tripdetail_id=0):
                 'trip_list': trip_list,
                 'status_list': status_list,
                 'consignment_list': consignment_list,
-                'status_selected': status_selected,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
-                'is_empty_trip':is_empty_trip
             }
         else:
             trip_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_tripnumber
@@ -134,11 +127,6 @@ def tripdetail_add(request,tripdetail_id=0):
             else:
                 consignment_selected = None
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
-
-            is_empty_trip = False
-            if trip_instance.tr_category == 2 and not trip_instance.tr_consignmentnumber:
-                is_empty_trip = True
-
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
@@ -151,7 +139,6 @@ def tripdetail_add(request,tripdetail_id=0):
                 'consignment_selected': consignment_selected,
                 'consignment_list': consignment_list,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
-                'is_empty_trip':is_empty_trip
             }
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
     else:
@@ -166,13 +153,7 @@ def tripdetail_add(request,tripdetail_id=0):
             if vehicle_allotment_id:
                 va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
             if trip_det_form.is_valid():
-                # enquiry_number = request.GET.get('enquiry_number')
-                # consignment_number = request.GET.get('consignment_number')
-                # consignment_number=TripdetailInfo.objects.get(pk=tripdetail_id).tr_consignmentnumber
-                # vehicle_number=TripdetailInfo.objects.get(pk=tripdetail_id).tr_vehiclenumber
-                # print('consignment_number',consignment_number)
-                # print('vehicle_number',vehicle_number)
-                # First, filter all trips with same vehicle and enquiry
+
                 trip_status_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num,tr_vehiclenumber=vehicle_number)
                 if cosnignment_number:
                     trip_status_list = trip_status_list.filter(tr_consignmentnumber=cosnignment_number)
@@ -180,16 +161,14 @@ def tripdetail_add(request,tripdetail_id=0):
                 for trip in trip_status_list:
                     if trip.tc_financestatus and trip.tc_financestatus.id == 1:
                         messages.error(request,
-                                       'A trip for this vehicle is still open. Please close it before creating a new one.')
+                        'A trip for this vehicle is still open. Please close it before creating a new one.')
                         return redirect(request.META['HTTP_REFERER'])
-
                     else:
                         pass
                 # SAFELY GENERATE trip_num_next
                 trip_num_next = 'TN_1000000'  # default fallback
 
-                latest_trip = TripdetailInfo.objects.exclude(tr_tripnumber__isnull=True).exclude(
-                    tr_tripnumber='').order_by('-id').first()
+                latest_trip = TripdetailInfo.objects.exclude(tr_tripnumber__isnull=True).exclude(tr_tripnumber='').order_by('-id').first()
 
                 if latest_trip and latest_trip.tr_tripnumber and latest_trip.tr_tripnumber.startswith('TN_'):
                     try:
