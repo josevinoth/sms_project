@@ -171,14 +171,14 @@ def dispatch_remove_goods(request):
     dispatch_id_val = request.session.get('ses_dispatch_id_val')
     for i in selected_stocks:
         try:
+            print('Inside for loop',i)
             goods = Warehouse_goods_info.objects.get(wh_qr_rand_num=i)
         except Warehouse_goods_info.DoesNotExist:
-            continue
-
-        goods.wh_goods_pieces += goods.wh_dispatch_qty
-        goods.wh_dispatch_qty = 0
+            messages.error(request, f'Stock with QR {i} not found.')
+            return redirect(request.META['HTTP_REFERER'])
 
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=None)
+        print("done updating wh_dispatch_num")
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_id="")
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=1)
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=0)
@@ -186,7 +186,7 @@ def dispatch_remove_goods(request):
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_id="")
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_truck_type=None)
 
-        goods.save()
+        # goods.save()
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
 
@@ -244,8 +244,6 @@ def dispatch_add_goods(request):
             messages.error(request, f'Fumigation Date not entered for stock {stock}.')
             return redirect(request.META.get('HTTP_REFERER', '/'))
 
-        goods_info.wh_dispatch_qty = goods_info.wh_goods_pieces
-        goods_info.wh_goods_pieces = 0
         # Prepare goods for bulk update
         goods_info.wh_check_in_out = check_in_out_instance  # Assign the Check_in_out instance
         goods_info.wh_dispatch_num = dispatch_num_val
