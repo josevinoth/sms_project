@@ -32,6 +32,10 @@ class PkneedassessmentInfo(models.Model):
     na_special_requirements = models.ManyToManyField(Naspecialrequirements,blank=True)
     na_delivery_location = models.CharField(max_length=100, null=True, blank=True, default='')
     na_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
+    na_contactno = models.CharField(max_length=10, default='', null=True)
+    na_email = models.EmailField(max_length=50, default='')
+    na_client_scope = models.TextField(blank=True, null=True)
+    na_bvm_scope = models.TextField(blank=True, null=True)
     class Meta:
         ordering = ["na_assessment_num"]
 

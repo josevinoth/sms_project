@@ -1,8 +1,14 @@
+from datetime import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+
 from ..forms import PkneedassessmentForm,NadimensionForm
-from ..models import  PkquotationsummaryInfo,PkquotationInfo,POdimension,PkpurchaseorderInfo,PkcostingsummaryInfo,PkcostingInfo,commentsInfo,User_extInfo,PkneedassessmentInfo,Nadimension
-from django.shortcuts import render, redirect
+from ..models import  PkquotationsummaryInfo,PkquotationInfo,POdimension,Natypeofreq,Unitofmeasure,Naconsumables,VehicletypeInfo,Pkstocktype,Pkwooddescription,Nadimensiontype,PkpurchaseorderInfo,PkcostingsummaryInfo,PkcostingInfo,commentsInfo,User_extInfo,PkneedassessmentInfo,Nadimension
+from django.shortcuts import render, redirect, get_object_or_404
 from random import randint
 from django.contrib import messages
 
@@ -11,6 +17,7 @@ def needassessment_add(request,needassessment_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
+
     if request.method == "GET":
         if needassessment_id == 0:
             form = PkneedassessmentForm()
@@ -231,67 +238,102 @@ def na_dimension_cancel(request,needassessment_id=0):
 def na_dimension_add(request, na_dimension_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    na_assessment_num_id=request.session.get('na_assessment_id')
+    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+    na_assessment_num_id = request.session.get('na_assessment_id')
+    # Retrieve related status from PkneedassessmentInfo
+    na_status = None
+    if na_assessment_num_id:
+        try:
+            assessment_instance = PkneedassessmentInfo.objects.get(id=na_assessment_num_id)
+            na_status = assessment_instance.na_status.id if assessment_instance.na_status else None
+        except PkneedassessmentInfo.DoesNotExist:
+            na_status = None
+
     if request.method == "GET":
         if na_dimension_id == 0:
-            form = NadimensionForm()
+            # Get session values
+            wood_type_ids = request.session.get('last_nad_wood_type_list', [])
+            wood_desc_ids = request.session.get('last_nad_wood_description_list', [])
+
+            initial_data = {
+                'nad_type_of_req': Natypeofreq.objects.filter(id=request.session.get('last_nad_type_of_req')).first(),
+                'nad_quantity': request.session.get('last_nad_quantity'),
+                'nad_consumables': Naconsumables.objects.filter(id=request.session.get('last_nad_consumables')).first(),
+                'nad_vechicle_type': VehicletypeInfo.objects.filter(id=request.session.get('last_nad_vechicle_type')).first(),
+                'nad_uom': Unitofmeasure.objects.filter(id=request.session.get('last_nad_uom')).first(),
+                'nad_dimension_type': Nadimensiontype.objects.filter(id=request.session.get('last_nad_dimension_type')).first(),
+            }
+
+            form = NadimensionForm(initial=initial_data)
+
+            # Prefill ManyToMany after form init
+            if wood_type_ids:
+                form.fields['nad_wood_type'].initial = Pkstocktype.objects.filter(id__in=wood_type_ids)
+            if wood_desc_ids:
+                form.fields['nad_wood_description'].initial = Pkwooddescription.objects.filter(id__in=wood_desc_ids)
+
         else:
             na_dimensioninfo = Nadimension.objects.get(pk=na_dimension_id)
             form = NadimensionForm(instance=na_dimensioninfo)
-        context={
+
+        context = {
             'form': form,
             'first_name': first_name,
             'user_id': user_id,
+            'role_id': role_id,
             'na_assessment_num_id': na_assessment_num_id,
+            'na_status': na_status,  # Pass to template
         }
+
         return render(request, "asset_mgt_app/na_dimension_add.html", context)
+
     else:
         if na_dimension_id == 0:
             form = NadimensionForm(request.POST)
             if form.is_valid():
-                form.save()
+                instance = form.save()
                 try:
                     last_id = Nadimension.objects.latest('id').id
-                    na_item_num_next = str('Item_') + str(int(1000000 + last_id))
+                    na_item_num_next = 'Item_' + str(1000000 + last_id)
                 except ObjectDoesNotExist:
-                    na_item_num_next = str('Item_') + str(1000000)
-                last_id = Nadimension.objects.latest('id').id
-                Nadimension.objects.filter(id=last_id).update(nad_item=na_item_num_next)
-                print("Main Form Saved")
-                messages.success(request, "Record Updated Successfully")
+                    na_item_num_next = 'Item_1000000'
+
+                Nadimension.objects.filter(id=instance.id).update(nad_item=na_item_num_next)
+
+                # Store last submitted values in session
+                request.session['last_nad_type_of_req'] = form.cleaned_data['nad_type_of_req'].id if form.cleaned_data.get('nad_type_of_req') else None
+                request.session['last_nad_quantity'] = form.cleaned_data.get('nad_quantity')
+
+                request.session['last_nad_wood_type_list'] = [obj.id for obj in form.cleaned_data.get('nad_wood_type')] if form.cleaned_data.get('nad_wood_type') else []
+                request.session['last_nad_wood_description_list'] = [obj.id for obj in form.cleaned_data.get('nad_wood_description')] if form.cleaned_data.get('nad_wood_description') else []
+
+                request.session['last_nad_consumables'] = form.cleaned_data['nad_consumables'].id if form.cleaned_data.get('nad_consumables') else None
+                request.session['last_nad_vechicle_type'] = form.cleaned_data['nad_vechicle_type'].id if form.cleaned_data.get('nad_vechicle_type') else None
+                request.session['last_nad_uom'] = form.cleaned_data['nad_uom'].id if form.cleaned_data.get('nad_uom') else None
+                request.session['last_nad_dimension_type'] = form.cleaned_data['nad_dimension_type'].id if form.cleaned_data.get('nad_dimension_type') else None
+
+                messages.success(request, "Record Saved Successfully")
             else:
-                print("Main form not saved")
-                # Display form errors
                 for field, errors in form.errors.items():
                     for error in errors:
-                        print(f"Error in {field}: {error}")
                         messages.error(request, f"Error in {field}: {error}")
-                messages.error(request, "Record Not Updated Successfully")
+                messages.error(request, "Record Not Saved")
         else:
             na_dimensioninfo = Nadimension.objects.get(pk=na_dimension_id)
             form = NadimensionForm(request.POST, instance=na_dimensioninfo)
             if form.is_valid():
                 form.save()
-                print("Main Form Saved")
-                messages.success(request,"Record Updated Successfully")
+                messages.success(request, "Record Updated Successfully")
             else:
-                print("Main form not saved")
-                # Display form errors
                 for field, errors in form.errors.items():
                     for error in errors:
-                        print(f"Error in {field}: {error}")
                         messages.error(request, f"Error in {field}: {error}")
-                messages.error(request,"Record Not Updated Successfully")
-
-                # Display form errors
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        print(f"Error in {field}: {error}")
-                        messages.error(request, f"Error in {field}: {error}")
+                messages.error(request, "Update Failed")
 
             return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
-        # return redirect('/SMS/needassessment_list')
+
         return redirect(request.META['HTTP_REFERER'])
+
 @login_required(login_url='login_page')
 def na_dimension_list(request):
     first_name = request.session.get('first_name')
@@ -307,3 +349,34 @@ def na_dimension_delete(request, na_dimension_id):
     na_dimensioninfo.delete()
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/sales_list')
+
+@login_required(login_url='login_page')
+def need_assessment_print_pdf(request, assessment_id):
+    try:
+        need_assessment = PkneedassessmentInfo.objects.get(pk=assessment_id)
+        dimensions = Nadimension.objects.filter(nad_assess_num=need_assessment)
+
+        today = datetime.now().strftime("%d-%b-%Y")
+
+        context = {
+            "need_assessment": need_assessment,
+            "dimensions": dimensions,
+            "today_date": today,
+        }
+
+        file_name = f"NeedAssessment_{need_assessment.na_assessment_num}.pdf"
+        template_path = 'asset_mgt_app/need_assessment_print.html'  # customize
+
+        template = get_template(template_path)
+        html = template.render(context)
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse(f"Error during PDF generation: <pre>{html}</pre>")
+        return response
+
+    except PkneedassessmentInfo.DoesNotExist:
+        return HttpResponse("Assessment not found", status=404)
