@@ -14,12 +14,12 @@ def tripclosure_enquiry(request,enquiry_id,trip_num):
     # If no trip is associated, store enquiry ID in session and redirect to insert
     if trip_num == 'none' or trip_num == '':
         request.session['ses_enqiury_id'] = enquiry_id
-        return redirect('tripdetail_insert')  # Define this URL in urls.py
+        return redirect('tripclosure_insert')  # Define this URL in urls.py
     else:
         trip_id = TripdetailInfo.objects.get(tr_tripnumber=trip_num).id
         print('trip_id:', trip_id)
         # If trip_id is provided, redirect to update
-        return redirect('tripdetail_update', tripdetail_id=trip_id)  # tripdetail_id is a keyword argument in the URL
+        return redirect('tripclosure_update', tripclosure_id=trip_id)  # tripdetail_id is a keyword argument in the URL
 @login_required(login_url='login_page')
 def tripclosure_nav(request,tripclosure_id=0):
     first_name = request.session.get('first_name')

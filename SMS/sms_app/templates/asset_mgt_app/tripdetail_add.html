@@ -177,33 +177,18 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Status</span>
 									</div>
-									{% with trip=trip_det_form.instance %}
-									<select name="tc_financestatus" id="tc_financestatus" class="form-control"
-											{% if not is_empty_trip %}
-											{% if not trip.tr_approval or trip.tr_approval.ta_approval_status != 1 %}
-
-
-											{% endif %}
-											{% endif %}>
+									<select name="tc_financestatus" id="tc_financestatus" class="form-control">
 										{% for item in status_list %}
 										<option value="{{ item.id }}"
 												{% if item.id == status_selected %}
-												selected
+													selected
 												{% elif not status_selected and item.id == 8 %}
-												selected
+													selected
 												{% endif %}>
 											{{ item.status }}
 										</option>
 										{% endfor %}
 									</select>
-
-									{% if not is_empty_trip %}
-									{% if not trip.tr_approval or trip.tr_approval.ta_approval_status == 1 %}
-									<small class="text-danger hide">Trip cannot be started until it is approved.</small>
-									{% endif %}
-									{% endif %}
-									{% endwith %}
-
 								</div>
 							</div>
 							<div class="container-fluid col-12 col-lg-5 p-3 bg-dark mb-2 mt-2 rounded-sm text-white">

@@ -677,8 +677,6 @@ urlpatterns = [
     path('add_consignee/', views.add_consignee, name='add_consignee'),
     path('partial_dispatch/', views.dispatch_partial_goods, name='dispatch_partial_goods'),
     path('need-assessment/print/<int:assessment_id>/', views.need_assessment_print_pdf, name='need_assessment_print'),
-    # path('need-assessment/export/csv/<int:assessment_id>/', views.export_assessment_to_csv,name='export_assessment_csv'),
-    # path('need-assessment/export/excel/<int:assessment_id>/', views.export_assessment_to_excel,name='export_assessment_excel'),
 
 ]
 
