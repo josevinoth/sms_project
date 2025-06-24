@@ -1,0 +1,31 @@
+{% extends "asset_mgt_app/report_header_landscape.html" %}
+{% block content %}
+<h2 class="text-center">BVM PACK NEED ASSESSMENT FORM</h2>
+<p><strong>Customer Name:</strong> {{ need_assessment.na_customer_name }}</p>
+<p><strong>Date:</strong> {{ today_date }}</p>
+<p><strong>Assessment No:</strong> {{ need_assessment.na_assessment_num }}</p>
+<p><strong>Location:</strong> {{ need_assessment.na_delivery_location }}</p>
+<p><strong>Contact:</strong> {{ need_assessment.na_contactno }}</p>
+<p><strong>Email:</strong> {{ need_assessment.na_email }}</p>
+
+<table border="1" cellpadding="5" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>Item</th><th>Length</th><th>Width</th><th>Height</th><th>Weight</th><th>Qty</th><th>UOM</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dim in dimensions %}
+        <tr>
+            <td>{{ dim.nad_item }}</td>
+            <td>{{ dim.nad_length }}</td>
+            <td>{{ dim.nad_width }}</td>
+            <td>{{ dim.nad_height }}</td>
+            <td>{{ dim.nad_job_weight }}</td>
+            <td>{{ dim.nad_quantity }}</td>
+            <td>{{ dim.nad_uom }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
