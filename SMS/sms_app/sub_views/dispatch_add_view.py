@@ -26,6 +26,7 @@ from pyzbar.pyzbar import decode
 from ..views import warehousevolme_area_calc
 from io import BytesIO
 from django.views.decorators.http import require_POST
+from django.db.models import F, ExpressionWrapper, IntegerField
 
 
 # Add Dispatch Job
@@ -152,9 +153,10 @@ def dispatch_goods_list(request):
     dispatch_customer = Dispatch_info.objects.get(pk=dispatch_id).dispatch_customer
     request.session['ses_dispatch_num_val'] = dispatch_num_val
     request.session['ses_dispatch_id_val'] = dispatch_id
-    dispatch_master_list = Warehouse_goods_info.objects.filter(
-        Q(wh_check_in_out=1, wh_customer_name=dispatch_customer) |
-        Q(wh_check_in_out=4, wh_goods_pieces__gt=0, wh_customer_name=dispatch_customer)
+    dispatch_master_list = Warehouse_goods_info.objects.annotate(
+        remaining_qty=ExpressionWrapper(
+            F('wh_goods_pieces') - F('wh_dispatch_qty'),
+            output_field=IntegerField())).filter(remaining_qty__gt=0,wh_customer_name=dispatch_customer,wh_check_in_out__in=[1, 4]
     )
     goods_list=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
     context = {'goods_list' : goods_list,
@@ -170,23 +172,38 @@ def dispatch_remove_goods(request):
     print('selected_stocks',selected_stocks)
     dispatch_id_val = request.session.get('ses_dispatch_id_val')
     for i in selected_stocks:
-        try:
-            goods = Warehouse_goods_info.objects.get(wh_qr_rand_num=i)
-        except Warehouse_goods_info.DoesNotExist:
+        goods = Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).first()
+        if not goods:
             continue
 
-        goods.wh_goods_pieces += goods.wh_dispatch_qty
-        goods.wh_dispatch_qty = 0
+        if "_P" in i:
+            try:
+                original_qr = i.split("_P")[0]
+                original_goods = Warehouse_goods_info.objects.filter(wh_qr_rand_num=original_qr).first()
 
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=None)
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_id="")
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=1)
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_storage_time=0)
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_checkout_time=None)
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_id="")
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_truck_type=None)
+                if original_goods:
+                    goods.delete()
+                    partial_dispatches = Warehouse_goods_info.objects.filter(
+                        wh_qr_rand_num__startswith=f"{original_qr}_P"
+                    )
+                    total_partial_qty = sum([x.wh_goods_pieces for x in partial_dispatches])
+                    original_goods.wh_dispatch_qty = max(0, total_partial_qty)
+                    original_goods.save()
 
-        goods.save()
+            except Exception as e:
+                print("Error reversing partial dispatch:", e)
+                continue
+        else:
+            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(
+                wh_dispatch_num=None,
+                wh_dispatch_id="",
+                wh_check_in_out=1,
+                wh_storage_time=0,
+                wh_checkout_time=None,
+                wh_truck_type=None,
+                wh_dispatch_qty=0
+            )
+
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
 
@@ -245,7 +262,6 @@ def dispatch_add_goods(request):
             return redirect(request.META.get('HTTP_REFERER', '/'))
 
         goods_info.wh_dispatch_qty = goods_info.wh_goods_pieces
-        goods_info.wh_goods_pieces = 0
         # Prepare goods for bulk update
         goods_info.wh_check_in_out = check_in_out_instance  # Assign the Check_in_out instance
         goods_info.wh_dispatch_num = dispatch_num_val
@@ -265,7 +281,6 @@ def dispatch_add_goods(request):
         ['wh_check_in_out', 'wh_dispatch_num', 'wh_checkout_time', 'wh_truck_type', 'wh_storage_time','wh_dispatch_qty','wh_goods_pieces']
     )
 
-    # Update dispatch ID for all goods
     Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_info.id)
 
     # Additional tasks
@@ -463,24 +478,47 @@ def dispatch_partial_goods(request):
     except Warehouse_goods_info.DoesNotExist:
         return JsonResponse({'error': 'Goods not found'}, status=404)
 
-    if dispatch_qty <= 0 or dispatch_qty > goods.wh_goods_pieces:
-        return JsonResponse({'error': 'Invalid dispatch quantity'}, status=400)
+    remaining = goods.wh_goods_pieces - goods.wh_dispatch_qty
+    if dispatch_qty > remaining:
+        return JsonResponse({'error': 'Cannot dispatch more than remaining pieces'}, status=400)
+
+    goods.wh_dispatch_qty += dispatch_qty
+    goods.save()
 
     dispatch_num_val = request.session.get('ses_dispatch_num_val')
     dispatch_info = Dispatch_info.objects.get(dispatch_num=dispatch_num_val)
     current_date = now()
     check_in_out_instance = Check_in_out.objects.get(id=4)
+    partial_count = Warehouse_goods_info.objects.filter(
+        wh_qr_rand_num__startswith=f"{goods.wh_qr_rand_num}_P"
+    ).count()
+    partial_suffix = partial_count + 1
+    new_qr_rand_num = f"{goods.wh_qr_rand_num}_P{partial_suffix}"
 
-    goods.wh_dispatch_qty = dispatch_qty
-    goods.wh_checkout_time = current_date
-    goods.wh_dispatch_num = dispatch_num_val
-    goods.wh_dispatch_id = dispatch_info
-    goods.wh_check_in_out = check_in_out_instance
-    goods.wh_truck_type = dispatch_info.dispatch_truck_type
-    goods.wh_storage_time = (current_date.date() - goods.wh_checkin_time.date()).days
+    dispatched_goods = Warehouse_goods_info.objects.create(
+        wh_job_no=goods.wh_job_no,
+        wh_qr_rand_num=new_qr_rand_num,
+        wh_goods_pieces = dispatch_qty,
+        wh_check_in_out=Check_in_out.objects.get(id=2),
+        wh_dispatch_num=dispatch_num_val,
+        wh_checkout_time=current_date,
+        wh_truck_type=dispatch_info.dispatch_truck_type,
+        wh_checkin_time=goods.wh_checkin_time,
+        wh_customer_name=goods.wh_customer_name,
+        wh_customer_type=goods.wh_customer_type,
+        wh_branch=goods.wh_branch,
+        wh_unit=goods.wh_unit,
+        wh_bay=goods.wh_bay,
+        wh_stack_layer=goods.wh_stack_layer,
+        wh_storage_time=(current_date.date() - goods.wh_checkin_time.date()).days,
+        wh_dispatch_id=dispatch_info,
 
-    goods.wh_goods_pieces -= dispatch_qty
+        wh_goods_length=goods.wh_goods_length,
+        wh_goods_width=goods.wh_goods_width,
+        wh_goods_height=goods.wh_goods_height,
+        wh_goods_weight=goods.wh_goods_weight,
+        wh_goods_package_type=goods.wh_goods_package_type,
+        wh_dispatch_qty=dispatch_qty
+    )
 
-    goods.save()
-
-    return JsonResponse({'message': 'Partial dispatch updated on same record'})
+    return JsonResponse({'message': 'Partial dispatch recorded as a new entry'})
