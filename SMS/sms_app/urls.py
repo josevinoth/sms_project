@@ -676,4 +676,8 @@ urlpatterns = [
     path('add_consigner/', views.add_consigner, name='add_consigner'),
     path('add_consignee/', views.add_consignee, name='add_consignee'),
     path('partial_dispatch/', views.dispatch_partial_goods, name='dispatch_partial_goods'),
+    path('need-assessment/print/<int:assessment_id>/', views.need_assessment_print_pdf, name='need_assessment_print'),
+
 ]
+
+

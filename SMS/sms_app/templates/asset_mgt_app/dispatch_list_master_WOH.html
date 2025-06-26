@@ -24,6 +24,7 @@
         <th>Consignee</th>
         <th>Number Of Pieces</th>
         <th>Dispatch Pieces</th>
+        <th>Remaining Pieces</th>
         <th>HAWB</th>
         <th>Shipper Invoice</th>
         <th>Dispatch Number</th>
@@ -48,6 +49,7 @@
         <td> {{goodsinfo.wh_consignee}}</td>
         <td> {{goodsinfo.wh_goods_pieces}}</td>
         <td> {{goodsinfo.wh_dispatch_qty}}</td>
+        <td>{{ goodsinfo.remaining_qty }}</td>
         <td> {{goodsinfo.wh_gate_injob_no_id.gatein_hawb}}</td>
         <td> {{goodsinfo.wh_goods_invoice}}</td>
         <td> {{goodsinfo.wh_dispatch_num}}</td>
@@ -72,7 +74,8 @@
                     data-id="{{ goodsinfo.id }}"
                     data-job="{{ goodsinfo.wh_job_no }}"
                     data-qr="{{ goodsinfo.wh_qr_rand_num }}"
-                    data-pieces="{{ goodsinfo.wh_goods_pieces }}">
+                    data-pieces="{{ goodsinfo.wh_goods_pieces }}"
+                    data-remaining="{{ goodsinfo.remaining_qty }}">
                 <i class="fas fa-share-square"></i> Partial Dispatch
             </button>
         </td>
@@ -157,12 +160,13 @@
     const job = $(this).data('job');
     const qr = $(this).data('qr');
     const pieces = $(this).data('pieces');
+    const remainingQty = $(this).data('remaining');
 
     $('#modal_goods_id').val(id);
     $('#modal_job_no').val(job);
     $('#modal_qr').val(qr);
     $('#modal_total_pieces').val(pieces);
-    $('#modal_dispatch_qty').attr('max', pieces).val(pieces);
+    $('#modal_dispatch_qty').attr('max', remainingQty).val(remainingQty);
     $('#partialDispatchModal').modal('show');
 });
 
@@ -201,8 +205,8 @@ $('#partial-dispatch-form').on('submit', function (e) {
               console.log( len );
               var elements = [];
               for (var i = 0; i < len1; i++) {
-                    console.log(selectedValues[i][10]);
-                    elements.push(selectedValues[i][10]);
+                    console.log(selectedValues[i][11]);
+                    elements.push(selectedValues[i][11]);
                 }
             var elements_list=elements;
        $.ajax({

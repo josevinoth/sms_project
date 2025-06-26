@@ -8,7 +8,7 @@
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header text-center"><h3>Add/Update Need Assessment Dimension</h3></div>
-					<div class="card-body bg-light" >
+					<div class="card-body bg-light" id="nad_form" >
 						<div class="row">
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
@@ -97,13 +97,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Job Weight (kg)</span>
+										<span class="input-group-text">Per Job Weight</span>
 									</div>
 									{% render_field form.nad_job_weight id="nad_job_weight" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity</span>
+										<span class="input-group-text">Quantity to supply</span>
 									</div>
 									{% render_field form.nad_quantity id="nad_quantity" class="form-control" %}
 								</div>
@@ -132,18 +132,27 @@
 	</div>
 </form>
 <script>
-	$(document).ready(function() {
-        document.getElementById("nad_updated_by").value ='{{user_id}}';
-        document.getElementById("nad_assess_num").value ='{{na_assessment_num_id}}';
-        plywood_thickness();
-		requirement_type();
-        });
+$(document).ready(function () {
+    $('#nad_updated_by').val('{{ user_id }}');
+    $('#nad_assess_num').val('{{ na_assessment_num_id }}');
+
+    var user_role = '{{ role_id }}';
+
+    var status = '{{ na_status }}';
+
+    if (status == 5 && user_role == 2) {
+        alert('Since Status is Completed, you have read-only access. To edit, please contact Administrator');
+        $('#nad_form').addClass('disable_a_href');
+        $('#na_submit_btn').addClass('disable_a_href');
+        $('#add_dim_btn').addClass('disable_a_href');
+    }
+
+    plywood_thickness();
+    requirement_type();
+});
 </script>
 <script>
 	$(document).ready(function () {
-    $('#yourTableId').DataTable({
-        responsive: true // Enables responsive DataTables
-    });
 
     $('#nad_wood_type').multiselect({
         includeSelectAllOption: true,
@@ -209,29 +218,35 @@
     }
 </script>
 <script>
-	function requirement_type() {
-      var requirement=document.getElementById("nad_type_of_req").value
-      if (requirement==7)
-        {
-           $('#nad_wood_type').multiselect('disable');
-		   $('#nad_wood_description').multiselect('disable');
-		    $("#consumables, #vehicle_type,#wood_type, #wood_desc, #uom " ).hide();
-		}
-	  else if(requirement==12){
-		  $("#consumables " ).show();
-		  $("#wood_type, #wood_desc, #uom, #vehicle_type").hide();
-	  }
-	  else if(requirement==13){
-		  $("#consumables, #vehicle_type " ).show();
-		  $("#wood_type, #wood_desc, #uom").hide();
-	  }
-      else
-        {
-			$('#nad_wood_type').multiselect('enable');
-			$('#nad_wood_description').multiselect('enable');
-			 $("#consumables, #vehicle_type " ).hide();
-			$("#wood_type, #wood_desc, #uom").show();
-		}
+    $(document).ready(function () {
+        // Run the function once to set the initial field visibility in edit mode
+        requirement_type();
+
+        // Optional: if the user changes the field again
+        $("#nad_type_of_req").change(function () {
+            requirement_type();
+        });
+    });
+
+    function requirement_type() {
+        var requirement = document.getElementById("nad_type_of_req").value;
+
+        if (requirement == 7) {
+            $('#nad_wood_type').multiselect('disable');
+            $('#nad_wood_description').multiselect('disable');
+            $("#consumables, #vehicle_type, #wood_type, #wood_desc, #uom").hide();
+        } else if (requirement == 12) {
+            $("#consumables").show();
+            $("#wood_type, #wood_desc, #uom, #vehicle_type").hide();
+        } else if (requirement == 13) {
+            $("#consumables, #vehicle_type").show();
+            $("#wood_type, #wood_desc, #uom").hide();
+        } else {
+            $('#nad_wood_type').multiselect('enable');
+            $('#nad_wood_description').multiselect('enable');
+            $("#consumables, #vehicle_type").hide();
+            $("#wood_type, #wood_desc, #uom").show();
+        }
     }
 </script>
 {% endblock content %}
