@@ -226,6 +226,7 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
     quotation_number = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_quotation_number
     margin = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_margin
     gst_val = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_gst
+    customer_name = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_customer_name_2
     total_sum=0
     for i in na_req:
         k=i.id
@@ -237,19 +238,19 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
         print('total_cost_wom',total_cost_wom)
         total_cost=total_cost_wom+(total_cost_wom*margin/100)
         try:
-            Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost,2))
+            Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost,0))
         except:
             Nadimension.objects.filter(pk=k).update(nad_cost_unit=0)
         try:
-            Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost*qty,2))
+            Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost*qty,0))
         except:
             Nadimension.objects.filter(pk=k).update(nad_cost_total=0)
         # total_sum=round((total_sum+total_cost),2)
     totalbox_cost = Nadimension.objects.filter(nad_assess_num=needassessment_id).aggregate(totalbox_cost=Sum('nad_cost_total'))['totalbox_cost'] or 0
 
     print('totalbox_cost',totalbox_cost)
-    gst=round(totalbox_cost*gst_val/100,2)
-    final_cost=round((totalbox_cost+gst),2)
+    gst=round(totalbox_cost*gst_val/100,0)
+    final_cost=round((totalbox_cost+gst),0)
     today = datetime.now()
     formatted_date = today.strftime("%d-%b-%Y")
     context = {
@@ -266,6 +267,7 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
         'final_cost': final_cost,
         'quotation_number': quotation_number,
         'today_date': formatted_date,
+        'customer_name': customer_name,
     }
     file_name = str("Quotation_") + str(needassessment_num) + str(".pdf")
     template_path = 'asset_mgt_app/bvm_pk_quotation_pdf.html'
