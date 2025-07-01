@@ -7,6 +7,7 @@ def Pkpurchaseorder_directory_path(instance, filename):
     return 'Pkpurchaseorderfiles/{0}/{1}'.format(instance.po_num, filename)
 class PkpurchaseorderInfo(models.Model):
     po_num = models.CharField(max_length=100)
+    sales_order_num = models.CharField(max_length=100, unique=True, blank=True, null=True)
     po_date = models.DateTimeField(blank=True, null=True)
     po_value = models.FloatField(blank=True, null=True, default=0.0)
     po_tax = models.FloatField(blank=True, null=True, default=0.0)
@@ -22,7 +23,7 @@ class PkpurchaseorderInfo(models.Model):
     po_attach = models.FileField(upload_to=Pkpurchaseorder_directory_path, null=True, blank=True)
     po_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, related_name='po_status',
                                   db_column='po_status', blank=True, null=True, default=6)
-    po_comments_box = models.TextField(default="")
+    po_comments_box = models.TextField(blank=True, null=True, default="")
     po_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
 
     class Meta:
