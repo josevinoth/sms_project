@@ -12,6 +12,9 @@
 							<a href="{% url 'tripdetail_insert' %}" class="btn btn-primary m-2">
 								<i class="fas fa-plus"></i> Add
 							</a>
+							<a href="{% url 'trip_highvalue_add' %}" id="checklist-btn" class="btn btn-primary mt-2 disable_a_href">
+    Goods High Value Checklist
+</a>
 						</div>
 
 						<div class="col-6 ">
@@ -40,6 +43,16 @@
 						</div>
 					</div>
 				</div>
+				{% if not checklist %}
+  <div class="alert alert-danger" role="alert">
+  Awaiting For High Value check list Approval
+</div>
+{% endif %}
+				{% if not trip_approvallist %}
+  <div class="alert alert-danger" role="alert">
+  Awaiting For Invoice & E-WayBill Approval
+  </div>
+{% endif %}
 				<div class="card-body bg-light" >
 					<form method="POST" action="" id="tripdetail_add" enctype="multipart/form-data">
 						{% csrf_token %}
@@ -170,14 +183,20 @@
 									</div>
 									{% render_field trip_det_form.tr_reporteddate id="tr_reporteddate" type="Datetime-local" class="form-control" %}
 								</div>
-
+<div class="input-group input-group-sm m-1">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Goods High Value Check </span>
+							</div>
+							{% render_field trip_det_form.tr_high_value id="tr_high_value" class="form-control" %}
+						</div>
 								{% render_field trip_det_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
 								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Status</span>
 									</div>
-									<select name="tc_financestatus" id="tc_financestatus" class="form-control">
+									<select name="tc_financestatus" id="tc_financestatus" class="form-control" onchange="trip_type1()">
+
 										{% for item in status_list %}
 										<option value="{{ item.id }}"
 												{% if item.id == status_selected %}
@@ -359,4 +378,49 @@
     	}
 	}
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const trHighValue = document.getElementById('tr_high_value');
+    const checklistBtn = document.getElementById('checklist-btn');
+
+    function updateButtonState() {
+        if (trHighValue.value === '1') {
+            checklistBtn.classList.remove('disable_a_href');
+        } else {
+            checklistBtn.classList.add('disable_a_href');
+        }
+    }
+    updateButtonState();
+});
+
+</script>
+
+<script>
+var checklistApproved = {{ checklist|yesno:"true,false" }};
+var tripApprovalApproved = {{ trip_approvallist|yesno:"true,false" }};
+
+function trip_type1() {
+    var categoryValue = document.getElementById('tr_category').value;
+    var tripStatus = document.getElementById('tc_financestatus');
+
+    if (categoryValue === "2") {
+        tripStatus.disabled = false;
+        tripStatus.classList.remove("select-disabled-style");
+    } else if (categoryValue === "1" && checklistApproved && tripApprovalApproved) {
+        tripStatus.disabled = false;
+        tripStatus.classList.remove("select-disabled-style");
+    } else {
+        tripStatus.disabled = true;
+        tripStatus.classList.add("select-disabled-style");
+        tripStatus.selectedIndex = 0;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    trip_type1();
+});
+</script>
+
+
+
 {% endblock content %}

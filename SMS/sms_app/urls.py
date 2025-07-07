@@ -677,7 +677,11 @@ urlpatterns = [
     path('add_consignee/', views.add_consignee, name='add_consignee'),
     path('partial_dispatch/', views.dispatch_partial_goods, name='dispatch_partial_goods'),
     path('need-assessment/print/<int:assessment_id>/', views.need_assessment_print_pdf, name='need_assessment_print'),
-
+    path('trip_highvalue_add/', views.trip_highvalue_add, name='trip_highvalue_add'),
+    path('trip_highvalue_list/', views.trip_highvalue_list, name='trip_highvalue_list'),
+    path('trip_highvalue_update/<int:high_value_id>/', views.trip_highvalue_add, name='trip_highvalue_update'),
+    path('trip_highvalue_delete/<int:high_value_id>/', views.trip_highvalue_delete, name='trip_highvalue_delete'),
+    path('trip_highvalue_cancel/', views.trip_highvalue_cancel, name='trip_highvalue_cancel'),
 ]
 
 

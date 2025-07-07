@@ -314,6 +314,12 @@ nav > div a.nav-item.nav-link:focus
     background:#CCFFCC !important;
     color:#000000 !important;
 }
+/*Disable anchor for select options*/
+.select-disabled-style {
+    background: #CCFFCC !important;
+    color: #000000 !important;
+
+}
 
 /*Disable anchor*/
 .disable_a_href_list{

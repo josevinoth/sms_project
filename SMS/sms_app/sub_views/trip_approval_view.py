@@ -10,18 +10,12 @@ def trip_approval_view(request):
         'tr_consignmentnumber',
         'tr_approval',
         'tr_approval__ta_approval_status'
-    ).filter( Q(tr_consignmentnumber__isnull=False),
+    ).filter( Q(tr_category=1),
         Q(tr_approval__ta_approval_status__id=3) | Q(tr_approval__isnull=True)
     )
 
-    consignment_map = {
-        trip.id: ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=trip.tr_consignmentnumber)
-        for trip in trip_list
-    }
-
     return render(request, "asset_mgt_app/trip_approval.html", {
         'trip_list': trip_list,
-        'consignment_map': consignment_map,
         'status_list': approval_status_info.objects.all()
     })
 

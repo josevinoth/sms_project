@@ -5,7 +5,7 @@ from django.db.models import Q
 
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm,TripdetailaddForm
-from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,VehiclemasterInfo
+from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,VehiclemasterInfo,TripHighvalueInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 import json
@@ -101,6 +101,7 @@ def tripdetail_add(request,tripdetail_id=0):
                 'status_list': status_list,
                 'consignment_list': consignment_list,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
+                'status_selected': 8,
             }
         else:
             trip_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_tripnumber
@@ -127,6 +128,9 @@ def tripdetail_add(request,tripdetail_id=0):
             else:
                 consignment_selected = None
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+            checklist = TripHighvalueInfo.objects.filter(thc_tripnumber=trip_instance.id,thc_enquirynumber=enquiry_num_id,thc_approval_status_id=1).exists()
+            trip_approvallist = (trip_instance.tr_approval and trip_instance.tr_approval.ta_approval_status_id == 1)
+
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
@@ -139,6 +143,9 @@ def tripdetail_add(request,tripdetail_id=0):
                 'consignment_selected': consignment_selected,
                 'consignment_list': consignment_list,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
+                'checklist':checklist,
+                'trip_approvallist':trip_approvallist,
+
             }
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
     else:

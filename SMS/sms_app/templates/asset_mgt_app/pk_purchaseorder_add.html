@@ -8,7 +8,7 @@
 		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Purchase Order</h3></div>
+					<div class="card-header text-center"><h3>Add/Update Sales Order</h3></div>
 					<div class="card-body bg-light" >
 						<div class="row" id="purchase_order">
 							<div class="col-3">
@@ -17,6 +17,12 @@
 										<span class="input-group-text">Assessment Number</span>
 									</div>
 									{% render_field form.po_assessment_num id="po_assessment_num" class="form-control"  %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Sales Order NO</span>
+									</div>
+									{% render_field form.sales_order_num id="sales_order_num" class="form-control disable_a_href" readonly="readonly" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -40,7 +46,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Customer PO Number</span>
+										<span class="input-group-text">Customer PO Number / Mail</span>
 									</div>
 									{% render_field form.po_num id="po_num" class="form-control " %}
 								</div>
@@ -58,7 +64,6 @@
 									</div>
 									{% render_field form.po_value id="po_value" class="form-control" oninput="calculateTotal()" %}
 								</div>
-
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Tax %</span>
@@ -69,7 +74,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Value</span>
 									</div>
-									{% render_field form.po_total_value id="po_total_value" class="form-control disable_a_href"%}
+									{% render_field form.po_total_value id="po_total_value" class="form-control disable_a_href "%}
 								</div>
 							</div>
 							<div class="col-3">
@@ -101,7 +106,7 @@
 							<div class="col">
 							<div class="input-group input-group-sm mb-3 bg-dark block">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Comment Box</span>
+									<span class="input-group-text">Remarks</span>
 								</div>
 								{% render_field form.po_comments_box id="po_comments_box" class="form-control"   %}
 								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->

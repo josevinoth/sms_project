@@ -45,7 +45,7 @@ def stockpurchases_add(request, stockpurchases_id=0):
 
                 # Generate purchase number
                 reg_number = 1000000 + last_id
-                stockpurchases_num_next = f'GRN/PK/{reg_number}'
+                stockpurchases_num_next = f'item_no-{reg_number}'
 
                 # Update the new record with the generated stock purchase number
                 new_record.sp_purchase_num = stockpurchases_num_next

@@ -9,11 +9,12 @@ from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_del
 
 
 @login_required(login_url='login_page')
-def purchaseorder_add(request,purchaseorder_id=0):
+def purchaseorder_add(request, purchaseorder_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+
     if request.method == "GET":
         if purchaseorder_id == 0:
             form = PkpurchaseorderForm()
@@ -25,52 +26,71 @@ def purchaseorder_add(request,purchaseorder_id=0):
                 'role_id': role_id,
             }
         else:
-            purchaseorder=PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
+            purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
             form = PkpurchaseorderForm(instance=purchaseorder)
-            purchaseorder_id = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id).id
-            purchaseorder_num = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id).po_assessment_num
+            purchaseorder_id = purchaseorder.id
+            purchaseorder_num = purchaseorder.po_assessment_num
             request.session['purchaseorder_id'] = purchaseorder_id
-            na_id = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id).po_assessment_num.id
-            print('na_id',na_id)
+            na_id = purchaseorder.po_assessment_num.id
             request.session['ses_na_id'] = na_id
             po_dimension_list = POdimension.objects.filter(pod_po_num=purchaseorder_id)
-            context={
-                    'form': form,
-                    'first_name': first_name,
-                    'user_id': user_id,
-                    'na_id': na_id,
-                    'po_dimension_list': po_dimension_list,
-                    'role': role,
-                    'role_id': role_id,
-                    }
+            context = {
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'na_id': na_id,
+                'po_dimension_list': po_dimension_list,
+                'role': role,
+                'role_id': role_id,
+            }
         return render(request, "asset_mgt_app/pk_purchaseorder_add.html", context)
+
     else:
         form = PkpurchaseorderForm(request.POST, request.FILES)
         if form.is_valid():
             customer_po_num = form.cleaned_data['po_num']
+
+            # Check for uniqueness of PO Number
             if not PkpurchaseorderInfo.objects.filter(po_num=customer_po_num).exclude(id=purchaseorder_id).exists():
+
                 if purchaseorder_id == 0:
                     print("Inside post add")
-                    form.save()
-                    print("PkpurchaseorderForm Form is Valid")
-                    messages.success(request, 'Record Updated Successfully')
+                    instance = form.save(commit=False)
+
+                    # Auto-generate sales_order_num
+                    last_po = PkpurchaseorderInfo.objects.filter(sales_order_num__startswith="25-26-MP-SO-").order_by('-id').first()
+                    if last_po and last_po.sales_order_num:
+                        try:
+                            last_num = int(last_po.sales_order_num.split("-")[-1])
+                        except ValueError:
+                            last_num = 0
+                    else:
+                        last_num = 0
+
+                    if last_num >= 9999:
+                        messages.error(request, 'Sales Order number limit (9999) reached.')
+                        return redirect(request.META['HTTP_REFERER'])
+
+                    next_num = str(last_num + 1).zfill(4)
+                    instance.sales_order_num = f"25-26-MP-SO-{next_num}"
+
+                    instance.save()
+                    messages.success(request, 'Purchase Order Added Successfully')
+
                 else:
                     print("Inside post edit")
                     purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
                     form = PkpurchaseorderForm(request.POST, request.FILES, instance=purchaseorder)
                     form.save()
-                    print("PkpurchaseorderForm Form is Valid")
-                    messages.success(request, 'Record Updated Successfully')
+                    messages.success(request, 'Purchase Order Updated Successfully')
 
             else:
-                print("Duplicate customer PO found")
                 messages.error(request, 'Please enter a Unique PO Number.')
+
             last_id = PkpurchaseorderInfo.objects.order_by('-id').values_list('id', flat=True).first()
-            # return redirect(request.META['HTTP_REFERER'])
             return redirect('/SMS/purchaseorder_update/' + str(last_id))
         else:
-            print("PkpurchaseorderInfo Form is Not Valid")
-            messages.error(request, 'Record Not Updated Successfully')
+            messages.error(request, 'Please check your inputs.')
             return redirect(request.META['HTTP_REFERER'])
 
 # List purchaseorder
