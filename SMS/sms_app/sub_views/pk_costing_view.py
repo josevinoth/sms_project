@@ -1,5 +1,6 @@
 import json
 from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.search import TrigramSimilarity
 from django.db import transaction
 from django.db.models import Sum
 
@@ -188,11 +189,12 @@ def costing_add(request, costing_id=0):
 
 def update_reduced_dimensions(stock_purchase_num,last_id):
     requested_qty = PkcostingInfo.objects.get(pk=last_id).ct_quantity_req
+    requested_overall_qty = PkcostingInfo.objects.get(pk=last_id).ct_na_quantity
     requested_cft = PkcostingInfo.objects.get(pk=last_id).ct_sqrt_req
     prev_qty = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_quantity
     prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft
-    current_qty = prev_qty - requested_qty
-    current_cft = prev_cft - requested_cft
+    current_qty = prev_qty - (requested_qty * requested_overall_qty)
+    current_cft = prev_cft - (requested_cft * requested_overall_qty)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity=current_qty)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft=round(current_cft,2))
 
@@ -270,23 +272,25 @@ def costing_cancel(request):
 
 @login_required(login_url='login_page')
 def pk_item_search_page_costing(request):
-    # stock_type = request.GET.get('stock_type')
-    # stock_description = request.GET.get('stock_description')
-    # length_req = request.GET.get('length_req')
-    # width_req = request.GET.get('width_req')
     part_code = request.GET.get('part_code')
-    # height_req = request.GET.get('height_req')
 
-    # Query the database
-    queryset = PkstockpurchasesInfo.objects.filter(
-        sp_part_code=part_code
-    )
+    # First: Try exact match
+    queryset = PkstockpurchasesInfo.objects.filter(sp_part_code=part_code)
 
-    # Function to format date
+    # If no exact match, fallback to similar part codes using TrigramSimilarity
+    if not queryset.exists() and part_code:
+        queryset = (
+            PkstockpurchasesInfo.objects
+            .annotate(similarity=TrigramSimilarity('sp_part_code', part_code))
+            .filter(similarity__gt=0.3)  # adjust threshold if needed
+            .order_by('-similarity')[:5]  # top 5 similar
+        )
+
+    # Format date function
     def format_date(date):
         return date.strftime('%B %d, %Y') if date else ''
 
-    # Serialize the queryset to JSON with date formatting
+    # Serialize queryset
     results = list(queryset.values(
         'id',
         'sp_vendor_bill_id',
@@ -310,11 +314,11 @@ def pk_item_search_page_costing(request):
         'sp_size',
     ))
 
-    # Apply date formatting to the results
+    # Apply date formatting
     for result in results:
         result['sp_stock_in_date'] = format_date(result['sp_stock_in_date'])
-    return JsonResponse(results, safe=False)
 
+    return JsonResponse(results, safe=False)
 @login_required(login_url='login_page')
 def pk_item_search_page(request):
     form = CostingSearchForm(request.GET)

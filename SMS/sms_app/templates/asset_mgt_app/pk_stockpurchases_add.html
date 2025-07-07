@@ -18,7 +18,7 @@
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Bill/Return/New Order</span>
+										<span class="input-group-text">Bill Reference</span>
 									</div>
 									{% render_field form.sp_vendor_bill_id id="sp_vendor_bill_id" class="form-control disable_a_href" %}
 								</div>
@@ -132,13 +132,13 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity</span>
+										<span class="input-group-text">Quantity (Nos)</span>
 									</div>
 									{% render_field form.sp_quantity id="sp_quantity" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Total Value</span>
+										<span class="input-group-text">Purchased qty (UOM)</span>
 									</div>
 									{% render_field form.sp_total_cft  id="sp_total_cft" class="form-control " %}
 								</div>
@@ -153,7 +153,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Price (INR)</span>
+										<span class="input-group-text">Item value (INR)</span>
 									</div>
 									{% render_field form.sp_price id="sp_price" class="form-control disable_a_href" %}
 								</div>
@@ -511,20 +511,27 @@
 
 </script>
 <script>
-	 function toggleFields() {
-            var stockType = $("#sp_stock_type").val();
+    function toggleFields() {
+        var stockType = $("#sp_stock_type").val();
 
-            if  (stockType == "1" ||stockType == "4" || stockType == "5" || stockType == "6") {
-                $("#diameter_width_group, #con_length_group , #uom_group " ).hide();
-                $("#length_group, #width_group, #height_group").show();
-
-            }
-            else {
-                $("#diameter_width_group, #con_length_group, #uom_group ").show();
-                $("#length_group, #width_group, #height_group").hide();
-            }
+        if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
+            $("#diameter_width_group, #con_length_group, #uom_group").hide();
+            $("#length_group, #width_group, #height_group").show();
+        } else {
+            $("#diameter_width_group, #con_length_group, #uom_group").show();
+            $("#length_group, #width_group, #height_group").hide();
         }
+    }
 
+    // Run toggleFields on page load
+    $(document).ready(function () {
+        toggleFields();
+
+        // Run toggleFields when stock type changes
+        $("#sp_stock_type").change(function () {
+            toggleFields();
+        });
+    });
 </script>
 <script>
     // Enable select2 for part code field

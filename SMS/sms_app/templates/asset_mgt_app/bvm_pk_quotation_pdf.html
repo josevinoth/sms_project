@@ -1,142 +1,105 @@
-{% extends "asset_mgt_app/report_header_landscape.html" %}
+{% extends "asset_mgt_app/report_header_potrait.html" %}
 {% block content %}
-<div>
-    <table class='report_details'>
-        <tr>
-            <td colspan="3">
-                <h1 style="color:red;">BVM PACK SOLUTIONS PRIVATE LIMITED</h1>
-                <p>Address 70, Adam Nagar Road Nagalkeni, Chrompet Chennai 600 044</p>
-            </td>
-            <td colspan="1">
-                <img src="media/Company_Logo.png" alt="home" class="centered-image">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="4">
-                <h3><b>QUOTATION</b></h3>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="1">
-                <b>Customer:</b> {{customer_name}}
-            </td>
-            <td colspan="1">
-                <b>Address:</b> {{address}}
-            </td>
-            <td colspan="1">
-                <b>Quotation Date:</b> {{today_date}}
-            </td>
-            <td colspan="1">
-                <b>Quotation Number:</b> {{quotation_number}}
-            </td>
-        </tr>
-    </table>
-    <br>
-    <small> Refer to our discussion, please find our offer.</small>
-    <hr class="report_hrItem"/>
-    <table class='report_details'>
-        <tr>
-            <th>Item</th>
-            <th>Description</th>
-            <th>UOM</th>
-            <th>Length</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>Unit Cost (INR)</th>
-            <th>Qty</th>
-            <th>Total Cost (INR)</th>
-        </tr>
-        {% for quote in quotation %}
-        <tr>
-            <td>{{quote.nad_item}}</td>
-            <td>{{quote.nad_type_of_req}}</td>
-            <td>{{quote.nad_uom}}</td>
-            <td>{{quote.nad_length}}</td>
-            <td>{{quote.nad_width}}</td>
-            <td>{{quote.nad_height}}</td>
-            <td>{{quote.nad_cost_unit}}</td>
-            <td>{{quote.nad_quantity}}</td>
-            <td>{{quote.nad_cost_total}}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <table class='report_details'>
-        <tr>
-            <td colspan="7"></td>
-            <td colspan="1"><b>Value</b></td>
-            <td colspan="1">
-                <b>{{total_sum}}</b>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="7"></td>
-            <td colspan="1"><b>Taxable value {{gst_val}} %</b></td>
-            <td colspan="1">
-                <b>{{gst}}</b>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="7"></td>
-            <td colspan="1"><b>Total Cost</b></td>
-            <td colspan="1">
-                <b>{{final_cost}}</b>
-            </td>
-        </tr>
-    </table>
-    <br>
-    <table class='report_details'>
-        <tr>
-            <th colspan="4" style="text-align: left;"><b>Cost Includes</b></th>
-        </tr>
-        <tr>
-            <td colspan="4" style="text-align: left;">
-                {{cost_includes}}
-            </td>
-        </tr>
-    </table>
-    <br>
-    <table class='report_details'>
-        <tr>
-            <th colspan="4" style="text-align: left;"><b>Notes</b></th>
-        </tr>
-        <tr>
-            <td colspan="4" style="text-align: left;">
-                {{notes}}
-            </td>
-        </tr>
-    </table>
-    <br>
-    <table class='report_details'>
-        <tr>
-            <th colspan="4" style="text-align: left;"><b>Terms & Conditions</b></th>
-        </tr>
-        <tr>
-            <td colspan="4" style="text-align: left;">
-                {{terms_condition}}
-            </td>
-        </tr>
-    </table>
-    <br>
-    <table class='report_details'>
-        <tr>
-            <th colspan="4" style="text-align: left;"><b>Client Scope</b></th>
-        </tr>
-        <tr>
-            <td colspan="4" style="text-align: left;">
-                {{client_scope}}
-            </td>
-        </tr>
-    </table>
-    <br>
-    <table class='report_details'>
-        <tr>
-            <th colspan="4" style="text-align: left;"><b>BVM Scope</b></th>
-        </tr>
-        <tr>
-            <td colspan="4" style="text-align: left;">
-                {{bvm_scope}}
-            </td>
-        </tr>
-    </table>
-</div>
+
+
+<!-- Header -->
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+    <tr>
+        <td style="padding: 6px; vertical-align: top; width: 85%;">
+            <div class="company-name">BVM PACK SOLUTIONS PRIVATE LIMITED</div>
+            <div class="company-address">
+                70/1, Adam Nagar Road, Nagalkeni,<br>
+                Chrompet, Chennai – 600 044,<br>
+                Tamil Nadu
+            </div>
+        </td>
+        <td style="padding: 6px; vertical-align: top; text-align: right; width: 15%;">
+            <img src="media/Company_Logo.png" alt="Company Logo" class="company-logo">
+        </td>
+    </tr>
+</table>
+
+<div class="info-box">QUOTATION</div>
+
+<!-- Client Info -->
+<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <tr>
+        <td style="vertical-align: top; padding: 6px; font-size: 11px; width: 50%;">
+            <div class="info-box"><b>Date:</b> {{ today_date }}</div>
+            <div class="info-box"><b>Quotation No:</b> {{ quotation_number }}</div>
+        </td>
+         <td style="vertical-align: top; padding: 6px; font-size: 11px; width: 50%;">
+            <b>To:</b><br>
+            Mr. {{ customer_name }}<br>
+            {{ address|linebreaksbr }}
+        </td>
+
+    </tr>
+</table>
+
+<p class="text-left" style="font-size: 11px;">Refer to your inquiry mail, please find our offer:</p>
+
+<!-- Item Table -->
+<table class="report-table">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Description</th>
+        <th colspan="3">OD Dim (mm)</th>
+        <th>Ref</th>
+        <th>Unit<br>INR</th>
+        <th>Qty</th>
+        <th>Total<br>INR</th>
+    </tr>
+    <tr>
+        <th></th><th></th>
+        <th>L</th><th>W</th><th>H</th>
+        <th></th><th></th><th></th><th></th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for quote in quotation %}
+    <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ quote.nad_type_of_req }}</td>
+        <td>{{ quote.nad_length }}</td>
+        <td>{{ quote.nad_width }}</td>
+        <td>{{ quote.nad_height }}</td>
+        <td>{{ quote.nad_doc_ref }}</td>
+        <td>{{ quote.nad_cost_unit }}</td>
+        <td>{{ quote.nad_quantity }}</td>
+        <td>{{ quote.nad_cost_total }}</td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td colspan="8" class="text-right"><b>VALUE</b></td>
+        <td><b>{{ total_sum }}</b></td>
+    </tr>
+    <tr>
+        <td colspan="8" class="text-right"><b>TAXES AT ACTUAL {{ gst_val }}%</b></td>
+        <td><b>{{ gst }}</b></td>
+    </tr>
+    <tr>
+        <td colspan="8" class="text-right"><b>TOTAL COST</b></td>
+        <td><b>{{ final_cost }}</b></td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- Sections -->
+<div class="section-title">Cost Includes</div>
+<div class="section-box">{{ cost_includes }}</div>
+
+<div class="section-title">Notes</div>
+<div class="section-box">{{ notes }}</div>
+
+<div class="section-title">Terms and Conditions</div>
+<div class="section-box">{{ terms_condition }}</div>
+
+<div class="section-title">Client Scope</div>
+<div class="section-box">{{ client_scope }}</div>
+
+<div class="section-title">BVM Pack Scope</div>
+<div class="section-box">{{ bvm_scope }}</div>
+
 {% endblock content %}

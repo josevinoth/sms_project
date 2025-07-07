@@ -460,7 +460,7 @@ def export_cost_assessment_to_excel(request):
             costinginfo.ct_quantity,
             costinginfo.ct_size,
             str(costinginfo.ct_uom) if costinginfo.ct_uom else '',
-            costinginfo.ct_cft,
+            costinginfo.ct_sqrt_req,
             costinginfo.ct_rate,
             costinginfo.ct_days,
             costinginfo.ct_total_cost,
