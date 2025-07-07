@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Trip_approval_info,iou_info,EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehicletypeInfo,OwnershipInfo,Places,Tripstatusinfo
+from ..models import Trip_approval_info,iou_info,EnquirynoteInfo,ConsignmentdetailInfo,MyUser,VehicletypeInfo,OwnershipInfo,Places,Tripstatusinfo,YesNoInfo
 
 def trip_attach_path(instance, filename):
     return 'PODattachfiles/{0}/{1}'.format(instance.tr_tripnumber, filename)
@@ -54,6 +54,7 @@ class TripdetailInfo(models.Model):
     tc_financestatus = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE,blank=True,null=True)
     tc_pod_attachment = models.FileField(upload_to=trip_attach_path, null=True,blank=True)
     tr_customerref = models.CharField(max_length=30,null=True,blank=True)
+    tr_high_value = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE, related_name='tr_high_value',db_column='tr_high_value', default=2)
 
 
 
