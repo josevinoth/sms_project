@@ -3,7 +3,7 @@
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
         <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
+        <div class="col-2 rounded text-center bg-info shadow-box">
             <h3>Asset List</h3>
         </div>
         <div class="col-5"></div>
@@ -20,22 +20,14 @@
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
-    <div class="col-md-1">
+    <div class="col-md-2">
         <a href="{% url 'asset_list' %}" class="btn btn-warning btn-block btn-lg">
             <i class="fa fa-eye" aria-hidden="true"></i> Show All
         </a>
     </div>
-<!--    <div class="col-md-1">-->
-<!--        <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'assign_asset_search' %}" method="get">-->
-<!--            <div class="form-group">-->
-<!--                <input type="search" class="form-control" id="asset_number" placeholder="Asset Number" name="asset_number">-->
-<!--                <button class="btn btn-primary" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>-->
-<!--            </div>-->
-<!--        </form>-->
-<!--    </div>-->
 </div>
 <hr>
-<div class="container-fluid">
+<div class="container-fluid shadow-box-table">
     <table id="asset_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
@@ -124,7 +116,7 @@
         </span>
 
         {% if page_obj.has_next %}
-            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="btn btn-primary me-5" href="?page={{ page_obj.next_page_number }}">Next</a>
             <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
         {% endif %}
     </span>

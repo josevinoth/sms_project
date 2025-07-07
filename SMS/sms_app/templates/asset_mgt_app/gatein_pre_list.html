@@ -3,7 +3,7 @@
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
         <div class="col-5"></div>
-        <div class="col-12 col-md-8 col-lg-2 rounded text-center bg-info">
+        <div class="col-12 col-md-8 col-lg-2 rounded text-center bg-info shadow-box">
             <h3>Pre-Gatein List</h3>
         </div>
         <div class="col-5"></div>
@@ -25,82 +25,93 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-6 col-lg-4 justify-content-start">
-            <form class="d-flex flex-column flex-md-row gap-2" action="{% url 'pre_gatein_search' %}" method="get">
-                <input type="search" class="form-control" placeholder="Pre Gate-In" name="pre_gate_in">
-                <input type="search" class="form-control" placeholder="Truck Number" name="truck_number">
-                <input type="search" class="form-control" placeholder="Driver Name" name="driver_name">
-                <button class="btn btn-primary d-inline-flex align-items-center justify-content-center" type="submit">
-                    <i class="fa fa-search me-1"></i> Search
-                </button>
+        <div class="col-12 col-md-6 col-lg-4 mb-2">
+            <form action="{% url 'pre_gatein_search' %}" method="get">
+                <div class="form-row align-items-center">
+                    <div class="col-12 col-sm-4 mb-2 mb-sm-0">
+                        <input type="search" class="form-control" placeholder="Pre Gate-In" name="pre_gate_in">
+                    </div>
+                    <div class="col-12 col-sm-4 mb-2 mb-sm-0">
+                        <input type="search" class="form-control" placeholder="Truck Number" name="truck_number">
+                    </div>
+                    <div class="col-12 col-sm-4 mb-2 mb-sm-0">
+                        <input type="search" class="form-control" placeholder="Driver Name" name="driver_name">
+                    </div>
+                    <div class="col-12 mt-2">
+                        <button class="btn btn-primary btn-block" type="submit">
+                            <i class="fa fa-search mr-1"></i> Search
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
+
     </div>
 </div>
 
 <hr>
 
-    <div class="table-responsive">
-        <table id="gatein_list" class="table table-striped table-bordered nowrap">
-            <thead class="thead-dark">
-            <tr>
-                <th></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Pre-Gate-In"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Truck Numbers"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Driver Names"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Updated On"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Updated By"></th>
-                <th></th>
-            </tr>
-            <tr>
-                <th>Edit</th>
-                <th>ID</th>
-                <th>Created On</th>
-                <th>Pre-Gate-In #</th>
-                <th>Branch</th>
-                <th>Truck Numbers</th>
-                <th>Driver Names</th>
-                <th>Updated On</th>
-                <th>Updated By</th>
-                <th>Delete</th>
-            </thead>
-            <tbody>
-            {% for gateinpreinfo in page_obj %}
-            <tr>
-                <td>
-                    <div class="d-flex justify-content-center gap-1">
+<div class="table-responsive shadow-box-table p-3" style="overflow-x: auto;">
+    <table id="gatein_list" class="table table-striped table-bordered" style="width: 100%;">
+        <thead class="thead-dark">
+        <tr class="d-none d-sm-table-row">
+            <th></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Pre-Gate-In"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Truck Numbers"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Driver Names"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Updated On"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Updated By"></th>
+            <th></th>
+        </tr>
+        <tr>
+            <th>Edit</th>
+            <th>ID</th>
+            <th>Created On</th>
+            <th>Pre-Gate-In #</th>
+            <th>Branch</th>
+            <th>Truck Numbers</th>
+            <th>Driver Names</th>
+            <th>Updated On</th>
+            <th>Updated By</th>
+            <th>Delete</th>
+        </thead>
+        <tbody>
+        {% for gateinpreinfo in page_obj %}
+        <tr>
+            <td>
+                <div class="d-flex justify-content-center gap-1">
                     <a class="btn btn-primary" href="{% url 'gatein_pre_update' gateinpreinfo.id %}" >
                         <i class="far fa-edit"></i>
                     </a>
-                    </div>
-                </td>
-                <td>{{gateinpreinfo.id}}</td>
-                <td>{{gateinpreinfo.gatein_pre_created_at}}</td>
-                <td>{{gateinpreinfo.gatein_pre_number}}</td>
-                <td>{{gateinpreinfo.gatein_pre_branch}}</td>
-                <td>{{gateinpreinfo.gatein_pre_truck_number}}</td>
-                <td>{{gateinpreinfo.gatein_pre_driver_name}}</td>
-                <td>{{gateinpreinfo.gatein_pre_updated_at}}</td>
-                <td>{{gateinpreinfo.gatein_pre_updated_by}}</td>
-                <td>
-                    <div class="d-flex justify-content-center gap-1">
+                </div>
+            </td>
+            <td>{{gateinpreinfo.id}}</td>
+            <td>{{gateinpreinfo.gatein_pre_created_at}}</td>
+            <td>{{gateinpreinfo.gatein_pre_number}}</td>
+            <td>{{gateinpreinfo.gatein_pre_branch}}</td>
+            <td>{{gateinpreinfo.gatein_pre_truck_number}}</td>
+            <td>{{gateinpreinfo.gatein_pre_driver_name}}</td>
+            <td>{{gateinpreinfo.gatein_pre_updated_at}}</td>
+            <td>{{gateinpreinfo.gatein_pre_updated_by}}</td>
+            <td>
+                <div class="d-flex justify-content-center gap-1">
                     <form action="{% url 'gatein_pre_delete' gateinpreinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </form>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-<div class="pagination">
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
             <a class="btn btn-warning" href="?page=1">First</a>
@@ -116,20 +127,21 @@
             <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
         {% endif %}
     </span>
+    </div>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-    var table = $('#gatein_list').DataTable({
-    order: [[0, 'desc']],
-    responsive: true,
-    scrollX: false,
-    dom: 'lBfrtip',
-    buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
+        var table = $('#gatein_list').DataTable({
+            order: [[0, 'desc']],
+            responsive: true,
+            scrollX: false,
+            dom: 'lBfrtip',
+            buttons: [
+                'copy', 'csv', 'excel','print'
+            ]
 
-});
+        });
 
         // Apply search to each column
         $('.filter-input').on('keyup change', function () {

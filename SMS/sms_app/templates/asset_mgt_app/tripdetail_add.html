@@ -13,8 +13,8 @@
 								<i class="fas fa-plus"></i> Add
 							</a>
 							<a href="{% url 'trip_highvalue_add' %}" id="checklist-btn" class="btn btn-primary mt-2 disable_a_href">
-    Goods High Value Checklist
-</a>
+								Goods High Value Checklist
+							</a>
 						</div>
 
 						<div class="col-6 ">
@@ -44,15 +44,15 @@
 					</div>
 				</div>
 				{% if not checklist %}
-  <div class="alert alert-danger" role="alert">
-  Awaiting For High Value check list Approval
-</div>
-{% endif %}
+				<div class="alert alert-danger" role="alert">
+					Awaiting For High Value check list Approval
+				</div>
+				{% endif %}
 				{% if not trip_approvallist %}
-  <div class="alert alert-danger" role="alert">
-  Awaiting For Invoice & E-WayBill Approval
-  </div>
-{% endif %}
+				<div class="alert alert-danger" role="alert">
+					Awaiting For Invoice & E-WayBill Approval
+				</div>
+				{% endif %}
 				<div class="card-body bg-light" >
 					<form method="POST" action="" id="tripdetail_add" enctype="multipart/form-data">
 						{% csrf_token %}
@@ -183,12 +183,12 @@
 									</div>
 									{% render_field trip_det_form.tr_reporteddate id="tr_reporteddate" type="Datetime-local" class="form-control" %}
 								</div>
-<div class="input-group input-group-sm m-1">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Goods High Value Check </span>
-							</div>
-							{% render_field trip_det_form.tr_high_value id="tr_high_value" class="form-control" %}
-						</div>
+								<div class="input-group input-group-sm m-1">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Goods High Value Check </span>
+									</div>
+									{% render_field trip_det_form.tr_high_value id="tr_high_value" class="form-control" %}
+								</div>
 								{% render_field trip_det_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
 								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
 								<div class="input-group input-group-sm m-1">
@@ -200,9 +200,9 @@
 										{% for item in status_list %}
 										<option value="{{ item.id }}"
 												{% if item.id == status_selected %}
-													selected
+												selected
 												{% elif not status_selected and item.id == 8 %}
-													selected
+												selected
 												{% endif %}>
 											{{ item.status }}
 										</option>
@@ -255,170 +255,170 @@
 
 	</div>
 </div>
-<div class="table-responsive">
+<div class="table-responsive shadow-box-table">
 	{% include "asset_mgt_app/tripdetail_list_woh.html" %}
 </div>
 <script>
 	$(document).ready(function() {
-        document.getElementById("tr_updated_by").value ='{{user_id}}';
-        document.getElementById("tc_financestatus").value ='{{status_selected}}';
-        document.getElementById("tr_enquirynumber").value ='{{enquiry_num_id}}';
-        document.getElementById("tr_consignmentnumber").value ='{{consignment_selected}}'
+		document.getElementById("tr_updated_by").value ='{{user_id}}';
+		document.getElementById("tc_financestatus").value ='{{status_selected}}';
+		document.getElementById("tr_enquirynumber").value ='{{enquiry_num_id}}';
+		document.getElementById("tr_consignmentnumber").value ='{{consignment_selected}}'
 
-        trip_type();
-        trip_status_update();
-      });
+		trip_type();
+		trip_status_update();
+	});
 </script>
 
 <script>
 	$("#tr_consignmentnumber").change(function () {
-        var consignment_number = $(this).val();
-        var enquiry_number=document.getElementById("tr_enquirynumber").value
-        console.log("Triggered change event. Consignment Number:", consignment_number);
-        if (consignment_number) {
-            $.ajax({
-                url: '{% url "load_truck_details" %}',
-                type: "GET",
-                data: { 'consignment_number': consignment_number,'enquiry_number':enquiry_number},
-                dataType: "json",
-                beforeSend: function () {
-                    console.log("Sending request to Django...");
-                },
-                success: function (data) {
-                    console.log("Response received:", data);
-                    if (data.error) {
-                        alert(data.error);
-                    } else {
-                        $("#tr_vehiclenumber").val(data.truck_number);
-                        $("#tr_drivername").val(data.va_drivername || "");
-                        $("#tr_drivernumber").val(data.va_drivernumber || "");
-                        $("#tr_vehiclesource").val(data.va_vehiclesource || "");
-                        $("#tr_vehicletype_placed").val(data.va_vehicletype_placed || "");
-                        $("#tr_vehicletype").val(data.va_vehicletype || "");
-                        $("#tr_driver_lic").val(data.va_driver_lic || "");
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.log("AJAX Error:", status, error);
-                    alert("Failed to load truck details.");
-                }
-            });
-        } else {
-            console.log("No consignment number entered.");
-            alert("Please enter a consignment number.");
-        }
-    });
+		var consignment_number = $(this).val();
+		var enquiry_number=document.getElementById("tr_enquirynumber").value
+		console.log("Triggered change event. Consignment Number:", consignment_number);
+		if (consignment_number) {
+			$.ajax({
+				url: '{% url "load_truck_details" %}',
+				type: "GET",
+				data: { 'consignment_number': consignment_number,'enquiry_number':enquiry_number},
+				dataType: "json",
+				beforeSend: function () {
+					console.log("Sending request to Django...");
+				},
+				success: function (data) {
+					console.log("Response received:", data);
+					if (data.error) {
+						alert(data.error);
+					} else {
+						$("#tr_vehiclenumber").val(data.truck_number);
+						$("#tr_drivername").val(data.va_drivername || "");
+						$("#tr_drivernumber").val(data.va_drivernumber || "");
+						$("#tr_vehiclesource").val(data.va_vehiclesource || "");
+						$("#tr_vehicletype_placed").val(data.va_vehicletype_placed || "");
+						$("#tr_vehicletype").val(data.va_vehicletype || "");
+						$("#tr_driver_lic").val(data.va_driver_lic || "");
+					}
+				},
+				error: function (xhr, status, error) {
+					console.log("AJAX Error:", status, error);
+					alert("Failed to load truck details.");
+				}
+			});
+		} else {
+			console.log("No consignment number entered.");
+			alert("Please enter a consignment number.");
+		}
+	});
 </script>
 
 <script>
 	function trip_type() {
-      var tr_category = document.getElementById("tr_category").value;
-        if (tr_category == 1) {
-            $('#tc_pod_attachment').removeClass('disable_a_href');
-            $('#tc_pod').removeClass('disable_a_href');
+		var tr_category = document.getElementById("tr_category").value;
+		if (tr_category == 1) {
+			$('#tc_pod_attachment').removeClass('disable_a_href');
+			$('#tc_pod').removeClass('disable_a_href');
 
-        } else {
-            $('#tc_pod_attachment').addClass('disable_a_href');
-            $('#tc_pod').addClass('disable_a_href');
-            document.getElementById("tc_pod_attachment").value=""
-            document.getElementById("tc_pod").value=""
-        }
-    }
+		} else {
+			$('#tc_pod_attachment').addClass('disable_a_href');
+			$('#tc_pod').addClass('disable_a_href');
+			document.getElementById("tc_pod_attachment").value=""
+			document.getElementById("tc_pod").value=""
+		}
+	}
 </script>
 <script>
 	document.getElementById("tripEmailForm").addEventListener("submit", function(event) {
-        event.preventDefault(); // Prevent form submission
-        let confirmSend = confirm("Are you sure you want to send the trip email?");
-        if (confirmSend) {
-            this.submit(); // Submit form if confirmed
-            alert("Trip email has been sent successfully!");
-        }
-    });
+		event.preventDefault(); // Prevent form submission
+		let confirmSend = confirm("Are you sure you want to send the trip email?");
+		if (confirmSend) {
+			this.submit(); // Submit form if confirmed
+			alert("Trip email has been sent successfully!");
+		}
+	});
 </script>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
-        if (window.location.href.includes("tripdetail_insert")) {
-            // Enable fields
-            $('#tripdetail_id,#tripdetail_submit_id')
-                .removeClass('disable_a_href')
-                .prop('disabled', false);
-        }
-        else if (window.location.href.includes("tripdetail_update")) {
-            // Enable fields
-            $('#tripdetail_id,#tripdetail_submit_id')
-                .removeClass('disable_a_href')
-                .prop('disabled', false);
-        }
-        else {
-            // Disable fields if on any other page
-            $('#tripdetail_id,#tripdetail_submit_id')
-                .addClass('disable_a_href')
-                .prop('disabled', true);
-        }
-    });
+		if (window.location.href.includes("tripdetail_insert")) {
+			// Enable fields
+			$('#tripdetail_id,#tripdetail_submit_id')
+					.removeClass('disable_a_href')
+					.prop('disabled', false);
+		}
+		else if (window.location.href.includes("tripdetail_update")) {
+			// Enable fields
+			$('#tripdetail_id,#tripdetail_submit_id')
+					.removeClass('disable_a_href')
+					.prop('disabled', false);
+		}
+		else {
+			// Disable fields if on any other page
+			$('#tripdetail_id,#tripdetail_submit_id')
+					.addClass('disable_a_href')
+					.prop('disabled', true);
+		}
+	});
 </script>
 
 <script>
 	function trip_status_update()
 	{
-    	var trip_status = document.getElementById("tc_financestatus").value;
+		var trip_status = document.getElementById("tc_financestatus").value;
 		alert
-    	if (trip_status == 1) {
-        	tr_departedlocation.setAttribute("required", "required");  // Make it mandatory
-        	tr_departedkm.setAttribute("required", "required");  // Make it mandatory
-        	tr_departeddate.setAttribute("required", "required");  // Make it mandatory
-        	tr_loading_time.setAttribute("required", "required");  // Make it mandatory
-    	}
-    	else if (trip_status ==2)
-    	{
+		if (trip_status == 1) {
+			tr_departedlocation.setAttribute("required", "required");  // Make it mandatory
+			tr_departedkm.setAttribute("required", "required");  // Make it mandatory
+			tr_departeddate.setAttribute("required", "required");  // Make it mandatory
+			tr_loading_time.setAttribute("required", "required");  // Make it mandatory
+		}
+		else if (trip_status ==2)
+		{
 			tr_unloading_time.setAttribute("required", "required");  // Make it mandatory
-        	tr_reportedlocation.setAttribute("required", "required");  // Make it mandatory
-        	tr_reportedkm.setAttribute("required", "required");  // Make it mandatory
-        	tr_reporteddate.setAttribute("required", "required");  // Make it mandatory
-    	}
+			tr_reportedlocation.setAttribute("required", "required");  // Make it mandatory
+			tr_reportedkm.setAttribute("required", "required");  // Make it mandatory
+			tr_reporteddate.setAttribute("required", "required");  // Make it mandatory
+		}
 	}
 </script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const trHighValue = document.getElementById('tr_high_value');
-    const checklistBtn = document.getElementById('checklist-btn');
+	document.addEventListener('DOMContentLoaded', function () {
+		const trHighValue = document.getElementById('tr_high_value');
+		const checklistBtn = document.getElementById('checklist-btn');
 
-    function updateButtonState() {
-        if (trHighValue.value === '1') {
-            checklistBtn.classList.remove('disable_a_href');
-        } else {
-            checklistBtn.classList.add('disable_a_href');
-        }
-    }
-    updateButtonState();
-});
+		function updateButtonState() {
+			if (trHighValue.value === '1') {
+				checklistBtn.classList.remove('disable_a_href');
+			} else {
+				checklistBtn.classList.add('disable_a_href');
+			}
+		}
+		updateButtonState();
+	});
 
 </script>
 
 <script>
-var checklistApproved = {{ checklist|yesno:"true,false" }};
-var tripApprovalApproved = {{ trip_approvallist|yesno:"true,false" }};
+	var checklistApproved = {{ checklist|yesno:"true,false" }};
+	var tripApprovalApproved = {{ trip_approvallist|yesno:"true,false" }};
 
-function trip_type1() {
-    var categoryValue = document.getElementById('tr_category').value;
-    var tripStatus = document.getElementById('tc_financestatus');
+	function trip_type1() {
+		var categoryValue = document.getElementById('tr_category').value;
+		var tripStatus = document.getElementById('tc_financestatus');
 
-    if (categoryValue === "2") {
-        tripStatus.disabled = false;
-        tripStatus.classList.remove("select-disabled-style");
-    } else if (categoryValue === "1" && checklistApproved && tripApprovalApproved) {
-        tripStatus.disabled = false;
-        tripStatus.classList.remove("select-disabled-style");
-    } else {
-        tripStatus.disabled = true;
-        tripStatus.classList.add("select-disabled-style");
-        tripStatus.selectedIndex = 0;
-    }
-}
+		if (categoryValue === "2") {
+			tripStatus.disabled = false;
+			tripStatus.classList.remove("select-disabled-style");
+		} else if (categoryValue === "1" && checklistApproved && tripApprovalApproved) {
+			tripStatus.disabled = false;
+			tripStatus.classList.remove("select-disabled-style");
+		} else {
+			tripStatus.disabled = true;
+			tripStatus.classList.add("select-disabled-style");
+			tripStatus.selectedIndex = 0;
+		}
+	}
 
-document.addEventListener("DOMContentLoaded", function() {
-    trip_type1();
-});
+	document.addEventListener("DOMContentLoaded", function() {
+		trip_type1();
+	});
 </script>
 
 
