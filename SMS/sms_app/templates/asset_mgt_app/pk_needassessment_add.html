@@ -228,13 +228,18 @@
 			</div>
 			<div class="card">
 				<div class="card-header bg-info" id="headingTwo">
+					<div class="row">
+						<div class="col-10">
 					<h5 class="mb-0">
 						<button class="btn btn-warning text-white collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
 							Add/Edit Dimensions
 						</button>
 					</h5>
-					<a class="btn btn-outline-primary" href="{% url 'need_assessment_print' request.session.na_assessment_id %}">Download PDF</a>
-
+						</div>
+						<div class="col-2">
+					<a class="btn btn-warning btn-block" href="{% url 'need_assessment_print' request.session.na_assessment_id %}">Download PDF</a>
+						</div>
+					</div>
 				</div>
 				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
 					<div class="card-body">
