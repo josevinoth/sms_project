@@ -129,3 +129,4 @@ from .sub_forms.trans_fastag_forms import trans_fastag_form
 from .sub_forms.vendorratemaster_Form import VendorratemasteraddForm
 from .sub_forms.Locationmaster_form import LocationMasterForm
 from .sub_forms.Trans_fastag_form import trans_fastag_form
+from .sub_forms.trip_highvaluecheck_form import TripHighvalueForm

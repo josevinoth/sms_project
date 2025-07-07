@@ -1,0 +1,207 @@
+{% extends "asset_mgt_app/base_1.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center">
+                        <div class="col-12 col-md-10 text-center">
+                            <h3>Add/Update Trip High Value Check</h3>
+                        </div>
+                    </div>
+                    <div class="card-body bg-light">
+                        <div class="row">
+                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Enquiry Number</span>
+                                    </div>
+                                    {% render_field form.thc_enquirynumber id="thc_enquirynumber" class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Trip Number</span>
+                                    </div>
+                                    {% render_field form.thc_tripnumber id="thc_tripnumber" class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Vehicle RC & Validity</span>
+                                    </div>
+                                    {% render_field form.thc_vehicleRC id="thc_vehicleRC" class="form-control " %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Vehicle Insurance & Validity</span>
+                                    </div>
+                                    {% render_field form.thc_vehicle_insurance id="thc_vehicle_insurance" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Goods Permit & Validity</span>
+                                    </div>
+                                    {% render_field form.thc_goodspermit id="thc_goodspermit" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Outside/Under Carriage</span>
+                                    </div>
+                                    {% render_field form.thc_outside_undercarriage id="thc_outside_undercarriage" class="form-control" onchange="validateEndDate()" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Inside & Outside Doors</span>
+                                    </div>
+                                    {% render_field form.thc_inoutside_doors id="thc_inoutside_doors" class="form-control" %}
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">RightSide Inner Wall</span>
+                                    </div>
+                                    {% render_field form.thc_rightinnerwall id="thc_rightinnerwall" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">LeftSide Inner Wall</span>
+                                    </div>
+                                    {% render_field form.thc_leftinnerwall id="thc_leftinnerwall" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">FrontSide Inner Wall</span>
+                                    </div>
+                                    {% render_field form.thc_frontinnerwall id="thc_frontinnerwall" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Ceiling/Roof</span>
+                                    </div>
+                                    {% render_field form.thc_roof id="thc_roof" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Floor Inside</span>
+                                    </div>
+                                    {% render_field form.thc_floorinside id="thc_floorinside" class="form-control" %}
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend" style="width:35%;">
+                                        <span class="input-group-text" style="width:100%;">GPS Fitted and Working Status</span>
+                                    </div>
+                                    {% render_field form.thc_gpsfit id="thc_gpsfit" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend" style="width:37%;">
+                                        <span class="input-group-text" style="width:100%;">SIM Tracking Enabled</span>
+                                    </div>
+                                    {% render_field form.thc_simtracking id="thc_simtracking" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Smart Lock Fixed&Working Status(Card,RFID,GPS)</span>
+                                    </div>
+                                    {% render_field form.thc_smartlock id="thc_smartlock" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">SmartLock Battery Charge Status</span>
+                                    </div>
+                                    {% render_field form.thc_smartlockbaterry id="thc_smartlockbaterry" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Bottle OTL Seal Fixed(ISO Std)</span>
+                                    </div>
+                                    {% render_field form.thc_bottle_otlseal id="thc_bottle_otlseal" class="form-control" %}
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend" style="width:40%;">
+                                        <span class="input-group-text" style="width:100%;">No of Packages Loaded</span>
+                                    </div>
+                                    {% render_field form.thc_packagesloaded id="thc_packagesloaded" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend" style="width:50%;">
+                                        <span class="input-group-text" style="width:100%;">Commercial Invoice</span>
+                                    </div>
+                                    {% render_field form.thc_commercialinvoice id="thc_commercialinvoice" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Packing List</span>
+                                    </div>
+                                    {% render_field form.thc_packinglist id="thc_packinglist" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">EPIL COC List</span>
+                                    </div>
+                                    {% render_field form.thc_eipl_coc id="thc_eipl_coc" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Consignment Note</span>
+                                    </div>
+                                    {% render_field form.thc_consignmentnote id="thc_consignmentnote" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">E-Way Bill Copy & Validity</span>
+                                    </div>
+                                    {% render_field form.thc_ewaybill id="thc_ewaybill" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Status</span>
+                                    </div>
+                                    {% if request.user.id == 86 %}
+                                    {% render_field form.thc_approval_status id="thc_approval_status" class="form-control" %}
+                                    {% else %}
+                                    {% render_field form.thc_approval_status id="thc_approval_status" class="form-control disable_a_href" %}
+                                    {% endif %}
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="input-group input-group-sm mb-3 p-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Remarks</span>
+                            </div>
+                            {% render_field form.thc_remarks id="thc_remarks" class="form-control" %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success" id="save-btn">
+                            <i class="fas fa-check"></i> Submit
+                        </button>
+                        <a href="{% url 'trip_highvalue_cancel' %}" class="btn btn-danger float-right">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock content %}
