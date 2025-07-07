@@ -195,7 +195,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Status</span>
 									</div>
-									<select name="tc_financestatus" id="tc_financestatus" class="form-control" onchange="trip_type()">
+									<select name="tc_financestatus" id="tc_financestatus" class="form-control" onchange="trip_type1()">
 
 										{% for item in status_list %}
 										<option value="{{ item.id }}"
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function () {
 var checklistApproved = {{ checklist|yesno:"true,false" }};
 var tripApprovalApproved = {{ trip_approvallist|yesno:"true,false" }};
 
-function trip_type() {
+function trip_type1() {
     var categoryValue = document.getElementById('tr_category').value;
     var tripStatus = document.getElementById('tc_financestatus');
 
@@ -417,7 +417,7 @@ function trip_type() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    trip_type();
+    trip_type1();
 });
 </script>
 
