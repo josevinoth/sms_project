@@ -3,37 +3,37 @@
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
         <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
+        <div class="col-2 rounded text-center shadow-box">
             <h3>Sales List</h3>
         </div>
         <div class="col-5"></div>
     </div>
 </div>
 <div class="container-fluid row">
-    <div class="col-md-1">
+    <div class="col-auto">
         <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
-    <div class="col-md-1">
+    <div class="col-auto">
         <a href="{% url 'sales_insert' %}" class="btn btn-success btn-block btn-lg">
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
-    <div class="col-md-1.5">
+    <div class="col-auto">
         <a href="{% url 'sales_list' %}" class="btn btn-warning btn-block btn-lg">
             <i class="fa fa-eye" aria-hidden="true"></i> Show All
         </a>
     </div>
-    <div class="col-md-2">
+    <div class="col-auto">
         <a href="{% url 'sales_comments_search' %}" class="btn btn-warning btn-block btn-lg">
             <i class="fa fa-book" aria-hidden="true"></i> Sales Comment List
         </a>
     </div>
-    <div class="col-md-1">
+    <div class="col-auto">
         <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'sales_search' %}" method="get">
             <div class="form-group">
-                <input type="search" class="form-control" id="sales_number" placeholder="Sales Number" name="sales_number">
+                <input type="search" class="form-control-md w-50" id="sales_number" placeholder="Sales Number" name="sales_number">
                 <button class="btn btn-primary" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
                 <div class="form-group mx-1 ml-5">
                     <label for="from-date" class="mr-1"><b>From:</b></label>
@@ -48,7 +48,7 @@
     </div>
 </div>
 <hr>
-<div class="container-fluid">
+<div class="container-fluid shadow-box-table">
     <table id="sales_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>

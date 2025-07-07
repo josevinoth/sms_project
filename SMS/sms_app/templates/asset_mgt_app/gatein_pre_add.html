@@ -5,24 +5,24 @@
 <div class="row">
 	<div class="col">
 		<div class="container-fluid">
-			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+			<div class="card shadow text-white bg-info mb-3" style="max-width: 100%;">
 				<div class="col-12 card-header text-center">
-    <div class="row align-items-center">
-        <div class="col-12 col-md-8 col-lg-10 text-center">
-            <h3>Add/Update Gate-In</h3>
-        </div>
-        <div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
-            <button id="email_alert" type="button" onclick="email_message_fn()"
-                    class="btn btn-warning d-inline-flex align-items-center"
-                    data-toggle="modal" data-target="#sendEmailModal">
-                <i class="fas fa-envelope-square mr-2"></i>
-                Email Alert
-                <span class="badge badge-danger ml-2">{{ gatein_pre_email_count }}</span>
-            </button>
-        </div>
-    </div>
-</div>
-<!-- Email Modal (outside card-header) -->
+					<div class="row align-items-center">
+						<div class="col-12 col-md-8 col-lg-10 text-center">
+							<h3>Add/Update Gate-In</h3>
+						</div>
+						<div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
+							<button id="email_alert" type="button" onclick="email_message_fn()"
+									class="btn btn-warning d-inline-flex align-items-center"
+									data-toggle="modal" data-target="#sendEmailModal">
+								<i class="fas fa-envelope-square mr-2"></i>
+								Email Alert
+								<span class="badge badge-danger ml-2">{{ gatein_pre_email_count }}</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<!-- Email Modal (outside card-header) -->
 				<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
 					<div class="modal-dialog modal-lg">
 						<div class="modal-content">
@@ -64,7 +64,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipment Details</span>
 									</div>
-									{% render_field gatein_pre_form.gatein_pre_shipment_att id="gatein_pre_shipment_att" class="form-control" %}
+									{% render_field gatein_pre_form.gatein_pre_shipment_att id="gatein_pre_shipment_att" class="form-control text-wrap" %}
 								</div>
 							</div>
 							<div class=" col-12 col-md-6 col-lg-6 p-2  shadow bg-white rounded border">
@@ -107,7 +107,7 @@
 
 <div class="container-fluid row">
 	<div class="col-5 col-md-6 col-lg-2">
-		<a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-success">
+		<a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-primary">
 			<i class="fas fa-plus"></i> Add
 		</a>
 	</div>
@@ -119,27 +119,27 @@
 {% block scripts %}
 <script>
 	document.addEventListener("DOMContentLoaded", function() {
-    $('#gatein_list').DataTable({
-        order: [1, 'desc' ],
-        responsive: true,
-        scrollX: false,
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
-    });
-    var gateinpre_num = document.getElementById("gatein_pre_number").value
-    if (gateinpre_num =="")
-    {
-        $('#add_gateinpre').addClass('disable_a_href');
-    }
-    else
-    {
-        $('#add_gateinpre').removeClass('disable_a_href');
-    }
-    document.getElementById("gatein_pre_updated_by").value ='{{user_id}}';
-    document.getElementById("gatein_pre_branch").value ='{{user_branch_id}}';
-} );
+		$('#gatein_list').DataTable({
+			order: [1, 'desc' ],
+			responsive: true,
+			scrollX: false,
+			dom: 'lBfrtip',
+			buttons: [
+				'copy', 'csv', 'excel','print'
+			]
+		});
+		var gateinpre_num = document.getElementById("gatein_pre_number").value
+		if (gateinpre_num =="")
+		{
+			$('#add_gateinpre').addClass('disable_a_href');
+		}
+		else
+		{
+			$('#add_gateinpre').removeClass('disable_a_href');
+		}
+		document.getElementById("gatein_pre_updated_by").value ='{{user_id}}';
+		document.getElementById("gatein_pre_branch").value ='{{user_branch_id}}';
+	} );
 </script>
 {% endblock scripts %}
 

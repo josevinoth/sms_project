@@ -61,7 +61,13 @@
                         </div>
                     </div>
                     <hr class="hr_style">
-                    <button  id="customer" type="button" class="collapsible d-flex align-items-center" onclick="window.location.href='{% url 'customer_contract_rate_due_days' %}'"><i class="fa fa-life-ring" aria-hidden="true"></i> Customer Management System (CMS) <a href="{% url 'customer_contract_rate_dues_list' %}"><span class="badge bg-danger p-2 blink">{{ total_dues }}</span></a> </button>
+                    <a id="customer"
+                       href="{% url 'customer_contract_rate_due_days' %}"
+                       class="collapsible d-flex align-items-center btn btn-primary">
+                        <i class="fa fa-life-ring" aria-hidden="true"></i>
+                        Customer Management System (CMS)
+                        <span class="badge bg-danger p-2 blink ms-2">{{ total_dues }}</span>
+                    </a>
                     <div class="content" >
                         <a href="{% url 'customer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer List</a>
                         <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Dues <span class="badge bg-danger p-2 blink">{{ customer_contract_due_count }}</span></a>
@@ -221,12 +227,12 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-10 pt-3">
+        <div class="col-12 col-md-10 pt-4">
 
             <div class="row">
                 <!-- Card 1 -->
                 <div class="col-6 col-sm-6 col-md-3 mb-3">
-                    <div class="card text-white mb-3 text-center bg-primary">
+                    <div class="card text-white mb-3 text-center bg-primary shadow-card">
                         <div class="card-header">Products</div>
                         <div class="card-body text-center">
                             <h2><i class="fas fa-shopping-cart"></i></h2>
@@ -338,18 +344,18 @@
 
 <script>
     var coll = document.getElementsByClassName("collapsible");
-var i;
-for (i = 0; i < coll.length; i++) {
-  coll[i].addEventListener("click", function() {
-    this.classList.toggle("active");
-    var content = this.nextElementSibling;
-    if (content.style.display === "block") {
-      content.style.display = "none";
-    } else {
-      content.style.display = "block";
+    var i;
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        });
     }
-  });
-}
 </script>
 
 <script>
@@ -359,7 +365,7 @@ for (i = 0; i < coll.length; i++) {
         var department = '{{ department }}';
         var user_id='{{user_id}}';
         var bussiness_solution = '{{ bussiness_solution }}';
-        const bussiness_solution_id = {{ bussiness_solution_id|default:0 }};
+        const bussiness_solution_id = "{{ bussiness_solution_id|default:''|escapejs }}";
         // Function to remove disable_a_href class
         function enableElement(elementId) {
             $('#' + elementId).removeClass('disable_a_href');

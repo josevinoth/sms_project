@@ -5,10 +5,10 @@
   font-family: 'poppins', sans-serif;
   height: 100%;
   cursor: pointer;
-  width: 390px;
+  width: 440px;
   position: fixed;
   z-index: 1;
-  top: 0;
+  top:0;
   left: 0;
   background-color: #111;
   overflow-x: hidden;
@@ -106,7 +106,7 @@ td {
 
 h1, h2{
     font-family: 'Poppins', sans-serif;
-    color:#8de4e9;
+    /*color:#8de4e9;*/
     font-weight: bold;
     margin-left:10px;
 }
@@ -140,15 +140,17 @@ color:black;
  font-family: 'Poppins:wght@400', sans-serif;
 }
 
+
 .card-body{
 margin: 2px;
 padding:20px;
 align:center;
+
 }
 
 .card-header,.form-control,.btn {
 font-family: 'Poppins', sans-serif;
-font-weight: bold;
+
 }
 .input-group-text,.form-control {
     font-family: 'Poppins', sans-serif;
@@ -170,14 +172,7 @@ font-size:30px;
 .table{
 font-family: 'Poppins', sans-serif;
 background-color:white;
-border-color:black;
 }
-
-.table.dataTable thead tr th {
-  color: white;
-  text-align:center;
-}
-
 .badge a{
 font-size:16px;
 font-weight: bold;
@@ -329,7 +324,7 @@ nav > div a.nav-item.nav-link:focus
 
 /*Enable anchor*/
 .enable_a_href{
-    pointer-events: 1;
+    pointer-events: auto;
 }
 
 /*page Loader*/
@@ -386,7 +381,10 @@ nav > div a.nav-item.nav-link:focus
       width: 100% !important;        /* Ensure it fills the width of the button */
       box-sizing: border-box;
  }
-
+.container-fluid,.container{
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+}
 .multiselect-container li {
     display: flex;
     align-items: center;
@@ -450,12 +448,30 @@ font-size: 12px;
 }
 
 /* Default button layout */
-.btn-block {
+.btn,btn-block {
     display: inline-block; /* Ensure buttons are inline */
-    /*width: 45%;  Reduce the width to leave space */
-    /*padding: 10px 55px 10px 5px; *//* Add padding for better appearance *//*
-    margin-right: 10px;  Add space between buttons */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25); /* Stronger shadow */
+    transition: box-shadow 0.5s ease; /* Smooth transition on hover */
 }
+
+
+.shadow-box {
+  background: linear-gradient(135deg, #a15e53, #ff4b2b );
+  color: white;
+  padding: 8px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0, 114, 255, 0.4);
+}
+.shadow-box-table {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* strong shadow */
+    transition: box-shadow 0.3s ease;
+    padding-block: 10px;
+    border-radius: 10px;
+    background-color:white;
+}
+
 fieldset {
     display: block;
     margin: 5px 0; /* Remove left & right margin */
@@ -477,202 +493,6 @@ legend {
 /* Remove margin-right for the last button */
 
 
-/* For tablets */
-@media (max-width: 1024px) {
-    /*.btn-block {
-       *//* width: 48%;  Adjust width for tablets *//*
-        margin-bottom: 10px; *//* Add spacing for stacked layout if needed *//*
-    }*/
-}
-
-/* For mobile screens */
-@media (max-width: 767px) {
-    /*.btn-block {
-        width: 100%; *//* Buttons will stack on mobile *//*
-        margin-right: 0; *//* Reset horizontal margin *//*
-        margin-bottom: 10px; *//* Space between stacked buttons */
-    }
-}
-
-
-/* Media Queries for Responsiveness */
-
-/* Smartphones (portrait and landscape) */
-@media (max-width: 767px) {
-  .sidenav {
-    width: 100%;
-    position: relative;
-    height: auto;
-    padding-left: 5px;
-  }
-
-  .sidenav a, p {
-    font-size: 14px;
-    padding: 8px;
-  }
-
-  .main {
-    margin-left: 0;
-    padding: 10px;
-  }
-
-  .collapsible {
-    font-size: 14px;
-    padding: 8px;
-  }
-
-  .content {
-    font-size: 14px;
-    padding: 8px;
-  }
-
-  input, select {
-    font-color:black;
-    font-size: 12px !important;
-    padding: 8px;
-  }
-
-
-.input-group-prepend span {
-/*  width: 140px;*/
-  background-color: #8de4e9;
-  color: black;
-  font-weight: bold;
-  font-size: 12px !important;
-  font-family: 'Poppins:wght@400', sans-serif;
-}
 
 
 
-.card-header, .input-group-text, .form-control, .btn {
-  font-family: 'Poppins', sans-serif;
-  font-weight: bold;
-}
-
-
-  .table {
-    font-size: 12px;
-  }
-
-  .hr_style {
-    border-bottom: 1px solid #3366ff;
-  }
-
-  .nav_header_style {
-    border-bottom: 3px solid #3366ff;
-    font-size: 14px;
-  }
-
-  h1, h2 {
-    font-size: 24px;
-    margin-left: 5px;
-  }
-
-  h4 {
-    font-size: 18px;
-    margin-left: 5px;
-  }
-
-  .button {
-    padding: 10px 15px;
-    font-size: 14px;
-  }
-
-  nav > div a.nav-item.nav-link {
-    padding: 10px;
-    font-size: 12px;
-  }
-
-  .card-body {
-    padding: 10px;
-  }
-}
-
-/* Tablets (portrait and landscape) */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .sidenav {
-    width: 250px;
-    height: 100%;
-  }
-
-  .main {
-    margin-left: 260px;
-    padding: 10px;
-  }
-
-  .sidenav a, p {
-    font-size: 15px;
-  }
-
-  .collapsible {
-    font-size: 15px;
-    padding: 10px;
-  }
-
-  .content {
-    font-size: 15px;
-    padding: 10px;
-  }
-
-  input, select {
-    font-size: 12px !important;
-  }
-
-  .input-group-prepend span {
-/*  width: 140px;*/
-  background-color: #8de4e9;
-  color: black;
-  font-weight: bold;
-  font-size: 12px !important;
-  font-family: 'Poppins:wght@400', sans-serif;
-}
-
- .btn-block {
-        /*width: 70%;  Adjust width for tablets */
-    }
-
- /*#add_enquiry {
-    width: 70%; *//* Adjust button width for tablets *//*
-    font-size: 14px;
-    padding: 8px 16px;
-  }*/
-
-.card-header, .input-group-text, .form-control, .btn {
-  font-family: 'Poppins', sans-serif;
-  font-weight: bold;
-}
-
-  .hr_style {
-    border-bottom: 1.5px solid #3366ff;
-  }
-
-  .nav_header_style {
-    border-bottom: 4px solid #3366ff;
-    font-size: 16px;
-  }
-
-  h1, h2 {
-    font-size: 28px;
-    margin-left: 8px;
-  }
-
-  h4 {
-    font-size: 20px;
-    margin-left: 8px;
-  }
-
-  .button {
-    padding: 12px 20px;
-    font-size: 16px;
-  }
-
-  nav > div a.nav-item.nav-link {
-    padding: 15px;
-    font-size: 14px;
-  }
-
-  .card-body {
-    padding: 15px;
-  }
-
-}
