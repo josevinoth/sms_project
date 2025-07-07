@@ -60,7 +60,8 @@ def trip_highvalue_add(request, high_value_id=0):
                 for error in errors:
                     messages.error(request, f"Error in {field}: {error}")
 
-        return redirect(request.META['HTTP_REFERER'])
+        return redirect(f'/SMS/tripdetail_update/{tripdetail_id}')
+        #return redirect(request.META['HTTP_REFERER'])
 
 @login_required(login_url='login_page')
 def trip_highvalue_list(request):
