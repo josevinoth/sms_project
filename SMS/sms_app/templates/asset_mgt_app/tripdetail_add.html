@@ -93,6 +93,12 @@
 									</div>
 									{% render_field trip_det_form.tr_vehiclesource id="tr_vehiclesource" class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3 bg-dark block">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Tracking Link</span>
+									</div>
+									{% render_field trip_det_form.tr_track_link id="tr_track_link" class="form-control" placeholder="Paste your link here" %}
+								</div>
 							</div>
 							<div class="  col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
 								<div class="input-group input-group-sm m-1">
@@ -230,7 +236,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Remarks</span>
 								</div>
-								{% render_field trip_det_form.tr_remarks class="form-control" %}
+								{% render_field trip_det_form.tr_remarks class="form-control" style="height: 60px;" %}
 							</div>
 						</div>
 						<div class="row">
@@ -324,6 +330,20 @@
 			document.getElementById("tc_pod").value=""
 		}
 	}
+</script>
+<script>
+	function trip_track() {
+    var tr_vehiclesource = document.getElementById("tr_vehiclesource").value;
+    if (tr_vehiclesource == "3") {
+        $('#tr_track_link').removeClass('disable_a_href');
+    } else {
+        $('#tr_track_link').addClass('disable_a_href');
+    }
+}
+document.addEventListener("DOMContentLoaded", function () {
+    trip_track();  // Call on page load
+    $('#tr_vehiclesource').on('change', trip_track);  // Call on change
+});
 </script>
 <script>
 	document.getElementById("tripEmailForm").addEventListener("submit", function(event) {
@@ -420,7 +440,6 @@
 		trip_type1();
 	});
 </script>
-
 
 
 {% endblock content %}
