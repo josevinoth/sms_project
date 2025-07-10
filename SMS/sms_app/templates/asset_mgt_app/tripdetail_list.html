@@ -33,6 +33,7 @@
                 <th>To Location</th>
                 <th>Ending KM</th>
                 <th>Ending Date & Time</th>
+                <th>Track</th>
                 <th>Trip Status</th>
                 <th>Updated By</th>
                 <th>Updated On</th>
@@ -76,6 +77,17 @@
                 <td class="d-flex d-md-table-cell justify-content-between">
                     <span class="fw-bold d-md-none me-2">Ending Date & Time :</span> {{ tripdetailinfo.tr_reporteddate }}
                 </td>
+                <td class="d-flex d-md-table-cell justify-content-between" id="track-cell-{{ tripdetailinfo.id }}">
+                    <span class="fw-bold d-md-none me-2">Track :</span>
+                    {% if tripdetailinfo.tr_track_link %}
+                    <a href="{{ tripdetailinfo.tr_track_link }}" target="_blank" class="btn btn-info btn-sm">Track</a>
+                    {% else %}
+                    <a href="{% url 'track_vehicle_position' %}?vehicle={{ tripdetailinfo.tr_vehiclenumber }}"
+                       class="btn btn-sm btn-secondary" target="_blank">
+                        Live Track
+                    </a>
+                    {% endif %}
+                </td>
                 <td class="d-flex d-md-table-cell justify-content-between">
                     <span class="fw-bold d-md-none me-2">Trip Status :</span> {{ tripdetailinfo.tc_financestatus }}
                 </td>
@@ -112,6 +124,39 @@
     $(document).ready(function() {
     $('#tripdetail_list').DataTable();
 } );
+</script>
+<script>
+function fetchLiveTracking(vehicleNumber, rowId) {
+    const target = document.getElementById("track-cell-" + rowId);
+    target.innerHTML = "Fetching...";
+
+    fetch("{% url 'get_vehicle_data' %}")
+        .then(res => res.json())
+        .then(data => {
+            let found = false;
+            vehicleNumber = vehicleNumber.toUpperCase().replace(/[\s-]/g, '');
+
+            for (const vehicle of data) {
+                const normalizedNumber = vehicle.number.toUpperCase().replace(/[\s-]/g, '');
+                if (vehicleNumber === normalizedNumber) {
+                    const lat = vehicle.lat;
+                    const lon = vehicle.lon;
+                    const link = `https://maps.google.com/?q=${lat},${lon}`;
+                    target.innerHTML = `<a href="${link}" class="btn btn-success btn-sm" target="_blank">Live Track</a>`;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                target.innerHTML = '<span class="text-muted">No Tracking</span>';
+            }
+        })
+        .catch(err => {
+            console.error("Error fetching tracking:", err);
+            target.innerHTML = '<span class="text-danger">Error</span>';
+        });
+}
 </script>
 
 

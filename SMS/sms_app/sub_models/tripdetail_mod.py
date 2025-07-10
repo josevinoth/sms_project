@@ -55,7 +55,7 @@ class TripdetailInfo(models.Model):
     tc_pod_attachment = models.FileField(upload_to=trip_attach_path, null=True,blank=True)
     tr_customerref = models.CharField(max_length=30,null=True,blank=True)
     tr_high_value = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE, related_name='tr_high_value',db_column='tr_high_value', default=2)
-
+    tr_track_link = models.URLField(max_length=500,null=True,blank=True,verbose_name="Tracking Link")
 
 
     class Meta:

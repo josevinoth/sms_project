@@ -11,9 +11,9 @@ from django.conf import settings
 if settings.DEBUG:
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-
 def track_vehicle_position(request):
-    return render(request, "asset_mgt_app/trans_gps.html")
+    vehicle_number = request.GET.get('vehicle', '').upper().replace(' ', '').replace('-', '')
+    return render(request, "asset_mgt_app/trans_gps.html", {'vehicle_number': vehicle_number})
 
 
 def get_vehicle_data(request):
