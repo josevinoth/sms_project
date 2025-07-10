@@ -314,7 +314,7 @@ def get_remaining_quantity(request, enquiry_id, vehicle_type_id):
 def get_vendor_buy_rate(request):
     vehicle_id = request.GET.get('vehicle_id')  # This is actually a vehicle type ID, not the Vehicle_allotmentInfo ID
     vendor_id = request.GET.get('vendor_id')
-    enquiry_id = request.session.get('ses_enqiury_id')
+    enquiry_id = request.session.get('enquiry_num_id')
 
     print("vehicle_id:", vehicle_id)
     print("vendor_id:", vendor_id)
@@ -343,7 +343,7 @@ def get_vendor_buy_rate(request):
 def get_vendor_sale_rate(request):
     vehicle_id = request.GET.get('vehicle_id')  # This is actually a vehicle type ID, not the Vehicle_allotmentInfo ID
     vendor_id = request.GET.get('vendor_id')
-    enquiry_id = request.session.get('ses_enqiury_id')
+    enquiry_id = request.session.get('enquiry_num_id')
 
     print("vehicle_id:", vehicle_id)
     print("vendor_id:", vendor_id)
