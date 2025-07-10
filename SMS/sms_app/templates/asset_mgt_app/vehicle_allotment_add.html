@@ -435,7 +435,9 @@
 <script>
 	function loadVendorBuyRate() {
 		  var vendorId = $('#va_vendor').val();
+		  alert(vendorId)
 		  var vehicleId = $('#va_vehicletype_placed').val();
+		  alert(vehicleId)
 		$.ajax({
 			url: '{% url 'get_vendor_buy_rate' %}',
 			type: 'GET',
@@ -445,6 +447,7 @@
 			success: function(data) {
 				var buy_rate = data.buy_rate;
 				document.getElementById("va_buy").value = buy_rate;
+				alert(buy_rate)
 			}
 		});
 	}

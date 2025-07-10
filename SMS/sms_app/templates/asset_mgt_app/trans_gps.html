@@ -18,9 +18,21 @@
   .select2-container {
     width: 100% !important;
   }
+  #mapLoader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  }
 </style>
 
-<div class="container-fluid p-3">
+<div class="container-fluid p-3 position-relative">
   <div class="card shadow">
     <div class="card-header bg-info text-white text-center">
       <h4>Vehicle Position Tracker</h4>
@@ -32,7 +44,7 @@
       </button>
     </div>
 
-    <div class="card-body px-4">
+    <div class="card-body px-4 position-relative">
       <div id="map" style="height: 600px; width: 100%; border-radius: 10px; border: 2px solid #17a2b8;"></div>
     </div>
 
@@ -98,7 +110,6 @@
   </div>
 </div>
 
-<!-- Script block -->
 <script>
   const vehicleToHighlight = "{{ vehicle_number|default:'' }}".toUpperCase().replace(/[\s\-]/g, '');
   const map = L.map("map").setView([12.9716, 77.5946], 6);
@@ -118,13 +129,38 @@
     return num ? num.toUpperCase().replace(/[\s\-]/g, '') : '';
   }
 
-  function loadVehicleData(statusFilter = "all", numberFilter = "all") {
+  function showLoader() {
+    if (!document.getElementById("mapLoader")) {
+      const loader = document.createElement("div");
+      loader.id = "mapLoader";
+      loader.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>Loading...`;
+      loader.style.position = "absolute";
+      loader.style.top = "50%";
+      loader.style.left = "50%";
+      loader.style.transform = "translate(-50%, -50%)";
+      loader.style.zIndex = "9999";
+      loader.style.background = "#ffffffdd";
+      loader.style.padding = "15px 25px";
+      loader.style.borderRadius = "10px";
+      loader.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+      document.getElementById("map").appendChild(loader);
+    }
+  }
+
+  function hideLoader() {
+    const loader = document.getElementById("mapLoader");
+    if (loader) loader.remove();
+  }
+
+  function loadVehicleData(statusFilter = "all", numberFilter = "all", showSpinner = false) {
+    if (showSpinner) showLoader();
+
     fetch("/SMS/get_vehicle_data/")
       .then(res => res.json())
       .then(data => {
         const allData = data;
 
-        // Populate vehicle dropdown only once
+        // Fill dropdown only once
         const vehicleDropdown = document.getElementById("modalVehicleFilter");
         if (vehicleDropdown && vehicleDropdown.options.length <= 1) {
           const unique = [...new Set(allData.map(v => v.number))].sort();
@@ -137,12 +173,10 @@
           $('#modalVehicleFilter').select2({ width: '100%', dropdownParent: $('#filterModal') });
         }
 
-        let filtered;
+        let filtered = allData;
         if (vehicleToHighlight) {
-          // Live Track Filter
           filtered = allData.filter(v => normalize(v.number) === vehicleToHighlight);
         } else {
-          // Normal Filter
           filtered = allData.filter(v => {
             const matchStatus = statusFilter === "all" || v.status === statusFilter;
             const matchNumber = numberFilter === "all" || normalize(v.number) === normalize(numberFilter);
@@ -150,7 +184,6 @@
           });
         }
 
-        // Clear map markers
         map.eachLayer(layer => {
           if (layer instanceof L.Marker) map.removeLayer(layer);
         });
@@ -175,15 +208,18 @@
           }
         });
 
-        // Focus on live vehicle
         if (vehicleToHighlight && markersMap[vehicleToHighlight]) {
           map.setView(markersMap[vehicleToHighlight].getLatLng(), 15);
           markersMap[vehicleToHighlight].openPopup();
         }
 
         renderVehicleTable(filtered);
+        if (showSpinner) hideLoader();
       })
-      .catch(err => console.error("Error loading vehicle data:", err));
+      .catch(err => {
+        console.error("Error loading vehicle data:", err);
+        if (showSpinner) hideLoader();
+      });
   }
 
   function renderVehicleTable(data) {
@@ -205,37 +241,32 @@
   document.addEventListener("DOMContentLoaded", () => {
     const isLiveTrack = vehicleToHighlight !== "";
 
-    document.getElementById("applyFilterBtn").addEventListener("click", () => {
-      const status = document.getElementById("modalStatusFilter").value;
-      const vehicle = document.getElementById("modalVehicleFilter").value;
-      loadVehicleData(status, vehicle);
+   document.getElementById("applyFilterBtn").addEventListener("click", () => {
+  const status = document.getElementById("modalStatusFilter").value;
+  const vehicle = document.getElementById("modalVehicleFilter").value;
 
-      // Hide modal and scroll
-      const modal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
-      modal.hide();
-      setTimeout(() => {
-        document.getElementById("map").scrollIntoView({ behavior: "smooth" });
-      }, 300);
-    });
+  // Show loader and load filtered data
+  loadVehicleData(status, vehicle, true);
+
+  // Close the modal
+  const modalEl = document.getElementById("filterModal");
+  const modalInstance = bootstrap.Modal.getInstance(modalEl);
+  if (modalInstance) modalInstance.hide();
+
+  // Scroll to map after slight delay
+  setTimeout(() => {
+    document.getElementById("map").scrollIntoView({ behavior: "smooth" });
+  }, 400);
+});
 
     if (isLiveTrack) {
-      // Disable modal filters
       document.getElementById("modalStatusFilter").disabled = true;
       document.getElementById("modalVehicleFilter").disabled = true;
       document.getElementById("applyFilterBtn").disabled = true;
-
-      // Load live vehicle
       loadVehicleData();
-
-      // Optional: Refresh every 3s
-      setInterval(() => {
-        loadVehicleData();
-      }, 3000);
+      setInterval(() => loadVehicleData(), 3000);
     } else {
-      // Regular filter mode
       loadVehicleData();
-
-      // Auto-refresh
       setInterval(() => {
         const status = document.getElementById("modalStatusFilter").value;
         const vehicle = document.getElementById("modalVehicleFilter").value;
