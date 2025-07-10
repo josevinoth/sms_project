@@ -128,7 +128,7 @@ def tripdetail_add(request,tripdetail_id=0):
             else:
                 consignment_selected = None
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
-            checklist = TripHighvalueInfo.objects.filter(thc_tripnumber=trip_instance.id,thc_enquirynumber=enquiry_num_id,thc_approval_status_id=1).exists()
+            checklist = TripHighvalueInfo.objects.filter(thc_tripnumber=trip_instance.id,thc_enquirynumber=enquiry_num_id).order_by('-id').first()
             trip_approvallist = (trip_instance.tr_approval and trip_instance.tr_approval.ta_approval_status_id == 1)
 
             context = {
@@ -145,6 +145,7 @@ def tripdetail_add(request,tripdetail_id=0):
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
                 'checklist':checklist,
                 'trip_approvallist':trip_approvallist,
+                'trip_instance':trip_instance
 
             }
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
