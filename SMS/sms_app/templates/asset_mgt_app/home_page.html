@@ -437,15 +437,15 @@
                 disableElement('finance');
             }
 
-            if (bussiness_solution_id === 1)
+            if (parseInt(bussiness_solution_id) === 1)
             {
                 enableElement('warehouse'); // Enable warehouse for BVM Storage Solutions
             }
-            else if (bussiness_solution_id === 3)
+            else if (parseInt(bussiness_solution_id) === 3)
             {
                 enableElement('packing'); // Enable packing for BVM Pack Solutions
             }
-            else if (bussiness_solution_id === 2)
+            else if (parseInt(bussiness_solution_id) === 2)
             {
                 enableElement('transport'); // Enable transport for BVM Trans Solutions
             }
