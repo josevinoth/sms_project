@@ -51,6 +51,7 @@ def vehicle_allotment_nav(request,vehicle_allotment_id=0):
 def vehicle_allotment_add(request,vehicle_allotment_id=0,enquiry_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+
     if request.method == "GET":
         if vehicle_allotment_id == 0:
             print("I am inside Get add vehicle_allotments")
@@ -62,12 +63,15 @@ def vehicle_allotment_add(request,vehicle_allotment_id=0,enquiry_id=0):
                 vehicle_allotment_list= Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id)
             except ObjectDoesNotExist:
                 vehicle_allotment_list = []
+            vehicles = VehiclemasterInfo.objects.all()
+
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
                 'vehicle_allotment_form': vehicle_allotment_form,
                 'enquiry_num_id': enquiry_num_id,
                 'vehicle_allotment_list': vehicle_allotment_list,
+                'vehicles_data': vehicles,
             }
         else:
             print("I am inside Get edit vehicle_allotments")
@@ -75,6 +79,9 @@ def vehicle_allotment_add(request,vehicle_allotment_id=0,enquiry_id=0):
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             vehicle_allotment = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
             vehicle_allotment_form = VehicleallotmentForm(instance=vehicle_allotment)
+            vehicles = VehiclemasterInfo.objects.all()
+            for v in VehiclemasterInfo.objects.all():
+                print(v.id, v.vm_policyexpirydate)
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
@@ -82,6 +89,7 @@ def vehicle_allotment_add(request,vehicle_allotment_id=0,enquiry_id=0):
                 'enquiry_num_id': enquiry_num_id,
                 'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id),
                 'va': vehicle_allotment,
+                'vehicles_data': vehicles,
             }
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", context)
     else:
