@@ -62,7 +62,7 @@
                             <a href="{{ tripdetailinfo.tr_track_link }}" target="_blank" class="btn btn-info btn-sm">Track</a>
                         {% else %}
                             <a href="{% url 'track_vehicle_position' %}?vehicle={{ tripdetailinfo.tr_vehiclenumber }}"
-                               class="btn btn-sm btn-secondary" target="_blank">
+                               class="btn btn-sm btn-info" target="_blank">
                                 Live Track
                             </a>
                         {% endif %}
