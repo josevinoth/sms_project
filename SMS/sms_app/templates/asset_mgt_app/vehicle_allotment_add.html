@@ -1,6 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<div id="top-alert" class="alert alert-warning w-50 " role="alert" style="display: none;"></div>
 
 <form method="POST" action="" id="vehicle_allotment" data-vehicle_source-url="{% url 'load_vehicle_source' %}">
 	{% csrf_token %}
@@ -470,5 +471,37 @@
 
 </script>
 
+<script>
+	const vehiclePolicyData = {
+        {% for v in vehicles_data %}
+            "{{ v.id }}": "{{ v.vm_policyexpirydate|default:'Not set' }}" {% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+  const vehicleSelect = document.getElementById("va_vehiclenumber");
+  const alertBox = document.getElementById("top-alert");
+
+  vehicleSelect.addEventListener("change", () => {
+    const id = vehicleSelect.value;
+    const expiry = vehiclePolicyData[id] || "";
+
+    if (!expiry || expiry === "Not set") {
+      alertBox.style.display = "none";
+      return;
+    }
+
+    alertBox.style.display = "block";
+
+    const expired = new Date(expiry) < new Date();
+
+    alertBox.textContent = expired
+      ? `Vehicle policy expired on ${expiry}`
+      : `Policy expiry date: ${expiry}`;
+
+    alertBox.className = expired ? "alert alert-danger w-50" : "alert alert-info w-50";
+  });
+});
+</script>
 
 {% endblock content %}

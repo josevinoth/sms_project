@@ -85,9 +85,9 @@ WSGI_APPLICATION = 'SMS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'asset_mgt_013',
+        'NAME': 'sms_002',
         'USER': 'postgres',
-        'PASSWORD': '244613',
+        'PASSWORD': 'password@1234',
         'HOST': 'localhost'
     }
 }
@@ -171,14 +171,14 @@ DEPARTMENT_EMAILS = {
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'erpwarehouse@bvmstorage.com',
-        'EMAIL_HOST_PASSWORD' : 'D$798938126348as',
+        'EMAIL_HOST_PASSWORD' : 'L@324160337522ab',
     },
     'itadmin': {
         'EMAIL_HOST' : 'smtp.office365.com',
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'itadmin@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'Q/133158149266ap',
+        'EMAIL_HOST_PASSWORD' : 'T/350967465402ak',
     }
 }
 
