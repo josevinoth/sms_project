@@ -273,8 +273,9 @@
                 var final_vehicle_list = data.final_vehicle_list || [];
                 var selectedVehicle = data.selected_vehicles || "";
 
-                $("#co_vehicelnumber").empty();
-                $("#co_vehicelnumber").append("<option value=''>--Select--</option>");
+				var vehicleDropdown = $("#co_vehicelnumber");
+                vehicleDropdown.empty();
+            vehicleDropdown.append("<option value=''>--Select--</option>");
 
                 if (selectedVehicle !== "") {
     				$("#co_vehicelnumber").append(
@@ -290,6 +291,7 @@
 				}
 
                 bind_vehicle_type_fetch();
+            	vehicleDropdown.trigger('change');
             },
             error: function (xhr, status, error) {
                 console.error("AJAX Error:", status, error);
@@ -298,26 +300,26 @@
     }
 </script>
 <script>
-	const getVehicleTypeUrl = '{% url "get_vehicle_type" "VEHICLE_ID_PLACEHOLDER" %}';
+	const getVehicleTypeUrl = '{% url "get_vehicle_type" "VEHICLE_ID" %}';
 
     function bind_vehicle_type_fetch() {
-        document.getElementById('co_vehicelnumber').addEventListener('change', function () {
-            const vehicleId = this.value;
-            if (vehicleId) {
-                const url = getVehicleTypeUrl.replace("VEHICLE_ID_PLACEHOLDER", vehicleId);
+    $('#co_vehicelnumber').off('change').on('change', function () {
+        const vehicleId = this.value;
+        if (vehicleId) {
+            const url = getVehicleTypeUrl.replace("VEHICLE_ID", vehicleId);
 
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        const vehicleType = data.vehicle_type || 'Not Found';
-                        document.getElementById('co_vehicletype').value = vehicleType;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const vehicleType = data.vehicle_type || 'Not Found';
+                    document.getElementById('co_vehicletype').value = vehicleType;
 
-                        updateFieldsBasedOnVehicleType(vehicleType);
-                    })
-                    .catch(error => console.error("Error fetching vehicle type:", error));
-            }
-        });
-    }
+                    updateFieldsBasedOnVehicleType(vehicleType);
+                })
+                .catch(error => console.error("Error fetching vehicle type:", error));
+        }
+    });
+}
 </script>
 <script>
 	function updateFieldsBasedOnVehicleType(vehicleType) {
