@@ -656,7 +656,7 @@ urlpatterns = [
     path("get_vehicle_data/", views.get_vehicle_data, name="get_vehicle_data"),
     path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
          name='get_remaining_quantity'),
-    path('SMS/get-vehicle-type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),
+    path('get_vehicle_type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),
     path('add-description/', views.add_description, name='add_description'),
     path('fleet_management_view/', views.fleet_management_view, name='fleet_management_view'),
     path('vendorratemaster_list/', views.vendorratemaster_list, name='vendorratemaster_list'),
