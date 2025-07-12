@@ -227,9 +227,7 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-12 col-md-10 pt-4">
-
+        <div class="col-12 col-md-10 pt-4 ">
             <div class="row">
                 <!-- Card 1 -->
                 <div class="col-6 col-sm-6 col-md-3 mb-3">
@@ -437,15 +435,15 @@
                 disableElement('finance');
             }
 
-            if (bussiness_solution_id === 1)
+            if (parseInt(bussiness_solution_id) === 1)
             {
                 enableElement('warehouse'); // Enable warehouse for BVM Storage Solutions
             }
-            else if (bussiness_solution_id === 3)
+            else if (parseInt(bussiness_solution_id) === 3)
             {
                 enableElement('packing'); // Enable packing for BVM Pack Solutions
             }
-            else if (bussiness_solution_id === 2)
+            else if (parseInt(bussiness_solution_id) === 2)
             {
                 enableElement('transport'); // Enable transport for BVM Trans Solutions
             }
