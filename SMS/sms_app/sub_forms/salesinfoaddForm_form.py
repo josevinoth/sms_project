@@ -36,3 +36,5 @@ class SalesinfoaddForm(forms.ModelForm):
         self.fields['s_ops_sop'].empty_label = "--Select--"
         self.fields['s_billing_sop'].empty_label = "--Select--"
         self.fields['s_trans_imp'].empty_label = "--Select--"
+        self.fields['s_express_requirement'].empty_label = "--Select--"
+        self.fields['s_tt_requirement'].empty_label = "--Select--"

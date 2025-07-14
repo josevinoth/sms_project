@@ -19,6 +19,8 @@ from .sub_models.industry_type_mod import Industrytype
 from .sub_models.wh_requirement_mod import Whrequirementinfo
 from .sub_models.trans_requirement_mod import Transrequirementinfo
 from .sub_models.pack_requirement_mod import Packreuqirementinfo
+from .sub_models.express_requirement_mod import Expressrequirementinfo
+from .sub_models.tours_requirement_mod import Toursrequirementinfo
 from .sub_models.supply_info_mod import Supplyinfo
 from .sub_models.call_type_mod import Calltype
 from .sub_models.call_nature_mod import Callnature
