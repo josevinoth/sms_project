@@ -44,6 +44,7 @@
 									<div class="col-2">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
+												<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Verify"></i>
 												<!--										<span class="input-group-text">Vehicle Type Requested</span>-->
 											</div>
 											{% render_field vehicle_allotment_form.va_vehicletype_selection_requested id="va_vehicletype_selection_requested" class="form-control" %}
@@ -62,6 +63,7 @@
 									<div class="col-2">
 										<div class="input-group input-group-sm mb-3">
 											<div class="input-group-prepend">
+												<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Verify"></i>
 												<!--										<span class="input-group-text">Vehicle Type Requested</span>-->
 											</div>
 											{% render_field vehicle_allotment_form.va_vehicletype_selection_placed id="va_vehicletype_selection_placed" class="form-control " %}
@@ -127,13 +129,19 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Buy</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_buy id="va_buy" class="form-control" %}
+									{% render_field vehicle_allotment_form.va_buy id="va_buy"  class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3 ">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Sell</span>
 									</div>
 									{% render_field vehicle_allotment_form.va_sale id="va_sale" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3 ">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Profit %</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_profit_percentage id="va_profit_percentage" class="form-control disable_a_href" readonly="readonly" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -446,6 +454,8 @@
 			success: function(data) {
 				var buy_rate = data.buy_rate;
 				document.getElementById("va_buy").value = buy_rate;
+				      calculateProfit();  // ✅ Trigger profit calculation after setting buy
+
 			}
 		});
 	}
@@ -462,6 +472,8 @@
 			success: function(data) {
 				var saleRate = data.sale_rate;
 				document.getElementById("va_sale").value = saleRate;
+				      calculateProfit();  // ✅ Trigger profit calculation after setting buy
+
 			}
 		});
 	}
@@ -499,6 +511,25 @@
     alertBox.className = expired ? "alert alert-danger w-50" : "alert alert-info w-50";
   });
 });
+</script>
+<script>
+  function calculateProfit() {
+    const buyVal = parseFloat(document.getElementById("va_buy").value) || 0;
+    const sellVal = parseFloat(document.getElementById("va_sale").value) || 0;
+    const profitField = document.getElementById("va_profit_percentage");
+
+    if (buyVal > 0) {
+      const profit = ((sellVal - buyVal) / buyVal) * 100;
+      profitField.value = profit.toFixed(2);
+    } else {
+      profitField.value = "";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("va_buy").addEventListener("input", calculateProfit);
+    document.getElementById("va_sale").addEventListener("input", calculateProfit);
+  });
 </script>
 
 {% endblock content %}

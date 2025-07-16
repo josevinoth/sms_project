@@ -469,3 +469,20 @@ def fleet_management_view(request):
 
     return render(request, "asset_mgt_app/fleet_management.html", {'vehicle_status_list': vehicle_status_list})
 
+@login_required(login_url='login_page')
+def get_sim_tracking_data(request):
+    trip_details = TripdetailInfo.objects.filter(tr_vehiclesource=3,tc_financestatus=1).values(
+        'tr_vehiclenumber', 'tr_drivername', 'tr_drivernumber', 'tr_track_link','tc_financestatus'
+    )
+
+    sim_data = []
+    for trip in trip_details:
+        sim_data.append({
+            'sim_number': trip['tr_drivernumber'] or 'NA',
+            'imei': trip['tr_vehiclenumber'],
+            'status': trip['tc_financestatus'],
+            'track_url': trip['tr_track_link'] if trip['tr_track_link'] else '#',
+            'driver_name': trip['tr_drivername'] or 'NA'
+        })
+
+    return JsonResponse(sim_data, safe=False)
