@@ -104,6 +104,7 @@
             <th>Number</th>
             <th>Running</th>
             <th>Speed</th>
+            <th>Odometer</th>
             <th>Last Updated</th>
           </tr>
         </thead>
@@ -149,169 +150,182 @@
 </div>
 
 <script>
-  const vehicleToHighlight = "{{ vehicle_number|default:'' }}".toUpperCase().replace(/[\s\-]/g, '');
-  const map = L.map("map").setView([12.9716, 77.5946], 6);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors',
-  }).addTo(map);
+let allVehicleData = [];
 
-  const runningIcons = {
-    Moving: L.divIcon({ className: 'custom-div-icon', html: '<i class="fa-solid fa-truck" style="color: green; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] }),
-    Idle: L.divIcon({ className: 'custom-div-icon', html: '<i class="fa-solid fa-truck" style="color: orange; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] }),
-    Stopped: L.divIcon({ className: 'custom-div-icon', html: '<i class="fa-solid fa-truck" style="color: red; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] }),
-  };
+function normalize(num) {
+  return num ? num.toUpperCase().replace(/[\s\-]/g, '') : '';
+}
 
-  function normalize(num) {
-    return num ? num.toUpperCase().replace(/[\s\-]/g, '') : '';
-  }
+function loadAllVehicleData(showSpinner = false) {
+  if (showSpinner) showLoader();
 
-  function showLoader() {
-    if (!document.getElementById("mapLoader")) {
-      const loader = document.createElement("div");
-      loader.id = "mapLoader";
-      loader.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>Loading...`;
-      loader.style.position = "absolute";
-      loader.style.top = "50%";
-      loader.style.left = "50%";
-      loader.style.transform = "translate(-50%, -50%)";
-      loader.style.zIndex = "9999";
-      loader.style.background = "#ffffffdd";
-      loader.style.padding = "15px 25px";
-      loader.style.borderRadius = "10px";
-      loader.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
-      document.getElementById("map").appendChild(loader);
-    }
-  }
+  fetch("/SMS/get_vehicle_data/")
+    .then(res => res.json())
+    .then(data => {
+      allVehicleData = data.all_data || [];
 
-  function hideLoader() {
-    const loader = document.getElementById("mapLoader");
-    if (loader) loader.remove();
-  }
+      // Populate dropdown with ALL vehicles when page loads
+      populateVehicleDropdown(allVehicleData);
 
-  function loadVehicleData(statusFilter = "all", numberFilter = "all", showSpinner = false) {
-    if (showSpinner) showLoader();
+      // Render all markers and table
+      renderMarkers(allVehicleData);
+      renderVehicleTable(allVehicleData);
 
-    fetch("/SMS/get_vehicle_data/")
-      .then(res => res.json())
-      .then(data => {
-        const allData = data;
-
-        // Fill dropdown only once
-        const vehicleDropdown = document.getElementById("modalVehicleFilter");
-        if (vehicleDropdown && vehicleDropdown.options.length <= 1) {
-          const unique = [...new Set(allData.map(v => v.number))].sort();
-          unique.forEach(num => {
-            const opt = document.createElement("option");
-            opt.value = normalize(num);
-            opt.textContent = num;
-            vehicleDropdown.appendChild(opt);
-          });
-          $('#modalVehicleFilter').select2({ width: '100%', dropdownParent: $('#filterModal') });
-        }
-
-        let filtered = allData;
-        if (vehicleToHighlight) {
-          filtered = allData.filter(v => normalize(v.number) === vehicleToHighlight);
-        } else {
-          filtered = allData.filter(v => {
-            const matchStatus = statusFilter === "all" || v.status === statusFilter;
-            const matchNumber = numberFilter === "all" || normalize(v.number) === normalize(numberFilter);
-            return matchStatus && matchNumber;
-          });
-        }
-
-        map.eachLayer(layer => {
-          if (layer instanceof L.Marker) map.removeLayer(layer);
-        });
-
-        const markersMap = {};
-        filtered.forEach(vehicle => {
-          const lat = parseFloat(vehicle.lat);
-          const lon = parseFloat(vehicle.lon);
-          const icon = runningIcons[vehicle.running_status] || runningIcons.Stopped;
-
-          if (!isNaN(lat) && !isNaN(lon)) {
-            const marker = L.marker([lat, lon], { icon: icon })
-              .addTo(map)
-              .bindPopup(`
-                <b>${vehicle.number}</b><br>
-                Status: ${vehicle.status.replace("_", " ").toUpperCase()}<br>
-                Running: ${vehicle.running_status}<br>
-                Speed: ${vehicle.speed} km/h<br>
-                ${vehicle.timestamp}
-              `);
-            markersMap[normalize(vehicle.number)] = marker;
-          }
-        });
-
-        if (vehicleToHighlight && markersMap[vehicleToHighlight]) {
-          map.setView(markersMap[vehicleToHighlight].getLatLng(), 15);
-          markersMap[vehicleToHighlight].openPopup();
-        }
-
-        renderVehicleTable(filtered);
-        if (showSpinner) hideLoader();
-      })
-      .catch(err => {
-        console.error("Error loading vehicle data:", err);
-        if (showSpinner) hideLoader();
-      });
-  }
-
-  function renderVehicleTable(data) {
-    const tbody = document.getElementById("vehicle-table-body");
-    tbody.innerHTML = "";
-    data.forEach(v => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><span class="badge bg-${v.status === 'in_trip' ? 'primary' : v.status === 'available' ? 'success' : 'danger'}">${v.status.replace("_", " ").toUpperCase()}</span></td>
-        <td>${v.number}</td>
-        <td>${v.running_status}</td>
-        <td>${v.speed} km/h</td>
-        <td>${v.timestamp}</td>
-      `;
-      tbody.appendChild(tr);
+      if (showSpinner) hideLoader();
+    })
+    .catch(err => {
+      console.error("Error loading vehicle data:", err);
+      if (showSpinner) hideLoader();
     });
+}
+
+function populateVehicleDropdown(vehicles) {
+  const vehicleDropdown = document.getElementById("modalVehicleFilter");
+  vehicleDropdown.innerHTML = '<option value="all">All</option>';
+
+  const uniqueNumbers = [...new Set(vehicles.map(v => v.number))].sort();
+
+  uniqueNumbers.forEach(num => {
+    const opt = document.createElement("option");
+    opt.value = normalize(num);
+    opt.textContent = num;
+    vehicleDropdown.appendChild(opt);
+  });
+
+  if (typeof $ !== 'undefined' && $.fn.select2) {
+    $(vehicleDropdown).select2({ width: '100%' });
+  }
+}
+
+function filterAndRenderData() {
+  const statusFilter = document.getElementById("modalStatusFilter").value;
+  const vehicleFilter = document.getElementById("modalVehicleFilter").value;
+
+  let filteredData = allVehicleData;
+
+  if (statusFilter !== "all") {
+    filteredData = filteredData.filter(v => v.status === statusFilter);
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const isLiveTrack = vehicleToHighlight !== "";
+  if (vehicleFilter !== "all") {
+    filteredData = filteredData.filter(v => normalize(v.number) === vehicleFilter);
+  }
 
-   document.getElementById("applyFilterBtn").addEventListener("click", () => {
-  const status = document.getElementById("modalStatusFilter").value;
-  const vehicle = document.getElementById("modalVehicleFilter").value;
+  renderMarkers(filteredData);
+  renderVehicleTable(filteredData);
+}
 
-  // Show loader and load filtered data
-  loadVehicleData(status, vehicle, true);
+const map = L.map("map").setView([12.9716, 77.5946], 6);
 
-  // Close the modal
-  const modalEl = document.getElementById("filterModal");
-  const modalInstance = bootstrap.Modal.getInstance(modalEl);
-  if (modalInstance) modalInstance.hide();
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap contributors',
+}).addTo(map);
 
-  // Scroll to map after slight delay
-  setTimeout(() => {
-    document.getElementById("map").scrollIntoView({ behavior: "smooth" });
-  }, 400);
-});
+const runningIcons = {
+  Moving: L.divIcon({ className: 'custom-div-icon', html: '<i class="fa-solid fa-truck" style="color: green; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32] }),
+  Idle: L.divIcon({ className: 'custom-div-icon', html: '<i class="fa-solid fa-truck" style="color: orange; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32] }),
+  Stopped: L.divIcon({ className: 'custom-div-icon', html: '<i class="fa-solid fa-truck" style="color: red; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32] }),
+};
 
-    if (isLiveTrack) {
-      document.getElementById("modalStatusFilter").disabled = true;
-      document.getElementById("modalVehicleFilter").disabled = true;
-      document.getElementById("applyFilterBtn").disabled = true;
-      loadVehicleData();
-      setInterval(() => loadVehicleData(), 3000);
-    } else {
-      loadVehicleData();
-      setInterval(() => {
-        const status = document.getElementById("modalStatusFilter").value;
-        const vehicle = document.getElementById("modalVehicleFilter").value;
-        loadVehicleData(status, vehicle);
-      }, 3000);
+function renderMarkers(vehicleData) {
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker) map.removeLayer(layer);
+  });
+
+  vehicleData.forEach(v => {
+    const lat = parseFloat(v.lat);
+    const lon = parseFloat(v.lon);
+    const icon = runningIcons[v.running_status] || runningIcons.Stopped;
+
+    if (!isNaN(lat) && !isNaN(lon)) {
+      L.marker([lat, lon], { icon: icon })
+        .addTo(map)
+        .bindPopup(`
+          <b>${v.number}</b><br>
+          Status: ${v.status.replace("_", " ").toUpperCase()}<br>
+          Running: ${v.running_status}<br>
+          Speed: ${v.speed} km/h<br>
+          Odometer: ${v.Odometer} km/h<br>
+          ${v.timestamp}
+        `);
     }
   });
+}
+
+function renderVehicleTable(vehicleData) {
+  const tbody = document.getElementById("vehicle-table-body");
+  tbody.innerHTML = "";
+
+  vehicleData.forEach(v => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><span class="badge bg-${v.status === 'in_trip' ? 'primary' : v.status === 'available' ? 'success' : 'danger'}">${v.status.replace("_", " ").toUpperCase()}</span></td>
+      <td>${v.number}</td>
+      <td>${v.running_status}</td>
+      <td>${v.speed} km/h</td>
+      <td>${v.Odometer} km/h</td>
+      <td>${v.timestamp}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function showLoader() {
+  if (!document.getElementById("mapLoader")) {
+    const loader = document.createElement("div");
+    loader.id = "mapLoader";
+    loader.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>Loading...`;
+    loader.style.position = "absolute";
+    loader.style.top = "50%";
+    loader.style.left = "50%";
+    loader.style.transform = "translate(-50%, -50%)";
+    loader.style.zIndex = "9999";
+    loader.style.background = "#ffffffdd";
+    loader.style.padding = "15px 25px";
+    loader.style.borderRadius = "10px";
+    loader.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+    document.getElementById("map").appendChild(loader);
+  }
+}
+
+function hideLoader() {
+  const loader = document.getElementById("mapLoader");
+  if (loader) loader.remove();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadAllVehicleData(true);
+
+  document.getElementById("modalStatusFilter").addEventListener("change", () => {
+    const status = document.getElementById("modalStatusFilter").value;
+    const vehicleDropdownData = status === "all"
+      ? allVehicleData
+      : allVehicleData.filter(v => v.status === status);
+
+    populateVehicleDropdown(vehicleDropdownData);
+    filterAndRenderData();
+  });
+
+  document.getElementById("modalVehicleFilter").addEventListener("change", filterAndRenderData);
+
+  document.getElementById("applyFilterBtn").addEventListener("click", () => {
+    filterAndRenderData();
+
+    const modalEl = document.getElementById("filterModal");
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+
+    setTimeout(() => {
+      document.getElementById("map").scrollIntoView({ behavior: "smooth" });
+    }, 400);
+  });
+
+  // Auto refresh every 5 seconds
+  setInterval(() => loadAllVehicleData(), 5000);
+});
+
 </script>
 <script>
   function loadSimTrackingData() {
@@ -333,7 +347,7 @@
               <td>${item.sim_number || 'NA'}</td>
               <td>${item.status || 'NA'}</td>
               <td>
-                <a href="${item.track_url}" target="_blank" class="btn btn-sm btn-info ${item.status === 'Active' ? '' : 'disabled'}">
+                <a href="${item.track_url}" target="_blank" class="btn btn-sm btn-info ${item.status === 1 ? '' : 'disabled'}">
                   <i class="fas fa-map-marker-alt"></i> Track
                 </a>
               </td>

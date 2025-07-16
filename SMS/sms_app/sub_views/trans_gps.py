@@ -15,7 +15,6 @@ def track_vehicle_position(request):
     vehicle_number = request.GET.get('vehicle', '').upper().replace(' ', '').replace('-', '')
     return render(request, "asset_mgt_app/trans_gps.html", {'vehicle_number': vehicle_number})
 
-
 def get_vehicle_data(request):
     api_url = (
         "https://track.trackmyvehicle.in/events/data.xml"
@@ -31,9 +30,15 @@ def get_vehicle_data(request):
 
     in_trip_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=1).values_list('tr_vehiclenumber', flat=True)))
     available_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=2).values_list('tr_vehiclenumber', flat=True)))
-    workshop_number = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=8).values_list('tr_vehiclenumber', flat=True)))
+    workshop_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=8).values_list('tr_vehiclenumber', flat=True)))
 
-    vehicle_data = []
+    categorized_data = {
+        "in_trip": [],
+        "available": [],
+        "workshop": [],
+        "all_data": []
+    }
+
     try:
         response = requests.get(api_url, verify=False, timeout=10)
         if response.status_code == 200:
@@ -50,6 +55,7 @@ def get_vehicle_data(request):
                 lat = event.findtext("GPSPoint_lat", "").strip()
                 lon = event.findtext("GPSPoint_lon", "").strip()
                 speed = event.findtext("Speed", "").strip()
+                Odometer = event.findtext("Odometer", "").strip()
                 status_code = event.findtext("StatusCode", "").strip()
                 timestamp = event.findtext("Timestamp", "").strip()
 
@@ -61,23 +67,26 @@ def get_vehicle_data(request):
 
                 if normalized_number in in_trip_numbers:
                     trip_status = "in_trip"
-                elif normalized_number in workshop_number:
+                elif normalized_number in workshop_numbers:
                     trip_status = "workshop"
                 else:
                     trip_status = "available"
 
-                if lat and lon:
-                    vehicle_data.append({
-                        "number": raw_number,
-                        "lat": lat,
-                        "lon": lon,
-                        "speed": speed,
-                        "status": trip_status,
-                        "running_status": running_status,
-                        "timestamp": timestamp,
-                    })
+                vehicle_info = {
+                    "number": raw_number,
+                    "lat": lat,
+                    "lon": lon,
+                    "speed": speed,
+                    "Odometer": Odometer,
+                    "status": trip_status,
+                    "running_status": running_status,
+                    "timestamp": timestamp,
+                }
+
+                categorized_data[trip_status].append(vehicle_info)
+                categorized_data["all_data"].append(vehicle_info)
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-    return JsonResponse(vehicle_data, safe=False)
+    return JsonResponse(categorized_data, safe=False)
