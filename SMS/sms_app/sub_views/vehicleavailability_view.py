@@ -23,11 +23,15 @@ def vehicle_availability_list(request):
             location = latest_closed_trip.tr_reportedlocation.place_name if latest_closed_trip.tr_reportedlocation else "N/A"
             date_time = latest_closed_trip.tr_reporteddate
 
-            # If the trip was closed yesterday or before, mark as unavailable
-            if latest_closed_trip.tr_reporteddate.date() < now().date():
-                availability = "No"
+
+            if latest_closed_trip.tr_reporteddate:
+
+                if latest_closed_trip.tr_reporteddate.date() < now().date():
+                    availability = "No"
+                else:
+                    availability = "Yes"
             else:
-                availability = "Yes"
+                availability = "No"
 
         vehicle_data.append({
             'vehicle_number': vehicle.vm_registrationnumber,

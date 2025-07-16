@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import PaymentcycleInfo,Business_Sol_info,Prespectivec_customer_NoInfo,MyUser,Business_won_NoInfo,faciltiyrequirementinfo,YesNoInfo,CustomertypeInfo,Salestatus,Cusnewexist,Industrytype,Packreuqirementinfo,Supplyinfo,Transrequirementinfo,Whrequirementinfo,Location_info,CustomerInfo
+from ..models import PaymentcycleInfo,Business_Sol_info,Prespectivec_customer_NoInfo,MyUser,Business_won_NoInfo,faciltiyrequirementinfo,YesNoInfo,CustomertypeInfo,Salestatus,Cusnewexist,Industrytype,Packreuqirementinfo,Supplyinfo,Transrequirementinfo,Whrequirementinfo,Location_info,CustomerInfo,Expressrequirementinfo,Toursrequirementinfo
 
 def sales_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
@@ -66,6 +66,12 @@ class SalesInfo(models.Model):
     s_fmr_business = models.CharField(blank=True, null=True, max_length=30)
     s_or_volume = models.CharField(blank=True, null=True, max_length=30)
     s_or_business = models.CharField(blank=True, null=True, max_length=30)
+    s_express_requirement = models.ForeignKey(Expressrequirementinfo, blank=True, null=True, on_delete=models.CASCADE, default='')
+    s_express_volume = models.CharField(blank=True, null=True, max_length=30)
+    s_express_business = models.CharField(blank=True, null=True, max_length=30)
+    s_tt_requirement = models.ForeignKey(Toursrequirementinfo, blank=True, null=True, on_delete=models.CASCADE,default='')
+    s_tt_volume = models.CharField(blank=True, null=True, max_length=30)
+    s_tt_business = models.CharField(blank=True, null=True, max_length=30)
     class Meta:
         ordering = ["s_sale_number"]
 

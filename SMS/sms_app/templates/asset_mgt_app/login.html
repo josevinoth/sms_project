@@ -1,48 +1,120 @@
 {% extends "asset_mgt_app/header_1.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
-<!--<form method="POST" action="">
-	{% csrf_token %}
-	{{form.as_p}}
+<style>
+/* Outer Card */
+.login-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  display: flex;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+}
 
-</form>-->
-<div class="d-flex justify-content-center align-items-center" style="min-height: 30vh;">
-	<div class="card text-white bg-info mb-3" style="width: 100%; max-width: 400px;">
-		<div class="card-header text-center"><h4>Sign In</h4></div>
-		<div class="card-body bg-light text-dark">
-			<form method="POST">
-				{% csrf_token %}
-				<div class="input-group form-group mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text" style="width: 40px;"><i class="fas fa-user-tie"></i></span>
-					</div>
-					<input type="text" class="form-control" placeholder="Employee ID" name="username" required>
-				</div>
+/* Left Section with gradient */
+.login-left {
+  background: linear-gradient(135deg, #007bff, #00bfff);
+  color: white;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 2rem;
+}
 
-				<div class="input-group form-group mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text" style="width: 40px;"><i class="fas fa-key"></i></span>
-					</div>
-					<input type="password" class="form-control" placeholder="Password" name="password" required>
-				</div>
-				<div class="text-center p-2">
-					<button class="btn btn-success" type="submit"><i class="fa fa-thumbs-up"></i> Login</button>
-				</div>
-			</form>
-			<br>
-			<div class="message text-center">
-				{% for message in messages %}
-					<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-				{% endfor %}
-			</div>
-		</div>
-		<div class="card-footer text-center bg-light">
-			<div class="text-dark">Don't have an account? <a href="{% url 'registration_page' %}">Sign Up</a></div>
-			<div><a href="{% url 'password_reset' %}">Forgot your password?</a></div>
-		</div>
-	</div>
+
+/* Right Section with form */
+.login-right {
+  background: #fff;
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-right .btn-primary {
+  background: #007bff;
+  border: none;
+}
+
+.login-right .btn-primary:hover {
+  background: #0056b3;
+}
+
+.login-right .login-footer {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column;
+  }
+
+}
+  body {
+  background: url("/media/warehouse_bw.png") no-repeat center fixed;
+  background-size: cover;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+</style>
+
+<div class="login-container">
+  <!-- Left section -->
+  <div class="login-left text-center">
+    <img src="/media/logo1.png" alt="Logo" style="margin-bottom:20px; height:100px;width:80px;">
+    <h3>Welcome to</h3>
+    <h2>BVM Management System</h2>
+    <h6>WAREHOUSE | TRANSPORTATION | PACKAGING</h6>
+  </div>
+
+  <!-- Right section -->
+  <div class="login-right">
+    <h4 class="mb-4"> Sign In</h4>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="username">User ID</label>
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
+          </div>
+          <input type="text" class="form-control" id="username" placeholder="Enter your ID" name="username" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text"><i class="fas fa-key"></i></span>
+          </div>
+          <input type="password" class="form-control" id="password" placeholder="Enter your password" name="password" required>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block mt-3" type="submit">
+        <i class="fa fa-thumbs-up"></i> Login
+      </button>
+    </form>
+
+    <div class="message text-center mt-3">
+      {% for message in messages %}
+        <small class="text-danger">{{ message }}</small>
+      {% endfor %}
+    </div>
+
+    <div class="login-footer text-center mt-3">
+      Don't have an account? <a href="{% url 'registration_page' %}">Sign Up</a><br>
+      <a href="{% url 'password_reset' %}">Forgot your password?</a>
+    </div>
+  </div>
 </div>
-
 
 <!--<div class="container-fluid">-->
 <!--	<div class="d-flex justify-content-center h-100">-->
