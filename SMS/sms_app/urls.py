@@ -682,6 +682,8 @@ urlpatterns = [
     path('trip_highvalue_update/<int:high_value_id>/', views.trip_highvalue_add, name='trip_highvalue_update'),
     path('trip_highvalue_delete/<int:high_value_id>/', views.trip_highvalue_delete, name='trip_highvalue_delete'),
     path('trip_highvalue_cancel/', views.trip_highvalue_cancel, name='trip_highvalue_cancel'),
+    path('get_sim_tracking_data/', views.get_sim_tracking_data, name='get_sim_tracking_data'),
+
 ]
 
 

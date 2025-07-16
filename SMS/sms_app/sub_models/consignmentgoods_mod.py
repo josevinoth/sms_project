@@ -5,7 +5,7 @@ def consignmentgoods_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
     return 'Consignment_Goods_files/{0}/{1}'.format(instance.cg_consignmentnumber, filename)
 class ConsignmentgoodsInfo(models.Model):
-    cg_currency_type = models.ForeignKey(Currency_type, on_delete=models.CASCADE,blank=True,null=True)
+    cg_currency_type = models.ForeignKey(Currency_type, on_delete=models.CASCADE,default=1,blank=True,null=True)
     cg_consigner = models.ForeignKey(ConsignerInfo, on_delete=models.CASCADE,blank=True,null=True)
     cg_consignee = models.ForeignKey(ConsigneeInfo, on_delete=models.CASCADE,blank=True,null=True)
     cg_consignerinvoice = models.CharField(max_length=50)
