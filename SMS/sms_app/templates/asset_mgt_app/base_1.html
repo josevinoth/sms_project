@@ -53,7 +53,7 @@
             </div>
             <div class="col-2 text-center">
                 <div>
-                    Hi, {{ request.session.first_name }}<br>
+                    Hi, {{ request.session.first_name }}
                     <small class="text-danger">{{ request.session.ses_role }}</small>
                 </div>
                 <a href="{% url 'logout_page' %}" class="btn btn-dark p-1 mt-1">
