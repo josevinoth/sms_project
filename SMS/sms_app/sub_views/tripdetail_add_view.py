@@ -481,7 +481,7 @@ def get_sim_tracking_data(request):
             'sim_number': trip['tr_drivernumber'] or 'NA',
             'imei': trip['tr_vehiclenumber'],
             'status': trip['tc_financestatus'],
-            'track_url': trip['tr_track_link'] if trip['tr_track_link'] else '#',
+            'track_url': trip['tr_track_link'] ,
             'driver_name': trip['tr_drivername'] or 'NA'
         })
 
