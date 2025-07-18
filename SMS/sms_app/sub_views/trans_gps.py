@@ -32,12 +32,10 @@ def get_vehicle_data(request):
     available_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=2).values_list('tr_vehiclenumber', flat=True)))
     workshop_numbers = set(map(normalize, TripdetailInfo.objects.filter(tr_approval=8).values_list('tr_vehiclenumber', flat=True)))
 
-    categorized_data = {
-        "in_trip": [],
-        "available": [],
-        "workshop": [],
-        "all_data": []
-    }
+    vehicle_data = []
+    in_trip_list = []
+    available_list = []
+    workshop_list = []
 
     try:
         response = requests.get(api_url, verify=False, timeout=10)
@@ -55,7 +53,6 @@ def get_vehicle_data(request):
                 lat = event.findtext("GPSPoint_lat", "").strip()
                 lon = event.findtext("GPSPoint_lon", "").strip()
                 speed = event.findtext("Speed", "").strip()
-                Odometer = event.findtext("Odometer", "").strip()
                 status_code = event.findtext("StatusCode", "").strip()
                 timestamp = event.findtext("Timestamp", "").strip()
 
@@ -77,16 +74,27 @@ def get_vehicle_data(request):
                     "lat": lat,
                     "lon": lon,
                     "speed": speed,
-                    "Odometer": Odometer,
                     "status": trip_status,
                     "running_status": running_status,
                     "timestamp": timestamp,
                 }
 
-                categorized_data[trip_status].append(vehicle_info)
-                categorized_data["all_data"].append(vehicle_info)
+                vehicle_data.append(vehicle_info)
+
+                # Categorize into separate lists
+                if trip_status == "in_trip":
+                    in_trip_list.append(vehicle_info)
+                elif trip_status == "available":
+                    available_list.append(vehicle_info)
+                elif trip_status == "workshop":
+                    workshop_list.append(vehicle_info)
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-    return JsonResponse(categorized_data, safe=False)
+    return JsonResponse({
+        "all_data": vehicle_data,
+        "in_trip": in_trip_list,
+        "available": available_list,
+        "workshop": workshop_list
+    }, safe=False)
