@@ -837,8 +837,9 @@ BUDGET_FIELD_MAPPING = {
     "Packing Expenses": "bf_Packing_Charges",
     "Warehouse Handling Charges": "bf_Warehouse_Handling_Charges",
     "Warehouse Loading Charges": "bf_Warehouse_Loading_Charges",
-    "Storage Expenses": "bf_Warehouse_Storage_Charges",
-    "Unloading Expenses": "bf_Warehouse_Unloading_Charges",
+    "Warehouse Storage Charges": "bf_Warehouse_Storage_Charges",
+    "Warehouse Unloading Charges":"bf_Warehouse_Unloading_Charges",
+    # "Unloading Expenses": "bf_Warehouse_Unloading_Charges",
     "Audit Fee": "bf_audit_fees",
     "Bad Debts": "bf_bad_debts",
     "Bank Charges": "bf_bank_charges",
@@ -953,12 +954,12 @@ def budget_expense(request):
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
         expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
-        budget_filter['bf_updated_at__gte'] = from_date
+        budget_filter['bf_start_date_year__gte'] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
         expenses_filter['exp_ext_expense_number__exp_service_start_date__lte'] = to_date
-        budget_filter['bf_updated_at__lte'] = to_date
+        budget_filter['bf_start_date_year__lte'] = to_date
 
     # Get total expenses per category
     expense_summary = ExpenseExtinfo.objects.filter(**expenses_filter).values(
@@ -1071,7 +1072,7 @@ def budget_expense_mis(request):
 
     if selected_year:
         expenses_filter["exp_ext_expense_number__exp_service_start_date__year"] = selected_year
-        budget_filter["bf_updated_at__year"] = selected_year
+        budget_filter["bf_start_date_year__year"] = selected_year
     if selected_company:
         expenses_filter["exp_ext_expense_number__exp_business__bvm_business"] = selected_company
         budget_filter["bf_company__bvm_business"] = selected_company
@@ -1087,12 +1088,12 @@ def budget_expense_mis(request):
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
         expenses_filter["exp_ext_expense_number__exp_service_start_date__gte"] = from_date
-        budget_filter["bf_updated_at__gte"] = from_date
+        budget_filter["bf_start_date_year__gte"] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
         expenses_filter["exp_ext_expense_number__exp_service_start_date__lte"] = to_date
-        budget_filter["bf_updated_at__lte"] = to_date
+        budget_filter["bf_start_date_year__lte"] = to_date
 
     expense_summary = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
@@ -1111,14 +1112,14 @@ def budget_expense_mis(request):
 
     budget_summary = (
         BudgetInfo.objects.filter(**budget_filter)
-        .values("bf_updated_at__month")
+        .values("bf_start_date_year__month")
         .annotate(**{field: Sum(field) for field in BUDGET_FIELD_MAPPING.values() if field is not None})
     )
 
     # Convert the budget data into a dictionary with month-wise budgets
     budget_dict_by_month = {}
     for item in budget_summary:
-        month = item["bf_updated_at__month"]
+        month = item["bf_start_date_year__month"]
         for category, field in BUDGET_FIELD_MAPPING.items():
             if field:
                 if category not in budget_dict_by_month:
@@ -1218,7 +1219,7 @@ def budget_expense_mis(request):
     }
 
     for item in budget_summary:
-        month = item["bf_updated_at__month"]
+        month = item["bf_start_date_year__month"]
         income_total = sum(item[field] for field in INCOME_CATEGORIES.values() if field in item)
         department_total = sum(item[field] for field in DEPARTMENT_EXPENSES_CATEGORIES.values() if field in item)
         employee_total = sum(item[field] for field in EMPLOYEE_BENEFITS_CATEGORIES.values() if field in item)
@@ -1456,7 +1457,7 @@ def fin_mis(request):
 
     if selected_year:
         expenses_filter["exp_ext_expense_number__exp_service_start_date__year"] = selected_year
-        budget_filter["bf_updated_at__year"] = selected_year
+        budget_filter["bf_start_date_year__year"] = selected_year
     if selected_company:
         expenses_filter["exp_ext_expense_number__exp_business__bvm_business"] = selected_company
         budget_filter["bf_company__bvm_business"] = selected_company
@@ -1472,12 +1473,12 @@ def fin_mis(request):
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
         expenses_filter["exp_ext_expense_number__exp_service_start_date__gte"] = from_date
-        budget_filter["bf_updated_at__gte"] = from_date
+        budget_filter["bf_start_date_year__gte"] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
         expenses_filter["exp_ext_expense_number__exp_service_start_date__lte"] = to_date
-        budget_filter["bf_updated_at__lte"] = to_date
+        budget_filter["bf_start_date_year__lte"] = to_date
 
     expense_summary = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
@@ -1496,13 +1497,13 @@ def fin_mis(request):
 
     budget_summary = (
         BudgetInfo.objects.filter(**budget_filter)
-        .values("bf_updated_at__month")
+        .values("bf_start_date_year__month")
         .annotate(**{field: Sum(field) for field in BUDGET_FIELD_MAPPING.values() if field is not None})
     )
 
     budget_dict_by_month = {}
     for item in budget_summary:
-        month = item["bf_updated_at__month"]
+        month = item["bf_start_date_year__month"]
         for category, field in BUDGET_FIELD_MAPPING.items():
             if field:
                 if category not in budget_dict_by_month:
@@ -1804,7 +1805,7 @@ def fin_mis_warehouse(request):
 
     if selected_year:
         expenses_filter["exp_ext_expense_number__exp_service_start_date__year"] = selected_year
-        budget_filter["bf_updated_at__year"] = selected_year
+        budget_filter["bf_start_date_year__year"] = selected_year
         warehouse_filter["wh_checkin_time__year"] = selected_year
     if selected_company:
         expenses_filter["exp_ext_expense_number__exp_business__bvm_business"] = selected_company
@@ -1821,13 +1822,13 @@ def fin_mis_warehouse(request):
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
         expenses_filter["exp_ext_expense_number__exp_service_start_date__gte"] = from_date
-        budget_filter["bf_updated_at__gte"] = from_date
+        budget_filter["bf_start_date_year__gte"] = from_date
         warehouse_filter["wh_checkin_time__gte"] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
         expenses_filter["exp_ext_expense_number__exp_service_start_date__lte"] = to_date
-        budget_filter["bf_updated_at__lte"] = to_date
+        budget_filter["bf_start_date_year__lte"] = to_date
         warehouse_filter["wh_checkin_time__lte"] = to_date
 
     warehouse_queryset = (
@@ -1874,13 +1875,13 @@ def fin_mis_warehouse(request):
 
     budget_summary = (
         BudgetInfo.objects.filter(**budget_filter)
-        .values("bf_updated_at__month")
+        .values("bf_start_date_year__month")
         .annotate(**{field: Sum(field) for field in BUDGET_FIELD_MAPPING.values() if field is not None})
     )
 
     budget_dict_by_month = {}
     for item in budget_summary:
-        month = item["bf_updated_at__month"]
+        month = item["bf_start_date_year__month"]
         for category, field in BUDGET_FIELD_MAPPING.items():
             if field:
                 if category not in budget_dict_by_month:
