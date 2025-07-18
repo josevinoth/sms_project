@@ -27,6 +27,11 @@ from ..views import warehousevolme_area_calc
 from io import BytesIO
 from django.views.decorators.http import require_POST
 from django.db.models import F, ExpressionWrapper, IntegerField
+import base64
+from django.core.files.base import ContentFile
+from django.conf import settings
+from django.templatetags.static import static
+import os
 
 
 # Add Dispatch Job
@@ -105,7 +110,24 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_form = DispatchaddForm(request.POST, instance=dispatch_info)
 
             if dispatch_form.is_valid():
-                dispatch_form.save()
+                dispatch = dispatch_form.save(commit=False)
+                # Process driver signature
+                driver_data = request.POST.get('driver_signature_data')
+                if driver_data:
+                    format, imgstr = driver_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                    data = ContentFile(base64.b64decode(imgstr), name=f'driver_signature.{ext}')
+                    dispatch.dispatch_driver_signature = data
+
+                # Process supervisor signature
+                supervisor_data = request.POST.get('supervisor_signature_data')
+                if supervisor_data:
+                    format, imgstr = supervisor_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                    data = ContentFile(base64.b64decode(imgstr), name=f'supervisor_signature.{ext}')
+                    dispatch.dispatch_supervisor_signature = data
+
+                dispatch.save()
                 print("Form Saved")
                 messages.success(request, 'Record Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
@@ -156,7 +178,7 @@ def dispatch_goods_list(request):
     dispatch_master_list = Warehouse_goods_info.objects.annotate(
         remaining_qty=ExpressionWrapper(
             F('wh_goods_pieces') - F('wh_dispatch_qty'),
-            output_field=IntegerField())).filter(remaining_qty__gt=0,wh_customer_name=dispatch_customer,wh_check_in_out__in=[1, 4]
+            output_field=IntegerField())).filter(wh_customer_name=dispatch_customer,wh_check_in_out__in=[1, 4]
     )
     goods_list=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
     context = {'goods_list' : goods_list,
@@ -372,6 +394,13 @@ def dispatch_search(request):
         'page_obj': page_obj,
         }
     return render(request, "asset_mgt_app/dispatch_list.html", context)
+
+def get_base64_image(image_field):
+    if not image_field:
+        return None
+    with image_field.open('rb') as img_file:
+        return 'data:image/png;base64,' + base64.b64encode(img_file.read()).decode('utf-8')
+
 @login_required(login_url='login_page')
 def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
     dispatch_num = Dispatch_info.objects.get(id=dispatch_id).dispatch_num
@@ -399,6 +428,9 @@ def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
 
     dispatch_details = Dispatch_info.objects.filter(dispatch_num=dispatch_num).order_by('-id')
     wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name', flat=True).order_by('id').first()
+    for d in dispatch_details:
+        d.driver_signature_base64 = get_base64_image(d.dispatch_driver_signature)
+        d.supervisor_signature_base64 = get_base64_image(d.dispatch_supervisor_signature)
 
     context = {
         'dispatch_details': dispatch_details,
@@ -482,43 +514,43 @@ def dispatch_partial_goods(request):
     if dispatch_qty > remaining:
         return JsonResponse({'error': 'Cannot dispatch more than remaining pieces'}, status=400)
 
-    goods.wh_dispatch_qty += dispatch_qty
-    goods.save()
-
     dispatch_num_val = request.session.get('ses_dispatch_num_val')
     dispatch_info = Dispatch_info.objects.get(dispatch_num=dispatch_num_val)
     current_date = now()
-    check_in_out_instance = Check_in_out.objects.get(id=4)
-    partial_count = Warehouse_goods_info.objects.filter(
-        wh_qr_rand_num__startswith=f"{goods.wh_qr_rand_num}_P"
-    ).count()
-    partial_suffix = partial_count + 1
-    new_qr_rand_num = f"{goods.wh_qr_rand_num}_P{partial_suffix}"
+    if dispatch_qty == remaining:
+        # Dispatching all remaining pieces - update the original record
+        goods.wh_dispatch_qty += dispatch_qty
+       # goods.wh_goods_pieces = goods.wh_goods_pieces-goods.wh_dispatch_qty
+        goods.wh_dispatch_num = dispatch_num_val
+        goods.wh_dispatch_id = dispatch_info
+        goods.wh_check_in_out = Check_in_out.objects.get(id=2)
+        goods.wh_checkout_time = current_date
+        goods.wh_truck_type = dispatch_info.dispatch_truck_type
+        goods.wh_storage_time = (current_date.date() - goods.wh_checkin_time.date()).days
+        goods.save()
+    else:
+        # Partial dispatch - create new record
+        goods.wh_dispatch_qty += dispatch_qty
+        goods.save()
+    # Generate new QR number for partial
+        partial_count = Warehouse_goods_info.objects.filter(
+            wh_qr_rand_num__startswith=f"{goods.wh_qr_rand_num}_P"
+        ).count()
+        new_qr_rand_num = f"{goods.wh_qr_rand_num}_P{partial_count + 1}"
 
-    dispatched_goods = Warehouse_goods_info.objects.create(
-        wh_job_no=goods.wh_job_no,
-        wh_qr_rand_num=new_qr_rand_num,
-        wh_goods_pieces = dispatch_qty,
-        wh_check_in_out=Check_in_out.objects.get(id=2),
-        wh_dispatch_num=dispatch_num_val,
-        wh_checkout_time=current_date,
-        wh_truck_type=dispatch_info.dispatch_truck_type,
-        wh_checkin_time=goods.wh_checkin_time,
-        wh_customer_name=goods.wh_customer_name,
-        wh_customer_type=goods.wh_customer_type,
-        wh_branch=goods.wh_branch,
-        wh_unit=goods.wh_unit,
-        wh_bay=goods.wh_bay,
-        wh_stack_layer=goods.wh_stack_layer,
-        wh_storage_time=(current_date.date() - goods.wh_checkin_time.date()).days,
-        wh_dispatch_id=dispatch_info,
+        dispatched_goods = goods
+        dispatched_goods.pk = None
+        dispatched_goods.wh_qr_rand_num = new_qr_rand_num
+        dispatched_goods.wh_goods_pieces = dispatch_qty
+        dispatched_goods.wh_dispatch_qty = dispatch_qty
+        dispatched_goods.wh_dispatch_num = dispatch_num_val
+        dispatched_goods.wh_dispatch_id = dispatch_info
+        dispatched_goods.wh_check_in_out = Check_in_out.objects.get(id=2)
+        dispatched_goods.wh_checkout_time = current_date
+        dispatched_goods.wh_truck_type = dispatch_info.dispatch_truck_type
+        dispatched_goods.wh_storage_time = (current_date.date() - goods.wh_checkin_time.date()).days
 
-        wh_goods_length=goods.wh_goods_length,
-        wh_goods_width=goods.wh_goods_width,
-        wh_goods_height=goods.wh_goods_height,
-        wh_goods_weight=goods.wh_goods_weight,
-        wh_goods_package_type=goods.wh_goods_package_type,
-        wh_dispatch_qty=dispatch_qty
-    )
+        dispatched_goods.save()
 
-    return JsonResponse({'message': 'Partial dispatch recorded as a new entry'})
+    return JsonResponse({'message': 'Partial dispatch recorded'})
+

@@ -82,8 +82,25 @@
         {% endfor %}
     </table>
     <div class="left-group">
-        <div>Driver ----------------------------------------------</div>
-        <div>BVM Supervisor ----------------------------------------------</div>
+        {% for dispatch_detail in dispatch_details %}
+        <div>
+            <strong>Driver ----------------------------------------------</strong><br>
+            {% if dispatch_detail.driver_signature_base64 %}
+            <img src="{{ dispatch_detail.driver_signature_base64 }}" style="height: 50px;">
+            {% else %}
+            <span>No Signature</span>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: 30px;">
+            <strong>BVM Supervisor ----------------------------------------------</strong><br>
+            {% if dispatch_detail.supervisor_signature_base64 %}
+            <img src="{{ dispatch_detail.supervisor_signature_base64 }}" style="height: 50px;">
+            {% else %}
+            <span>No Signature</span>
+            {% endif %}
+        </div>
+        {% endfor %}
     </div>
     <div class="right-group">
         <p>Super Verification</p>

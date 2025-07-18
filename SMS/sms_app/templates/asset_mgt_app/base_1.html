@@ -38,7 +38,7 @@
 
 <body style="background-color: whitesmoke;">
 <!-- Header -->
-<div class="header_style bg-dark text-white sticky-top">
+<div class="header_style  text-white sticky-top" style="background-color: #0D2F3F;">
     <div class="container-fluid">
         <!-- Desktop layout -->
         <div class="row align-items-center d-none d-md-flex">
@@ -54,9 +54,10 @@
             <div class="col-2 text-center">
                 <div>
                     Hi, {{ request.session.first_name }}
-                    <small class="text-danger">{{ request.session.ses_role }}</small>
+                    <small style="color: #3399ff;">{{ request.session.ses_role }}</small>
                 </div>
-                <a href="{% url 'logout_page' %}" class="btn btn-dark p-1 mt-1">
+
+                <a href="{% url 'logout_page' %}" class="btn btn-dark p-1 m-2">
                     <i class="fas fa-sign-out-alt fa-lg"></i>
                 </a>
             </div>
@@ -76,7 +77,7 @@
                             <i class="fas fa-home"></i>
                         </a>
                         <small>{{ request.session.first_name }}</small>
-                        <small class="text-danger">{{ request.session.ses_role }}</small>
+                        <small style="color: #3399ff;">{{ request.session.ses_role }}</small>
                         <a href="{% url 'logout_page' %}" class="btn btn-dark btn-sm ">
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
@@ -86,7 +87,7 @@
         </div>
     </div>
 </div>
-</div>
+
 <!-- Content -->
 <div class="container-fluid pt-2 pb-5">
     {% block content %}

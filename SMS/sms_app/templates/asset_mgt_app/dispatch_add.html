@@ -8,32 +8,32 @@
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 				<div class=" col-12 card-header text-center">
 					<div class="row align-items-center">
-        <div class="col-12 col-md-8 col-lg-10 text-center">
+						<div class="col-12 col-md-8 col-lg-10 text-center">
 							<h3>Add/Update Dispatch</h3>
 						</div>
 						<div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
 							<button id="email_alert" type="button" onclick="email_message_fn()" class="btn btn-warning d-inline-flex align-items-center" data-toggle="modal" data-target=".bd-example-modal-lg">
 								<i class="fas fa-envelope-square mr-2"></i> Email Alert <span class="badge badge-danger ml-2">{{gate_out_email_count}}</span>
 							</button>
-							</div>
+						</div>
 					</div>
 				</div>
-							<!-- Modal Structure -->
-							<div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-								<div class="modal-dialog modal-lg" role="document">
-									<div class="modal-content">
-										<div class="modal-header bg-info">
-											<h5 class="modal-title text-center" id="sendEmailModalLabel">Email Alert </h5>
-											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-												<span aria-hidden="true">&times;</span>
-											</button>
-										</div>
-										<div class="modal-body text-dark">
-											{% include "asset_mgt_app/gate_out_send_email.html" %}
-										</div>
-									</div>
-								</div>
+				<!-- Modal Structure -->
+				<div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-lg" role="document">
+						<div class="modal-content">
+							<div class="modal-header bg-info">
+								<h5 class="modal-title text-center" id="sendEmailModalLabel">Email Alert </h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
 							</div>
+							<div class="modal-body text-dark">
+								{% include "asset_mgt_app/gate_out_send_email.html" %}
+							</div>
+						</div>
+					</div>
+				</div>
 
 				<div class="card-body bg-light" >
 					<form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}">
@@ -168,17 +168,53 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
-									{% render_field dispatch_form.dispatch_status id="dispatch_status" class="form-control"  %}
+									{% render_field dispatch_form.dispatch_status id="dispatch_status" class="form-control" onchange="SignatureButtons()" %}
 								</div>
 								{% render_field dispatch_form.dispatch_updated_by hidden="True" id="dispatch_updated_by" class="form-control"  %}
 								{% render_field dispatch_form.dispatch_invoice_list hidden="True" id="dispatch_invoice_list" class="form-control"  %}
 								{% render_field dispatch_form.dispatch_job_num_list hidden="True" id="dispatch_job_num_list" class="form-control"  %}
 							</div>
-							<div class="input-group input-group-sm mb-3 mt-2 container-fluid">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Comments</span>
+							<div class="container-fluid">
+								<div class="row">
+
+									<!-- Left Column: Comments -->
+									<div class="col-md-6">
+										<div class="input-group input-group-sm mb-3 mt-2">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Comments</span>
+											</div>
+											{% render_field dispatch_form.dispatch_comments class="form-control" %}
+										</div>
+									</div>
+									<div class="col-md-6 mt-3">
+										<div class="row">
+											<div class="col-md-6">
+												<!-- Driver Signature -->
+												<button type="button" class="btn btn-primary btn-sm mt-2" data-toggle="modal" data-target="#driverSignatureModal" id="driver-sign-btn" disabled>
+													Driver Signature
+												</button>
+												<div id="driver-signature-preview">
+													{% if dispatch_form.instance.dispatch_driver_signature %}
+													<img src="{{ dispatch_form.instance.dispatch_driver_signature.url }}" alt="Driver Signature" class="img-fluid" style="max-height: 80px;">
+													{% endif %}
+												</div>
+												<input type="hidden" name="driver_signature_data" id="driver-signature-data">
+											</div>
+											<div class="col-md-6">
+												<!-- Supervisor Signature -->
+												<button type="button" class="btn btn-primary btn-sm mt-2" data-toggle="modal" data-target="#supervisorSignatureModal" id="supervisor-sign-btn" disabled>
+													Supervisor Signature
+												</button>
+												<div id="supervisor-signature-preview">
+													{% if dispatch_form.instance.dispatch_supervisor_signature %}
+													<img src="{{ dispatch_form.instance.dispatch_supervisor_signature.url }}" alt="Supervisor Signature" class="img-fluid" style="max-height: 80px;">
+													{% endif %}
+												</div>
+												<input type="hidden" name="supervisor_signature_data" id="supervisor-signature-data">
+											</div>
+										</div>
+									</div>
 								</div>
-								{% render_field dispatch_form.dispatch_comments class="form-control"  %}
 							</div>
 						</div>
 						<div class="row">
@@ -200,22 +236,99 @@
 	</div>
 </div>
 <br>
-		<div id="accordion">
-			<div class="card px-0">
-				<div class="card-header bg-info" id="headingTwo">
-					<h5 class="mb-0">
-						<button class="btn btn-danger text-white" id="add_edit_stocks" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-							<i class="fas fa-chevron-down"></i>
-						</button>
-					</h5>
-				</div>
-				<div id="collapseTwo"  aria-labelledby="headingTwo" data-parent="#accordion">
-							<div id="dispatch_goods_list">
-								{% include "asset_mgt_app/dispatch_goods_list.html" %}
-							</div>
-				</div>
+<div id="accordion">
+	<div class="card px-0">
+		<div class="card-header bg-info" id="headingTwo">
+			<h5 class="mb-0">
+				<button class="btn btn-danger text-white" id="add_edit_stocks" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+					<i class="fas fa-chevron-down"></i>
+				</button>
+			</h5>
+		</div>
+		<div id="collapseTwo"  aria-labelledby="headingTwo" data-parent="#accordion">
+			<div id="dispatch_goods_list">
+				{% include "asset_mgt_app/dispatch_goods_list.html" %}
 			</div>
 		</div>
+	</div>
+</div>
+
+<!-- Driver Signature Modal -->
+<div class="modal fade" id="driverSignatureModal" tabindex="-1">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Driver Signature</h5>
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+			</div>
+			<div class="modal-body">
+				<canvas id="driver-pad" width="800" height="150" style="border:1px solid #ccc; width:100%;"></canvas>
+				<button type="button" id="clear-driver" class="btn btn-warning btn-sm mt-2">Clear</button>
+			</div>
+			<div class="modal-footer">
+				<button type="button" id="save-driver" class="btn btn-success">Save</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Supervisor Signature Modal -->
+<div class="modal fade" id="supervisorSignatureModal" tabindex="-1">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Supervisor Signature</h5>
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+			</div>
+			<div class="modal-body">
+				<canvas id="supervisor-pad" width="800" height="150" style="border:1px solid #ccc; width:100%;"></canvas>
+				<button type="button" id="clear-supervisor" class="btn btn-warning btn-sm mt-2">Clear</button>
+			</div>
+			<div class="modal-footer">
+				<button type="button" id="save-supervisor" class="btn btn-success">Save</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
+<script>
+	const driverPad = new SignaturePad(document.getElementById('driver-pad'));
+    const supervisorPad = new SignaturePad(document.getElementById('supervisor-pad'));
+
+    // Driver
+    document.getElementById('clear-driver').onclick = () => driverPad.clear();
+    document.getElementById('save-driver').onclick = () => {
+      if (!driverPad.isEmpty()) {
+        const data = driverPad.toDataURL();
+        document.getElementById('driver-signature-data').value = data;
+        document.getElementById('driver-signature-preview').innerHTML = `<img src="${data}" class="img-fluid mt-2" style="max-height: 80px;">`;
+        $('#driverSignatureModal').modal('hide');
+      }
+    };
+
+    // Supervisor
+    document.getElementById('clear-supervisor').onclick = () => supervisorPad.clear();
+    document.getElementById('save-supervisor').onclick = () => {
+      if (!supervisorPad.isEmpty()) {
+        const data = supervisorPad.toDataURL();
+        document.getElementById('supervisor-signature-data').value = data;
+        document.getElementById('supervisor-signature-preview').innerHTML = `<img src="${data}" class="img-fluid mt-2" style="max-height: 80px;">`;
+        $('#supervisorSignatureModal').modal('hide');
+      }
+    };
+</script>
+<script>
+
+	function SignatureButtons() {
+      const status = document.getElementById("dispatch_status").value;
+      document.getElementById("driver-sign-btn").disabled = status !== "5";
+      document.getElementById("supervisor-sign-btn").disabled = status !== "5";
+    }
+
+    // Run on page load
+    document.addEventListener("DOMContentLoaded", SignatureButtons);
+</script>
 
 
 <script>
