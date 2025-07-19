@@ -10,7 +10,7 @@
   z-index: 1;
   top:0;
   left: 0;
-  background-color: #111;
+  background-color: #0D2F3F;
   overflow-x: hidden;
   padding-top: 12px;
   padding-left:10px;
@@ -33,7 +33,7 @@
 /*Collapsible List*/
 /* Style the button that is used to open and close the collapsible content */
 .collapsible {
-  background-color: #111;
+  background-color: #0D2F3F;
   color: #ffffff;
   cursor: pointer;
   padding: 10px;
@@ -62,7 +62,7 @@
   font-size: 20px;
   display: none;
   overflow: hidden;
-  background-color:  #111;
+  background-color:  #0D2F3F;
   font-size: 16px;
 }
 
@@ -181,7 +181,7 @@ font-weight: bold;
 /*header*/
 
 .header_style{
-background-color: #111;
+background-color: #0D2F3F;
 border-bottom:8px solid #3366ff;
 text-align: center;
 }
