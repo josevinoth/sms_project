@@ -103,6 +103,9 @@ hr {
 td {
     text-align: center; /* Or right or left */
 }
+th {
+    text-align: center !important; /* Or right or left */
+}
 
 h1, h2{
     font-family: 'Poppins', sans-serif;
