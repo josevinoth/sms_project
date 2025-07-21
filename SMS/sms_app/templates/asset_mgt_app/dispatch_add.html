@@ -183,12 +183,12 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text">Comments</span>
 											</div>
-											{% render_field dispatch_form.dispatch_comments class="form-control" %}
+											{% render_field dispatch_form.dispatch_comments class="form-control" rows="3" %}
 										</div>
 									</div>
 									<div class="col-md-6 mt-3">
 										<div class="row">
-											<div class="col-md-6">
+											<div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
 												<!-- Driver Signature -->
 												<button type="button" class="btn btn-primary btn-sm mt-2" data-toggle="modal" data-target="#driverSignatureModal" id="driver-sign-btn" disabled>
 													Driver Signature
@@ -200,7 +200,7 @@
 												</div>
 												<input type="hidden" name="driver_signature_data" id="driver-signature-data">
 											</div>
-											<div class="col-md-6">
+											<div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
 												<!-- Supervisor Signature -->
 												<button type="button" class="btn btn-primary btn-sm mt-2" data-toggle="modal" data-target="#supervisorSignatureModal" id="supervisor-sign-btn" disabled>
 													Supervisor Signature
@@ -263,10 +263,10 @@
 			</div>
 			<div class="modal-body">
 				<canvas id="driver-pad" width="800" height="150" style="border:1px solid #ccc; width:100%;"></canvas>
-				<button type="button" id="clear-driver" class="btn btn-warning btn-sm mt-2">Clear</button>
-			</div>
-			<div class="modal-footer">
-				<button type="button" id="save-driver" class="btn btn-success">Save</button>
+				</div>
+			<div class="modal-footer d-flex justify-content-between">
+				<button type="button" id="clear-driver" class="btn btn-warning btn-sm">Clear</button>
+				<button type="button" id="save-driver" class="btn btn-success btn-sm">Save</button>
 			</div>
 		</div>
 	</div>
@@ -282,10 +282,10 @@
 			</div>
 			<div class="modal-body">
 				<canvas id="supervisor-pad" width="800" height="150" style="border:1px solid #ccc; width:100%;"></canvas>
-				<button type="button" id="clear-supervisor" class="btn btn-warning btn-sm mt-2">Clear</button>
 			</div>
-			<div class="modal-footer">
-				<button type="button" id="save-supervisor" class="btn btn-success">Save</button>
+			<div class="modal-footer d-flex justify-content-between">
+				<button type="button" id="clear-supervisor" class="btn btn-warning btn-sm mt-2">Clear</button>
+				<button type="button" id="save-supervisor" class="btn btn-success btn-sm">Save</button>
 			</div>
 		</div>
 	</div>
@@ -305,6 +305,9 @@
         document.getElementById('driver-signature-preview').innerHTML = `<img src="${data}" class="img-fluid mt-2" style="max-height: 80px;">`;
         $('#driverSignatureModal').modal('hide');
       }
+      else {
+		alert(" Please sign before saving the driver signature.");
+	}
     };
 
     // Supervisor
@@ -316,6 +319,9 @@
         document.getElementById('supervisor-signature-preview').innerHTML = `<img src="${data}" class="img-fluid mt-2" style="max-height: 80px;">`;
         $('#supervisorSignatureModal').modal('hide');
       }
+      else {
+		alert("Please sign before saving the supervisor signature.");
+	}
     };
 </script>
 <script>
