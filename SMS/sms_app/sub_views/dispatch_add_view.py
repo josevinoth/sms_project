@@ -27,6 +27,8 @@ from ..views import warehousevolme_area_calc
 from io import BytesIO
 from django.views.decorators.http import require_POST
 from django.db.models import F, ExpressionWrapper, IntegerField
+import base64
+from django.core.files.base import ContentFile
 
 
 # Add Dispatch Job
@@ -105,7 +107,24 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_form = DispatchaddForm(request.POST, instance=dispatch_info)
 
             if dispatch_form.is_valid():
-                dispatch_form.save()
+                dispatch = dispatch_form.save(commit=False)
+                # Process driver signature
+                driver_data = request.POST.get('driver_signature_data')
+                if driver_data:
+                    format, imgstr = driver_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                    data = ContentFile(base64.b64decode(imgstr), name=f'driver_signature.{ext}')
+                    dispatch.dispatch_driver_signature = data
+
+                # Process supervisor signature
+                supervisor_data = request.POST.get('supervisor_signature_data')
+                if supervisor_data:
+                    format, imgstr = supervisor_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                    data = ContentFile(base64.b64decode(imgstr), name=f'supervisor_signature.{ext}')
+                    dispatch.dispatch_supervisor_signature = data
+
+                dispatch.save()
                 print("Form Saved")
                 messages.success(request, 'Record Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
@@ -372,6 +391,12 @@ def dispatch_search(request):
         'page_obj': page_obj,
         }
     return render(request, "asset_mgt_app/dispatch_list.html", context)
+
+def get_base64_image(image_field):
+    if not image_field:
+        return None
+    with image_field.open('rb') as img_file:
+        return 'data:image/png;base64,' + base64.b64encode(img_file.read()).decode('utf-8')
 @login_required(login_url='login_page')
 def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
     dispatch_num = Dispatch_info.objects.get(id=dispatch_id).dispatch_num
@@ -399,7 +424,9 @@ def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
 
     dispatch_details = Dispatch_info.objects.filter(dispatch_num=dispatch_num).order_by('-id')
     wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name', flat=True).order_by('id').first()
-
+    for d in dispatch_details:
+        d.driver_signature_base64 = get_base64_image(d.dispatch_driver_signature)
+        d.supervisor_signature_base64 = get_base64_image(d.dispatch_supervisor_signature)
     context = {
         'dispatch_details': dispatch_details,
         'grouped_dispatch_details': grouped_details,

@@ -1,5 +1,9 @@
 from django.db import models
 from ..models import Check_in_out,CustomerInfo,Labels_pasted_Info,StatusList,VehicletypeInfo,GstexcemptionInfo,MyUser,TransitdistributeInfo
+def user_directory_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+
+    return 'DispatchsignImages/{0}/{1}'.format(instance.dispatch_num, filename)
 
 class Dispatch_info(models.Model):
     dispatch_depature_date = models.DateTimeField(null=True,blank=True)
@@ -33,3 +37,5 @@ class Dispatch_info(models.Model):
     dispatch_email_count = models.IntegerField(null=True,blank=True,default=0)
     dispatch_transit = models.ForeignKey(TransitdistributeInfo,on_delete=models.CASCADE, null=True, blank=True)
     dispatch_reference = models.CharField(null=True,blank=True, max_length=40)
+    dispatch_driver_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
+    dispatch_supervisor_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
