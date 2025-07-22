@@ -108,19 +108,20 @@ body::before {
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.7);
   outline: none;
 }
-
 .btn-primary {
-  background: linear-gradient(to right, #2b5876 0%, #4e4376 51%, #2b5876 100%);
+  background: #237fb7;
   background-size: 200% auto;
   color: white;
   border: none;
   padding: 12px;
-  width: 100%;
+  width: 200px;             /* Fixed width */
   transition: all 0.3s ease;
   border-radius: 10px;
   font-weight: 600;
   font-size: 1rem;
-  display: inline-block;
+  display: block;           /* Block for centering */
+  margin: 0 auto;           /* Center horizontally */
+  text-align: center;       /* Center text inside */
 }
 
 .btn-primary:hover {
@@ -128,6 +129,7 @@ body::before {
   color: #fff;
   text-decoration: none;
 }
+
 
 .login-footer {
   text-align: center;
@@ -156,55 +158,53 @@ body::before {
 </style>
 
 <div class="login-container">
-  <!-- Left section -->
-  <div class="login-left text-center">
-    <img src="/media/logo4.0.png" alt="Logo" style="margin-bottom:20px; height:100%;width:100%;">
+    <!-- Left section -->
+    <div class="login-left text-center">
+        <img src="/media/logo4.0.png" alt="Logo" style="margin-bottom:20px; height:100%;width:100%;">
 
-    <!-- Stylized Header -->
-    <div class="bvm-logo-text">
-          <h3>Welcome to</h3>
-
-      <span class="montserrat-bold">The BVM Group</span>
+        <!-- Stylized Header -->
+        <div class="bvm-logo-text">
+            <h3>Welcome to</h3>
+            <span class="montserrat-bold">The BVM Group</span>
+        </div>
+        <h6>WAREHOUSE | TRANSPORTATION | PACKAGING</h6>
     </div>
 
-    <h6>WAREHOUSE | TRANSPORTATION | PACKAGING</h6>
-  </div>
-
-  <!-- Right section -->
-  <div class="login-right">
-    <h4 class="mb-4"> Sign In</h4>
-    <form method="POST">
-      {% csrf_token %}
-      <div class="form-group">
-        <label for="username">User ID</label>
-        <div class="input-group">
-          <input type="text" class="form-control" id="username" placeholder="Enter your ID" name="username" required>
-        </div>
-      </div>
-
-      <div class="form-group">
+    <!-- Right section -->
+    <div class="login-right">
+        <h4 class="mb-4"> Sign In</h4>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">User ID</label>
                 <div class="input-group">
-        <label for="password">Password</label>
+                    <input type="text" class="form-control" id="username" placeholder="Enter your ID" name="username" required>
                 </div>
-          <input type="password" class="form-control" id="password" placeholder="Enter your password" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <label for="password">Password</label>
+                </div>
+                <input type="password" class="form-control" id="password" placeholder="Enter your password" name="password" required>
+            </div>
+
+
+            <button class="btn btn-primary btn-block mt-3" type="submit">
+                <i class="fa fa-thumbs-up"></i> Login
+            </button>
+        </form>
+
+        <div class="message text-center mt-3">
+            {% for message in messages %}
+            <small class="text-danger">{{ message }}</small>
+            {% endfor %}
         </div>
 
-
-      <button class="btn btn-primary btn-block mt-3" type="submit">
-        <i class="fa fa-thumbs-up"></i> Login
-      </button>
-    </form>
-
-    <div class="message text-center mt-3">
-      {% for message in messages %}
-        <small class="text-danger">{{ message }}</small>
-      {% endfor %}
+        <div class="login-footer text-center mt-3">
+            Don't have an account? <a href="{% url 'registration_page' %}"><b>Sign Up</b></a><br>
+            <a href="{% url 'password_reset' %}"><b>Forgot your password?</b></a>
+        </div>
     </div>
-
-    <div class="login-footer text-center mt-3">
-      Don't have an account? <a href="{% url 'registration_page' %}"><b>Sign Up</b></a><br>
-      <a href="{% url 'password_reset' %}"><b>Forgot your password?</b></a>
-    </div>
-  </div>
 </div>
 {% endblock content %}

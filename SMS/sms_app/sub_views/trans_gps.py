@@ -53,6 +53,7 @@ def get_vehicle_data(request):
                 lat = event.findtext("GPSPoint_lat", "").strip()
                 lon = event.findtext("GPSPoint_lon", "").strip()
                 speed = event.findtext("Speed", "").strip()
+                Odometer = event.findtext("Odometer", "").strip()
                 status_code = event.findtext("StatusCode", "").strip()
                 timestamp = event.findtext("Timestamp", "").strip()
 
@@ -74,6 +75,7 @@ def get_vehicle_data(request):
                     "lat": lat,
                     "lon": lon,
                     "speed": speed,
+                    "Odometer": Odometer,
                     "status": trip_status,
                     "running_status": running_status,
                     "timestamp": timestamp,
