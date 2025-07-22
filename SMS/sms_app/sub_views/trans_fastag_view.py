@@ -14,8 +14,11 @@ def fastag_enquiry_view(request):
         if form.is_valid():
             vehicle = form.cleaned_data['vehicleNumber'].strip()
             contact = form.cleaned_data['contactNumber'].strip()
-            from_date = form.cleaned_data['fromDate'].strftime("%Y%m%d") + " 000000"
-            to_date = form.cleaned_data['toDate'].strftime("%Y%m%d") + " 235959"
+            from_date = form.cleaned_data['fromDate'].strftime("%Y%m%d %H%M%S")
+            to_date = form.cleaned_data['toDate'].strftime("%Y%m%d %H%M%S")
+
+            print("From DateTime for API:", from_date)
+            print("To DateTime for API:", to_date)
 
             payload = {
                 "requestID": datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3],

@@ -227,8 +227,13 @@ function showLoader() {
     const loader = document.createElement("div");
     loader.id = "fullScreenLoader";
     loader.innerHTML = `
-      <dotlottie-wc src="https://lottie.host/7dfc6f49-e000-4eca-b3bb-c6097b76f6a4/Ek7CbZuhdh.lottie"
-        style="width: 300px; height: 300px;" autoplay loop></dotlottie-wc>
+      <dotlottie-wc
+  src="https://lottie.host/d9da93dd-25f1-4d20-b23e-a4cf03af23bc/VlvKHd09Qu.lottie"
+  style="width: 300px;height: 300px"
+  speed="1"
+  autoplay
+  loop
+></dotlottie-wc>
       <p>Loading Vehicle Data...</p>`;
     document.body.appendChild(loader);
   }
