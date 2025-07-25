@@ -1,5 +1,12 @@
+import json
+from datetime import datetime, timedelta
+
+import requests
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 
 from ..forms import TripclosurefilesForm,TripclosureaddForm
 from ..models import RtratemasterInfo,User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,Tripstatusinfo
@@ -206,3 +213,108 @@ def transport_calculate_trip_charges(request):
     else:
         # Return 100 if trip_category is not 1
         return JsonResponse({'ro_rate': 100})
+
+@csrf_exempt
+@require_GET
+def get_fastag_toll_cost_ajax(request):
+    result = {"success": False, "error": None, "total_amount": 0.0, "txn_list": []}
+
+    trip_num = request.GET.get('trip_num')
+    if not trip_num:
+        result["error"] = "Trip number not provided."
+        return JsonResponse(result)
+
+    try:
+        trip = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
+        vehicle_num = trip.tr_vehiclenumber
+        from_date = trip.tr_departeddate
+        to_date = trip.tr_reporteddate
+
+        total_amount, txn_list = calculate_toll(vehicle_num, from_date, to_date)
+
+        result["success"] = True
+        result["total_amount"] = total_amount
+        result["txn_list"] = txn_list
+
+    except TripdetailInfo.DoesNotExist:
+        result["error"] = "Trip not found."
+    except Exception as e:
+        result["error"] = str(e)
+
+    return JsonResponse(result, safe=False)
+
+
+def calculate_toll(vehicle_num, from_date, to_date):
+    result = {}
+    txn_list = []
+    total_amount = 0.0
+    from_date_str = from_date.strftime("%Y%m%d %H%M%S")
+    print(from_date_str)
+    to_date_str = to_date.strftime("%Y%m%d %H%M%S")
+    print(to_date_str)
+    print(vehicle_num.strip())
+    contact = "9677022115"
+    print(contact)
+    payload = {
+        "requestID": datetime.now().strftime("%Y%m%d%H%M%S%f"),
+        "requestTime": datetime.now().strftime("%Y%m%d%H%M"),
+        "merchantID": "HDFCWL",
+        "walletId": "W0122122713156600041",
+        "requestSource": "BD",
+        "fromDate": from_date_str,
+        "toDate": to_date_str,
+        "vehicleNumber": vehicle_num.strip(),
+        "contactNumber": contact
+    }
+
+    headers = {
+        'Authorization': 'C223611027:95ef659313847c7485d43d66b8c5b9e8b817c9c136d2798333c5df693b6efc2a',
+        'Content-Type': 'application/json',
+        'salt': '95ef659313847c7485d43d66b8c5b9e8b817c9c136d2798333c5df693b6efc2a'
+    }
+    try:
+        response = requests.post(
+            "https://1paytag.hdfcbank.com/walletmware/api/wallet/txn/tollenquiry",
+            json=payload,
+            headers=headers,
+            timeout=15
+        )
+        if response.status_code == 200:
+            api_data = response.json()
+            res_code = api_data.get("resCode", "").strip().upper()
+            res_msg = api_data.get("resMessage", "")
+            txn_list = api_data.get("data", [])
+            print("DEBUG resCode:", repr(api_data.get("resCode")))
+            print("DEBUG resMessage:", repr(api_data.get("resMessage")))
+            print("DEBUG txn_list type:", type(api_data.get("data")))
+
+            print(f"res_code = {res_code}, txn_list count = {len(txn_list)}")
+
+            if res_code in [res_code, "SUCCESS"] and isinstance(txn_list, list):
+                toll_count = len(txn_list)
+                total_amount = 0.0
+
+                for idx, txn in enumerate(txn_list):
+                    raw_amt = txn.get("txnAmt", "0")
+                    try:
+                        amount = float(str(raw_amt).strip())
+                        print(f"[{idx}] txnAmt = {amount}")
+                        total_amount += amount
+                    except Exception as e:
+                        print(f"[{idx}] Failed to parse txnAmt={raw_amt}: {e}")
+
+                result["success"] = f"{res_msg}: {toll_count} transactions"
+                result["error"] = None
+            else:
+                result["success"] = None
+                result["error"] = f"API ERROR: {res_msg or 'No message'}"
+        else:
+            result = {
+                "success": None,
+                "error": f"API returned status {response.status_code}: {response.text}"
+            }
+
+    except requests.exceptions.RequestException as e:
+        result = {"success": None, "error": str(e)}
+    print(f"Total toll amount for vehicle {vehicle_num}: {total_amount}")
+    return total_amount,txn_list
