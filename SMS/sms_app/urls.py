@@ -683,6 +683,7 @@ urlpatterns = [
     path('trip_highvalue_cancel/', views.trip_highvalue_cancel, name='trip_highvalue_cancel'),
     path('get_sim_tracking_data/', views.get_sim_tracking_data, name='get_sim_tracking_data'),
     path('get_fastag_toll_cost_ajax/', views.get_fastag_toll_cost_ajax, name='get_fastag_toll_cost_ajax'),
+    path('vendor_filter/', views.vendor_filter, name='vendor_filter'),
 
 ]
 
