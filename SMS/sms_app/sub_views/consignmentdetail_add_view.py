@@ -48,9 +48,9 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     enquiry_num = request.session.get('ses_enqiury_num')
-    enquiry_num_id = request.session.get('enquiry_num_id')
+    # enquiry_num_id = request.session.get('enquiry_num_id')
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
-
+    enquiry_num_id =ConsignmentdetailInfo.objects.get(id=consignmentdetail_id).co_enquirynumber.id if consignmentdetail_id != 0 else 0
     customer = EnquirynoteInfo.objects.get(pk=enquiry_num_id).en_customername
     customer_obj = CustomerInfo.objects.get(cu_name=customer)
     customer_id = customer_obj.id
