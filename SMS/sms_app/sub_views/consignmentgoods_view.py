@@ -184,3 +184,21 @@ def consignmentgoods_upload_attachment(request, pk, att_type):
         messages.error(request, 'Attachment upload failed. Please try again.')
 
     return redirect(request.META.get('HTTP_REFERER', 'consignmentgoods_list'))
+
+@csrf_exempt
+def consignmentgoods_delete_attachment(request, pk, att_type):
+    if request.method == 'POST':
+        instance = get_object_or_404(ConsignmentgoodsInfo, pk=pk)
+
+        if att_type == 'eway':
+            instance.cg_ewaybill_att.delete(save=False)
+            instance.cg_ewaybill_att = None
+        elif att_type == 'invoice':
+            instance.cg_invoice_att.delete(save=False)
+            instance.cg_invoice_att = None
+        elif att_type == 'otl':
+            instance.cg_otl_att.delete(save=False)
+            instance.cg_otl_att = None
+
+        instance.save()
+    return redirect(request.META.get('HTTP_REFERER', 'consignmentgoods_list'))

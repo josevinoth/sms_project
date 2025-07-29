@@ -281,77 +281,95 @@
 			<td> {{consignmentgoodsinfo.cg_qty}}</td>
 			<td> {{consignmentgoodsinfo.cg_weight}}</td>
 			<td> {{consignmentgoodsinfo.cg_ebillno}}</td>
-			<td style="min-width: 250px;">
+			<td style="min-width: 350px;">
+				<!-- Eway -->
+<div class="mb-2">
+    {% if consignmentgoodsinfo.cg_ewaybill_att %}
+        <a href="{{ consignmentgoodsinfo.cg_ewaybill_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
 
+        <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}" enctype="multipart/form-data" class="d-inline">
+            {% csrf_token %}
+            <label class="btn btn-sm btn-warning mb-0">
+                Re-attach Eway Bill
+                <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+            </label>
+        </form>
 
-    <!-- Eway -->
-    <div class="mb-2">
-        {% if consignmentgoodsinfo.cg_ewaybill_att %}
-            <a href="{{ consignmentgoodsinfo.cg_ewaybill_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
-            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}" enctype="multipart/form-data" class="d-inline">
-                {% csrf_token %}
-                <label class="btn btn-sm btn-warning mb-0">
-                    Retake Eway Bill
-                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-                </label>
-            </form>
-        {% else %}
-            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}" enctype="multipart/form-data" class="d-inline">
-                {% csrf_token %}
-                <label class="btn btn-sm btn-primary mb-0">
-                    Eway Bill
-                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-                </label>
-            </form>
-        {% endif %}
-    </div>
+        <!-- Delete Eway -->
+        <form method="post" action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'eway' %}" class="d-inline" onsubmit="return confirm('Delete Eway Bill attachment?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
+        </form>
+    {% else %}
+        <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}" enctype="multipart/form-data" class="d-inline">
+            {% csrf_token %}
+            <label class="btn btn-sm btn-primary mb-0">
+                Eway Bill
+                <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+            </label>
+        </form>
+    {% endif %}
+</div>
 
-				<!-- Invoice -->
-    <div class="mb-2">
-        {% if consignmentgoodsinfo.cg_invoice_att %}
-            <a href="{{ consignmentgoodsinfo.cg_invoice_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
-            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
-                {% csrf_token %}
-                <label class="btn btn-sm btn-warning mb-0">
-                   Retake Invoice
-                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-                </label>
-            </form>
-        {% else %}
-            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
-                {% csrf_token %}
-                <label class="btn btn-sm btn-primary mb-0">
-                    Invoice
-                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-                </label>
-            </form>
-        {% endif %}
-    </div>
+<!-- Invoice -->
+<div class="mb-2">
+    {% if consignmentgoodsinfo.cg_invoice_att %}
+        <a href="{{ consignmentgoodsinfo.cg_invoice_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
 
+        <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
+            {% csrf_token %}
+            <label class="btn btn-sm btn-warning mb-0">
+                Re-attach Invoice
+                <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+            </label>
+        </form>
 
-    <!-- OTL -->
-    <div>
-        {% if consignmentgoodsinfo.cg_otl_att %}
-            <a href="{{ consignmentgoodsinfo.cg_otl_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
-            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}" enctype="multipart/form-data" class="d-inline">
-                {% csrf_token %}
-                <label class="btn btn-sm btn-warning mb-0">
-                    Retake OTL
-                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-                </label>
-            </form>
-        {% else %}
-            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}" enctype="multipart/form-data" class="d-inline">
-                {% csrf_token %}
-                <label class="btn btn-sm btn-primary mb-0">
-                    OTL
-                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-                </label>
-            </form>
-        {% endif %}
-    </div>
+        <!-- Delete Invoice -->
+        <form method="post" action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'invoice' %}" class="d-inline" onsubmit="return confirm('Delete Invoice attachment?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
+        </form>
+    {% else %}
+        <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
+            {% csrf_token %}
+            <label class="btn btn-sm btn-primary mb-0">
+                Invoice
+                <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+            </label>
+        </form>
+    {% endif %}
+</div>
 
-</td>
+<!-- OTL -->
+<div>
+    {% if consignmentgoodsinfo.cg_otl_att %}
+        <a href="{{ consignmentgoodsinfo.cg_otl_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
+
+        <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}" enctype="multipart/form-data" class="d-inline">
+            {% csrf_token %}
+            <label class="btn btn-sm btn-warning mb-0">
+                Re-attach OTL
+                <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+            </label>
+        </form>
+
+        <!-- Delete OTL -->
+        <form method="post" action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'otl' %}" class="d-inline" onsubmit="return confirm('Delete OTL attachment?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
+        </form>
+    {% else %}
+        <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}" enctype="multipart/form-data" class="d-inline">
+            {% csrf_token %}
+            <label class="btn btn-sm btn-primary mb-0">
+                OTL
+                <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+            </label>
+        </form>
+    {% endif %}
+</div>
+
+			</td>
 
 
 </td>
