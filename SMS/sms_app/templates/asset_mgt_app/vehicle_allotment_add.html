@@ -464,20 +464,22 @@
 </script>
 <script>
 	function loadVendorSaleRate() {
-		  var vehicleId = $('#va_vehicletype_placed').val();
-		$.ajax({
-			url: '{% url 'get_vendor_sale_rate' %}',
-			type: 'GET',
-			data: {vehicle_id: vehicleId},
-			dataType: 'json',
-			success: function(data) {
-				var saleRate = data.sale_rate;
-				document.getElementById("va_sale").value = saleRate;
-				      calculateProfit();  // ✅ Trigger profit calculation after setting buy
-
-			}
-		});
-	}
+  var vehicleId = $('#va_vehicletype_placed').val();
+  $.ajax({
+    url: '{% url 'get_vendor_sale_rate' %}',
+    type: 'GET',
+    data: {vehicle_id: vehicleId},
+    dataType: 'json',
+    success: function(data) {
+      var saleRate = data.sale_rate;
+      if (saleRate === 0 || saleRate === "0") {
+        alert("Rate not assigned for this customer");
+      }
+      document.getElementById("va_sale").value = saleRate;
+      calculateProfit();  // Trigger profit calculation after setting buy
+    }
+  });
+}
 
 </script>
 

@@ -684,6 +684,7 @@ urlpatterns = [
     path('get_sim_tracking_data/', views.get_sim_tracking_data, name='get_sim_tracking_data'),
     path('get_fastag_toll_cost_ajax/', views.get_fastag_toll_cost_ajax, name='get_fastag_toll_cost_ajax'),
     path('vendor_filter/', views.vendor_filter, name='vendor_filter'),
+    path('consignmentgoods/<int:pk>/upload/<str:att_type>/', views.consignmentgoods_upload_attachment, name='consignmentgoods_upload_attachment'),
 
 ]
 

@@ -130,7 +130,7 @@
 							</div>
 							<div class="container-fluid row">
 								<div class="col-1"></div>
-								<div class="col-5 bg-dark p-2 mb-2 mr-1 rounded-sm text-white">
+								<div class="col-3 bg-dark p-2 mb-2 mr-1 rounded-sm text-white">
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Eway Bill Attachment</span>
@@ -138,12 +138,20 @@
 										{% render_field form.cg_ewaybill_att id="cg_ewaybill_att" class="form-control" %}
 									</div>
 								</div>
-								<div class="col-5 bg-dark p-2 mb-2 rounded-sm text-white">
+								<div class="col-3 bg-dark p-2 mb-2 mr-1 rounded-sm text-white">
 									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend bg-da">
+										<div class="input-group-prepend ">
 											<span class="input-group-text">Invoice Attachment</span>
 										</div>
 										{% render_field form.cg_invoice_att id="cg_invoice_att" class="form-control" %}
+									</div>
+								</div>
+								<div class="col-3 bg-dark p-2 mb-2 rounded-sm text-white">
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend ">
+											<span class="input-group-text">OTL Attachment</span>
+										</div>
+										{% render_field form.cg_otl_att id="cg_otl_att" class="form-control" %}
 									</div>
 								</div>
 							</div>
@@ -252,6 +260,7 @@
 			<th>No. of Pieces</th>
 			<th>Invoice Weight</th>
 			<th>E-Bill No.</th>
+			<th>Link / Attachment</th>
 			<th>Date of Issue</th>
 			<th>Date of Validity</th>
 			<th>Updated On</th>
@@ -272,6 +281,81 @@
 			<td> {{consignmentgoodsinfo.cg_qty}}</td>
 			<td> {{consignmentgoodsinfo.cg_weight}}</td>
 			<td> {{consignmentgoodsinfo.cg_ebillno}}</td>
+			<td style="min-width: 250px;">
+
+
+    <!-- Eway -->
+    <div class="mb-2">
+        {% if consignmentgoodsinfo.cg_ewaybill_att %}
+            <a href="{{ consignmentgoodsinfo.cg_ewaybill_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
+            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}" enctype="multipart/form-data" class="d-inline">
+                {% csrf_token %}
+                <label class="btn btn-sm btn-warning mb-0">
+                    Retake Eway Bill
+                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+                </label>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}" enctype="multipart/form-data" class="d-inline">
+                {% csrf_token %}
+                <label class="btn btn-sm btn-primary mb-0">
+                    Eway Bill
+                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+                </label>
+            </form>
+        {% endif %}
+    </div>
+
+				<!-- Invoice -->
+    <div class="mb-2">
+        {% if consignmentgoodsinfo.cg_invoice_att %}
+            <a href="{{ consignmentgoodsinfo.cg_invoice_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
+            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
+                {% csrf_token %}
+                <label class="btn btn-sm btn-warning mb-0">
+                   Retake Invoice
+                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+                </label>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
+                {% csrf_token %}
+                <label class="btn btn-sm btn-primary mb-0">
+                    Invoice
+                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+                </label>
+            </form>
+        {% endif %}
+    </div>
+
+
+    <!-- OTL -->
+    <div>
+        {% if consignmentgoodsinfo.cg_otl_att %}
+            <a href="{{ consignmentgoodsinfo.cg_otl_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
+            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}" enctype="multipart/form-data" class="d-inline">
+                {% csrf_token %}
+                <label class="btn btn-sm btn-warning mb-0">
+                    Retake OTL
+                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+                </label>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}" enctype="multipart/form-data" class="d-inline">
+                {% csrf_token %}
+                <label class="btn btn-sm btn-primary mb-0">
+                    OTL
+                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+                </label>
+            </form>
+        {% endif %}
+    </div>
+
+</td>
+
+
+</td>
+
 			<td> {{consignmentgoodsinfo.cg_dateofissue}}</td>
 			<td> {{consignmentgoodsinfo.cg_dateofvalidity}}</td>
 			<td> {{consignmentgoodsinfo.cg_updated_at}}</td>
