@@ -18,7 +18,7 @@ from xhtml2pdf import pisa
 from .send_department_email import send_department_email
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Check_in_out,Warehouse_goods_info,Dispatch_info
+from ..models import Check_in_out,Warehouse_goods_info,Dispatch_info,GoodsPartialDispatchInfo
 from django.contrib import messages
 import cv2
 import numpy as np
@@ -165,63 +165,80 @@ def dispatch_delete(request,dispatch_id):
 
 @login_required(login_url='login_page')
 def dispatch_goods_list(request):
-    # wh_job_id = request.session.get('ses_gatein_id_nam')
     first_name = request.session.get('first_name')
     dispatch_id = request.session.get('ses_dispatch_id')
-    dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-    dispatch_customer = Dispatch_info.objects.get(pk=dispatch_id).dispatch_customer
+    dispatch_info = Dispatch_info.objects.get(pk=dispatch_id)
+
+    dispatch_num_val = dispatch_info.dispatch_num
+    dispatch_customer = dispatch_info.dispatch_customer
+
     request.session['ses_dispatch_num_val'] = dispatch_num_val
     request.session['ses_dispatch_id_val'] = dispatch_id
-    dispatch_master_list = Warehouse_goods_info.objects.annotate(
-        remaining_qty=ExpressionWrapper(
-            F('wh_goods_pieces') - F('wh_dispatch_qty'),
-            output_field=IntegerField())).filter(remaining_qty__gt=0,wh_customer_name=dispatch_customer,wh_check_in_out__in=[1, 4]
+
+    dispatch_master_list = Warehouse_goods_info.objects.filter(
+        wh_customer_name=dispatch_customer,
+        wh_check_in_out__in=[1, 4]
     )
-    goods_list=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
-    context = {'goods_list' : goods_list,
-               'first_name': first_name,
-               'dispatch_master_list':dispatch_master_list,
-               'dispatch_num_val':dispatch_num_val,
-               }
-    return render(request,"asset_mgt_app/dispatch_goods_list_woh.html",context)
+
+    for goods in dispatch_master_list:
+        total_dispatched = GoodsPartialDispatchInfo.objects.filter(
+            pd_goods=goods
+        ).aggregate(total=Sum('pd_dispatch_qty'))['total'] or 0
+
+        goods.dispatched_total = total_dispatched
+        goods.remaining_qty = goods.wh_goods_pieces - total_dispatched
+
+
+    dispatch_master_list = [g for g in dispatch_master_list if g.remaining_qty > 0]
+
+    partial_goods = GoodsPartialDispatchInfo.objects.filter(
+        pd_dispatch_info=dispatch_info
+    ).select_related('pd_goods')
+
+    goods_list = []
+    for entry in partial_goods:
+        goods = entry.pd_goods
+        goods.dispatched_total = entry.pd_dispatch_qty
+        goods.all_dispatch_nums = dispatch_num_val
+        goods_list.append(goods)
+
+    context = {
+        'goods_list': goods_list,
+        'dispatch_master_list': dispatch_master_list,
+        'first_name': first_name,
+        'dispatch_num_val': dispatch_num_val,
+    }
+
+    return render(request, "asset_mgt_app/dispatch_goods_list_woh.html", context)
 
 @login_required(login_url='login_page')
 def dispatch_remove_goods(request):
     selected_stocks = request.GET.getlist('myList[]')
     print('selected_stocks',selected_stocks)
     dispatch_id_val = request.session.get('ses_dispatch_id_val')
-    for i in selected_stocks:
-        goods = Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).first()
-        if not goods:
+    current_dispatch = Dispatch_info.objects.get(pk=dispatch_id_val)
+
+    for qr_num in selected_stocks:
+        try:
+            goods = Warehouse_goods_info.objects.get(wh_qr_rand_num=qr_num)
+
+            GoodsPartialDispatchInfo.objects.filter(
+                pd_goods=goods,
+                pd_dispatch_info=current_dispatch
+            ).delete()
+
+            if goods.wh_dispatch_id == current_dispatch:
+                goods.wh_dispatch_num = None
+                goods.wh_dispatch_id = None
+                goods.wh_dispatch_qty = 0
+                goods.wh_check_in_out = Check_in_out.objects.get(pk=1)
+                goods.wh_storage_time = 0
+                goods.wh_checkout_time = None
+                goods.wh_truck_type = None
+                goods.save()
+
+        except Warehouse_goods_info.DoesNotExist:
             continue
-
-        if "_P" in i:
-            try:
-                original_qr = i.split("_P")[0]
-                original_goods = Warehouse_goods_info.objects.filter(wh_qr_rand_num=original_qr).first()
-
-                if original_goods:
-                    goods.delete()
-                    partial_dispatches = Warehouse_goods_info.objects.filter(
-                        wh_qr_rand_num__startswith=f"{original_qr}_P"
-                    )
-                    total_partial_qty = sum([x.wh_goods_pieces for x in partial_dispatches])
-                    original_goods.wh_dispatch_qty = max(0, total_partial_qty)
-                    original_goods.save()
-
-            except Exception as e:
-                print("Error reversing partial dispatch:", e)
-                continue
-        else:
-            Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(
-                wh_dispatch_num=None,
-                wh_dispatch_id="",
-                wh_check_in_out=1,
-                wh_storage_time=0,
-                wh_checkout_time=None,
-                wh_truck_type=None,
-                wh_dispatch_qty=0
-            )
 
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
@@ -293,6 +310,12 @@ def dispatch_add_goods(request):
         goods_info.wh_storage_time = date_diff
 
         goods_to_update.append(goods_info)
+        GoodsPartialDispatchInfo.objects.create(
+            pd_goods=goods_info,
+            pd_dispatch_info=dispatch_info,
+            pd_dispatch_qty=goods_info.wh_goods_pieces,
+            pd_updated_by=request.user,
+        )
 
     # Bulk update all modified goods
     Warehouse_goods_info.objects.bulk_update(
@@ -494,58 +517,43 @@ def gate_out_email(request, dispatch_id=0):
         messages.error(request, 'Invalid input in the email form.')
     return redirect(request.META['HTTP_REFERER'])
 
+
 @require_POST
 @login_required(login_url='login_page')
 def dispatch_partial_goods(request):
     goods_id = request.POST.get('goods_id')
     dispatch_qty = float(request.POST.get('dispatch_qty'))
-
-    try:
-        goods = Warehouse_goods_info.objects.get(id=goods_id)
-    except Warehouse_goods_info.DoesNotExist:
-        return JsonResponse({'error': 'Goods not found'}, status=404)
-
-    remaining = goods.wh_goods_pieces - goods.wh_dispatch_qty
-    if dispatch_qty > remaining:
-        return JsonResponse({'error': 'Cannot dispatch more than remaining pieces'}, status=400)
-
-    goods.wh_dispatch_qty += dispatch_qty
-    goods.save()
-
+    goods = Warehouse_goods_info.objects.get(id=goods_id)
     dispatch_num_val = request.session.get('ses_dispatch_num_val')
     dispatch_info = Dispatch_info.objects.get(dispatch_num=dispatch_num_val)
-    current_date = now()
-    check_in_out_instance = Check_in_out.objects.get(id=4)
-    partial_count = Warehouse_goods_info.objects.filter(
-        wh_qr_rand_num__startswith=f"{goods.wh_qr_rand_num}_P"
-    ).count()
-    partial_suffix = partial_count + 1
-    new_qr_rand_num = f"{goods.wh_qr_rand_num}_P{partial_suffix}"
 
-    dispatched_goods = Warehouse_goods_info.objects.create(
-        wh_job_no=goods.wh_job_no,
-        wh_qr_rand_num=new_qr_rand_num,
-        wh_goods_pieces = dispatch_qty,
-        wh_check_in_out=Check_in_out.objects.get(id=2),
-        wh_dispatch_num=dispatch_num_val,
-        wh_checkout_time=current_date,
-        wh_truck_type=dispatch_info.dispatch_truck_type,
-        wh_checkin_time=goods.wh_checkin_time,
-        wh_customer_name=goods.wh_customer_name,
-        wh_customer_type=goods.wh_customer_type,
-        wh_branch=goods.wh_branch,
-        wh_unit=goods.wh_unit,
-        wh_bay=goods.wh_bay,
-        wh_stack_layer=goods.wh_stack_layer,
-        wh_storage_time=(current_date.date() - goods.wh_checkin_time.date()).days,
-        wh_dispatch_id=dispatch_info,
+    total_dispatched = GoodsPartialDispatchInfo.objects.filter(pd_goods=goods).aggregate(
+        total=Sum('pd_dispatch_qty')
+    )['total'] or 0
 
-        wh_goods_length=goods.wh_goods_length,
-        wh_goods_width=goods.wh_goods_width,
-        wh_goods_height=goods.wh_goods_height,
-        wh_goods_weight=goods.wh_goods_weight,
-        wh_goods_package_type=goods.wh_goods_package_type,
-        wh_dispatch_qty=dispatch_qty
+    remaining_qty = goods.wh_goods_pieces - total_dispatched
+
+    if dispatch_qty > remaining_qty:
+        return JsonResponse({'error': 'Cannot dispatch more than remaining quantity'}, status=400)
+
+    # Create a dispatch log record
+    GoodsPartialDispatchInfo.objects.create(
+        pd_goods=goods,
+        pd_dispatch_qty=dispatch_qty,
+        pd_dispatch_info=dispatch_info,
+        pd_updated_by=request.user
     )
+    goods.wh_dispatch_num = dispatch_info.dispatch_num
+    goods.wh_dispatch_id = dispatch_info
+    goods.wh_checkout_time = now()
 
-    return JsonResponse({'message': 'Partial dispatch recorded as a new entry'})
+    new_total_dispatched = total_dispatched + dispatch_qty
+    if new_total_dispatched >= goods.wh_goods_pieces:
+        goods.wh_dispatch_qty = goods.wh_goods_pieces
+        goods.wh_check_in_out = Check_in_out.objects.get(id=2)  # Fully out
+    else:
+        goods.wh_dispatch_qty = new_total_dispatched
+        goods.wh_check_in_out = Check_in_out.objects.get(id=4)
+
+    goods.save()
+    return JsonResponse({'message': f'{dispatch_qty} units dispatched successfully.'})

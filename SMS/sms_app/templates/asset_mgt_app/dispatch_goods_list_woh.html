@@ -1,16 +1,10 @@
 {% extends "asset_mgt_app/base_1.html" %}
 {% block content %}
-<div class="col-md-1.5">
-    <a href="{% url 'dispatch_goods_back' %}" class="btn btn-primary">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
-</div>
 <!--    <div class="col-md-1">-->
 <!--        <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">-->
 <!--            <i class="fas fa-plus"></i>-->
 <!--        </a>-->
 <!--    </div>-->
-<br>
 <div class="row mt-3">
     <div class="col-12 text-center">
         {% if messages %}
@@ -24,8 +18,13 @@
         {% endif %}
     </div>
 </div>
-
-<hr>
+<div class="col-md-1.5">
+    <a href="{% url 'dispatch_goods_back' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+<br>
+<div class="container-fluid shadow-box-table">
 <div class="col-md-1.5">
     <a href="" id='remove_btn' class="btn btn-success" onclick="return confirm('Are you sure to Re-Check-In this stock?');">
         <i class="fas fa-plus"></i> Re-Check-In
@@ -64,8 +63,8 @@
             <td> {{goodsinfo.wh_job_no}}</td>
             <td> {{goodsinfo.wh_qr_rand_num}}</td>
             <td> {{goodsinfo.wh_goods_pieces}}</td>
-            <td> {{goodsinfo.wh_dispatch_qty}}</td>
-            <td> {{goodsinfo.wh_dispatch_num}}</td>
+            <td>{{ goodsinfo.dispatched_total }}</td>
+            <td> {{goodsinfo.all_dispatch_nums}}</td>
             <td> {{goodsinfo.wh_dispatch_id.dispatch_billing_truck_type}}</td>
             <td> {{goodsinfo.wh_goods_invoice}}</td>
             <td> {{goodsinfo.wh_customer_name}}</td>
@@ -83,7 +82,8 @@
         </tbody>
     </table>
 </div>
-
+</div>
+<br>
 <h3><span class="badge bg-info light">Master Stock List</span></h3>
 {% include "asset_mgt_app/dispatch_list_master_WOH.html" %}
 <script>

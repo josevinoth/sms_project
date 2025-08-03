@@ -682,7 +682,9 @@ urlpatterns = [
     path('trip_highvalue_delete/<int:high_value_id>/', views.trip_highvalue_delete, name='trip_highvalue_delete'),
     path('trip_highvalue_cancel/', views.trip_highvalue_cancel, name='trip_highvalue_cancel'),
     path('get_sim_tracking_data/', views.get_sim_tracking_data, name='get_sim_tracking_data'),
-
+    path('backfill-preview/', views.backfill_preview, name='backfill_preview'),
+    path('backfill-one/', views.backfill_one_record, name='backfill_one_record'),
+    path('backfill-all/',  views.backfill_all_records, name='backfill_all_records'),
 ]
 
 

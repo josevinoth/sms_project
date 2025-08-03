@@ -1,22 +1,23 @@
 from django.shortcuts import render
-from django.db.models import Count, Q,Sum,Case, When, Value, CharField, Min,FloatField, F,IntegerField
+from django.db.models import Count, Q, Sum, Case, When, Value, CharField, Min, FloatField, F, IntegerField
 from django.db.models import F, Subquery, OuterRef
-from django.db.models.functions import Coalesce,Round,ExtractMonth
+from django.db.models.functions import Coalesce, Round, ExtractMonth
 from django.utils import timezone
 from calendar import month_name
 from django.core.serializers import serialize
 import json
 from django.utils.timezone import make_aware
 from datetime import datetime
-from ..models import Warehouse_goods_info,ExpenseExtinfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,ExpenseTypeInfo,Ar_Info,BudgetInfo,ExpenseInfo
+from ..models import Warehouse_goods_info, ExpenseExtinfo, Location_info, UnitInfo, Business_Sol_info, \
+    TrbusinesstypeInfo, CustomerInfo, ExpenseTypeInfo, Ar_Info, BudgetInfo, ExpenseInfo, BilingInfo
 
 
 def finance_reports(request):
     first_name = request.session.get('first_name')
     context = {
-               'first_name': first_name
-               }
-    return render(request,"asset_mgt_app/finance_reports.html",context)
+        'first_name': first_name
+    }
+    return render(request, "asset_mgt_app/finance_reports.html", context)
 
 
 def branch_profit_loss(request):
@@ -48,12 +49,39 @@ def branch_profit_loss(request):
         .values('exp_ext_branch', 'exp_ext_branch__loc_name')
         .annotate(total_expense=Sum('exp_ext_amount'))
     )
-
     invoice_data = (
         Warehouse_goods_info.objects.filter(**invoices_filter)
         .values('wh_branch', 'wh_branch__loc_name')
         .annotate(total_invoice_cost=Sum('wh_total_invoice_cost'))
     )
+    # invoice_data = []
+    # voucher_groups = Warehouse_goods_info.objects.filter(**invoices_filter).values('wh_branch', 'wh_branch__loc_name',
+    #                                                                                'wh_voucher_num').distinct()
+
+    # for entry in voucher_groups:
+    #     voucher = entry['wh_voucher_num']
+    #     branch = entry['wh_branch']
+    #     branch_name = entry['wh_branch__loc_name']
+    #     try:
+    #         if voucher:
+    #             clean_voucher = voucher.strip()
+    #             print(f"Looking for: {clean_voucher}")
+    #             pre_gst_total = (
+    #                     BilingInfo.objects
+    #                     .filter(bill_invoice_ref__iexact=clean_voucher)
+    #                     .aggregate(total=Sum('bill_total_pre_gst'))['total'] or 0
+    #             )
+    #         else:
+    #             print(" Skipping: voucher is None or empty.")
+    #             pre_gst_total = 0
+    #
+    #         invoice_data.append({
+    #             'wh_branch': branch,
+    #             'wh_branch__loc_name': branch_name,
+    #             'total_invoice_cost': pre_gst_total
+    #         })
+    #     except BilingInfo.DoesNotExist:
+    #         continue
 
     combined_data = {}
 
@@ -428,7 +456,7 @@ def fin_profit_loss_view(request):
     to_date = request.GET.get('to_date')
 
     branches = Location_info.objects.all()
-    customers= CustomerInfo.objects.all()
+    customers = CustomerInfo.objects.all()
     businessmodels = TrbusinesstypeInfo.objects.all()
 
     if from_date:
@@ -509,7 +537,7 @@ def fin_profit_loss_view(request):
         profit_loss_values.append(profit_loss)
 
     context = {
-        'first_name':first_name,
+        'first_name': first_name,
         'results': results,
         'branches': branches,
         'customers': customers,
@@ -542,7 +570,8 @@ def expenses_report(request):
     expense_summary = ExpenseExtinfo.objects.all()
 
     if branch_filter:
-        units = expense_summary.filter(exp_ext_branch__loc_name=branch_filter).values_list('exp_ext_unit__unit_name', flat=True).distinct()
+        units = expense_summary.filter(exp_ext_branch__loc_name=branch_filter).values_list('exp_ext_unit__unit_name',
+                                                                                           flat=True).distinct()
         expense_summary = expense_summary.filter(exp_ext_branch__loc_name=branch_filter)
 
     if unit_filter:
@@ -558,7 +587,7 @@ def expenses_report(request):
     if company_filter:
         expense_summary = expense_summary.filter(
             exp_ext_expense_number__exp_business__bvm_business=company_filter
-            )
+        )
 
     expense_summary = (
         expense_summary.values(expense_type=F('exp_ext_expense_number__exp_expense_type__exp_type_name'))
@@ -601,7 +630,6 @@ DUE_DAY_GROUPS = [
 
 
 def get_due_day_case_expression(field_name):
-
     return Case(
         *[
             When(**{f"{field_name}__gte": start, f"{field_name}__lte": end}, then=Value(label))
@@ -613,7 +641,6 @@ def get_due_day_case_expression(field_name):
 
 
 def get_due_day_sort_expression(field_name):
-
     return Case(
         *[
             When(**{f"{field_name}": label}, then=Value(order))
@@ -716,7 +743,7 @@ INCOME_CATEGORIES = {
     "Warehouse Handling Charges": "bf_Warehouse_Handling_Charges",
     "Warehouse Loading Charges": "bf_Warehouse_Loading_Charges",
     "Warehouse Storage Charges": "bf_Warehouse_Storage_Charges",
-    "Warehouse Unloading Charges":"bf_Warehouse_Unloading_Charges",
+    "Warehouse Unloading Charges": "bf_Warehouse_Unloading_Charges",
 }
 WAREHOUSE_EXPENSE_FIELD_MAPPING = {
     "Airport Handling Charges": None,  # If this isn't tracked in Warehouse_goods_info
@@ -731,15 +758,20 @@ WAREHOUSE_EXPENSE_FIELD_MAPPING = {
 }
 
 DEPARTMENT_EXPENSES_CATEGORIES = {
-    "Audit Fee": "bf_audit_fees",
-    "Bad Debts": "bf_bad_debts",
+    "Advertisement & Business Promotion Expenses": "bf_advertisement_business_promotion",
+    # "Audit Fee": "bf_audit_fees",
+    # "Bad Debts": "bf_bad_debts",
     "Bank Charges": "bf_bank_charges",
     "Consultancy Charges": "bf_consultancy_charges",
     "Celebration Expenses": "bf_celebration_expenses",
     "Directors Remuneration": "bf_directors_remuneration",
-    "Insurance Car": "bf_insurance_car",
+    "Housekeeping Salary": "bf_housekeeping_salary",
+    # "Insurance Car": "bf_insurance_car",
     "Interest On Statutory Dues": "bf_interest_on_statutory_dues",
+    "Office Repairs and Maintenance Expenses": "bf_office_repairs_maintenance",
     "Professional & Legal Charges": "bf_professional_legal_charges",
+    "Rent Furniture fittings": "bf_rent_furniture_fittings",
+    "Rent Office": "bf_rent_office",
     "Subscription Membership": "bf_subscription_membership",
 }
 EMPLOYEE_BENEFITS_CATEGORIES = {
@@ -749,7 +781,11 @@ EMPLOYEE_BENEFITS_CATEGORIES = {
     "Employer Contribution to ESI Corp Staff": "bf_employer_contribution_to_ESI_corp_staff",
     "Employer Contribution to PF Corp Staff": "bf_employer_contribution_to_PF_corp_staff",
     "EPF Admin Charges Corp Staff": "bf_EPF_admin_charges_corp_staff",
+    "Ex-Gratia Corp Staff": "bf_exgratia_corp_staff",
     "Gratuity Corp Staff": "bf_gratuity_corp_staff",
+    "Incentive Corp Staff": "bf_incentive_corp_staff",
+    "Insurance Corp Staff": "bf_insurance_corp_staff",
+    "LWF Corp Staff": "bf_lwf_corp_staff",
     "Salaries Wages Corp Staff": "bf_salaries_wages_corp_staff",
     "Dept Staff": "bf_dept_staff",
     "Bonus Staff": "bf_bonus_staff",
@@ -757,78 +793,85 @@ EMPLOYEE_BENEFITS_CATEGORIES = {
     "Employer Contribution to ESI Staff": "bf_employer_contribution_to_ESI_staff",
     "Employer Contribution to PF Staff": "bf_employer_contribution_to_PF_staff",
     "EPF Admin Charges Staff": "bf_EPF_admin_charges_staff",
+    "Ex-Gratia Dept Staff": "bf_exgratia_dept_staff",
     "Gratuity Staff": "bf_gratuity_staff",
+    "Incentive Dept Staff": "bf_incentive_dept_staff",
+    "Insurance Staff": "bf_insurance_staff",
+    "LWF Dept Staff": "bf_lwf_dept_staff",
     "Salaries Wages Staff": "bf_salaries_wages_staff",
 }
-INTEREST_EXPENSES_CATEGORIES = {
-    "Interest on Borrowings": "bf_interest_on_borrowings",
-    "Interest on Other Loans ": "bf_interest_on_other_loans",
-}
+
 OPERATIONAL_EXPENSES_CATEGORIES = {
     "Operational Expenses Fixed": "bf_fixed",
-    "Depreciation Expenses":"bf_depreciation",
-    "Software AMC Charges Expenses":"bf_software_AMC_charges",
     "Insurance Expenses - Warehouse": "bf_insurance_warehouse",
-    "Rates & Taxes Expenses": "bf_rates_taxes",
+    "Insurance - WCC": "bf_insurance_wcc",
+    "Manpower Supply Expenses": "bf_manpower_supply_expenses",
     "Rent - Premises Expenses": "bf_rent_premises",
     "Security Service Charges Expenses": "bf_security_service_charges",
-    "Manpower Supply Expenses": "bf_manpower_supply_expenses",
     "Operational Expenses Variable": "bf_variable",
     "Crane Handling Expenses": "bf_crane_handling_expenses",
     "Diesel Expenses - Forklift": "bf_diesel_expenses_forklift",
     "Forklift Handling Expenses": "bf_forklift_handling_expenses",
-    "Fumigation Expenses":"bf_fumigation_expenses",
+    "Fumigation Expenses": "bf_fumigation_expenses",
+    "Packing Services": "bf_packing_services",
+    "Support Handling": "bf_support_handling",
 }
 OPERATIONAL_EXPENSES_FIXED = {
     "Operational Expenses Fixed": "bf_fixed",
-    "Depreciation Expenses":"bf_depreciation",
-    "Software AMC Charges Expenses":"bf_software_AMC_charges",
     "Insurance Expenses - Warehouse": "bf_insurance_warehouse",
-    "Rates & Taxes Expenses": "bf_rates_taxes",
+    "Insurance - WCC": "bf_insurance_wcc",
+    "Manpower Supply Expenses": "bf_manpower_supply_expenses",
     "Rent - Premises Expenses": "bf_rent_premises",
     "Security Service Charges Expenses": "bf_security_service_charges",
-    "Manpower Supply Expenses": "bf_manpower_supply_expenses",
+
 }
-OPERATIONAL_EXPENSES_VARIABLE ={
+OPERATIONAL_EXPENSES_VARIABLE = {
     "Operational Expenses Variable": "bf_variable",
     "Crane Handling Expenses": "bf_crane_handling_expenses",
     "Diesel Expenses - Forklift": "bf_diesel_expenses_forklift",
     "Forklift Handling Expenses": "bf_forklift_handling_expenses",
-    "Fumigation Expenses":"bf_fumigation_expenses",
+    "Fumigation Expenses": "bf_fumigation_expenses",
+    "Packing Services": "bf_packing_services",
+    "Support Handling": "bf_support_handling",
 }
 NON_OPERATIONAL_EXPENSES_CATEGORIES = {
     "Non-Operational Expenses Fixed": "bf_oe_Fixed",
-    "Housekeeping Salary": "bf_housekeeping_salary",
-    "Insurance Corp Staff": "bf_insurance_corp_staff",
-    "Insurance Staff": "bf_insurance_staff",
+    "Depreciation Expenses": "bf_depreciation",
     "Internet Data Card Expenses": "bf_internet_data_card_expenses",
-    "Rent - Plant & Machinery Expenses":"bf_rent_plant_machinery",
-    "System AMC Expenses": "bf_system_amc",
+    # "Insurance Corp Staff": "bf_insurance_corp_staff",
+    # "Insurance Staff": "bf_insurance_staff",
+
+    "Rent - Plant & Machinery Expenses": "bf_rent_plant_machinery",
+    "AMC Expenses": "bf_amc",
+    "Software AMC Expenses": "bf_software_AMC_charges",
 
     "Non-Operational Expenses Variable": "bf_oe_variable",
-    "Advertisement & Business Promotion Expenses": "bf_advertisement_business_promotion",
+    "CGST Ineligible ITC": "bf_CGST_ineligible_ITC",
+
     "Conveyance Expenses": "bf_conveyance_expenses",
-    "Diesel Expenses - Genset":"bf_diesel_expenses_gense",
+    "Diesel Expenses - Genset": "bf_diesel_expenses_gense",
     "Handling Expenses": "bf_handling_expenses",
     "Hotel Boarding Lodging Expenses": "bf_hotel_boarding_lodging_expenses",
-    "Office Repairs and Maintenance Expenses": "bf_office_repairs_maintenance",
+    "IGST Ineligible ITC": "bf_IGST_ineligible_ITC",
+
     "Office Supplies & General Expenses": "bf_office_supplies_general_expenses",
     "Postage & Courier Expenses": "bf_postage_courier",
     "Power and Fuel Expenses": "bf_power_fuel",
     "Printing & Stationery Expenses": "bf_printing_stationery",
     "Service and Maintanance Expenses": "bf_service_maintenance_expenses",
+    "SGST Ineligible ITC": "bf_SGST_ineligible_ITC",
     "Staff Welfare Expenses": "bf_staff_welfare_staff",
     "Telephone and Mobile Expenses": "bf_telephone_mobile_expenses",
     "Training Expenses": "bf_training_expenses",
-    "Travelling Expenses" : "bf_travelling_expenses",
+    "Travelling Expenses": "bf_travelling_expenses",
 
 }
 
 BUDGET_FIELD_MAPPING = {
-    "TV Expense":None,
-    "Salary Expenses":None,
-    "Transportation Expenses":None,
-    "Air Conditioning Expenses":None,
+    "TV Expense": None,
+    "Salary Expenses": None,
+    "Transportation Expenses": None,
+    "Air Conditioning Expenses": None,
 
     "Airport Handling Charges": "bf_Airport_Handling_Charges",
     "Forklift Handling Charges": "bf_Forklift_Handling_Charges",
@@ -838,25 +881,32 @@ BUDGET_FIELD_MAPPING = {
     "Warehouse Handling Charges": "bf_Warehouse_Handling_Charges",
     "Warehouse Loading Charges": "bf_Warehouse_Loading_Charges",
     "Warehouse Storage Charges": "bf_Warehouse_Storage_Charges",
-    "Warehouse Unloading Charges":"bf_Warehouse_Unloading_Charges",
+    "Warehouse Unloading Charges": "bf_Warehouse_Unloading_Charges",
     # "Unloading Expenses": "bf_Warehouse_Unloading_Charges",
-    "Audit Fee": "bf_audit_fees",
-    "Bad Debts": "bf_bad_debts",
+    "Advertisement & Business Promotion Expenses": "bf_advertisement_business_promotion",
+    # "Audit Fee": "bf_audit_fees",
+    # "Bad Debts": "bf_bad_debts",
     "Bank Charges": "bf_bank_charges",
     "Consultancy Charges": "bf_consultancy_charges",
     "Celebration Expenses": "bf_celebration_expenses",
     "Directors Remuneration": "bf_directors_remuneration",
-    "Insurance Car": "bf_insurance_car",
+    # "Insurance Car": "bf_insurance_car",
     "Interest On Statutory Dues": "bf_interest_on_statutory_dues",
     "Professional & Legal Charges": "bf_professional_legal_charges",
     "Subscription Membership": "bf_subscription_membership",
+    "Rent Furniture fittings": "bf_rent_furniture_fittings",
+    "Rent Office": "bf_rent_office",
     "Corp Staff": "bf_corp_staff",
     "Bonus Corp Staff": "bf_bonus_corp_staff",
     "EDLI Contribution Corp Staff": "bf_EDLI_contribution_corp_staff",
     "Employer Contribution to ESI Corp Staff": "bf_employer_contribution_to_ESI_corp_staff",
     "Employer Contribution to PF Corp Staff": "bf_employer_contribution_to_PF_corp_staff",
     "EPF Admin Charges Corp Staff": "bf_EPF_admin_charges_corp_staff",
+    "Ex-Gratia Corp Staff": "bf_exgratia_corp_staff",
     "Gratuity Corp Staff": "bf_gratuity_corp_staff",
+    "Incentive Corp Staff": "bf_incentive_corp_staff",
+    "Insurance Corp Staff": "bf_insurance_corp_staff",
+    "LWF Corp Staff": "bf_lwf_corp_staff",
     "Salaries Wages Corp Staff": "bf_salaries_wages_corp_staff",
 
     "Dept Staff": "bf_dept_staff",
@@ -865,58 +915,62 @@ BUDGET_FIELD_MAPPING = {
     "Employer Contribution to ESI Staff": "bf_employer_contribution_to_ESI_staff",
     "Employer Contribution to PF Staff": "bf_employer_contribution_to_PF_staff",
     "EPF Admin Charges Staff": "bf_EPF_admin_charges_staff",
+    "Ex-Gratia Dept Staff": "bf_exgratia_dept_staff",
     "Gratuity Staff": "bf_gratuity_staff",
+    "Incentive Dept Staff": "bf_incentive_dept_staff",
+    "Insurance Staff": "bf_insurance_staff",
+    "LWF Dept Staff": "bf_lwf_dept_staff",
     "Salaries Wages Staff": "bf_salaries_wages_staff",
-    "Interest on Borrowings": "bf_interest_on_borrowings",
-    "Interest on Other Loans ": "bf_interest_on_other_loans",
+    # "Interest on Borrowings": "bf_interest_on_borrowings",
+    # "Interest on Other Loans ": "bf_interest_on_other_loans",
     "Operational Expenses Fixed": "bf_fixed",
-    "Depreciation Expenses": "bf_depreciation",
-    "Software AMC Charges Expenses": "bf_software_AMC_charges",
+
     "Insurance Expenses - Warehouse": "bf_insurance_warehouse",
-    "Rates & Taxes Expenses": "bf_rates_taxes",
+    "Insurance - WCC": "bf_insurance_wcc",
+    "Manpower Supply Expenses": "bf_manpower_supply_expenses",
+    # "Rates & Taxes Expenses": "bf_rates_taxes",
     "Rent - Premises Expenses": "bf_rent_premises",
     "Security Service Charges Expenses": "bf_security_service_charges",
-    "Manpower Supply Expenses": "bf_manpower_supply_expenses",
-
     "Operational Expenses Variable": "bf_variable",
     "Crane Handling Expenses": "bf_crane_handling_expenses",
     "Diesel Expenses - Forklift": "bf_diesel_expenses_forklift",
     "Forklift Handling Expenses": "bf_forklift_handling_expenses",
     "Fumigation Expenses": "bf_fumigation_expenses",
+    "Packing Services": "bf_packing_services",
+    "Support Handling": "bf_support_handling",
     "Non-Operational Expenses Fixed": "bf_oe_Fixed",
-    "Housekeeping Salary": "bf_housekeeping_salary",
-    "Insurance Corp Staff": "bf_insurance_corp_staff",
-    "Insurance Staff": "bf_insurance_staff",
+    "Depreciation Expenses": "bf_depreciation",
     "Internet Data Card Expenses": "bf_internet_data_card_expenses",
-    "Rent - Plant & Machinery Expenses":"bf_rent_plant_machinery",
-    "System AMC Expenses": "bf_system_amc",
-
+    "Housekeeping Salary": "bf_housekeeping_salary",
+    "Rent - Plant & Machinery Expenses": "bf_rent_plant_machinery",
+    "AMC Expenses": "bf_amc",
+    "Software AMC Expenses": "bf_software_AMC_charges",
     "Non-Operational Expenses Variable": "bf_oe_variable",
-    "Advertisement & Business Promotion Expenses": "bf_advertisement_business_promotion",
+    "CGST Ineligible ITC": "bf_CGST_ineligible_ITC",
     "Conveyance Expenses": "bf_conveyance_expenses",
-    "Diesel Expenses - Genset":"bf_diesel_expenses_gense",
+    "Diesel Expenses - Genset": "bf_diesel_expenses_gense",
     "Handling Expenses": "bf_handling_expenses",
     "Hotel Boarding Lodging Expenses": "bf_hotel_boarding_lodging_expenses",
+    "IGST Ineligible ITC": "bf_IGST_ineligible_ITC",
     "Office Repairs and Maintenance Expenses": "bf_office_repairs_maintenance",
     "Office Supplies & General Expenses": "bf_office_supplies_general_expenses",
     "Postage & Courier Expenses": "bf_postage_courier",
     "Power and Fuel Expenses": "bf_power_fuel",
     "Printing & Stationery Expenses": "bf_printing_stationery",
     "Service and Maintanance Expenses": "bf_service_maintenance_expenses",
+    "SGST Ineligible ITC": "bf_SGST_ineligible_ITC",
     "Staff Welfare Expenses": "bf_staff_welfare_staff",
     "Telephone and Mobile Expenses": "bf_telephone_mobile_expenses",
     "Training Expenses": "bf_training_expenses",
-    "Travelling Expenses" : "bf_travelling_expenses",
-
+    "Travelling Expenses": "bf_travelling_expenses",
 
 }
 OTHER_EXPENSES_CATEGORIES = {k: v for k, v in BUDGET_FIELD_MAPPING.items() if v not in (
-    set(INCOME_CATEGORIES.values()) |
-    set(DEPARTMENT_EXPENSES_CATEGORIES.values()) |
-    set(EMPLOYEE_BENEFITS_CATEGORIES.values()) |
-    set(INTEREST_EXPENSES_CATEGORIES.values()) |
-    set(OPERATIONAL_EXPENSES_CATEGORIES.values()) |
-    set(NON_OPERATIONAL_EXPENSES_CATEGORIES.values())
+        set(INCOME_CATEGORIES.values()) |
+        set(DEPARTMENT_EXPENSES_CATEGORIES.values()) |
+        set(EMPLOYEE_BENEFITS_CATEGORIES.values()) |
+        set(OPERATIONAL_EXPENSES_CATEGORIES.values()) |
+        set(NON_OPERATIONAL_EXPENSES_CATEGORIES.values())
 
 )}
 
@@ -934,7 +988,8 @@ def budget_expense(request):
     companies = Business_Sol_info.objects.values_list('bvm_business', flat=True).distinct()
 
     if selected_branch:
-        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list('unit_name', flat=True).distinct()
+        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list('unit_name',
+                                                                                              flat=True).distinct()
 
     expenses_filter = {}
     budget_filter = {}
@@ -1001,7 +1056,6 @@ def budget_expense(request):
     income_summary = get_category_summary(INCOME_CATEGORIES)
     department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES)
     employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES)
-    interest_summary = get_category_summary(INTEREST_EXPENSES_CATEGORIES)
     operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES)
     non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES)
     other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES)
@@ -1015,7 +1069,6 @@ def budget_expense(request):
         "income_summary": income_summary,
         "department_expenses_summary": department_expenses_summary,
         "employee_benefits_summary": employee_benefits_summary,
-        "interest_summary": interest_summary,
         "operational_summary": operational_summary,
         "non_operational_summary": non_operational_summary,
         "other_expenses_summary": other_expenses_summary,
@@ -1052,7 +1105,8 @@ def budget_expense_mis(request):
         selected_year = None
 
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list(
+            'exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
@@ -1060,12 +1114,14 @@ def budget_expense_mis(request):
     units = UnitInfo.objects.values_list("unit_name", flat=True).distinct()
     companies = Business_Sol_info.objects.values_list("bvm_business", flat=True).distinct()
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list(
+            'exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
     if selected_branch:
-        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list("unit_name", flat=True).distinct()
+        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list("unit_name",
+                                                                                              flat=True).distinct()
 
     expenses_filter = {}
     budget_filter = {}
@@ -1098,7 +1154,8 @@ def budget_expense_mis(request):
     expense_summary = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
         .exclude(exp_ext_expense_number__exp_service_start_date__isnull=True)
-        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_expense_number__exp_service_start_date__month")
+        .values("exp_ext_expense_number__exp_expense_type__exp_type_name",
+                "exp_ext_expense_number__exp_service_start_date__month")
         .annotate(total_expense=Sum("exp_ext_amount"))
         .order_by("exp_ext_expense_number__exp_service_start_date__month")
     )
@@ -1138,7 +1195,6 @@ def budget_expense_mis(request):
     def get_category_summary(category_mapping):
         summary = []
         for category, field in category_mapping.items():
-
             monthly_expenses = expense_dict.get(category, {i: 0 for i in range(1, 13)})
             monthly_budgets = budget_dict_by_month.get(category, {i: 0 for i in range(1, 13)})
             monthly_variance = {month: monthly_budgets[month] - monthly_expenses[month] for month in range(1, 13)}
@@ -1165,7 +1221,6 @@ def budget_expense_mis(request):
     income_summary = get_category_summary(INCOME_CATEGORIES)
     department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES)
     employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES)
-    interest_summary = get_category_summary(INTEREST_EXPENSES_CATEGORIES)
     operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES)
     non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES)
     other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES)
@@ -1223,10 +1278,10 @@ def budget_expense_mis(request):
         income_total = sum(item[field] for field in INCOME_CATEGORIES.values() if field in item)
         department_total = sum(item[field] for field in DEPARTMENT_EXPENSES_CATEGORIES.values() if field in item)
         employee_total = sum(item[field] for field in EMPLOYEE_BENEFITS_CATEGORIES.values() if field in item)
-        interest_total = sum(item[field] for field in INTEREST_EXPENSES_CATEGORIES.values() if field in item)
         operational_total = sum(item[field] for field in OPERATIONAL_EXPENSES_CATEGORIES.values() if field in item)
         operational_fixed_total = sum(item[field] for field in OPERATIONAL_EXPENSES_FIXED.values() if field in item)
-        operational_variable_total= sum(item[field] for field in OPERATIONAL_EXPENSES_VARIABLE.values() if field in item)
+        operational_variable_total = sum(
+            item[field] for field in OPERATIONAL_EXPENSES_VARIABLE.values() if field in item)
 
         non_operational_total = sum(
             item[field] for field in NON_OPERATIONAL_EXPENSES_CATEGORIES.values() if field in item)
@@ -1234,7 +1289,6 @@ def budget_expense_mis(request):
         category_summaries["income_budget"][month] = income_total
         category_summaries["department_budget"][month] = department_total
         category_summaries["employee_budget"][month] = employee_total
-        category_summaries["interest_budget"][month] = interest_total
         category_summaries["operational_budget"][month] = operational_total
         category_summaries["operational_fixed_budget"][month] = operational_fixed_total
         category_summaries["operational_variable_budget"][month] = operational_variable_total
@@ -1244,7 +1298,6 @@ def budget_expense_mis(request):
         category_totals["income_budget"] += income_total
         category_totals["department_budget"] += department_total
         category_totals["employee_budget"] += employee_total
-        category_totals["interest_budget"] += interest_total
         category_totals["operational_budget"] += operational_total
         category_totals["operational_fixed_budget"] += operational_fixed_total
         category_totals["operational_variable_budget"] += operational_variable_total
@@ -1273,9 +1326,6 @@ def budget_expense_mis(request):
         elif category in EMPLOYEE_BENEFITS_CATEGORIES:
             category_summaries["employee_expense"][month] += amount
             category_totals["employee_expense"] += amount
-        elif category in INTEREST_EXPENSES_CATEGORIES:
-            category_summaries["interest_expense"][month] += amount
-            category_totals["interest_expense"] += amount
         elif category in NON_OPERATIONAL_EXPENSES_CATEGORIES:
             category_summaries["non_operational_expense"][month] += amount
             category_totals["non_operational_expense"] += amount
@@ -1295,15 +1345,18 @@ def budget_expense_mis(request):
         )
 
         category_summaries["employee_variance"][month] = (
-                category_summaries["employee_budget"].get(month, 0) - category_summaries["employee_expense"].get(month, 0)
+                category_summaries["employee_budget"].get(month, 0) - category_summaries["employee_expense"].get(month,
+                                                                                                                 0)
         )
 
         category_summaries["department_variance"][month] = (
-                category_summaries["department_budget"].get(month, 0) - category_summaries["department_expense"].get(month, 0)
+                category_summaries["department_budget"].get(month, 0) - category_summaries["department_expense"].get(
+            month, 0)
         )
 
         category_summaries["interest_variance"][month] = (
-                category_summaries["interest_budget"].get(month, 0) - category_summaries["interest_expense"].get(month, 0)
+                category_summaries["interest_budget"].get(month, 0) - category_summaries["interest_expense"].get(month,
+                                                                                                                 0)
         )
         category_summaries["operational_variance"][month] = (
                 category_summaries["operational_budget"].get(month, 0) - category_summaries["operational_expense"].get(
@@ -1375,7 +1428,8 @@ def budget_expense_mis(request):
         )
 
         if grand_totals["monthly_budget"][month] > 0:
-            grand_totals["monthly_profit_loss_percentage"][month] = ((grand_totals["monthly_profit_loss"][month] / grand_totals["monthly_budget"][month]) * 100)
+            grand_totals["monthly_profit_loss_percentage"][month] = (
+                        (grand_totals["monthly_profit_loss"][month] / grand_totals["monthly_budget"][month]) * 100)
         else:
             grand_totals["monthly_profit_loss_percentage"][month] = 0
 
@@ -1391,7 +1445,6 @@ def budget_expense_mis(request):
         "category_summaries": category_summaries,
         "department_expenses_summary": department_expenses_summary,
         "employee_benefits_summary": employee_benefits_summary,
-        "interest_summary": interest_summary,
         "operational_summary": operational_summary,
         "non_operational_summary": non_operational_summary,
         "other_expenses_summary": other_expenses_summary,
@@ -1437,7 +1490,8 @@ def fin_mis(request):
         selected_year = None
 
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list(
+            'exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
@@ -1445,12 +1499,14 @@ def fin_mis(request):
     units = UnitInfo.objects.values_list("unit_name", flat=True).distinct()
     companies = Business_Sol_info.objects.values_list("bvm_business", flat=True).distinct()
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list(
+            'exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
     if selected_branch:
-        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list("unit_name", flat=True).distinct()
+        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list("unit_name",
+                                                                                              flat=True).distinct()
 
     expenses_filter = {}
     budget_filter = {}
@@ -1483,7 +1539,8 @@ def fin_mis(request):
     expense_summary = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
         .exclude(exp_ext_expense_number__exp_service_start_date__isnull=True)
-        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_expense_number__exp_service_start_date__month")
+        .values("exp_ext_expense_number__exp_expense_type__exp_type_name",
+                "exp_ext_expense_number__exp_service_start_date__month")
         .annotate(total_expense=Sum("exp_ext_amount"))
         .order_by("exp_ext_expense_number__exp_service_start_date__month")
     )
@@ -1575,16 +1632,13 @@ def fin_mis(request):
 
         return summary
 
-
-
     # Generate category-wise summaries
-    income_summary = get_category_summary(INCOME_CATEGORIES,"Income ")
-    department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES,"Department Expenses")
-    employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES,"Employee Benefits")
-    interest_summary = get_category_summary(INTEREST_EXPENSES_CATEGORIES,"Interest Expenses")
-    operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES,"Operational Expenses ")
-    non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES,"Non-Operational Expenses")
-    other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES,"Other Expenses")
+    income_summary = get_category_summary(INCOME_CATEGORIES, "Income ")
+    department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES, "Department Expenses")
+    employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES, "Employee Benefits")
+    operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES, "Operational Expenses ")
+    non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES, "Non-Operational Expenses")
+    other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES, "Other Expenses")
 
     income_total_expense = income_summary[-1]["total_expense"]
     income_total_budget = income_summary[-1]["total_budget"]
@@ -1593,7 +1647,6 @@ def fin_mis(request):
     expense_summaries = [
         department_expenses_summary,
         employee_benefits_summary,
-        interest_summary,
         operational_summary,
         non_operational_summary,
         other_expenses_summary,
@@ -1674,7 +1727,6 @@ def fin_mis(request):
         income_summary,
         department_expenses_summary,
         employee_benefits_summary,
-        interest_summary,
         operational_summary,
         non_operational_summary,
         other_expenses_summary,
@@ -1700,8 +1752,6 @@ def fin_mis(request):
         "total_variance": total_variance,
         "is_total": True,
     }
-
-
 
     overall_monthly_expenses = {i: 0 for i in range(1, 13)}
     overall_monthly_budgets = {i: 0 for i in range(1, 13)}
@@ -1736,7 +1786,6 @@ def fin_mis(request):
         "income_summary": income_summary,
         "department_expenses_summary": department_expenses_summary,
         "employee_benefits_summary": employee_benefits_summary,
-        "interest_summary": interest_summary,
         "operational_summary": operational_summary,
         "non_operational_summary": non_operational_summary,
         "other_expenses_summary": other_expenses_summary,
@@ -1761,11 +1810,12 @@ def fin_mis(request):
         "overall_monthly_budgets": overall_monthly_budgets,
         "overall_monthly_variances": overall_monthly_variances,
         "overall_monthly_pl_percentage": overall_monthly_pl_percentage,
-        "net_income_summary" :net_income_summary,
+        "net_income_summary": net_income_summary,
         "net_income_summary_percentage": net_income_summary_percentage,
         "grand_totals_summary": grand_totals_summary,
 
     })
+
 
 def fin_mis_warehouse(request):
     first_name = request.session.get("first_name")
@@ -1784,7 +1834,8 @@ def fin_mis_warehouse(request):
         selected_year = None
 
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list(
+            'exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
@@ -1792,12 +1843,14 @@ def fin_mis_warehouse(request):
     units = UnitInfo.objects.values_list("unit_name", flat=True).distinct()
     companies = Business_Sol_info.objects.values_list("bvm_business", flat=True).distinct()
     years = list(
-        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list('exp_ext_expense_number__exp_service_start_date__year', flat=True)
+        ExpenseExtinfo.objects.dates('exp_ext_expense_number__exp_service_start_date', 'year').values_list(
+            'exp_ext_expense_number__exp_service_start_date__year', flat=True)
         .distinct()
     )
 
     if selected_branch:
-        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list("unit_name", flat=True).distinct()
+        units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).values_list("unit_name",
+                                                                                              flat=True).distinct()
 
     expenses_filter = {}
     budget_filter = {}
@@ -1861,7 +1914,8 @@ def fin_mis_warehouse(request):
     expense_summary = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
         .exclude(exp_ext_expense_number__exp_service_start_date__isnull=True)
-        .values("exp_ext_expense_number__exp_expense_type__exp_type_name", "exp_ext_expense_number__exp_service_start_date__month")
+        .values("exp_ext_expense_number__exp_expense_type__exp_type_name",
+                "exp_ext_expense_number__exp_service_start_date__month")
         .annotate(total_expense=Sum("exp_ext_amount"))
         .order_by("exp_ext_expense_number__exp_service_start_date__month")
     )
@@ -1920,13 +1974,13 @@ def fin_mis_warehouse(request):
                 grand_monthly_expenses[month] += monthly_expenses[month]
 
                 if category_name in ["Employee Benefits", "Operational Expenses", "Non-Operational Expenses"]:
-                    grand_monthly_budgets[month] += monthly_budgets[month]/2
+                    grand_monthly_budgets[month] += monthly_budgets[month] / 2
                 else:
                     grand_monthly_budgets[month] += monthly_budgets[month]
 
             grand_total_expense += total_expense
             if category_name in ["Employee Benefits", "Operational Expenses", "Non-Operational Expenses"]:
-                grand_total_budget += total_budget/2
+                grand_total_budget += total_budget / 2
             else:
                 grand_total_budget += total_budget
 
@@ -1962,12 +2016,11 @@ def fin_mis_warehouse(request):
         return summary
 
     # Generate category-wise summaries
-    department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES,"Department Expenses")
-    employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES,"Employee Benefits")
-    interest_summary = get_category_summary(INTEREST_EXPENSES_CATEGORIES,"Interest Expenses")
-    operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES,"Operational Expenses")
-    non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES,"Non-Operational Expenses")
-    other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES,"Other Expenses")
+    department_expenses_summary = get_category_summary(DEPARTMENT_EXPENSES_CATEGORIES, "Department Expenses")
+    employee_benefits_summary = get_category_summary(EMPLOYEE_BENEFITS_CATEGORIES, "Employee Benefits")
+    operational_summary = get_category_summary(OPERATIONAL_EXPENSES_CATEGORIES, "Operational Expenses")
+    non_operational_summary = get_category_summary(NON_OPERATIONAL_EXPENSES_CATEGORIES, "Non-Operational Expenses")
+    other_expenses_summary = get_category_summary(OTHER_EXPENSES_CATEGORIES, "Other Expenses")
     income_summary = get_category_summary(
         INCOME_CATEGORIES,
         "Income",
@@ -1981,7 +2034,6 @@ def fin_mis_warehouse(request):
     expense_summaries = [
         department_expenses_summary,
         employee_benefits_summary,
-        interest_summary,
         operational_summary,
         non_operational_summary,
         other_expenses_summary,
@@ -2062,7 +2114,6 @@ def fin_mis_warehouse(request):
         income_summary,
         department_expenses_summary,
         employee_benefits_summary,
-        interest_summary,
         operational_summary,
         non_operational_summary,
         other_expenses_summary,
@@ -2088,8 +2139,6 @@ def fin_mis_warehouse(request):
         "total_variance": total_variance,
         "is_total": True,
     }
-
-
 
     overall_monthly_expenses = {i: 0 for i in range(1, 13)}
     overall_monthly_budgets = {i: 0 for i in range(1, 13)}
@@ -2124,7 +2173,6 @@ def fin_mis_warehouse(request):
         "income_summary": income_summary,
         "department_expenses_summary": department_expenses_summary,
         "employee_benefits_summary": employee_benefits_summary,
-        "interest_summary": interest_summary,
         "operational_summary": operational_summary,
         "non_operational_summary": non_operational_summary,
         "other_expenses_summary": other_expenses_summary,
@@ -2149,7 +2197,7 @@ def fin_mis_warehouse(request):
         "overall_monthly_budgets": overall_monthly_budgets,
         "overall_monthly_variances": overall_monthly_variances,
         "overall_monthly_pl_percentage": overall_monthly_pl_percentage,
-        "net_income_summary" :net_income_summary,
+        "net_income_summary": net_income_summary,
         "net_income_summary_percentage": net_income_summary_percentage,
         "grand_totals_summary": grand_totals_summary,
 
