@@ -473,7 +473,7 @@ def invoice_add(request,invoice_id=0):
                 voucher_num_val = BilingInfo.objects.get(pk=invoice_id).bill_invoice_ref
                 # update total invoice cost in warehouse goods table
                 stock_id = list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).values_list('id', flat=True))
-                total_invoice_cost = BilingInfo.objects.get(bill_invoice_ref=voucher_num_val).bill_total_post_gst
+                total_invoice_cost = BilingInfo.objects.get(bill_invoice_ref=voucher_num_val).bill_total_pre_gst
                 stock_id.sort()
                 for i in range(0, len(stock_id)):
                     if i == 0:
