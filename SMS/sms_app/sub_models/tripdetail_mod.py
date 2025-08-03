@@ -3,6 +3,10 @@ from ..models import Trip_approval_info,iou_info,EnquirynoteInfo,Consignmentdeta
 
 def trip_attach_path(instance, filename):
     return 'PODattachfiles/{0}/{1}'.format(instance.tr_tripnumber, filename)
+def pod_digi_sign_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    return 'PODsignImages/{0}/{1}'.format(instance.tr_tripnumber, filename)
+
 class Trip_category_info(models.Model):
     category = models.CharField(max_length=100, default='')
 
@@ -56,7 +60,7 @@ class TripdetailInfo(models.Model):
     tr_customerref = models.CharField(max_length=30,null=True,blank=True)
     tr_high_value = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE, related_name='tr_high_value',db_column='tr_high_value', default=2)
     tr_track_link = models.URLField(max_length=500,null=True,blank=True,verbose_name="Tracking Link")
-
+    td_pod = models.ImageField(upload_to=pod_digi_sign_path, null=True, blank=True)
 
     class Meta:
         ordering = ["tr_tripnumber"]

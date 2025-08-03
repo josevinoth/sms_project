@@ -30,6 +30,7 @@ class ConsignmentgoodsInfo(models.Model):
     cg_unloading_date = models.DateTimeField(null=True,blank=True)
     cg_ewaybill_att = models.FileField(upload_to=consignmentgoods_directory_path, null=True, blank=True)
     cg_invoice_att = models.FileField(upload_to=consignmentgoods_directory_path, null=True, blank=True)
+    cg_otl_att = models.FileField(upload_to=consignmentgoods_directory_path, null=True, blank=True)
 
     def __str__(self):
         return self.cg_consignmentnumber

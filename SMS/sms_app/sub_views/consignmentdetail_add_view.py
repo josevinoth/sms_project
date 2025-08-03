@@ -12,16 +12,18 @@ from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
 @login_required(login_url='login_page')
 def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
-    # You can now use enquiry_id and vehicle_number
     enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
-    print('consignment_number',consignment_number)
+    print('consignment_number', consignment_number)
 
-    if consignment_number=='none' or consignment_number=='':
-        request.session['enquiry_num_id'] = enquiry_id
-        return redirect('consignmentdetail_insert')  # Adjust this as per your URL names
+    # ✅ Set both session keys here
+    request.session['ses_enqiury_id'] = enquiry.id
+    request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
+
+    if consignment_number == 'none' or consignment_number == '':
+        return redirect('consignmentdetail_insert')
     else:
-        # Redirect to the update URL with the found vehicle_allotment id
         return redirect('consignmentdetail_update', consignmentdetail_id=consignment_number)
+
 
 @login_required(login_url='login_page')
 def consignmentdetail_nav(request,consignmentdetail_id=0):
@@ -48,8 +50,22 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     enquiry_num = request.session.get('ses_enqiury_num')
-    enquiry_num_id = request.session.get('enquiry_num_id')
+    enquiry_num_id = request.session.get('ses_enqiury_id')
+
+    print("Enquiry Number:", enquiry_num)
+    print("Enquiry ID:", enquiry_num_id)
+
+    # enquiry_num_id = request.session.get('enquiry_num_id')
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
+    enquiry_num_id = request.session.get('ses_enqiury_id')
+
+    if consignmentdetail_id != 0:
+        enquiry_num_id = ConsignmentdetailInfo.objects.get(id=consignmentdetail_id).co_enquirynumber.id
+
+    if not enquiry_num_id or enquiry_num_id == 0:
+        # Handle error, redirect or show message
+        messages.error(request, "Invalid enquiry number. Please select a valid consignment.")
+        return redirect('some_fallback_view')
 
     customer = EnquirynoteInfo.objects.get(pk=enquiry_num_id).en_customername
     customer_obj = CustomerInfo.objects.get(cu_name=customer)

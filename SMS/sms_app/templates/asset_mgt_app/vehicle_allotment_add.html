@@ -96,7 +96,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vendor Name</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_vendor id="va_vendor" onchange="loadVendorBuyRate()"  class="form-control " %}
+									{% render_field vehicle_allotment_form.va_vendor class="form-control" id="va_vendor" data-selected=vehicle_allotment_form.va_vendor.value %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -196,6 +196,7 @@
 			document.getElementById("va_vehicletype").value =vehicle_type;
 		}
 		market_vehicle_enable_disable();
+		loadVendorOptions();
 	});
 </script>
 <script>
@@ -463,20 +464,22 @@
 </script>
 <script>
 	function loadVendorSaleRate() {
-		  var vehicleId = $('#va_vehicletype_placed').val();
-		$.ajax({
-			url: '{% url 'get_vendor_sale_rate' %}',
-			type: 'GET',
-			data: {vehicle_id: vehicleId},
-			dataType: 'json',
-			success: function(data) {
-				var saleRate = data.sale_rate;
-				document.getElementById("va_sale").value = saleRate;
-				      calculateProfit();  // ✅ Trigger profit calculation after setting buy
-
-			}
-		});
-	}
+  var vehicleId = $('#va_vehicletype_placed').val();
+  $.ajax({
+    url: '{% url 'get_vendor_sale_rate' %}',
+    type: 'GET',
+    data: {vehicle_id: vehicleId},
+    dataType: 'json',
+    success: function(data) {
+      var saleRate = data.sale_rate;
+      if (saleRate === 0 || saleRate === "0") {
+        alert("Rate not assigned for this customer");
+      }
+      document.getElementById("va_sale").value = saleRate;
+      calculateProfit();  // Trigger profit calculation after setting buy
+    }
+  });
+}
 
 </script>
 
@@ -513,23 +516,56 @@
 });
 </script>
 <script>
-  function calculateProfit() {
-    const buyVal = parseFloat(document.getElementById("va_buy").value) || 0;
-    const sellVal = parseFloat(document.getElementById("va_sale").value) || 0;
-    const profitField = document.getElementById("va_profit_percentage");
+	function calculateProfit() {
+      const buyVal = parseFloat(document.getElementById("va_buy").value) || 0;
+      const sellVal = parseFloat(document.getElementById("va_sale").value) || 0;
+      const profitField = document.getElementById("va_profit_percentage");
 
-    if (buyVal > 0) {
-      const profit = ((sellVal - buyVal) / buyVal) * 100;
-      profitField.value = profit.toFixed(2);
-    } else {
-      profitField.value = "";
+      if (buyVal > 0) {
+        const profit = ((sellVal - buyVal) / buyVal) * 100;
+        profitField.value = profit.toFixed(2);
+      } else {
+        profitField.value = "";
+      }
     }
-  }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("va_buy").addEventListener("input", calculateProfit);
-    document.getElementById("va_sale").addEventListener("input", calculateProfit);
-  });
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("va_buy").addEventListener("input", calculateProfit);
+      document.getElementById("va_sale").addEventListener("input", calculateProfit);
+    });
 </script>
+
+<script>
+	function loadVendorOptions(selectedVendorId = null) {
+    var enquiry_num = $('#va_enquirynumber').val();
+
+    $.ajax({
+        url: "{% url 'vendor_filter' %}",
+        data: {
+            enquiry_num: enquiry_num
+        },
+        success: function(response) {
+            const dropdown = $('#va_vendor');
+            dropdown.empty();
+            dropdown.append('<option value="">Select Vendor</option>');
+
+            response.vendor_filter.forEach(function(vendor) {
+                const isSelected = (selectedVendorId && selectedVendorId == vendor.id) ? 'selected' : '';
+                dropdown.append(`<option value="${vendor.id}" ${isSelected}>${vendor.name}</option>`);
+            });
+        },
+        error: function() {
+            alert("Could not load vendors.");
+        }
+    });
+}
+
+$(document).ready(function () {
+    const selectedVendorId = $('#va_vendor').data('selected');  // get pre-selected value
+    loadVendorOptions(selectedVendorId); // load on page load with value
+});
+
+</script>
+
 
 {% endblock content %}

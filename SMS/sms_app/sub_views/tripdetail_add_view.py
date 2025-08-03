@@ -1,6 +1,9 @@
+import base64
+
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
+from django.core.files.base import ContentFile
 from django.db.models import Q
 
 from .send_department_email import send_department_email
@@ -188,6 +191,14 @@ def tripdetail_add(request,tripdetail_id=0):
 
                 trip = trip_det_form.save(commit=False)
                 trip.tc_financestatus_id = 8
+                # Process POD signature
+                pod_data = request.POST.get('pod_signature_data')
+                if pod_data:
+                    format, imgstr = pod_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                    data = ContentFile(base64.b64decode(imgstr), name=f'pod_signature.{ext}')
+                    trip.td_pod = data  # Make sure `td_pod` is in TripdetailInfo model
+
                 trip.save()
                 tripclosurefiles_form.save()
                 print("Main Form is Valid")
@@ -209,12 +220,26 @@ def tripdetail_add(request,tripdetail_id=0):
             tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES, instance=tripclosure_files)
 
-            enquiry_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_enquirynumber.id
+            enquiry_num = tripdetail.tr_enquirynumber.id  # Simplified
+
             if trip_det_form.is_valid():
-                trip_det_form.save()
+                trip = trip_det_form.save(commit=False)
+
+                # 🔥 Save POD Signature if available (in edit too!)
+                pod_data = request.POST.get("pod_signature_data", None)
+
+                if pod_data:
+                    format, imgstr = pod_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                    # Save image as a file
+                    data = ContentFile(base64.b64decode(imgstr), name=f"{trip_num}_pod_signature.{ext}")
+                    trip.td_pod = data
+                trip.save()
                 tripclosurefiles_form.save()
+
                 print("Main Form is Valid")
-                tripdetail_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list('tr_tripnumber', flat=True)
+                tripdetail_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list(
+                    'tr_tripnumber', flat=True)
                 print(tripdetail_list)
                 EnquirynoteInfo.objects.filter(pk=enquiry_num).update(en_tripdetails=list(tripdetail_list))
                 messages.success(request, 'Record Updated Successfully')
@@ -225,7 +250,8 @@ def tripdetail_add(request,tripdetail_id=0):
                         messages.error(request, f"Error in {field}: {error}")
                 print("Trip Details Main Form is not Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-        return redirect(request.META['HTTP_REFERER'])
+
+    return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/enquirynote_list')
 
 # List tripdetail

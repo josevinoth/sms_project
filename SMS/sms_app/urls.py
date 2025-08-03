@@ -652,7 +652,7 @@ urlpatterns = [
     path('fin_mis/', views.fin_mis, name='fin_mis'),
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
     path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
-    path("track_vehicle/", views.track_vehicle_position, name="track_vehicle_position"),
+    path('track_vehicle_position/', views.track_vehicle_position, name='track_vehicle_position'),
     path("get_vehicle_data/", views.get_vehicle_data, name="get_vehicle_data"),
     path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,name='get_remaining_quantity'),
     path('get_vehicle_type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),
@@ -685,6 +685,12 @@ urlpatterns = [
     path('backfill-preview/', views.backfill_preview, name='backfill_preview'),
     path('backfill-one/', views.backfill_one_record, name='backfill_one_record'),
     path('backfill-all/',  views.backfill_all_records, name='backfill_all_records'),
+    path('get_fastag_toll_cost_ajax/', views.get_fastag_toll_cost_ajax, name='get_fastag_toll_cost_ajax'),
+    path('vendor_filter/', views.vendor_filter, name='vendor_filter'),
+    path('consignmentgoods/<int:pk>/upload/<str:att_type>/', views.consignmentgoods_upload_attachment, name='consignmentgoods_upload_attachment'),
+    path('consignmentgoods/delete-attachment/<int:pk>/<str:att_type>/', views.consignmentgoods_delete_attachment, name='consignmentgoods_delete_attachment'),
+
+
 ]
 
 

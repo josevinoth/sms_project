@@ -8,6 +8,8 @@ from ..models import Enquirynotevehicle,TripdetailInfo,OwnershipInfo,Vehiclemast
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 
+from ..sub_models.vendor_info_mod import Vendor_info
+
 
 @login_required(login_url='login_page')
 def vehicle_allotment_enquiry(request, enquiry_id, vehicle_number):
@@ -368,3 +370,32 @@ def get_vendor_sale_rate(request):
         'sale_rate': sale_rate,
     }
     return JsonResponse(data)
+
+@login_required(login_url='login_page')
+def vendor_filter(request):
+    enquiry_num = request.GET.get('enquiry_num')
+
+    try:
+        enquiry = EnquirynoteInfo.objects.get(id=enquiry_num)
+        from_location = enquiry.en_fromlocaion
+        to_location = enquiry.en_tolocation
+
+        vendors = VendorratemasterInfo1.objects.filter(
+            vr1_fromlocation=from_location,
+            vr1_tolocation=to_location
+        ).select_related('vr1_vendor').values(
+            'vr1_vendor__id',
+            'vr1_vendor__vend_name'  # ✅ Use actual field name
+        ).distinct()
+
+        vendor_list = [
+            {'id': v['vr1_vendor__id'], 'name': v['vr1_vendor__vend_name']}
+            for v in vendors
+        ]
+
+        return JsonResponse({'vendor_filter': vendor_list})
+
+    except EnquirynoteInfo.DoesNotExist:
+        return JsonResponse({'vendor_filter': [], 'error': 'Invalid Enquiry Number'}, status=400)
+    except EnquirynoteInfo.DoesNotExist:
+        return JsonResponse({'vendor_filter': [], 'error': 'Invalid Enquiry Number'}, status=400)

@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ..forms import ConsignmentgoodsaddForm,ConsignmentdetailaddForm
 from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,Stock_type,ConsigneeInfo,ConsignerInfo
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
 
@@ -162,3 +162,43 @@ def add_consignee(request):
         return JsonResponse({"success": True,"id": new.id,"name": new.consignee_name})
 
     return JsonResponse({"success": False, "error": "Invalid request"})
+
+
+@csrf_exempt
+@login_required(login_url='login_page')
+def consignmentgoods_upload_attachment(request, pk, att_type):
+    if request.method == 'POST' and request.FILES.get('attachment'):
+        instance = get_object_or_404(ConsignmentgoodsInfo, pk=pk)
+        uploaded_file = request.FILES['attachment']
+
+        if att_type == 'eway':
+            instance.cg_ewaybill_att = uploaded_file
+        elif att_type == 'invoice':
+            instance.cg_invoice_att = uploaded_file
+        elif att_type == 'otl':
+            instance.cg_otl_att = uploaded_file
+
+        instance.save()
+        messages.success(request, 'Attachment uploaded successfully.')
+    else:
+        messages.error(request, 'Attachment upload failed. Please try again.')
+
+    return redirect(request.META.get('HTTP_REFERER', 'consignmentgoods_list'))
+
+@csrf_exempt
+def consignmentgoods_delete_attachment(request, pk, att_type):
+    if request.method == 'POST':
+        instance = get_object_or_404(ConsignmentgoodsInfo, pk=pk)
+
+        if att_type == 'eway':
+            instance.cg_ewaybill_att.delete(save=False)
+            instance.cg_ewaybill_att = None
+        elif att_type == 'invoice':
+            instance.cg_invoice_att.delete(save=False)
+            instance.cg_invoice_att = None
+        elif att_type == 'otl':
+            instance.cg_otl_att.delete(save=False)
+            instance.cg_otl_att = None
+
+        instance.save()
+    return redirect(request.META.get('HTTP_REFERER', 'consignmentgoods_list'))

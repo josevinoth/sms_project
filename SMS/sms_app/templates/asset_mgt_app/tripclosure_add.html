@@ -92,7 +92,7 @@
 											{% render_field tripclosure_form.tr_iou class="form-control" %}
 										</div>
 									</div>
-<div class="col-3 bg-info text-center small">Bill To Customer</div>
+									<div class="col-3 bg-info text-center small">Bill To Customer</div>
 								</div>
 
 
@@ -125,13 +125,40 @@
 								</div>
 
 								<div class="row mb-2 align-items-center">
-									<div class="col-9">
+									<div class="col-6">
 										<div class="input-group input-group-sm">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Toll Charges</span>
 											</div>
-											{% render_field tripclosure_form.tc_tollcost class="form-control" %}
+											{% render_field tripclosure_form.tc_tollcost class="form-control" id="tc_tollcost" %}
 										</div>
+									</div>
+									<div class="col-3 text-center">
+										<div class="input-group-append ms-2">
+											<button type="button" class="btn btn-outline-info btn-sm" onclick="showTollTxnDialog()">
+												View
+											</button>
+										</div>
+<div class="modal fade" id="tollTxnModal" tabindex="-1" role="dialog" aria-labelledby="tollTxnModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="tollTxnModalLabel">Toll Transaction List</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+  <span aria-hidden="true">&times;</span>
+</button>
+
+      </div>
+      <div class="modal-body" id="tollTxnContent">
+        <!-- Table will be populated here by JS -->
+      </div>
+<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+
+    </div>
+  </div>
+</div>
+
 									</div>
 									<div class="col-3 text-center">
 										<input type="checkbox" id="tc_tollcost">
@@ -368,6 +395,93 @@
         new bootstrap.Tooltip(tooltipTriggerEl);
       });
     });
+</script>
+<script>
+	function fetchTollCost() {
+    var trip_num = document.getElementById("tr_tripnumber").value;
+    if (!trip_num) {
+        alert("Please enter a trip number.");
+        return;
+    }
+
+    $.ajax({
+        url: '{% url "get_fastag_toll_cost_ajax" %}',
+        method: "GET",
+        data: { 'trip_num': trip_num },
+        success: function(data) {
+            if (data.success) {
+                document.getElementsByName("tc_tollcost")[0].value = data.total_amount.toFixed(2);
+
+                // Pass txn_list and total_amount to buildTxnTable and include summary info
+                window.txnListHtml = buildTxnTable(data.txn_list, data.total_amount);
+            } else {
+                alert("Error: " + data.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("AJAX error:", error);
+        }
+    });
+}
+
+function buildTxnTable(txn_list, total_amount) {
+    if (!txn_list || txn_list.length === 0) {
+        return "<p>No toll transactions found.</p>";
+    }
+
+    let tollCount = txn_list.length;
+
+    let table = `
+<p style="color: black;">
+  <strong>Total Transactions:</strong> ${tollCount} &nbsp;&nbsp;
+  <strong>Total Amount:</strong> ₹${total_amount.toFixed(2)}
+</p>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Vehicle Number</th>
+                    <th>Txn ID</th>
+                    <th>Plaza</th>
+                    <th>Vehicle</th>
+                    <th>Amount</th>
+                    <th>Lane</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+    txn_list.forEach(txn => {
+        table += `
+            <tr>
+                <td>${txn.txnPostedtime}</td>
+                <td>${txn.vehicleNo}</td>
+                <td>${txn.originalTxnId}</td>
+                <td>${txn.tollplazaname}</td>
+                <td>${txn.vehicleDesc}</td>
+                <td>₹${parseFloat(txn.txnAmt).toFixed(2)}</td>
+                <td>${txn.laneId}</td>
+            </tr>`;
+    });
+
+    table += `</tbody></table></div>`;
+    return table;
+}
+
+function showTollTxnDialog() {
+    if (window.txnListHtml) {
+        document.getElementById("tollTxnContent").innerHTML = window.txnListHtml;
+        $('#tollTxnModal').modal('show');
+    } else {
+        alert("Transaction list not loaded yet.");
+    }
+}
+
+// Load toll cost and txn list on page load
+window.onload = function() {
+    fetchTollCost();
+};
+
 </script>
 
 {% endblock content %}

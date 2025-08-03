@@ -9,27 +9,76 @@
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.6.2/dist/dotlottie-wc.js" type="module"></script>
 
-<style>
-  .custom-div-icon i {
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
-    cursor: pointer;
-  }
-  .select2-container {
-    width: 100% !important;
-  }
-  #mapLoader {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 20px;
-    border-radius: 10px;
-    font-weight: bold;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
-  }
+<style>body {
+  background: #121212;
+  color: #f1f1f1;
+}
+
+.card {
+  background: #1e1e1e;
+  color: #f1f1f1;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.card-header {
+  background: linear-gradient(45deg, #0d7377, #14ffec);
+  color: #fff;
+  border-bottom: none;
+}
+
+.table thead {
+  background: #0d7377;
+  color: #fff;
+}
+
+button.btn {
+  border-radius: 30px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+button.btn:hover {
+  transform: scale(1.05);
+}
+
+#map {
+  border: 2px solid #0d7377;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark Modal */
+.modal-content {
+  background: #1e1e1e;
+  color: #f1f1f1;
+}
+
+/* Dark Loader Centered */
+#fullScreenLoader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(18, 18, 18, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  flex-direction: column;
+  transition: opacity 0.3s ease;
+}
+
+#fullScreenLoader p {
+  margin-top: 20px;
+  font-size: 20px;
+  color: #FF0000;
+  font-weight: bold;
+}
 </style>
 
 <div class="container-fluid p-3 position-relative">
@@ -150,171 +199,188 @@
 </div>
 
 <script>
-  const vehicleToHighlight = "{{ vehicle_number|default:'' }}".toUpperCase().replace(/[\s\-]/g, '');
-  const map = L.map("map").setView([12.9716, 77.5946], 6);
+  let allVehicleData = [];
+let currentStatusFilter = "all";
+let currentVehicleFilter = "all";
+let liveTrackMode = false;
+const liveTrackVehicleNumber = "{{ vehicle_number|default:'' }}".toUpperCase().replace(/[\s\-]/g, '');
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors',
-  }).addTo(map);
+function normalize(num) {
+  return num ? num.toUpperCase().replace(/[\s\-]/g, '') : '';
+}
 
-  const runningIcons = {
-    Moving: L.divIcon({ className: 'custom-div-icon', html: '<i class="fa-solid fa-truck" style="color: green; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] }),
-    Idle: L.divIcon({ className: 'custom-div-icon', html: '<i class="fa-solid fa-truck" style="color: orange; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] }),
-    Stopped: L.divIcon({ className: 'custom-div-icon', html: '<i class="fa-solid fa-truck" style="color: red; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] }),
-  };
+const map = L.map("map").setView([12.9716, 77.5946], 6);
 
-  function normalize(num) {
-    return num ? num.toUpperCase().replace(/[\s\-]/g, '') : '';
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap contributors',
+}).addTo(map);
+
+const runningIcons = {
+  Moving: L.divIcon({ html: '<i class="fa-solid fa-truck" style="color: green; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32] }),
+  Idle: L.divIcon({ html: '<i class="fa-solid fa-truck" style="color: orange; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32] }),
+  Stopped: L.divIcon({ html: '<i class="fa-solid fa-truck" style="color: red; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32] }),
+};
+
+function showLoader() {
+  if (!document.getElementById("fullScreenLoader")) {
+    const loader = document.createElement("div");
+    loader.id = "fullScreenLoader";
+    loader.innerHTML = `
+      <dotlottie-wc
+  src="https://lottie.host/d9da93dd-25f1-4d20-b23e-a4cf03af23bc/VlvKHd09Qu.lottie"
+  style="width: 300px;height: 300px"
+  speed="1"
+  autoplay
+  loop
+></dotlottie-wc>
+      <p>Loading Vehicle Data...</p>`;
+    document.body.appendChild(loader);
+  }
+}
+
+function hideLoader() {
+  const loader = document.getElementById("fullScreenLoader");
+  if (loader) loader.remove();
+}
+
+function populateVehicleDropdown() {
+  const vehicleDropdown = document.getElementById("modalVehicleFilter");
+  vehicleDropdown.innerHTML = '<option value="all">All</option>';
+
+  let filteredList = allVehicleData;
+  if (currentStatusFilter !== "all") {
+    filteredList = filteredList.filter(v => v.status === currentStatusFilter);
   }
 
-  function showLoader() {
-    if (!document.getElementById("mapLoader")) {
-      const loader = document.createElement("div");
-      loader.id = "mapLoader";
-      loader.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>Loading...`;
-      loader.style.position = "absolute";
-      loader.style.top = "50%";
-      loader.style.left = "50%";
-      loader.style.transform = "translate(-50%, -50%)";
-      loader.style.zIndex = "9999";
-      loader.style.background = "#ffffffdd";
-      loader.style.padding = "15px 25px";
-      loader.style.borderRadius = "10px";
-      loader.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
-      document.getElementById("map").appendChild(loader);
-    }
+  const uniqueNumbers = [...new Set(filteredList.map(v => v.number))].sort();
+  uniqueNumbers.forEach(num => {
+    const opt = document.createElement("option");
+    opt.value = normalize(num);
+    opt.textContent = num;
+    vehicleDropdown.appendChild(opt);
+  });
+
+  if (typeof $ !== 'undefined' && $.fn.select2) {
+    $(vehicleDropdown).select2({ width: '100%' });
+  }
+}
+
+function applyFiltersAndRender() {
+  let filtered = allVehicleData;
+
+  if (currentStatusFilter !== "all") {
+    filtered = filtered.filter(v => v.status === currentStatusFilter);
+  }
+  if (currentVehicleFilter !== "all") {
+    filtered = filtered.filter(v => normalize(v.number) === currentVehicleFilter);
   }
 
-  function hideLoader() {
-    const loader = document.getElementById("mapLoader");
-    if (loader) loader.remove();
-  }
+  renderMarkers(filtered);
+  renderVehicleTable(filtered);
+}
 
-  function loadVehicleData(statusFilter = "all", numberFilter = "all", showSpinner = false) {
-    if (showSpinner) showLoader();
+function renderMarkers(vehicleList) {
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker) map.removeLayer(layer);
+  });
 
-    fetch("/SMS/get_vehicle_data/")
-      .then(res => res.json())
-      .then(data => {
-        const allData = data;
+  vehicleList.forEach(v => {
+    const lat = parseFloat(v.lat);
+    const lon = parseFloat(v.lon);
+    const icon = runningIcons[v.running_status] || runningIcons.Stopped;
 
-        // Fill dropdown only once
-        const vehicleDropdown = document.getElementById("modalVehicleFilter");
-        if (vehicleDropdown && vehicleDropdown.options.length <= 1) {
-          const unique = [...new Set(allData.map(v => v.number))].sort();
-          unique.forEach(num => {
-            const opt = document.createElement("option");
-            opt.value = normalize(num);
-            opt.textContent = num;
-            vehicleDropdown.appendChild(opt);
-          });
-          $('#modalVehicleFilter').select2({ width: '100%', dropdownParent: $('#filterModal') });
-        }
-
-        let filtered = allData;
-        if (vehicleToHighlight) {
-          filtered = allData.filter(v => normalize(v.number) === vehicleToHighlight);
-        } else {
-          filtered = allData.filter(v => {
-            const matchStatus = statusFilter === "all" || v.status === statusFilter;
-            const matchNumber = numberFilter === "all" || normalize(v.number) === normalize(numberFilter);
-            return matchStatus && matchNumber;
-          });
-        }
-
-        map.eachLayer(layer => {
-          if (layer instanceof L.Marker) map.removeLayer(layer);
-        });
-
-        const markersMap = {};
-        filtered.forEach(vehicle => {
-          const lat = parseFloat(vehicle.lat);
-          const lon = parseFloat(vehicle.lon);
-          const icon = runningIcons[vehicle.running_status] || runningIcons.Stopped;
-
-          if (!isNaN(lat) && !isNaN(lon)) {
-            const marker = L.marker([lat, lon], { icon: icon })
-              .addTo(map)
-              .bindPopup(`
-                <b>${vehicle.number}</b><br>
-                Status: ${vehicle.status.replace("_", " ").toUpperCase()}<br>
-                Running: ${vehicle.running_status}<br>
-                Speed: ${vehicle.speed} km/h<br>
-                Odometer: ${vehicle.Odometer} km/h<br>
-                ${vehicle.timestamp}
-              `);
-            markersMap[normalize(vehicle.number)] = marker;
-          }
-        });
-
-        if (vehicleToHighlight && markersMap[vehicleToHighlight]) {
-          map.setView(markersMap[vehicleToHighlight].getLatLng(), 15);
-          markersMap[vehicleToHighlight].openPopup();
-        }
-
-        renderVehicleTable(filtered);
-        if (showSpinner) hideLoader();
-      })
-      .catch(err => {
-        console.error("Error loading vehicle data:", err);
-        if (showSpinner) hideLoader();
-      });
-  }
-
-  function renderVehicleTable(data) {
-    const tbody = document.getElementById("vehicle-table-body");
-    tbody.innerHTML = "";
-    data.forEach(v => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><span class="badge bg-${v.status === 'in_trip' ? 'primary' : v.status === 'available' ? 'success' : 'danger'}">${v.status.replace("_", " ").toUpperCase()}</span></td>
-        <td>${v.number}</td>
-        <td>${v.running_status}</td>
-        <td>${v.speed} km/h</td>
-        <td>${v.Odometer} km/h</td>
-        <td>${v.timestamp}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const isLiveTrack = vehicleToHighlight !== "";
-
-   document.getElementById("applyFilterBtn").addEventListener("click", () => {
-  const status = document.getElementById("modalStatusFilter").value;
-  const vehicle = document.getElementById("modalVehicleFilter").value;
-
-  // Show loader and load filtered data
-  loadVehicleData(status, vehicle, true);
-
-  // Close the modal
-  const modalEl = document.getElementById("filterModal");
-  const modalInstance = bootstrap.Modal.getInstance(modalEl);
-  if (modalInstance) modalInstance.hide();
-
-  // Scroll to map after slight delay
-  setTimeout(() => {
-    document.getElementById("map").scrollIntoView({ behavior: "smooth" });
-  }, 400);
-});
-
-    if (isLiveTrack) {
-      document.getElementById("modalStatusFilter").disabled = true;
-      document.getElementById("modalVehicleFilter").disabled = true;
-      document.getElementById("applyFilterBtn").disabled = true;
-      loadVehicleData();
-      setInterval(() => loadVehicleData(), 3000);
-    } else {
-      loadVehicleData();
-      setInterval(() => {
-        const status = document.getElementById("modalStatusFilter").value;
-        const vehicle = document.getElementById("modalVehicleFilter").value;
-        loadVehicleData(status, vehicle);
-      }, 3000);
+    if (!isNaN(lat) && !isNaN(lon)) {
+      const marker = L.marker([lat, lon], { icon: icon })
+        .addTo(map)
+        .bindPopup(`<b>${v.number}</b><br>Status: ${v.status.toUpperCase()}<br>Running: ${v.running_status}<br>Speed: ${v.speed} km/h<br>Odometer: ${v.Odometer} km<br>${v.timestamp}`);
+      if (liveTrackMode) {
+        map.setView([lat, lon], 15);
+        marker.openPopup();
+      }
     }
   });
+}
+
+function renderVehicleTable(vehicleList) {
+  const tbody = document.getElementById("vehicle-table-body");
+  tbody.innerHTML = "";
+
+  vehicleList.forEach(v => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><span class="badge bg-${v.status === 'in_trip' ? 'primary' : v.status === 'available' ? 'success' : 'danger'}">${v.status.replace("_", " ").toUpperCase()}</span></td>
+      <td>${v.number}</td>
+      <td>${v.running_status}</td>
+      <td>${v.speed} km/h</td>
+      <td>${v.Odometer} km</td>
+      <td>${v.timestamp}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function loadVehicleData(showSpinner = false) {
+  if (showSpinner) showLoader();
+
+  fetch("/SMS/get_vehicle_data/")
+    .then(res => res.json())
+    .then(data => {
+      allVehicleData = data.all_data || [];
+
+      if (liveTrackMode) {
+        const liveData = allVehicleData.filter(v => normalize(v.number) === liveTrackVehicleNumber);
+        renderMarkers(liveData);
+        renderVehicleTable(liveData);
+      } else {
+        populateVehicleDropdown();
+        applyFiltersAndRender();
+      }
+
+      if (showSpinner) hideLoader();
+    })
+    .catch(err => {
+      console.error("Error loading vehicle data:", err);
+      if (showSpinner) hideLoader();
+    });
+}
+
+// --- INIT ON PAGE LOAD ---
+document.addEventListener("DOMContentLoaded", () => {
+  liveTrackMode = liveTrackVehicleNumber !== "";
+
+  if (!liveTrackMode) populateVehicleDropdown();
+
+  loadVehicleData(true);
+  setInterval(() => loadVehicleData(), 5000);
+
+  document.getElementById("modalStatusFilter").addEventListener("change", function () {
+    currentStatusFilter = this.value;
+    if (!liveTrackMode) {
+      populateVehicleDropdown();
+    }
+  });
+
+  document.getElementById("modalVehicleFilter").addEventListener("change", function () {
+    currentVehicleFilter = this.value;
+  });
+
+  document.getElementById("applyFilterBtn").addEventListener("click", () => {
+    if (!liveTrackMode) {
+      applyFiltersAndRender();
+    }
+    bootstrap.Modal.getInstance(document.getElementById("filterModal")).hide();
+  });
+
+  // Optional: Button to Exit Live Track Mode (show all vehicles again)
+  if (liveTrackMode) {
+    const resetBtn = document.createElement("button");
+    resetBtn.textContent = "Show All Vehicles";
+    resetBtn.className = "btn btn-warning my-2";
+    resetBtn.onclick = () => window.location.href = window.location.pathname;
+    document.querySelector(".d-flex.justify-content-between").appendChild(resetBtn);
+  }
+});
+
 </script>
 <script>
   function loadSimTrackingData() {
