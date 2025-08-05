@@ -3,7 +3,7 @@
 {% block content %}
 {% load crispy_forms_tags %}
 <!-- Content Container -->
-<div id="content" class="bg-warning" style="width: 550px; margin: auto; padding: 1px; border: 4px solid black; text-align: left; font-family: Arial, sans-serif;">
+<div id="content" class="bg-warning" style="width: 350px; margin: auto; padding: 1px; border: 4px solid black; text-align: left; font-family: Arial, sans-serif;">
     <div style="display: flex; align-items: center;">
         <!-- QR Code Section -->
         <div style="flex: 1; text-align: center;">
@@ -29,61 +29,77 @@
 
 <!-- Print Function -->
 <script>
-    function printDiv() {
-        const content = document.getElementById("content").outerHTML;
-        const printWindow = window.open("", "_blank");
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Print</title>
-                    <style>
-    @media print {
-        body {
-            margin: 0;
-            padding: 0;
-            width: 48mm;
-            height: 25mm;
-            background-color: white;
-        }
-        #content {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2mm; /* Add padding to prevent overflow */
-            border: 3px solid black;
-            border-radius: 3.2mm;
-            background-color: #add8e6;
-            box-sizing: border-box; /* Include padding in width/height calculations */
-            font-family: Arial, sans-serif;
-            font-size: 4mm; /* Adjusted for readability */
-            text-align: left;
-        }
-        .qr-container {
-            display: flex;
-            align-items: center;
-            gap: 2mm;
-        }
-        .qr-container img {
-            width: 12mm; /* Ensure the QR code fits properly */
-            height: 12mm;
-        }
-        .text-container {
-            max-width: calc(100% - 14mm); /* Prevent overflow */
-            line-height: 1.2;
-            word-wrap: break-word;
-        }
-    }
-</style>
-
-                </head>
-                <body>${content}</body>
-            </html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
-    }
+function printDiv() {
+    const content = document.getElementById("content").outerHTML;
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Print</title>
+<!--                <style>-->
+<!--                    @media print {-->
+<!--                        body {-->
+<!--                            margin: 0;-->
+<!--                            padding: 0;-->
+<!--                            width: 48mm;-->
+<!--                            height: 25mm;-->
+<!--                        }-->
+<!--                        .print-label {-->
+<!--                            display: flex;-->
+<!--                            flex-direction: row;-->
+<!--                            align-items: center;-->
+<!--                            justify-content: space-between;-->
+<!--                            width: 100%;-->
+<!--                            height: 100%;-->
+<!--                            padding: 1mm 2mm;-->
+<!--                            box-sizing: border-box;-->
+<!--                            border: 2px solid black;-->
+<!--                            border-radius: 3mm;-->
+<!--                            background-color: #fdfdfd;-->
+<!--                            font-family: Arial, sans-serif;-->
+<!--                            font-size: 3.5mm;-->
+<!--                        }-->
+<!--                        .qr-container {-->
+<!--                            width: 15mm;-->
+<!--                            height: 15mm;-->
+<!--                            display: flex;-->
+<!--                            align-items: center;-->
+<!--                            justify-content: center;-->
+<!--                            flex-shrink: 0;-->
+<!--                        }-->
+<!--                        .qr-container img {-->
+<!--                            width: 100%;-->
+<!--                            height: 100%;-->
+<!--                            object-fit: contain;-->
+<!--                        }-->
+<!--                        .text-container {-->
+<!--                            flex: 1;-->
+<!--                            padding-left: 2mm;-->
+<!--                            display: flex;-->
+<!--                            flex-direction: column;-->
+<!--                            justify-content: center;-->
+<!--                            line-height: 1.1;-->
+<!--                            overflow: hidden;-->
+<!--                        }-->
+<!--                        .text-container p {-->
+<!--                            margin: 0;-->
+<!--                            padding: 0;-->
+<!--                        }-->
+<!--                    }-->
+<!--                </style>-->
+            </head>
+            <body>
+                ${content}
+                <script>
+                    const img = document.querySelector("img");
+                    img.onload = () => window.print();
+                    if (img.complete) window.print();
+                <\/script>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
 </script>
 
 
