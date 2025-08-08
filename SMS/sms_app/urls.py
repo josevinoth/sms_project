@@ -686,6 +686,7 @@ urlpatterns = [
     path('vendor_filter/', views.vendor_filter, name='vendor_filter'),
     path('consignmentgoods/<int:pk>/upload/<str:att_type>/', views.consignmentgoods_upload_attachment, name='consignmentgoods_upload_attachment'),
     path('consignmentgoods/delete-attachment/<int:pk>/<str:att_type>/', views.consignmentgoods_delete_attachment, name='consignmentgoods_delete_attachment'),
+    path('add_transporter/', views.add_transporter, name='add_transporter'),
 
 
 ]

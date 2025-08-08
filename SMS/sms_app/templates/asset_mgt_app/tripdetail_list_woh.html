@@ -5,6 +5,7 @@
         <table class="table table-bordered align-middle" id="tripdetail_list">
             <thead class="table-dark">
             <tr class="d-none d-md-table-row">
+                <th>ID</th>
                 <th>Created On</th>
                 <th>Enquiry Number</th>
                 <th>Consignment Number</th>
@@ -26,6 +27,7 @@
             <tbody>
             {% for tripdetailinfo in tripdetail_list %}
             <tr class="d-block d-md-table-row mb-3 mb-md-0 border rounded shadow-sm p-2">
+                <td> {{tripdetailinfo.id}}</td>
                 <td class="d-flex d-md-table-cell justify-content-between">
                     <span class="fw-bold d-md-none me-2">Created On :</span> {{ tripdetailinfo.tr_created_at }}
                 </td>

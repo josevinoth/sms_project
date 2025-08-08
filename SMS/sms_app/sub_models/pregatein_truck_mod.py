@@ -1,9 +1,11 @@
 from django.db import models
+
+from .transporter_mod import Transporter_name
 from ..models import storagecrosslabelInfo,TypeofotlInfo,VehicletypeInfo,MyUser,GstexcemptionInfo,Gatein_pre_info,YesNoInfo
 
 class Pregateintruckinfo(models.Model):
     pregatein_number = models.ForeignKey(Gatein_pre_info, null=True,on_delete=models.CASCADE, default='')
-    pregatein_transporter = models.CharField(max_length=1000)
+    pregatein_transporter_name = models.ForeignKey(Transporter_name, on_delete=models.CASCADE,blank=True,null=True,related_name='pregatein_transporter',db_column='pregatein_transporter')
     pregatein_truck_number = models.CharField(max_length=200)
     pregatein_truck_type = models.ForeignKey(VehicletypeInfo, null=True,on_delete=models.CASCADE, default='')
     pregatein_driver = models.CharField(max_length=500)

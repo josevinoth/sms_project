@@ -1,6 +1,40 @@
 {% extends "asset_mgt_app/base_1.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<style>
+  @media (max-width: 767.98px) {
+    .input-group {
+      display: block !important;
+    }
+
+    .input-group .input-group-prepend,
+    .input-group .input-group-append {
+      display: block;
+      width: 100%;
+      margin-bottom: 0.25rem;
+    }
+
+    .input-group .input-group-text {
+      display: block;
+      width: 100%;
+      text-align: center;          /* center text */
+      font-size: 1rem;             /* increase font size */
+      font-weight: 500;            /* optional: make it semi-bold */
+      border-radius: 0.2rem;
+    }
+
+    .input-group .form-control {
+      width: 100%;
+      display: block;
+    }
+
+    .input-group .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+
 <form method="POST" action="" enctype="multipart/form-data">
 	{% csrf_token %}
 	<div class="container-fluid">
@@ -17,12 +51,20 @@
 							</div>
 							{% render_field form.pregatein_number id="pregatein_number" class="form-control disable_a_href" %}
 						</div>
-						<div class="input-group input-group-sm mb-2">
+						<!-- Transporter Input + Add Button -->
+						<div class="input-group input-group-sm mb-3">
 							<div class="input-group-prepend">
 								<span class="input-group-text">Transporter</span>
 							</div>
-							{% render_field form.pregatein_transporter class="form-control" id="gatein_pre_transporter" %}
+							{% render_field form.pregatein_transporter_name class="form-control" id="gatein_pre_transporter" %}
+							<div class="input-group-append">
+								<button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#addTransporterModal">
+									Add
+								</button>
+							</div>
 						</div>
+
+
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
 								<span class="input-group-text">Truck Number</span>
@@ -141,6 +183,26 @@
 		</div>
 	</div>
 </form>
+<!-- Modal -->
+<div class="modal fade" id="addTransporterModal" tabindex="-1" role="dialog" aria-labelledby="addTransporterModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<form id="addTransporterForm">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Add New Transporter</h5>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+				<div class="modal-body">
+					<input type="text" class="form-control" name="name" placeholder="Enter new transporter name" required>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-primary">Save</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
 <hr>
 <div class="container-fluid ">
 	<div class="col-12 col-md-6 col-lg-12 shadow-box-table" id="highvalue">
@@ -191,5 +253,57 @@
 		}
 	}
 </script>
+<script>
+	$(document).ready(function () {
+        function toTitleCase(str) {
+            return str.toLowerCase().replace(/\b\w/g, function (char) {
+                return char.toUpperCase();
+            });
+        }
+
+        $('#addTransporterForm').submit(function (e) {
+            e.preventDefault();
+            var name = $(this).find('input[name="name"]').val().trim();
+
+            if (!name) {
+                alert("Please enter a transporter name.");
+                return;
+            }
+
+            name = toTitleCase(name);
+
+            $.ajax({
+                url: "{% url 'add_transporter' %}",
+                method: "POST",
+                data: {
+                    name: name,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    if (response.success) {
+                        let newOption = new Option(response.name, response.id, true, true);
+                        $('#gatein_pre_transporter').append(newOption).trigger('change');
+                        $('#addTransporterModal').modal('hide');
+                        $('#addTransporterForm')[0].reset();
+                    } else {
+                        if (response.id) {
+                            let existingOption = new Option(response.name, response.id, true, true);
+                            $('#gatein_pre_transporter').append(existingOption).trigger('change');
+                            $('#addTransporterModal').modal('hide');
+                            $('#addTransporterForm')[0].reset();
+                            alert(response.error);
+                        } else {
+                            alert(response.error || "Something went wrong.");
+                        }
+                    }
+                },
+                error: function () {
+                    alert("Error: Could not add transporter.");
+                }
+            });
+        });
+    });
+</script>
+
 {% endblock scripts %}
 {% endblock content %}

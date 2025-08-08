@@ -1,9 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 from ..forms import PregateintruckForm
 from ..models import Pregateintruckinfo,Gatein_pre_info,HighvalueInfo
 from django.shortcuts import render, redirect
 from django.contrib import messages
+
+from ..sub_models.transporter_mod import Transporter_name
+
 
 @login_required(login_url='login_page')
 def pregateintruck_add(request,pregateintruck_id=0):
@@ -92,5 +98,23 @@ def pregateintruck_delete(request,pregateintruck_id):
 def pregateintruck_cancel(request):
     gatein_num_id = request.session['gatein_num_id']
     return redirect('/SMS/gatein_pre_update/' + str(gatein_num_id))
+@csrf_exempt
+def add_transporter(request):
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        if not name:
+            return JsonResponse({"success": False, "error": "Transporter name cannot be empty."})
 
+        existing = Transporter_name.objects.filter(transporter_name__iexact=name).first()
+        if existing:
+            return JsonResponse({
+                "success": False,
+                "id": existing.id,
+                "name": existing.transporter_name,
+                "error": "This transporter already exists."
+            })
 
+        new = Transporter_name.objects.create(transporter_name=name)
+        return JsonResponse({"success": True, "id": new.id, "name": new.transporter_name})
+
+    return JsonResponse({"success": False, "error": "Invalid request"})

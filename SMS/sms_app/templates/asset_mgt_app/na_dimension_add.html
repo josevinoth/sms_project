@@ -35,7 +35,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Type</span>
 									</div>
-									{% render_field form.nad_wood_type id="nad_wood_type" onchange="plywood_thickness()" class="form-control" %}
+									{% render_field form.nad_wood_type id="nad_wood_type"  class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3" id="wood_desc">
 									<div class="input-group-prepend">
@@ -107,7 +107,7 @@
 									</div>
 									{% render_field form.nad_quantity id="nad_quantity" class="form-control" %}
 								</div>
-									{% render_field form.nad_updated_by id="nad_updated_by" hidden="True" class="form-control " %}
+								{% render_field form.nad_updated_by id="nad_updated_by" hidden="True" class="form-control " %}
 							</div>
 						</div>
 						<div class="row">
@@ -132,24 +132,75 @@
 	</div>
 </form>
 <script>
-$(document).ready(function () {
-    $('#nad_updated_by').val('{{ user_id }}');
-    $('#nad_assess_num').val('{{ na_assessment_num_id }}');
+	$(document).ready(function () {
+        $('#nad_updated_by').val('{{ user_id }}');
+        $('#nad_assess_num').val('{{ na_assessment_num_id }}');
 
-    var user_role = '{{ role_id }}';
+        var user_role = '{{ role_id }}';
 
-    var status = '{{ na_status }}';
+        var status = '{{ na_status }}';
 
-    if (status == 5 && user_role == 2) {
-        alert('Since Status is Completed, you have read-only access. To edit, please contact Administrator');
-        $('#nad_form').addClass('disable_a_href');
-        $('#na_submit_btn').addClass('disable_a_href');
-        $('#add_dim_btn').addClass('disable_a_href');
+        if (status == 5 && user_role == 2) {
+            alert('Since Status is Completed, you have read-only access. To edit, please contact Administrator');
+            $('#nad_form').addClass('disable_a_href');
+            $('#na_submit_btn').addClass('disable_a_href');
+            $('#add_dim_btn').addClass('disable_a_href');
+        }
+
+        plywood_thickness();
+        requirement_type();
+    });
+</script>
+
+<script>
+	$("#nad_wood_type").change(function () {
+       var wood_type = $(this).val();
+       $('#nad_wood_description').removeClass('disable_a_href');
+            $.ajax({
+         url: '{% url 'load_stock_description' %}',
+         data: {
+           'stock_type': wood_type,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#nad_wood_description').removeClass('disable_a_href');
+             $("#nad_wood_description").empty();
+             $('#nad_wood_description').empty().append("<option value='0'>--Select--</option>");
+             var nad_wood_description_name=JSON.parse(data)["stock_description"];
+             var nad_wood_description_id=JSON.parse(data)["stock_description_id"];
+             var len = (nad_wood_description_id).length;
+             $('#nad_wood_description').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#nad_wood_description").append("<option value='"+nad_wood_description_id[i]+"'>"+nad_wood_description_name[i]+"</option>");
+             }
+         }
+       });
+     });
+</script>
+<script>
+	function plywood_thickness() {
+    var wood_type = $('#nad_wood_type').val();  // Use jQuery to get multiselect values
+      if (wood_type==4)
+        {
+            $('#nad_plywood_thickness').removeClass('disable_a_href');
+        }
+      else
+        {
+            $('#nad_plywood_thickness').addClass('disable_a_href');
+          }
+		// Attach the event on DOM ready
+		$(document).ready(function () {
+			// Call once on page load
+			plywood_thickness();
+
+			// Attach change event handler
+			$('#nad_wood_type').on('change', function () {
+				plywood_thickness();
+			});
+		});
+      endif
     }
 
-    plywood_thickness();
-    requirement_type();
-});
 </script>
 <script>
 	$(document).ready(function () {
@@ -179,46 +230,7 @@ $(document).ready(function () {
 
 </script>
 <script>
-	$("#nad_wood_type").change(function () {
-       var wood_type = $(this).val();
-       $('#nad_wood_description').removeClass('disable_a_href');
-            $.ajax({
-         url: '{% url 'load_stock_description' %}',
-         data: {
-           'stock_type': wood_type,
-         },
-         success: function (data) {
-             console.log(data);
-             $('#nad_wood_description').removeClass('disable_a_href');
-             $("#nad_wood_description").empty();
-             $('#nad_wood_description').empty().append("<option value='0'>--Select--</option>");
-             var nad_wood_description_name=JSON.parse(data)["stock_description"];
-             var nad_wood_description_id=JSON.parse(data)["stock_description_id"];
-             var len = (nad_wood_description_id).length;
-             $('#nad_wood_description').empty().append("<option value='0'>--Select--</option>");
-             for( var i = 0; i<len; i++){
-                 $("#nad_wood_description").append("<option value='"+nad_wood_description_id[i]+"'>"+nad_wood_description_name[i]+"</option>");
-             }
-         }
-       });
-     });
-</script>
-<script>
-	function plywood_thickness() {
-      var wood_type=document.getElementById("nad_wood_type").value
-      if (wood_type==4)
-        {
-            $('#nad_plywood_thickness').removeClass('disable_a_href');
-        }
-      else
-        {
-            $('#nad_plywood_thickness').addClass('disable_a_href');
-          }
-      endif
-    }
-</script>
-<script>
-    $(document).ready(function () {
+	$(document).ready(function () {
         // Run the function once to set the initial field visibility in edit mode
         requirement_type();
 

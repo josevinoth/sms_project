@@ -96,7 +96,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vendor Name</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_vendor class="form-control" id="va_vendor" data-selected=vehicle_allotment_form.va_vendor.value %}
+									{% render_field vehicle_allotment_form.va_vendor class="form-control" id="va_vendor" onchange="loadVendorBuyRate()"  data-selected=vehicle_allotment_form.va_vendor.value %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
