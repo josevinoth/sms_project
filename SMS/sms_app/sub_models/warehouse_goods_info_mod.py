@@ -1,4 +1,6 @@
 from django.db import models
+
+from .billing_mod import BilingInfo
 from ..models import TrbusinesstypeInfo,CustomerInfo,DamagereportInfo,Loadingbay_Info,Gatein_info,Dispatch_info,VehicletypeInfo,Fumigation_ActionInfo,Packagetype_info,StatusList,DamageInfo,Location_info,UnitInfo,BayInfo,Check_in_out,GstexcemptionInfo,UOM,StackingInfo
 
 class Warehouse_goods_info(models.Model):
@@ -66,3 +68,4 @@ class Warehouse_goods_info(models.Model):
     wh_truck_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, null=True,blank=True)
     wh_dispatch_id= models.ForeignKey(Dispatch_info, on_delete=models.CASCADE, null=True,blank=True)
     wh_dispatch_qty = models.FloatField(blank=True, null=True,default=0.0)
+    wh_voucher_id = models.ForeignKey(BilingInfo, on_delete=models.CASCADE, default='',null=True,blank=True)

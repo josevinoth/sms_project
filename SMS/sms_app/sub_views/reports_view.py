@@ -14,7 +14,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.timezone import make_naive
 from xhtml2pdf import pisa
-from ..models import CustomerInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo
+from ..models import CustomerInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo,GoodsPartialDispatchInfo
 from datetime import date,timedelta
 import datetime
 from django.db.models import Count, Sum
@@ -297,7 +297,7 @@ def export_stockreport_to_csv(request):
 
     # Query data
     data = Warehouse_goods_info.objects.filter(
-        Q(wh_check_in_out=1) | (Q(wh_check_in_out=2, wh_checkout_time__gte=four_months_ago))
+        Q(wh_check_in_out__in=[1, 4]) | (Q(wh_check_in_out=2, wh_checkout_time__gte=four_months_ago))
     ).annotate(
         arrival_date=ExpressionWrapper(F('wh_gate_injob_no_id__gatein_arrival_date'),
                                        output_field=fields.DateTimeField()),
@@ -310,7 +310,7 @@ def export_stockreport_to_csv(request):
         departure_time=ExpressionWrapper(F('wh_dispatch_id__dispatch_depature_date'),
                                          output_field=fields.DateTimeField()),
     ).order_by('-arrival_date').values_list(
-        'wh_job_no', 'wh_qr_rand_num', 'wh_customer_name__cu_name',
+        'id','wh_job_no', 'wh_qr_rand_num', 'wh_customer_name__cu_name',
         'arrival_date', 'unloading_start_time', 'unloading_end_time',
         'wh_gate_injob_no_id__gatein_transporter',
         'wh_gate_injob_no_id__gatein_truck_number',
@@ -323,11 +323,11 @@ def export_stockreport_to_csv(request):
         'wh_lb_job_no_id__lb_stock_invoice_currency__currency_type', 'wh_invoice_amount_inr',
         'wh_lb_job_no_id__lb_eway_bill', 'eway_bill_validity',
         'wh_fumigation_process__ge_gstexcepmtion', 'wh_check_in_out__check_in_out_name', 'wh_branch__loc_name',
-        'wh_unit__unit_name',
-        'wh_bay__bay_bayname', 'wh_storage_time', 'wh_dispatch_id__dispatch_truck_number',
-        str('wh_dispatch_id__dispatch_truck_type__vt_vehicletype'),'departure_time',
-        'wh_dispatch_id__dispatch_sticker_pasted_bvm__lp_name', 'wh_dispatch_id__dispatch_mawb',
-        'wh_dispatch_id__dispatch_num',
+        'wh_unit__unit_name', 'wh_bay__bay_bayname', 'wh_storage_time',
+        # 'wh_dispatch_id__dispatch_truck_number',
+        # str('wh_dispatch_id__dispatch_truck_type__vt_vehicletype'),'departure_time',
+        # 'wh_dispatch_id__dispatch_sticker_pasted_bvm__lp_name', 'wh_dispatch_id__dispatch_mawb',
+        # 'wh_dispatch_id__dispatch_num',
     )
 
     # Header row
@@ -342,7 +342,7 @@ def export_stockreport_to_csv(request):
             'E-Way Bill#', 'E-Way Bill Validity', 'Fumigation Status',
             'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days',
             'Truck_Number(Out)', 'Truck_Type(Out)', 'Truck_Depature_Time(Out)',
-            'Labels_Pasted_By', 'MAWB', 'Dispatch_Number'
+            'Labels_Pasted_By', 'MAWB', 'Dispatch Number(s)', 'Total Dispatch Qty'
     ]
 
     def generate_streamed_excel():
@@ -361,12 +361,56 @@ def export_stockreport_to_csv(request):
 
         # Write data rows
         for row_num, row_data in enumerate(data, 2):
+            goods_id = row_data[0]  # first element is ID
+            try:
+                goods_obj = Warehouse_goods_info.objects.get(id=goods_id)
+                partials = GoodsPartialDispatchInfo.objects.filter(pd_goods=goods_obj).select_related(
+                    'pd_dispatch_info__dispatch_truck_type',
+                    'pd_dispatch_info__dispatch_sticker_pasted_bvm'
+                )
+
+                dispatch_nums = set()
+                truck_numbers = set()
+                truck_types = set()
+                departure_times = set()
+                sticker_pasted_bys = set()
+                mawb_list = set()
+
+                total_qty = 0
+
+                for partial in partials:
+                    dispatch = partial.pd_dispatch_info
+                    if dispatch:
+                        dispatch_nums.add(dispatch.dispatch_num or "")
+                        truck_numbers.add(dispatch.dispatch_truck_number or "")
+                        truck_types.add(getattr(dispatch.dispatch_truck_type, 'vt_vehicletype', "") or "")
+                        departure_times.add(dispatch.dispatch_depature_date.strftime(
+                            "%d-%b-%y") if dispatch.dispatch_depature_date else "")
+                        sticker_pasted_bys.add(getattr(dispatch.dispatch_sticker_pasted_bvm, 'lp_name', "") or "")
+                        mawb_list.add(dispatch.dispatch_mawb or "")
+                    total_qty += partial.pd_dispatch_qty or 0
+
+                row_data = list(row_data[1:])  # remove ID
+
+                row_data += [
+                    ", ".join(truck_numbers),
+                    ", ".join(truck_types),
+                    ", ".join(departure_times),
+                    ", ".join(sticker_pasted_bys),
+                    ", ".join(mawb_list),
+                    ", ".join(dispatch_nums),
+                    total_qty
+                ]
+
+            except Exception as e:
+                row_data = list(row_data[1:])
+                row_data += ["", "", "", "", "", "", 0]
+
             for col_num, value in enumerate(row_data, 1):
-                # Convert timezone-aware datetime to naive
-                if isinstance(value, (datetime.date, datetime.datetime)) and hasattr(value,'tzinfo') and value.tzinfo is not None:
-                    value = make_naive(value)  # Convert to naive datetime in the local timezone
+                if isinstance(value, (datetime.date, datetime.datetime)) and hasattr(value, 'tzinfo') and value.tzinfo:
+                    value = make_naive(value)
                 cell = sheet.cell(row=row_num, column=col_num, value=value)
-                cell.font = Font(name='Bookman Old Style', size=9, bold=False, color="000000")
+                cell.font = Font(name='Bookman Old Style', size=9)
 
         # Get the last row and column with data
         max_row = sheet.max_row
@@ -507,7 +551,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
         else:
             # Step 1: Filter stock_values and ensure the date fields are timezone-free
             stock_values = stock_values.filter(
-                Q(wh_check_in_out=1) |
+                Q(wh_check_in_out__in=[1, 4]) |
                 Q(wh_check_in_out=2, wh_checkout_time__isnull=False, wh_checkout_time__gte=three_months_ago)
 
             ).order_by('-wh_gate_injob_no_id__gatein_arrival_date')
@@ -523,8 +567,34 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                     else:
                         date_of_arrival = ""
 
-                checkin_qty = stock_value.wh_invoice_qty if stock_value.wh_invoice_qty else 0
-                dispatch_qty = stock_value.wh_dispatch_id.dispatch_total_goods if stock_value.wh_dispatch_id and stock_value.wh_dispatch_id.dispatch_total_goods else 0
+                checkin_qty = stock_value.wh_goods_pieces if stock_value.wh_goods_pieces else 0
+                # Fetch partial dispatches for this stock
+                partials = GoodsPartialDispatchInfo.objects.filter(pd_goods=stock_value)
+                dispatch_nums = set()
+                truck_numbers = set()
+                truck_types = set()
+                departure_times = set()
+                sticker_pasted_bys = set()
+                mawb_list = set()
+
+                dispatch_qty = 0  # initialize
+
+                for partial in partials:
+                    dispatch = partial.pd_dispatch_info
+                    if dispatch:
+                        dispatch_nums.add(dispatch.dispatch_num or "")
+                        truck_numbers.add(dispatch.dispatch_truck_number or "")
+                        truck_type = getattr(dispatch.dispatch_truck_type, 'vt_vehicletype', "")
+                        if truck_type:
+                            truck_types.add(truck_type)
+                        sticker = getattr(dispatch.dispatch_sticker_pasted_bvm, 'lp_name', "")
+                        if sticker:
+                            sticker_pasted_bys.add(sticker)
+                        mawb_list.add(dispatch.dispatch_mawb or "")
+                        if dispatch.dispatch_depature_date:
+                            departure_times.add(dispatch.dispatch_depature_date.strftime('%d-%b-%Y'))
+
+                    dispatch_qty += partial.pd_dispatch_qty or 0  # Sum total qty
 
                 stock_on_hand = checkin_qty - dispatch_qty  # Subtract dispatch quantity
                 try:
@@ -603,14 +673,22 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                     str(stock_value.wh_unit),  # Index 34
                     str(stock_value.wh_bay),  # Index 35
                     stock_value.wh_storage_time,# Index 36
-                    getattr(stock_value.wh_dispatch_id, 'dispatch_truck_number', ''),# Index 37
-                    str(getattr(stock_value.wh_dispatch_id, 'dispatch_truck_type', '')),# Index 38
-                    # getattr(stock_value.wh_dispatch_id, 'dispatch_depature_date', ''),# Index 39
-                    dispatch_depature_time,
-                    str(getattr(stock_value.wh_dispatch_id, 'dispatch_sticker_pasted_bvm', '')),# Index 40
-                    getattr(stock_value.wh_dispatch_id, 'dispatch_mawb', ''),# Index 41
-                    getattr(stock_value.wh_dispatch_id, 'dispatch_num', ''),# Index 42
-                    getattr(stock_value.wh_dispatch_id, 'dispatch_total_goods', ''),# Index 43
+                    # getattr(stock_value.wh_dispatch_id, 'dispatch_truck_number', ''),# Index 37
+                    # str(getattr(stock_value.wh_dispatch_id, 'dispatch_truck_type', '')),# Index 38
+                    # # getattr(stock_value.wh_dispatch_id, 'dispatch_depature_date', ''),# Index 39
+                    # dispatch_depature_time,
+                    # str(getattr(stock_value.wh_dispatch_id, 'dispatch_sticker_pasted_bvm', '')),# Index 40
+                    # getattr(stock_value.wh_dispatch_id, 'dispatch_mawb', ''),# Index 41
+                    # getattr(stock_value.wh_dispatch_id, 'dispatch_num', ''),# Index 42
+                    # getattr(stock_value.wh_dispatch_id, 'dispatch_total_goods', ''),# Index 43
+                    ", ".join(truck_numbers),
+                    ", ".join(truck_types),
+                    ", ".join(departure_times),
+                    ", ".join(sticker_pasted_bys),
+                    ", ".join(mawb_list),
+                    ", ".join(dispatch_nums),
+                    dispatch_qty,
+
                     stock_on_hand,# Index 44
                 ]
 

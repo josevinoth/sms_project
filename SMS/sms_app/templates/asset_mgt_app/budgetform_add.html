@@ -131,16 +131,11 @@
                                                 <div class="col-6">
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text">Audit Fees</span>
+                                                            <span class="input-group-text">Advertisement & Business Promotion Expenses</span>
                                                         </div>
-                                                        {% render_field form.bf_audit_fees id="bf_audit_fees" class="form-control" %}
+                                                        {% render_field form.bf_advertisement_business_promotion id="bf_advertisement_business_promotion" class="form-control" %}
                                                     </div>
-                                                    <div class="input-group input-group-sm mb-3">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text">Bad Debts</span>
-                                                        </div>
-                                                        {% render_field form.bf_bad_debts id="bf_bad_debts" class="form-control" %}
-                                                    </div>
+
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">Bank Charges</span>
@@ -169,9 +164,9 @@
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text">Insurance Car</span>
+                                                            <span class="input-group-text">Housekeeping Salary</span>
                                                         </div>
-                                                        {% render_field form.bf_insurance_car id="bf_insurance_car" class="form-control" %}
+                                                        {% render_field form.bf_housekeeping_salary id="bf_housekeeping_salary" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
@@ -180,10 +175,28 @@
                                                         {% render_field form.bf_interest_on_statutory_dues id="bf_interest_on_statutory_dues" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Office Repairs and Maintenance Expenses</span>
+                                                        </div>
+                                                        {% render_field form.bf_office_repairs_maintenance id="bf_office_repairs_maintenance" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend" style="width:57%;">
                                                             <span class="input-group-text" style="width:110%;">Professional & Legal Charges</span>
                                                         </div>
                                                         {% render_field form.bf_professional_legal_charges id="bf_professional_legal_charges" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Rent Furniture fittings</span>
+                                                        </div>
+                                                        {% render_field form.bf_rent_furniture_fittings id="bf_rent_furniture_fittings" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Rent Office</span>
+                                                        </div>
+                                                        {% render_field form.bf_rent_office id="bf_rent_office" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend" style="width:55%;">
@@ -246,9 +259,33 @@
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
+                                                            <span class="input-group-text">Ex-Gratia Corp Staff</span>
+                                                        </div>
+                                                        {% render_field form.bf_exgratia_corp_staff id="bf_exgratia_corp_staff" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
                                                             <span class="input-group-text">Gratuity Corp Staff</span>
                                                         </div>
                                                         {% render_field form.bf_gratuity_corp_staff id="bf_gratuity_corp_staff" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Incentive-Corp Staff</span>
+                                                        </div>
+                                                        {% render_field form.bf_incentive_corp_staff id="bf_incentive_corp_staff" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Insurance Corp Staff</span>
+                                                        </div>
+                                                        {% render_field form.bf_insurance_corp_staff id="bf_insurance_corp_staff" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">LWF Corp Staff</span>
+                                                        </div>
+                                                        {% render_field form.bf_lwf_corp_staff id="bf_lwf_corp_staff" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend" style="width:50%;">
@@ -273,33 +310,57 @@
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text">EDLI Contribution Dep Staff</span>
+                                                            <span class="input-group-text">EDLI Contribution Staff</span>
                                                         </div>
                                                         {% render_field form.bf_EDLI_contribution_staff id="bf_EDLI_contribution_staff" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend" style="width:70%;">
-                                                            <span class="input-group-text" style="width:150%;">Employer Contribution to ESI Dep Staff</span>
+                                                            <span class="input-group-text" style="width:150%;">Employer Contribution to ESI Staff</span>
                                                         </div>
                                                         {% render_field form.bf_employer_contribution_to_ESI_staff id="bf_employer_contribution_to_ESI_staff" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend" style="width:70%;">
-                                                            <span class="input-group-text" style="width:150%;">Employer Contribution to PF Dep Staff</span>
+                                                            <span class="input-group-text" style="width:150%;">Employer Contribution to PF Staff</span>
                                                         </div>
                                                         {% render_field form.bf_employer_contribution_to_PF_staff id="bf_employer_contribution_to_ESI_staff" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend" style="width:55%;">
-                                                            <span class="input-group-text" style="width:130%;">EPF Admin Charges Dep staff</span>
+                                                            <span class="input-group-text" style="width:130%;">EPF Admin Charges staff</span>
                                                         </div>
                                                         {% render_field form.bf_EPF_admin_charges_staff id="bf_EPF_admin_charges_staff" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text">Gratuity Dep Staff</span>
+                                                            <span class="input-group-text">Ex-Gratia Staff</span>
+                                                        </div>
+                                                        {% render_field form.bf_exgratia_dept_staff id="bf_exgratia_dept_staff" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Gratuity Staff</span>
                                                         </div>
                                                         {% render_field form.bf_gratuity_staff id="bf_gratuity_staff" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Incentive Dept Staff</span>
+                                                        </div>
+                                                        {% render_field form.bf_incentive_dept_staff id="bf_incentive_dept_staff" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Insurance Dept Staff</span>
+                                                        </div>
+                                                        {% render_field form.bf_insurance_staff id="bf_insurance_staff" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">LWF Dept Staff</span>
+                                                        </div>
+                                                        {% render_field form.bf_lwf_dept_staff id="bf_lwf_dept_staff" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend" style="width:50%;">
@@ -315,30 +376,30 @@
                             </div>
                             <div class="col-6">
                                 <div id="accordion_1" class="container-fluid mb-3">
-                                    <div class="card">
-                                        <div class="card-header bg-info" id="headingFour">
-                                            <h5 class="mb-0">
-                                                <a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
-                                                    Interest Expenses <i class="fas fa-chevron-down "></i>
-                                                </a>
-                                            </h5>
-                                        </div>
-                                        <div id="collapseFour" class="collapse " aria-labelledby="headingFour" data-parent="#accordion">
-                                            <br>
-                                            <div class="input-group input-group-sm mb-3">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text">Interest on Borrowings</span>
-                                                </div>
-                                                {% render_field form.bf_interest_on_borrowings id="bf_interest_on_borrowings" class="form-control" %}
-                                            </div>
-                                            <div class="input-group input-group-sm mb-3">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text">Interest on Other Loans</span>
-                                                </div>
-                                                {% render_field form.bf_interest_on_other_loans id="bf_interest_on_other_loans" class="form-control" %}
-                                            </div>
-                                        </div>
-                                    </div>
+<!--                                    <div class="card">-->
+<!--                                        <div class="card-header bg-info" id="headingFour">-->
+<!--                                            <h5 class="mb-0">-->
+<!--                                                <a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">-->
+<!--                                                    Interest Expenses <i class="fas fa-chevron-down "></i>-->
+<!--                                                </a>-->
+<!--                                            </h5>-->
+<!--                                        </div>-->
+<!--                                        <div id="collapseFour" class="collapse " aria-labelledby="headingFour" data-parent="#accordion">-->
+<!--                                            <br>-->
+<!--                                            <div class="input-group input-group-sm mb-3">-->
+<!--                                                <div class="input-group-prepend">-->
+<!--                                                    <span class="input-group-text">Interest on Borrowings</span>-->
+<!--                                                </div>-->
+<!--                                                {% render_field form.bf_interest_on_borrowings id="bf_interest_on_borrowings" class="form-control" %}-->
+<!--                                            </div>-->
+<!--                                            <div class="input-group input-group-sm mb-3">-->
+<!--                                                <div class="input-group-prepend">-->
+<!--                                                    <span class="input-group-text">Interest on Other Loans</span>-->
+<!--                                                </div>-->
+<!--                                                {% render_field form.bf_interest_on_other_loans id="bf_interest_on_other_loans" class="form-control" %}-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
                                     <div class="card">
                                         <div class="card-header bg-info" id="headingFive">
                                             <h5 class="mb-0">
@@ -360,31 +421,20 @@
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text">Depreciation</span>
-                                                        </div>
-                                                        {% render_field form.bf_depreciation id="bf_depreciation" class="form-control" %}
-                                                    </div>
-                                                    <div class="input-group input-group-sm mb-3">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text">Software AMC Charges</span>
-                                                        </div>
-                                                        {% render_field form.bf_software_AMC_charges id="bf_software_AMC_charges" class="form-control" %}
-                                                    </div>
-                                                    <div class="input-group input-group-sm mb-3">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text">Insurance Warehouse</span>
+                                                            <span class="input-group-text">Insurance Expenses - Warehouse</span>
                                                         </div>
                                                         {% render_field form.bf_insurance_warehouse id="bf_insurance_warehouse" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text">Rates & Taxes</span>
+                                                            <span class="input-group-text">Insurance - WCC</span>
                                                         </div>
-                                                        {% render_field form.bf_rates_taxes id="bf_rates_taxes" class="form-control" %}
+                                                        {% render_field form.bf_insurance_wcc id="bf_insurance_wcc" class="form-control" %}
                                                     </div>
+
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text">Rent Premises</span>
+                                                            <span class="input-group-text">Rent-Premises</span>
                                                         </div>
                                                         {% render_field form.bf_rent_premises id="bf_rent_premises" class="form-control" %}
                                                     </div>
@@ -433,6 +483,18 @@
                                                         </div>
                                                         {% render_field form.bf_fumigation_expenses id="bf_fumigation_expenses" class="form-control" %}
                                                     </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Packing Services</span>
+                                                        </div>
+                                                        {% render_field form.bf_packing_services id="bf_packing_services" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">Support Handling</span>
+                                                        </div>
+                                                        {% render_field form.bf_support_handling id="bf_support_handling" class="form-control" %}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -458,21 +520,9 @@
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text">Housekeeping Salary</span>
+                                                            <span class="input-group-text">Depreciation Expenses</span>
                                                         </div>
-                                                        {% render_field form.bf_housekeeping_salary id="bf_housekeeping_salary" class="form-control" %}
-                                                    </div>
-                                                    <div class="input-group input-group-sm mb-3">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text">Insurance-Corp Staff</span>
-                                                        </div>
-                                                        {% render_field form.bf_insurance_corp_staff id="bf_insurance_corp_staff" class="form-control" %}
-                                                    </div>
-                                                    <div class="input-group input-group-sm mb-3">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text">Insurance-Staff</span>
-                                                        </div>
-                                                        {% render_field form.bf_insurance_staff id="bf_insurance_staff" class="form-control" %}
+                                                        {% render_field form.bf_depreciation id="bf_depreciation" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend" style="width:55%;">
@@ -488,9 +538,15 @@
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text">System AMC</span>
+                                                            <span class="input-group-text">Software AMC Expenses</span>
                                                         </div>
-                                                        {% render_field form.bf_system_amc id="bf_system_amc" class="form-control" %}
+                                                        {% render_field form.bf_software_AMC_charges id="bf_software_AMC_charges" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">AMC Expenses</span>
+                                                        </div>
+                                                        {% render_field form.bf_amc id="bf_amc" class="form-control" %}
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
@@ -503,9 +559,9 @@
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text">Advertisement & Business Promotion</span>
+                                                            <span class="input-group-text">CGST Ineligible ITC</span>
                                                         </div>
-                                                        {% render_field form.bf_advertisement_business_promotion id="bf_advertisement_business_promotion" class="form-control" %}
+                                                        {% render_field form.bf_CGST_ineligible_ITC id="bf_CGST_ineligible_ITC" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
@@ -532,10 +588,10 @@
                                                         {% render_field form.bf_hotel_boarding_lodging_expenses id="bf_hotel_boarding_lodging_expenses" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
-                                                        <div class="input-group-prepend" style="width:50%;">
-                                                            <span class="input-group-text" style="width:100%;">Office Repairs & Maintenance</span>
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">IGST Ineligible ITC</span>
                                                         </div>
-                                                        {% render_field form.bf_office_repairs_maintenance id="bf_office_repairs_maintenance" class="form-control" %}
+                                                        {% render_field form.bf_IGST_ineligible_ITC id="bf_IGST_ineligible_ITC" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend" style="width:62%;">
@@ -566,6 +622,12 @@
                                                             <span class="input-group-text" style="width:110%;">Service & Maintenance Expenses</span>
                                                         </div>
                                                         {% render_field form.bf_service_maintenance_expenses id="bf_service_maintenance_expenses" class="form-control" %}
+                                                    </div>
+                                                    <div class="input-group input-group-sm mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">SGST Ineligible ITC</span>
+                                                        </div>
+                                                        {% render_field form.bf_SGST_ineligible_ITC id="bf_SGST_ineligible_ITC" class="form-control" %}
                                                     </div>
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">

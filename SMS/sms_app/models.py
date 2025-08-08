@@ -97,6 +97,7 @@ from .sub_models.customername_mod import CustomernameInfo_new
 from .sub_models.vehiclecategory_mod import VehiclecategoryInfo
 from .sub_models.transitdistribute_info_mod import TransitdistributeInfo
 from .sub_models.dispatch_mod import Dispatch_info
+from .sub_models.billing_mod import BilingInfo
 from .sub_models.warehouse_goods_info_mod import Warehouse_goods_info
 from .sub_models.expense_category_mod import ExpenseCategoryInfo
 from .sub_models.enquirynote_mod import EnquirynoteInfo
@@ -116,7 +117,6 @@ from.sub_models.expense_type_mod import ExpenseTypeInfo
 from.sub_models.expense_uom_mod import ExpenseUOMInfo
 from.sub_models.expense_mod import ExpenseInfo
 from.sub_models.sales_info_mod import SalesInfo
-from .sub_models.billing_mod import BilingInfo
 from.sub_models.in_inspection_report_mod import Ininspectreport
 from.sub_models.ou_inspection_report_mod import Ouinspectreport
 from.sub_models.material_stock_mod import Materialstock
@@ -211,3 +211,4 @@ from .sub_models.vendorratemaster1_mod import VendorratemasterInfo1
 from .sub_models.location_master_gmap_mod import LocationMaster
 from .sub_models.trip_highvaluecheck_info_mod import TripHighvalueInfo
 from .sub_models.transporter_mod import Transporter_name
+from .sub_models.wh_partial_dispatch_mod import GoodsPartialDispatchInfo

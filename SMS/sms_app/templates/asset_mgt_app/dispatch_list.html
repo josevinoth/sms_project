@@ -11,30 +11,30 @@
 </div>
 <div class="container-fluid">
     <div class="row g-2 align-items-start flex-wrap">
-    <div class="col-12 col-md-4 col-lg-5 mb-2">
+        <div class="col-12 col-md-4 col-lg-5 mb-2">
             <div class="flex-wrap gap-2">
-          <a href="{% url 'home_page' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
-          </a>
-        <a href="{% url 'dispatch_insert' %}" class="btn btn-success">
-            <i class="fas fa-plus"></i> Add
-        </a>
-        <a href="{% url 'dispatch_list' %}" class="btn btn-warning">
-            <i class="fa fa-eye" aria-hidden="true"></i> Show All
-        </a>
-                </div>
+                <a href="{% url 'home_page' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                <a href="{% url 'dispatch_insert' %}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Add
+                </a>
+                <a href="{% url 'dispatch_list' %}" class="btn btn-warning">
+                    <i class="fa fa-eye" aria-hidden="true"></i> Show All
+                </a>
+            </div>
         </div>
-    <div class="col-12 col-md-6 col-lg-4 justify-content-start">
-        <form class="d-flex flex-column flex-md-row gap-2" action="{% url 'dispatch_search' %}" method="get">
+        <div class="col-12 col-md-6 col-lg-4 justify-content-start">
+            <form class="d-flex flex-column flex-md-row gap-2" action="{% url 'dispatch_search' %}" method="get">
                 <input type="search" class="form-control" id="dispatch_number" placeholder="Dispatch Number" name="dispatch_number">
                 <input type="search" class="form-control" id="job_number" placeholder="Job Number" name="job_number">
                 <button class="btn btn-primary d-inline-flex align-items-center justify-content-center" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
-    </div>
 <hr>
-    <div class="table-responsive shadow-box-table p-3">
+<div class="table-responsive shadow-box-table p-3">
     <table id="dispatch_list" class="table table-striped table-bordered nowrap">
         <thead class="thead-dark">
         <tr>
@@ -63,18 +63,18 @@
             <td></td>
             <td>
                 <div class="d-flex justify-content-center gap-1">
-                <a class="btn btn-primary" href="{% url 'dispatch_update' dispatchinfo.id %}" >
-                    <i class="far fa-edit"></i>
-                </a>
+                    <a class="btn btn-primary" href="{% url 'dispatch_update' dispatchinfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
                 </div>
             </td>
             <td> {{dispatchinfo.dispatch_created_at}}</td>
             <td> {{dispatchinfo.dispatch_num}}</td>
             <td>
                 <div class="d-flex justify-content-center gap-1">
-                <a class="btn btn-warning" href="{% url 'dispatch_gatepass_pdf_download' dispatchinfo.id %}" >
-                    <i class="fas fa-luggage-cart"></i>
-                </a>
+                    <a class="btn btn-warning" href="{% url 'dispatch_gatepass_pdf_download' dispatchinfo.id %}" >
+                        <i class="fas fa-luggage-cart"></i>
+                    </a>
                 </div>
             </td>
             <td> {{dispatchinfo.dispatch_customer}}</td>
@@ -100,7 +100,6 @@
         {% endfor %}
         </tbody>
     </table>
-        </div>
     <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
@@ -118,23 +117,24 @@
         {% endif %}
     </span>
     </div>
+</div>
 <script>
-$(document).ready(function () {
-    var table = $('#dispatch_list').DataTable({
-        responsive: true,
-        scrollX: true,
-        autoWidth: false,
-        order: [1, 'desc'],
-        dom: 'lBfrtip',
-        buttons: ['copy', 'csv', 'excel', 'print']
-    });
+    $(document).ready(function () {
+        var table = $('#dispatch_list').DataTable({
+            responsive: true,
+            scrollX: true,
+            autoWidth: false,
+            order: [1, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
 
-    $(window).on('resize', function () {
-        setTimeout(function () {
-            table.columns.adjust().responsive.recalc();
-        }, 300); // delay to allow layout to settle
+        $(window).on('resize', function () {
+            setTimeout(function () {
+                table.columns.adjust().responsive.recalc();
+            }, 300); // delay to allow layout to settle
+        });
     });
-});
 
 </script>
 {% endblock content %}

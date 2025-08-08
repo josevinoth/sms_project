@@ -45,23 +45,31 @@ def budgetform_add(request,budget_id=0):
                     (instance.bf_employer_contribution_to_ESI_corp_staff or 0) +
                     (instance.bf_employer_contribution_to_PF_corp_staff or 0)+
                     (instance.bf_EPF_admin_charges_corp_staff or 0) +
+                    (instance.bf_exgratia_corp_staff or 0) +
                     (instance.bf_gratuity_corp_staff or 0) +
+                    (instance.bf_incentive_corp_staff or 0) +
+                    (instance.bf_insurance_corp_staff or 0) +
+                    (instance.bf_lwf_corp_staff or 0) +
                     (instance.bf_salaries_wages_corp_staff or 0)
             )
             instance.bf_dept_staff = (
                     (instance.bf_bonus_staff or 0) +
                     (instance.bf_EDLI_contribution_staff or 0) +
                     (instance.bf_employer_contribution_to_ESI_staff or 0) +
-                    (instance.bf_employer_contribution_to_ESI_staff or 0) +
+                    (instance.bf_employer_contribution_to_PF_staff or 0) +
                     (instance.bf_EPF_admin_charges_staff or 0) +
+                    (instance.bf_exgratia_dept_staff or 0) +
                     (instance.bf_gratuity_staff or 0) +
+                    (instance.bf_incentive_dept_staff or 0) +
+                    (instance.bf_insurance_staff or 0) +
+                    (instance.bf_lwf_dept_staff or 0) +
                     (instance.bf_salaries_wages_staff or 0)
             )
             instance.bf_fixed = (
-                    (instance.bf_depreciation or 0) +
-                    (instance.bf_software_AMC_charges or 0) +
+
                     (instance.bf_insurance_warehouse or 0) +
-                    (instance.bf_rates_taxes or 0) +
+                    (instance.bf_insurance_wcc or 0) +
+
                     (instance.bf_rent_premises or 0) +
                     (instance.bf_security_service_charges or 0) +
                     (instance.bf_manpower_supply_expenses or 0)
@@ -70,28 +78,31 @@ def budgetform_add(request,budget_id=0):
                     (instance.bf_crane_handling_expenses or 0) +
                     (instance.bf_diesel_expenses_forklift or 0) +
                     (instance.bf_forklift_handling_expenses or 0) +
+                    (instance.bf_packing_services or 0) +
+                    (instance.bf_support_handling or 0) +
                     (instance.bf_fumigation_expenses or 0)
             )
             instance.bf_oe_Fixed = (
-                    (instance.bf_housekeeping_salary or 0) +
-                    (instance.bf_insurance_corp_staff or 0) +
-                    (instance.bf_insurance_staff or 0) +
+                    (instance.bf_amc or 0) +
+                    (instance.bf_depreciation or 0) +
+
                     (instance.bf_internet_data_card_expenses or 0) +
                     (instance.bf_rent_plant_machinery or 0) +
-                    (instance.bf_system_amc or 0)
+                    (instance.bf_software_AMC_charges or 0)
             )
             instance.bf_oe_variable = (
-                    (instance.bf_advertisement_business_promotion or 0) +
+                    (instance.bf_CGST_ineligible_ITC or 0) +
                     (instance.bf_conveyance_expenses or 0) +
                     (instance.bf_diesel_expenses_gense or 0) +
                     (instance.bf_handling_expenses or 0) +
                     (instance.bf_hotel_boarding_lodging_expenses or 0) +
-                    (instance.bf_office_repairs_maintenance or 0) +
+                    (instance.bf_IGST_ineligible_ITC or 0) +
                     (instance.bf_office_supplies_general_expenses or 0)+
                     (instance.bf_postage_courier or 0) +
                     (instance.bf_power_fuel or 0) +
                     (instance.bf_printing_stationery or 0) +
                     (instance.bf_service_maintenance_expenses or 0) +
+                    (instance.bf_SGST_ineligible_ITC or 0) +
                     (instance.bf_staff_welfare_staff or 0) +
                     (instance.bf_telephone_mobile_expenses or 0) +
                     (instance.bf_training_expenses or 0) +
@@ -122,7 +133,7 @@ def budgetform_list(request):
     income_total = 0
     department_expenses_total = 0
     employee_benefits_total = 0
-    interest_expenses_total = 0
+
     operational_expenses_total = 0
     non_operational_expenses_total = 0
     overall_total = 0
@@ -143,15 +154,17 @@ def budgetform_list(request):
         )  # Assuming 'bf_fixed' is for Income
 
         department_expenses_total += (
-                budget.bf_audit_fees +
-                budget.bf_bad_debts +
+                budget.bf_advertisement_business_promotion +
                 budget.bf_bank_charges +
                 budget.bf_celebration_expenses +
                 budget.bf_consultancy_charges +
                 budget.bf_directors_remuneration +
-                budget.bf_insurance_car +
+                budget.bf_housekeeping_salary +
+                budget.bf_office_repairs_maintenance +
                 budget.bf_interest_on_statutory_dues +
                 budget.bf_professional_legal_charges +
+                budget.bf_rent_furniture_fittings +
+                budget.bf_rent_office +
                 budget.bf_subscription_membership
         )
 
@@ -162,7 +175,11 @@ def budgetform_list(request):
                 budget.bf_employer_contribution_to_ESI_corp_staff +
                 budget.bf_employer_contribution_to_PF_corp_staff +
                 budget.bf_EPF_admin_charges_corp_staff +
+                budget.bf_exgratia_corp_staff +
                 budget.bf_gratuity_corp_staff +
+                budget.bf_incentive_corp_staff +
+                budget.bf_insurance_corp_staff +
+                budget.bf_lwf_corp_staff +
                 budget.bf_salaries_wages_corp_staff +
                 budget.bf_dept_staff +
                 budget.bf_bonus_staff +
@@ -170,22 +187,18 @@ def budgetform_list(request):
                 budget.bf_employer_contribution_to_ESI_staff +
                 budget.bf_employer_contribution_to_PF_staff +
                 budget.bf_EPF_admin_charges_staff +
+                budget.bf_exgratia_dept_staff +
                 budget.bf_gratuity_staff +
+                budget.bf_incentive_dept_staff +
+                budget.bf_insurance_staff +
+                budget.bf_lwf_dept_staff +
                 budget.bf_salaries_wages_staff
-        )
-
-        interest_expenses_total += (
-                budget.bf_interest_on_borrowings +
-                budget.bf_interest_on_other_loans
         )
 
         operational_expenses_total += (
                 budget.bf_fixed +
-                budget.bf_depreciation +
-                budget.bf_handling_expenses +
-                budget.bf_software_AMC_charges +
                 budget.bf_insurance_warehouse +
-                budget.bf_rates_taxes +
+                budget.bf_insurance_wcc +
                 budget.bf_rent_premises +
                 budget.bf_security_service_charges +
                 budget.bf_manpower_supply_expenses
@@ -193,22 +206,24 @@ def budgetform_list(request):
 
         non_operational_expenses_total += (
                 budget.bf_oe_Fixed +
-                budget.bf_housekeeping_salary +
-                budget.bf_insurance_corp_staff +
-                budget.bf_insurance_staff +
+                budget.bf_depreciation +
+                budget.bf_software_AMC_charges +
+                budget.bf_amc +
                 budget.bf_internet_data_card_expenses +
                 budget.bf_rent_plant_machinery +
                 budget.bf_oe_variable +
-                budget.bf_advertisement_business_promotion +
+                budget.bf_CGST_ineligible_ITC +
                 budget.bf_conveyance_expenses +
                 budget.bf_diesel_expenses_gense +
                 budget.bf_handling_expenses +
                 budget.bf_hotel_boarding_lodging_expenses +
-                budget.bf_office_repairs_maintenance +
+                budget.bf_IGST_ineligible_ITC +
                 budget.bf_office_supplies_general_expenses +
                 budget.bf_power_fuel +
+                budget.bf_postage_courier +
                 budget.bf_printing_stationery +
                 budget.bf_service_maintenance_expenses +
+                budget.bf_SGST_ineligible_ITC +
                 budget.bf_staff_welfare_staff +
                 budget.bf_telephone_mobile_expenses +
                 budget.bf_training_expenses +
@@ -218,12 +233,12 @@ def budgetform_list(request):
     # Calculate the overall total
     overall_total = (
             income_total + department_expenses_total + employee_benefits_total +
-            interest_expenses_total + operational_expenses_total + non_operational_expenses_total
+            operational_expenses_total + non_operational_expenses_total
     )
     income_total = round(income_total, 2)
     department_expenses_total = round(department_expenses_total, 2)
     employee_benefits_total = round(employee_benefits_total, 2)
-    interest_expenses_total = round(interest_expenses_total, 2)
+
     operational_expenses_total = round(operational_expenses_total, 2)
     non_operational_expenses_total = round(non_operational_expenses_total, 2)
     overall_total = round(overall_total, 2)
@@ -234,7 +249,7 @@ def budgetform_list(request):
         'income_total': income_total,
         'department_expenses_total': department_expenses_total,
         'employee_benefits_total': employee_benefits_total,
-        'interest_expenses_total': interest_expenses_total,
+
         'operational_expenses_total': operational_expenses_total,
         'non_operational_expenses_total': non_operational_expenses_total,
         'overall_total': overall_total,
@@ -271,15 +286,17 @@ def budgetform_clone(request, budget_id):
             'bf_Warehouse_Loading_Charges': budget.bf_Warehouse_Loading_Charges,
             'bf_Warehouse_Storage_Charges': budget.bf_Warehouse_Storage_Charges,
             'bf_Warehouse_Unloading_Charges': budget.bf_Warehouse_Unloading_Charges,
-            'bf_audit_fees': budget.bf_audit_fees,
-            'bf_bad_debts': budget.bf_bad_debts,
+            'bf_advertisement_business_promotion':budget.bf_advertisement_business_promotion,
             'bf_bank_charges': budget.bf_bank_charges,
             'bf_celebration_expenses': budget.bf_celebration_expenses,
             'bf_consultancy_charges': budget.bf_consultancy_charges,
             'bf_directors_remuneration': budget.bf_directors_remuneration,
-            'bf_insurance_car': budget.bf_insurance_car,
+            'bf_office_repairs_maintenance':budget.bf_office_repairs_maintenance,
+            'bf_housekeeping_salary': budget.bf_housekeeping_salary,
             'bf_interest_on_statutory_dues': budget.bf_interest_on_statutory_dues,
             'bf_professional_legal_charges': budget.bf_professional_legal_charges,
+            'bf_rent_furniture_fittings':budget.bf_rent_furniture_fittings,
+            'bf_rent_office':budget.bf_rent_office,
             'bf_subscription_membership': budget.bf_subscription_membership,
             'bf_corp_staff': budget.bf_corp_staff,
             'bf_bonus_corp_staff': budget.bf_bonus_corp_staff,
@@ -287,7 +304,11 @@ def budgetform_clone(request, budget_id):
             'bf_employer_contribution_to_ESI_corp_staff': budget.bf_employer_contribution_to_ESI_corp_staff,
             'bf_employer_contribution_to_PF_corp_staff': budget.bf_employer_contribution_to_PF_corp_staff,
             'bf_EPF_admin_charges_corp_staff': budget.bf_EPF_admin_charges_corp_staff,
+            'bf_exgratia_corp_staff':budget.bf_exgratia_corp_staff,
             'bf_gratuity_corp_staff': budget.bf_gratuity_corp_staff,
+            'bf_incentive_corp_staff':budget.bf_incentive_corp_staff,
+            'bf_insurance_corp_staff':budget.bf_insurance_corp_staff,
+            'bf_lwf_corp_staff':budget.bf_lwf_corp_staff,
             'bf_salaries_wages_corp_staff': budget.bf_salaries_wages_corp_staff,
             'bf_dept_staff': budget.bf_dept_staff,
             'bf_bonus_staff': budget.bf_bonus_staff,
@@ -295,15 +316,15 @@ def budgetform_clone(request, budget_id):
             'bf_employer_contribution_to_ESI_staff': budget.bf_employer_contribution_to_ESI_staff,
             'bf_employer_contribution_to_PF_staff': budget.bf_employer_contribution_to_PF_staff,
             'bf_EPF_admin_charges_staff': budget.bf_EPF_admin_charges_staff,
+            'bf_exgratia_dept_staff':budget.bf_exgratia_dept_staff,
             'bf_gratuity_staff': budget.bf_gratuity_staff,
+            'bf_insurance_staff':budget.bf_insurance_staff,
+            'bf_lwf_dept_staff':budget.bf_lwf_dept_staff,
+            'bf_incentive_dept_staff':budget.bf_incentive_dept_staff,
             'bf_salaries_wages_staff': budget.bf_salaries_wages_staff,
-            'bf_interest_on_borrowings': budget.bf_interest_on_borrowings,
-            'bf_interest_on_other_loans': budget.bf_interest_on_other_loans,
             'bf_fixed': budget.bf_fixed,
-            'bf_depreciation': budget.bf_depreciation,
-            'bf_software_AMC_charges': budget.bf_software_AMC_charges,
             'bf_insurance_warehouse': budget.bf_insurance_warehouse,
-            'bf_rates_taxes': budget.bf_rates_taxes,
+            'bf_insurance_wcc':budget.bf_insurance_wcc,
             'bf_rent_premises': budget.bf_rent_premises,
             'bf_security_service_charges': budget.bf_security_service_charges,
             'bf_manpower_supply_expenses': budget.bf_manpower_supply_expenses,
@@ -312,25 +333,27 @@ def budgetform_clone(request, budget_id):
             'bf_diesel_expenses_forklift': budget.bf_diesel_expenses_forklift,
             'bf_forklift_handling_expenses': budget.bf_forklift_handling_expenses,
             'bf_fumigation_expenses': budget.bf_fumigation_expenses,
+            'bf_packing_services':budget.bf_packing_services,
+            'bf_support_handling':budget.bf_support_handling,
             'bf_oe_Fixed': budget.bf_oe_Fixed,
-            'bf_housekeeping_salary': budget.bf_housekeeping_salary,
-            'bf_insurance_corp_staff': budget.bf_insurance_corp_staff,
-            'bf_insurance_staff': budget.bf_insurance_staff,
+            'bf_depreciation': budget.bf_depreciation,
             'bf_internet_data_card_expenses': budget.bf_internet_data_card_expenses,
             'bf_rent_plant_machinery': budget.bf_rent_plant_machinery,
-            'bf_system_amc': budget.bf_system_amc,
+            'bf_amc': budget.bf_amc,
+            'bf_software_AMC_charges':budget.bf_software_AMC_charges,
             'bf_oe_variable': budget.bf_oe_variable,
-            'bf_advertisement_business_promotion': budget.bf_advertisement_business_promotion,
+            'bf_CGST_ineligible_ITC': budget.bf_CGST_ineligible_ITC,
             'bf_conveyance_expenses': budget.bf_conveyance_expenses,
             'bf_diesel_expenses_gense': budget.bf_diesel_expenses_gense,
             'bf_handling_expenses': budget.bf_handling_expenses,
             'bf_hotel_boarding_lodging_expenses': budget.bf_hotel_boarding_lodging_expenses,
-            'bf_office_repairs_maintenance': budget.bf_office_repairs_maintenance,
+            'bf_IGST_ineligible_ITC': budget.bf_IGST_ineligible_ITC,
             'bf_office_supplies_general_expenses': budget.bf_office_supplies_general_expenses,
             'bf_postage_courier': budget.bf_postage_courier,
             'bf_power_fuel': budget.bf_power_fuel,
             'bf_printing_stationery': budget.bf_printing_stationery,
             'bf_service_maintenance_expenses': budget.bf_service_maintenance_expenses,
+            'bf_SGST_ineligible_ITC':budget.bf_SGST_ineligible_ITC,
             'bf_staff_welfare_staff': budget.bf_staff_welfare_staff,
             'bf_telephone_mobile_expenses': budget.bf_telephone_mobile_expenses,
             'bf_training_expenses': budget.bf_training_expenses,
@@ -371,6 +394,3 @@ def budgetform_clone(request, budget_id):
             messages.error(request, 'Form is not valid. Please correct the errors.')
 
         return redirect(request.META.get('HTTP_REFERER', '/'))
-
-
-

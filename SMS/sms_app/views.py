@@ -152,3 +152,4 @@ from .sub_views.vendorratemaster_add_view import vendorratemaster_add,vendorrate
 from .sub_views.Location_master_view import location_master_add,location_master_list,location_master_delete
 from .sub_views.trip_approval_view import trip_approval_view,update_trip_approval
 from .sub_views.trip_highvaluecheck_view import trip_highvalue_add,trip_highvalue_list,trip_highvalue_delete,trip_highvalue_cancel
+from .sub_views.backfill_view import backfill_one_record,backfill_preview,backfill_all_records
