@@ -13,7 +13,7 @@
 						</div>
 						<div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
 							<button id="email_alert" type="button" onclick="email_message_fn()"
-									class="btn btn-warning d-inline-flex align-items-center"
+									class="btn btn-warning btn-sm d-inline-flex align-items-center"
 									data-toggle="modal" data-target="#sendEmailModal">
 								<i class="fas fa-envelope-square mr-2"></i>
 								Email Alert
@@ -93,8 +93,8 @@
 							</div>
 							<div class="col-1 p-2"></div>
 						</div>
-						<button type="submit" class="btn btn-success" ><i class="fas fa-check"></i> Save</button>
-						<a href="{% url 'pre_gatein_search' %}" class="btn btn-danger float-right">
+						<button type="submit" class="btn btn-success btn-sm" ><i class="fas fa-check"></i> Save</button>
+						<a href="{% url 'pre_gatein_search' %}" class="btn btn-danger btn-sm float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
 					</form>
@@ -107,7 +107,7 @@
 
 <div class="container-fluid row">
 	<div class="col-5 col-md-6 col-lg-2">
-		<a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-primary">
+		<a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-primary btn-sm">
 			<i class="fas fa-plus"></i> Add
 		</a>
 	</div>

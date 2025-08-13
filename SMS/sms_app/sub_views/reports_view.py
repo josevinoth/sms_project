@@ -369,25 +369,28 @@ def export_stockreport_to_csv(request):
                     'pd_dispatch_info__dispatch_sticker_pasted_bvm'
                 )
 
-                dispatch_nums = set()
-                truck_numbers = set()
-                truck_types = set()
-                departure_times = set()
-                sticker_pasted_bys = set()
-                mawb_list = set()
+                dispatch_nums = []
+                truck_numbers = []
+                truck_types = []
+                departure_times = []
+                sticker_pasted_bys = []
+                mawb_list = []
 
                 total_qty = 0
 
                 for partial in partials:
                     dispatch = partial.pd_dispatch_info
                     if dispatch:
-                        dispatch_nums.add(dispatch.dispatch_num or "")
-                        truck_numbers.add(dispatch.dispatch_truck_number or "")
-                        truck_types.add(getattr(dispatch.dispatch_truck_type, 'vt_vehicletype', "") or "")
-                        departure_times.add(dispatch.dispatch_depature_date.strftime(
-                            "%d-%b-%y") if dispatch.dispatch_depature_date else "")
-                        sticker_pasted_bys.add(getattr(dispatch.dispatch_sticker_pasted_bvm, 'lp_name', "") or "")
-                        mawb_list.add(dispatch.dispatch_mawb or "")
+                        dispatch_nums.append(dispatch.dispatch_num or "")
+                        truck_numbers.append(dispatch.dispatch_truck_number or "")
+                        truck_types.append(getattr(dispatch.dispatch_truck_type, 'vt_vehicletype', "") or "")
+                        departure_times.append(
+                            dispatch.dispatch_depature_date.strftime(
+                                "%d-%b-%y") if dispatch.dispatch_depature_date else ""
+                        )
+                        sticker_pasted_bys.append(getattr(dispatch.dispatch_sticker_pasted_bvm, 'lp_name', "") or "")
+                        mawb_list.append(dispatch.dispatch_mawb or "")
+
                     total_qty += partial.pd_dispatch_qty or 0
 
                 row_data = list(row_data[1:])  # remove ID
@@ -570,29 +573,33 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                 checkin_qty = stock_value.wh_goods_pieces if stock_value.wh_goods_pieces else 0
                 # Fetch partial dispatches for this stock
                 partials = GoodsPartialDispatchInfo.objects.filter(pd_goods=stock_value)
-                dispatch_nums = set()
-                truck_numbers = set()
-                truck_types = set()
-                departure_times = set()
-                sticker_pasted_bys = set()
-                mawb_list = set()
+                dispatch_nums = []
+                truck_numbers = []
+                truck_types = []
+                departure_times = []
+                sticker_pasted_bys = []
+                mawb_list = []
 
                 dispatch_qty = 0  # initialize
 
                 for partial in partials:
                     dispatch = partial.pd_dispatch_info
                     if dispatch:
-                        dispatch_nums.add(dispatch.dispatch_num or "")
-                        truck_numbers.add(dispatch.dispatch_truck_number or "")
+                        dispatch_nums.append(dispatch.dispatch_num or "")
+                        truck_numbers.append(dispatch.dispatch_truck_number or "")
+
                         truck_type = getattr(dispatch.dispatch_truck_type, 'vt_vehicletype', "")
                         if truck_type:
-                            truck_types.add(truck_type)
+                            truck_types.append(truck_type)
+
                         sticker = getattr(dispatch.dispatch_sticker_pasted_bvm, 'lp_name', "")
                         if sticker:
-                            sticker_pasted_bys.add(sticker)
-                        mawb_list.add(dispatch.dispatch_mawb or "")
+                            sticker_pasted_bys.append(sticker)
+
+                        mawb_list.append(dispatch.dispatch_mawb or "")
+
                         if dispatch.dispatch_depature_date:
-                            departure_times.add(dispatch.dispatch_depature_date.strftime('%d-%b-%Y'))
+                            departure_times.append(dispatch.dispatch_depature_date.strftime('%d-%b-%Y'))
 
                     dispatch_qty += partial.pd_dispatch_qty or 0  # Sum total qty
 
