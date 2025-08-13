@@ -690,6 +690,9 @@ urlpatterns = [
     path('consignmentgoods/<int:pk>/upload/<str:att_type>/', views.consignmentgoods_upload_attachment, name='consignmentgoods_upload_attachment'),
     path('consignmentgoods/delete-attachment/<int:pk>/<str:att_type>/', views.consignmentgoods_delete_attachment, name='consignmentgoods_delete_attachment'),
     path('add_transporter/', views.add_transporter, name='add_transporter'),
+    path('pregatein_gatepass/<int:pregatein_id>/', views.pregatein_gatepass_pdf, name='pregatein_gatepass_pdf'),
+    path('pregatein_gatepass_pdf_download/<int:pregatein_id>/', views.pregatein_gatepass_pdf_download,name='pregatein_gatepass_pdf_download'),
+    path('get_units/', views.get_units_for_user, name='get_units_for_user'),
 
 
 ]

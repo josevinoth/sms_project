@@ -55,6 +55,7 @@
                 <div>
                     Hi, {{ request.session.first_name }}
                     <small class="text-warning">{{ request.session.ses_role }}</small>
+                    <small class="text-warning">{{ request.session.ses_unit_name }}</small>
                 </div>
 
                 <a href="{% url 'logout_page' %}" class="btn btn-dark p-1 m-2">

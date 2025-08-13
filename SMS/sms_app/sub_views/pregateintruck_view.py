@@ -1,15 +1,21 @@
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+import base64
+from io import BytesIO
 
+from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
+from django.core.paginator import Paginator
+from django.http import JsonResponse, HttpResponse
+from django.template.loader import get_template
+from django.views.decorators.csrf import csrf_exempt
+from xhtml2pdf import pisa
+
+from .dispatch_add_view import get_base64_image
 from ..forms import PregateintruckForm
 from ..models import Pregateintruckinfo,Gatein_pre_info,HighvalueInfo
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
 from ..sub_models.transporter_mod import Transporter_name
-
 
 @login_required(login_url='login_page')
 def pregateintruck_add(request,pregateintruck_id=0):
@@ -19,10 +25,12 @@ def pregateintruck_add(request,pregateintruck_id=0):
     high_list = HighvalueInfo.objects.all()
     if request.method == "GET":
         high_value_check = None
+        truck = None
         if pregateintruck_id == 0:
             form = PregateintruckForm()
         else:
             pregateintruck=Pregateintruckinfo.objects.get(pk=pregateintruck_id)
+            truck = get_object_or_404(Pregateintruckinfo, pk=pregateintruck_id)
             form = PregateintruckForm(instance=pregateintruck)
             request.session['ses_pregateintruck_id'] = pregateintruck_id
             high_value_check=Pregateintruckinfo.objects.get(pk=pregateintruck_id).pregatein_high_value.id
@@ -33,35 +41,69 @@ def pregateintruck_add(request,pregateintruck_id=0):
                 'gatein_num_id': gatein_num_id,
                 'high_list':high_list,
                 'high_value_check':high_value_check,
+                'truck':truck,
                 }
         return render(request, "asset_mgt_app/pregateintruck_add.html", context)
     else:
         if pregateintruck_id == 0:
             form = PregateintruckForm(request.POST)
             if form.is_valid():
-                form.save()
-                print("Pregateintruckinfo Form is Valid")
-                last_id = (Pregateintruckinfo.objects.latest('id')).id
+                pregateintruck = form.save(commit=False)
+
+                # Process driver signature
+                driver_data = request.POST.get('driver_signature_data')
+                if driver_data:
+                    format, imgstr = driver_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                    data = ContentFile(base64.b64decode(imgstr), name=f'driver_signature.{ext}')
+                    pregateintruck.pregatein_driver_signature = data
+
+                # Process supervisor signature
+                supervisor_data = request.POST.get('supervisor_signature_data')
+                if supervisor_data:
+                    format, imgstr = supervisor_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                    data = ContentFile(base64.b64decode(imgstr), name=f'supervisor_signature.{ext}')
+                    pregateintruck.pregatein_supervisor_signature = data
+
+                pregateintruck.save()
                 messages.success(request, 'Record Updated Successfully')
-                # return redirect(request.META['HTTP_REFERER'])
-                a=pregateintruckdetails_list(request,gatein_num_id)
+                last_id = pregateintruck.id
+                pregateintruckdetails_list(request, gatein_num_id)
                 return redirect('/SMS/pregateintruck_update/' + str(last_id))
             else:
-                print("Pregateintruckinfo Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
+
         else:
-            pregateintruck = Pregateintruckinfo.objects.get(pk=pregateintruck_id)
-            form = PregateintruckForm(request.POST,instance=pregateintruck)
+            pregateintruck = get_object_or_404(Pregateintruckinfo, pk=pregateintruck_id)
+            form = PregateintruckForm(request.POST, instance=pregateintruck)
             if form.is_valid():
-                form.save()
-                print("pregateintruckForm Form is Valid")
+                pregateintruck = form.save(commit=False)
+
+                # Process driver signature
+                driver_data = request.POST.get('driver_signature_data')
+                if driver_data:
+                    format, imgstr = driver_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                    data = ContentFile(base64.b64decode(imgstr), name=f'driver_signature.{ext}')
+                    pregateintruck.pregatein_driver_signature = data
+
+                # Process supervisor signature
+                supervisor_data = request.POST.get('supervisor_signature_data')
+                if supervisor_data:
+                    format, imgstr = supervisor_data.split(';base64,')
+                    ext = format.split('/')[-1]
+                    data = ContentFile(base64.b64decode(imgstr), name=f'supervisor_signature.{ext}')
+                    pregateintruck.pregatein_supervisor_signature = data
+
+                pregateintruck.save()
                 messages.success(request, 'Record Updated Successfully')
-                a = pregateintruckdetails_list(request, gatein_num_id)
+                pregateintruckdetails_list(request, gatein_num_id)
+                return redirect(request.META['HTTP_REFERER'])
             else:
-                print("pregateintruckForm Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
-            return redirect(request.META['HTTP_REFERER'])
+                return redirect(request.META['HTTP_REFERER'])
 def pregateintruckdetails_list(request,gatein_num_id):
     turck_numbers=list(Pregateintruckinfo.objects.filter(pregatein_number=gatein_num_id).values_list('pregatein_truck_number',flat=True))
     driver_names=list(Pregateintruckinfo.objects.filter(pregatein_number=gatein_num_id).values_list('pregatein_driver',flat=True))
@@ -118,3 +160,45 @@ def add_transporter(request):
         return JsonResponse({"success": True, "id": new.id, "name": new.transporter_name})
 
     return JsonResponse({"success": False, "error": "Invalid request"})
+@login_required(login_url='login_page')
+def pregatein_gatepass_pdf(request, pregatein_id=0, download=False):
+    try:
+        truck = get_object_or_404(Pregateintruckinfo, id=pregatein_id)
+
+        if truck.pregatein_job_category_id != 3:
+            return JsonResponse({"success": False, "error": "Gatepass PDF only available for Job Category 3."}, status=403)
+
+        # Convert signatures to base64 strings
+        truck.driver_signature_base64 = get_base64_image(truck.pregatein_driver_signature)
+        truck.supervisor_signature_base64 = get_base64_image(truck.pregatein_supervisor_signature)
+
+        context = {
+            'truck': truck,
+        }
+
+        template = get_template('asset_mgt_app/pregatein_gate_pass.html')
+        html = template.render(context)
+
+        pdf_buffer = BytesIO()
+        pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
+
+        if pisa_status.err:
+            raise ValueError('Error generating PDF')
+
+        pdf_buffer.seek(0)
+        pdf_data = pdf_buffer.read()
+        pdf_buffer.close()
+
+        if download:
+            response = HttpResponse(pdf_data, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="Pregatein_Gatepass_{truck.pregatein_number}.pdf"'
+            return response
+
+        return pdf_data  # For email attachment use
+
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+@login_required(login_url='login_page')
+def pregatein_gatepass_pdf_download(request, pregatein_id):
+    return pregatein_gatepass_pdf(request, pregatein_id, download=True)

@@ -9,36 +9,38 @@
         <div class="col-5"></div>
     </div>
 </div>
+
 <div class="container-fluid">
-    <div class="row g-2 align-items-start flex-wrap">
-        <div class="col-12 col-md-4 col-lg-5 mb-2">
-            <div class="flex-wrap gap-2">
-                <a href="{% url 'home_page' %}" class="btn btn-primary">
-                    <i class="fas fa-arrow-left"></i> Back
-                </a>
-                <a href="{% url 'gatein_pre_insert' %}" class="btn btn-success">
-                    <i class="fas fa-plus"></i> Add
-                </a>
-                <a href="{% url 'gatein_pre_list' %}" class="btn btn-warning">
-                    <i class="fa fa-eye"></i> Show All
-                </a>
-            </div>
+    <div class="row g-2 align-items-center">
+
+        <!-- Buttons Section -->
+        <div class="col-12 col-lg-3 d-flex flex-wrap gap-2 mb-2">
+            <a href="{% url 'home_page' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <a href="{% url 'gatein_pre_insert' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Add
+            </a>
+            <a href="{% url 'gatein_pre_list' %}" class="btn btn-warning">
+                <i class="fa fa-eye"></i> Show All
+            </a>
         </div>
 
-        <div class="col-12 col-md-6 col-lg-4 mb-2">
+        <!-- Search Form Section -->
+        <div class="col-12 col-lg-6 mb-2">
             <form action="{% url 'pre_gatein_search' %}" method="get">
-                <div class="form-row align-items-center">
-                    <div class="col-12 col-sm-4 mb-2 mb-sm-0">
+                <div class="row g-2">
+                    <div class="col-12 col-sm-4">
                         <input type="search" class="form-control" placeholder="Pre Gate-In" name="pre_gate_in">
                     </div>
-                    <div class="col-12 col-sm-4 mb-2 mb-sm-0">
+                    <div class="col-12 col-sm-4">
                         <input type="search" class="form-control" placeholder="Truck Number" name="truck_number">
                     </div>
-                    <div class="col-12 col-sm-4 mb-2 mb-sm-0">
+                    <div class="col-12 col-sm-4">
                         <input type="search" class="form-control" placeholder="Driver Name" name="driver_name">
                     </div>
                     <div class="col-12 mt-2">
-                        <button class="btn btn-primary btn-block" type="submit">
+                        <button class="btn btn-primary w-100" type="submit">
                             <i class="fa fa-search mr-1"></i> Search
                         </button>
                     </div>
@@ -46,8 +48,29 @@
             </form>
         </div>
 
+<!-- Info Boxes Section (Stacked vertically, smaller width) -->
+<div class="col-12 col-lg-2 mb-2">
+    <div class="mb-2 p-2 bg-info text-white border rounded d-flex justify-content-between align-items-center">
+        <strong>Unit:</strong>
+        <span class="text-danger"><strong>{{ branch_code }}{% if branch_code %}_{% endif %}{{ user_unit }}</strong></span>
+    </div>
+    <div class="mb-2 p-2 bg-info text-white border rounded d-flex justify-content-between align-items-center">
+        <strong >Pending:</strong>
+        <span class="text-danger"><strong>{{ pending_count }}</strong></span>
+    </div>
+    <div class="mb-2 p-2 bg-info text-white border rounded d-flex justify-content-between align-items-center">
+        <strong>Total:</strong>
+        <span class="text-danger"><strong>{{ total_count }}</strong></span>
     </div>
 </div>
+
+
+
+    </div>
+</div>
+
+
+<hr>
 
 <hr>
 

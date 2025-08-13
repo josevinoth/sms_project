@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.gatein_mod import Gatein_info
+from ..sub_models.unit_info_mod import UnitInfo
 from ..views import dsr_send_email_view
 from ..forms import Gatein_preaddForm
 from django.contrib.auth.decorators import login_required
@@ -56,16 +57,36 @@ def gatein_pre_add(request, gatein_pre_id=0):
             print("I am inside post add Pre-Gatein")
             gatein_pre_form = Gatein_preaddForm(request.POST,request.FILES)
             if gatein_pre_form.is_valid():
-                print( "Pre-Gate-in Main Form is Valid")
+                print("Pre-Gate-in Main Form is Valid")
                 gatein_pre_form.save()
 
-                # Generate Random requirement number
+                # Get unit name and branch info from session
+                unit_id = request.session.get('ses_unit_id')
+                user_branch = request.session.get('ses_unit_name')  # or actual branch name
+                # user_branch_id = Location_info.objects.get(loc_name=user_branch).id
+
+                # Map branch ID to code
+                branch_code_map = {
+                    1: "BLR",
+                    2: "MAA",
+                    4: "HYD"
+                }
+                branch_code = branch_code_map.get(user_branch_id, "UNK")  # fallback to UNK
+
+                # Get last inserted ID
                 try:
                     last_id = Gatein_pre_info.objects.order_by('-id').values_list('id', flat=True).first()
-                    pre_gatein_num = 2000000 + last_id
+                    seq_number = 2000000 + last_id
                 except ObjectDoesNotExist:
-                    pre_gatein_num = 2000000
-                Gatein_pre_info.objects.filter(id=last_id).update(gatein_pre_number=pre_gatein_num)
+                    last_id = None
+                    seq_number = 2000000
+
+                # Construct number
+                pre_gatein_num = f"{branch_code}_{user_branch}_{seq_number}"
+
+                # Update record
+                if last_id:
+                    Gatein_pre_info.objects.filter(id=last_id).update(gatein_pre_number=pre_gatein_num)
                 messages.success(request, 'Record Updated Successfully')
                 url = 'gatein_pre_update/' + str(last_id)
                 return redirect(url)
@@ -91,16 +112,44 @@ def gatein_pre_add(request, gatein_pre_id=0):
 @login_required(login_url='login_page')
 def gatein_pre_list(request):
     first_name = request.session.get('first_name')
-    Gatein_pre_list= (Gatein_pre_info.objects.all()).order_by('-id')
+    unit_id = request.session.get('ses_unit_id')
+    user_id = request.session.get('ses_userID')
+    user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+    user_branch_id = Location_info.objects.get(loc_name=user_branch).id
+
+    unit_name = None
+    pending_count = 0
+
+    if unit_id:
+        try:
+            unit_obj = UnitInfo.objects.get(id=unit_id)
+            unit_name = unit_obj.unit_name
+            # Pending count (status_id = 6)
+            pending_count = Gatein_pre_info.objects.filter(
+                gatein_pre_status_id=6,
+                unit_field=unit_obj  # Replace with actual FK field in Gatein_pre_info
+            ).count()
+            # Filter only for this unit
+            Gatein_pre_list = Gatein_pre_info.objects.filter(unit_field=unit_obj).order_by('-id')
+        except UnitInfo.DoesNotExist:
+            unit_name = None
+            pending_count = 0
+            Gatein_pre_list = Gatein_pre_info.objects.all().order_by('-id')
+    else:
+        Gatein_pre_list = Gatein_pre_info.objects.all().order_by('-id')
+
     page_number = request.GET.get('page')
     paginator = Paginator(Gatein_pre_list, 1000)
     page_obj = paginator.get_page(page_number)
+
     context = {
-        # 'Gatein_pre_list' : Gatein_pre_info.objects.all(),
         'first_name': first_name,
         'page_obj': page_obj,
+        'unit_name': unit_name,
+        'pending_count': pending_count,
+        'total_count': Gatein_pre_list.count(),
     }
-    return render(request,"asset_mgt_app/gatein_pre_list.html",context)
+    return render(request, "asset_mgt_app/gatein_pre_list.html", context)
 
 #Delete WH Job
 @login_required(login_url='login_page')
@@ -114,25 +163,69 @@ def gatein_pre_delete(request,gatein_pre_id):
 @login_required(login_url='login_page')
 def pre_gatein_search(request):
     first_name = request.session.get('first_name')
-    pre_gate_in = request.GET.get("pre_gate_in")
-    truck_number = request.GET.get("truck_number")
-    driver_name = request.GET.get("driver_name")
-    if not pre_gate_in:
-        pre_gate_in = ""
-    if not truck_number:
-        truck_number = ""
-    if not driver_name:
-        driver_name = ""
-    # Gatein_pre_list = Gatein_pre_info.objects.filter(Q(gatein_pre_number__icontains =pre_gate_in)|Q(gatein_pre_number__isnull=True)).order_by('id')
-    Gatein_pre_list = Gatein_pre_info.objects.filter((Q(gatein_pre_number__icontains =pre_gate_in)|Q(gatein_pre_number__isnull=True)) & (Q(gatein_pre_truck_number__icontains =truck_number)|Q(gatein_pre_truck_number__isnull=True)) & (Q(gatein_pre_driver_name__icontains =driver_name)|Q(gatein_pre_driver_name__isnull=True))).order_by('-id')
+    user_id = request.session.get('ses_userID')
+    user_unit = (request.session.get('ses_unit_name') or "").strip()
+
+    # Dynamically get branch from User_extInfo and Location_info like in gatein_pre_add
+    try:
+        user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+        user_branch_obj = Location_info.objects.get(loc_name=user_branch)
+        branch_code_map = {
+            1: "BLR",
+            2: "MAA",
+            4: "HYD"
+        }
+        branch_code = branch_code_map.get(user_branch_obj.id, "UNK")
+    except ObjectDoesNotExist:
+        branch_code = "UNK"
+        user_branch = ""
+        print("DEBUG: Branch info not found for user_id", user_id)
+
+    # Search filters
+    pre_gate_in = request.GET.get("pre_gate_in") or ""
+    truck_number = request.GET.get("truck_number") or ""
+    driver_name = request.GET.get("driver_name") or ""
+
+    Gatein_pre_list = Gatein_pre_info.objects.filter(
+        (Q(gatein_pre_number__icontains=pre_gate_in) | Q(gatein_pre_number__isnull=True)) &
+        (Q(gatein_pre_truck_number__icontains=truck_number) | Q(gatein_pre_truck_number__isnull=True)) &
+        (Q(gatein_pre_driver_name__icontains=driver_name) | Q(gatein_pre_driver_name__isnull=True))
+    ).order_by('-id')
+
+    # Pagination
     page_number = request.GET.get('page')
     paginator = Paginator(Gatein_pre_list, 50)
     page_obj = paginator.get_page(page_number)
+
+    # Pending and total counts based on unit pattern
+    pending_count = 0
+    total_count = 0
+    if user_unit:
+        unit_pattern = f"{branch_code}_{user_unit}"
+        print(f"DEBUG: unit_pattern={unit_pattern}")
+
+        records = Gatein_pre_info.objects.filter(
+            gatein_pre_number__icontains=unit_pattern,
+            gatein_pre_status=6
+        )
+        total = Gatein_pre_info.objects.filter(
+            gatein_pre_number__icontains=unit_pattern,
+        )
+        print(f"DEBUG: matching gatein_pre_number = {[r.gatein_pre_number for r in records]}")
+
+        pending_count = records.count()
+        total_count = total.count()
+
     context = {
         'Gatein_pre_list': Gatein_pre_list,
         'first_name': first_name,
         'page_obj': page_obj,
-        }
+        'user_unit': user_unit,
+        'branch_code': branch_code,
+        'pending_count': pending_count,
+        'total_count': total_count,
+    }
+
     return render(request, "asset_mgt_app/gatein_pre_list.html", context)
 
 @login_required(login_url='login_page')

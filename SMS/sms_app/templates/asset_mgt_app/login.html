@@ -173,38 +173,90 @@ body::before {
     <!-- Right section -->
     <div class="login-right">
         <h4 class="mb-4"> Sign In</h4>
-        <form method="POST">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="username">User ID</label>
-                <div class="input-group">
-                    <input type="text" class="form-control" id="username" placeholder="Enter your ID" name="username" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <div class="input-group">
-                    <label for="password">Password</label>
-                </div>
-                <input type="password" class="form-control" id="password" placeholder="Enter your password" name="password" required>
-            </div>
-
-
-            <button class="btn btn-primary btn-block mt-3" type="submit">
-                <i class="fa fa-thumbs-up"></i> Login
-            </button>
-        </form>
-
-        <div class="message text-center mt-3">
-            {% for message in messages %}
-            <small class="text-danger">{{ message }}</small>
-            {% endfor %}
+       <form method="POST" id="loginForm">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="username">User ID</label>
+        <div class="input-group">
+          <input type="text" class="form-control" id="username" placeholder="Enter your ID" name="username" required value="{{ username|default:'' }}">
         </div>
+      </div>
 
-        <div class="login-footer text-center mt-3">
-            Don't have an account? <a href="{% url 'registration_page' %}"><b>Sign Up</b></a><br>
-            <a href="{% url 'password_reset' %}"><b>Forgot your password?</b></a>
-        </div>
+      <div class="form-group" id="unitContainer" style="display:none;">
+        <label for="unit">Select Unit</label>
+        <select name="unit" id="unit" class="form-control" required>
+          <option value="">-- Select Unit --</option>
+          {% for unit in units %}
+          <option value="{{ unit.id }}" {% if selected_unit_id|stringformat:"s" == unit.id|stringformat:"s" %}selected{% endif %}>{{ unit.unit_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" class="form-control" id="password" placeholder="Enter your password" name="password" required>
+      </div>
+
+      <button class="btn btn-primary btn-block mt-3" type="submit">
+        <i class="fa fa-thumbs-up"></i> Login
+      </button>
+    </form>
+
+    <div class="message text-center mt-3">
+      {% for message in messages %}
+      <small class="text-danger">{{ message }}</small>
+      {% endfor %}
     </div>
+
+    <div class="login-footer text-center mt-3">
+      Don't have an account? <a href="{% url 'registration_page' %}"><b>Sign Up</b></a><br>
+      <a href="{% url 'password_reset' %}"><b>Forgot your password?</b></a>
+    </div>
+  </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $('#unitContainer').hide();
+
+    $('#username').on('blur', function () {
+      let usernameVal = $(this).val().trim();
+      if (!usernameVal) {
+        $('#unitContainer').hide();
+        $('#unit').html('<option value="">-- Select Unit --</option>');
+        $('#unit').prop('required', false);
+        return;
+      }
+
+      $.ajax({
+        url: "{% url 'get_units_for_user' %}",
+        type: "GET",
+        data: { username: usernameVal },
+        success: function (data) {
+          if (data.org_id == 1 && data.units.length > 0) {
+            let options = '<option value="">-- Select Unit --</option>';
+            $.each(data.units, function (i, unit) {
+              options += `<option value="${unit.id}">${unit.unit_name}</option>`;
+            });
+            $('#unit').html(options);
+            $('#unitContainer').show();
+            $('#unit').prop('required', true);
+          } else {
+            $('#unitContainer').hide();
+            $('#unit').html('<option value="">-- Select Unit --</option>');
+            $('#unit').prop('required', false);
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("AJAX error:", status, error);
+          $('#unitContainer').hide();
+          $('#unit').html('<option value="">-- Select Unit --</option>');
+          $('#unit').prop('required', false);
+        }
+      });
+    });
+  });
+</script>
+
 {% endblock content %}
