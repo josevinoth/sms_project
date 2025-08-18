@@ -1,0 +1,146 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" action="" id="incident_add" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center"><h3>Add/Update Incident Report</h3></div>
+                    <div class="card-body bg-light">
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Branch</span>
+                                    </div>
+                                    {% render_field form.inc_branch id="inc_branch"  class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Unit</span>
+                                    </div>
+                                    {% render_field form.inc_unit id="inc_unit" class="form-control disable_a_href" id="inc_unit" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Date Of Incident</span>
+                                    </div>
+                                    {% render_field form.inc_incident_date type="Date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Details Of Incident</span>
+                                    </div>
+                                    {% render_field form.inc_details id="inc_details" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Root Cause Analysis</span>
+                                    </div>
+                                    {% render_field form.inc_analysis id="inc_analysis" class="form-control"  %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Action Taken</span>
+                                    </div>
+                                    {% render_field form.inc_action_taken id="inc_action_taken" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Current Status</span>
+                                    </div>
+                                    {% render_field form.inc_status id="inc_status" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">CAPA Issued Date</span>
+                                    </div>
+                                    {% render_field form.inc_CAPA_issueddate type="Date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">CAPA Closed Date</span>
+                                    </div>
+                                    {% render_field form.inc_CAPA_closeddate type="Date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Management Approval</span>
+                                    </div>
+                                    {% render_field form.inc_approval_status id="inc_approval_status" class="form-control" %}
+                                </div>
+                                {% render_field form.inc_updated_by id="inc_updated_by" hidden="True" class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="save-btn">
+                            <i class="fas fa-check"></i> Submit
+                        </button>
+                        <a href="{% url 'incident_list'  %}" class="btn btn-danger float-right">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function() {
+
+            {
+                var updated_by = document.getElementById("inc_updated_by").value
+                if (updated_by == "")
+                {
+                    document.getElementById("inc_updated_by").value='{{user_id}}'
+                }
+                else
+                {
+                    document.getElementById("inc_updated_by").value=updated_by;
+                }
+            }
+        });
+</script>
+
+<script>
+    $("#inc_branch").change(function () {
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#inc_unit').removeClass('disable_a_href');
+             $("#inc_unit").empty();
+             $('#wh_bay').empty().append("<option value='0'>--Select--</option>");
+             $("#wh_stack_layer").val($("#selectBox option:first").val());
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#inc_unit').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#inc_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
+</script>
+
+{% endblock content %}

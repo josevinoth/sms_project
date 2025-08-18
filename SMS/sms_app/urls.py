@@ -689,8 +689,18 @@ urlpatterns = [
     path('vendor_filter/', views.vendor_filter, name='vendor_filter'),
     path('consignmentgoods/<int:pk>/upload/<str:att_type>/', views.consignmentgoods_upload_attachment, name='consignmentgoods_upload_attachment'),
     path('consignmentgoods/delete-attachment/<int:pk>/<str:att_type>/', views.consignmentgoods_delete_attachment, name='consignmentgoods_delete_attachment'),
-
-
+    path('incident_add/', views.incident_add, name='incident_add'),
+    path('incident_list/', views.incident_list, name='incident_list'),
+    path('incident_update/<int:incident_id>/', views.incident_add, name='incident_update'),
+    path('incident_delete/<int:incident_id>/', views.incident_delete, name='incident_delete'),
+    path('customer_claims_add/', views.customer_claims_add, name='customer_claims_add'),
+    path('customer_claims_list/', views.customer_claims_list, name='customer_claims_list'),
+    path('customer_claims_update/<int:claim_id>/', views.customer_claims_add, name='customer_claims_update'),
+    path('customer_claims_delete/<int:claim_id>/', views.customer_claims_delete, name='customer_claims_delete'),
+    path('wrong_labelling_add/', views.wrong_labelling_add, name='wrong_labelling_add'),
+    path('wrong_labelling_list/', views.wrong_labelling_list, name='wrong_labelling_list'),
+    path('wrong_labelling_update/<int:wrong_labelling_id>/', views.wrong_labelling_add, name='wrong_labelling_update'),
+    path('wrong_labelling_delete/<int:wrong_labelling_id>/', views.wrong_labelling_delete, name='wrong_labelling_delete'),
 ]
 
 
