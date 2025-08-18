@@ -12,7 +12,6 @@
 
 <div class="container-fluid">
     <div class="row g-2 align-items-center">
-
         <!-- Buttons Section -->
         <div class="col-12 col-lg-3 d-flex flex-wrap gap-2 mb-2">
             <a href="{% url 'home_page' %}" class="btn btn-primary">
@@ -48,31 +47,24 @@
             </form>
         </div>
 
-<!-- Info Boxes Section (Stacked vertically, smaller width) -->
-<div class="col-12 col-lg-2 mb-2">
-    <div class="mb-2 p-2 bg-info text-white border rounded d-flex justify-content-between align-items-center">
-        <strong>Unit:</strong>
-        <span class="text-danger"><strong>{{ branch_code }}{% if branch_code %}_{% endif %}{{ user_unit }}</strong></span>
-    </div>
-    <div class="mb-2 p-2 bg-info text-white border rounded d-flex justify-content-between align-items-center">
-        <strong >Pending:</strong>
-        <span class="text-danger"><strong>{{ pending_count }}</strong></span>
-    </div>
-    <div class="mb-2 p-2 bg-info text-white border rounded d-flex justify-content-between align-items-center">
-        <strong>Total:</strong>
-        <span class="text-danger"><strong>{{ total_count }}</strong></span>
-    </div>
-</div>
-
-
-
+        <!-- Info Boxes Section (Stacked vertically, smaller width) -->
+        <div class="col-12 col-lg-2 mb-2">
+            <div class="mb-2 p-2 bg-info text-white border rounded d-flex justify-content-between align-items-center">
+                <strong>Unit:</strong>
+                <span class="text-danger"><strong>{{ branch_code }}{% if branch_code %}_{% endif %}{{ user_unit }}</strong></span>
+            </div>
+            <div class="mb-2 p-2 bg-info text-white border rounded d-flex justify-content-between align-items-center">
+                <strong >Pending:</strong>
+                <span class="text-danger"><strong>{{ pending_count }}</strong></span>
+            </div>
+            <div class="mb-2 p-2 bg-info text-white border rounded d-flex justify-content-between align-items-center">
+                <strong>Total:</strong>
+                <span class="text-danger"><strong>{{ total_count }}</strong></span>
+            </div>
+        </div>
     </div>
 </div>
 
-
-<hr>
-
-<hr>
 
 <div class="table-responsive shadow-box-table p-3" style="overflow-x: auto;">
     <table id="gatein_list" class="table table-striped table-bordered" style="width: 100%;">
