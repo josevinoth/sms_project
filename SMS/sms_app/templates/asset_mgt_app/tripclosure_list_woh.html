@@ -17,6 +17,7 @@
 <table  id="tripclosure_list" class="table table-striped table-bordered">
     <thead class="thead-dark">
         <tr>
+            <th>ID</th>
             <th>Enquiry Number</th>
             <th>Consignment Number</th>
             <th>Trip Number</th>
@@ -35,6 +36,7 @@
     <tbody>
         {% for tripclosureinfo in tripclosure_list %}
             <tr>
+                <td> {{tripclosureinfo.id}}</td>
                 <td> {{tripclosureinfo.tr_enquirynumber}}</td>
                 <td> {{tripclosureinfo.tr_consignmentnumber}}</td>
                 <td> {{tripclosureinfo.tr_tripnumber}}</td>

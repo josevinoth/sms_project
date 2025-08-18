@@ -26,17 +26,16 @@
         </div>
         <div class="col-12 col-md-6 col-lg-4 ms-md-3">
             <form class="d-flex flex-column flex-md-row gap-2" action="{% url 'search' %}" method="get">
-                    <input type="search" class="form-control" id="pre_gate_in" placeholder="Pre Gate-In" name="pre_gate_in">
-                    <input type="search" class="form-control" id="job_number" placeholder="Job Number" name="job_number">
-                    <input type="search" class="form-control" id="invoice_number" placeholder="Invoice Number" name="invoice_number">
-                    <button class="btn btn-primary d-inline-flex align-items-center justify-content-center" type="submit">
-                        <i class="fa fa-search me-1"></i> Search</button>
+                <input type="search" class="form-control" id="pre_gate_in" placeholder="Pre Gate-In" name="pre_gate_in">
+                <input type="search" class="form-control" id="job_number" placeholder="Job Number" name="job_number">
+                <input type="search" class="form-control" id="invoice_number" placeholder="Invoice Number" name="invoice_number">
+                <button class="btn btn-primary d-inline-flex align-items-center justify-content-center" type="submit">
+                    <i class="fa fa-search me-1"></i> Search</button>
             </form>
         </div>
     </div>
 </div>
-<hr>
-<div class="table-responsive">
+<div class="table-responsive shadow-box-table p-3">
     <table id="gatein_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr class="d-none d-sm-table-row">
@@ -71,9 +70,9 @@
             <td></td>
             <td>
                 <div class="d-flex justify-content-center gap-1">
-                <a class="btn btn-primary" href="{% url 'gatein_update' gateininfo.id %}" >
-                    <i class="far fa-edit"></i>
-                </a>
+                    <a class="btn btn-primary" href="{% url 'gatein_update' gateininfo.id %}" >
+                        <i class="far fa-edit"></i>
+                    </a>
                 </div>
             </td>
             <td>{{gateininfo.id}}</td>
@@ -86,12 +85,12 @@
             <td>{{gateininfo.gatein_updated_by}}</td>
             <td>
                 <div class="d-flex justify-content-center gap-1">
-                <form action="{% url 'gatein_delete' gateininfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
+                    <form action="{% url 'gatein_delete' gateininfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
                 </div>
             </td>
         </tr>

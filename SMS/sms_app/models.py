@@ -210,6 +210,7 @@ from .sub_models.pk_wood_description import Pkwooddescription
 from .sub_models.vendorratemaster1_mod import VendorratemasterInfo1
 from .sub_models.location_master_gmap_mod import LocationMaster
 from .sub_models.trip_highvaluecheck_info_mod import TripHighvalueInfo
+from .sub_models.transporter_mod import Transporter_name
 from .sub_models.wh_partial_dispatch_mod import GoodsPartialDispatchInfo
 from .sub_models.incident_details_info import Incident_details_info
 from .sub_models.incident_report_mod import IncidentReportInfo

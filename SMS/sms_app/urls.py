@@ -701,6 +701,12 @@ urlpatterns = [
     path('wrong_labelling_list/', views.wrong_labelling_list, name='wrong_labelling_list'),
     path('wrong_labelling_update/<int:wrong_labelling_id>/', views.wrong_labelling_add, name='wrong_labelling_update'),
     path('wrong_labelling_delete/<int:wrong_labelling_id>/', views.wrong_labelling_delete, name='wrong_labelling_delete'),
+    path('add_transporter/', views.add_transporter, name='add_transporter'),
+    path('pregatein_gatepass/<int:pregatein_id>/', views.pregatein_gatepass_pdf, name='pregatein_gatepass_pdf'),
+    path('pregatein_gatepass_pdf_download/<int:pregatein_id>/', views.pregatein_gatepass_pdf_download,name='pregatein_gatepass_pdf_download'),
+    path('get_units/', views.get_units_for_user, name='get_units_for_user'),
+
+
 ]
 
 

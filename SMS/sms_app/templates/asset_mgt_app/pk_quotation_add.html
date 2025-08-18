@@ -444,6 +444,8 @@
             $('#pkqt_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+            var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+            alert({{ total_cft_display }})
             document.getElementById("pkqt_total_cft_display").value = "{{ total_cft_display }}";
             var total_cft = parseFloat(document.getElementById("pkqt_total_cft_display").value) || 0;
 
