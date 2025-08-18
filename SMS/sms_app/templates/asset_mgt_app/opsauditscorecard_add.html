@@ -150,8 +150,23 @@
 								</tr>
 								<tr>
 									<th>Compliance</th>
-									<th>Contract with validity</th>
-									<td>{% render_field form.ops_Contract_validity class="form-control" id="ops_Contract_validity"  %}</td>
+									<th>Customer Contract with validity</th>
+									<td>{% render_field form.ops_Customer_Contract_validity class="form-control" id="ops_Customer_Contract_validity"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance</th>
+									<th>Vendor Contract with validity</th>
+									<td>{% render_field form.ops_Vendor_Contract_validity class="form-control" id="ops_Vendor_Contract_validity"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance</th>
+									<th>Customer code process followed</th>
+									<td>{% render_field form.ops_Customer_code_process_followed class="form-control" id="ops_Customer_code_process_followed"  %}</td>
+								</tr>
+								<tr>
+									<th>Compliance</th>
+									<th>Asset Audit done</th>
+									<td>{% render_field form.ops_Asset_Audit_done class="form-control" id="ops_Asset_Audit_done"  %}</td>
 								</tr>
 								<tr>
 									<th>Customer</th>
@@ -162,6 +177,11 @@
 									<th>Customer</th>
 									<th>Monthly reviews done</th>
 									<td>{% render_field form.ops_monthly_reviews_done class="form-control" id="ops_monthly_reviews_done"  %}</td>
+								</tr>
+								<tr>
+									<th>Customer</th>
+									<th>KPI achieved</th>
+									<td>{% render_field form.ops_KPI_achieved class="form-control" id="ops_KPI_achieved"  %}</td>
 								</tr>
 								<tr>
 									<th>Facility</th>
@@ -215,7 +235,7 @@
 								</tr>
 								<tr>
 									<th>Facility</th>
-									<th>dumping of cargo</th>
+									<th> NO Dumping of cargo</th>
 									<td>{% render_field form.ops_dumping_cargo class="form-control" id="ops_dumping_cargo"  %}</td>
 								</tr>
 								<tr>
@@ -295,8 +315,8 @@
 								</tr>
 								<tr>
 									<th>Process</th>
-									<th>More than 3 days old cargo report / mail</th>
-									<td>{% render_field form.ops_more_than_3_days_cargo_report_mail class="form-control" id="ops_more_than_3_days_cargo_report_mail"  %}</td>
+									<th>3 or 7 Days old cargo report / mail</th>
+									<td>{% render_field form.ops_3_or_7_days_cargo_report_mail class="form-control" id="ops_3_or_7_days_cargo_report_mail"  %}</td>
 								</tr>
 								<tr>
 									<th>Process</th>
@@ -323,33 +343,13 @@
 								<tbody>
 								<tr>
 									<th>Process</th>
-									<th>Double check shipments</th>
-									<td>{% render_field form.ops_double_check_shipments class="form-control" id="ops_double_check_shipments"  %}</td>
+									<th>Double check Dispatch</th>
+									<td>{% render_field form.ops_double_check_dispatch class="form-control" id="ops_double_check_dispatch"  %}</td>
 								</tr>
 								<tr>
 									<th>Process</th>
-									<th>Truck Validation</th>
-									<td>{% render_field form.ops_Truck_validation class="form-control" id="ops_Truck_validation"  %}</td>
-								</tr>
-								<tr>
-									<th>Process</th>
-									<th>Driver Validation</th>
-									<td>{% render_field form.ops_Driver_validation class="form-control" id="ops_Driver_validation"  %}</td>
-								</tr>
-								<tr>
-									<th>Process</th>
-									<th>Document Validation</th>
-									<td>{% render_field form.ops_Document_validation class="form-control" id="ops_Document_validation" %}</td>
-								</tr>
-								<tr>
-									<th>Process</th>
-									<th>Check OSD/ Packages</th>
-									<td>{% render_field form.ops_check_OSD_Packages class="form-control" id="ops_check_OSD_Packages"  %}</td>
-								</tr>
-								<tr>
-									<th>Process</th>
-									<th>OTL process</th>
-									<td>{% render_field form.ops_OTL_process class="form-control" id="ops_OTL_process"  %}</td>
+									<th>OTL Check</th>
+									<td>{% render_field form.ops_OTL_check class="form-control" id="ops_OTL_check"  %}</td>
 								</tr>
 								<tr>
 									<th>Process</th>
@@ -372,9 +372,14 @@
 									<td>{% render_field form.ops_stacking class="form-control" id="ops_stacking"  %}</td>
 								</tr>
 								<tr>
+									<th>Process</th>
+									<th>Gate meeting conducted - Daily</th>
+									<td>{% render_field form.ops_gate_meeting_conducted_daily class="form-control" id="ops_gate_meeting_conducted_daily"  %}</td>
+								</tr>
+								<tr>
 									<th>Reports</th>
-									<th>Daily Stock Register</th>
-									<td>{% render_field form.ops_daily_stock_register class="form-control" id="ops_daily_stock_register"  %}</td>
+									<th>BRP and Management Reports</th>
+									<td>{% render_field form.ops_BRP_Management_Reports class="form-control" id="ops_BRP_Management_Reports"  %}</td>
 								</tr>
 								<tr>
 									<th>Reports</th>
@@ -558,18 +563,13 @@
 								</tr>
 								<tr>
 									<th>WMS usage</th>
-									<th>Timely and Complete Data entry</th>
+									<th>Timely completion of Data entry</th>
 									<td>{% render_field form.ops_timely_complete_data_entry class="form-control" id="ops_timely_complete_data_entry"  %}</td>
 								</tr>
 								<tr>
 									<th>WMS usage</th>
-									<th>Rate updation / Contract updation</th>
-									<td>{% render_field form.ops_rate_updation_contract_updation class="form-control" id="ops_rate_updation_contract_updation"  %}</td>
-								</tr>
-								<tr>
-									<th>WMS usage</th>
-									<th>Reports including DSR – correctness</th>
-									<td>{% render_field form.ops_reports_including_DSR_correctness class="form-control" id="ops_reports_including_DSR_correctness" %}</td>
+									<th>All masters updation</th>
+									<td>{% render_field form.ops_All_masters_updation class="form-control" id="ops_All_masters_updation"  %}</td>
 								</tr>
 								</tbody>
 							</table>
