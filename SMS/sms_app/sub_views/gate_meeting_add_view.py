@@ -79,7 +79,7 @@ def gate_meeting_send_email(request):
     gate_meet_email_count = Gatemeetinginfo.objects.get(pk=gate_meet_id).gm_email_count
 
     recipient_list = [
-        'hariharasudhanh968@gmail.com',
+        'josevinoth83@gmail.com',
     ]
 
     subject = f"Gate Meeting {gate.gm_branch} - Update"

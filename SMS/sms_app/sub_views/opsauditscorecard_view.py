@@ -276,7 +276,7 @@ def send_ops_audit_email(request):
         </html>
         """
 
-    recipient_list = ['hariharasudhanh968@gmail.com']
+    recipient_list = ['josevinoth83@gmail.com.com']
 
     subject = f"Ops Audit Scorecard Report - {branch} - {unit} ({date})"
 
