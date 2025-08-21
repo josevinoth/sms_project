@@ -212,3 +212,8 @@ from .sub_models.location_master_gmap_mod import LocationMaster
 from .sub_models.trip_highvaluecheck_info_mod import TripHighvalueInfo
 from .sub_models.transporter_mod import Transporter_name
 from .sub_models.wh_partial_dispatch_mod import GoodsPartialDispatchInfo
+from .sub_models.incident_details_info import Incident_details_info
+from .sub_models.incident_report_mod import IncidentReportInfo
+from .sub_models.customer_claims_mod import CustomerClaimsInfo
+from .sub_models.cross_labelling_info import Cross_labelling_info
+from .sub_models.wronglabelling_mod import WrongLabellingInfo

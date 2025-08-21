@@ -153,3 +153,6 @@ from .sub_views.Location_master_view import location_master_add,location_master_
 from .sub_views.trip_approval_view import trip_approval_view,update_trip_approval
 from .sub_views.trip_highvaluecheck_view import trip_highvalue_add,trip_highvalue_list,trip_highvalue_delete,trip_highvalue_cancel
 from .sub_views.backfill_view import backfill_one_record,backfill_preview,backfill_all_records
+from .sub_views.incident_report_view import incident_add,incident_list,incident_delete
+from .sub_views.customer_claims_view import customer_claims_add,customer_claims_list,customer_claims_delete
+from .sub_views.wrong_labelling_view import wrong_labelling_add,wrong_labelling_list,wrong_labelling_delete

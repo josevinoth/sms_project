@@ -1,0 +1,238 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" action="" id="wrong_labelling_add" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center"><h3>Add/Update Wrong Labelling</h3></div>
+                    <div class="card-body bg-light">
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Branch</span>
+                                    </div>
+                                    {% render_field form.wl_branch id="wl_branch"  class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Unit</span>
+                                    </div>
+                                    {% render_field form.wl_unit id="wl_unit" class="form-control disable_a_href" id="wl_unit" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer Name</span>
+                                    </div>
+                                    {% render_field form.wl_customer id="wl_customer"  class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Supervisor Name</span>
+                                    </div>
+                                    {% render_field form.wl_supervisor id="wl_supervisor"  class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Date Of Shipment</span>
+                                    </div>
+                                    {% render_field form.wl_shipment_date type="Date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">CCTV Footage Available</span>
+                                    </div>
+                                    {% render_field form.wl_cctvfootage_available id="wl_cctvfootage_available" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Is BVM Fault?</span>
+                                    </div>
+                                    {% render_field form.wl_bvm_fault id="wl_bvm_fault" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Root Cause Analysis</span>
+                                    </div>
+                                    {% render_field form.wl_rootcause_analysis id="wl_rootcause_analysis" class="form-control"  %}
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Cross Labelling Details</span>
+                                    </div>
+                                    {% render_field form.wl_crosslabelling_details id="wl_crosslabelling_details" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">No of Shipments</span>
+                                    </div>
+                                    {% render_field form.wl_noof_shipments id="wl_noof_shipments" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Shipment 1</span>
+                                    </div>
+                                    {% render_field form.wl_shipment1 id="wl_shipment1" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Correct Destination</span>
+                                    </div>
+                                    {% render_field form.wl_correct_shipment1 id="wl_correct_shipment1" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Wrong Destination</span>
+                                    </div>
+                                    {% render_field form.wl_wrong_shipment1 id="wl_wrong_shipment1" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Weight</span>
+                                    </div>
+                                    {% render_field form.wl_weight_shipment1 id="wl_weight_shipment1" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Dims</span>
+                                    </div>
+                                    {% render_field form.wl_dims_shipment1 id="wl_dims_shipment1" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Dispatch Reference</span>
+                                    </div>
+                                    {% render_field form.wl_dispatch_num_shipment1 id="wl_dispatch_num_shipment1" class="form-control" %}
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Shipment 2</span>
+                                    </div>
+                                    {% render_field form.wl_shipment2 id="wl_shipment2" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Correct Destination</span>
+                                    </div>
+                                    {% render_field form.wl_correct_shipment2 id="wl_correct_shipment2" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Wrong Destination</span>
+                                    </div>
+                                    {% render_field form.wl_wrong_shipment2 id="wl_wrong_shipment2" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Weight</span>
+                                    </div>
+                                    {% render_field form.wl_weight_shipment2 id="wl_weight_shipment2" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Dims</span>
+                                    </div>
+                                    {% render_field form.wl_dims_shipment2 id="wl_dims_shipment2" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Dispatch Reference</span>
+                                    </div>
+                                    {% render_field form.wl_dispatch_num_shipment2 id="wl_dispatch_num_shipment2" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">CAPA Issued Date</span>
+                                    </div>
+                                    {% render_field form.wl_CAPA_issueddate type="Date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">CAPA Closed Date</span>
+                                    </div>
+                                    {% render_field form.wl_CAPA_closeddate type="Date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Management Approval</span>
+                                    </div>
+                                    {% render_field form.wl_approval_status id="wl_approval_status" class="form-control" %}
+                                </div>
+                                {% render_field form.wl_updated_by id="wl_updated_by" hidden="True" class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="save-btn">
+                            <i class="fas fa-check"></i> Submit
+                        </button>
+                        <a href="{% url 'wrong_labelling_list'  %}" class="btn btn-danger float-right">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function() {
+
+            {
+                var updated_by = document.getElementById("wl_updated_by").value
+                if (updated_by == "")
+                {
+                    document.getElementById("wl_updated_by").value='{{user_id}}'
+                }
+                else
+                {
+                    document.getElementById("wl_updated_by").value=updated_by;
+                }
+            }
+        });
+</script>
+
+<script>
+    $("#wl_branch").change(function () {
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#wl_unit').removeClass('disable_a_href');
+             $("#wl_unit").empty();
+             $('#wh_bay').empty().append("<option value='0'>--Select--</option>");
+             $("#wh_stack_layer").val($("#selectBox option:first").val());
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#wl_unit').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#wl_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
+</script>
+
+{% endblock content %}
