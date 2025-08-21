@@ -86,6 +86,7 @@ def gate_meeting_send_email(request):
         'venkat@bvmstorage.com','prem@bvmtranssolutions.com','Deepa@thebvmgroup.com'
     ]
 
+
     subject = f"Gate Meeting {gate.gm_branch} - Update"
 
     email_body = f""" 

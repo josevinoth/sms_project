@@ -292,6 +292,7 @@ def send_ops_audit_email(request):
 
     recipient_list = ['joseph@thebvmgroup.com','sony@thebvmgroup.com','sridhar@precise.org.in']
 
+
     subject = f"Ops Audit Scorecard Report - {branch} - {unit} ({date})"
 
     send_department_email('itadmin', subject, email_body, recipient_list, email_type=1)
