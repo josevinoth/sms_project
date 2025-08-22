@@ -3,7 +3,7 @@ from django.contrib.messages.context_processors import messages
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.utils import timezone
-from ..models import Customerattach,PkcostingInfo,RequirementsInfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info,TripdetailInfo,TripHighvalueInfo
+from ..models import Customerattach,PkcostingInfo,RequirementsInfo,Pregateintruckinfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info,TripdetailInfo,TripHighvalueInfo
 from django.shortcuts import render, redirect
 from django.db.models import Sum, Q
 from datetime import timedelta
@@ -39,6 +39,12 @@ def home_page(request):
     approval_count = TripdetailInfo.objects.filter( Q(tr_category=1),
         Q(tr_approval__isnull=True) | Q(tr_approval__ta_approval_status__id=3)
     ).count()
+    approval_count_wms1 = Pregateintruckinfo.objects.filter( ( Q(pregatein_commodity__id__gte=11, pregatein_commodity__id__lte=14) |
+        Q(pregatein_invoice_value__gt=250000) ) & Q(pregatein_approval_status__id=2)
+    ).count()
+    approval_count_wms2 = Pregateintruckinfo.objects.filter( ( Q(pregatein_commodity__id__gte=11, pregatein_commodity__id__lte=14) |
+        Q(pregatein_invoice_value__gt=250000) ) & Q(pregatein_approval_status__id=3)
+    ).count()
     checklist_count = TripHighvalueInfo.objects.filter(thc_approval_status=2).count()
 
 
@@ -72,7 +78,9 @@ def home_page(request):
                'customer_rate_due_count': customer_rate_due_count,
                'total_dues': total_dues,
                'approval_count':approval_count,
-               'checklist_count':checklist_count
+               'checklist_count':checklist_count,
+               'approval_count_wms1':approval_count_wms1,
+               'approval_count_wms2':approval_count_wms2
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 

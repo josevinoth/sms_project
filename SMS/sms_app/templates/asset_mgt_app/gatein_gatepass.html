@@ -1,0 +1,78 @@
+{% extends "asset_mgt_app/report_header_potrait.html" %}
+{% block content %}
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; }
+  .report_title { font-weight: bold; font-size: 16px; text-align: center; margin-bottom: 20px; }
+  table.report_details { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+  table.report_details th, table.report_details td { border: 1px solid #000; padding: 5px 10px; text-align: left; }
+  hr.report_hrItem { border: 0; border-top: 1px solid #000; margin: 15px 0; }
+  .container-signatures { margin-top: 40px; overflow: hidden; }
+  .left-group { float: left; width: 260px; }
+  .center-group { clear: both; margin-top: 60px; text-align: center; font-weight: bold; }
+  img { max-height: 40px; border: 1px solid #000; }
+  .left-group div { margin-bottom: 20px; }
+</style>
+
+<!-- 1. Gate In Details -->
+<div class="report_title">
+    Gate In Details ({{ gatein.gatein_job_no }})
+</div>
+<table class='report_details'>
+    <tr><th>Invoice</th><td>{{ gatein.gatein_invoice }}</td></tr>
+    <tr><th>Customer</th><td>{{ gatein.gatein_customer }}</td></tr>
+    <tr><th>Arrival Date</th><td>{{ gatein.gatein_arrival_date }}</td></tr>
+    <tr><th>Shipper</th><td>{{ gatein.gatein_shipper }}</td></tr>
+    <tr><th>Consignee</th><td>{{ gatein.gatein_consignee }}</td></tr>
+    <tr><th>No of Packages</th><td>{{ gatein.gatein_no_of_pkg }}</td></tr>
+    <tr><th>Weight</th><td>{{ gatein.gatein_weight }}</td></tr>
+    <tr><th>Actual Weight</th><td>{{ gatein.gatein_actual_weight }}</td></tr>
+    <tr><th>Actual Count</th><td>{{ gatein.gatein_actual_count }}</td></tr>
+    <tr><th>Transporter</th><td>{{ gatein.gatein_transporter }}</td></tr>
+    <tr><th>Truck Number</th><td>{{ gatein.gatein_truck_number }}</td></tr>
+    <tr><th>Truck Type</th><td>{{ gatein.gatein_truck_type }}</td></tr>
+    <tr><th>Driver</th><td>{{ gatein.gatein_driver }}</td></tr>
+    <tr><th>Contact Number</th><td>{{ gatein.gatein_contact_number }}</td></tr>
+    <tr><th>DL Number</th><td>{{ gatein.gatein_dl_number }}</td></tr>
+    <tr><th>OTL</th><td>{{ gatein.gatein_otl }}</td></tr>
+    <tr><th>Commodity</th><td>{{ gatein.gatein_comodity }}</td></tr>
+    <tr><th>PO Number</th><td>{{ gatein.gatein_po_num }}</td></tr>
+    <tr><th>Destination</th><td>{{ gatein.gatein_destination }}</td></tr>
+    <tr><th>HAWB</th><td>{{ gatein.gatein_hawb }}</td></tr>
+    {% if warehouse %}
+    <tr><th>Damages</th><td>{{ warehouse.wh_damages }}</td></tr>
+    <tr><th>Comments</th><td>{{ warehouse.wh_comments }}</td></tr>
+    <tr><th>Check In/Out</th><td>{{ warehouse.wh_check_in_out }}</td></tr>
+{% endif %}
+
+</table>
+
+<!-- 2. Warehouse Goods Info -->
+
+<!-- 3. Signatures -->
+<hr class="report_hrItem"/>
+<div class="container-signatures">
+  <div class="left-group">
+    <div>
+      <strong>Driver Signature</strong><br>
+      {% if gatein.driver_signature_base64 %}
+        <img src="{{ gatein.driver_signature_base64 }}" alt="Driver Signature">
+      {% else %}
+        <span>No Signature</span>
+      {% endif %}
+    </div>
+    <div>
+      <strong>Supervisor Signature</strong><br>
+      {% if gatein.supervisor_signature_base64 %}
+        <img src="{{ gatein.supervisor_signature_base64 }}" alt="Supervisor Signature">
+      {% else %}
+        <span>No Signature</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- 4. Closing Message -->
+<div class="center-group">
+  <p>THANK YOU FOR YOUR BUSINESS!</p>
+</div>
+{% endblock content %}

@@ -1,0 +1,73 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Pregatein Approval</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+<hr>
+<table id="pregatein_approval_table" class="table table-bordered table-sm">
+    <thead class="thead-dark">
+    <tr>
+        <th>Pregatein No</th>
+        <th>Truck No</th>
+        <th>Transporter</th>
+        <th>Commodity</th>
+        <th>Invoice Value</th>
+        <th>Approval</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for record in pregatein_list %}
+    <tr>
+        <td>{{ record.pregatein_number }}</td>
+        <td>{{ record.pregatein_truck_number }}</td>
+        <td>{{ record.pregatein_transporter_name }}</td>
+        <td>{{ record.pregatein_commodity }}</td>
+        <td>{{ record.pregatein_invoice_value }}</td>
+        <td class="text-center">
+            <form method="post" action="{% url 'update_pregatein_approval' record.id %}" class="d-flex align-items-center gap-2">
+                {% csrf_token %}
+                <select name="pregatein_approval_status" class="form-control form-control-sm" style="width: 150px;" required>
+                    {% for status in status_list %}
+                        <option value="{{ status.id }}"
+                            {% if record.pregatein_approval_status and record.pregatein_approval_status.id == status.id %}
+                                selected
+                            {% elif not record.pregatein_approval_status and status.id == 3 %}
+                                selected
+                            {% endif %}>
+                            {{ status }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary ml-2">Update</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<script>
+    $(document).ready(function() {
+        $('#pregatein_approval_table').DataTable({
+            order: [0, 'desc' ],
+            dom: 'lBfrtip',
+            buttons: [
+                'copy', 'csv', 'excel','print'
+            ]
+        });
+    });
+</script>
+{% endblock content %}

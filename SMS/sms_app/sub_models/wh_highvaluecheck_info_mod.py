@@ -1,4 +1,6 @@
 from django.db import models
+
+from .approval_status_mod import approval_status_info
 from ..models import YesNoInfo,CustomerInfo,storagecrosslabelInfo,GstexcemptionInfo,hptforkliftcraneInfo,Stock_type,Location_info,UnitInfo,DamageInfo,Unitofmeasure
 
 class HighvalueInfo(models.Model):
@@ -22,6 +24,21 @@ class HighvalueInfo(models.Model):
     hc_handling_instruction = models.ForeignKey(GstexcemptionInfo, related_name='hc_handling_instruction', db_column='hc_handling_instruction',on_delete=models.CASCADE,default=2)
     hc_expected_days = models.FloatField(  default=0.0)
     hc_bvm_scope_work = models.TextField(max_length=50, blank=True,null=True)
+    hc_approval_status = models.ForeignKey(approval_status_info, on_delete=models.CASCADE, blank=True, null=True,default=2)
+    hc_first_approval = models.ForeignKey(
+        approval_status_info,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="first_approvals"
+    )
+    hc_second_approval = models.ForeignKey(
+        approval_status_info,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="second_approvals"
+    )
 
     def __str__(self):
         return f"high value check at {self.hc_location}"
