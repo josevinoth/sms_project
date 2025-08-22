@@ -21,6 +21,7 @@ class Warehouse_goods_info(models.Model):
     wh_dimension_deviation = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,null=True,related_name='wh_dimension_deviation',db_column='wh_dimension_deviation',default=2)
     wh_no_of_units_deviation = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,null=True,related_name='wh_no_of_units_deviation',db_column='wh_no_of_units_deviation',default=2)
     wh_damages= models.ForeignKey(DamageInfo, on_delete=models.CASCADE, null=True,related_name='wh_damages',db_column='wh_damages',default=6)
+    wh_damages1= models.ManyToManyField(DamageInfo,blank=True,default=6)
     wh_mismatches= models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True,related_name='wh_mismatches',db_column='wh_mismatches',default=2)
     wh_fumigation_process = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, blank=True,related_name='wh_fumigation_process',db_column='wh_fumigation_process',default=1)
     wh_fumigation_action = models.ForeignKey(Fumigation_ActionInfo, on_delete=models.CASCADE, null=True)

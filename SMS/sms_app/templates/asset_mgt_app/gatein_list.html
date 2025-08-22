@@ -44,6 +44,7 @@
             <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Pre-Gate-In"></th>
+            <th></th> <!-- Gate pass column: no search box -->
             <th><input type="text" class="form-control filter-input" placeholder="Search Job Number"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Shipper Inovice Number"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Customer Name"></th>
@@ -57,12 +58,14 @@
             <th>ID</th>
             <th>Created On</th>
             <th>Pre-Gate_In</th>
+            <th>Gate pass</th>
             <th>Job Number</th>
             <th class="shipper-invoice-col">Shipper Invoice Number</th>
             <th>Customer Name</th>
-            <th>Updated ON </th>
-            <th>Updated By </th>
+            <th>Updated ON</th>
+            <th>Updated By</th>
             <th>Delete</th>
+        </tr>
         </thead>
         <tbody>
         {% for gateininfo in page_obj %}
@@ -70,19 +73,29 @@
             <td></td>
             <td>
                 <div class="d-flex justify-content-center gap-1">
-                    <a class="btn btn-primary" href="{% url 'gatein_update' gateininfo.id %}" >
+                    <a class="btn btn-primary" href="{% url 'gatein_update' gateininfo.id %}">
                         <i class="far fa-edit"></i>
                     </a>
                 </div>
             </td>
-            <td>{{gateininfo.id}}</td>
-            <td>{{gateininfo.gatein_created_at}}</td>
-            <td>{{gateininfo.gatein_pre_id}}</td>
-            <td>{{gateininfo.gatein_job_no}}</td>
-            <td style="width:400px">{{gateininfo.gatein_invoice}}</td>
-            <td>{{gateininfo.gatein_customer}}</td>
-            <td>{{gateininfo.gatein_updated_at}}</td>
-            <td>{{gateininfo.gatein_updated_by}}</td>
+            <td>{{ gateininfo.id }}</td>
+            <td>{{ gateininfo.gatein_created_at }}</td>
+            <td>{{ gateininfo.gatein_pre_id }}</td>
+
+            <!-- Gate pass download icon -->
+            <td class="text-center">
+                <div class="d-flex justify-content-center gap-1">
+                    <a class="btn btn-warning" href="{% url 'gatein_pdf_download' gateininfo.id %}" target="_blank" title="Download Gate Pass">
+                        <i class="fas fa-luggage-cart"></i>
+                    </a>
+                </div>
+            </td>
+
+            <td>{{ gateininfo.gatein_job_no }}</td>
+            <td style="width:400px">{{ gateininfo.gatein_invoice }}</td>
+            <td>{{ gateininfo.gatein_customer }}</td>
+            <td>{{ gateininfo.gatein_updated_at }}</td>
+            <td>{{ gateininfo.gatein_updated_by }}</td>
             <td>
                 <div class="d-flex justify-content-center gap-1">
                     <form action="{% url 'gatein_delete' gateininfo.id %}" method="post" onclick="return confirm('Are you sure?');">
@@ -96,6 +109,7 @@
         </tr>
         {% endfor %}
         </tbody>
+
     </table>
     <div class="pagination">
     <span class="step-links">

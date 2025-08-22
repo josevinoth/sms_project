@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
 <div class="col-5 col-md-2 p-2 col-lg-1">
@@ -269,7 +269,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Damages?</span>
 									</div>
-									{% render_field goods_form.wh_damages id="wh_damages" class="form-control" onchange="challan_damage_btn_active()"%}
+									{% render_field goods_form.wh_damages1 id="wh_damages1" class="form-control" onchange="challan_damage_btn_active()"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -580,6 +580,17 @@
         package_type_chng()
         fumigation_process_chng()
         fumigation_action_chng()
+        $('#wh_damages1').multiselect({
+    includeSelectAllOption: true,
+    enableFiltering: true,
+    enableCaseInsensitiveFiltering: true,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select Types of Damages',
+    buttonClass: 'custom-multiselect-button',
+    maxHeight: 250,
+    dropUp: false
+});
+
       });
 </script>
 
@@ -610,7 +621,7 @@
         var weight_deviation_val =document.getElementById("wh_weights_deviation").value;
         var dimension_deviation_val=document.getElementById("wh_dimension_deviation").value;
         var no_of_units_deviation_val=document.getElementById("wh_no_of_units_deviation").value;
-        var damages_val=document.getElementById("wh_damages").value;
+        var damages_val=document.getElementById("wh_damages1").value;
         var mismatches_val=document.getElementById("wh_mismatches").value;
     }
 </script>

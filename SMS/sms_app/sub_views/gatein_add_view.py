@@ -1,14 +1,19 @@
+from io import BytesIO
 from random import randint
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+
+from .dispatch_add_view import get_base64_image
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import VehicletypeInfo,Pregateintruckinfo,Location_info,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from ..models import User_extInfo
 import pytz
 
@@ -288,7 +293,7 @@ def load_pre_gate_in_truck_details(request):
     # Fetch pre_gate_in details
     pre_gatein_id = request.GET.get('pre_gatein_id')
     pre_gatein_truck_number_val = request.GET.get('gatein_truck_number_val')
-    Transporter=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_transporter',flat=True)
+    Transporter=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_transporter_name',flat=True)
     Driver_Name=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_driver',flat=True)
     Driver_Contact=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_contact_number',flat=True)
     Driver_License=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_dl_number',flat=True)
@@ -325,3 +330,51 @@ def load_pre_gate_in_truck_details(request):
     # return HttpResponse(json.dumps(data))
     return JsonResponse((data))
 
+@login_required(login_url='login_page')
+def gatein_pdf(request, gatein_id=0, download=False):
+    gatein = get_object_or_404(Gatein_info, id=gatein_id)
+
+    # Convert signatures to base64
+    gatein.driver_signature_base64 = None
+    if hasattr(gatein, "gatein_driver_signature") and gatein.gatein_driver_signature:
+        gatein.driver_signature_base64 = get_base64_image(gatein.gatein_driver_signature)
+
+    gatein.supervisor_signature_base64 = None
+    if hasattr(gatein, "gatein_supervisor_signature") and gatein.gatein_supervisor_signature:
+        gatein.supervisor_signature_base64 = get_base64_image(gatein.gatein_supervisor_signature)
+
+    # Fetch warehouse goods info (matching by job number)
+    warehouse_info = Warehouse_goods_info.objects.filter(
+        wh_job_no=gatein.gatein_job_no
+    ).select_related('wh_damages', 'wh_check_in_out').first()
+
+    context = {
+        "gatein": gatein,
+        "warehouse": warehouse_info
+    }
+
+    template_path = 'asset_mgt_app/gatein_gatepass.html'
+    template = get_template(template_path)
+    html = template.render(context)
+
+    pdf_buffer = BytesIO()
+    pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
+
+    if pisa_status.err:
+        raise ValueError("Error generating PDF")
+
+    pdf_buffer.seek(0)
+    pdf_data = pdf_buffer.read()
+    pdf_buffer.close()
+
+    if download:
+        response = HttpResponse(pdf_data, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="Gatein_{gatein.gatein_job_no or gatein.id}.pdf"'
+        return response
+
+    return pdf_data
+
+
+@login_required(login_url='login_page')
+def gatein_pdf_download(request, gatein_id):
+    return gatein_pdf(request, gatein_id, download=True)

@@ -693,6 +693,11 @@ urlpatterns = [
     path('pregatein_gatepass/<int:pregatein_id>/', views.pregatein_gatepass_pdf, name='pregatein_gatepass_pdf'),
     path('pregatein_gatepass_pdf_download/<int:pregatein_id>/', views.pregatein_gatepass_pdf_download,name='pregatein_gatepass_pdf_download'),
     path('get_units/', views.get_units_for_user, name='get_units_for_user'),
+    path('gatein/<int:gatein_id>/pdf/', views.gatein_pdf_download, name='gatein_pdf_download'),
+    path("pregatein/approval/", views.pregatein_approval_view, name="pregatein_approval_view"),
+    path("pregatein/approval/update/<int:pregatein_id>/", views.update_pregatein_approval, name="update_pregatein_approval"),
+    path("pregatein/approval2/", views.pregatein_approval2_view, name="pregatein_approval2_view"),
+    path("pregatein/approval2/update/<int:pregatein_id>/", views.update_pregatein_approval2, name="update_pregatein_approval2"),
 
 
 ]
