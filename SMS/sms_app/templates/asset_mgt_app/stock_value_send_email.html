@@ -3,6 +3,9 @@
 <!-- Email Form -->
 <form method="post" action="{% url 'stock_value_send_email_view' %}">
     {% csrf_token %}
+    <input type="hidden" name="from_date" id="modal_from_date">
+    <input type="hidden" name="to_date" id="modal_to_date">
+
     <div class="input-group mb-2 mr-sm-2">
         <div class="input-group-prepend">
             <div class="input-group-text">Customer</div>
@@ -41,14 +44,23 @@
 
 <script>
     function email_message_fn() {
-     // Assign Django template variables to JavaScript variables
-       var message = 	"Dear Customer,\n\n" +
-                "Please find the Stock Value report attached.\n\n" +
-                  "Regards,\n" +
-                  "BVM Warehouse Team";
+        // 1️⃣ Get the values from the main date inputs
+        let fromDate = document.querySelector('input[name="from_date"]').value;
+        let toDate = document.querySelector('input[name="to_date"]').value;
 
-        // Set the consolidated message as the value of the form field with id 'message'
+        // Put them into the hidden modal inputs
+        document.getElementById('modal_from_date').value = fromDate;
+        document.getElementById('modal_to_date').value = toDate;
+
+        // 2️⃣ Set default message
+        let message = "Dear Customer,\n\n" +
+                      "Please find the Stock Value report attached.\n\n" +
+                      "Regards,\n" +
+                      "BVM Warehouse Team";
+
         document.getElementById("message").value = message;
     }
 </script>
+
+
 {% endblock content %}

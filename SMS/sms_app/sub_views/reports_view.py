@@ -15,8 +15,9 @@ from django.utils import timezone
 from django.utils.timezone import make_naive
 from xhtml2pdf import pisa
 from ..models import CustomerInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo,GoodsPartialDispatchInfo
-from datetime import date,timedelta
 import datetime
+from datetime import timedelta
+
 from django.db.models import Count, Sum
 import openpyxl
 from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
@@ -65,7 +66,7 @@ def stock_value_reports(request):
     Warehouse_goods_info.objects.filter(wh_check_in_out=1).update(
         wh_storage_time=Cast(
             Extract(ExpressionWrapper(
-                date.today()-F('wh_checkin_time'),
+                datetime.date.today() - F('wh_checkin_time'),
                 output_field=DurationField()
             ), 'days'),
             output_field=fields.FloatField()  # Cast to double precision
@@ -292,12 +293,25 @@ def damage_report_pdf(request):
         return HttpResponse('We has some error <pre>'+ html +'</pre>')
     return response
 
+
+
 def export_stockreport_to_csv(request):
-    four_months_ago = timezone.now() - timedelta(days=120)
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+
+    if from_date and to_date:
+        from_date = timezone.make_aware(datetime.datetime.strptime(from_date, "%Y-%m-%d"))
+        to_date = timezone.make_aware(datetime.datetime.strptime(to_date, "%Y-%m-%d"))
+
+    else:
+        to_date = timezone.now()
+        from_date = to_date - timedelta(days=120)
 
     # Query data
     data = Warehouse_goods_info.objects.filter(
-        Q(wh_check_in_out__in=[1, 4]) | (Q(wh_check_in_out=2, wh_checkout_time__gte=four_months_ago))
+        Q(wh_check_in_out__in=[1, 4], wh_checkout_time__isnull=True) |  # Still in warehouse
+        # Q(wh_check_in_out__in=[1, 4], wh_checkout_time__range=(from_date, to_date)) |  # Checked out in range
+        Q(wh_check_in_out=2, wh_checkout_time__range=(from_date, to_date))  # Checkout records in range
     ).annotate(
         arrival_date=ExpressionWrapper(F('wh_gate_injob_no_id__gatein_arrival_date'),
                                        output_field=fields.DateTimeField()),
@@ -323,7 +337,9 @@ def export_stockreport_to_csv(request):
         'wh_lb_job_no_id__lb_stock_invoice_currency__currency_type', 'wh_invoice_amount_inr',
         'wh_lb_job_no_id__lb_eway_bill', 'eway_bill_validity',
         'wh_fumigation_process__ge_gstexcepmtion', 'wh_check_in_out__check_in_out_name', 'wh_branch__loc_name',
-        'wh_unit__unit_name', 'wh_bay__bay_bayname', 'wh_storage_time',
+        'wh_unit__unit_name', 'wh_bay__bay_bayname', 'wh_storage_time','wh_Dam_rep_job_num_id__id',  # Damage ID to check Yes/No
+    'wh_Dam_rep_job_num_id__dam_damage_type__damage_name',
+    'wh_Dam_rep_job_num_id__dam_GRN_num',
         # 'wh_dispatch_id__dispatch_truck_number',
         # str('wh_dispatch_id__dispatch_truck_type__vt_vehicletype'),'departure_time',
         # 'wh_dispatch_id__dispatch_sticker_pasted_bvm__lp_name', 'wh_dispatch_id__dispatch_mawb',
@@ -340,12 +356,12 @@ def export_stockreport_to_csv(request):
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight',
             'CBM', 'Invoice Value', 'Invoice Currency', 'Invoice (INR)',
             'E-Way Bill#', 'E-Way Bill Validity', 'Fumigation Status',
-            'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days',
+            'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage?','Damage Type','GRN Number',
             'Truck_Number(Out)', 'Truck_Type(Out)', 'Truck_Depature_Time(Out)',
             'Labels_Pasted_By', 'MAWB', 'Dispatch Number(s)', 'Total Dispatch Qty'
     ]
 
-    def generate_streamed_excel():
+    def generate_streamed_excel(red_font=None):
         # Create an in-memory buffer
         output = BytesIO()
         workbook = openpyxl.Workbook()
@@ -394,6 +410,16 @@ def export_stockreport_to_csv(request):
                     total_qty += partial.pd_dispatch_qty or 0
 
                 row_data = list(row_data[1:])  # remove ID
+                damage_id = row_data[-3]  # based on the order in values_list
+                damage_type = row_data[-2]
+                grn_number = row_data[-1]
+
+                damage_flag = "Yes" if damage_id else "No"
+
+                # Replace with cleaned values
+                row_data[-3] = damage_flag
+                row_data[-2] = damage_type or ""
+                row_data[-1] = grn_number or ""
 
                 row_data += [
                     ", ".join(truck_numbers),
@@ -409,11 +435,13 @@ def export_stockreport_to_csv(request):
                 row_data = list(row_data[1:])
                 row_data += ["", "", "", "", "", "", 0]
 
+            red_font = Font(name='Bookman Old Style', size=9, color="FF0000")
+            is_damaged = (row_data[-10] == "Yes")  # "Damage?" column position
             for col_num, value in enumerate(row_data, 1):
                 if isinstance(value, (datetime.date, datetime.datetime)) and hasattr(value, 'tzinfo') and value.tzinfo:
                     value = make_naive(value)
                 cell = sheet.cell(row=row_num, column=col_num, value=value)
-                cell.font = Font(name='Bookman Old Style', size=9)
+                cell.font = red_font if is_damaged else Font(name='Bookman Old Style', size=9)
 
         # Get the last row and column with data
         max_row = sheet.max_row
@@ -491,6 +519,16 @@ def goods_in_out_reports_list(request):
 
 @login_required(login_url='login_page')
 def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=None):
+    from_date_str = request.POST.get('from_date') or request.GET.get('from_date')
+    to_date_str = request.POST.get('to_date') or request.GET.get('to_date')
+
+    if from_date_str and to_date_str:
+        from_date = timezone.make_aware(datetime.datetime.strptime(from_date_str, "%Y-%m-%d"))
+        to_date = timezone.make_aware(datetime.datetime.strptime(to_date_str, "%Y-%m-%d"))
+    # else:
+    #     to_date = timezone.now()
+    #     from_date = to_date - timedelta(days=120)
+
     print('Entering stcokvalue_send_email_view')
     if request.method == 'POST':
         recipient = request.POST.get('recipient')
@@ -517,7 +555,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
             'Invoice Value', 'Invoice Currency', 'Invoice (INR)', 'E-Way Bill#', 'E-Way Bill Validity',
-            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days',
+            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage?','Damage Type','GRN Number',
             'Truck_Number(Out)','Truck_Type(Out)','Truck_Depature_Time(Out)','Labels_Pasted_By',
             'MAWB','Dispatch_Number','Dispatch quantity','Stock On Hand'
         ]
@@ -526,7 +564,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
         # Fetch the IDs from Gatein_info
         gate_in_ids = Gatein_info.objects.filter(gatein_pre_id=pre_gatein_id).values_list('id', flat=True)
 
-        three_months_ago = timezone.now() - timedelta(days=90)
+        # three_months_ago = timezone.now() - timedelta(days=90)
 
         # Initialize query to none
         stock_values = None
@@ -555,8 +593,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             # Step 1: Filter stock_values and ensure the date fields are timezone-free
             stock_values = stock_values.filter(
                 Q(wh_check_in_out__in=[1, 4]) |
-                Q(wh_check_in_out=2, wh_checkout_time__isnull=False, wh_checkout_time__gte=three_months_ago)
-
+                Q(wh_check_in_out=2, wh_checkout_time__isnull=False,wh_checkout_time__range=(from_date, to_date))  #wh_checkout_time__gte=three_months_ago
             ).order_by('-wh_gate_injob_no_id__gatein_arrival_date')
 
             # Step 2: In the loop, replace the date with timezone-free date objects
@@ -680,6 +717,9 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                     str(stock_value.wh_unit),  # Index 34
                     str(stock_value.wh_bay),  # Index 35
                     stock_value.wh_storage_time,# Index 36
+                    "Yes" if stock_value.wh_Dam_rep_job_num_id else "No",  # Damage? flag
+                    str(getattr(getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_damage_type', None),'damage_name','')),  # Damage Type
+                    getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_GRN_num', ''),  # GRN Number
                     # getattr(stock_value.wh_dispatch_id, 'dispatch_truck_number', ''),# Index 37
                     # str(getattr(stock_value.wh_dispatch_id, 'dispatch_truck_type', '')),# Index 38
                     # # getattr(stock_value.wh_dispatch_id, 'dispatch_depature_date', ''),# Index 39
@@ -734,10 +774,14 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
         for row_index, row in enumerate(sheet.iter_rows(), start=1):
             if row_index == 1:
                 continue  # Skip the first row
+            damage_flag = str(row[37].value).strip().lower() == "yes"
             for cell in row:
                 if cell.value:  # Skip empty cells
                     cell.border = border_style
-                    cell.font = cell_font
+                    if damage_flag:
+                        cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red text
+                    else:
+                        cell.font = cell_font
 
         # Set column width for all columns
         for col in sheet.columns:

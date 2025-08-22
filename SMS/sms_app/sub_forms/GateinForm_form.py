@@ -1,5 +1,7 @@
 from django import forms
-from ..models import Gatein_info
+from django.db.models import Q
+
+from ..models import Gatein_info,Gatein_pre_info,Pregateintruckinfo
 
 
 
@@ -16,6 +18,19 @@ class GateinaddForm(forms.ModelForm):
         self.fields['gatein_customer'].empty_label = "--Select--"
         self.fields['gatein_department'].empty_label = "--Select--"
         self.fields['gatein_customer_type'].empty_label = "--Select--"
+        available_pre_gateins = []
+        for pre in Gatein_pre_info.objects.all():
+            used_trucks = Gatein_info.objects.filter(gatein_pre_id=pre).values_list('gatein_truck_number_n_id',
+                                                                                    flat=True)
+            unused_trucks = Pregateintruckinfo.objects.filter(pregatein_number=pre).exclude(id__in=used_trucks)
+            if unused_trucks.exists():
+                available_pre_gateins.append(pre.id)
+        if self.instance and self.instance.pk and self.instance.gatein_pre_id:
+            self.fields['gatein_pre_id'].queryset = Gatein_pre_info.objects.filter(
+                Q(id__in=available_pre_gateins) | Q(id=self.instance.gatein_pre_id.id)
+            )
+        else:
+            self.fields['gatein_pre_id'].queryset = Gatein_pre_info.objects.filter(id__in=available_pre_gateins)
         self.fields['gatein_pre_id'].empty_label = "--Select--"
         self.fields['gatein_updated_by'].empty_label = "--Select--"
         self.fields['gatein_comodity'].empty_label = "--Select--"

@@ -302,6 +302,7 @@ urlpatterns = [
     path('qr_dispatch_decoder/<int:dispatch_id>', views.qr_dispatch_decoder, name='qr_dispatch_decoder'), # qr_dispatch_decoder
     path('message_test/',views.message_test,name='message_test'),
     path('load_area_volume/',views.load_area_volume,name='load_area_volume'),
+    path("get_available_pre_gateins/", views.get_available_pre_gateins, name="get_available_pre_gateins"),
     path('load_pre_gate_in/',views.load_pre_gate_in,name='load_pre_gate_in'),
     path('load_pre_gate_in_truck_details/',views.load_pre_gate_in_truck_details,name='load_pre_gate_in_truck_details'),
     path('invoice_list/',views.invoice_list,name='invoice_list'), # List invoice
@@ -685,6 +686,7 @@ urlpatterns = [
     path('backfill-preview/', views.backfill_preview, name='backfill_preview'),
     path('backfill-one/', views.backfill_one_record, name='backfill_one_record'),
     path('backfill-all/',  views.backfill_all_records, name='backfill_all_records'),
+    path('backfill_weight/', views.backfill_goods_weight, name='backfill_goods_weight'),
     path('get_fastag_toll_cost_ajax/', views.get_fastag_toll_cost_ajax, name='get_fastag_toll_cost_ajax'),
     path('vendor_filter/', views.vendor_filter, name='vendor_filter'),
     path('consignmentgoods/<int:pk>/upload/<str:att_type>/', views.consignmentgoods_upload_attachment, name='consignmentgoods_upload_attachment'),
@@ -705,7 +707,8 @@ urlpatterns = [
     path('pregatein_gatepass/<int:pregatein_id>/', views.pregatein_gatepass_pdf, name='pregatein_gatepass_pdf'),
     path('pregatein_gatepass_pdf_download/<int:pregatein_id>/', views.pregatein_gatepass_pdf_download,name='pregatein_gatepass_pdf_download'),
     path('get_units/', views.get_units_for_user, name='get_units_for_user'),
-
+    path("get_shippers/", views.get_shippers, name="get_shippers"),
+    path("get_consignees/", views.get_consignees, name="get_consignees"),
 
 ]
 

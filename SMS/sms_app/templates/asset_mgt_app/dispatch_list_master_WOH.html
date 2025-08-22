@@ -75,7 +75,8 @@
                         data-job="{{ goodsinfo.wh_job_no }}"
                         data-qr="{{ goodsinfo.wh_qr_rand_num }}"
                         data-pieces="{{ goodsinfo.wh_goods_pieces }}"
-                        data-remaining="{{ goodsinfo.remaining_qty }}">
+                        data-remaining="{{ goodsinfo.remaining_qty }}"
+                        data-weight="{{ goodsinfo.wh_goods_weight }}">
                     <i class="fas fa-share-square"></i> Partial Dispatch
                 </button>
             </td>
@@ -112,9 +113,18 @@
                         <input type="number" class="form-control" id="modal_remaining_qty" readonly>
                     </div>
                     <div class="form-group">
+    <label>Total Weight:</label>
+    <input type="number" class="form-control" id="modal_total_weight" readonly>
+</div>
+                    <div class="form-group">
                         <label>Dispatch Quantity:</label>
                         <input type="number" class="form-control" id="modal_dispatch_qty" min="1">
                     </div>
+                    <div class="form-group">
+    <label>Dispatch Weight:</label>
+    <input type="number" class="form-control" id="modal_dispatch_weight" min="0">
+</div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-success">Dispatch</button>
@@ -166,13 +176,16 @@
     const qr = $(this).data('qr');
     const pieces = $(this).data('pieces');
     const remainingQty = $(this).data('remaining');
+    const totalWeight = $(this).data('weight');
 
     $('#modal_goods_id').val(id);
     $('#modal_job_no').val(job);
     $('#modal_qr').val(qr);
     $('#modal_total_pieces').val(pieces);
     $('#modal_remaining_qty').val(remainingQty);
+    $('#modal_total_weight').val(totalWeight);
     $('#modal_dispatch_qty').attr('max', remainingQty).val(remainingQty);
+    $('#modal_dispatch_weight').val('');
     $('#partialDispatchModal').modal('show');
 });
 
@@ -180,6 +193,7 @@ $('#partial-dispatch-form').on('submit', function (e) {
     e.preventDefault();
     const goodsId = $('#modal_goods_id').val();
     const dispatchQty = $('#modal_dispatch_qty').val();
+    const dispatchWeight = $('#modal_dispatch_weight').val();
 
     $.ajax({
         url: '{% url "dispatch_partial_goods" %}',
@@ -187,6 +201,7 @@ $('#partial-dispatch-form').on('submit', function (e) {
         data: {
             'goods_id': goodsId,
             'dispatch_qty': dispatchQty,
+            'dispatch_weight': dispatchWeight,
             'csrfmiddlewaretoken': '{{ csrf_token }}'
         },
         success: function () {

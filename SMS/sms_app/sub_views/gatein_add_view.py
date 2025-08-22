@@ -263,23 +263,35 @@ def gatein_delete(request,gatein_id):
 
     return redirect('/SMS/search')
 
-# Load pre-gatein details
+@login_required(login_url='login_page')
+def get_available_pre_gateins(request):
+    pre_gateins = Gatein_pre_info.objects.all()
+    available_pre_gateins = []
+
+    for pre in pre_gateins:
+        used_trucks = Gatein_info.objects.filter(gatein_pre_id=pre).values_list('gatein_truck_number_n_id', flat=True)
+        unused_trucks = Pregateintruckinfo.objects.filter(pregatein_number=pre).exclude(id__in=used_trucks)
+        if unused_trucks.exists():
+            available_pre_gateins.append(pre)
+    return JsonResponse({
+        "pre_gateins": [{"id": p.id, "number": p.gatein_pre_number} for p in available_pre_gateins]
+    })
+
+
 @login_required(login_url='login_page')
 def load_pre_gate_in(request):
     pre_gatein_val = request.GET.get('pre_gatein_val')
-    pre_gatein_id = Gatein_pre_info.objects.get(gatein_pre_number=pre_gatein_val).id
-    pre_gatein_truck_list=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id)
-    print('pre_gatein_truck_list',pre_gatein_truck_list)
-    truck_numbers=[]
-    truck_numbers_id=[]
-    for i in pre_gatein_truck_list:
-        truck_numbers.append(i.pregatein_truck_number)
-        truck_numbers_id.append(i.id)
+    pre_gatein = Gatein_pre_info.objects.get(id=pre_gatein_val)
+    all_trucks = Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein)
+
+    used_trucks = Gatein_info.objects.filter(gatein_pre_id=pre_gatein).values_list('gatein_truck_number_n_id', flat=True)
+    unused_trucks = all_trucks.exclude(id__in=used_trucks)
+
     data = {
-            'truck_numbers_id': truck_numbers_id,
-            'truck_numbers': truck_numbers,
-        }
-    # return HttpResponse(json.dumps(data))
+        'truck_numbers_id': [t.id for t in unused_trucks],
+        'truck_numbers': [t.pregatein_truck_number for t in unused_trucks],
+    }
+
     return JsonResponse(data)
 
 # Load pre-gatein truck details
@@ -288,7 +300,7 @@ def load_pre_gate_in_truck_details(request):
     # Fetch pre_gate_in details
     pre_gatein_id = request.GET.get('pre_gatein_id')
     pre_gatein_truck_number_val = request.GET.get('gatein_truck_number_val')
-    Transporter=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_transporter',flat=True)
+    Transporter=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_transporter_name',flat=True)
     Driver_Name=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_driver',flat=True)
     Driver_Contact=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_contact_number',flat=True)
     Driver_License=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_dl_number',flat=True)
@@ -325,3 +337,20 @@ def load_pre_gate_in_truck_details(request):
     # return HttpResponse(json.dumps(data))
     return JsonResponse((data))
 
+def get_shippers(request):
+    q = request.GET.get('term', '')
+    shippers = list(
+        Gatein_info.objects.filter(gatein_shipper__icontains=q)
+        .values_list('gatein_shipper', flat=True)
+        .distinct()[:10]   # limit results
+    )
+    return JsonResponse(shippers, safe=False)
+
+def get_consignees(request):
+    q = request.GET.get('term', '')
+    consignees = list(
+        Gatein_info.objects.filter(gatein_consignee__icontains=q)
+        .values_list('gatein_consignee', flat=True)
+        .distinct()[:10]
+    )
+    return JsonResponse(consignees, safe=False)
