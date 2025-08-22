@@ -32,6 +32,28 @@
                 {% endfor %}
             </select>
         </div>
+        <div class="col-md-2">
+            <label for="company-filter"><b>Company:</b></label>
+            <select id="company-filter" name="company" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for company in companies %}
+                <option value="{{ company.id }}" {% if company.id|stringformat:"s" == selected_company %} selected {% endif %}>
+    {{ company.bvm_business }}
+</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="branch-filter"><b>Branch:</b></label>
+            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for branch in branches %}
+                <option value="{{ branch.id }}" {% if branch.id|stringformat:"s" == selected_branch %} selected {% endif %}>
+    {{ branch.loc_name }}
+</option>
+                {% endfor %}
+            </select>
+        </div>
 
         <!-- From Date -->
         <div class="col-md-2">
@@ -125,11 +147,15 @@
 
 
      document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+     document.getElementById('company-filter').addEventListener('change', updateFilters);
+     document.getElementById('branch-filter').addEventListener('change', updateFilters);
        document.getElementById('from-date').addEventListener('change', updateFilters);
        document.getElementById('to-date').addEventListener('change', updateFilters);
 
     function updateFilters() {
     const salesperson = document.getElementById('salesperson-filter').value;
+    const company = document.getElementById('company-filter').value;
+    const branch = document.getElementById('branch-filter').value;
     const fromDate = document.getElementById('from-date').value;
     const toDate = document.getElementById('to-date').value;
 
@@ -139,6 +165,16 @@
         url.searchParams.set('salesperson', salesperson);
     } else {
         url.searchParams.delete('salesperson');
+    }
+    if (company) {
+        url.searchParams.set('company', company);
+    } else {
+        url.searchParams.delete('company');
+    }
+    if (branch) {
+        url.searchParams.set('branch', branch);
+    } else {
+        url.searchParams.delete('branch');
     }
 
     if (fromDate) {
