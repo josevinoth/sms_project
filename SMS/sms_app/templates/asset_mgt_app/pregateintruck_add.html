@@ -64,13 +64,13 @@
 							{% render_field form.pregatein_number id="pregatein_number" class="form-control disable_a_href" %}
 						</div>
 						<!-- Transporter Input + Add Button -->
-						<div class="input-group input-group-sm mb-3">
+						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
 								<span class="input-group-text">Transporter</span>
 							</div>
 							{% render_field form.pregatein_transporter_name class="form-control" id="gatein_pre_transporter" %}
 							<div class="input-group-append">
-								<button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#addTransporterModal">
+								<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addTransporterModal">
 									Add
 								</button>
 							</div>
@@ -210,7 +210,7 @@
 
 							<!-- Left Column: Comments -->
 							<div class="col-md-6">
-								<div class="input-group input-group-sm mb-3 mt-2">
+								<div class="input-group input-group-sm mb-2 mt-2">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Comments</span>
 									</div>
@@ -355,7 +355,7 @@
 		}
 		hc_enabler()
 		highvalue_enabler()
-		  toggleHighvalueFields();
+		toggleHighvalueFields();
 
 	});
 </script>
