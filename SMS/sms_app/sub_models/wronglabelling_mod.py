@@ -1,0 +1,31 @@
+from django.db import models
+from ..models import Location_info, UnitInfo, MyUser,StatusList,approval_status_info,CustomerInfo,YesNoInfo,Cross_labelling_info
+
+class WrongLabellingInfo(models.Model):
+    wl_branch = models.ForeignKey(Location_info, on_delete=models.CASCADE, blank=True, null=True)
+    wl_unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE, blank=True, null=True)  # Correct field definition
+    wl_customer = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, blank=False, null=False)
+    wl_supervisor = models.CharField(blank=True, null=True, max_length=200)
+    wl_shipment_date= models.DateTimeField(null=True, blank=True)
+    wl_cctvfootage_available = models.ForeignKey(YesNoInfo, related_name='wl_cctvfootage_available',db_column='wl_cctvfootage_available',on_delete=models.CASCADE, default=2)
+    wl_bvm_fault = models.ForeignKey(YesNoInfo, related_name='wl_bvm_fault',db_column='wl_bvm_fault', on_delete=models.CASCADE,default=2)
+    wl_rootcause_analysis = models.CharField(blank=True, null=True, max_length=200)
+    wl_crosslabelling_details = models.ForeignKey(Cross_labelling_info, on_delete=models.CASCADE, blank=False, null=False)
+    wl_noof_shipments = models.IntegerField(blank=True, null=True)
+    wl_shipment1 = models.CharField(blank=True, null=True, max_length=200)
+    wl_correct_shipment1 = models.CharField(blank=True, null=True, max_length=200)
+    wl_wrong_shipment1 = models.CharField(blank=True, null=True, max_length=200)
+    wl_weight_shipment1 = models.FloatField(default=0.0)
+    wl_dims_shipment1 = models.FloatField(default=0.0)
+    wl_dispatch_num_shipment1 = models.CharField(blank=True, null=True, max_length=200)
+    wl_shipment2 = models.CharField(blank=True, null=True, max_length=200)
+    wl_correct_shipment2 = models.CharField(blank=True, null=True, max_length=200)
+    wl_wrong_shipment2 = models.CharField(blank=True, null=True, max_length=200)
+    wl_weight_shipment2 = models.FloatField(default=0.0)
+    wl_dims_shipment2 = models.FloatField(default=0.0)
+    wl_dispatch_num_shipment2 = models.CharField(blank=True, null=True, max_length=200)
+    wl_CAPA_issueddate = models.DateTimeField(null=True, blank=True)
+    wl_CAPA_closeddate = models.DateTimeField(null=True, blank=True)
+    wl_approval_status = models.ForeignKey(approval_status_info, on_delete=models.CASCADE, blank=True, null=True)
+    wl_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+    wl_updated_on = models.DateTimeField(null=True, auto_now=True)

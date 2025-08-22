@@ -23,6 +23,9 @@ def gatemeeting_add(request,gate_meet_id=0):
             gatemeet = Gatemeetinginfo.objects.get(pk=gate_meet_id)
             form = GatemeetingaddForm(instance=gatemeet)
             gate_meet_email_count = Gatemeetinginfo.objects.get(pk=gate_meet_id).gm_email_count
+
+            request.session['ses_gate_meet_id'] = gate_meet_id
+
             context = {
                 'form': form,
                 'first_name': first_name,
@@ -69,6 +72,7 @@ def gatemeeting_delete(request,gate_meet_id):
 @login_required(login_url='login_page')
 def gate_meeting_send_email(request):
     gate_meet_id = request.session.get('ses_gate_meet_id')
+
     print(gate_meet_id)
 
     if not gate_meet_id:
@@ -79,8 +83,9 @@ def gate_meeting_send_email(request):
     gate_meet_email_count = Gatemeetinginfo.objects.get(pk=gate_meet_id).gm_email_count
 
     recipient_list = [
-        'hariharasudhanh968@gmail.com',
+        'venkat@bvmstorage.com','prem@bvmtranssolutions.com','Deepa@thebvmgroup.com'
     ]
+
 
     subject = f"Gate Meeting {gate.gm_branch} - Update"
 
@@ -177,7 +182,8 @@ def gate_meeting_send_email(request):
             </html>
         """
 
-    send_department_email('itadmin',subject, email_body, recipient_list, email_type=1)
+    # send_department_email('itadmin',subject, email_body, recipient_list, email_type=1)
+    send_department_email('itadmin', subject, email_body, recipient_list, email_type=1)
 
     gate_meet_email_count = gate_meet_email_count + 1
     Gatemeetinginfo.objects.filter(pk=gate_meet_id).update(gm_email_count=gate_meet_email_count)

@@ -1,0 +1,146 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="POST" action="" id="customer_claim_add" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center"><h3>Add/Update Customer Claims</h3></div>
+                    <div class="card-body bg-light">
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Branch</span>
+                                    </div>
+                                    {% render_field form.cc_branch id="cc_branch"  class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Unit</span>
+                                    </div>
+                                    {% render_field form.cc_unit id="cc_unit" class="form-control disable_a_href" id="cc_unit" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer</span>
+                                    </div>
+                                    {% render_field form.cc_customer id="cc_customer" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">WH Job Number</span>
+                                    </div>
+                                    {% render_field form.cc_job_ref id="cc_job_ref" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Supervisor Name</span>
+                                    </div>
+                                    {% render_field form.cc_supervisor id="icc_supervisor" class="form-control"  %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Reason For Claims</span>
+                                    </div>
+                                    {% render_field form.cc_claim_reason id="cc_claim_reason" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">CAPA Issued Date</span>
+									</div>
+									{% render_field form.cc_CAPA_issueddate type="Date" class="form-control" %}
+								</div>
+                                <div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">CAPA Closed Date</span>
+									</div>
+									{% render_field form.cc_CAPA_closeddate type="Date" class="form-control" %}
+								</div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Management Approval</span>
+                                    </div>
+                                    {% render_field form.cc_approval_status id="cc_approval_status" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Current Status</span>
+                                    </div>
+                                    {% render_field form.cc_status id="cc_status" class="form-control" %}
+                                </div>
+                                {% render_field form.cc_updated_by id="cc_updated_by" hidden="True" class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="save-btn">
+                            <i class="fas fa-check"></i> Submit
+                        </button>
+                        <a href="{% url 'customer_claims_list'  %}" class="btn btn-danger float-right">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+	$(document).ready(function() {
+
+            {
+                var updated_by = document.getElementById("cc_updated_by").value
+                if (updated_by == "")
+                {
+                    document.getElementById("cc_updated_by").value='{{user_id}}'
+                }
+                else
+                {
+                    document.getElementById("cc_updated_by").value=updated_by;
+                }
+            }
+        });
+</script>
+
+<script>
+	$("#cc_branch").change(function () {
+       var branchId = $(this).val();
+       $.ajax({
+         url: '{% url 'load_units' %}',
+         data: {
+           'branchId': branchId,
+         },
+         success: function (data) {
+             console.log(data);
+             $('#cc_unit').removeClass('disable_a_href');
+             $("#cc_unit").empty();
+             $('#wh_bay').empty().append("<option value='0'>--Select--</option>");
+             $("#wh_stack_layer").val($("#selectBox option:first").val());
+             var unit_name=JSON.parse(data)["unit_name_list"];
+             var unit_id=JSON.parse(data)["unit_id"];
+             var len = (unit_name).length;
+             $('#cc_unit').empty().append("<option value='0'>--Select--</option>");
+             for( var i = 0; i<len; i++){
+                 $("#cc_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             }
+         }
+       });
+     });
+</script>
+
+{% endblock content %}

@@ -370,7 +370,7 @@ def send_performance_audit_email(request):
     </html>
     """
 
-    recipient_list = ['hariharasudhanh968@gmail.com',]
+    recipient_list = ['joseph@thebvmgroup.com','sony@thebvmgroup.com','sridhar@precise.org.in']
 
     subject = f"Performance Audit Scorecard Report - "
 
