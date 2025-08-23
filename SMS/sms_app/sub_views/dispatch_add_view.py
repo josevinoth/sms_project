@@ -297,7 +297,28 @@ def dispatch_add_goods(request):
             messages.error(request, f'Fumigation Date not entered for stock {stock}.')
             return redirect(request.META.get('HTTP_REFERER', '/'))
 
-        goods_info.wh_dispatch_qty = goods_info.wh_goods_pieces
+        # Short code start
+        total_dispatched = GoodsPartialDispatchInfo.objects.filter(
+            pd_goods=goods_info
+        ).aggregate(total=Sum('pd_dispatch_qty'))['total'] or 0
+
+        remaining_qty = goods_info.wh_goods_pieces - total_dispatched
+
+        if remaining_qty <= 0:
+            continue
+        # Create dispatch entry with remaining quantity
+        GoodsPartialDispatchInfo.objects.create(
+            pd_goods=goods_info,
+            pd_dispatch_info=dispatch_info,
+            pd_dispatch_qty=remaining_qty,
+            pd_updated_by=request.user,
+            pd_dispatch_time= current_date,
+        )
+
+        # Update goods_info fields
+        goods_info.wh_dispatch_qty = total_dispatched + remaining_qty
+
+        # goods_info.wh_dispatch_qty = goods_info.wh_goods_pieces
         # Prepare goods for bulk update
         goods_info.wh_check_in_out = check_in_out_instance  # Assign the Check_in_out instance
         goods_info.wh_dispatch_num = dispatch_num_val
@@ -310,12 +331,12 @@ def dispatch_add_goods(request):
         goods_info.wh_storage_time = date_diff
 
         goods_to_update.append(goods_info)
-        GoodsPartialDispatchInfo.objects.create(
-            pd_goods=goods_info,
-            pd_dispatch_info=dispatch_info,
-            pd_dispatch_qty=goods_info.wh_goods_pieces,
-            pd_updated_by=request.user,
-        )
+        # GoodsPartialDispatchInfo.objects.create(
+        #     pd_goods=goods_info,
+        #     pd_dispatch_info=dispatch_info,
+        #     pd_dispatch_qty=goods_info.wh_goods_pieces,
+        #     pd_updated_by=request.user,
+        # )
 
     # Bulk update all modified goods
     Warehouse_goods_info.objects.bulk_update(
