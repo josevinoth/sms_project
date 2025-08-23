@@ -1,6 +1,8 @@
 from django import forms
 
 from ..models import Warehouse_goods_info
+from ..sub_models.damage_mod import DamageInfo
+
 
 class GoodsaddForm(forms.ModelForm):
     class Meta:
@@ -8,11 +10,16 @@ class GoodsaddForm(forms.ModelForm):
         fields = ['wh_po_num','wh_fumigation_date','wh_job_no','wh_uom','wh_goods_pieces','wh_goods_length','wh_goods_width','wh_goods_height','wh_goods_weight','wh_goods_package_type','wh_goods_area','wh_goods_volume_weight','wh_chargeable_weight','wh_cbm','wh_weights_deviation','wh_dimension_deviation','wh_no_of_units_deviation','wh_damages','wh_mismatches','wh_fumigation_process','wh_fumigation_action','wh_goods_status','wh_customer_name','wh_customer_type','wh_goods_invoice','wh_qr_rand_num','wh_consigner','wh_consignee','wh_comments','wh_checkin_time','wh_po_num','wh_job_no', 'wh_uom', 'wh_goods_pieces', 'wh_goods_length', 'wh_goods_width', 'wh_goods_height',
                   'wh_goods_weight', 'wh_goods_package_type', 'wh_goods_area', 'wh_goods_volume_weight',
                   'wh_chargeable_weight', 'wh_cbm', 'wh_weights_deviation', 'wh_dimension_deviation',
-                  'wh_no_of_units_deviation', 'wh_damages', 'wh_mismatches',
+                  'wh_no_of_units_deviation', 'wh_damages1', 'wh_mismatches',
                   'wh_branch','wh_unit','wh_bay','wh_available_area','wh_available_volume','wh_check_in_out','wh_customer_name','wh_customer_type','wh_goods_invoice','wh_stack_layer','wh_qr_rand_num','wh_consigner','wh_consignee']
         # fields = '__all__'
 
     wh_comments = forms.CharField(widget=forms.Textarea(attrs={'rows': 3, 'style': 'resize:none; overflow:hidden;'}),required=False)
+    wh_damages1 = forms.ModelMultipleChoiceField(
+        queryset=DamageInfo.objects.all(),
+        widget=forms.SelectMultiple,  # Important
+        required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -21,7 +28,7 @@ class GoodsaddForm(forms.ModelForm):
         self.fields['wh_weights_deviation'].empty_label = "--Select--"
         self.fields['wh_dimension_deviation'].empty_label = "--Select--"
         self.fields['wh_no_of_units_deviation'].empty_label = "--Select--"
-        self.fields['wh_damages'].empty_label = "--Select--"
+        # self.fields['wh_damages1'].empty_label = "--Select--"
         self.fields['wh_mismatches'].empty_label = "--Select--"
         self.fields['wh_fumigation_process'].empty_label = "--Select--"
         self.fields['wh_fumigation_action'].empty_label = "--Select--"

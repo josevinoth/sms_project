@@ -14,6 +14,8 @@ from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.utils.timezone import now
 from xhtml2pdf import pisa
+from django.db.models import CharField, Value
+from django.db.models.functions import Concat
 
 from .send_department_email import send_department_email
 from ..forms import DispatchaddForm
@@ -184,10 +186,15 @@ def dispatch_goods_list(request):
         total_dispatched = GoodsPartialDispatchInfo.objects.filter(
             pd_goods=goods
         ).aggregate(total=Sum('pd_dispatch_qty'))['total'] or 0
+        total_dispatched_weight = GoodsPartialDispatchInfo.objects.filter(
+            pd_goods=goods
+        ).aggregate(total_wt=Sum('pd_goods_weight'))['total_wt'] or 0
 
         goods.dispatched_total = total_dispatched
         goods.remaining_qty = goods.wh_goods_pieces - total_dispatched
 
+        goods.dispatched_total_weight = total_dispatched_weight
+        goods.remaining_weight = goods.wh_goods_weight - total_dispatched_weight
 
     dispatch_master_list = [g for g in dispatch_master_list if g.remaining_qty > 0]
 
@@ -297,31 +304,34 @@ def dispatch_add_goods(request):
             messages.error(request, f'Fumigation Date not entered for stock {stock}.')
             return redirect(request.META.get('HTTP_REFERER', '/'))
 
-        # Short code start
         total_dispatched = GoodsPartialDispatchInfo.objects.filter(
             pd_goods=goods_info
         ).aggregate(total=Sum('pd_dispatch_qty'))['total'] or 0
+        total_dispatched_weight = GoodsPartialDispatchInfo.objects.filter(
+            pd_goods=goods_info
+        ).aggregate(total_wt=Sum('pd_goods_weight'))['total_wt'] or 0
 
+        remaining_weight = goods_info.wh_goods_weight - total_dispatched_weight
         remaining_qty = goods_info.wh_goods_pieces - total_dispatched
 
-        if remaining_qty <= 0:
+        if remaining_qty <= 0 or remaining_weight <= 0:
             continue
+
         # Create dispatch entry with remaining quantity
         GoodsPartialDispatchInfo.objects.create(
             pd_goods=goods_info,
             pd_dispatch_info=dispatch_info,
             pd_dispatch_qty=remaining_qty,
             pd_updated_by=request.user,
-            pd_dispatch_time= current_date,
+            pd_goods_weight=remaining_weight,
+            #pd_dispatch_time= current_date,
         )
 
         # Update goods_info fields
         goods_info.wh_dispatch_qty = total_dispatched + remaining_qty
-
-        # goods_info.wh_dispatch_qty = goods_info.wh_goods_pieces
-        # Prepare goods for bulk update
-        goods_info.wh_check_in_out = check_in_out_instance  # Assign the Check_in_out instance
         goods_info.wh_dispatch_num = dispatch_num_val
+        goods_info.wh_dispatch_id = dispatch_info
+        goods_info.wh_check_in_out = check_in_out_instance
         goods_info.wh_checkout_time = current_date
         goods_info.wh_truck_type = vehicle_type
 
@@ -331,12 +341,6 @@ def dispatch_add_goods(request):
         goods_info.wh_storage_time = date_diff
 
         goods_to_update.append(goods_info)
-        # GoodsPartialDispatchInfo.objects.create(
-        #     pd_goods=goods_info,
-        #     pd_dispatch_info=dispatch_info,
-        #     pd_dispatch_qty=goods_info.wh_goods_pieces,
-        #     pd_updated_by=request.user,
-        # )
 
     # Bulk update all modified goods
     Warehouse_goods_info.objects.bulk_update(
@@ -419,22 +423,30 @@ def qr_dispatch_decoder(request,dispatch_id):
 @login_required(login_url='login_page')
 def dispatch_search(request):
     first_name = request.session.get('first_name')
-    dispatch_number = request.GET.get('dispatch_number')
-    job_number = request.GET.get('job_number')
-    if not dispatch_number:
-        dispatch_number = ""
-    if not job_number:
-        job_number = ""
-    dispatch_list = (Dispatch_info.objects.filter((Q(dispatch_num__icontains =dispatch_number)|Q(dispatch_num__isnull=True)) & (Q(dispatch_job_num_list__icontains =job_number)|Q(dispatch_job_num_list__isnull=True)))).order_by('-dispatch_created_at')
+    dispatch_number = request.GET.get('dispatch_number', '')
+    job_number = request.GET.get('job_number', '')
+
+    dispatch_list = Dispatch_info.objects.filter(
+        (Q(dispatch_num__icontains=dispatch_number) | Q(dispatch_num__isnull=True)) &
+        (Q(dispatch_job_num_list__icontains=job_number) | Q(dispatch_job_num_list__isnull=True))
+    ).order_by('-dispatch_created_at')
+
+    # Convert signatures to base64
+    for d in dispatch_list:
+        d.driver_signature_base64 = get_base64_image(d.dispatch_driver_signature)
+        d.supervisor_signature_base64 = get_base64_image(d.dispatch_supervisor_signature)
+
+    # Pagination
     page_number = request.GET.get('page')
     paginator = Paginator(dispatch_list, 50)
     page_obj = paginator.get_page(page_number)
+
     context = {
-        # 'sales_list': sales_list,
         'first_name': first_name,
         'page_obj': page_obj,
-        }
+    }
     return render(request, "asset_mgt_app/dispatch_list.html", context)
+
 
 def get_base64_image(image_field):
     if not image_field:
@@ -450,21 +462,48 @@ def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
     ).order_by('wh_goods_invoice', 'id')
 
     # Group by `wh_goods_invoice` and calculate totals
-    grouped_details = []
-    for invoice, items in groupby(wh_dispatch_details, key=attrgetter('wh_goods_invoice')):
-        items_list = list(items)  # Convert group iterator to list
-        total_pieces = sum(item.wh_goods_pieces for item in items_list)
-        total_weight = sum(item.wh_goods_weight for item in items_list)
-        first_item = items_list[0]  # Use the first item for non-aggregated fields
+    grouped_details = GoodsPartialDispatchInfo.objects.filter(
+        pd_dispatch_info__dispatch_num=dispatch_num
+    ).annotate(
+        wh_consigner=F('pd_goods__wh_consigner'),
+        wh_goods_invoice=F('pd_goods__wh_goods_invoice'),
+        pieces_str=Concat(
+            F('pd_dispatch_qty'),
+            Value('/'),
+            F('pd_goods__wh_goods_pieces'),
+            output_field=CharField()
+        ),
+        weight_str=Concat(
+            F('pd_goods_weight'),
+            Value('/'),
+            F('pd_goods__wh_goods_weight'),
+            output_field=CharField()
+        ),
+        total_weight=F('pd_goods__wh_goods_weight'),
+        gatein_destination=F('pd_goods__wh_gate_injob_no_id__gatein_destination'),
+        gatein_hawb=F('pd_goods__wh_gate_injob_no_id__gatein_hawb')
+    ).values(
+    'wh_consigner',
+    'wh_goods_invoice',
+    'pieces_str',
+    'weight_str',
+    'total_weight',
+    'gatein_destination',
+    'gatein_hawb',
+    'pd_dispatch_qty',
+    'pd_goods__wh_goods_pieces',
+    'pd_goods_weight',
+    'pd_goods__wh_goods_weight'
+)
 
-        grouped_details.append({
-            'wh_consigner': first_item.wh_consigner,
-            'wh_goods_invoice': invoice,
-            'total_pieces': total_pieces,
-            'total_weight': total_weight,
-            'gatein_destination': first_item.wh_gate_injob_no_id.gatein_destination,
-            'gatein_hawb': first_item.wh_gate_injob_no_id.gatein_hawb,
-        })
+    total_dispatch_qty = sum(d['pd_dispatch_qty'] for d in grouped_details)
+    total_pieces_sum = sum(d['pd_goods__wh_goods_pieces'] for d in grouped_details)
+
+    total_dispatch_weight = sum(d['pd_goods_weight'] for d in grouped_details)
+    total_weight_sum = sum(d['pd_goods__wh_goods_weight'] for d in grouped_details)
+
+    total_packages_str = f"{int(total_dispatch_qty)}/{int(total_pieces_sum)}"
+    total_weight_str = f"{total_dispatch_weight}/{total_weight_sum}"
 
     dispatch_details = Dispatch_info.objects.filter(dispatch_num=dispatch_num).order_by('-id')
     wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name', flat=True).order_by('id').first()
@@ -476,6 +515,8 @@ def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
         'grouped_dispatch_details': grouped_details,
         'wh_dispatch_details': wh_dispatch_details,
         'wh_location': wh_location,
+        'total_packages_str': total_packages_str,
+        'total_weight_str': total_weight_str,
     }
 
     dispatch_invoice_job_update(dispatch_num)
@@ -544,6 +585,8 @@ def gate_out_email(request, dispatch_id=0):
 def dispatch_partial_goods(request):
     goods_id = request.POST.get('goods_id')
     dispatch_qty = float(request.POST.get('dispatch_qty'))
+    dispatch_weight = float(request.POST.get('dispatch_weight') or 0)
+
     goods = Warehouse_goods_info.objects.get(id=goods_id)
     dispatch_num_val = request.session.get('ses_dispatch_num_val')
     dispatch_info = Dispatch_info.objects.get(dispatch_num=dispatch_num_val)
@@ -562,7 +605,8 @@ def dispatch_partial_goods(request):
         pd_goods=goods,
         pd_dispatch_qty=dispatch_qty,
         pd_dispatch_info=dispatch_info,
-        pd_updated_by=request.user
+        pd_updated_by=request.user,
+        pd_goods_weight = dispatch_weight
     )
     goods.wh_dispatch_num = dispatch_info.dispatch_num
     goods.wh_dispatch_id = dispatch_info
@@ -571,7 +615,7 @@ def dispatch_partial_goods(request):
     new_total_dispatched = total_dispatched + dispatch_qty
     if new_total_dispatched >= goods.wh_goods_pieces:
         goods.wh_dispatch_qty = goods.wh_goods_pieces
-        goods.wh_check_in_out = Check_in_out.objects.get(id=2)  # Fully out
+        goods.wh_check_in_out = Check_in_out.objects.get(id=2)
     else:
         goods.wh_dispatch_qty = new_total_dispatched
         goods.wh_check_in_out = Check_in_out.objects.get(id=4)

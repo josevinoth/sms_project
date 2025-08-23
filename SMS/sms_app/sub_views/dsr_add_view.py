@@ -60,7 +60,7 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
             'Invoice Value', 'Invoice Currency', 'Invoice (INR)', 'E-Way Bill#', 'E-Way Bill Validity',
-            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days'
+            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage?','Type of Damage','GRN Number'
         ]
         ws.append(headers)
 
@@ -101,6 +101,8 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
                 date_of_arrival = stock_value.wh_gate_injob_no_id.gatein_arrival_date
                 if date_of_arrival:
                     date_of_arrival = date_of_arrival.replace(tzinfo=None)  # Keep both date and time
+                has_damage = "Yes" if stock_value.wh_Dam_rep_job_num_id else "No"
+                damage_type = str(getattr(getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_damage_type', ''), 'damage_name', '') or '')
 
                 row = [
                     stock_value.wh_job_no,  # Index 0
@@ -169,7 +171,11 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
                     str(stock_value.wh_branch),  # Index 33
                     str(stock_value.wh_unit),  # Index 34
                     str(stock_value.wh_bay),  # Index 35
-                    stock_value.wh_storage_time,  # Index 36
+                    stock_value.wh_storage_time,# Index 36
+                    has_damage,# Index 37
+                    damage_type,
+                    # getattr(stock_value.wh_damages, 'damage_name', ''), # Index 38
+                    getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_GRN_num', ''),
                 ]
 
                 # # Debugging the row values
@@ -201,6 +207,7 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
             cell.alignment = Alignment(horizontal='center', vertical='center')
 
         # Apply borders to the rest of the cells in the sheet, skipping the first row
+
         for row_index, row in enumerate(sheet.iter_rows(), start=1):
             if row_index == 1:
                 continue  # Skip the first row
@@ -208,6 +215,13 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
                 if cell.value:  # Skip empty cells
                     cell.border = border_style
                     cell.font = cell_font
+
+        red_font = Font(color="FF0000")
+        for row_index, row in enumerate(sheet.iter_rows(min_row=2), start=2):
+            damage_cell = row[len(headers) - 3]  # Last column index
+            if damage_cell.value == "Yes":
+                for cell in row:
+                    cell.font = red_font
 
         # Set column width for all columns
         for col in sheet.columns:

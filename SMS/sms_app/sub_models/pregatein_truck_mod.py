@@ -1,5 +1,7 @@
 from django.db import models
 
+from .approval_status_mod import approval_status_info
+from .stock_type_mod import Stock_type
 from .transporter_mod import Transporter_name
 from ..models import storagecrosslabelInfo,TypeofotlInfo,VehicletypeInfo,MyUser,GstexcemptionInfo,Gatein_pre_info,YesNoInfo
 
@@ -36,6 +38,10 @@ class Pregateintruckinfo(models.Model):
     pregatein_no_of_pcs = models.FloatField( default=0.0)
     pregatein_invoice_ref = models.CharField(max_length=50, blank=True,null=True)
     pregatein_remarks = models.TextField(blank=True, null=True)
+    pregatein_commodity = models.ForeignKey(Stock_type, on_delete=models.CASCADE, blank=True,null=True)
+    pregatein_invoice_value = models.FloatField(null=True,blank=True,default=0.0)
+    pregatein_approval_status = models.ForeignKey(approval_status_info, on_delete=models.CASCADE, blank=True, null=True,default=2)
+
 
     class Meta:
         ordering = ["pregatein_truck_number"]

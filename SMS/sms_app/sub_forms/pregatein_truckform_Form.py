@@ -21,33 +21,5 @@ class PregateintruckForm(forms.ModelForm):
         self.fields['pregatein_job_category'].empty_label = "Select Job Category"
         self.fields['pregatein_transporter_name'].empty_label = "Select Transporter Name"
         self.fields['pregatein_transporter_name'].queryset = Transporter_name.objects.all()
+        self.fields['pregatein_commodity'].empty_label = "Select Commodity"
 
-        self.fields['pregatein_arrival_date_time'].widget = TextInput(
-            attrs={
-                'class': 'form-control datetimepicker',
-                'id': 'id_pregatein_arrival_date_time',
-                'placeholder': 'Select date and time',
-                'autocomplete': 'off',
-            }
-        )
-        self.fields['pregatein_dl_exp_date'].widget = DateInput(
-            attrs={'class': 'datepicker', 'autocomplete': 'off', 'placeholder': 'Driver DL Expiry Date'}
-        )
-        self.fields['pregatein_dock_in_date_time'].widget = DateInput(
-            attrs={'class': 'datepicker', 'autocomplete': 'off', 'placeholder': 'Dock-In Date & Time'}
-        )
-
-        # Add placeholders for text/date/datetime fields
-        placeholders = {
-            'pregatein_truck_number': 'Truck Number',
-            'pregatein_driver': 'Driver Name',
-            'pregatein_contact_number': 'Driver Number',
-            'pregatein_dl_number': 'Driver DL Number',
-            'pregatein_dl_exp_date': 'DL Expiry Date',
-            'pregatein_qty': 'Qty',
-
-            'pregatein_otl': 'OTL Number',
-        }
-
-        for field, text in placeholders.items():
-            self.fields[field].widget.attrs.update({'placeholder': text})

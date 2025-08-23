@@ -82,3 +82,26 @@ def backfill_all_records(request):
 
     messages.success(request, f" Backfilled {count} records into GoodsPartialDispatchInfo.")
     return redirect('backfill_preview')
+
+
+from django.utils.timezone import now
+
+
+def backfill_goods_weight(request):
+    records = GoodsPartialDispatchInfo.objects.filter(
+        Q(pd_goods_weight__isnull=True) | Q(pd_goods_weight=0)
+    )
+
+    updated_count = 0
+    for record in records:
+        if record.pd_dispatch_qty is None:
+            continue
+
+        weight = getattr(record.pd_goods, 'wh_goods_weight', None)
+        if weight is not None:
+            record.pd_goods_weight = weight
+            record.save(update_fields=['pd_goods_weight'])
+            updated_count += 1
+
+    messages.success(request, f"Backfilled weight for {updated_count} records.")
+    return redirect('backfill_preview')

@@ -135,6 +135,12 @@
 						</div>
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
+								<span class="input-group-text">Commodity</span>
+							</div>
+							{% render_field form.pregatein_commodity id="pregatein_commodity" class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-2">
+							<div class="input-group-prepend">
 								<span class="input-group-text">OTL Type</span>
 							</div>
 							{% render_field form.pregatein_otl_type id="pregatein_otl_type" class="form-control" %}
@@ -161,6 +167,12 @@
 						</div>
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
+								<span class="input-group-text">Invoice Value</span>
+							</div>
+							{% render_field form.pregatein_invoice_value id="pregatein_invoice_value" class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-2">
+							<div class="input-group-prepend">
 								<span class="input-group-text">High Value Check List</span>
 							</div>
 							{% render_field form.pregatein_high_value id="pregatein_high_value" class="form-control" onchange="hc_enabler()" %}
@@ -170,6 +182,12 @@
 								<span class="input-group-text">Job Category</span>
 							</div>
 							{% render_field form.pregatein_job_category id="pregatein_job_category" class="form-control" onchange="highvalue_enabler(); toggleHighvalueFields();" %}
+						</div>
+						<div class="input-group input-group-sm mb-2">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Status</span>
+							</div>
+							{% render_field form.pregatein_approval_status id="pregatein_approval_status" class="form-control"  %}
 						</div>
 						<div id="highvalue_fields" style="display:none;">
 							<div class="input-group input-group-sm mb-2">
@@ -361,23 +379,31 @@
 </script>
 
 <script>
-	function hc_enabler() {
-		var jn3=document.getElementById("pregatein_high_value").value
-		if (jn3==1)
-		{
-			$('#pregatein_job_category').removeClass('disable_a_href');
-		}
-		else
-		{
-			$('#pregatein_job_category').addClass('disable_a_href');
-			$('#highvalue').addClass('disable_a_href');
-		}
-	}
+function check_high_value() {
+    let commodity = parseInt(document.getElementById("pregatein_commodity").value) || 0;
+    let invoice = parseFloat(document.getElementById("pregatein_invoice_value").value) || 0;
+
+    let highValueField = document.getElementById("pregatein_high_value");
+
+    if ((commodity >= 11 && commodity <= 14) || invoice > 250000) {
+        highValueField.value = 1;
+    } else {
+        highValueField.value = 2;
+    }
+
+    hc_enabler();
+}
+
+
+
+// Attach events
+document.getElementById("pregatein_commodity").addEventListener("change", check_high_value);
+document.getElementById("pregatein_invoice_value").addEventListener("input", check_high_value);
 </script>
 <script>
 	function highvalue_enabler() {
-		var jn7 = document.getElementById("pregatein_job_category").value;
-		if (jn7 ==2 || jn7 ==3) {
+		var jn7 = document.getElementById("pregatein_high_value").value;
+		if (jn7 ==1) {
 			$("#highvalue").removeClass('disable_a_href');
 		} else {
 			$("#highvalue").addClass('disable_a_href');
@@ -438,11 +464,12 @@
 <script>
 	function toggleHighvalueFields() {
   var jn7 = document.getElementById("pregatein_job_category").value;
+  var jn1 = document.getElementById("pregatein_high_value").value;
   var container = document.getElementById("highvalue_fields");
   var driverBtn = document.getElementById("driver-sign-btn");
   var supervisorBtn = document.getElementById("supervisor-sign-btn");
 
-  if (jn7 == '3') {
+  if (jn1=='2' && jn7 == '3') {
     container.style.display = "block";
     driverBtn.disabled = false;
     supervisorBtn.disabled = false;

@@ -72,9 +72,15 @@
             <td> {{dispatchinfo.dispatch_num}}</td>
             <td>
                 <div class="d-flex justify-content-center gap-1">
-                    <a class="btn btn-warning" href="{% url 'dispatch_gatepass_pdf_download' dispatchinfo.id %}" >
+                    {% if dispatchinfo.driver_signature_base64 and dispatchinfo.supervisor_signature_base64 %}
+                    <a class="btn btn-warning" href="{% url 'dispatch_gatepass_pdf_download' dispatchinfo.id %}">
                         <i class="fas fa-luggage-cart"></i>
                     </a>
+                    {% else %}
+                    <button class="btn btn-warning" disabled>
+                        <i class="fas fa-luggage-cart"></i>
+                    </button>
+                    {% endif %}
                 </div>
             </td>
             <td> {{dispatchinfo.dispatch_customer}}</td>
