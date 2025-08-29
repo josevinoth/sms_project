@@ -109,13 +109,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignor</span>
 									</div>
-									{% render_field gatein_form.gatein_shipper class="form-control" %}
+									{% render_field gatein_form.gatein_shipper id="gatein_shipper" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignee</span>
 									</div>
-									{% render_field gatein_form.gatein_consignee class="form-control" %}
+									{% render_field gatein_form.gatein_consignee id="gatein_consignee" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -234,6 +234,24 @@
 		</div>
 	</div>
 </form>
+<!-- jQuery & jQuery UI -->
+
+<script>
+$(function() {
+  // Shipper autocomplete
+  $("#gatein_shipper").autocomplete({
+    source: "{% url 'get_shippers' %}",
+    minLength: 2
+  });
+
+  // Consignee autocomplete
+  $("#gatein_consignee").autocomplete({
+    source: "{% url 'get_consignees' %}",
+    minLength: 2
+  });
+});
+</script>
+
 <script>
 	$(document).ready(function() {
         var gatein_status_id = '{{gatein_status}}';
@@ -355,28 +373,50 @@
 
 
 <script>
-	$("#gatein_pre_id").change(function () {
-      var pre_gatein_val = $(this).find(":selected").text();
-       $.ajax({
-        url: '{% url 'load_pre_gate_in' %}',
-        data: {
-          'pre_gatein_val': pre_gatein_val
-        },
-        success: function (data) {
-            var truck_numbers=data.truck_numbers;
-            var truck_numbers_id=data.truck_numbers_id;
-            $('#gatein_truck_number_n').removeClass('disable_a_href');
-            $('#gatein_truck_number_n').empty();
-            $('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
-            var len = (truck_numbers).length;
-            $('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
-            for( var i = 0; i<len; i++){
-                $("#gatein_truck_number_n").append("<option value='"+truck_numbers_id[i]+"'>"+truck_numbers[i]+"</option>");
-            }
+$(document).ready(function() {
+    var preDropdown = $("#gatein_pre_id");
+    var truckDropdown = $("#gatein_truck_number_n");
+
+    // 1️⃣ Load available Pre-Gate-Ins on page load
+    $.ajax({
+        url: "{% url 'get_available_pre_gateins' %}",
+        success: function(data) {
+            preDropdown.empty().append("<option value=''>--Select--</option>");
+            data.pre_gateins.forEach(function(pre) {
+                preDropdown.append("<option value='" + pre.id + "'>" + pre.number + "</option>");
+            });
         }
-      });
     });
+
+    // 2️⃣ Load unused trucks when a Pre-Gate-In is selected
+    preDropdown.change(function() {
+        var pre_gatein_val = $(this).val();
+
+        if (!pre_gatein_val) {
+            truckDropdown.empty().append("<option value=''>--Select--</option>").addClass("disable_a_href");
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "load_pre_gate_in" %}',
+            data: { 'pre_gatein_val': pre_gatein_val },
+            success: function(data) {
+                truckDropdown.empty();
+
+                if (data.truck_numbers.length === 0) {
+                    truckDropdown.append("<option value=''>No trucks available</option>").addClass("disable_a_href");
+                } else {
+                    truckDropdown.append("<option value=''>--Select--</option>").removeClass("disable_a_href");
+                    for (var i = 0; i < data.truck_numbers.length; i++) {
+                        truckDropdown.append("<option value='" + data.truck_numbers_id[i] + "'>" + data.truck_numbers[i] + "</option>");
+                    }
+                }
+            }
+        });
+    });
+});
 </script>
+
 <script>
 	$("#gatein_truck_number_n").change(function () {
       var gatein_truck_number_val = $(this).find(":selected").text();

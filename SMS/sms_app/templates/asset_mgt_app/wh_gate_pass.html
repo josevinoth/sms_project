@@ -44,11 +44,11 @@
         </tr>
         <tr>
             <th>Total Weight (kg)</th>
-            <td>{{dispatch_detail.dispatch_total_weight}}</td>
+            <td>{{ total_weight_str }}</td>
         </tr>
         <tr>
             <th>Total Packages</th>
-            <td>{{dispatch_detail.dispatch_total_goods}}</td>
+            <td>{{ total_packages_str }}</td>
         </tr>
         <tr>
             <th>MAWB</th>
@@ -78,8 +78,8 @@
         <tr>
             <td>{{ detail.wh_consigner }}</td>
             <td>{{ detail.wh_goods_invoice }}</td>
-            <td>{{ detail.total_pieces }}</td>
-            <td>{{ detail.total_weight }}</td>
+            <td>{{ detail.pieces_str }}</td>
+            <td>{{ detail.weight_str }}</td>
             <td>{{ detail.gatein_destination }}</td>
             <td>{{ detail.gatein_hawb }}</td>
         </tr>
