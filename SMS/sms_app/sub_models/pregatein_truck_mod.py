@@ -13,7 +13,7 @@ class Pregateintruckinfo(models.Model):
     pregatein_number = models.ForeignKey(Gatein_pre_info, null=True,on_delete=models.CASCADE, default='')
     pregatein_transporter_name = models.ForeignKey(Transporter_name, on_delete=models.CASCADE,blank=True,null=True,related_name='pregatein_transporter',db_column='pregatein_transporter')
     pregatein_truck_number = models.CharField(max_length=200)
-    pregatein_truck_type = models.ForeignKey(VehicletypeInfo, null=True,on_delete=models.CASCADE, default='')
+    pregatein_truck_type = models.ForeignKey(VehicletypeInfo, null=True,on_delete=models.CASCADE,related_name='pregatein_truck_type',db_column='pregatein_truck_type', default='')
     pregatein_driver = models.CharField(max_length=500)
     pregatein_contact_number = models.CharField(blank=True, null=True, max_length=500)
     pregatein_dl_number = models.CharField(blank=True, null=True, max_length=500)
@@ -41,7 +41,12 @@ class Pregateintruckinfo(models.Model):
     pregatein_commodity = models.ForeignKey(Stock_type, on_delete=models.CASCADE, blank=True,null=True)
     pregatein_invoice_value = models.FloatField(null=True,blank=True,default=0.0)
     pregatein_approval_status = models.ForeignKey(approval_status_info, on_delete=models.CASCADE, blank=True, null=True,default=2)
-
+    pregateinn_transporter = models.CharField(max_length=1000,blank=True, null=True)
+    pregatein_truck_number_CD = models.CharField(max_length=200,blank=True, null=True)
+    pregatein_truck_type_CD = models.ForeignKey(VehicletypeInfo, null=True, on_delete=models.CASCADE,related_name='pregatein_truck_type_CD',db_column='pregatein_truck_type_CD', default='')
+    pregatein_driver_CD = models.CharField(max_length=500,blank=True, null=True)
+    pregatein_contact_number_CD = models.CharField(blank=True, null=True, max_length=500)
+    pregatein_dl_number_CD = models.CharField(blank=True, null=True, max_length=500)
 
     class Meta:
         ordering = ["pregatein_truck_number"]

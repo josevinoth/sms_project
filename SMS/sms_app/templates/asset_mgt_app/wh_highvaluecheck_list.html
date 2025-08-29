@@ -30,6 +30,7 @@
         <thead class="thead-dark">
             <tr>
                 <th>ID</th>
+                <th>Pre-Gatein Number</th>
                 <th>Location</th>
                 <th>Unit Reference</th>
                 <th>Date</th>
@@ -58,6 +59,7 @@
             {% for high in high_list %}
             <tr>
                 <td>{{ high.id }}</td>
+                <td>{{ high.hc_pregatein_number }}</td>
                 <td>{{ high.hc_location }}</td>
                 <td>{{ high.hc_unit_reference }}</td>
                 <td>{{ high.hc_date }}</td>

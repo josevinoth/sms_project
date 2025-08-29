@@ -45,6 +45,7 @@
             <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Pre-Gate-In"></th>
             <th></th> <!-- Gate pass column: no search box -->
+            <th></th> <!-- Gate pass column: no search box -->
             <th><input type="text" class="form-control filter-input" placeholder="Search Job Number"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Shipper Inovice Number"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Customer Name"></th>
@@ -58,6 +59,7 @@
             <th>ID</th>
             <th>Created On</th>
             <th>Pre-Gate_In</th>
+            <th>Attachment</th>
             <th>Gate pass</th>
             <th>Job Number</th>
             <th class="shipper-invoice-col">Shipper Invoice Number</th>
@@ -81,7 +83,37 @@
             <td>{{ gateininfo.id }}</td>
             <td>{{ gateininfo.gatein_created_at }}</td>
             <td>{{ gateininfo.gatein_pre_id }}</td>
+<!-- Invoice Attachment -->
+                <td style="min-width: 200px;">
+                    <div class="mb-2">
+                        {% if gateininfo.gatein_invoice_att %}
+                            <a href="{{ gateininfo.gatein_invoice_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
 
+                            <!-- Re-attach -->
+                            <form method="post" action="{% url 'gatein_upload_attachment' gateininfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
+                                {% csrf_token %}
+                                <label class="btn btn-sm btn-warning mb-0">
+                                    Re-attach
+                                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+                                </label>
+                            </form>
+
+                            <!-- Delete -->
+                            <form method="post" action="{% url 'gatein_delete_attachment' gateininfo.id 'invoice' %}" class="d-inline" onsubmit="return confirm('Delete invoice attachment?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'gatein_upload_attachment' gateininfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
+                                {% csrf_token %}
+                                <label class="btn btn-sm btn-primary mb-0">
+                                    Upload
+                                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+                                </label>
+                            </form>
+                        {% endif %}
+                    </div>
+                </td>
             <!-- Gate pass download icon -->
             <td class="text-center">
                 <div class="d-flex justify-content-center gap-1">

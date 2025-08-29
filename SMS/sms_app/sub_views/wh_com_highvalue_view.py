@@ -3,86 +3,88 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 
-from ..models import Pregateintruckinfo, approval_status_info
+from ..models import HighvalueInfo, approval_status_info
 
 
+# 🔹 First approval view
 @login_required(login_url='login_page')
-def pregatein_approval_view(request):
-    # Filter based on conditions
-    pregatein_list = Pregateintruckinfo.objects.select_related(
-        'pregatein_number',
-        'pregatein_commodity',
-        'pregatein_approval_status'
+def highvalue_approval_view(request):
+    # Filter: commodity 11–14 OR value > 250000 AND pending approval
+    highvalue_list = HighvalueInfo.objects.select_related(
+        "hc_pregatein_number",
+        "hc_commodity",
+        "hc_approval_status"
     ).filter(
-        ( Q(pregatein_commodity__id__gte=11, pregatein_commodity__id__lte=14) |
-        Q(pregatein_invoice_value__gt=250000) ) & Q(pregatein_approval_status__id=2)
+        (Q(hc_commodity__id__gte=11, hc_commodity__id__lte=14) | Q(hc_value__gt=2500000))
+        & Q(hc_approval_status__id=2)  # pending
     )
 
     return render(request, "asset_mgt_app/pregatein_approval1.html", {
-        "pregatein_list": pregatein_list,
-        "status_list": approval_status_info.objects.all()
+        "highvalue_list": highvalue_list,
+        "status_list": approval_status_info.objects.all(),
     })
+
 
 @login_required
-def update_pregatein_approval(request, pregatein_id):
+def update_highvalue_approval(request, highvalue_id):
     if request.method == "POST":
-        # ✅ Only users 93, 1, 86 can update
-        if request.user.id not in [93, 1, 86]:
+        # Only certain users can approve
+        if request.user.id not in [93, 1, 86, 7]:
             messages.error(request, "You are not authorized to update this approval.")
-            return redirect("pregatein_approval_view")
+            return redirect("highvalue_approval_view")
 
-        pregatein = get_object_or_404(Pregateintruckinfo, pk=pregatein_id)
+        highvalue = get_object_or_404(HighvalueInfo, pk=highvalue_id)
 
-        # ✅ If invoice value > 250000 → force status to ID=3
-        if pregatein.pregatein_invoice_value > 250000:
-            pregatein.pregatein_approval_status_id = 3
-            messages.success(request, "Pregatein sent for Sony approval .")
+        # Force Sony approval if > 250000
+        if highvalue.hc_value > 2500000:
+            highvalue.hc_approval_status_id = 3
+            highvalue.hc_first_approval_id = 3
+            messages.success(request, "Highvalue sent for Sony approval.")
         else:
-            # ✅ Normal approval flow
-            approval_status_id = request.POST.get("pregatein_approval_status")
+            approval_status_id = request.POST.get("hc_approval_status")
             status_obj = get_object_or_404(approval_status_info, pk=approval_status_id)
-            pregatein.pregatein_approval_status = status_obj
-            messages.success(request, "Pregatein approval updated.")
+            highvalue.hc_approval_status = status_obj
+            highvalue.hc_first_approval = status_obj
+            messages.success(request, "Highvalue approval updated.")
 
-        pregatein.save()
+        highvalue.save()
 
-    return redirect("pregatein_approval_view")
+    return redirect("highvalue_approval_view")
 
 
+# 🔹 Second approval view
 @login_required(login_url='login_page')
-def pregatein_approval2_view(request):
-    # ✅ Show only records with status = 3
-    pregatein_list = Pregateintruckinfo.objects.select_related(
-        'pregatein_number',
-        'pregatein_commodity',
-        'pregatein_approval_status'
-    ).filter(pregatein_approval_status__id=3)
+def highvalue_approval2_view(request):
+    highvalue_list = HighvalueInfo.objects.select_related(
+        "hc_pregatein_number",
+        "hc_commodity",
+        "hc_approval_status"
+    ).filter(hc_approval_status__id=3)
 
     return render(request, "asset_mgt_app/pregatein_approval2.html", {
-        "pregatein_list": pregatein_list,
-        "status_list": approval_status_info.objects.all()
+        "highvalue_list": highvalue_list,
+        "status_list": approval_status_info.objects.all(),
     })
 
 
-@login_required(login_url='login_page')
-def update_pregatein_approval2(request, pregatein_id):
+@login_required
+def update_highvalue_approval2(request, highvalue_id):
     if request.method == "POST":
-        # ✅ Only users with ID in [93, 1, 2, 36] can update
-        allowed_users = [93, 1, 2, 36]
+        # Sony approvers only
+        allowed_users = [93, 1, 2]
         if request.user.id not in allowed_users:
             messages.error(request, "You are not authorized to update this approval.")
-            return redirect("pregatein_approval2_view")
+            return redirect("highvalue_approval2_view")
 
-        pregatein = get_object_or_404(Pregateintruckinfo, pk=pregatein_id)
+        highvalue = get_object_or_404(HighvalueInfo, pk=highvalue_id)
 
-        approval_status_id = request.POST.get("pregatein_approval_status")
+        approval_status_id = request.POST.get("hc_approval_status")
         status_obj = get_object_or_404(approval_status_info, pk=approval_status_id)
 
-        pregatein.pregatein_approval_status = status_obj
-        pregatein.save()
+        highvalue.hc_approval_status = status_obj
+        highvalue.hc_second_approval = status_obj
+        highvalue.save()
 
-        messages.success(request, "Pregatein approved by Sony .")
+        messages.success(request, "Highvalue approved by Sony.")
 
-    return redirect("pregatein_approval2_view")
-
-
+    return redirect("highvalue_approval2_view")

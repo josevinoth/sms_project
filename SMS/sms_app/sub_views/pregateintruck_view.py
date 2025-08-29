@@ -18,32 +18,43 @@ from django.contrib import messages
 from ..sub_models.transporter_mod import Transporter_name
 
 @login_required(login_url='login_page')
-def pregateintruck_add(request,pregateintruck_id=0):
+def pregateintruck_add(request, pregateintruck_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     gatein_num_id = request.session['gatein_num_id']
-    high_list = HighvalueInfo.objects.all()
+    print(gatein_num_id, 'gatein')
+
+    high_list = HighvalueInfo.objects.filter(hc_pregatein_number_id=gatein_num_id)
+
+    # 👉 Get the latest High Value Checklist for this Gatein (if exists)
+    highvalue_instance = high_list.order_by('-id').first()
+    checklist = highvalue_instance  # alias for template
+
     if request.method == "GET":
-        high_value_check = None
-        truck = None
         if pregateintruck_id == 0:
             form = PregateintruckForm()
+            truck = None
+            high_value_check = None
         else:
-            pregateintruck=Pregateintruckinfo.objects.get(pk=pregateintruck_id)
-            truck = get_object_or_404(Pregateintruckinfo, pk=pregateintruck_id)
+            pregateintruck = get_object_or_404(Pregateintruckinfo, pk=pregateintruck_id)
+            truck = pregateintruck
             form = PregateintruckForm(instance=pregateintruck)
             request.session['ses_pregateintruck_id'] = pregateintruck_id
-            high_value_check=Pregateintruckinfo.objects.get(pk=pregateintruck_id).pregatein_high_value.id
-        context={
-                'form': form,
-                'first_name': first_name,
-                'user_id': user_id,
-                'gatein_num_id': gatein_num_id,
-                'high_list':high_list,
-                'high_value_check':high_value_check,
-                'truck':truck,
-                }
+            high_value_check = getattr(pregateintruck, 'pregatein_high_value_id', None)
+
+        context = {
+            'form': form,
+            'first_name': first_name,
+            'user_id': user_id,
+            'gatein_num_id': gatein_num_id,
+            'truck': truck,
+            'high_list': high_list,
+            'highvalue_instance': highvalue_instance,
+            'checklist': checklist,
+            'high_value_check': high_value_check,
+        }
         return render(request, "asset_mgt_app/pregateintruck_add.html", context)
+
     else:
         if pregateintruck_id == 0:
             form = PregateintruckForm(request.POST)
