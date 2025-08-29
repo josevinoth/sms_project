@@ -9,12 +9,18 @@
                 <div class="card text-white bg-info mb-3" style="max-width: 100%;">
                     <div class="card-header text-center">
                         <div class="col-12 col-md-10 text-center">
-                        <h3>Add/Update High Value Check</h3>
-                            </div>
+                            <h3>Add/Update High Value Check</h3>
+                        </div>
                     </div>
                     <div class="card-body bg-light">
                         <div class="row">
                             <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Pre-Gatein Number</span>
+                                    </div>
+                                    {% render_field form.hc_pregatein_number id="hc_pregatein_number" class="form-control disable_a_href" value=gatein_num_id %}
+                                </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Location</span>
@@ -175,7 +181,15 @@
         </div>
     </div>
 </form>
+<script>
+    $(document).ready(function() {
+    var pregateinField = document.getElementById("hc_pregatein_number");
+    if (pregateinField.value == "") {
+        pregateinField.value = '{{ gatein_num_id }}'; // Set Gatein number
+    }
+});
 
+</script>
 <script>
     $("#hc_location").change(function () {
        var branchId = $(this).val();

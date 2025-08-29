@@ -41,6 +41,7 @@ class Gatein_info(models.Model):
     gatein_cargo = models.ForeignKey(YesNoInfo,blank=True, null=True,default='2', on_delete=models.CASCADE)
     gatein_driver_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
     gatein_supervisor_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
+    gatein_invoice_att = models.FileField(upload_to=user_directory_path, null=True, blank=True)
 
     class Meta:
         ordering = ["gatein_job_no"]

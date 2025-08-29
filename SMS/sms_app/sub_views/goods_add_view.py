@@ -304,8 +304,15 @@ def goods_add(request, goods_id=0):
             else:
                 print("Form is not Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
+                for field, errors in goods_form.errors.items():
+                    for error in errors:
+                        print(f"Error in {field}: {error}")
+                        messages.error(request, f"Error in {field}: {error}")
+
+                return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
             return redirect(request.META['HTTP_REFERER'])
             # return redirect('/SMS/stock_list')
+
 
 # Delete goods
 @login_required(login_url='login_page')
