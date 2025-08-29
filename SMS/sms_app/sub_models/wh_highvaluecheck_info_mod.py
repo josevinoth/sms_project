@@ -1,9 +1,11 @@
 from django.db import models
 
 from .approval_status_mod import approval_status_info
+from .gatein_mod_pre import Gatein_pre_info
 from ..models import YesNoInfo,CustomerInfo,storagecrosslabelInfo,GstexcemptionInfo,hptforkliftcraneInfo,Stock_type,Location_info,UnitInfo,DamageInfo,Unitofmeasure
 
 class HighvalueInfo(models.Model):
+    hc_pregatein_number = models.ForeignKey(Gatein_pre_info, on_delete=models.CASCADE,default='',null=True)
     hc_location = models.ForeignKey(Location_info, on_delete=models.CASCADE, default='', blank=True,null=True)
     hc_unit_reference = models.ForeignKey(UnitInfo, on_delete=models.CASCADE, default='', blank=True,null=True)
     hc_date = models.CharField(max_length=50, blank=True,null=True)
@@ -41,4 +43,4 @@ class HighvalueInfo(models.Model):
     )
 
     def __str__(self):
-        return f"high value check at {self.hc_location}"
+        return f"high value check at {self.hc_pregatein_number}"

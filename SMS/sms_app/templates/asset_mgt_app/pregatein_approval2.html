@@ -4,54 +4,60 @@
     <div class="row">
         <div class="col-5"></div>
         <div class="col-2 rounded text-center bg-info">
-            <h3>Pregatein Approval - Stage 2</h3>
+            <h3>Highvalue Approval - Stage 2</h3>
         </div>
         <div class="col-5"></div>
     </div>
 </div>
 
-    <hr>
+<hr>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead class="thead-dark">
-                <tr>
-                    <th>Number</th>
-                    <th>Commodity</th>
-                    <th>Invoice Value</th>
-                    <th>Current Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in pregatein_list %}
-                <tr>
-                    <td>{{ item.pregatein_number }}</td>
-                    <td>{{ item.pregatein_commodity }}</td>
-                    <td>{{ item.pregatein_invoice_value }}</td>
-                    <td>{{ item.pregatein_approval_status }}</td>
-                    <td>
-                        {% if user.id == 93 %}
-                        <form method="post" action="{% url 'update_pregatein_approval2' item.id %}">
-                            {% csrf_token %}
-                            <select name="pregatein_approval_status" class="form-control form-control-sm d-inline w-auto">
-                                {% for status in status_list %}
-                                    <option value="{{ status.id }}" {% if item.pregatein_approval_status_id == status.id %}selected{% endif %}>
-                                        {{ status }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                            <button type="submit" class="btn btn-sm btn-success">Update</button>
-                        </form>
-                        {% else %}
-                            <span class="text-muted">Not Authorized</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>Pregatein No</th>
+                <th>Commodity</th>
+                <th>Invoice Number</th>
+                <th>Invoice Value</th>
+                <th>Current Status</th>
+                <th>Action</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in highvalue_list %}
+            <tr>
+                <td>{{ item.hc_pregatein_number }}</td>
+                <td>{{ item.hc_commodity }}</td>
+                <td>{{ item.hc_invoice_ref }}</td>
+                <td>{{ item.hc_value }}</td>
+                <td>{{ item.hc_second_approval }}</td>
+                <td>
+                    {% if user.id == 93 or user.id == 1 or user.id == 2 or user.id == 36 %}
+                    <form method="post" action="{% url 'update_highvalue_approval2' item.id %}">
+                        {% csrf_token %}
+                        <select name="hc_approval_status" class="form-control form-control-sm d-inline w-auto">
+                            {% for status in status_list %}
+                                <option value="{{ status.id }}" {% if item.hc_approval_status_id == status.id %}selected{% endif %}>
+                                    {{ status }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-success">Update</button>
+                    </form>
+                    {% else %}
+                        <span class="text-muted">Not Authorized</span>
+                    {% endif %}
+                </td>
+                 <td>
+                    <a class="btn btn-primary" href="{% url 'high_value_update' item.id %}">
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
-
 {% endblock %}

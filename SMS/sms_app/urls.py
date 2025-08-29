@@ -710,10 +710,13 @@ urlpatterns = [
     path("get_shippers/", views.get_shippers, name="get_shippers"),
     path("get_consignees/", views.get_consignees, name="get_consignees"),
     path('gatein/<int:gatein_id>/pdf/', views.gatein_pdf_download, name='gatein_pdf_download'),
-    path("pregatein/approval/", views.pregatein_approval_view, name="pregatein_approval_view"),
-    path("pregatein/approval/update/<int:pregatein_id>/", views.update_pregatein_approval, name="update_pregatein_approval"),
-    path("pregatein/approval2/", views.pregatein_approval2_view, name="pregatein_approval2_view"),
-    path("pregatein/approval2/update/<int:pregatein_id>/", views.update_pregatein_approval2, name="update_pregatein_approval2"),
+    path("highvalue/approval/", views.highvalue_approval_view, name="highvalue_approval_view"),
+    path("highvalue/approval/update/<int:highvalue_id>/", views.update_highvalue_approval,name="update_highvalue_approval"),
+    path("highvalue/approval2/", views.highvalue_approval2_view, name="highvalue_approval2_view"),
+    path("highvalue/approval2/update/<int:highvalue_id>/", views.update_highvalue_approval2,name="update_highvalue_approval2"),
+    path("gatein/upload/<int:pk>/", views.gatein_upload_attachment, name="gatein_upload_attachment"),
+    path('gatein/<int:pk>/upload/<str:att_type>/', views.gatein_upload_attachment, name='gatein_upload_attachment'),
+    path('gatein/<int:pk>/delete/<str:att_type>/', views.gatein_delete_attachment, name='gatein_delete_attachment'),
 
 
 ]

@@ -20,3 +20,4 @@ class HighvalueForm(forms.ModelForm):
         self.fields['hc_unit_reference'].empty_label = "--Select--"
         self.fields['hc_condition_cargo_received'].empty_label = "--Select--"
         self.fields['hc_customer'].empty_label = "--Select--"
+        self.fields['hc_pregatein_number'].empty_label = "--Select--"

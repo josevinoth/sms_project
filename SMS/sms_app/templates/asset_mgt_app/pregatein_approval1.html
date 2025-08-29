@@ -4,13 +4,13 @@
     <div class="row">
         <div class="col-5"></div>
         <div class="col-2 rounded text-center bg-info">
-            <h3>Pregatein Approval</h3>
+            <h3>Highvalue Approval</h3>
         </div>
         <div class="col-5"></div>
     </div>
 </div>
 
-<div class="container-fluid row">
+<div class="container-fluid row mb-2">
     <div class="col-md-1">
         <a href="{% url 'home_page' %}" class="btn btn-primary">
             <i class="fas fa-arrow-left"></i> Back
@@ -18,55 +18,63 @@
     </div>
 </div>
 <hr>
-<table id="pregatein_approval_table" class="table table-bordered table-sm">
+
+<table id="highvalue_approval_table" class="table table-bordered table-sm">
     <thead class="thead-dark">
     <tr>
         <th>Pregatein No</th>
-        <th>Truck No</th>
-        <th>Transporter</th>
+        <th>Location</th>
+        <th>Invoice Number</th>
+        <th>Customer</th>
         <th>Commodity</th>
         <th>Invoice Value</th>
         <th>Approval</th>
+        <th>Edit</th>
     </tr>
     </thead>
     <tbody>
-    {% for record in pregatein_list %}
+    {% for record in highvalue_list %}
     <tr>
-        <td>{{ record.pregatein_number }}</td>
-        <td>{{ record.pregatein_truck_number }}</td>
-        <td>{{ record.pregatein_transporter_name }}</td>
-        <td>{{ record.pregatein_commodity }}</td>
-        <td>{{ record.pregatein_invoice_value }}</td>
+        <td>{{ record.hc_pregatein_number }}</td>
+        <td>{{ record.hc_location }}</td>
+        <td>{{ record.hc_invoice_ref }}</td>
+        <td>{{ record.hc_customer }}</td>
+        <td>{{ record.hc_commodity }}</td>
+        <td>{{ record.hc_value }}</td>
         <td class="text-center">
-            <form method="post" action="{% url 'update_pregatein_approval' record.id %}" class="d-flex align-items-center gap-2">
+            <form method="post" action="{% url 'update_highvalue_approval' record.id %}" class="d-flex align-items-center gap-2">
                 {% csrf_token %}
-                <select name="pregatein_approval_status" class="form-control form-control-sm" style="width: 150px;" required>
+                <select name="hc_approval_status" class="form-control form-control-sm" style="width: 150px;" required>
                     {% for status in status_list %}
-                        <option value="{{ status.id }}"
-                            {% if record.pregatein_approval_status and record.pregatein_approval_status.id == status.id %}
-                                selected
-                            {% elif not record.pregatein_approval_status and status.id == 3 %}
-                                selected
+                    <option value="{{ status.id }}"
+                            {% if record.hc_approval_status and record.hc_approval_status.id == status.id %}
+                            selected
+                            {% elif not record.hc_approval_status and status.id == 3 %}
+                            selected
                             {% endif %}>
-                            {{ status }}
-                        </option>
+                        {{ status }}
+                    </option>
                     {% endfor %}
                 </select>
                 <button type="submit" class="btn btn-sm btn-primary ml-2">Update</button>
             </form>
         </td>
+        <td>
+            <a class="btn btn-primary" href="{% url 'high_value_update' record.id %}">
+                <i class="far fa-edit"></i>
+            </a>
+        </td>
     </tr>
     {% endfor %}
     </tbody>
 </table>
+
 <script>
     $(document).ready(function() {
-        $('#pregatein_approval_table').DataTable({
-            order: [0, 'desc' ],
+        $('#highvalue_approval_table').DataTable({
+            order: [0, 'desc'],
             dom: 'lBfrtip',
-            buttons: [
-                'copy', 'csv', 'excel','print'
-            ]
+            buttons: ['copy', 'csv', 'excel', 'print']
         });
     });
 </script>
