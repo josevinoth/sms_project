@@ -337,9 +337,9 @@ def export_stockreport_to_csv(request):
         'wh_lb_job_no_id__lb_stock_invoice_currency__currency_type', 'wh_invoice_amount_inr',
         'wh_lb_job_no_id__lb_eway_bill', 'eway_bill_validity',
         'wh_fumigation_process__ge_gstexcepmtion', 'wh_check_in_out__check_in_out_name', 'wh_branch__loc_name',
-        'wh_unit__unit_name', 'wh_bay__bay_bayname', 'wh_storage_time','wh_Dam_rep_job_num_id__id',  # Damage ID to check Yes/No
-    'wh_Dam_rep_job_num_id__dam_damage_type__damage_name',
-    'wh_Dam_rep_job_num_id__dam_GRN_num',
+        'wh_unit__unit_name', 'wh_bay__bay_bayname', 'wh_storage_time','wh_comments','wh_damages__damage_name',
+        'wh_Dam_rep_job_num_id__dam_GRN_num',
+
         # 'wh_dispatch_id__dispatch_truck_number',
         # str('wh_dispatch_id__dispatch_truck_type__vt_vehicletype'),'departure_time',
         # 'wh_dispatch_id__dispatch_sticker_pasted_bvm__lp_name', 'wh_dispatch_id__dispatch_mawb',
@@ -356,7 +356,7 @@ def export_stockreport_to_csv(request):
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight',
             'CBM', 'Invoice Value', 'Invoice Currency', 'Invoice (INR)',
             'E-Way Bill#', 'E-Way Bill Validity', 'Fumigation Status',
-            'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage?','Damage Type','GRN Number',
+            'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Remarks','Damage Type','GRN Number',
             'Truck_Number(Out)', 'Truck_Type(Out)', 'Truck_Depature_Time(Out)',
             'Labels_Pasted_By', 'MAWB', 'Dispatch Number(s)', 'Total Dispatch Qty'
     ]
@@ -410,16 +410,35 @@ def export_stockreport_to_csv(request):
                     total_qty += partial.pd_dispatch_qty or 0
 
                 row_data = list(row_data[1:])  # remove ID
-                damage_id = row_data[-3]  # based on the order in values_list
-                damage_type = row_data[-2]
+                weights_dev_id = goods_obj.wh_weights_deviation_id
+                dim_dev_id = goods_obj.wh_dimension_deviation_id
+                units_dev_id = goods_obj.wh_no_of_units_deviation_id
+                damage_id = goods_obj.wh_damages_id  # raw FK id from Warehouse_goods_info
+                remarks = goods_obj.wh_comments or ""
+                remarks_index = headers.index("Remarks")
+
+                # Blank remarks by default
+                row_data[remarks_index] = ""
+                damage_type = row_data[-2]  # last two from values_list
                 grn_number = row_data[-1]
+                if (
+                        weights_dev_id == 1 or
+                        dim_dev_id == 1 or
+                        units_dev_id == 1 or
+                        (damage_id and damage_id != 6)
+                ):
+                    is_damaged = True
+                    row_data[remarks_index] = remarks  # show remarks only when flagged
+                else:
+                    is_damaged = False
 
-                damage_flag = "Yes" if damage_id else "No"
+                if damage_id == 6:  # Nil Damage
+                    damage_type = ""
+                    grn_number = ""
 
-                # Replace with cleaned values
-                row_data[-3] = damage_flag
-                row_data[-2] = damage_type or ""
-                row_data[-1] = grn_number or ""
+                # overwrite cleaned values
+                row_data[-2] = damage_type
+                row_data[-1] = grn_number
 
                 row_data += [
                     ", ".join(truck_numbers),
@@ -436,7 +455,6 @@ def export_stockreport_to_csv(request):
                 row_data += ["", "", "", "", "", "", 0]
 
             red_font = Font(name='Bookman Old Style', size=9, color="FF0000")
-            is_damaged = (row_data[-10] == "Yes")  # "Damage?" column position
             for col_num, value in enumerate(row_data, 1):
                 if isinstance(value, (datetime.date, datetime.datetime)) and hasattr(value, 'tzinfo') and value.tzinfo:
                     value = make_naive(value)
@@ -555,7 +573,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
             'Invoice Value', 'Invoice Currency', 'Invoice (INR)', 'E-Way Bill#', 'E-Way Bill Validity',
-            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage?','Damage Type','GRN Number',
+            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage Type','GRN Number','Remarks',
             'Truck_Number(Out)','Truck_Type(Out)','Truck_Depature_Time(Out)','Labels_Pasted_By',
             'MAWB','Dispatch_Number','Dispatch quantity','Stock On Hand'
         ]
@@ -648,7 +666,15 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                         dispatch_depature_time = None
                 except AttributeError:
                     dispatch_depature_time = None
-
+                header_font = Font(name="Arial", bold=True, size=11)  # Make the header row bold
+                cell_font = Font(name="Arial", bold=False, size=10)  # settings fro cells
+                yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Yellow fill
+                border_style = Border(
+                    left=Side(style='thin'),
+                    right=Side(style='thin'),
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin'),
+                )
                 row = [
                     stock_value.wh_job_no,  # Index 0
                     stock_value.wh_qr_rand_num,  # Index 1
@@ -717,9 +743,15 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                     str(stock_value.wh_unit),  # Index 34
                     str(stock_value.wh_bay),  # Index 35
                     stock_value.wh_storage_time,# Index 36
-                    "Yes" if stock_value.wh_Dam_rep_job_num_id else "No",  # Damage? flag
-                    str(getattr(getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_damage_type', None),'damage_name','')),  # Damage Type
-                    getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_GRN_num', ''),  # GRN Number
+                    # Damage Info
+                    getattr(stock_value.wh_damages, 'damage_name', ''),  # Index 37
+                    getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_GRN_num',
+                            '') if stock_value.wh_damages_id and stock_value.wh_damages_id != 6 else '',
+                    stock_value.wh_comments if (
+                            stock_value.wh_weights_deviation_id != 2 or
+                            stock_value.wh_dimension_deviation_id != 2 or
+                            stock_value.wh_no_of_units_deviation_id != 2
+                    ) else '',
                     # getattr(stock_value.wh_dispatch_id, 'dispatch_truck_number', ''),# Index 37
                     # str(getattr(stock_value.wh_dispatch_id, 'dispatch_truck_type', '')),# Index 38
                     # # getattr(stock_value.wh_dispatch_id, 'dispatch_depature_date', ''),# Index 39
@@ -745,19 +777,26 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
 
                 ws.append(row)  # Append the row to the worksheet
 
+                # Check if this row has damage/deviation
+                damage_flag = (
+                        (stock_value.wh_damages_id and stock_value.wh_damages_id != 6) or
+                        stock_value.wh_weights_deviation_id == 1 or
+                        stock_value.wh_dimension_deviation_id == 1 or
+                        stock_value.wh_no_of_units_deviation_id == 1
+                )
+
+                # Apply borders + font immediately for this row
+                for cell in ws[ws.max_row]:
+                    cell.border = border_style
+                    if damage_flag:
+                        cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red if damaged
+                    else:
+                        cell.font = cell_font  # Normal font
 
         sheet = wb.active
 
         # Format the first row (Header)
-        header_font = Font(name="Arial",bold=True,size=11)  # Make the header row bold
-        cell_font = Font(name="Arial",bold=False,size=10)  # settings fro cells
-        yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Yellow fill
-        border_style = Border(
-            left=Side(style='thin'),
-            right=Side(style='thin'),
-            top=Side(style='thin'),
-            bottom=Side(style='thin'),
-        )
+
         if str(customer_name).isdigit():
             customer_name = CustomerInfo.objects.get(pk=int(customer_name)).cu_name
         else:
@@ -771,17 +810,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             cell.alignment = Alignment(horizontal='center', vertical='center')
 
         # Apply borders to the rest of the cells in the sheet, skipping the first row
-        for row_index, row in enumerate(sheet.iter_rows(), start=1):
-            if row_index == 1:
-                continue  # Skip the first row
-            damage_flag = str(row[37].value).strip().lower() == "yes"
-            for cell in row:
-                if cell.value:  # Skip empty cells
-                    cell.border = border_style
-                    if damage_flag:
-                        cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red text
-                    else:
-                        cell.font = cell_font
+
 
         # Set column width for all columns
         for col in sheet.columns:
