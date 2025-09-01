@@ -5,10 +5,15 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 
 from ..sub_models.gatein_mod_pre import Gatein_pre_info
+from ..sub_models.user_ext_mod import User_extInfo
+
 
 @login_required(login_url='login_page')
 def highvalue_add(request, high_value_id=0):
     first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    role=User_extInfo.objects.get(user=user_id).emp_role
+    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
     pregateintruck_id = request.session.get('ses_pregateintruck_id')
     gatein_num_id = request.session.get('gatein_num_id')  # this is Gatein_pre_info.id
     print("Gatein Num ID:", gatein_num_id, "Pregatein ID:", pregateintruck_id)
@@ -25,6 +30,9 @@ def highvalue_add(request, high_value_id=0):
         context = {
             'form': form,
             'first_name': first_name,
+            'user_id': user_id,
+            'role': role,
+            'role_id': role_id,
             'pregateintruck_id': pregateintruck_id,
             'gatein_num_id': gatein_num_id,
         }

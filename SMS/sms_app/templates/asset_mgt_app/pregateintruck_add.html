@@ -34,50 +34,50 @@
     }
 </style>
 {% if highvalue_instance %}
-    <div class="d-flex flex-row gap-2 my-3">
+<div class="d-flex flex-row gap-2 my-3">
 
-        {# 🔹 High Value Checklist alert #}
-        {% if not checklist %}
-            <div class="alert alert-warning w-50" role="alert">
-                Please fill the high value checklist.
-            </div>
-        {% else %}
-            {% if checklist.hc_approval_status_id == 2 %}
-                <div class="alert alert-danger w-50" role="alert">
-                    Awaiting High Value Checklist Approval.
-                </div>
-            {% elif checklist.hc_approval_status_id == 1  %}
-                <div class="alert alert-success w-50" role="alert">
-                    High Value Checklist Approved .
-                </div>
-            {% elif checklist.hc_approval_status_id == 3 %}
-                <div class="alert alert-info w-50" role="alert">
-                    Sent for Finance Approval (Stage 2).
-                </div>
-            {% else %}
-                <div class="alert alert-secondary w-50" role="alert">
-                    Status unknown.
-                </div>
-            {% endif %}
-        {% endif %}
+	{# 🔹 High Value Checklist alert #}
+	{% if not checklist %}
+	<div class="alert alert-warning w-50" role="alert">
+		Please fill the high value checklist.
+	</div>
+	{% else %}
+	{% if checklist.hc_approval_status_id == 2 %}
+	<div class="alert alert-danger w-50" role="alert">
+		Awaiting High Value Checklist Approval.
+	</div>
+	{% elif checklist.hc_approval_status_id == 1  %}
+	<div class="alert alert-success w-50" role="alert">
+		High Value Checklist Approved .
+	</div>
+	{% elif checklist.hc_approval_status_id == 3 %}
+	<div class="alert alert-info w-50" role="alert">
+		Sent for Finance Approval (Stage 2).
+	</div>
+	{% else %}
+	<div class="alert alert-secondary w-50" role="alert">
+		Status unknown.
+	</div>
+	{% endif %}
+	{% endif %}
 
-        {# 🔹 Second Stage Approval (Sony) #}
-        {% if highvalue_instance.hc_second_approval_id %}
-            {% if highvalue_instance.hc_second_approval_id == 1 %}
-                <div class="alert alert-success w-50 ml-2" role="alert">
-                    High Value Finance Approval Completed.
-                </div>
-            {% elif highvalue_instance.hc_second_approval_id == 3 %}
-                <div class="alert alert-danger w-50 ml-2" role="alert">
-                    Awaiting Finance Approval.
-                </div>
-            {% endif %}
-        {% else %}
-            <div class="alert alert-warning w-50 ml-2" role="alert">
-                Finance Approval Not Initiated.
-            </div>
-        {% endif %}
-    </div>
+	{# 🔹 Second Stage Approval (Sony) #}
+	{% if highvalue_instance.hc_second_approval_id %}
+	{% if highvalue_instance.hc_second_approval_id == 1 %}
+	<div class="alert alert-success w-50 ml-2" role="alert">
+		High Value Finance Approval Completed.
+	</div>
+	{% elif highvalue_instance.hc_second_approval_id == 3 %}
+	<div class="alert alert-danger w-50 ml-2" role="alert">
+		Awaiting Finance Approval.
+	</div>
+	{% endif %}
+	{% else %}
+	<div class="alert alert-warning w-50 ml-2" role="alert">
+		Finance Approval Not Initiated.
+	</div>
+	{% endif %}
+</div>
 {% endif %}
 
 <form method="POST" action="" enctype="multipart/form-data">
@@ -221,6 +221,12 @@
 						</div>
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
+								<span class="input-group-text">Invoice Number</span>
+							</div>
+							{% render_field form.pregatein_invoice_ref id="pregatein_invoice_ref" class="form-control" %}
+						</div>
+						<div class="input-group input-group-sm mb-2">
+							<div class="input-group-prepend">
 								<span class="input-group-text">Invoice Value</span>
 							</div>
 							{% render_field form.pregatein_invoice_value id="pregatein_invoice_value" class="form-control" %}
@@ -237,24 +243,18 @@
 							</div>
 							{% render_field form.pregatein_job_category id="pregatein_job_category" class="form-control" onchange="highvalue_enabler(); toggleHighvalueFields();" %}
 						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Status</span>
-							</div>
-							{% render_field form.pregatein_approval_status id="pregatein_approval_status" class="form-control"  %}
-						</div>
 						<div id="highvalue_fields" style="display:none;">
+							<div class="input-group input-group-sm mb-2">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Shipper</span>
+								</div>
+								{% render_field form.pregatein_consigner id="pregatein_consigner" class="form-control" %}
+							</div>
 							<div class="input-group input-group-sm mb-2">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Consignee</span>
 								</div>
 								{% render_field form.pregatein_consignee id="pregatein_consignee" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Invoice Number</span>
-								</div>
-								{% render_field form.pregatein_invoice_ref id="pregatein_invoice_ref" class="form-control" %}
 							</div>
 							<div class="input-group input-group-sm mb-2">
 								<div class="input-group-prepend">
@@ -686,14 +686,14 @@ document.getElementById("pregatein_invoice_value").addEventListener("input", che
 
 </script>
 <script>
-function hc_enabler() {
-    var hv = document.getElementById("pregatein_high_value");
-    if (hv.value === "1") {
-        hv.style.backgroundColor = "yellow";
-    } else {
-        hv.style.backgroundColor = ""; // reset to default
+	function hc_enabler() {
+        var hv = document.getElementById("pregatein_high_value");
+        if (hv.value === "1") {
+            hv.style.backgroundColor = "yellow";
+        } else {
+            hv.style.backgroundColor = ""; // reset to default
+        }
     }
-}
 </script>
 {% endblock scripts %}
 {% endblock content %}
