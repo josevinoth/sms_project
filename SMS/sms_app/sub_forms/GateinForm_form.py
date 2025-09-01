@@ -25,12 +25,15 @@ class GateinaddForm(forms.ModelForm):
             unused_trucks = Pregateintruckinfo.objects.filter(pregatein_number=pre).exclude(id__in=used_trucks)
             if unused_trucks.exists():
                 available_pre_gateins.append(pre.id)
+
         if self.instance and self.instance.pk and self.instance.gatein_pre_id:
             self.fields['gatein_pre_id'].queryset = Gatein_pre_info.objects.filter(
                 Q(id__in=available_pre_gateins) | Q(id=self.instance.gatein_pre_id.id)
             )
         else:
             self.fields['gatein_pre_id'].queryset = Gatein_pre_info.objects.filter(id__in=available_pre_gateins)
+
+
         self.fields['gatein_pre_id'].empty_label = "--Select--"
         self.fields['gatein_updated_by'].empty_label = "--Select--"
         self.fields['gatein_comodity'].empty_label = "--Select--"
