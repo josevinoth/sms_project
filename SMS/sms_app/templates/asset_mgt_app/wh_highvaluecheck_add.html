@@ -145,7 +145,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Approval Status</span>
                                     </div>
-                                    {% render_field form.hc_approval_status id="hc_approval_status" class="form-control" %}
+                                    {% render_field form.hc_approval_status id="hc_approval_status" class="form-control disable_a_href" %}
                                 </div>
                             </div>
                         </div>
@@ -213,6 +213,16 @@
        });
      });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var user_role = {{ role_id }};  // inject as number, no quotes
+    var approvalField = document.getElementById("hc_approval_status");
 
-
+    if (user_role === 2) {  // role 2 -> disable
+    	$('#hc_approval_status').addClass('disable_a_href');
+    } else {
+   		$('#hc_approval_status').removeClass('disable_a_href');
+    }
+});
+</script>
 {% endblock content %}

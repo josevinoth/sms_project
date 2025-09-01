@@ -35,6 +35,7 @@ class Pregateintruckinfo(models.Model):
     pregatein_supervisor_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
     pregatein_total_weight = models.FloatField(null=True,blank=True,default=0.0)
     pregatein_consignee = models.CharField(blank=True, null=True, max_length=200)
+    pregatein_consigner = models.CharField(blank=True, null=True, max_length=200)
     pregatein_no_of_pcs = models.FloatField( default=0.0)
     pregatein_invoice_ref = models.CharField(max_length=50, blank=True,null=True)
     pregatein_remarks = models.TextField(blank=True, null=True)
