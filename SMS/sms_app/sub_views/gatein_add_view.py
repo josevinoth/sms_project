@@ -271,21 +271,6 @@ def gatein_delete(request,gatein_id):
     return redirect('/SMS/search')
 
 @login_required(login_url='login_page')
-def get_available_pre_gateins(request):
-    pre_gateins = Gatein_pre_info.objects.all()
-    available_pre_gateins = []
-
-    for pre in pre_gateins:
-        used_trucks = Gatein_info.objects.filter(gatein_pre_id=pre).values_list('gatein_truck_number_n_id', flat=True)
-        unused_trucks = Pregateintruckinfo.objects.filter(pregatein_number=pre).exclude(id__in=used_trucks)
-        if unused_trucks.exists():
-            available_pre_gateins.append(pre)
-    return JsonResponse({
-        "pre_gateins": [{"id": p.id, "number": p.gatein_pre_number} for p in available_pre_gateins]
-    })
-
-
-@login_required(login_url='login_page')
 def load_pre_gate_in(request):
     pre_gatein_val = request.GET.get('pre_gatein_val')
     pre_gatein = Gatein_pre_info.objects.get(id=pre_gatein_val)
