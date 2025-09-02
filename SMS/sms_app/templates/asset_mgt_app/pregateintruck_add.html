@@ -206,13 +206,13 @@
 							<div class="input-group-prepend">
 								<span class="input-group-text">OTL Type</span>
 							</div>
-							{% render_field form.pregatein_otl_type id="pregatein_otl_type" class="form-control" %}
+							{% render_field form.pregatein_otl_type id="pregatein_otl_type"  onchange="No_locks();" class="form-control" %}
 						</div>
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
 								<span class="input-group-text">OTL Number</span>
 							</div>
-							{% render_field form.pregatein_otl class="form-control" %}
+							{% render_field form.pregatein_otl id="pregatein_otl" class="form-control" %}
 						</div>
 					</div>
 					<div class=" col-12 col-md-6 col-lg-3 p-1 border  ">
@@ -468,6 +468,7 @@
 		}
 				toggleHighvalueFields();
 		highvalue_enabler()
+		 No_locks()
 
 	});
 </script>
@@ -703,6 +704,24 @@ document.getElementById("pregatein_invoice_value").addEventListener("input", che
             hv.style.backgroundColor = ""; // reset to default
         }
     }
+</script>
+<script>
+	function No_locks() {
+    var locks = document.getElementById("pregatein_otl_type").value;  // Always a string
+    var otl = document.getElementById("pregatein_otl");
+
+    alert("Selected value: " + locks);
+
+    if (locks === "5") {   // compare with string
+        alert("Condition matched!");
+        otl.value = "N/A";  // Default value
+        otl.readOnly = true;  // Prevent user editing if required
+    } else {
+        otl.value = "";
+        otl.readOnly = false; // Allow user to fill
+    }
+}
+
 </script>
 {% endblock scripts %}
 {% endblock content %}
