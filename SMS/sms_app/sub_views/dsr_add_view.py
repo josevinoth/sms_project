@@ -60,7 +60,7 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
             'Invoice Value', 'Invoice Currency', 'Invoice (INR)', 'E-Way Bill#', 'E-Way Bill Validity',
-            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage?','Type of Damage','GRN Number'
+            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Type of Damage','GRN Number','Remarks'
         ]
         ws.append(headers)
 
@@ -101,9 +101,17 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
                 date_of_arrival = stock_value.wh_gate_injob_no_id.gatein_arrival_date
                 if date_of_arrival:
                     date_of_arrival = date_of_arrival.replace(tzinfo=None)  # Keep both date and time
-                has_damage = "Yes" if stock_value.wh_Dam_rep_job_num_id else "No"
-                damage_type = str(getattr(getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_damage_type', ''), 'damage_name', '') or '')
-
+                # has_damage = "Yes" if stock_value.wh_Dam_rep_job_num_id else "No"
+                # damage_type = str(getattr(getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_damage_type', ''), 'damage_name', '') or '')
+                header_font = Font(name="Arial", bold=True, size=11)  # Make the header row bold
+                cell_font = Font(name="Arial", bold=False, size=10)  # settings fro cells
+                yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Yellow fill
+                border_style = Border(
+                    left=Side(style='thin'),
+                    right=Side(style='thin'),
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin'),
+                )
                 row = [
                     stock_value.wh_job_no,  # Index 0
                     stock_value.wh_qr_rand_num,  # Index 1
@@ -172,10 +180,15 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
                     str(stock_value.wh_unit),  # Index 34
                     str(stock_value.wh_bay),  # Index 35
                     stock_value.wh_storage_time,# Index 36
-                    has_damage,# Index 37
-                    damage_type,
-                    # getattr(stock_value.wh_damages, 'damage_name', ''), # Index 38
-                    getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_GRN_num', ''),
+                    # Damage Info
+                    getattr(stock_value.wh_damages, 'damage_name', ''),  # Index 37
+                    getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_GRN_num',# Index 38
+                            '') if stock_value.wh_damages_id and stock_value.wh_damages_id != 6 else '',
+                    stock_value.wh_comments if (
+                            stock_value.wh_weights_deviation_id != 2 or
+                            stock_value.wh_dimension_deviation_id != 2 or
+                            stock_value.wh_no_of_units_deviation_id != 2
+                    ) else '',
                 ]
 
                 # # Debugging the row values
@@ -183,20 +196,23 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
                 #     print(f"Index {idx}: Value={value}, Type={type(value)}")
 
                 ws.append(row)  # Append the row to the worksheet
+                damage_flag = (
+                        (stock_value.wh_damages_id and stock_value.wh_damages_id != 6) or
+                        stock_value.wh_weights_deviation_id == 1 or
+                        stock_value.wh_dimension_deviation_id == 1 or
+                        stock_value.wh_no_of_units_deviation_id == 1
+                )
 
-
+                for cell in ws[ws.max_row]:
+                    cell.border = border_style
+                    if damage_flag:
+                        cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red
+                    else:
+                        cell.font = cell_font  # Normal
         sheet = wb.active
 
         # Format the first row (Header)
-        header_font = Font(name="Arial",bold=True,size=11)  # Make the header row bold
-        cell_font = Font(name="Arial",bold=False,size=10)  # settings fro cells
-        yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Yellow fill
-        border_style = Border(
-            left=Side(style='thin'),
-            right=Side(style='thin'),
-            top=Side(style='thin'),
-            bottom=Side(style='thin'),
-        )
+
         customer_name =CustomerInfo.objects.get(id=customer_name).cu_name
         file_name = str(customer_name)+'_DSR_report.xlsx'  # Set your desired file name
         # Apply formatting to the first row
@@ -205,23 +221,6 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
             cell.fill = yellow_fill
             cell.border = border_style
             cell.alignment = Alignment(horizontal='center', vertical='center')
-
-        # Apply borders to the rest of the cells in the sheet, skipping the first row
-
-        for row_index, row in enumerate(sheet.iter_rows(), start=1):
-            if row_index == 1:
-                continue  # Skip the first row
-            for cell in row:
-                if cell.value:  # Skip empty cells
-                    cell.border = border_style
-                    cell.font = cell_font
-
-        red_font = Font(color="FF0000")
-        for row_index, row in enumerate(sheet.iter_rows(min_row=2), start=2):
-            damage_cell = row[len(headers) - 3]  # Last column index
-            if damage_cell.value == "Yes":
-                for cell in row:
-                    cell.font = red_font
 
         # Set column width for all columns
         for col in sheet.columns:

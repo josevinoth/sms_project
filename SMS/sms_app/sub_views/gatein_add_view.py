@@ -279,6 +279,9 @@ def load_pre_gate_in(request):
     used_trucks = Gatein_info.objects.filter(gatein_pre_id=pre_gatein).values_list('gatein_truck_number_n_id', flat=True)
     unused_trucks = all_trucks.exclude(id__in=used_trucks)
 
+    if not unused_trucks.exists():
+        pre_gatein.gatein_pre_status_id = 5
+        pre_gatein.save(update_fields=["gatein_pre_status"])
     data = {
         'truck_numbers_id': [t.id for t in unused_trucks],
         'truck_numbers': [t.pregatein_truck_number for t in unused_trucks],
