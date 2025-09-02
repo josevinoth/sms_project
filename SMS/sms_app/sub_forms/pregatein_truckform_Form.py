@@ -13,14 +13,14 @@ class PregateintruckForm(forms.ModelForm):
 
         # Set empty labels for dropdowns
         self.fields['pregatein_number'].empty_label = "--Select--"
-        self.fields['pregatein_truck_type'].empty_label = "Select Truck Type"
-        self.fields['pregatein_updated_by'].empty_label = "Select Updated By"
-        self.fields['pregatein_otl_check'].empty_label = "Select OTL Check"
-        self.fields['pregatein_offload_acceptance'].empty_label = "Select Offload Acceptance"
-        self.fields['pregatein_otl_type'].empty_label = "Select OTL Type"
-        self.fields['pregatein_job_category'].empty_label = "Select Job Category"
-        self.fields['pregatein_transporter_name'].empty_label = "Select Transporter Name"
+        self.fields['pregatein_truck_type'].empty_label = "--Select--"
+        self.fields['pregatein_updated_by'].empty_label = "--Select--"
+        self.fields['pregatein_otl_check'].empty_label = "--Select--"
+        self.fields['pregatein_offload_acceptance'].empty_label = "--Select--"
+        self.fields['pregatein_otl_type'].empty_label = "--Select--"
+        self.fields['pregatein_job_category'].empty_label = "--Select--"
+        self.fields['pregatein_transporter_name'].empty_label = "--Select--"
         self.fields['pregatein_transporter_name'].queryset = Transporter_name.objects.all()
-        self.fields['pregatein_commodity'].empty_label = "Select Commodity"
-        self.fields['pregatein_approval_status'].empty_label = "Select Commodity"
+        self.fields['pregatein_commodity'].empty_label = "--Select--"
+        self.fields['pregatein_approval_status'].empty_label = "--Select--"
 
