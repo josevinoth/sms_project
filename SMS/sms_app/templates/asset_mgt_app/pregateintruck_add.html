@@ -92,17 +92,26 @@
 					<div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
 						{% if truck and truck.pregatein_driver_signature and truck.pregatein_supervisor_signature %}
 						{% if truck.pregatein_job_category.id == 2 or truck.pregatein_job_category.id == 3 %}
+						{% if approval_status_id == 1 or truck.pregatein_high_value.id == 2 %}
 						<a href="{% url 'pregatein_gatepass_pdf_download' truck.id %}"
 						   target="_blank"
-						   id="gatepass-btn"
 						   class="btn btn-warning">
 							Gate Pass
 						</a>
 						{% else %}
-						<button type="button" class="btn btn-warning" disabled>Gate Pass</button>
+						<button type="button" class="btn btn-warning" disabled>
+							Gate Pass (Waiting for Approval)
+						</button>
 						{% endif %}
 						{% else %}
-						<button type="button" class="btn btn-warning" disabled>Gate Pass</button>
+						<button type="button" class="btn btn-warning" disabled>
+							Gate Pass
+						</button>
+						{% endif %}
+						{% else %}
+						<button type="button" class="btn btn-warning" disabled>
+							Gate Pass (Signature Pending)
+						</button>
 						{% endif %}
 					</div>
 				</div>

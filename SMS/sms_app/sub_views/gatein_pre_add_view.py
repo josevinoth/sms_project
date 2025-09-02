@@ -23,7 +23,10 @@ def gatein_pre_add(request, gatein_pre_id=0):
     user_id = request.session.get('ses_userID')
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
     user_branch_id=Location_info.objects.get(loc_name=user_branch).id
+    role = User_extInfo.objects.get(user=user_id).emp_role
+    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
     print('user_branch_id',user_branch_id)
+    print('role',role)
     if request.method == "GET":
         if gatein_pre_id == 0:
             print("I am inside Get add Pre Gatein")
@@ -33,6 +36,8 @@ def gatein_pre_add(request, gatein_pre_id=0):
                 'gatein_pre_form': gatein_pre_form,
                 'user_branch_id': user_branch_id,
                 'user_id': user_id,
+                'role': role,
+                'role_id': role_id,
             }
         else:
             gatein_pre_info = Gatein_pre_info.objects.get(pk=gatein_pre_id)
@@ -50,6 +55,8 @@ def gatein_pre_add(request, gatein_pre_id=0):
             'user_branch_id': user_branch_id,
             'user_id': user_id,
             'pregateintruck_list': pregateintruck_list,
+            'role': role,
+            'role_id': role_id,
         }
         return render(request, "asset_mgt_app/gatein_pre_add.html", context)
     else:
