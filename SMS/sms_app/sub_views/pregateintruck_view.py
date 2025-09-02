@@ -29,6 +29,9 @@ def pregateintruck_add(request, pregateintruck_id=0):
     # 👉 Get the latest High Value Checklist for this Gatein (if exists)
     highvalue_instance = high_list.order_by('-id').first()
     checklist = highvalue_instance  # alias for template
+    approval_status_id = None
+    if highvalue_instance:
+        approval_status_id = highvalue_instance.hc_approval_status_id
 
     if request.method == "GET":
         if pregateintruck_id == 0:
@@ -52,6 +55,8 @@ def pregateintruck_add(request, pregateintruck_id=0):
             'highvalue_instance': highvalue_instance,
             'checklist': checklist,
             'high_value_check': high_value_check,
+            'approval_status_id': approval_status_id,  # ✅ add this
+
         }
         return render(request, "asset_mgt_app/pregateintruck_add.html", context)
 
@@ -176,7 +181,7 @@ def pregatein_gatepass_pdf(request, pregatein_id=0, download=False):
     try:
         truck = get_object_or_404(Pregateintruckinfo, id=pregatein_id)
 
-        if truck.pregatein_job_category_id != 3:
+        if truck.pregatein_job_category_id == 1:
             return JsonResponse({"success": False, "error": "Gatepass PDF only available for Job Category 3."}, status=403)
 
         # Convert signatures to base64 strings

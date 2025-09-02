@@ -1,6 +1,13 @@
 {% extends "asset_mgt_app/base_1.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<style>
+.disabled-colour {
+     pointer-events: none;
+    background:#CCFFCC !important;
+    color:#000000 !important;
+}
+</style>
 
 <div class="row">
 	<div class="col">
@@ -104,7 +111,7 @@
 	</div>
 </div>
 
-
+<div id="gatein_list_block">
 <div class="container-fluid row">
 	<div class="col-5 col-md-6 col-lg-2">
 		<a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-primary btn-sm">
@@ -113,12 +120,13 @@
 	</div>
 </div>
 <hr>
-{% include "asset_mgt_app/gateintruck_list_woh.html" %}
-
+    {% include "asset_mgt_app/gateintruck_list_woh.html" %}
+</div>
 
 {% block scripts %}
 <script>
 	document.addEventListener("DOMContentLoaded", function() {
+		// init datatable
 		$('#gatein_list').DataTable({
 			order: [1, 'desc' ],
 			responsive: true,
@@ -128,18 +136,42 @@
 				'copy', 'csv', 'excel','print'
 			]
 		});
-		var gateinpre_num = document.getElementById("gatein_pre_number").value
-		if (gateinpre_num =="")
-		{
+
+		// disable add button if pre number empty
+		var gateinpre_num = document.getElementById("gatein_pre_number").value;
+		if (gateinpre_num =="") {
 			$('#add_gateinpre').addClass('disable_a_href');
-		}
-		else
-		{
+		} else {
 			$('#add_gateinpre').removeClass('disable_a_href');
 		}
+
+		// auto-fill hidden fields
 		document.getElementById("gatein_pre_updated_by").value ='{{user_id}}';
 		document.getElementById("gatein_pre_branch").value ='{{user_branch_id}}';
-	} );
+
+		// role & status based disabling
+		var user_role = '{{ role }}';
+		var statusVal = document.getElementById("id_gatein_pre_status").value;
+
+		if (statusVal == "5" && user_role == "User") {
+			alert('Since Status is Completed, you have read-only access. To edit, please contact Administrator');
+
+			// disable gatein list block
+			$('#gatein_list_block').addClass('disable_a_href disabled-colour');
+
+			// disable Add button
+			$('#add_gateinpre').addClass('disable_a_href');
+
+			// disable Save button
+			$('button[type="submit"]').addClass('disable_a_href disabled-colour');
+
+			// disable form fields (read-only mode)
+			$('form :input').not('[type=hidden]').prop('disabled', true);
+
+			// allow Cancel button only
+			$('a.btn-danger').removeClass('disable_a_href disabled-colour').prop('disabled', false);
+		}
+	});
 </script>
 {% endblock scripts %}
 

@@ -1,60 +1,60 @@
 {% extends "asset_mgt_app/report_header_potrait.html" %}
 {% block content %}
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-  }
-  .report_title {
-    font-weight: bold;
-    font-size: 16px;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  table.report_details {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 15px;
-  }
-  table.report_details th, table.report_details td {
-    border: 1px solid #000;
-    padding: 5px 10px;
-    text-align: left;
-  }
-  hr.report_hrItem {
-    border: 0;
-    border-top: 1px solid #000;
-    margin: 15px 0;
-  }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+    }
+    .report_title {
+      font-weight: bold;
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table.report_details {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    table.report_details th, table.report_details td {
+      border: 1px solid #000;
+      padding: 5px 10px;
+      text-align: left;
+    }
+    hr.report_hrItem {
+      border: 0;
+      border-top: 1px solid #000;
+      margin: 15px 0;
+    }
 
-  /* Float layout for signatures and gate verification */
-  .container-signatures {
-    margin-top: 40px;
-    overflow: hidden; /* clearfix */
-  }
+    /* Float layout for signatures and gate verification */
+    .container-signatures {
+      margin-top: 40px;
+      overflow: hidden; /* clearfix */
+    }
 
-  .left-group {
-    float: left;
-    width: 260px;
-  }
+    .left-group {
+      float: left;
+      width: 260px;
+    }
 
 
-  .center-group {
-    clear: both;
-    margin-top: 60px;
-    text-align: center;
-    font-weight: bold;
-  }
+    .center-group {
+      clear: both;
+      margin-top: 60px;
+      text-align: center;
+      font-weight: bold;
+    }
 
-  img {
-    max-height: 40px;
-    border: 1px solid #000;
-  }
+    img {
+      max-height: 40px;
+      border: 1px solid #000;
+    }
 
-  /* Spacing between signature blocks */
-  .left-group div {
-    margin-bottom: 20px;
-  }
+    /* Spacing between signature blocks */
+    .left-group div {
+      margin-bottom: 20px;
+    }
 </style>
 
 <div class="report_title">
@@ -62,8 +62,13 @@
 </div>
 
 <table class='report_details'>
+
     <tr>
         <th>Consignee</th>
+        <td>{{ truck.pregatein_consignee }}</td>
+    </tr>
+    <tr>
+        <th>Shipper</th>
         <td>{{ truck.pregatein_consignee }}</td>
     </tr>
     <tr>
@@ -72,24 +77,59 @@
     </tr>
     <tr>
         <th>Truck Number</th>
-        <td>{{ truck.pregatein_truck_number }}</td>
+        <td>
+            {% if truck.pregatein_job_category.id == 2 %}
+            {{ truck.pregatein_truck_number_CD }}
+            {% elif truck.pregatein_job_category.id == 3 %}
+            {{ truck.pregatein_truck_number }}
+            {% endif %}
+        </td>
     </tr>
+
     <tr>
         <th>Truck Type</th>
-        <td>{{ truck.pregatein_truck_type }}</td>
+        <td>
+            {% if truck.pregatein_job_category.id == 2 %}
+            {{ truck.pregatein_truck_type_CD }}
+            {% elif truck.pregatein_job_category.id == 3 %}
+            {{ truck.pregatein_truck_type }}
+            {% endif %}
+        </td>
     </tr>
+
     <tr>
         <th>Driver Name</th>
-        <td>{{ truck.pregatein_driver }}</td>
+        <td>
+            {% if truck.pregatein_job_category.id == 2 %}
+            {{ truck.pregatein_driver_CD }}
+            {% elif truck.pregatein_job_category.id == 3 %}
+            {{ truck.pregatein_driver }}
+            {% endif %}
+        </td>
     </tr>
+
     <tr>
         <th>Driver Contact</th>
-        <td>{{ truck.pregatein_contact_number }}</td>
+        <td>
+            {% if truck.pregatein_job_category.id == 2 %}
+            {{ truck.pregatein_contact_number_CD }}
+            {% elif truck.pregatein_job_category.id == 3 %}
+            {{ truck.pregatein_contact_number }}
+            {% endif %}
+        </td>
     </tr>
+
     <tr>
         <th>Driving License Number</th>
-        <td>{{ truck.pregatein_dl_number }}</td>
+        <td>
+            {% if truck.pregatein_job_category.id == 2 %}
+            {{ truck.pregatein_dl_number_CD }}
+            {% elif truck.pregatein_job_category.id == 3 %}
+            {{ truck.pregatein_dl_number }}
+            {% endif %}
+        </td>
     </tr>
+
     <tr>
         <th>Quantity</th>
         <td>{{ truck.pregatein_qty }}</td>
@@ -131,32 +171,32 @@
 <hr class="report_hrItem"/>
 
 <div class="container-signatures">
-  <div class="left-group">
-    <div>
-      <strong>Driver Signature</strong><br>
-      {% if truck.driver_signature_base64 %}
-        <img src="{{ truck.driver_signature_base64 }}" alt="Driver Signature">
-      {% else %}
-        <span>No Signature</span>
-      {% endif %}
+    <div class="left-group">
+        <div>
+            <strong>Driver Signature</strong><br>
+            {% if truck.driver_signature_base64 %}
+            <img src="{{ truck.driver_signature_base64 }}" alt="Driver Signature">
+            {% else %}
+            <span>No Signature</span>
+            {% endif %}
+        </div>
+
+        <div>
+            <strong>BVM Supervisor Signature</strong><br>
+            {% if truck.supervisor_signature_base64 %}
+            <img src="{{ truck.supervisor_signature_base64 }}" alt="Supervisor Signature">
+            {% else %}
+            <span>No Signature</span>
+            {% endif %}
+        </div>
     </div>
 
-    <div>
-      <strong>BVM Supervisor Signature</strong><br>
-      {% if truck.supervisor_signature_base64 %}
-        <img src="{{ truck.supervisor_signature_base64 }}" alt="Supervisor Signature">
-      {% else %}
-        <span>No Signature</span>
-      {% endif %}
+    <div class="right-group">
+        <p>Gate Verification</p>
     </div>
-  </div>
-
-  <div class="right-group">
-    <p>Gate Verification</p>
-  </div>
 </div>
 
 <div class="center-group">
-  <p>THANK YOU FOR YOUR BUSINESS!</p>
+    <p>THANK YOU FOR YOUR BUSINESS!</p>
 </div>
 {% endblock content %}
