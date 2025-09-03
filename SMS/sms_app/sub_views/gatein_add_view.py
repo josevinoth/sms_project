@@ -295,7 +295,7 @@ def load_pre_gate_in_truck_details(request):
     # Fetch pre_gate_in details
     pre_gatein_id = request.GET.get('pre_gatein_id')
     pre_gatein_truck_number_val = request.GET.get('gatein_truck_number_val')
-    Transporter=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_transporter_name',flat=True)
+    Transporter=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_transporter_name__transporter_name',flat=True)
     Driver_Name=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_driver',flat=True)
     Driver_Contact=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_contact_number',flat=True)
     Driver_License=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id,pregatein_truck_number=pre_gatein_truck_number_val).values_list('pregatein_dl_number',flat=True)
