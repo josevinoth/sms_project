@@ -331,7 +331,7 @@ def export_stockreport_to_csv(request):
         'wh_consigner', 'wh_consignee', 'wh_lb_job_no_id__lb_packing_list__ge_gstexcepmtion',
         'wh_gate_injob_no_id__gatein_hawb', 'wh_gate_injob_no_id__gatein_destination',
         'wh_gate_injob_no_id__gatein_invoice', 'wh_po_num', 'wh_total_qty',
-        'wh_gross_weight', 'wh_invoice_weight_unit', 'wh_uom__uom_name', 'wh_goods_length',
+        'wh_invoice_weight_unit','wh_gross_weight', 'wh_uom__uom_name', 'wh_goods_length',
         'wh_goods_width', 'wh_goods_height', 'wh_goods_pieces',
         'wh_goods_package_type__package_type', 'wh_chargeable_weight', 'wh_cbm', 'wh_invoice_value',
         'wh_lb_job_no_id__lb_stock_invoice_currency__currency_type', 'wh_invoice_amount_inr',
@@ -542,7 +542,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
 
     if from_date_str and to_date_str:
         from_date = timezone.make_aware(datetime.datetime.strptime(from_date_str, "%Y-%m-%d"))
-        to_date = timezone.make_aware(datetime.datetime.strptime(to_date_str, "%Y-%m-%d"))
+        to_date = timezone.make_aware(datetime.datetime.strptime(to_date_str, "%Y-%m-%d")) + timedelta(days=1)
     # else:
     #     to_date = timezone.now()
     #     from_date = to_date - timedelta(days=120)
@@ -705,8 +705,9 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
 
                     stock_value.wh_po_num,  # Index 14
                     stock_value.wh_total_qty,  # Index 15
-                    stock_value.wh_gross_weight,  # Index 16
-                    stock_value.wh_invoice_weight_unit,  # Index 17
+
+                    stock_value.wh_invoice_weight_unit,  # Index 16
+                    stock_value.wh_gross_weight,  # Index 17
 
                     # Index 18: wh_uom
                     str(stock_value.wh_uom),
@@ -803,11 +804,11 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             customer_name = CustomerInfo.objects.filter(cu_name=customer_name).first()
         file_name = str(customer_name)+'_Stock Value_report.xlsx'  # Set your desired file name
         # Apply formatting to the first row
-        for cell in sheet[1]:
-            cell.font = header_font
-            cell.fill = yellow_fill
-            cell.border = border_style
-            cell.alignment = Alignment(horizontal='center', vertical='center')
+        # for cell in sheet[1]:
+        #     cell.font = header_font
+        #     cell.fill = yellow_fill
+        #     cell.border = border_style
+        #     cell.alignment = Alignment(horizontal='center', vertical='center')
 
         # Apply borders to the rest of the cells in the sheet, skipping the first row
 

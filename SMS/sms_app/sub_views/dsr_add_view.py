@@ -142,8 +142,8 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
 
                     stock_value.wh_po_num,  # Index 14
                     stock_value.wh_total_qty,  # Index 15
-                    stock_value.wh_gross_weight,  # Index 16
-                    stock_value.wh_invoice_weight_unit,  # Index 17
+                    stock_value.wh_invoice_weight_unit,  # Index 16
+                    stock_value.wh_gross_weight,  # Index 17
 
                     # Index 18: wh_uom
                     str(stock_value.wh_uom),

@@ -12,12 +12,12 @@
         <i class="fas fa-arrow-left"></i> Back
       </a>
     </div>
-    <div class="col-4"></div>
-    <div class="col-2 rounded text-center bg-info">
-      <h3>Stock Value Report</h3>
+    <div class="col-3"></div>
+    <div class="col-3 rounded text-center bg-info">
+      <h3>Goods Movement Report</h3>
     </div>
     <div class="col-1"></div>
-    <div class="col-4"></div>
+    <div class="col-3"></div>
   </div>
   <br>
   <div class="row">
@@ -90,9 +90,9 @@
       <input type="date" name="to_date" value="{{ request.GET.to_date }}"
              style="box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.4); width: 200px; padding: 5px; font-size: 12px;">
 
-      <button type="submit" class="btn btn-warning btn-lg ml-2">
-        <i class="fas fa-file-csv"></i> Stock Report
-      </button>
+<!--      <button type="submit" class="btn btn-warning btn-lg ml-2">-->
+<!--        <i class="fas fa-file-csv"></i> Stock Report-->
+<!--      </button>-->
     </form>
 
     <div class="col-1.5 ml-2">
@@ -190,8 +190,8 @@
         <td> {{stock_value.wh_gate_injob_no_id.gatein_invoice}}</td>
         <td> {{stock_value.wh_po_num}}</td>
         <td> {{stock_value.wh_total_qty}}</td>
-        <td> {{stock_value.wh_gross_weight}}</td>
         <td> {{stock_value.wh_invoice_weight_unit}}</td>
+        <td> {{stock_value.wh_gross_weight}}</td>
         <td> {{stock_value.wh_uom}}</td>
         <td> {{stock_value.wh_goods_length}}</td>
         <td> {{stock_value.wh_goods_width}}</td>
