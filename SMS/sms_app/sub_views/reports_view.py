@@ -209,10 +209,21 @@ def deviation_report(request):
 @login_required(login_url='login_page')
 def revenue_report(request):
     first_name = request.session.get('first_name')
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+
     revenue_list=Warehouse_goods_info.objects.exclude(wh_voucher_num__isnull=True)
+    if from_date:
+        revenue_list = revenue_list.filter(wh_checkin_time__date__gte=from_date)
+
+    if to_date:
+        revenue_list = revenue_list.filter(wh_checkin_time__date__lte=to_date)
+
     context = {
                 'revenue_list': revenue_list,
                 'first_name': first_name,
+                'from_date': from_date,
+                'to_date': to_date,
                 }
     return render(request,"asset_mgt_app/revenue_report.html",context)
 

@@ -1,13 +1,15 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.db.models import Count, Q, Sum, Case, When, Value, CharField, Min, FloatField, F, IntegerField
 from django.db.models import F, Subquery, OuterRef
 from django.db.models.functions import Coalesce, Round, ExtractMonth
 from django.utils import timezone
 from calendar import month_name
+from django.db.models.functions import TruncMonth
 from django.core.serializers import serialize
 import json
-from django.utils.timezone import make_aware
-from datetime import datetime
+from django.utils.timezone import make_aware, now
+from datetime import datetime, timedelta
 from ..models import Warehouse_goods_info, ExpenseExtinfo, Location_info, UnitInfo, Business_Sol_info, \
     TrbusinesstypeInfo, CustomerInfo, ExpenseTypeInfo, Ar_Info, BudgetInfo, ExpenseInfo, BilingInfo
 
@@ -46,12 +48,14 @@ def branch_profit_loss(request):
 
     expenses_data = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
-        .values('exp_ext_branch', 'exp_ext_branch__loc_name')
+        .annotate(month=TruncMonth('exp_ext_expense_number__exp_service_start_date'))  # create "month"
+        .values('exp_ext_branch', 'exp_ext_branch__loc_name', 'month')  # now you can use it
         .annotate(total_expense=Sum('exp_ext_amount'))
     )
     invoice_data = (
         Warehouse_goods_info.objects.filter(**invoices_filter)
-        .values('wh_branch', 'wh_branch__loc_name')
+        .annotate(month=TruncMonth('wh_checkin_time'))  # create "month"
+        .values('wh_branch', 'wh_branch__loc_name', 'month')  # now you can use it
         .annotate(total_invoice_cost=Sum('wh_total_invoice_cost'))
     )
     # invoice_data = []
@@ -86,9 +90,10 @@ def branch_profit_loss(request):
     combined_data = {}
 
     for expense in expenses_data:
-        key = (expense['exp_ext_branch'])
+        key = (expense['exp_ext_branch'], expense['month'])
         combined_data[key] = {
             'branch': expense['exp_ext_branch__loc_name'],
+            'month': expense['month'].strftime("%b-%Y") if expense['month'] else '',
             'total_expense': expense['total_expense'],
             'total_invoice_cost': 0.0,
             'profit_loss': -expense['total_expense'],
@@ -96,18 +101,20 @@ def branch_profit_loss(request):
         }
 
     for invoice in invoice_data:
-        key = (invoice['wh_branch'])
+        key = (invoice['wh_branch'], invoice['month'])
         if key in combined_data:
             combined_data[key]['total_invoice_cost'] = invoice['total_invoice_cost']
             combined_data[key]['profit_loss'] += invoice['total_invoice_cost']
         else:
             combined_data[key] = {
                 'branch': invoice['wh_branch__loc_name'],
+                'month': invoice['month'].strftime("%b-%Y") if invoice['month'] else '',
                 'total_expense': 0.0,
                 'total_invoice_cost': invoice['total_invoice_cost'],
                 'profit_loss': invoice['total_invoice_cost'],
                 'profit_loss_percentage': 0.0,
             }
+
     for key, data in combined_data.items():
         if data['total_invoice_cost'] > 0:
             data['profit_loss_percentage'] = (data['profit_loss'] / data['total_invoice_cost']) * 100
@@ -178,23 +185,26 @@ def branch_unit_profit_loss(request):
 
     expenses_data = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
-        .values('exp_ext_branch', 'exp_ext_unit', 'exp_ext_branch__loc_name', 'exp_ext_unit__unit_name')
+        .annotate(month=TruncMonth('exp_ext_expense_number__exp_service_start_date'))
+        .values('exp_ext_branch', 'exp_ext_unit', 'exp_ext_branch__loc_name', 'exp_ext_unit__unit_name', 'month')
         .annotate(total_expense=Sum('exp_ext_amount'))
     )
 
     invoice_data = (
         Warehouse_goods_info.objects.filter(**invoices_filter)
-        .values('wh_branch', 'wh_unit', 'wh_branch__loc_name', 'wh_unit__unit_name')
+        .annotate(month=TruncMonth('wh_checkin_time'))
+        .values('wh_branch', 'wh_unit', 'wh_branch__loc_name', 'wh_unit__unit_name', 'month')
         .annotate(total_invoice_cost=Sum('wh_total_invoice_cost'))
     )
 
     combined_data = {}
 
     for expense in expenses_data:
-        key = (expense['exp_ext_branch'], expense['exp_ext_unit'])
+        key = (expense['exp_ext_branch'], expense['exp_ext_unit'], expense['month'])
         combined_data[key] = {
             'branch': expense['exp_ext_branch__loc_name'],
             'unit': expense['exp_ext_unit__unit_name'],
+            'month': expense['month'].strftime('%b-%Y') if expense['month'] else '',
             'total_expense': expense['total_expense'],
             'total_invoice_cost': 0.0,
             'profit_loss': -expense['total_expense'],
@@ -202,7 +212,7 @@ def branch_unit_profit_loss(request):
         }
 
     for invoice in invoice_data:
-        key = (invoice['wh_branch'], invoice['wh_unit'])
+        key = (invoice['wh_branch'], invoice['wh_unit'], invoice['month'])
         if key in combined_data:
             combined_data[key]['total_invoice_cost'] = invoice['total_invoice_cost']
             combined_data[key]['profit_loss'] += invoice['total_invoice_cost']
@@ -210,6 +220,7 @@ def branch_unit_profit_loss(request):
             combined_data[key] = {
                 'branch': invoice['wh_branch__loc_name'],
                 'unit': invoice['wh_unit__unit_name'],
+                'month': invoice['month'].strftime('%b-%Y') if invoice['month'] else '',
                 'total_expense': 0.0,
                 'total_invoice_cost': invoice['total_invoice_cost'],
                 'profit_loss': invoice['total_invoice_cost'],
@@ -733,6 +744,72 @@ def ar_due_reports(request):
 
     return render(request, "asset_mgt_app/ar_due_reports.html", context)
 
+
+
+from django.core.paginator import Paginator
+
+
+@login_required(login_url='login_page')
+def overdue_jobs_report(request):
+    first_name = request.session.get('first_name')
+    branch_filter = request.GET.get('branch')
+    unit_filter = request.GET.get('unit')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+
+    today = now().date()
+    jobs = (
+        Warehouse_goods_info.objects
+        .filter(wh_check_in_out=2, wh_voucher_num__isnull=True, wh_checkout_time__isnull=False)
+        .select_related("wh_customer_name", "wh_branch", "wh_unit")
+    )
+    branches = Location_info.objects.all()
+    units = UnitInfo.objects.values_list('unit_name', flat=True).distinct()
+    if branch_filter:
+        units = jobs.filter(wh_branch__loc_name=branch_filter).values_list('wh_unit__unit_name',
+                                                                           flat=True).distinct()
+        jobs = jobs.filter(wh_branch__loc_name=branch_filter)
+
+    if unit_filter:
+        jobs = jobs.filter(wh_unit__unit_name=unit_filter)
+
+    if from_date:
+        jobs = jobs.filter(wh_checkout_time__date__gte=from_date)
+
+    if to_date:
+        jobs = jobs.filter(wh_checkout_time__date__lte=to_date)
+
+    job_list = []
+    for job in jobs:
+        credit_days = job.wh_customer_name.cu_creditdays or 0
+        checkout_date = job.wh_checkout_time.date()
+        due_date = checkout_date + timedelta(days=credit_days)
+        overdue_days = (today - due_date).days if today > due_date else 0
+
+        job_list.append({
+            "wh_job_no": job.wh_job_no,
+            "wh_branch": job.wh_branch.loc_name if job.wh_branch else "N/A",
+            "wh_unit": job.wh_unit.unit_name if job.wh_unit else "N/A",
+            "customer": job.wh_customer_name.cu_name if job.wh_customer_name else "N/A",
+            "checkout": checkout_date,
+            "credit_days": credit_days,
+            "due_date": due_date,
+            "overdue_days": overdue_days,
+        })
+    paginator = Paginator(job_list, 50)  # 50 jobs per page
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "asset_mgt_app/overdue_job_report.html", {
+        "jobs": page_obj,
+        "first_name": first_name,
+        "branches": branches,
+        "units": units,
+        "branch_filter": branch_filter,
+        "unit_filter": unit_filter,
+        "from_date": request.GET.get('from_date', ''),
+        "to_date": request.GET.get('to_date', ''),
+    })
 
 INCOME_CATEGORIES = {
     "Airport Handling Charges": "bf_Airport_Handling_Charges",
@@ -1429,7 +1506,7 @@ def budget_expense_mis(request):
 
         if grand_totals["monthly_budget"][month] > 0:
             grand_totals["monthly_profit_loss_percentage"][month] = (
-                        (grand_totals["monthly_profit_loss"][month] / grand_totals["monthly_budget"][month]) * 100)
+                    (grand_totals["monthly_profit_loss"][month] / grand_totals["monthly_budget"][month]) * 100)
         else:
             grand_totals["monthly_profit_loss_percentage"][month] = 0
 
@@ -1883,7 +1960,10 @@ def fin_mis_warehouse(request):
         expenses_filter["exp_ext_expense_number__exp_service_start_date__lte"] = to_date
         budget_filter["bf_start_date_year__lte"] = to_date
         warehouse_filter["wh_checkin_time__lte"] = to_date
-
+    if from_date and to_date:
+        months_range = list(range(from_date.month, to_date.month + 1))
+    else:
+        months_range = list(range(1, 13))
     warehouse_queryset = (
         Warehouse_goods_info.objects
         .filter(**warehouse_filter)
@@ -1896,7 +1976,7 @@ def fin_mis_warehouse(request):
     )
 
     warehouse_income_expense_dict = {
-        category: {i: 0 for i in range(1, 13)}
+        category: {i: 0 for i in months_range}
         for category in INCOME_CATEGORIES.keys()
     }
 
@@ -1920,11 +2000,11 @@ def fin_mis_warehouse(request):
         .order_by("exp_ext_expense_number__exp_service_start_date__month")
     )
 
-    expense_dict = {category: {i: 0 for i in range(1, 13)} for category in set(INCOME_CATEGORIES.keys())}
+    expense_dict = {category: {i: 0 for i in months_range} for category in set(INCOME_CATEGORIES.keys())}
     for item in expense_summary:
         category = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
         month = item["exp_ext_expense_number__exp_service_start_date__month"]
-        expense_dict.setdefault(category, {i: 0 for i in range(1, 13)})
+        expense_dict.setdefault(category, {i: 0 for i in months_range})
         expense_dict[category][month] += item["total_expense"]
 
     budget_summary = (
@@ -1939,7 +2019,7 @@ def fin_mis_warehouse(request):
         for category, field in BUDGET_FIELD_MAPPING.items():
             if field:
                 if category not in budget_dict_by_month:
-                    budget_dict_by_month[category] = {i: 0 for i in range(1, 13)}
+                    budget_dict_by_month[category] = {i: 0 for i in months_range}
                 budget_dict_by_month[category][month] = item.get(field, 0.0)
 
     budget_totals = BudgetInfo.objects.filter(**budget_filter).aggregate(
@@ -1955,22 +2035,30 @@ def fin_mis_warehouse(request):
         summary = []
         expense_source = custom_expense_dict or expense_dict
 
-        grand_monthly_expenses = {i: 0 for i in range(1, 13)}
-        grand_monthly_budgets = {i: 0 for i in range(1, 13)}
+        grand_monthly_expenses = {i: 0 for i in months_range}
+        grand_monthly_budgets = {i: 0 for i in months_range}
         grand_total_expense = 0
         grand_total_budget = 0
 
+        #For expenses: budget - expense, for income: expense - budget
+        variance_sign = -1 if category_name == "Income" else 1
+
         for category, field in category_mapping.items():
-            monthly_expenses = expense_source.get(category, {i: 0 for i in range(1, 13)})
-            monthly_budgets = budget_dict_by_month.get(category, {i: 0 for i in range(1, 13)})
-            monthly_variance = {month: monthly_budgets[month] - monthly_expenses[month] for month in range(1, 13)}
+            monthly_expenses = expense_source.get(category, {i: 0 for i in months_range})
+            monthly_budgets = budget_dict_by_month.get(category, {i: 0 for i in months_range})
+
+            monthly_variance = {
+                month: variance_sign * (monthly_budgets[month] - monthly_expenses[month])
+                for month in months_range
+            }
 
             total_expense = round(sum(monthly_expenses.values()), 0)
             total_budget = round(sum(monthly_budgets.values()), 0)
-            total_variance = round(total_budget - total_expense, 0)
+            total_variance = variance_sign * round(total_budget - total_expense, 0)
+
             pl_percentage = round((total_variance / total_budget * 100), 2) if total_budget > 0 else 0.0
 
-            for month in range(1, 13):
+            for month in months_range:
                 grand_monthly_expenses[month] += monthly_expenses[month]
 
                 if category_name in ["Employee Benefits", "Operational Expenses", "Non-Operational Expenses"]:
@@ -1996,9 +2084,10 @@ def fin_mis_warehouse(request):
             })
 
         grand_monthly_variance = {
-            month: grand_monthly_budgets[month] - grand_monthly_expenses[month] for month in range(1, 13)
+            month: variance_sign * (grand_monthly_budgets[month] - grand_monthly_expenses[month])
+            for month in months_range
         }
-        grand_total_variance = grand_total_budget - grand_total_expense
+        grand_total_variance = variance_sign * (grand_total_budget - grand_total_expense)
         grand_pl_percentage = (grand_total_variance / grand_total_budget * 100) if grand_total_budget > 0 else 0.0
 
         summary.append({
@@ -2041,10 +2130,10 @@ def fin_mis_warehouse(request):
 
     total_expense = sum([summary[-1]["total_expense"] for summary in expense_summaries])
     total_budget = sum([summary[-1]["total_budget"] for summary in expense_summaries])
-    monthly_expense = {i: 0 for i in range(1, 13)}
-    monthly_budget = {i: 0 for i in range(1, 13)}
+    monthly_expense = {i: 0 for i in months_range}
+    monthly_budget = {i: 0 for i in months_range}
     for summary in expense_summaries:
-        for month in range(1, 13):
+        for month in months_range:
             monthly_expense[month] += summary[-1]["monthly_expenses"][month]
             monthly_budget[month] += summary[-1]["monthly_budgets"][month]
     net_actual_total = income_total_expense - total_expense
@@ -2052,9 +2141,9 @@ def fin_mis_warehouse(request):
     net_variance_total = net_budget_total - net_actual_total
     net_pl_percentage = (net_variance_total / net_budget_total * 100) if net_budget_total else 0.0
 
-    net_monthly_expense = {month: income_monthly_expenses[month] - monthly_expense[month] for month in range(1, 13)}
-    net_monthly_budget = {month: income_monthly_budgets[month] - monthly_budget[month] for month in range(1, 13)}
-    net_monthly_variance = {month: net_monthly_budget[month] - net_monthly_expense[month] for month in range(1, 13)}
+    net_monthly_expense = {month: income_monthly_expenses[month] - monthly_expense[month] for month in months_range}
+    net_monthly_budget = {month: income_monthly_budgets[month] - monthly_budget[month] for month in months_range}
+    net_monthly_variance = {month: net_monthly_expense[month] - net_monthly_budget[month] for month in months_range}
     net_income_summary = {
         "expense_type": "Profit/Loss",
         "monthly_expenses": net_monthly_expense,
@@ -2069,25 +2158,25 @@ def fin_mis_warehouse(request):
     # Total % calculations
     net_income_percentage = (net_actual_total / income_total_expense * 100) if income_total_expense else 0.0
     net_budget_percentage = (net_budget_total / income_total_budget * 100) if income_total_budget else 0.0
-    net_variance_percentage = (net_variance_total / income_total_budget * 100) if income_total_budget else 0.0
+    net_variance_percentage = (net_variance_total / income_total_expense * 100) if income_total_budget else 0.0
 
     # Monthly % calculations
     net_income_monthly_percentage = {
         month: (net_monthly_expense[month] / income_monthly_expenses[month] * 100)
         if income_monthly_expenses[month] else 0.0
-        for month in range(1, 13)
+        for month in months_range
     }
 
     net_budget_monthly_percentage = {
         month: (net_monthly_budget[month] / income_monthly_budgets[month] * 100)
         if income_monthly_budgets[month] else 0.0
-        for month in range(1, 13)
+        for month in months_range
     }
 
     net_variance_monthly_percentage = {
         month: (net_monthly_variance[month] / income_monthly_budgets[month] * 100)
         if income_monthly_budgets[month] else 0.0
-        for month in range(1, 13)
+        for month in months_range
     }
     net_income_summary["net_income_percentage"] = net_income_percentage
     net_income_summary["net_budget_percentage"] = net_budget_percentage
@@ -2106,9 +2195,9 @@ def fin_mis_warehouse(request):
         "total_variance": net_variance_percentage,
         "is_total": True,
     }
-    grand_monthly_budgets = {i: 0 for i in range(1, 13)}
-    grand_monthly_expenses = {i: 0 for i in range(1, 13)}
-    grand_monthly_variance = {i: 0 for i in range(1, 13)}
+    grand_monthly_budgets = {i: 0 for i in months_range}
+    grand_monthly_expenses = {i: 0 for i in months_range}
+    grand_monthly_variance = {i: 0 for i in months_range}
 
     for category_dict in [
         income_summary,
@@ -2121,7 +2210,7 @@ def fin_mis_warehouse(request):
         for entry in category_dict:
             if not entry.get("is_total"):  # Only accumulate actual categories, skip their own "Total" rows
                 continue
-            for month in range(1, 13):
+            for month in months_range:
                 grand_monthly_budgets[month] += entry["monthly_budgets"].get(month, 0)
                 grand_monthly_expenses[month] += entry["monthly_expenses"].get(month, 0)
                 grand_monthly_variance[month] += entry["monthly_variance"].get(month, 0)
@@ -2140,8 +2229,8 @@ def fin_mis_warehouse(request):
         "is_total": True,
     }
 
-    overall_monthly_expenses = {i: 0 for i in range(1, 13)}
-    overall_monthly_budgets = {i: 0 for i in range(1, 13)}
+    overall_monthly_expenses = {i: 0 for i in months_range}
+    overall_monthly_budgets = {i: 0 for i in months_range}
 
     for category_expenses in expense_dict.values():
         for month, amount in category_expenses.items():
@@ -2153,12 +2242,12 @@ def fin_mis_warehouse(request):
 
     overall_monthly_variances = {
         month: overall_monthly_budgets[month] - overall_monthly_expenses[month]
-        for month in range(1, 13)
+        for month in months_range
     }
     overall_monthly_pl_percentage = {
         month: (overall_monthly_variances[month] / overall_monthly_budgets[month] * 100)
         if overall_monthly_budgets[month] > 0 else 0.0
-        for month in range(1, 13)
+        for month in months_range
     }
 
     total_budget = sum(value if value is not None else 0.0 for value in budget_dict.values())
@@ -2181,7 +2270,7 @@ def fin_mis_warehouse(request):
         "total_expense": total_expense,
         "total_profit_loss": total_profit_loss,
         "total_pl_percentage": total_pl_percentage,
-        "months": [month_name[i] for i in range(1, 13)],
+        "months": [month_name[i] for i in months_range],
         "branches": branches,
         "units": units,
         "companies": companies,

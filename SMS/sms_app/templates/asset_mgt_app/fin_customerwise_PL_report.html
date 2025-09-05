@@ -1,4 +1,5 @@
 {% extends "asset_mgt_app/base.html" %}
+{% block title %}Customer Wise P/L Report{% endblock %}
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
@@ -62,8 +63,8 @@
         <th>Business Type</th>
         <th>Branch</th>
         <th>Customer Name</th>
-        <th>Total Invoice Amount (INR)</th>
-        <th>Total Expenses (INR)</th>
+        <th>Revenue(In Lakhs)</th>
+        <th>Expenses(In Lakhs)</th>
         <th>Profit/Loss</th>
         <th>Profit/Loss %</th>
     </tr>
@@ -77,14 +78,11 @@
         <td>{{ summary.total_invoice_amount|to_lakhs }}</td>
         <td>{{ summary.total_expenses|to_lakhs }}</td>
         <td>{{ summary.profit_loss|to_lakhs }}</td>
-        <td>{{ summary.profit_loss_percentage|floatformat:2 }}%</td>
+        <td>{{ summary.profit_loss_percentage|floatformat:0 }}%</td>
     </tr>
     {% endfor %}
     </tbody>
 </table>
-
-
-
 
 <script>
 
@@ -105,16 +103,16 @@
         data: {
             labels: labels,
             datasets: [{
-                label: 'Income (INR)',
+                label: 'Revenue',
                 data: incomeData,
-                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                backgroundColor: 'rgba(47, 85, 151, 1)',
                 borderColor: 'rgba(0, 123, 255, 1)',
                 borderWidth: 1
             }, {
-                label: 'Expense (INR)',
+                label: 'Expenses',
                 data: expenseData,
-                backgroundColor: 'rgba(255, 128, 0, 0.5)',
-                borderColor: 'rgba(255, 128, 0, 1)',
+                backgroundColor: 'rgba(143, 170, 220, 1)',
+                borderColor: 'rgba(143, 170, 220, 1)',
                 borderWidth: 1
             }, {
                 label: 'Profit/Loss (INR)',

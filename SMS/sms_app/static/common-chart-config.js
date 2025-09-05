@@ -93,11 +93,11 @@ function convertToLakhs(dataArray) {
 // Function to generate profit/loss colors dynamically
 
 function getProfitLossColors(dataArray) {
-    return dataArray.map(value => value >= 0 ? 'rgba(64, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)');
+    return dataArray.map(value => value >= 0 ? 'rgba(218, 227, 243, 1)' : 'rgba(255, 0, 0, 0.5)');
 }
 
 function getProfitLossBorderColors(dataArray) {
-    return dataArray.map(value => value >= 0 ? 'rgba(64, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
+    return dataArray.map(value => value >= 0 ? 'rgba(218, 227, 243, 1)' : 'rgba(255, 0, 0, 1)');
 }
 
 // Function to create a bar chart

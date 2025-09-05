@@ -1,4 +1,6 @@
 from django.contrib.auth.decorators import login_required
+from django.utils.dateparse import parse_date
+
 from ..forms import CustomerClaimsForm
 from ..models import CustomerClaimsInfo
 from django.contrib import messages
@@ -52,13 +54,21 @@ def customer_claims_add(request,claim_id=0):
 
 @login_required(login_url='login_page')
 def customer_claims_list(request):
-    first_name = request.session.get('first_name')  # If needed for context
-    # Fetch all expense attachments
+    first_name = request.session.get('first_name')
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
     customer_claim_list = CustomerClaimsInfo.objects.all()
+    if from_date:
+        customer_claim_list = customer_claim_list.filter(cc_updated_on__date__gte=from_date)
+
+    if to_date:
+        customer_claim_list = customer_claim_list.filter(cc_updated_on__date__lte=to_date)
 
     context = {
         'customer_claim_list': customer_claim_list,
         'first_name': first_name,
+        'from_date': from_date,
+        'to_date': to_date,
     }
     return render(request, "asset_mgt_app/customer_claim_list.html", context)
 

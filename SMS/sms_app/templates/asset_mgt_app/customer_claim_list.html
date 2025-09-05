@@ -10,8 +10,8 @@
     </div>
 </div>
 <div class="container-fluid">
-    <div class="row g-2 align-items-start flex-wrap">
-        <div class="col-12 col-md-4 col-lg-5 mb-2">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-4 col-lg-3 d-flex gap-2 mb-2 m-2">
             <div class="flex-wrap gap-2">
                 <a href="{% url 'home_page' %}" class="btn btn-primary">
                     <i class="fas fa-arrow-left"></i> Back
@@ -20,6 +20,14 @@
                     <i class="fas fa-plus"></i> Add
                 </a>
             </div>
+        </div>
+        <div class="col-6 col-md-2 mb-2 mr-2">
+            <label for="from-date"><b>From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+        </div>
+        <div class="col-6 col-md-2 mb-2">
+            <label for="to-date"><b>To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
         </div>
 
     </div>
@@ -36,6 +44,9 @@
             <th>Unit</th>
             <th>Customer</th>
             <th>WH Job Number</th>
+            <th>Reason For Claim</th>
+            <th>CAPA Issued Date</th>
+            <th>CAPA Closed Date</th>
             <th>Current Status</th>
             <th>Approval Status</th>
             <th>Updated On</th>
@@ -52,6 +63,9 @@
             <td>{{claim.cc_unit}}</td>
             <td>{{claim.cc_customer}}</td>
             <td>{{claim.cc_job_ref}}</td>
+            <td>{{claim.cc_claim_reason}}</td>
+            <td>{{claim.cc_CAPA_issueddate}}</td>
+            <td>{{claim.cc_CAPA_closeddate}}</td>
             <td>{{claim.cc_status}}</td>
             <td>{{claim.cc_approval_status}}</td>
             <td>{{claim.cc_updated_on}}</td>
@@ -109,6 +123,33 @@
             ]
 
         });
+    });
+</script>
+<script>
+    function updateFilters() {
+        const fromDate = document.getElementById('from-date').value;
+        const toDate = document.getElementById('to-date').value;
+        const url = new URL(window.location.href);
+
+        if (fromDate) {
+            url.searchParams.set('from_date', fromDate);
+        } else {
+            url.searchParams.delete('from_date');
+        }
+
+        if (toDate) {
+            url.searchParams.set('to_date', toDate);
+        } else {
+            url.searchParams.delete('to_date');
+        }
+
+        window.location.href = url.toString();
+    }
+
+    // Auto apply on change
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("from-date").addEventListener("change", updateFilters);
+        document.getElementById("to-date").addEventListener("change", updateFilters);
     });
 </script>
 {% endblock content %}

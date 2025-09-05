@@ -717,7 +717,7 @@ urlpatterns = [
     path("gatein/upload/<int:pk>/", views.gatein_upload_attachment, name="gatein_upload_attachment"),
     path('gatein/<int:pk>/upload/<str:att_type>/', views.gatein_upload_attachment, name='gatein_upload_attachment'),
     path('gatein/<int:pk>/delete/<str:att_type>/', views.gatein_delete_attachment, name='gatein_delete_attachment'),
-
+    path('overdue_jobs_report/', views.overdue_jobs_report, name='overdue_jobs_report'),
 
 ]
 

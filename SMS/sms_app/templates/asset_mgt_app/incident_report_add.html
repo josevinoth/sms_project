@@ -51,12 +51,6 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Current Status</span>
-                                    </div>
-                                    {% render_field form.inc_status id="inc_status" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
                                         <span class="input-group-text">CAPA Issued Date</span>
                                     </div>
                                     {% render_field form.inc_CAPA_issueddate type="Date" class="form-control" %}
@@ -66,6 +60,12 @@
                                         <span class="input-group-text">CAPA Closed Date</span>
                                     </div>
                                     {% render_field form.inc_CAPA_closeddate type="Date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Current Status</span>
+                                    </div>
+                                    {% render_field form.inc_status id="inc_status" class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">

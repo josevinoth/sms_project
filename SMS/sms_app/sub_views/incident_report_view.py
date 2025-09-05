@@ -1,4 +1,6 @@
 from django.contrib.auth.decorators import login_required
+from django.utils.dateparse import parse_date
+
 from ..forms import IncidentReportForm
 from ..models import IncidentReportInfo
 from django.contrib import messages
@@ -52,13 +54,21 @@ def incident_add(request,incident_id=0):
 
 @login_required(login_url='login_page')
 def incident_list(request):
-    first_name = request.session.get('first_name')  # If needed for context
-    # Fetch all expense attachments
+    first_name = request.session.get('first_name')
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
     incident_list = IncidentReportInfo.objects.all()
+    if from_date:
+        incident_list = incident_list.filter(inc_updated_on__date__gte=from_date)
+
+    if to_date:
+        incident_list = incident_list.filter(inc_updated_on__date__lte=to_date)
 
     context = {
         'incident_list': incident_list,
         'first_name': first_name,
+        'from_date': from_date,
+        'to_date': to_date,
     }
     return render(request, "asset_mgt_app/incident_report_list.html", context)
 
