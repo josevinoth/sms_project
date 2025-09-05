@@ -140,7 +140,13 @@ def goods_add(request, goods_id=0):
             form_warehouse_email = warehouse_EmailForm(request.POST)
             email_count=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_email_count
             try:
-                damage_status = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=gatein_wh_job_id).exclude(wh_damages_id=6).values_list('wh_damages_id', flat=True).first()
+                damage_status = (
+                    Warehouse_goods_info.objects
+                    .filter(wh_gate_injob_no_id=gatein_wh_job_id)
+                    .exclude(wh_damages1__id=6)  # ✅ correct way
+                    .values_list('wh_damages1__id', flat=True)  # ✅ correct way
+                    .first()
+                )
 
                 # If no non-6 values are found, default to 6
                 damage_status = damage_status if damage_status is not None else 6
@@ -177,7 +183,13 @@ def goods_add(request, goods_id=0):
             goods_form = GoodsaddForm(instance=goodsinfo)
             email_count=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_email_count
             try:
-                damage_status = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=gatein_wh_job_id).exclude(wh_damages_id=6).values_list('wh_damages_id', flat=True).first()
+                damage_status = (
+                    Warehouse_goods_info.objects
+                    .filter(wh_gate_injob_no_id=gatein_wh_job_id)
+                    .exclude(wh_damages1__id=6)  # ✅ correct way
+                    .values_list('wh_damages1__id', flat=True)  # ✅ correct way
+                    .first()
+                )
                 # If no non-6 values are found, default to 6
                 damage_status = damage_status if damage_status is not None else 6
             except ObjectDoesNotExist:

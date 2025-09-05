@@ -1,0 +1,57 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-warning">
+            <h3>DG Cargo Approval</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+
+<div class="container-fluid row mb-2">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+<hr>
+
+<table id="dg_cargo_approval_table" class="table table-bordered table-sm">
+    <thead class="thead-dark">
+    <tr>
+        <th>WH Job No</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>Edit</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for cargo in dg_cargo_list %}
+    <tr>
+
+        <td>{{ cargo.DG_wh_job_no }}</td>
+        <td>{{ cargo.DG_wh_location }}</td>
+        <td>{{ cargo.DG_wh_approval_status }}</td>
+        <td>
+            <a class="btn btn-primary" href="{% url 'dg_cargo_add' cargo.id %}">
+                <i class="far fa-edit"></i>
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    $(document).ready(function() {
+        $('#dg_cargo_approval_table').DataTable({
+            order: [0, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+</script>
+{% endblock content %}

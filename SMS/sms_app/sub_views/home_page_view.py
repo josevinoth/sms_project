@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect
 from django.db.models import Sum, Q
 from datetime import timedelta
 
+from ..sub_models.DG_cargo_checklist_mod import DGcargovalueInfo
 from ..sub_models.wh_highvaluecheck_info_mod import HighvalueInfo
 
 
@@ -37,6 +38,9 @@ def home_page(request):
     count_acceptance=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2))
     customer_contract_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30,ca_status=1))
     customer_rate_due_count = len(Customerattach.objects.filter(ca_rate_due_days__lte=30,ca_status=1))
+    customer_sop_due_count = len(Customerattach.objects.filter(ca_sop_due_days__lte=30,ca_status=1))
+    customer_kyc_due_count = len(Customerattach.objects.filter(ca_kyc_due_days__lte=30,ca_status=1))
+    DG_cargo_count = len(DGcargovalueInfo.objects.filter(DG_wh_approval_status__id=2))
     total_dues = customer_contract_due_count + customer_rate_due_count
     approval_count = TripdetailInfo.objects.filter( Q(tr_category=1),
         Q(tr_approval__isnull=True) | Q(tr_approval__ta_approval_status__id=3)
@@ -82,7 +86,10 @@ def home_page(request):
                'approval_count':approval_count,
                'checklist_count':checklist_count,
                'approval_count_wms1':approval_count_wms1,
-               'approval_count_wms2':approval_count_wms2
+               'approval_count_wms2':approval_count_wms2,
+               'DG_cargo_count':DG_cargo_count,
+               'customer_sop_due_count':customer_sop_due_count,
+               'customer_kyc_due_count':customer_kyc_due_count
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 
@@ -125,30 +132,61 @@ def customer_contract_rate_due_days(request):
 
     for i in customer_attach_list:
         customer_attach_id = i.id
+
         ca_contract_end_date_val = i.ca_contract_end_date
-        ca_rate_due_days_val = i.ca_rate_end_date
+        ca_rate_end_date_val = i.ca_rate_end_date
+        ca_sop_end_date_val = i.ca_sop_end_date
+        ca_kyc_end_date_val = i.ca_kyc_end_date
 
         if ca_contract_end_date_val:
             try:
                 ca_contract_due_days = (ca_contract_end_date_val - timezone.now().date()).days
-                Customerattach.objects.filter(pk=customer_attach_id).update(ca_contract_due_days=ca_contract_due_days)
+                Customerattach.objects.filter(pk=customer_attach_id).update(
+                    ca_contract_due_days=ca_contract_due_days
+                )
             except Exception as e:
                 print("Error calculating ca_contract_due_days:", e)
 
-        if ca_rate_due_days_val:
+        if ca_rate_end_date_val:
             try:
-                ca_rate_due_days = (ca_rate_due_days_val - timezone.now().date()).days
-                Customerattach.objects.filter(pk=customer_attach_id).update(ca_rate_due_days=ca_rate_due_days)
+                ca_rate_due_days = (ca_rate_end_date_val - timezone.now().date()).days
+                Customerattach.objects.filter(pk=customer_attach_id).update(
+                    ca_rate_due_days=ca_rate_due_days
+                )
             except Exception as e:
                 print("Error calculating ca_rate_due_days:", e)
 
-    # Return an empty HTTP response
+        if ca_sop_end_date_val:
+            try:
+                ca_sop_due_days = (ca_sop_end_date_val - timezone.now().date()).days
+                Customerattach.objects.filter(pk=customer_attach_id).update(
+                    ca_sop_due_days=ca_sop_due_days
+                )
+            except Exception as e:
+                print("Error calculating ca_sop_due_days:", e)
+
+        if ca_kyc_end_date_val:
+            try:
+                ca_kyc_due_days = (ca_kyc_end_date_val - timezone.now().date()).days
+                Customerattach.objects.filter(pk=customer_attach_id).update(
+                    ca_kyc_due_days=ca_kyc_due_days
+                )
+            except Exception as e:
+                print("Error calculating ca_kyc_due_days:", e)
+
     return HttpResponse(status=204)
 
 @login_required(login_url='login_page')
 def customer_contract_rate_dues_list(request):
     first_name = request.session.get('first_name')
-    customer_attach_list = Customerattach.objects.filter(Q(ca_contract_due_days__lte=30) | Q(ca_rate_due_days__lte=30))
+
+    customer_attach_list = Customerattach.objects.filter(
+        Q(ca_contract_due_days__lte=30) |
+        Q(ca_rate_due_days__lte=30) |
+        Q(ca_sop_due_days__lte=30) |
+        Q(ca_kyc_due_days__lte=30)
+    )
+
     context = {
         'customer_attach_list': customer_attach_list,
         'first_name': first_name,

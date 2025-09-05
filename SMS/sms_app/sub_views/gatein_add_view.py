@@ -19,6 +19,8 @@ from django.http import JsonResponse, HttpResponse
 from ..models import User_extInfo
 import pytz
 
+from ..sub_models.DG_cargo_checklist_mod import DGcargovalueInfo
+
 
 # Add WH Job
 @transaction.atomic
@@ -31,6 +33,8 @@ def gatein_add(request, gatein_id=0):
     ses_gatein_id_nam = request.session.get('ses_gatein_id_nam')
     wh_job_id = ses_gatein_id_nam
     tot_package = request.POST.get('gatein_no_of_pkg')
+    dg_cargo_list =DGcargovalueInfo.objects.filter(DG_wh_job_no=wh_job_id)
+
     if request.method == "GET":
         if gatein_id == 0:
             print("I am inside Get add Gatein")
@@ -46,6 +50,7 @@ def gatein_add(request, gatein_id=0):
                 'wh_job_id': wh_job_id,
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
                 'user_branch':user_branch,
+                'dg_cargo_list':dg_cargo_list,
             }
         else:
             print("I am inside get edit Gatein")
@@ -122,6 +127,12 @@ def gatein_add(request, gatein_id=0):
                     warehousein_status = "No Status"  # get goods status
             except ObjectDoesNotExist:
                 warehousein_status = "No Status"
+            approved_cargo = DGcargovalueInfo.objects.filter(
+                DG_wh_job_no=wh_job_id, DG_wh_approval_status=1
+            ).exists()
+            print("Approved Cargo:", approved_cargo)
+            if approved_cargo:
+                Gatein_info.objects.filter(gatein_job_no=wh_job_id).update(gatein_status_id=5)
 
             loadingbay_list= Loadingbay_Info.objects.filter(lb_job_no=wh_job_id)
             damagereport_list= DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id)
@@ -144,6 +155,7 @@ def gatein_add(request, gatein_id=0):
                 'damage_after_status': damage_after_status,
                 'warehousein_status': warehousein_status,
                 'damage_status': damage_status,
+                'dg_cargo_list': dg_cargo_list,
             }
         return render(request, "asset_mgt_app/gatein_add.html", context)
     else:

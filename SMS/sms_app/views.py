@@ -157,3 +157,4 @@ from .sub_views.wh_com_highvalue_view import highvalue_approval_view,update_high
 from .sub_views.incident_report_view import incident_add,incident_list,incident_delete
 from .sub_views.customer_claims_view import customer_claims_add,customer_claims_list,customer_claims_delete
 from .sub_views.wrong_labelling_view import wrong_labelling_add,wrong_labelling_list,wrong_labelling_delete
+from .sub_views.DGcargo_add_view import dg_cargo_add,dg_cargo_list,dg_cargo_delete,dg_cargo_approval_view,update_dg_cargo_approval
