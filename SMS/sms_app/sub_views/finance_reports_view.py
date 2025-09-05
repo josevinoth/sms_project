@@ -1756,10 +1756,12 @@ def fin_mis(request):
         "pl_percentage": net_pl_percentage,
         "is_total": True,
     }
+
+
     # Total % calculations
     net_income_percentage = (net_actual_total / income_total_expense * 100) if income_total_expense else 0.0
     net_budget_percentage = (net_budget_total / income_total_budget * 100) if income_total_budget else 0.0
-    net_variance_percentage = (net_variance_total / income_total_budget * 100) if income_total_budget else 0.0
+    net_variance_percentage = (net_variance_total / income_total_expense * 100) if income_total_expense else 0.0
 
     # Monthly % calculations
     net_income_monthly_percentage = {
@@ -2155,10 +2157,18 @@ def fin_mis_warehouse(request):
         "pl_percentage": net_pl_percentage,
         "is_total": True,
     }
-    # Total % calculations
-    net_income_percentage = (net_actual_total / income_total_expense * 100) if income_total_expense else 0.0
-    net_budget_percentage = (net_budget_total / income_total_budget * 100) if income_total_budget else 0.0
-    net_variance_percentage = (net_variance_total / income_total_expense * 100) if income_total_budget else 0.0
+
+    def safe_percentage(numerator, denominator):
+        return round((numerator / denominator * 100), 2) if denominator else 0.0
+
+    net_income_percentage = safe_percentage(net_actual_total, income_total_expense)
+    net_budget_percentage = safe_percentage(net_budget_total, income_total_budget)
+    net_variance_percentage = safe_percentage(net_variance_total, income_total_expense)
+
+    # # Total % calculations
+    # net_income_percentage = (net_actual_total / income_total_expense * 100) if income_total_expense else 0.0
+    # net_budget_percentage = (net_budget_total / income_total_budget * 100) if income_total_budget else 0.0
+    # net_variance_percentage = (net_variance_total / income_total_expense * 100) if income_total_budget else 0.0
 
     # Monthly % calculations
     net_income_monthly_percentage = {

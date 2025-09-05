@@ -313,18 +313,7 @@
       exportOptions: {
           columns: ':visible'
       },
-      customize: function (csv) {
-          const topHeader = [
-              'Warehouse',
-              ...Array(12).fill('Budget'),
-              'Total Budget',
-              ...Array(12).fill('Actuals'),
-              'Total Actuals',
-              ...Array(12).fill('Variance'),
-              'Total Variance'
-          ];
-          return topHeader.join(',') + '\n' + csv;
-      }
+
   },
 
               {
@@ -334,19 +323,6 @@
       exportOptions: {
           columns: ':visible'
       },
-      customize: function (xlsx) {
-          let sheet = xlsx.xl.worksheets['sheet1.xml'];
-          let firstRow = `
-              <row r="1">
-                  <c t="inlineStr" r="A1"><is><t>Warehouse</t></is></c>
-                  <c t="inlineStr" r="B1"><is><t colspan="12"> Budget</t></is></c>
-                  <c t="inlineStr" r="O1"><is><t colspan="12">Actuals</t></is></c>
-                  <c t="inlineStr" r="AB1"><is><t colspan="12">Variance</t></is></c>
-              </row>
-          `;
-          // Insert the new first row before the existing first row
-          sheet.childNodes[0].childNodes[1].innerHTML = firstRow + sheet.childNodes[0].childNodes[1].innerHTML;
-      }
   }
 
           ]
