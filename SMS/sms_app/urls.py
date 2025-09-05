@@ -717,6 +717,12 @@ urlpatterns = [
     path("gatein/upload/<int:pk>/", views.gatein_upload_attachment, name="gatein_upload_attachment"),
     path('gatein/<int:pk>/upload/<str:att_type>/', views.gatein_upload_attachment, name='gatein_upload_attachment'),
     path('gatein/<int:pk>/delete/<str:att_type>/', views.gatein_delete_attachment, name='gatein_delete_attachment'),
+    path("dg_cargo_add/", views.dg_cargo_add, name="dg_cargo_add"),
+    path("dg_cargo_add/<int:cargo_id>/", views.dg_cargo_add, name="dg_cargo_add"),
+    path('dg_cargo_list/', views.dg_cargo_list, name='dg_cargo_list'),
+    path('dg_cargo_delete/<int:cargo_id>/', views.dg_cargo_delete, name='dg_cargo_delete'),
+    path("dg_cargo/approval/", views.dg_cargo_approval_view, name="dg_cargo_approval_view"),
+    path("dg_cargo/approval/update/<int:cargo_id>/", views.update_dg_cargo_approval, name="update_dg_cargo_approval"),
     path('overdue_jobs_report/', views.overdue_jobs_report, name='overdue_jobs_report'),
 
 ]

@@ -9,8 +9,12 @@ class Customerattach(models.Model):
     ca_contract_start_date = models.DateField(blank=True, null=True)
     ca_contract_end_date = models.DateField(blank=True, null=True)
     ca_sop_attach = models.FileField(upload_to=customer_attach_path, null=True, blank=True)
+    ca_sop_start_date = models.DateField(blank=True, null=True)
+    ca_sop_end_date = models.DateField(blank=True, null=True)
     ca_sow_attach = models.FileField(upload_to=customer_attach_path, null=True, blank=True)
     ca_kyc_attach = models.FileField(upload_to=customer_attach_path, null=True, blank=True)
+    ca_kyc_start_date = models.DateField(blank=True, null=True)
+    ca_kyc_end_date = models.DateField(blank=True, null=True)
     ca_rate_attach = models.FileField(upload_to=customer_attach_path, null=True, blank=True)
     ca_rate_start_date = models.DateField(blank=True, null=True)
     ca_rate_end_date = models.DateField(blank=True, null=True)
@@ -19,6 +23,8 @@ class Customerattach(models.Model):
     ca_created_at = models.DateTimeField(null=True, auto_now_add=True)
     ca_contract_due_days=models.IntegerField(null=True, blank=True)
     ca_rate_due_days=models.IntegerField(null=True, blank=True)
+    ca_sop_due_days = models.IntegerField(blank=True, null=True)
+    ca_kyc_due_days = models.IntegerField(blank=True, null=True)
     ca_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.CASCADE,default=1)
 
     def __str__(self):

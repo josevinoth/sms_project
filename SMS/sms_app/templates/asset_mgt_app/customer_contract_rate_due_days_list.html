@@ -26,6 +26,8 @@
             <th>Customer Name</th>
             <th>Contract Due Days</th>
             <th>Rate Due Days</th>
+            <th>SOP Due Days</th>
+            <th>KYC Due Days</th>
         </thead>
         <tbody>
         {% for list in customer_attach_list %}
@@ -36,6 +38,8 @@
             </td>
             <td> {{list.ca_contract_due_days}}</td>
             <td> {{list.ca_rate_due_days}}</td>
+            <td> {{list.ca_sop_due_days}}</td>
+            <td> {{list.ca_kyc_due_days}}</td>
         </tr>
         {% endfor %}
         </tbody>

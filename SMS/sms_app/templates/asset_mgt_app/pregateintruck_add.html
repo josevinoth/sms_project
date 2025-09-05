@@ -710,10 +710,8 @@ document.getElementById("pregatein_invoice_value").addEventListener("input", che
     var locks = document.getElementById("pregatein_otl_type").value;  // Always a string
     var otl = document.getElementById("pregatein_otl");
 
-    alert("Selected value: " + locks);
 
     if (locks === "5") {   // compare with string
-        alert("Condition matched!");
         otl.value = "N/A";  // Default value
         otl.readOnly = true;  // Prevent user editing if required
     } else {

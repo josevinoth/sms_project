@@ -54,6 +54,22 @@
                                     {% render_field form.ca_sop_attach id="ca_sop_attach" class="form-control" %}
                                 </div>
 
+                                <!-- SOP Start Date Field -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">SOP Start Date</span>
+                                    </div>
+                                    {% render_field form.ca_sop_start_date id="ca_sop_start_date" type="date" class="form-control" %}
+                                </div>
+                                <!-- SOP End Date Field -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">SOP End Date</span>
+                                    </div>
+                                    {% render_field form.ca_sop_end_date id="ca_sop_end_date" type="date" class="form-control"  %}
+                                </div>
+
+
                                 <!-- SOW Attachment Field -->
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -77,7 +93,19 @@
                                     </div>
                                     {% render_field form.ca_rate_attach id="ca_rate_attach" class="form-control" %}
                                 </div>
-
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">KYC Start Date</span>
+                                    </div>
+                                    {% render_field form.ca_kyc_start_date id="ca_kyc_start_date" type="date" class="form-control" %}
+                                </div>
+                                <!-- KYC End Date Field -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">KYC End Date</span>
+                                    </div>
+                                    {% render_field form.ca_kyc_end_date id="ca_kyc_end_date" type="date" class="form-control"  %}
+                                </div>
                                 <!-- Rate Start Date Field -->
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -102,29 +130,29 @@
                                 </div>
                             </div>
 
-                                {% render_field form.ca_updated_by id="ca_updated_by" hidden="True" class="form-control" %}
+                            {% render_field form.ca_updated_by id="ca_updated_by" hidden="True" class="form-control" %}
 
-                                <!-- Comment Box Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Comment Box</span>
-                                    </div>
-                                    {% render_field form.ca_comments_box id="ca_comments_box" class="form-control" %}
+                            <!-- Comment Box Field -->
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Comment Box</span>
                                 </div>
+                                {% render_field form.ca_comments_box id="ca_comments_box" class="form-control" %}
+                            </div>
                         </div>
 
                         <!-- Message Display Section -->
                         <div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
 
                         <!-- Submit and Cancel Buttons -->
                         <button type="submit" class="btn btn-success" id="save-btn">
@@ -141,7 +169,7 @@
 </form>
 
 <script>
-	$(document).ready(function() {
+    $(document).ready(function() {
             {
                 var customer_id = document.getElementById("ca_customer_name").value
                 if (customer_id == "")
@@ -169,15 +197,15 @@
 </script>
 
 <script>
-        function validateEndDate() {
-            const startDate = document.getElementById('ca_contract_start_date').value;
-            const endDate = document.getElementById('ca_contract_end_date').value;
+    function validateEndDate() {
+        const startDate = document.getElementById('ca_contract_start_date').value;
+        const endDate = document.getElementById('ca_contract_end_date').value;
 
-            if (endDate < startDate) {
-                alert("End date should be greater than start date");
-                document.getElementById('ca_contract_end_date').value = '';
-            }
+        if (endDate < startDate) {
+            alert("End date should be greater than start date");
+            document.getElementById('ca_contract_end_date').value = '';
         }
+    }
 </script>
 
 

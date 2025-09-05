@@ -1,0 +1,76 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="">
+    {% csrf_token %}
+
+    <div class="row">
+        <div class="col">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center">
+                        <h3>Add / Update DG Cargo Value</h3>
+                    </div>
+                    <div class="card-body bg-light">
+                        <div class="row">
+                            <div class="col-6">
+                                <!-- WH Job Number -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">WH Job Number</span>
+                                    </div>
+                                    {% render_field form.DG_wh_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href" %}
+                                </div>
+
+                                <!-- Location -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Location</span>
+                                    </div>
+                                    {% render_field form.DG_wh_location id="DG_wh_location" class="form-control " %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <!-- Approval Status -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Approval Status</span>
+                                    </div>
+                                    {% render_field form.DG_wh_approval_status id="DG_wh_approval_status" class="form-control disable_a_href" %}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Messages -->
+                        <div class="message text-center">
+                            {% for message in messages %}
+                            <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Submit and Cancel Buttons -->
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Submit
+                        </button>
+                        <a class="btn btn-warning float-right" href="{% url 'gatein_update' gatein_wh_job_id %}">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var user_role = {{ role_id|default:0 }};  // inject safely
+        if (user_role === 2) {
+            $('#DG_wh_approval_status').addClass('disable_a_href');
+        } else {
+            $('#DG_wh_approval_status').removeClass('disable_a_href');
+        }
+    });
+</script>
+
+{% endblock content %}

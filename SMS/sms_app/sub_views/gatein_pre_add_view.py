@@ -137,7 +137,7 @@ def gatein_pre_list(request):
                 unit_field=unit_obj  # Replace with actual FK field in Gatein_pre_info
             ).count()
             # Filter only for this unit
-            Gatein_pre_list = Gatein_pre_info.objects.filter(unit_field=unit_obj).order_by('-id')
+            Gatein_pre_list = Gatein_pre_info.objects.all().order_by('-id')
         except UnitInfo.DoesNotExist:
             unit_name = None
             pending_count = 0

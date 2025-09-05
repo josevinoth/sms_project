@@ -133,3 +133,4 @@ from .sub_forms.trip_highvaluecheck_form import TripHighvalueForm
 from .sub_forms.Incidentreport_Form import IncidentReportForm
 from .sub_forms.customerclaims_Form import CustomerClaimsForm
 from .sub_forms.wronglabelling_Form import WrongLabellingForm
+from .sub_forms.DGcargoForm import DGcargoaddForm

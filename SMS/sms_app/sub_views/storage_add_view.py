@@ -92,7 +92,7 @@ def storage_list(request):
     goods_list= Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id)
     for i in goods_list:
         try:
-            arrival_date_obj = i.wh_gate_injob_no_id.gatein_truck_number_n.pregatein_arrival_time
+            arrival_date_obj = i.wh_gate_injob_no_id.gatein_truck_number_n.pregatein_arrival_date_time
             arrival_date = arrival_date_obj.astimezone(timezone.get_current_timezone()).strftime('%Y-%m-%d %H:%M')
         except AttributeError:
             messages.error(request, 'Enter Arrival Date in Gate-In tab')
