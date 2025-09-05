@@ -125,7 +125,8 @@ def branch_profit_loss(request):
         row for row in combined_data.values()
         if row['total_expense'] != 0.0 or row['total_invoice_cost'] != 0.0
     ]
-    chart_labels = [row['branch'] for row in summary_data]
+    chart_labels = [f"{row['branch']} ({row['month']})" for row in summary_data]
+
     chart_income = [row['total_invoice_cost'] for row in summary_data]
     chart_expenses = [row['total_expense'] for row in summary_data]
     chart_profit_loss = [row['profit_loss'] for row in summary_data]
@@ -236,7 +237,7 @@ def branch_unit_profit_loss(request):
         row for row in combined_data.values()
         if row['total_expense'] != 0.0 or row['total_invoice_cost'] != 0.0
     ]
-    chart_labels = [row['unit'] for row in summary_data]
+    chart_labels = [f"{row['unit']} ({row['month']})" for row in summary_data]
     chart_income = [row['total_invoice_cost'] for row in summary_data]
     chart_expenses = [row['total_expense'] for row in summary_data]
     chart_profit_loss = [row['profit_loss'] for row in summary_data]
