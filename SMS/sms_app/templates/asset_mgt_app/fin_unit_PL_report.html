@@ -1,4 +1,5 @@
 {% extends "asset_mgt_app/base.html" %}
+{% block title %}Unit Wise P/L Report{% endblock %}
 {% load widget_tweaks %}
 {% load currency_format %}
 {% block content %}
@@ -11,7 +12,7 @@
     </a>
 </div>
 <br>
-<h2 style="color:black;">Branch-Unit wise P/L Report</h2>
+<h2 style="color:black;">Unit wise P/L Report</h2>
 <hr>
 <div class="container-fluid">
     <div class="row align-items-center">
@@ -58,10 +59,8 @@
             <label for="to-date"><b>To:</b></label>
             <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
         </div>
-
     </div>
 </div>
-
 
 <div>
     <canvas id="unitBarChart"  width="300" height="100" class="bg-white box-shadow rounded" style="margin-top: 20px;"></canvas>
@@ -72,8 +71,9 @@
     <tr>
         <th>Branch</th>
         <th>Unit</th>
-        <th>Total Expenses</th>
-        <th>Total Invoice Cost</th>
+        <th>Month</th>
+        <th>Revenue(In Lakhs)</th>
+        <th>Expenses(In Lakhs)</th>
         <th>Profit/Loss</th>
         <th>Profit/Loss %</th>
     </tr>
@@ -83,10 +83,11 @@
     <tr>
         <td>{{ item.branch }}</td>
         <td>{{ item.unit }}</td>
-        <td>{{ item.total_expense|to_lakhs }}</td>
+        <td>{{ item.month }}</td>
         <td>{{ item.total_invoice_cost|to_lakhs }}</td>
+        <td>{{ item.total_expense|to_lakhs }}</td>
         <td>{{ item.profit_loss|to_lakhs }}</td>
-        <td>{{ item.profit_loss_percentage|floatformat:2 }}%</td>
+        <td>{{ item.profit_loss_percentage|floatformat:0 }}%</td>
     </tr>
     {% endfor %}
     </tbody>
@@ -103,15 +104,15 @@
         {
             label: 'Income',
             data: incomeData1,
-            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(47, 85, 151, 1)',
+            borderColor: 'rgba(47, 85, 151, 1)',
             borderWidth: 1,
         },
         {
             label: 'Expenses',
             data: expenseData1,
-            backgroundColor: 'rgba(255, 128, 0, 0.5)',
-            borderColor: 'rgba(255, 128, 0, 1)',
+            backgroundColor: 'rgba(143, 170, 220, 1)',
+            borderColor: 'rgba(143, 170, 220, 1)',
             borderWidth: 1,
         },
         {
@@ -190,6 +191,5 @@
     console.log(url.toString());
     window.location.href = url.toString();
 }
-
 </script>
 {% endblock content %}

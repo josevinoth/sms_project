@@ -723,6 +723,7 @@ urlpatterns = [
     path('dg_cargo_delete/<int:cargo_id>/', views.dg_cargo_delete, name='dg_cargo_delete'),
     path("dg_cargo/approval/", views.dg_cargo_approval_view, name="dg_cargo_approval_view"),
     path("dg_cargo/approval/update/<int:cargo_id>/", views.update_dg_cargo_approval, name="update_dg_cargo_approval"),
+    path('overdue_jobs_report/', views.overdue_jobs_report, name='overdue_jobs_report'),
 
 ]
 

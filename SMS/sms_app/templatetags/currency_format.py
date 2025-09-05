@@ -33,7 +33,7 @@ def format_currency(value):
 def to_lakhs(value):
 
     try:
-        return f"{float(value) / 100000:.2f} L"
+        return f"{float(value) / 100000:.2f} "
     except (ValueError, TypeError):
         return value
 
