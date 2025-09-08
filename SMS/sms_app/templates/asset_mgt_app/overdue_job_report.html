@@ -46,21 +46,31 @@
         </div>
     </div>
 </div>
-
-<hr>
-<div class="container-fluid">
+<br>
+<div class="container-fluid shadow-box-table">
     <table id="overdue_job_report" class="table table-striped table-bordered">
         <thead class="thead-dark">
+        <tr>
+            <th><input type="text" class="form-control filter-input" placeholder="Sr.No"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Job Num"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Customer"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Checkin Date"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Checkout Date"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Revenue"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Days"></th>
+        </tr>
         <tr>
             <th>Sr No.</th>
             <th>Job Number</th>
             <th>Branch</th>
             <th>Unit</th>
             <th>Customer</th>
+            <th>Checkin Date</th>
             <th>Checkout Date</th>
-            <th>Credit Days</th>
-            <th>Due Date</th>
-            <th>Over Due Days</th>
+            <th>Revenue</th>
+            <th>Days Since Checkout</th>
         </tr>
         </thead>
         <tbody>
@@ -68,13 +78,13 @@
         <tr>
             <td>{{ forloop.counter }}</td>
             <td>{{ job.wh_job_no }}</td>
-            <td>{{ job.wh_branch }}</td>
-            <td>{{ job.wh_unit }}</td>
-            <td>{{ job.customer }}</td>
-            <td>{{ job.checkout }}</td>
-            <td>{{ job.credit_days }}</td>
-            <td>{{ job.due_date }}</td>
-            <td>{{ job.overdue_days }}</td>
+            <td>{{ job.wh_branch.loc_name }}</td>
+            <td>{{ job.wh_unit.unit_name }}</td>
+            <td>{{ job.wh_customer_name.cu_name }}</td>
+            <td>{{ job.wh_checkin_time }}</td>
+            <td>{{ job.wh_checkout_time }}</td>
+            <td>{{ job.wh_total_invoice_cost }}</td>
+            <td>{{ job.days_since_checkout.days }}</td>
 
         </tr>
         {% endfor %}
@@ -96,18 +106,29 @@
 </div>
 <script>
     $(document).ready(function() {
-        $('#overdue_job_report').DataTable({
-            scrollY: "600px",
-            scrollCollapse: true,
-            paging: true,
-            pageLength: 10,
-            lengthMenu: [10, 25, 50, 100],
-            dom: 'lBfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'pdf', 'print'
-            ]
-        });
+    var table = $('#overdue_job_report').DataTable({
+        scrollY: "600px",
+        scrollCollapse: true,
+        paging: true,
+        pageLength: 10,
+        lengthMenu: [10, 25, 50, 100],
+        dom: 'lBfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
     });
+
+    // Apply search to each column
+    $('.filter-input').on('keyup change', function () {
+        var columnIndex = $(this).parent().index();
+        table.column(columnIndex).search(this.value).draw();
+    });
+
+    // Prevent sorting when clicking inside the filter input
+    $('#overdue_job_report thead input').on('click', function(e) {
+        e.stopPropagation();
+    });
+});
 
 
         document.getElementById('branch-filter').addEventListener('change', updateFilters);

@@ -554,9 +554,9 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
     if from_date_str and to_date_str:
         from_date = timezone.make_aware(datetime.datetime.strptime(from_date_str, "%Y-%m-%d"))
         to_date = timezone.make_aware(datetime.datetime.strptime(to_date_str, "%Y-%m-%d")) + timedelta(days=1)
-    # else:
-    #     to_date = timezone.now()
-    #     from_date = to_date - timedelta(days=120)
+    else:
+        to_date = timezone.now()
+        from_date = to_date - timedelta(days=120)
 
     print('Entering stcokvalue_send_email_view')
     if request.method == 'POST':
@@ -589,6 +589,20 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             'MAWB','Dispatch_Number','Dispatch quantity','Stock On Hand'
         ]
         ws.append(headers)
+        header_font = Font(name="Arial", bold=True, size=11, color="000000")
+        yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+        border_style = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin'),
+        )
+
+        for cell in ws[1]:
+            cell.font = header_font
+            cell.fill = yellow_fill
+            cell.border = border_style
+            cell.alignment = Alignment(horizontal='center', vertical='center')
 
         # Fetch the IDs from Gatein_info
         gate_in_ids = Gatein_info.objects.filter(gatein_pre_id=pre_gatein_id).values_list('id', flat=True)
@@ -677,15 +691,8 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                         dispatch_depature_time = None
                 except AttributeError:
                     dispatch_depature_time = None
-                header_font = Font(name="Arial", bold=True, size=11)  # Make the header row bold
-                cell_font = Font(name="Arial", bold=False, size=10)  # settings fro cells
-                yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Yellow fill
-                border_style = Border(
-                    left=Side(style='thin'),
-                    right=Side(style='thin'),
-                    top=Side(style='thin'),
-                    bottom=Side(style='thin'),
-                )
+
+
                 row = [
                     stock_value.wh_job_no,  # Index 0
                     stock_value.wh_qr_rand_num,  # Index 1
@@ -801,9 +808,9 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                 for cell in ws[ws.max_row]:
                     cell.border = border_style
                     if damage_flag:
-                        cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red if damaged
+                        cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red font
                     else:
-                        cell.font = cell_font  # Normal font
+                        cell.font = Font(name="Arial", bold=False, size=10, color="000000")
 
         sheet = wb.active
 

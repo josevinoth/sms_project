@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from django.db.models import Count, Q, Sum, Case, When, Value, CharField, Min, FloatField, F, IntegerField
+from django.db.models import Count, Q, Sum, Case, When, Value, CharField, Min, FloatField, F, IntegerField, \
+    ExpressionWrapper, fields
 from django.db.models import F, Subquery, OuterRef
-from django.db.models.functions import Coalesce, Round, ExtractMonth
+from django.db.models.functions import Coalesce, Round, ExtractMonth, Now
 from django.utils import timezone
 from calendar import month_name
 from django.db.models.functions import TruncMonth
@@ -779,25 +780,14 @@ def overdue_jobs_report(request):
 
     if to_date:
         jobs = jobs.filter(wh_checkout_time__date__lte=to_date)
+    jobs = jobs.annotate(
+        days_since_checkout=ExpressionWrapper(
+            Now() - F('wh_checkout_time'),
+            output_field=fields.DurationField()
+        )
+    )
 
-    job_list = []
-    for job in jobs:
-        credit_days = job.wh_customer_name.cu_creditdays or 0
-        checkout_date = job.wh_checkout_time.date()
-        due_date = checkout_date + timedelta(days=credit_days)
-        overdue_days = (today - due_date).days if today > due_date else 0
-
-        job_list.append({
-            "wh_job_no": job.wh_job_no,
-            "wh_branch": job.wh_branch.loc_name if job.wh_branch else "N/A",
-            "wh_unit": job.wh_unit.unit_name if job.wh_unit else "N/A",
-            "customer": job.wh_customer_name.cu_name if job.wh_customer_name else "N/A",
-            "checkout": checkout_date,
-            "credit_days": credit_days,
-            "due_date": due_date,
-            "overdue_days": overdue_days,
-        })
-    paginator = Paginator(job_list, 50)  # 50 jobs per page
+    paginator = Paginator(jobs, 50)  # 50 jobs per page
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
@@ -2211,7 +2201,7 @@ def fin_mis_warehouse(request):
     grand_monthly_variance = {i: 0 for i in months_range}
 
     for category_dict in [
-        income_summary,
+
         department_expenses_summary,
         employee_benefits_summary,
         operational_summary,
@@ -2230,7 +2220,7 @@ def fin_mis_warehouse(request):
     total_expense = sum(grand_monthly_expenses.values())
     total_variance = sum(grand_monthly_variance.values())
     grand_totals_summary = {
-        "expense_type": "Grand Totals",
+        "expense_type": "Total Expenses",
         "monthly_budgets": grand_monthly_budgets,
         "monthly_expenses": grand_monthly_expenses,
         "monthly_variance": grand_monthly_variance,
