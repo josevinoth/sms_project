@@ -11,18 +11,19 @@
     </div>
 </div>
 
-<div class="container-fluid row">
+<div class="container-fluid row mb-3">
     <div class="col-md-1">
         <a href="{% url 'home_page' %}" class="btn btn-primary">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
-    <div class="col-md-1">
-      <a href="{% url 'high_value_add' %}" class="btn btn-success">
-        <i class="fas fa-plus"></i> Add
-      </a>
-    </div>
+<!--    <div class="col-md-1">-->
+<!--        <a href="{% url 'high_value_add' %}" class="btn btn-success">-->
+<!--            <i class="fas fa-plus"></i> Add-->
+<!--        </a>-->
+<!--    </div>-->
 </div>
+
 <hr>
 
 <div class="container-fluid">
@@ -41,16 +42,6 @@
                 <th>Commodity</th>
                 <th>Value</th>
                 <th>No Of Pcs</th>
-                <th>Condition Of Cargo Received</th>
-                <th>Watch Sensor Available Or Not</th>
-                <th>CCTV Coverage</th>
-                <th>Driver Validation Received</th>
-                <th>Truck Validation Received</th>
-                <th>Shipment Information Received</th>
-                <th>Customer Information Receipt Of Cargo</th>
-                <th>Handling Instruction If Any</th>
-                <th>Expected Days Of Storage</th>
-                <th>BVM Scope Of Work</th>
                 <th>Edit</th>
                 <th>Delete</th>
             </tr>
@@ -70,23 +61,13 @@
                 <td>{{ high.hc_commodity }}</td>
                 <td>{{ high.hc_value }}</td>
                 <td>{{ high.hc_no_of_pcs }}</td>
-                <td>{{ high.hc_condition_cargo_received }}</td>
-                <td>{{ high.hc_tilt_watch_sensor_available }}</td>
-                <td>{{ high.hc_cctv_coverage }}</td>
-                <td>{{ high.hc_driver_validation_received }}</td>
-                <td>{{ high.hc_truck_validation }}</td>
-                <td>{{ high.hc_shipment_information }}</td>
-                <td>{{ high.hc_customer_informed }}</td>
-                <td>{{ high.hc_handling_instruction }}</td>
-                <td>{{ high.hc_expected_days }}</td>
-                <td>{{ high.hc_bvm_scope_work }}</td>
                 <td>
                     <a class="btn btn-primary" href="{% url 'high_value_update' high.id %}">
                         <i class="far fa-edit"></i>
                     </a>
                 </td>
                 <td>
-                    <form action="{% url 'high_value_delete' high.id %}" method="post" onclick="return confirm('Are you sure?');">
+                    <form action="{% url 'high_value_delete' high.id %}" method="post" onsubmit="return confirm('Are you sure?');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i>
@@ -102,7 +83,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         $('#highvalue_list').DataTable({
-            order: [[2, 'desc']],
+            order: [[4, 'desc']], // sort by Date column
             responsive: true,
             scrollX: true,
             scrollCollapse: true,
