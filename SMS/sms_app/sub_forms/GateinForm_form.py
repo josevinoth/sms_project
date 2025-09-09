@@ -1,5 +1,7 @@
 from django import forms
 from django.db.models import Q
+from django.utils.timezone import now
+from datetime import timedelta
 
 from ..models import Gatein_info,Gatein_pre_info,Pregateintruckinfo
 
@@ -19,7 +21,13 @@ class GateinaddForm(forms.ModelForm):
         self.fields['gatein_department'].empty_label = "--Select--"
         self.fields['gatein_customer_type'].empty_label = "--Select--"
         self.fields['gatein_pre_id'].empty_label = "--Select--"
-        self.fields['gatein_pre_id'].queryset = Gatein_pre_info.objects.filter(Q(gatein_pre_status=6) | Q(pk=self.instance.gatein_pre_id_id or None))
+        three_days_ago = now() - timedelta(days=3)
+        Gatein_pre_info.objects.filter(
+            gatein_pre_created_at__lte=three_days_ago,
+            gatein_pre_status__id__lt=5  # Only update if not already completed
+        ).update(gatein_pre_status_id=5)
+        current_pre_id = self.instance.gatein_pre_id_id if self.instance.pk else None
+        self.fields['gatein_pre_id'].queryset = Gatein_pre_info.objects.filter(Q(gatein_pre_created_at__gte=three_days_ago) | Q(pk=current_pre_id))
         self.fields['gatein_updated_by'].empty_label = "--Select--"
         self.fields['gatein_comodity'].empty_label = "--Select--"
         self.fields['gatein_cargo'].empty_label = "--Select--"

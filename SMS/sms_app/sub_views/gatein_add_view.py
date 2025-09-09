@@ -285,20 +285,19 @@ def gatein_delete(request,gatein_id):
 @login_required(login_url='login_page')
 def load_pre_gate_in(request):
     pre_gatein_val = request.GET.get('pre_gatein_val')
-    pre_gatein = Gatein_pre_info.objects.get(id=pre_gatein_val)
-    all_trucks = Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein)
-
-    used_trucks = Gatein_info.objects.filter(gatein_pre_id=pre_gatein).values_list('gatein_truck_number_n_id', flat=True)
-    unused_trucks = all_trucks.exclude(id__in=used_trucks)
-
-    if not unused_trucks.exists():
-        pre_gatein.gatein_pre_status_id = 5
-        pre_gatein.save(update_fields=["gatein_pre_status"])
+    pre_gatein_id = Gatein_pre_info.objects.get(gatein_pre_number=pre_gatein_val).id
+    pre_gatein_truck_list=Pregateintruckinfo.objects.filter(pregatein_number=pre_gatein_id)
+    print('pre_gatein_truck_list',pre_gatein_truck_list)
+    truck_numbers=[]
+    truck_numbers_id=[]
+    for i in pre_gatein_truck_list:
+        truck_numbers.append(i.pregatein_truck_number)
+        truck_numbers_id.append(i.id)
     data = {
-        'truck_numbers_id': [t.id for t in unused_trucks],
-        'truck_numbers': [t.pregatein_truck_number for t in unused_trucks],
-    }
-
+            'truck_numbers_id': truck_numbers_id,
+            'truck_numbers': truck_numbers,
+        }
+    # return HttpResponse(json.dumps(data))
     return JsonResponse(data)
 
 # Load pre-gatein truck details

@@ -603,9 +603,17 @@ def expenses_report(request):
         )
 
     expense_summary = (
-        expense_summary.values(expense_type=F('exp_ext_expense_number__exp_expense_type__exp_type_name'))
+        expense_summary
+        .annotate(month_start=TruncMonth("exp_ext_expense_number__exp_service_start_date"))
+        .values(
+            'exp_ext_branch__loc_name',
+            'exp_ext_unit__unit_name',
+            'exp_ext_expense_number__exp_business__bvm_business',
+            'month_start',
+            expense_type=F('exp_ext_expense_number__exp_expense_type__exp_type_name'),
+        )
         .annotate(total_expense=Sum('exp_ext_amount'))
-        .order_by('expense_type')
+        .order_by('exp_ext_branch__loc_name', 'exp_ext_unit__unit_name', 'month_start', 'expense_type')
     )
     chart_labels = [entry['expense_type'] for entry in expense_summary]
     chart_data = [entry['total_expense'] for entry in expense_summary]
