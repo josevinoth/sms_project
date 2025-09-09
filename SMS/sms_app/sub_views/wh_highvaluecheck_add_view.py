@@ -74,7 +74,7 @@ def highvalue_add(request, high_value_id=0):
 def highvalue_list(request):
     first_name = request.session.get('first_name')
     pregateintruck_id = request.session.get('ses_pregateintruck_id')
-    high_list = HighvalueInfo.objects.filter(hc_pregatein_number=pregateintruck_id)
+    high_list = HighvalueInfo.objects.all()
     context = {'high_list': high_list, 'first_name': first_name}
     return render(request, "asset_mgt_app/wh_highvaluecheck_list.html", context)
 
