@@ -10,6 +10,7 @@ class IncidentReportForm(forms.ModelForm):
         super(IncidentReportForm, self).__init__(*args, **kwargs)
         self.fields['inc_branch'].empty_label = "--Select--"
         self.fields['inc_unit'].empty_label = "--Select--"
+        self.fields['inc_customer'].empty_label = "--Select--"
         self.fields['inc_details'].empty_label = "--Select--"
         self.fields['inc_status'].empty_label = "--Select--"
         self.fields['inc_approval_status'].empty_label = "--Select--"

@@ -25,6 +25,12 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer</span>
+                                    </div>
+                                    {% render_field form.inc_customer id="inc_customer"  class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
                                         <span class="input-group-text">Date Of Incident</span>
                                     </div>
                                     {% render_field form.inc_incident_date type="Date" class="form-control" %}
@@ -35,11 +41,11 @@
                                     </div>
                                     {% render_field form.inc_details id="inc_details" class="form-control"  %}
                                 </div>
-                                <div class="input-group input-group-sm mb-3">
+                                <div class="input-group input-group-sm mb-3 row-2">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Root Cause Analysis</span>
                                     </div>
-                                    {% render_field form.inc_analysis id="inc_analysis" class="form-control"  %}
+                                    {% render_field form.inc_analysis id="inc_analysis" class="form-control" rows="2" %}
                                 </div>
                             </div>
                             <div class="col-6">

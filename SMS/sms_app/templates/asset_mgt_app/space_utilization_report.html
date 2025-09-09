@@ -26,6 +26,19 @@
     <table  id="space_utilization_report" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Bay"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Customer"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Model"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Total Area"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Occupied Area"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Available Area"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Total Volume"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Occupied Volume"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Search Available Volume"></th>
+</tr>
+        <tr>
             <th>Warehouse Branch</th>
             <th>Warehouse Unit</th>
             <th>Bay</th>
@@ -60,7 +73,7 @@
 
 <script>
     $(document).ready(function() {
-    $('#space_utilization_report').DataTable({
+    var table = $('#space_utilization_report').DataTable({
         scrollY: "600px",
 <!--        scrollX: true,-->
         scrollCollapse: true,
@@ -70,6 +83,17 @@
             'copy', 'csv', 'excel', 'pdf', 'print'
         ]
     });
+    // Apply search to each column
+    $('.filter-input').on('keyup change', function () {
+        var columnIndex = $(this).parent().index();
+        table.column(columnIndex).search(this.value).draw();
+    });
+
+    // Prevent sorting when clicking inside the filter input
+    $('#space_utilization_report thead input').on('click', function(e) {
+        e.stopPropagation();
+    });
+
 } );
 </script>
 

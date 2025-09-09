@@ -1,5 +1,7 @@
 from django.db import models
-from ..models import Location_info, UnitInfo, MyUser,StatusList,approval_status_info,Incident_details_info
+
+from .customer_mod import CustomerInfo
+from ..models import Location_info, UnitInfo, MyUser,StatusList,approval_status_info,Incident_details_info,CustomerInfo
 
 class IncidentReportInfo(models.Model):
     inc_branch = models.ForeignKey(Location_info, on_delete=models.CASCADE, blank=True, null=True)
@@ -14,3 +16,4 @@ class IncidentReportInfo(models.Model):
     inc_approval_status = models.ForeignKey(approval_status_info, on_delete=models.CASCADE, blank=True, null=True)
     inc_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     inc_updated_on = models.DateTimeField(null=True, auto_now=True)
+    inc_customer = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, blank=True, null=True)

@@ -29,3 +29,4 @@ class WrongLabellingInfo(models.Model):
     wl_approval_status = models.ForeignKey(approval_status_info, on_delete=models.CASCADE, blank=True, null=True)
     wl_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     wl_updated_on = models.DateTimeField(null=True, auto_now=True)
+    wl_amount = models.FloatField(default=0.0)
