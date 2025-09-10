@@ -55,7 +55,7 @@ def dg_cargo_list(request):
         'dg_cargo_list': dg_cargo_list,
         'first_name': first_name
     }
-    return render(request, "asset_mgt_app/dg_cargo_list_woh.html", context)
+    return render(request, "asset_mgt_app/dg_cargo_list.html", context)
 
 
 # Delete DG Cargo

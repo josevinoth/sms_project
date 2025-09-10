@@ -389,28 +389,26 @@
 </script>
 <script>
 	$("#gatein_pre_id").change(function () {
-    var pre_gatein_val = $(this).val();
-    $.ajax({
+      var pre_gatein_val = $(this).find(":selected").text();
+       $.ajax({
         url: '{% url 'load_pre_gate_in' %}',
         data: {
-            'pre_gatein_val': pre_gatein_val
+          'pre_gatein_val': pre_gatein_val
         },
         success: function (data) {
-            var truck_numbers = data.truck_numbers;
-            var truck_numbers_id = data.truck_numbers_id;
-
+            var truck_numbers=data.truck_numbers;
+            var truck_numbers_id=data.truck_numbers_id;
             $('#gatein_truck_number_n').removeClass('disable_a_href');
+            $('#gatein_truck_number_n').empty();
             $('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
-
-            for (var i = 0; i < truck_numbers.length; i++) {
-                $("#gatein_truck_number_n").append(
-                    "<option value='" + truck_numbers_id[i] + "'>" + truck_numbers[i] + "</option>"
-                );
+            var len = (truck_numbers).length;
+            $('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
+            for( var i = 0; i<len; i++){
+                $("#gatein_truck_number_n").append("<option value='"+truck_numbers_id[i]+"'>"+truck_numbers[i]+"</option>");
             }
         }
+      });
     });
-});
-
 </script>
 <script>
 	$("#gatein_truck_number_n").change(function () {

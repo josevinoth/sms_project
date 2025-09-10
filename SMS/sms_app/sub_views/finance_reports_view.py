@@ -26,7 +26,9 @@ def finance_reports(request):
 def branch_profit_loss(request):
     first_name = request.session.get('first_name')
     branches = Location_info.objects.all()
+    companies = Business_Sol_info.objects.all()
     selected_branch = request.GET.get('branch', '')
+    selected_company = request.GET.get('company', '')
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
 
@@ -36,6 +38,10 @@ def branch_profit_loss(request):
     if selected_branch:
         expenses_filter['exp_ext_branch__loc_name'] = selected_branch
         invoices_filter['wh_branch__loc_name'] = selected_branch
+
+    if selected_company:
+        expenses_filter['exp_ext_expense_number__exp_business__bvm_business'] = selected_company
+
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
@@ -137,6 +143,8 @@ def branch_profit_loss(request):
         'branches': branches,
         'first_name': first_name,
         'selected_branch': selected_branch,
+        'selected_company':selected_company,
+        'companies':companies,
         'from_date': from_date.strftime('%Y-%m-%d') if from_date else '',
         'to_date': to_date.strftime('%Y-%m-%d') if to_date else '',
         'chart_labels': chart_labels,
@@ -152,7 +160,9 @@ def branch_unit_profit_loss(request):
     first_name = request.session.get('first_name')
     branches = Location_info.objects.all()
     units = UnitInfo.objects.all().distinct()
+    companies = Business_Sol_info.objects.all()
 
+    selected_company = request.GET.get('company', '')
     selected_branch = request.GET.get('branch', '')
     selected_unit = request.GET.get('unit', '')
     from_date = request.GET.get('from_date')
@@ -174,6 +184,8 @@ def branch_unit_profit_loss(request):
     if selected_unit:
         expenses_filter['exp_ext_unit__unit_name'] = selected_unit
         invoices_filter['wh_unit__unit_name'] = selected_unit
+    if selected_company:
+        expenses_filter['exp_ext_expense_number__exp_business__bvm_business'] = selected_company
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
@@ -250,6 +262,8 @@ def branch_unit_profit_loss(request):
         'units': units,
         'selected_branch': selected_branch,
         'selected_unit': selected_unit,
+        'selected_company': selected_company,
+        'companies': companies,
         'from_date': from_date.strftime('%Y-%m-%d') if from_date else '',
         'to_date': to_date.strftime('%Y-%m-%d') if to_date else '',
         'chart_labels': chart_labels,
@@ -603,9 +617,17 @@ def expenses_report(request):
         )
 
     expense_summary = (
-        expense_summary.values(expense_type=F('exp_ext_expense_number__exp_expense_type__exp_type_name'))
+        expense_summary
+        .annotate(month_start=TruncMonth("exp_ext_expense_number__exp_service_start_date"))
+        .values(
+            'exp_ext_branch__loc_name',
+            'exp_ext_unit__unit_name',
+            'exp_ext_expense_number__exp_business__bvm_business',
+            'month_start',
+            expense_type=F('exp_ext_expense_number__exp_expense_type__exp_type_name'),
+        )
         .annotate(total_expense=Sum('exp_ext_amount'))
-        .order_by('expense_type')
+        .order_by('exp_ext_branch__loc_name', 'exp_ext_unit__unit_name', 'month_start', 'expense_type')
     )
     chart_labels = [entry['expense_type'] for entry in expense_summary]
     chart_data = [entry['total_expense'] for entry in expense_summary]
