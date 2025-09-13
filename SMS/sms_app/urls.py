@@ -724,7 +724,9 @@ urlpatterns = [
     path("dg_cargo/approval/", views.dg_cargo_approval_view, name="dg_cargo_approval_view"),
     path("dg_cargo/approval/update/<int:cargo_id>/", views.update_dg_cargo_approval, name="update_dg_cargo_approval"),
     path('overdue_jobs_report/', views.overdue_jobs_report, name='overdue_jobs_report'),
-
+    path('incident_report/', views.incident_report, name='incident_report'),
+    path('wrong_labelling_report/', views.wrong_labelling_report, name='wrong_labelling_report'),
+    path('customer_claims_report/', views.customer_claims_report, name='customer_claims_report'),
 ]
 
 

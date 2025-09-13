@@ -6,14 +6,20 @@
 {% load currency_format %}
 
 <body>
-<div class="col-md-1">
-    <a href="{% url 'finance_reports' %}" class="btn btn-primary">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
+<div class="container-fluid d-flex align-items-center justify-content-between py-3">
+    <div>
+        <a href="{% url 'finance_reports' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="flex-grow-1 d-flex justify-content-center">
+        <div class="rounded text-center bg-info shadow-box px-4 py-2">
+            <h3>BusinessModel Wise P/L Report</h3>
+        </div>
+    </div>
+    <div style="width: 80px;"></div>
 </div>
 <br>
-<h2 style="color:black;">Business Model Wise P/L Report</h2>
-<hr>
 <div class="container-fluid">
     <div class="row align-items-center">
         <div class="col-md-2">
@@ -56,13 +62,14 @@
 <div style="width: 100%; margin: 20px;">
     <canvas id="businessModelChart" class="bg-white box-shadow rounded"></canvas>
 </div>
-<hr>
-
+<br>
+<div class="container-fluid shadow-box-table p-3">
 <table id="businessmodel_PL_table" class="table table-striped table-bordered">
     <thead class="thead-dark">
     <tr>
         <th>Branch</th>
         <th>Unit</th>
+        <th>Month</th>
         <th>Revenue(In Lakhs)</th>
         <th>Expense(In Lakhs)</th>
         <th>Profit/Loss</th>
@@ -74,6 +81,7 @@
     <tr>
         <td>{{ result.branch }}</td>
         <td>{{ result.unit }}</td>
+        <td>{{ result.month }}</td>
         <td>{{ result.total_income|to_lakhs }}</td>
         <td>{{ result.total_expense|to_lakhs }}</td>
         <td>{{ result.profit_loss|to_lakhs }}</td>
@@ -82,7 +90,7 @@
     {% endfor %}
     </tbody>
 </table>
-
+</div>
 
 <script>
      const labels1 = {{ chart_labels|safe }};
