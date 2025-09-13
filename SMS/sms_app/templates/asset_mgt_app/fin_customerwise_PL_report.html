@@ -62,34 +62,44 @@
 <canvas id="businessModelChart" width="400" height="200" class="bg-white box-shadow rounded" style="margin-top: 20px;"></canvas>
 <br>
 <div class="container-fluid shadow-box-table p-3">
-<table id="customerwise_PL_table" class="table table-striped table-bordered">
-    <thead class="thead-dark">
-    <tr>
-        <th>Business Type</th>
-        <th>Branch</th>
-        <th>Month</th>
-        <th>Customer Name</th>
-        <th>Revenue(In Lakhs)</th>
-        <th>Expenses(In Lakhs)</th>
-        <th>Profit/Loss</th>
-        <th>Profit/Loss %</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for summary in business_summary %}
-    <tr>
-        <td>{{ summary.wh_customer_type__tb_trbusinesstype }}</td>
-        <td>{{ summary.wh_branch__loc_name }}</td>
-        <td>{{ summary.month_name }}</td>
-        <td>{{ summary.wh_customer_name__cu_nameshort }}</td>
-        <td>{{ summary.total_invoice_amount|to_lakhs }}</td>
-        <td>{{ summary.total_expenses|to_lakhs }}</td>
-        <td>{{ summary.profit_loss|to_lakhs }}</td>
-        <td>{{ summary.profit_loss_percentage|floatformat:0 }}%</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+    <table id="customerwise_PL_table" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Business Type"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Month"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Customer"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Revenue"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Expenses"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Profit/Loss"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Profit/Loss %"></th>
+        </tr>
+        <tr>
+            <th>Business Type</th>
+            <th>Branch</th>
+            <th>Month</th>
+            <th>Customer Name</th>
+            <th>Revenue(In Lakhs)</th>
+            <th>Expenses(In Lakhs)</th>
+            <th>Profit/Loss</th>
+            <th>Profit/Loss %</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for summary in business_summary %}
+        <tr>
+            <td>{{ summary.wh_customer_type__tb_trbusinesstype }}</td>
+            <td>{{ summary.wh_branch__loc_name }}</td>
+            <td>{{ summary.month_name }}</td>
+            <td>{{ summary.wh_customer_name__cu_nameshort }}</td>
+            <td>{{ summary.total_invoice_amount|to_lakhs }}</td>
+            <td>{{ summary.total_expenses|to_lakhs }}</td>
+            <td>{{ summary.profit_loss|to_lakhs }}</td>
+            <td>{{ summary.profit_loss_percentage|floatformat:0 }}%</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 </div>
 <script>
 
@@ -169,14 +179,23 @@
 <script>
     // Initialize DataTable
     $(document).ready(function() {
-        $('#customerwise_PL_table').DataTable({
+         var table = $('#customerwise_PL_table').DataTable({
             scrollY: "600px",
             scrollCollapse: true,
             order: [1, 'desc'],
             dom: 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'print']
         });
+    $('.filter-input').on('keyup change', function () {
+        var columnIndex = $(this).parent().index();
+        table.column(columnIndex).search(this.value).draw();
     });
+
+
+    $('#customerwise_PL_table thead input').on('click', function(e) {
+        e.stopPropagation();
+    });
+});
 
     document.getElementById('branch-filter').addEventListener('change', updateFilters);
     document.getElementById('businessmodel-filter').addEventListener('change', updateFilters);

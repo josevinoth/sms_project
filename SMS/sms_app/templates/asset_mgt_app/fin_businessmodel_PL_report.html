@@ -64,77 +64,96 @@
 </div>
 <br>
 <div class="container-fluid shadow-box-table p-3">
-<table id="businessmodel_PL_table" class="table table-striped table-bordered">
-    <thead class="thead-dark">
-    <tr>
-        <th>Branch</th>
-        <th>Unit</th>
-        <th>Month</th>
-        <th>Revenue(In Lakhs)</th>
-        <th>Expense(In Lakhs)</th>
-        <th>Profit/Loss</th>
-        <th>Profit/Loss (%)</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for result in results %}
-    <tr>
-        <td>{{ result.branch }}</td>
-        <td>{{ result.unit }}</td>
-        <td>{{ result.month }}</td>
-        <td>{{ result.total_income|to_lakhs }}</td>
-        <td>{{ result.total_expense|to_lakhs }}</td>
-        <td>{{ result.profit_loss|to_lakhs }}</td>
-        <td>{{ result.profit_loss_percentage|floatformat:0 }}%</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+    <table id="businessmodel_PL_table" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+
+            <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Month"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Revenue"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Expenses"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Profit/Loss"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Profit/Loss %"></th>
+        </tr>
+        <tr>
+            <th>Branch</th>
+            <th>Unit</th>
+            <th>Month</th>
+            <th>Revenue(In Lakhs)</th>
+            <th>Expense(In Lakhs)</th>
+            <th>Profit/Loss</th>
+            <th>Profit/Loss (%)</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for result in results %}
+        <tr>
+            <td>{{ result.branch }}</td>
+            <td>{{ result.unit }}</td>
+            <td>{{ result.month }}</td>
+            <td>{{ result.total_income|to_lakhs }}</td>
+            <td>{{ result.total_expense|to_lakhs }}</td>
+            <td>{{ result.profit_loss|to_lakhs }}</td>
+            <td>{{ result.profit_loss_percentage|floatformat:0 }}%</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 </div>
 
 <script>
-     const labels1 = {{ chart_labels|safe }};
-    const incomeData1 = convertToLakhs({{ income_values|safe }});
-    const expenseData1 = convertToLakhs({{ expense_values|safe }});
-    const profitLossData1 = convertToLakhs({{ profit_loss_values|safe }});
+    const labels1 = {{ chart_labels|safe }};
+   const incomeData1 = convertToLakhs({{ income_values|safe }});
+   const expenseData1 = convertToLakhs({{ expense_values|safe }});
+   const profitLossData1 = convertToLakhs({{ profit_loss_values|safe }});
 
-    const datasets1 = [
-        {
-            label: 'Income',
-            data: incomeData1,
-            backgroundColor: 'rgba(47, 85, 151, 1)',
-            borderColor: 'rgba(47, 85, 151, 1)',
-            borderWidth: 1,
-        },
-        {
-            label: 'Expenses',
-            data: expenseData1,
-            backgroundColor: 'rgba(143, 170, 220, 1)',
-            borderColor: 'rgba(143, 170, 220, 1)',
-            borderWidth: 1,
-        },
-        {
-            label: 'Profit/Loss',
-            data: profitLossData1,
-            backgroundColor: getProfitLossColors(profitLossData1),
-            borderColor: getProfitLossBorderColors(profitLossData1),
-            borderWidth: 1,
-        },
-    ];
+   const datasets1 = [
+       {
+           label: 'Income',
+           data: incomeData1,
+           backgroundColor: 'rgba(47, 85, 151, 1)',
+           borderColor: 'rgba(47, 85, 151, 1)',
+           borderWidth: 1,
+       },
+       {
+           label: 'Expenses',
+           data: expenseData1,
+           backgroundColor: 'rgba(143, 170, 220, 1)',
+           borderColor: 'rgba(143, 170, 220, 1)',
+           borderWidth: 1,
+       },
+       {
+           label: 'Profit/Loss',
+           data: profitLossData1,
+           backgroundColor: getProfitLossColors(profitLossData1),
+           borderColor: getProfitLossBorderColors(profitLossData1),
+           borderWidth: 1,
+       },
+   ];
 
-    createBarChart('businessModelChart', labels1, datasets1);
+   createBarChart('businessModelChart', labels1, datasets1);
 </script>
 <script>
     // Initialize DataTable
     $(document).ready(function() {
-        $('#businessmodel_PL_table').DataTable({
+       var table =  $('#businessmodel_PL_table').DataTable({
             scrollY: "600px",
             scrollCollapse: true,
             order: [1, 'desc'],
             dom: 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'print']
         });
+    $('.filter-input').on('keyup change', function () {
+        var columnIndex = $(this).parent().index();
+        table.column(columnIndex).search(this.value).draw();
     });
+
+
+    $('#businessmodel_PL_table thead input').on('click', function(e) {
+        e.stopPropagation();
+    });
+});
 
     document.getElementById('branch-filter').addEventListener('change', updateFilters);
     document.getElementById('businessmodel-filter').addEventListener('change', updateFilters);
