@@ -447,7 +447,8 @@ def salescalls_details(request):
     selected_salesperson = request.GET.get('salesperson', None)
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
-
+    selected_company = request.GET.get('company', None)
+    selected_branch = request.GET.get('branch', None)
     # Fetch salespersons
     salespersons = MyUser.objects.select_related('user_extinfo').filter(
         user_extinfo__department__dept_name="Sales", is_active=True
@@ -460,7 +461,8 @@ def salescalls_details(request):
     sales_data_query = Sales_Comments_Info.objects.filter(
         sc_updated_by__user_extinfo__department__dept_name="Sales",sc_updated_by__is_active=True
     )
-
+    companies = Business_Sol_info.objects.all()
+    branches = Location_info.objects.all()
     if selected_salesperson:
         sales_data_query = sales_data_query.filter(sc_updated_by__first_name=selected_salesperson)
 
@@ -469,6 +471,11 @@ def salescalls_details(request):
 
     if to_date:
         sales_data_query = sales_data_query.filter(sc_updated_at__date__lte=to_date)
+    if selected_company:
+        sales_data_query = sales_data_query.filter(sc_sales_number__s_company__bvm_business=selected_company)
+
+    if selected_branch:
+        sales_data_query = sales_data_query.filter(sc_sales_number__s_location__loc_name=selected_branch)
 
     def sanitize_key(key):
         return key.replace(" ", "_").replace("-", "_").replace("/", "_")
@@ -527,7 +534,11 @@ def salescalls_details(request):
     context = {
         'first_name': first_name,
         'salespersons': salespersons,
+        'companies': companies,
+        'branches': branches,
         'selected_salesperson': selected_salesperson,
+        'selected_company': selected_company,
+        'selected_branch': selected_branch,
         'from_date': from_date,
         'to_date': to_date,
         'call_types': call_types,
