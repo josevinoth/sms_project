@@ -167,7 +167,7 @@ def enquirynote_list(request):
             if trip_num:
                 trip_dict.setdefault(enq_id, []).append((trip_num, trip_cons, trip_status,trip_status_id))
             else:
-                trip_dict.setdefault(enq_id, []).append(("No Trip", "Not Applicable"))
+                trip_dict.setdefault(enq_id, []).append(("No Trip", "Not Applicable" ,"", None))
 
     # Organize the data for the template
     enquiry_data = []

@@ -81,4 +81,22 @@ def incident_delete(request, incident_id):
         messages.success(request, 'Incident deleted successfully.')
         return redirect(request.META['HTTP_REFERER'])
 
+@login_required(login_url='login_page')
+def incident_report(request):
+    first_name = request.session.get('first_name')
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+    incident_list = IncidentReportInfo.objects.all()
+    if from_date:
+        incident_list = incident_list.filter(inc_updated_on__date__gte=from_date)
 
+    if to_date:
+        incident_list = incident_list.filter(inc_updated_on__date__lte=to_date)
+
+    context = {
+        'incident_list': incident_list,
+        'first_name': first_name,
+        'from_date': from_date,
+        'to_date': to_date,
+    }
+    return render(request, "asset_mgt_app/incident_report.html", context)

@@ -81,4 +81,22 @@ def customer_claims_delete(request, claim_id):
         messages.success(request, 'Customer Claim deleted successfully.')
         return redirect(request.META['HTTP_REFERER'])
 
+@login_required(login_url='login_page')
+def customer_claims_report(request):
+    first_name = request.session.get('first_name')
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+    customer_claim_list = CustomerClaimsInfo.objects.all()
+    if from_date:
+        customer_claim_list = customer_claim_list.filter(cc_updated_on__date__gte=from_date)
 
+    if to_date:
+        customer_claim_list = customer_claim_list.filter(cc_updated_on__date__lte=to_date)
+
+    context = {
+        'customer_claim_list': customer_claim_list,
+        'first_name': first_name,
+        'from_date': from_date,
+        'to_date': to_date,
+    }
+    return render(request, "asset_mgt_app/customer_claim_report.html", context)

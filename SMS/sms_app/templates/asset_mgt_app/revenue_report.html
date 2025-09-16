@@ -1,16 +1,22 @@
 {% extends "asset_mgt_app/base.html" %}
+{% block title %}Revenue Report{% endblock %}
 {% block content %}
 
 
-<div class="col-md-1">
-    <a href="{% url 'finance_reports' %}" class="btn btn-primary">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
+<div class="container-fluid d-flex align-items-center justify-content-between py-3">
+    <div>
+        <a href="{% url 'finance_reports' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="flex-grow-1 d-flex justify-content-center">
+        <div class="rounded text-center bg-info shadow-box px-4 py-2">
+            <h3>Revenue Report</h3>
+        </div>
+    </div>
+    <div style="width: 80px;"></div>
 </div>
 <br>
-<h2 style="color:black;">Revenue Report</h2>
-<hr>
-
 <div class="container-fluid">
     <div class="row align-items-center">
         <div class="col-md-2">
@@ -27,58 +33,43 @@
 </div>
 
 <br>
-<hr>
-<div class="container-fluid">
+<div class="container-fluid shadow-box-table p-3">
     <table  id="revenue_report" class="table table-striped table-bordered">
         <thead class="thead-dark">
-<tr>
-    <th>WH Job Number</th>
-    <th>Customer Name</th>
-    <th>BVM Invoice Number</th>
-    <th>Shipment In-Date</th>
-    <th>Shipment Out-Date</th>
-    <th>Branch</th>
-    <th>Unit</th>
-    <th>Storage Charges</th>
-    <th>Loading Charges</th>
-    <th>Unloading Charges</th>
-    <th>Forklift Charges</th>
-    <th>Crane Charges</th>
-    <th>Total Charges</th>
-</tr>
-<tr>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Job Num"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Customer"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Invoice"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search In-Date"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Out-Date"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Storage"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Loading"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Unloading"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Forklift"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Crane"></th>
-    <th><input type="text" class="form-control filter-input" placeholder="Search Total"></th>
-</tr>
-</thead>
+        <tr>
+           <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
+             <th><input type="text" class="form-control filter-input" placeholder="Search Customer"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Storage"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Loading"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Forklift"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Crane"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Total Invoice"></th>
+        </tr>
+        <tr>
+            <th>Branch</th>
+            <th>Unit</th>
+            <th>Customer</th>
+            <th>Storage Charges</th>
+            <th>Loading Charges</th>
+            <th>Forklift Charges</th>
+            <th>Crane Charges</th>
+            <th>Total Invoice</th>
+        </tr>
+
+        </thead>
 
         <tbody>
-        {% for revenue in revenue_list %}
+        {% for row in revenue_summary %}
         <tr>
-            <td> {{revenue.wh_job_no}}</td>
-            <td> {{revenue.wh_customer_name}}</td>
-            <td> {{revenue.wh_voucher_num}}</td>
-            <td> {{revenue.wh_checkin_time}}</td>
-            <td> {{revenue.wh_checkout_time}}</td>
-            <td> {{revenue.wh_branch}}</td>
-            <td> {{revenue.wh_unit}}</td>
-            <td> {{revenue.wh_storage_cost_total}}</td>
-            <td> {{revenue.wh_total_loading_cost}}</td>
-            <td> {{revenue.wh_total_loading_cost}}</td>
-            <td> {{revenue.wh_forklift_cost}}</td>
-            <td> {{revenue.wh_crane_cost}}</td>
-            <td> {{revenue.wh_total_invoice_cost}}</td>
+            <td>{{ row.wh_branch__loc_name }}</td>
+            <td>{{ row.wh_unit__unit_name }}</td>
+            <td>{{ row.wh_customer_name__cu_name }}</td>
+            <td>{{ row.storage_total }}</td>
+            <td>{{ row.loading_total }}</td>
+            <td>{{ row.forklift_total }}</td>
+            <td>{{ row.crane_total }}</td>
+            <td>{{ row.total_invoice |floatformat:1 }}</td>
         </tr>
         {% endfor %}
         </tbody>

@@ -26,9 +26,7 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from ..forms import DsrForm
 
-
 from itertools import zip_longest
-
 
 @login_required(login_url='login_page')
 def reports(request):
@@ -62,14 +60,13 @@ def stock_value_reports(request):
     form = DsrForm(request.POST or None)
     customer_name = request.POST.get('ds_customer', '').strip()
 
-    # Calculate and update wh_storage_time on the database side
     Warehouse_goods_info.objects.filter(wh_check_in_out=1).update(
         wh_storage_time=Cast(
             Extract(ExpressionWrapper(
                 datetime.date.today() - F('wh_checkin_time'),
                 output_field=DurationField()
             ), 'days'),
-            output_field=fields.FloatField()  # Cast to double precision
+            output_field=fields.FloatField()
         )
     )
     checkin_goods_list=Warehouse_goods_info.objects.all().values_list().distinct()
@@ -206,26 +203,37 @@ def deviation_report(request):
                 }
     return render(request,"asset_mgt_app/deviation_report.html",context)
 
+
 @login_required(login_url='login_page')
 def revenue_report(request):
     first_name = request.session.get('first_name')
-    from_date = request.GET.get('from_date', None)
-    to_date = request.GET.get('to_date', None)
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
 
-    revenue_list=Warehouse_goods_info.objects.exclude(wh_voucher_num__isnull=True)
+    qs = Warehouse_goods_info.objects.exclude(wh_voucher_num__isnull=True)
+
     if from_date:
-        revenue_list = revenue_list.filter(wh_checkin_time__date__gte=from_date)
-
+        qs = qs.filter(wh_checkout_time__date__gte=from_date)
     if to_date:
-        revenue_list = revenue_list.filter(wh_checkin_time__date__lte=to_date)
+        qs = qs.filter(wh_checkout_time__date__lte=to_date)
+
+    revenue_summary = (
+        qs.values("wh_customer_name__cu_name", "wh_branch__loc_name", "wh_unit__unit_name")
+        .annotate(
+            storage_total=Sum("wh_storage_cost_total"),
+            loading_total=Sum("wh_total_loading_cost"),
+            forklift_total=Sum("wh_forklift_cost"),
+            crane_total=Sum("wh_crane_cost"),
+            total_invoice=Sum("wh_total_invoice_cost"),
+        ).order_by("wh_customer_name__cu_name", "wh_branch__loc_name", "wh_unit__unit_name"))
 
     context = {
-                'revenue_list': revenue_list,
-                'first_name': first_name,
-                'from_date': from_date,
-                'to_date': to_date,
-                }
-    return render(request,"asset_mgt_app/revenue_report.html",context)
+        "revenue_summary": revenue_summary,
+        "first_name": first_name,
+        "from_date": from_date,
+        "to_date": to_date,
+    }
+    return render(request, "asset_mgt_app/revenue_report.html", context)
 
 
 @login_required(login_url='login_page')

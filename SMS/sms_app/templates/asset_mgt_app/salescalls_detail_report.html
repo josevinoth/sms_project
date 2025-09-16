@@ -22,6 +22,27 @@
         {% endfor %}
     </select>
 
+    <label for="company-filter"><b>Company:</b></label>
+    <select id="company-filter" name="company" class="box-shadow rounded m-1">
+        <option value="">All</option>
+        {% for company in companies %}
+        <option value="{{ company.bvm_business }}"
+                {% if company.bvm_business == selected_company %} selected {% endif %}>
+            {{ company.bvm_business }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <label for="branch-filter"><b>Branch:</b></label>
+    <select id="branch-filter" name="branch" class="box-shadow rounded m-1">
+        <option value="">All</option>
+        {% for branch in branches %}
+        <option value="{{ branch.loc_name }}"
+                {% if branch.loc_name == selected_branch %} selected {% endif %}>
+            {{ branch.loc_name }}
+        </option>
+        {% endfor %}
+    </select>
     <label for="from-date"><b> From:</b></label>
     <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="box-shadow" >
 
@@ -335,11 +356,15 @@
 
 
 document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+document.getElementById('branch-filter').addEventListener('change', updateFilters);
+document.getElementById('company-filter').addEventListener('change', updateFilters);
 document.getElementById('from-date').addEventListener('change', updateFilters);
 document.getElementById('to-date').addEventListener('change', updateFilters);
 
 function updateFilters() {
     const salesperson = document.getElementById('salesperson-filter').value;
+    const company = document.getElementById('company-filter').value;
+    const branch = document.getElementById('branch-filter').value;
     const fromDate = document.getElementById('from-date').value;
     const toDate = document.getElementById('to-date').value;
     const url = new URL(window.location.href);
@@ -349,7 +374,17 @@ function updateFilters() {
     } else {
         url.searchParams.delete('salesperson');
     }
+    if (company) {
+        url.searchParams.set('company', company);
+    } else {
+        url.searchParams.delete('company');
+    }
 
+    if (branch) {
+        url.searchParams.set('branch', branch);
+    } else {
+        url.searchParams.delete('branch');
+    }
     if (fromDate) {
         url.searchParams.set('from_date', fromDate);
     } else {

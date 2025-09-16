@@ -1,4 +1,5 @@
 {% extends "asset_mgt_app/base.html" %}
+{% block title %}Stock Report{% endblock %}
 {% block content %}
 {% load currency_format %}
 {% load static %}
@@ -6,19 +7,19 @@
 
 
 <div class="container-fluid" style="padding:15px;" >
-  <div class="row">
-    <div class="col-1">
-      <a href="{% url 'warehouse_reports' %}" class="btn btn-primary btn-block">
-        <i class="fas fa-arrow-left"></i> Back
-      </a>
+  <div class="container-fluid d-flex align-items-center justify-content-between py-3">
+    <div>
+        <a href="{% url 'warehouse_reports' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
     </div>
-    <div class="col-3"></div>
-    <div class="col-3 rounded text-center bg-info">
-      <h3>Goods Movement Report</h3>
+    <div class="flex-grow-1 d-flex justify-content-center">
+        <div class="rounded text-center bg-info shadow-box px-4 py-2">
+            <h3>Goods Movement Report</h3>
+        </div>
     </div>
-    <div class="col-1"></div>
-    <div class="col-3"></div>
-  </div>
+    <div style="width: 80px;"></div>
+</div>
   <br>
   <div class="row">
     <div class="col-1"></div>
@@ -52,12 +53,6 @@
       <!--      <button type="button" class="btn btn-success border border-dark"> Check-Out: <i class="fas fa-rupee-sign"></i> <b>{{maa_out_stock_value_cud|format_currency}}</b></button>-->
       <!--      <button type="button" class="btn btn-success border border-dark"> Total: <i class="fas fa-rupee-sign"></i> <b>{{maa_total_cud|format_currency}}</b></button>-->
     </div>
-
-
-
-
-
-
 
 <!--    <div class="btn-group shadow-lg m-2">-->
 <!--      <button type="button" class="btn btn-danger border border-dark">HYD_Today</button>-->
@@ -95,7 +90,7 @@
 <!--      </button>-->
     </form>
 
-    <div class="col-1.5 ml-2">
+    <div class="col-1.5 ml-3">
       <!-- Trigger Button to Open Modal -->
       <button type="button" onclick="email_message_fn()" class="btn btn-warning btn-block btn-lg" data-toggle="modal" data-target=".bd-example-modal-lg">
         <i class="fas fa-envelope-square"></i> Goods Movement Report  <!-- Add the badge here -->
@@ -118,8 +113,8 @@
       </div>
     </div>
   </div>
-  <hr>
-  <div class="container-fluid">
+  <br>
+  <div class="container-fluid shadow-box-table p-3">
     <table  id="stock_value_report" class="table "  >
       <thead class="thead-dark">
       <tr>
