@@ -1,6 +1,7 @@
 from django.db import models
 
 from .approval_status_mod import approval_status_info
+from .my_user_mod import MyUser
 from ..models import (
     Location_info, CustomerInfo, Stock_type, YesNoInfo,
     DamageInfo, UnitInfo, Unitofmeasure
@@ -52,7 +53,8 @@ class DGcargovalueInfo(models.Model):
     DG_storage_location_details = models.TextField(max_length=200, blank=True, null=True)
     DG_CCTV_coverage = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE, default=2, related_name='cctv_coverage')
     DG_MHE_required = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE, default=2, related_name='MHE_required')
-
+    dg_updated_on = models.DateTimeField(null=True, auto_now=True)
+    DG_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
 
 def __str__(self):
         return f"DG cargo check at {self.DG_wh_job_no}"

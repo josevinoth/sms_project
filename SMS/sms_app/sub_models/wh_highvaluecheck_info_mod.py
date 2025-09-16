@@ -41,6 +41,7 @@ class HighvalueInfo(models.Model):
         null=True,
         related_name="second_approvals"
     )
+    hv_updated_on = models.DateField(null=True, auto_now_add=True)
 
     def __str__(self):
         return f"high value check at {self.hc_pregatein_number}"

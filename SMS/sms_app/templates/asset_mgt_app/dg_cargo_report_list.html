@@ -1,0 +1,125 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block title %}DG Cargo List{% endblock %}
+{% block content %}
+<div class="container-fluid d-flex justify-content-center py-3">
+    <div class="rounded text-center bg-info shadow-box px-4 py-2">
+        <h3>DG Cargo List</h3>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-4 col-lg-3 d-flex gap-2 mb-2 m-2">
+            <div class="flex-wrap gap-2">
+                <a href="{% url 'home_page' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+        <div class="col-6 col-md-2 mb-2 mr-2">
+            <label for="from-date"><b>From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+        </div>
+        <div class="col-6 col-md-2 mb-2">
+            <label for="to-date"><b>To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<div class="table-responsive shadow-box-table p-3" style="overflow-x:auto;">
+    <table id="dg_cargo_list" class="table table-striped table-bordered" style="width:100%;">
+        <thead class="thead-dark">
+<tr>
+    <th><input type="text" class="form-control filter-input" placeholder="ID"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="WH Job Number"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Location"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Approval Status"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Date"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Customer"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Value"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="Weight"></th>
+    <th><input type="text" class="form-control filter-input" placeholder="No. of Pcs"></th>
+</tr>
+<tr>
+    <th>ID</th>
+    <th>WH Job Number</th>
+    <th>Location</th>
+    <th>Approval Status</th>
+    <th>Date</th>
+    <th>Customer</th>
+    <th>Value</th>
+    <th>Weight</th>
+    <th>No. of Pcs</th>
+</tr>
+</thead>
+<tbody>
+{% for cargo in dg_cargo_list %}
+<tr>
+    <td>{{ cargo.id }}</td>
+    <td>{{ cargo.DG_wh_job_no }}</td>
+    <td>{{ cargo.DG_wh_location }}</td>
+    <td>{{ cargo.DG_wh_approval_status }}</td>
+    <td>{{ cargo.DG_date }}</td>
+    <td>{{ cargo.DG_customer }}</td>
+    <td>{{ cargo.DG_value }}</td>
+    <td>{{ cargo.DG_weight }}</td>
+    <td>{{ cargo.DG_no_of_pcs }}</td>
+</tr>
+{% endfor %}
+</tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var table = $('#dg_cargo_list').DataTable({
+            order: [[0, 'desc']],
+            responsive: true,
+            scrollX: false,
+            dom: 'lBfrtip',
+            buttons: [
+                'copy', 'csv', 'excel','print'
+            ]
+        });
+
+        // Column filtering
+        $('.filter-input').on('keyup change', function () {
+            var columnIndex = $(this).parent().index();
+            table.column(columnIndex).search(this.value).draw();
+        });
+
+        $('#dg_cargo_list thead input').on('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+
+    function updateFilters() {
+        const fromDate = document.getElementById('from-date').value;
+        const toDate = document.getElementById('to-date').value;
+        const url = new URL(window.location.href);
+
+        if (fromDate) {
+            url.searchParams.set('from_date', fromDate);
+        } else {
+            url.searchParams.delete('from_date');
+        }
+
+        if (toDate) {
+            url.searchParams.set('to_date', toDate);
+        } else {
+            url.searchParams.delete('to_date');
+        }
+
+        window.location.href = url.toString();
+    }
+
+    // Auto apply on change
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("from-date").addEventListener("change", updateFilters);
+        document.getElementById("to-date").addEventListener("change", updateFilters);
+    });
+</script>
+{% endblock content %}

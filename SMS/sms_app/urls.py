@@ -720,6 +720,7 @@ urlpatterns = [
     path("dg_cargo_add/", views.dg_cargo_add, name="dg_cargo_add"),
     path("dg_cargo_add/<int:cargo_id>/", views.dg_cargo_add, name="dg_cargo_add"),
     path('dg_cargo_list/', views.dg_cargo_list, name='dg_cargo_list'),
+    path('dg_cargo_report_list/', views.dg_cargo_report_list, name='dg_cargo_report_list'),
     path('dg_cargo_delete/<int:cargo_id>/', views.dg_cargo_delete, name='dg_cargo_delete'),
     path("dg_cargo/approval/", views.dg_cargo_approval_view, name="dg_cargo_approval_view"),
     path("dg_cargo/approval/update/<int:cargo_id>/", views.update_dg_cargo_approval, name="update_dg_cargo_approval"),
@@ -727,6 +728,7 @@ urlpatterns = [
     path('incident_report/', views.incident_report, name='incident_report'),
     path('wrong_labelling_report/', views.wrong_labelling_report, name='wrong_labelling_report'),
     path('customer_claims_report/', views.customer_claims_report, name='customer_claims_report'),
+    path('highvalue_report_list/', views.highvalue_report_list, name='highvalue_report_list'),
 ]
 
 
