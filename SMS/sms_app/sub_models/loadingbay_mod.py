@@ -39,6 +39,8 @@ class Loadingbay_Info(models.Model):
     lb_no_of_crane= models.IntegerField(blank=False, null=False, default=0)
     lb_no_of_forklift= models.IntegerField(blank=False, null=False, default=0)
     lb_pouch_yes = models.ForeignKey(SealedoropenedInfo, null=True,on_delete=models.CASCADE, default=1)
+    lb_eway = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, related_name='lb_eway',
+                                    db_column='lb_eway', default=2)
 
 class Loadingbayimages_Info(models.Model):
     lbimg_job_no = models.CharField(max_length=300, null=True, default='')

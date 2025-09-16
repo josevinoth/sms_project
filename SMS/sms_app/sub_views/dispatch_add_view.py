@@ -12,6 +12,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from django.utils.timezone import now
 from xhtml2pdf import pisa
 from django.db.models import CharField, Value
@@ -25,6 +26,8 @@ from django.contrib import messages
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
+
+from ..sub_models.loadingbay_mod import Loadingbay_Info
 from ..views import warehousevolme_area_calc
 from io import BytesIO
 from django.views.decorators.http import require_POST
@@ -176,7 +179,6 @@ def dispatch_goods_list(request):
 
     request.session['ses_dispatch_num_val'] = dispatch_num_val
     request.session['ses_dispatch_id_val'] = dispatch_id
-
     dispatch_master_list = Warehouse_goods_info.objects.filter(
         wh_customer_name=dispatch_customer,
         wh_check_in_out__in=[1, 4]
@@ -192,12 +194,12 @@ def dispatch_goods_list(request):
 
         goods.dispatched_total = total_dispatched
         goods.remaining_qty = goods.wh_goods_pieces - total_dispatched
-
         goods.dispatched_total_weight = total_dispatched_weight
         goods.remaining_weight = goods.wh_goods_weight - total_dispatched_weight
+        goods.loadingbay = Loadingbay_Info.objects.filter(lb_job_no=goods.wh_job_no).first()  # ✅ attach here
 
+    # Only show goods with remaining quantity
     dispatch_master_list = [g for g in dispatch_master_list if g.remaining_qty > 0]
-
     partial_goods = GoodsPartialDispatchInfo.objects.filter(
         pd_dispatch_info=dispatch_info
     ).select_related('pd_goods')
@@ -207,13 +209,16 @@ def dispatch_goods_list(request):
         goods = entry.pd_goods
         goods.dispatched_total = entry.pd_dispatch_qty
         goods.all_dispatch_nums = dispatch_num_val
+        goods.loadingbay = Loadingbay_Info.objects.filter(lb_job_no=goods.wh_job_no).first()
         goods_list.append(goods)
-
+    print()
     context = {
         'goods_list': goods_list,
         'dispatch_master_list': dispatch_master_list,
         'first_name': first_name,
         'dispatch_num_val': dispatch_num_val,
+        "now": timezone.now().date()   # ✅ pass only date
+
     }
 
     return render(request, "asset_mgt_app/dispatch_goods_list_woh.html", context)
@@ -274,7 +279,7 @@ def dispatch_add_goods(request):
     dispatch_id_val = request.session.get('ses_dispatch_id_val')
     selected_stocks = request.GET.getlist('myList[]')
     current_date = now()
-
+    print('selected',selected_stocks)
     try:
         dispatch_info = Dispatch_info.objects.get(dispatch_num=dispatch_num_val)
         vehicle_type = dispatch_info.dispatch_truck_type

@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/base_mobile.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
 <div class="col-5 col-md-2 col-lg-1">
@@ -85,24 +85,25 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Damages</span>
-									</div>
-									{% render_field damagereport_form.dam_damage_type id="dam_damage_type" onchange="challan_damage_btn_active()" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
 										<span class="input-group-text">GRN Number</span>
 									</div>
 									{% render_field damagereport_form.dam_GRN_num id="grn_num" class="form-control" readonly="True"%}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity Deviation (Open)</span>
+										<span class="input-group-text"> Deviation </span>
 									</div>
-									{% render_field damagereport_form.dam_no_of_units_deviation id="dam_no_of_units_deviation" class="form-control"%}
+									{% render_field damagereport_form.dam_deviation1 id="dam_deviation1" class="form-control"%}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text"> Damages? </span>
+									</div>
+									{% render_field damagereport_form.dam_damages1 id="dam_damages1" class="form-control"%}
 								</div>
 							</div>
 							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text" >Ratification Process?</span>
@@ -171,6 +172,7 @@
 									{% render_field damagereport_form.dam_status id="dam_status" class="form-control" %}
 								</div>
 							</div>
+
 							<div class="input-group input-group-sm mb-3 container-fluid">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Comments</span>
@@ -319,7 +321,30 @@
         }
     <!--	grnnum()-->
     challan_damage_btn_active()
+
       });
 </script>
+<script>
+	$(document).ready(function () {
+    $('#dam_damages1').multiselect({
+        includeSelectAllOption: true,
+        enableFiltering: true,
+        enableCaseInsensitiveFiltering: true,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select Types of Damages',
+        buttonClass: 'custom-multiselect-button',
+        maxHeight: 250
+    });
 
+    $('#dam_deviation1').multiselect({
+        includeSelectAllOption: true,
+        enableFiltering: true,
+        enableCaseInsensitiveFiltering: true,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select Types of Deviation',
+        buttonClass: 'custom-multiselect-button',
+        maxHeight: 250
+    });
+});
+</script>
 {% endblock content %}

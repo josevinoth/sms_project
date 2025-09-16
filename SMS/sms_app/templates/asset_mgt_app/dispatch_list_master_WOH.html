@@ -22,6 +22,7 @@
             <th>WH Job Number</th>
             <th>Consigner</th>
             <th>Consignee</th>
+            <th><b>Expiry Date</b></th> <!-- NEW COLUMN -->
             <th>Number Of Pieces</th>
             <th>Dispatch Pieces</th>
             <th>Remaining Pieces</th>
@@ -38,30 +39,32 @@
             <th>Check-In Time</th>
             <th>Goods Status</th>
             <th>Scan QR Code</th>
+        </tr>
         </thead>
         <tbody>
         {% for goodsinfo in dispatch_master_list %}
-        <tr>
+        <tr data-expiry="{{ goodsinfo.loadingbay.lb_validity_date|date:'Y-m-d' }}">
             <td></td>
-            <td></td>
-            <td> {{goodsinfo.wh_job_no}}</td>
-            <td> {{goodsinfo.wh_consigner}}</td>
-            <td> {{goodsinfo.wh_consignee}}</td>
-            <td> {{goodsinfo.wh_goods_pieces}}</td>
+            <td><input type="checkbox" class="row-checkbox"></td>
+            <td>{{ goodsinfo.wh_job_no }}</td>
+            <td>{{ goodsinfo.wh_consigner }}</td>
+            <td>{{ goodsinfo.wh_consignee }}</td>
+            <td>{{ goodsinfo.loadingbay.lb_validity_date }}</td> <!-- expiry date shown -->
+            <td>{{ goodsinfo.wh_goods_pieces }}</td>
             <td>{{ goodsinfo.dispatched_total }}</td>
             <td>{{ goodsinfo.remaining_qty }}</td>
-            <td> {{goodsinfo.wh_gate_injob_no_id.gatein_hawb}}</td>
-            <td> {{goodsinfo.wh_goods_invoice}}</td>
-            <td> {{goodsinfo.wh_dispatch_num}}</td>
-            <td> {{goodsinfo.wh_qr_rand_num}}</td>
-            <td> {{goodsinfo.wh_customer_name}}</td>
-            <td> {{goodsinfo.wh_customer_type}}</td>
-            <td> {{goodsinfo.wh_branch}}</td>
-            <td> {{goodsinfo.wh_unit}}</td>
-            <td> {{goodsinfo.wh_bay}}</td>
-            <td> {{goodsinfo.wh_stack_layer}}</td>
-            <td> {{goodsinfo.wh_checkin_time}}</td>
-            <td> {{goodsinfo.wh_check_in_out}}</td>
+            <td>{{ goodsinfo.wh_gate_injob_no_id.gatein_hawb }}</td>
+            <td>{{ goodsinfo.wh_goods_invoice }}</td>
+            <td>{{ goodsinfo.wh_dispatch_num }}</td>
+            <td>{{ goodsinfo.wh_qr_rand_num }}</td>
+            <td>{{ goodsinfo.wh_customer_name }}</td>
+            <td>{{ goodsinfo.wh_customer_type }}</td>
+            <td>{{ goodsinfo.wh_branch }}</td>
+            <td>{{ goodsinfo.wh_unit }}</td>
+            <td>{{ goodsinfo.wh_bay }}</td>
+            <td>{{ goodsinfo.wh_stack_layer }}</td>
+            <td>{{ goodsinfo.wh_checkin_time }}</td>
+            <td>{{ goodsinfo.wh_check_in_out }}</td>
             <td>
                 <form action="{% url 'qr_dispatch_decoder' goodsinfo.id %}" method="post">
                     {% csrf_token %}
@@ -83,6 +86,7 @@
         </tr>
         {% endfor %}
         </tbody>
+
     </table>
 </div>
 <div class="modal fade" id="partialDispatchModal" tabindex="-1" role="dialog" aria-labelledby="dispatchModalLabel" aria-hidden="true">
@@ -113,17 +117,17 @@
                         <input type="number" class="form-control" id="modal_remaining_qty" readonly>
                     </div>
                     <div class="form-group">
-    <label>Total Weight:</label>
-    <input type="number" class="form-control" id="modal_total_weight" readonly>
-</div>
+                        <label>Total Weight:</label>
+                        <input type="number" class="form-control" id="modal_total_weight" readonly>
+                    </div>
                     <div class="form-group">
                         <label>Dispatch Quantity:</label>
                         <input type="number" class="form-control" id="modal_dispatch_qty" min="1">
                     </div>
                     <div class="form-group">
-    <label>Dispatch Weight:</label>
-    <input type="number" class="form-control" id="modal_dispatch_weight" min="0">
-</div>
+                        <label>Dispatch Weight:</label>
+                        <input type="number" class="form-control" id="modal_dispatch_weight" min="0">
+                    </div>
 
                 </div>
                 <div class="modal-footer">
@@ -214,34 +218,52 @@ $('#partial-dispatch-form').on('submit', function (e) {
     });
 });
 
-       // Handle form submission event
-       $('#add_btn').on('click', function(){
+      $('#add_btn').on('click', function(e){
+    e.preventDefault();
 
-              let selectedValues = table.rows( { selected: true } ).data();
-              var len1=( selectedValues ).length;
-              console.log( len1 );
-              var len=( selectedValues[0] ).length;
-              console.log( selectedValues );
-              console.log( selectedValues[0] );
-              console.log( len );
-              var elements = [];
-              for (var i = 0; i < len1; i++) {
-                    console.log(selectedValues[i][11]);
-                    elements.push(selectedValues[i][11]);
-                }
-            var elements_list=elements;
-       $.ajax({
-            url: '{% url 'dispatch_add_goods' %}',
-            type: 'GET',
-            data: {
-                'myList[]': elements_list,  // This will encode the list as URL parameters
-            },
-            success: function(response) {
-                // Handle the response from the Django view
-            },
-       });
+    let selectedValues = table.rows({ selected: true }).data();
+    let len1 = selectedValues.length;
+    console.log("Total selected: ", len1);
 
-       });
+    var elements = [];
+    for (var i = 0; i < len1; i++) {
+        let row = table.row(i).node();
+        let expiry = $(row).data('expiry');
+        let today = new Date().toISOString().split('T')[0];
+
+        if (!expiry || expiry >= today) {
+            elements.push(selectedValues[i][12]);  // column 12 = WH Stock Number
+        }
+    }
+
+    alert("Sending to backend: " + elements);
+
+    $.ajax({
+        url: '{% url "dispatch_add_goods" %}',
+        type: 'GET',
+        data: { 'myList[]': elements },
+        success: function(response) {
+            location.reload();
+        }
+    });
+});
+    // Highlight expired rows
+$('#dispatch_master_list tbody tr').each(function () {
+    let expiry = $(this).data('expiry');
+    if (expiry) {
+        let today = new Date().toISOString().split('T')[0];
+        if (expiry < today) {
+            $(this).css({"background-color": "red", "color": "white"});
+            let checkbox = $(this).find('.row-checkbox');
+            checkbox.prop("disabled", true);
+            // show alert once
+            $(this).click(function() {
+                alert("This stock is expired. You cannot select it!");
+            });
+        }
+    }
+});
+
     });
 </script>
 {% endblock content %}

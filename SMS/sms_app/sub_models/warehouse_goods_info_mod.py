@@ -24,6 +24,7 @@ class Warehouse_goods_info(models.Model):
     wh_damages1= models.ManyToManyField(DamageInfo,blank=True,default=6)
     wh_mismatches= models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True,related_name='wh_mismatches',db_column='wh_mismatches',default=2)
     wh_fumigation_process = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, blank=True,related_name='wh_fumigation_process',db_column='wh_fumigation_process',default=1)
+    wh_damage_check = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, null=True, blank=True,related_name='wh_damage_check',db_column='wh_damage_check',default=2)
     wh_fumigation_action = models.ForeignKey(Fumigation_ActionInfo, on_delete=models.CASCADE, null=True)
     wh_fumigation_date=models.DateTimeField(null=True,blank=True)
     wh_uom = models.ForeignKey(UOM, on_delete=models.CASCADE, null=True, related_name='wh_uom',db_column='wh_uom',default=1)
