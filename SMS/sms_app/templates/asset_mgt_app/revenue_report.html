@@ -20,6 +20,17 @@
 <div class="container-fluid">
     <div class="row align-items-center">
         <div class="col-md-2">
+            <label for="branch-filter"><b>Branch:</b></label>
+            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for branch in branches %}
+                <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
+                    {{ branch.loc_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
             <label for="from-date"><b>From:</b></label>
             <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
         </div>
@@ -33,28 +44,30 @@
 </div>
 
 <br>
-<div class="container-fluid shadow-box-table p-3">
+<div class="container-fluid shadow-box-table p-4">
     <table  id="revenue_report" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
            <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
              <th><input type="text" class="form-control filter-input" placeholder="Search Customer"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Month"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Storage"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Loading"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Forklift"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Crane"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Total Invoice"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Revenue"></th>
         </tr>
         <tr>
             <th>Branch</th>
             <th>Unit</th>
             <th>Customer</th>
+            <th>Month</th>
             <th>Storage Charges</th>
             <th>Loading Charges</th>
             <th>Forklift Charges</th>
             <th>Crane Charges</th>
-            <th>Total Invoice</th>
+            <th>Revenue</th>
         </tr>
 
         </thead>
@@ -65,16 +78,37 @@
             <td>{{ row.wh_branch__loc_name }}</td>
             <td>{{ row.wh_unit__unit_name }}</td>
             <td>{{ row.wh_customer_name__cu_name }}</td>
-            <td>{{ row.storage_total }}</td>
-            <td>{{ row.loading_total }}</td>
-            <td>{{ row.forklift_total }}</td>
-            <td>{{ row.crane_total }}</td>
-            <td>{{ row.total_invoice |floatformat:1 }}</td>
+            <td>{{ row.month|date:"F Y" }}</td>
+            <td>{{ row.storage_total|floatformat:2 }}</td>
+            <td>{{ row.loading_total|floatformat:2 }}</td>
+            <td>{{ row.forklift_total|floatformat:2 }}</td>
+            <td>{{ row.crane_total|floatformat:2 }}</td>
+            <td>{{ row.total_invoice |floatformat:2 }}</td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
 </div>
+<br>
+<div>
+    <canvas id="revenueChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
+</div>
+<script>
+    const labels = JSON.parse('{{ chart_labels|safe|escapejs }}');
+    const data = JSON.parse('{{ chart_data|safe|escapejs }}');
+
+    const datasets1 = [
+        {
+            label: 'Revenue',
+            data: data,
+            backgroundColor: 'rgba(47, 85, 151, 1)',
+            borderColor: 'rgba(47, 85, 151, 1)',
+            borderWidth: 1,
+            barThickness: 20,
+        },
+    ];
+    createBarChart('revenueChart', labels, datasets1, "Revenue (Lakhs)");
+</script>
 
 <script>
     $(document).ready(function() {
@@ -102,9 +136,11 @@
 
 </script>
 <script>
+
     function updateFilters() {
         const fromDate = document.getElementById('from-date').value;
         const toDate = document.getElementById('to-date').value;
+        const branch = document.getElementById('branch-filter').value;
         const url = new URL(window.location.href);
 
         if (fromDate) {
@@ -118,7 +154,11 @@
         } else {
             url.searchParams.delete('to_date');
         }
-
+        if (branch) {
+            url.searchParams.set('branch', branch);
+        } else {
+            url.searchParams.delete('branch');
+        }
         window.location.href = url.toString();
     }
 
@@ -126,6 +166,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("from-date").addEventListener("change", updateFilters);
         document.getElementById("to-date").addEventListener("change", updateFilters);
+        document.getElementById('branch-filter').addEventListener('change', updateFilters);
     });
 </script>
 {% endblock content %}
