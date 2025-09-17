@@ -287,6 +287,18 @@ def salesperson_productivity_performance(request):
     if to_date:
         revenue_filter &= Q(br_from_date__lte=to_date)
 
+    if selected_company:
+        actual_filter &= Q(s_company__bvm_business=selected_company)
+        calls_filter &= Q(sc_sales_number__s_company__bvm_business=selected_company)
+        revenue_filter &= Q(br_business__bvm_business=selected_company)
+        target_filter &= Q(st_sales_person__user_extinfo__emp_organisation__bvm_business=selected_company)
+
+    if selected_branch:
+        actual_filter &= Q(s_location__loc_name=selected_branch)
+        calls_filter &= Q(sc_sales_number__s_location__loc_name=selected_branch)
+        # revenue_filter &= Q(br_branch__loc_name=selected_branch)
+        target_filter &= Q(st_sales_person__user_extinfo__emp_branch__loc_name=selected_branch)
+
     target_data = Sales_target_info.objects.filter(target_filter, st_sales_person__is_active=True).values(
         'st_sales_person__id', 'st_sales_person__first_name'
     ).annotate(

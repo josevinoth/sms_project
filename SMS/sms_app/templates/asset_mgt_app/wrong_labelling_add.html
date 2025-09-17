@@ -39,7 +39,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Date Of Shipment</span>
                                     </div>
-                                    {% render_field form.wl_shipment_date type="Date" class="form-control" %}
+                                    {% render_field form.wl_shipment_date type="Datetime-local" class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -146,6 +146,12 @@
                                         <span class="input-group-text">Dispatch Reference</span>
                                     </div>
                                     {% render_field form.wl_dispatch_num_shipment2 id="wl_dispatch_num_shipment2" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Amount</span>
+                                    </div>
+                                    {% render_field form.wl_amount id="wl_amount" class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">

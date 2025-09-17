@@ -40,19 +40,18 @@ def branch_profit_loss(request):
         expenses_filter['exp_ext_branch__loc_name'] = selected_branch
         invoices_filter['wh_branch__loc_name'] = selected_branch
 
-    if selected_company:
-        expenses_filter['exp_ext_expense_number__exp_business__bvm_business'] = selected_company
+    expenses_filter['exp_ext_expense_number__exp_business__id'] = 1
 
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
         expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
-        invoices_filter['wh_checkin_time__gte'] = from_date
+        invoices_filter['wh_voucher_id__bill_invoice_date__gte'] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
         expenses_filter['exp_ext_expense_number__exp_service_start_date__lte'] = to_date
-        invoices_filter['wh_checkin_time__lte'] = to_date
+        invoices_filter['wh_voucher_id__bill_invoice_date__lte'] = to_date
 
     expenses_data = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
@@ -62,7 +61,7 @@ def branch_profit_loss(request):
     )
     invoice_data = (
         Warehouse_goods_info.objects.filter(**invoices_filter)
-        .annotate(month=TruncMonth('wh_checkin_time'))  # create "month"
+        .annotate(month=TruncMonth('wh_voucher_id__bill_invoice_date'))  # create "month"
         .values('wh_branch', 'wh_branch__loc_name', 'month')  # now you can use it
         .annotate(total_invoice_cost=Sum('wh_total_invoice_cost'))
     )
@@ -98,10 +97,13 @@ def branch_profit_loss(request):
     combined_data = {}
 
     for expense in expenses_data:
-        key = (expense['exp_ext_branch'], expense['month'])
+        month = expense['month']
+        if isinstance(month, datetime):  # convert datetime → date
+            month = month.date()
+        key = (expense['exp_ext_branch'], expense['exp_ext_branch__loc_name'], month)
         combined_data[key] = {
             'branch': expense['exp_ext_branch__loc_name'],
-            'month': expense['month'].strftime("%b-%Y") if expense['month'] else '',
+            'month': month.strftime("%b-%Y") if month else '',
             'total_expense': expense['total_expense'],
             'total_invoice_cost': 0.0,
             'profit_loss': -expense['total_expense'],
@@ -109,14 +111,17 @@ def branch_profit_loss(request):
         }
 
     for invoice in invoice_data:
-        key = (invoice['wh_branch'], invoice['month'])
+        month = invoice['month']
+        if isinstance(month, datetime):  # convert only if datetime
+            month = month.date()
+        key = (invoice['wh_branch'], invoice['wh_branch__loc_name'], month)
         if key in combined_data:
             combined_data[key]['total_invoice_cost'] = invoice['total_invoice_cost']
             combined_data[key]['profit_loss'] += invoice['total_invoice_cost']
         else:
             combined_data[key] = {
                 'branch': invoice['wh_branch__loc_name'],
-                'month': invoice['month'].strftime("%b-%Y") if invoice['month'] else '',
+                'month': month.strftime("%b-%Y") if month else '',
                 'total_expense': 0.0,
                 'total_invoice_cost': invoice['total_invoice_cost'],
                 'profit_loss': invoice['total_invoice_cost'],
@@ -185,18 +190,18 @@ def branch_unit_profit_loss(request):
     if selected_unit:
         expenses_filter['exp_ext_unit__unit_name'] = selected_unit
         invoices_filter['wh_unit__unit_name'] = selected_unit
-    if selected_company:
-        expenses_filter['exp_ext_expense_number__exp_business__bvm_business'] = selected_company
+
+    expenses_filter['exp_ext_expense_number__exp_business__id'] = 1
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
         expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
-        invoices_filter['wh_checkin_time__gte'] = from_date
+        invoices_filter['wh_voucher_id__bill_invoice_date__gte'] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
         expenses_filter['exp_ext_expense_number__exp_service_start_date__lte'] = to_date
-        invoices_filter['wh_checkin_time__lte'] = to_date
+        invoices_filter['wh_voucher_id__bill_invoice_date__lte'] = to_date
 
     expenses_data = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
@@ -207,19 +212,21 @@ def branch_unit_profit_loss(request):
 
     invoice_data = (
         Warehouse_goods_info.objects.filter(**invoices_filter)
-        .annotate(month=TruncMonth('wh_checkin_time'))
+        .annotate(month=TruncMonth('wh_voucher_id__bill_invoice_date'))
         .values('wh_branch', 'wh_unit', 'wh_branch__loc_name', 'wh_unit__unit_name', 'month')
         .annotate(total_invoice_cost=Sum('wh_total_invoice_cost'))
     )
 
     combined_data = {}
-
     for expense in expenses_data:
-        key = (expense['exp_ext_branch'], expense['exp_ext_unit'], expense['month'])
+        month = expense['month']
+        if isinstance(month, datetime):  # if datetime -> convert
+            month = month.date()
+        key = (expense['exp_ext_branch'], expense['exp_ext_unit'], month)
         combined_data[key] = {
             'branch': expense['exp_ext_branch__loc_name'],
             'unit': expense['exp_ext_unit__unit_name'],
-            'month': expense['month'].strftime('%b-%Y') if expense['month'] else '',
+            'month': month.strftime('%b-%Y') if month else '',
             'total_expense': expense['total_expense'],
             'total_invoice_cost': 0.0,
             'profit_loss': -expense['total_expense'],
@@ -227,7 +234,10 @@ def branch_unit_profit_loss(request):
         }
 
     for invoice in invoice_data:
-        key = (invoice['wh_branch'], invoice['wh_unit'], invoice['month'])
+        month = invoice['month']
+        if isinstance(month, datetime):  # if datetime -> convert
+            month = month.date()
+        key = (invoice['wh_branch'], invoice['wh_unit'], month)
         if key in combined_data:
             combined_data[key]['total_invoice_cost'] = invoice['total_invoice_cost']
             combined_data[key]['profit_loss'] += invoice['total_invoice_cost']
@@ -235,12 +245,13 @@ def branch_unit_profit_loss(request):
             combined_data[key] = {
                 'branch': invoice['wh_branch__loc_name'],
                 'unit': invoice['wh_unit__unit_name'],
-                'month': invoice['month'].strftime('%b-%Y') if invoice['month'] else '',
+                'month': month.strftime('%b-%Y') if month else '',
                 'total_expense': 0.0,
                 'total_invoice_cost': invoice['total_invoice_cost'],
                 'profit_loss': invoice['total_invoice_cost'],
                 'profit_loss_percentage': 0.0,
             }
+
     for key, data in combined_data.items():
         if data['total_invoice_cost'] > 0:
             data['profit_loss_percentage'] = (data['profit_loss'] / data['total_invoice_cost']) * 100
@@ -288,9 +299,9 @@ def businessmodel_PL(request):
     businessmodels = TrbusinesstypeInfo.objects.all()
 
     if from_date:
-        from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
+        from_date = datetime.strptime(from_date, '%Y-%m-%d')
     if to_date:
-        to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
+        to_date = datetime.strptime(to_date, '%Y-%m-%d') + timedelta(days=1) - timedelta(seconds=1)
 
     income_queryset = Warehouse_goods_info.objects.all()
     if branch_filter:
@@ -300,11 +311,11 @@ def businessmodel_PL(request):
     if businessmodel_filter:
         income_queryset = income_queryset.filter(wh_customer_type__tb_trbusinesstype=businessmodel_filter)
     if from_date:
-        income_queryset = income_queryset.filter(wh_checkin_time__gte=from_date)
+        income_queryset = income_queryset.filter(wh_voucher_id__bill_invoice_date__gte=from_date)
     if to_date:
-        income_queryset = income_queryset.filter(wh_checkin_time__lte=to_date)
+        income_queryset = income_queryset.filter(wh_voucher_id__bill_invoice_date__lte=to_date)
 
-    income_data = income_queryset.annotate(month=TruncMonth('wh_checkin_time')).values('month',
+    income_data = income_queryset.annotate(month=TruncMonth('wh_voucher_id__bill_invoice_date')).values('month',
         branch_name=F('wh_branch__loc_name'),
         unit_name=F('wh_unit__unit_name'),
         businessmodel=F('wh_customer_type__tb_trbusinesstype')
@@ -320,8 +331,12 @@ def businessmodel_PL(request):
     if to_date:
         expense_queryset = expense_queryset.filter(exp_ext_expense_number__exp_service_start_date__lte=to_date)
 
+    expense_queryset = expense_queryset.filter(exp_ext_expense_number__exp_business__id=1)
     expense_data = (
-        expense_queryset.annotate(month=TruncMonth('exp_ext_expense_number__exp_service_start_date')).values(
+        expense_queryset
+        .annotate(month=TruncMonth('exp_ext_expense_number__exp_service_start_date'))
+        .values(
+            'month',
             branch_name=F('exp_ext_branch__loc_name'),
             unit_name=F('exp_ext_unit__unit_name'),
         )
@@ -329,42 +344,44 @@ def businessmodel_PL(request):
     )
 
     results = []
-    for income in income_data:
-        branch = income['branch_name']
-        unit = income['unit_name']
-        month = income['month'].strftime('%B %Y') if income['month'] else ''
-        businessmodel = income['businessmodel']
-        total_income = income['total_income']
 
-        matching_expense = next(
-            (exp for exp in expense_data if exp['branch_name'] == branch and exp['unit_name'] == unit), None
-        )
-        total_expense = matching_expense['total_expense'] if matching_expense else 0
+    all_keys = set(
+        (inc['branch_name'], inc['unit_name'], inc['businessmodel'], inc['month'])
+        for inc in income_data
+    ) | set(
+        (exp['branch_name'], exp['unit_name'], None, exp['month'])
+        for exp in expense_data
+    )
+
+    for branch, unit, businessmodel, month in all_keys:
+        total_income = next((inc['total_income'] for inc in income_data
+                             if inc['branch_name'] == branch and inc['unit_name'] == unit and inc['month'] == month), 0)
+
+        total_expense = next((exp['total_expense'] for exp in expense_data
+                              if exp['branch_name'] == branch and exp['unit_name'] == unit and exp['month'] == month),
+                             0)
 
         profit_loss = total_income - total_expense
-        profit_loss_percentage = (profit_loss / total_income * 100) if total_income != 0 else 0
+        profit_loss_percentage = (profit_loss / total_income * 100) if total_income else 0
 
         results.append({
             'branch': branch,
             'unit': unit,
-            'month': month,
+            'month': month.strftime('%B %Y') if month else '',
             'businessmodel': businessmodel,
             'total_income': total_income,
             'total_expense': total_expense,
             'profit_loss': profit_loss,
             'profit_loss_percentage': round(profit_loss_percentage, 2),
         })
+
     chart_data = {}
 
     # Aggregate business model-wise totals
     for result in results:
-        businessmodel = result['businessmodel']
+        businessmodel = result['businessmodel'] or 'Unknown'  # handle None
         if businessmodel not in chart_data:
-            chart_data[businessmodel] = {
-                'income': 0,
-                'expense': 0,
-                'profit_loss': 0,
-            }
+            chart_data[businessmodel] = {'income': 0, 'expense': 0, 'profit_loss': 0}
         chart_data[businessmodel]['income'] += result['total_income']
         chart_data[businessmodel]['expense'] += result['total_expense']
         chart_data[businessmodel]['profit_loss'] += result['profit_loss']
@@ -392,6 +409,11 @@ def businessmodel_PL(request):
     return render(request, "asset_mgt_app/fin_businessmodel_PL_report.html", context)
 
 
+from django.db.models import Sum
+from django.db.models.functions import TruncMonth
+from datetime import datetime
+
+
 def customerwise_PL(request):
     first_name = request.session.get('first_name')
     selected_branch = request.GET.get('branch', '')
@@ -402,69 +424,108 @@ def customerwise_PL(request):
     branches = Location_info.objects.all()
     businessmodels = TrbusinesstypeInfo.objects.all()
 
-    invoice_filters = Q()
-    expense_filters = Q()
-
+    # Expenses
+    expense_data = ExpenseExtinfo.objects.filter(exp_ext_expense_number__exp_business__id=1)
     if from_date:
-        invoice_filters &= Q(wh_checkin_time__gte=from_date)
-        expense_filters &= Q(exp_ext_expense_number__exp_service_start_date__gte=from_date)
+        from_date = datetime.strptime(from_date, '%Y-%m-%d').date()
+        expense_data = expense_data.filter(exp_ext_expense_number__exp_service_start_date__gte=from_date)
     if to_date:
-        invoice_filters &= Q(wh_checkin_time__lte=to_date)
-        expense_filters &= Q(exp_ext_expense_number__exp_service_start_date__lte=to_date)
-
-    total_expenses_subquery = ExpenseExtinfo.objects.filter(
-        exp_ext_branch=OuterRef('wh_branch')
-    ).values('exp_ext_branch').annotate(
-        total_expenses=Sum('exp_ext_amount')
-    ).values('total_expenses')
-
-    business_summary = Warehouse_goods_info.objects.annotate(
-    month=TruncMonth('wh_checkin_time')
-).values('month',
-        'wh_customer_type__tb_trbusinesstype',
-        'wh_branch__loc_name',
-        'wh_customer_name__cu_nameshort'
-    ).annotate(
-        total_invoice_amount=Coalesce(Sum('wh_total_invoice_cost', filter=invoice_filters), 0.0),
-        total_expenses=Coalesce(Subquery(total_expenses_subquery), 0.0),
-        profit_loss=F('total_invoice_amount') - F('total_expenses'),
-        profit_loss_percentage=Case(
-            When(total_invoice_amount=0, then=Value(0.0)),
-            default=(F('profit_loss') / F('total_invoice_amount') * 100),
-            output_field=FloatField()
-        )
-    )
-
+        to_date = datetime.strptime(to_date, '%Y-%m-%d').date()
+        expense_data = expense_data.filter(exp_ext_expense_number__exp_service_start_date__lte=to_date)
     if selected_branch:
-        business_summary = business_summary.filter(wh_branch__loc_name=selected_branch)
-    if selected_businessmodel:
-        business_summary = business_summary.filter(wh_customer_type__tb_trbusinesstype=selected_businessmodel)
-    for entry in business_summary:
-        month_date = entry['month']
-        entry['month_name'] = month_date.strftime('%B %Y') if month_date else ''
+        expense_data = expense_data.filter(exp_ext_branch__loc_name=selected_branch)
 
-    chart_summary = Warehouse_goods_info.objects.values(
-        'wh_customer_type__tb_trbusinesstype'  # Group by customer type
-    ).annotate(
-        total_invoice_amount=Coalesce(Sum('wh_total_invoice_cost', filter=invoice_filters), 0.0),
-        total_expenses=Coalesce(Sum(Subquery(total_expenses_subquery)), 0.0),
-        profit_loss=F('total_invoice_amount') - F('total_expenses')
+    expense_summary = expense_data.annotate(
+        month=TruncMonth('exp_ext_expense_number__exp_service_start_date')
+    ).values('month', 'exp_ext_branch__loc_name').annotate(
+        total_expense=Sum('exp_ext_amount')
     )
 
-    chart_labels = []
-    income_values = []
-    expense_values = []
-    profit_loss_values = []
+    # Income
+    income_data = Warehouse_goods_info.objects.all()
+    if from_date:
+        income_data = income_data.filter(wh_voucher_id__bill_invoice_date__gte=from_date)
+    if to_date:
+        income_data = income_data.filter(wh_voucher_id__bill_invoice_date__lte=to_date)
+    if selected_branch:
+        income_data = income_data.filter(wh_branch__loc_name=selected_branch)
+    if selected_businessmodel:
+        income_data = income_data.filter(wh_customer_type__tb_trbusinesstype=selected_businessmodel)
 
-    for entry in chart_summary:
-        customer_type = entry['wh_customer_type__tb_trbusinesstype']
-        chart_labels.append(customer_type)
-        income_values.append(entry['total_invoice_amount'] or 0)
-        expense_values.append(entry['total_expenses'] or 0)
-        profit_loss_values.append(entry['profit_loss'] or 0)
+    income_summary = income_data.annotate(
+        month=TruncMonth('wh_voucher_id__bill_invoice_date')
+    ).values(
+        'month', 'wh_branch__loc_name', 'wh_customer_type__tb_trbusinesstype', 'wh_customer_name__cu_nameshort'
+    ).annotate(
+        total_income=Sum('wh_total_invoice_cost')
+    )
+
+    # Build expense lookup dict safely
+    expense_lookup = {}
+    for exp in expense_summary:
+        month = exp['month']  # already a date
+        branch = exp.get('exp_ext_branch__loc_name') or 'Unknown'  # handle None
+        branch = branch.strip()
+        if month:
+            expense_lookup[(month, branch)] = exp['total_expense']
+
+    # Combine income + expense
+    results = []
+
+    for inc in income_summary:
+        month = inc['month']
+        branch = inc.get('wh_branch__loc_name') or 'Unknown'
+        branch = branch.strip()
+        if not month:
+            continue
+
+        total_expense = expense_lookup.get((month, branch), 0)
+        profit_loss = inc['total_income'] - total_expense
+        profit_loss_percentage = (profit_loss / inc['total_income'] * 100) if inc['total_income'] else 0
+
+        results.append({
+            'month_name': month.strftime('%B %Y'),
+            'branch': branch,
+            'businessmodel': inc.get('wh_customer_type__tb_trbusinesstype', 'N/A'),
+            'customer_name': inc.get('wh_customer_name__cu_nameshort', 'N/A'),
+            'total_income': inc['total_income'],
+            'total_expense': total_expense,
+            'profit_loss': profit_loss,
+            'profit_loss_percentage': round(profit_loss_percentage, 2),
+        })
+
+    # Add expense-only rows (branches+months with expenses but no income)
+    income_keys = {(inc['month'], (inc.get('wh_branch__loc_name') or 'Unknown').strip()) for inc in income_summary}
+    for exp in expense_summary:
+        month = exp['month']
+        branch = exp.get('exp_ext_branch__loc_name') or 'Unknown'
+        branch = branch.strip()
+        if not month:
+            continue
+        if (month, branch) not in income_keys:  # expense-only
+            results.append({
+                'month_name': month.strftime('%B %Y'),
+                'branch': branch,
+                'businessmodel': 'N/A',
+                'customer_name': 'N/A',
+                'total_income': 0,
+                'total_expense': exp['total_expense'],
+                'profit_loss': -exp['total_expense'],
+                'profit_loss_percentage': 0,
+            })
+
+    # Prepare chart data if needed
+    chart_data = {}
+    for entry in results:
+        bm = entry['businessmodel'] or 'Unknown'
+        if bm not in chart_data:
+            chart_data[bm] = {'income': 0, 'expense': 0, 'profit_loss': 0}
+        chart_data[bm]['income'] += entry['total_income']
+        chart_data[bm]['expense'] += entry['total_expense']
+        chart_data[bm]['profit_loss'] += entry['profit_loss']
 
     context = {
-        'business_summary': business_summary,
+        'business_summary': results,
         'first_name': first_name,
         'branches': branches,
         'businessmodels': businessmodels,
@@ -472,10 +533,10 @@ def customerwise_PL(request):
         'selected_businessmodel': selected_businessmodel,
         'from_date': from_date,
         'to_date': to_date,
-        'chart_labels': chart_labels,
-        'income_values': income_values,
-        'expense_values': expense_values,
-        'profit_loss_values': profit_loss_values,
+        'chart_labels': list(chart_data.keys()),
+        'income_values': [d['income'] for d in chart_data.values()],
+        'expense_values': [d['expense'] for d in chart_data.values()],
+        'profit_loss_values': [d['profit_loss'] for d in chart_data.values()],
     }
 
     return render(request, "asset_mgt_app/fin_customerwise_PL_report.html", context)
@@ -509,9 +570,9 @@ def fin_profit_loss_view(request):
     if businessmodel_filter:
         income_queryset = income_queryset.filter(wh_customer_type__tb_trbusinesstype=businessmodel_filter)
     if from_date:
-        income_queryset = income_queryset.filter(wh_checkin_time__gte=from_date)
+        income_queryset = income_queryset.filter(wh_voucher_id__bill_invoice_date__gte=from_date)
     if to_date:
-        income_queryset = income_queryset.filter(wh_checkin_time__lte=to_date)
+        income_queryset = income_queryset.filter(wh_voucher_id__bill_invoice_date__lte=to_date)
 
     income_data = income_queryset.values(
         branch_name=F('wh_branch__loc_name'),
@@ -793,7 +854,7 @@ def overdue_jobs_report(request):
     jobs = (
         Warehouse_goods_info.objects
         .filter(wh_check_in_out=2, wh_voucher_num__isnull=True, wh_checkout_time__isnull=False)
-        .select_related("wh_customer_name", "wh_branch", "wh_unit")
+        .select_related("wh_customer_name", "wh_branch", "wh_unit","wh_customer_type")
     )
     branches = Location_info.objects.all()
     units = UnitInfo.objects.values_list('unit_name', flat=True).distinct()
@@ -1921,7 +1982,7 @@ def fin_mis_warehouse(request):
     first_name = request.session.get("first_name")
     selected_branch = request.GET.get("branch")
     selected_unit = request.GET.get("unit")
-    selected_company = request.GET.get("company")
+
     from_date = request.GET.get("from_date")
     to_date = request.GET.get("to_date")
     selected_year = request.GET.get("year")
@@ -1959,10 +2020,12 @@ def fin_mis_warehouse(request):
     if selected_year:
         expenses_filter["exp_ext_expense_number__exp_service_start_date__year"] = selected_year
         budget_filter["bf_start_date_year__year"] = selected_year
-        warehouse_filter["wh_checkin_time__year"] = selected_year
-    if selected_company:
-        expenses_filter["exp_ext_expense_number__exp_business__bvm_business"] = selected_company
-        budget_filter["bf_company__bvm_business"] = selected_company
+        warehouse_filter["wh_voucher_id__bill_invoice_date__year"] = selected_year
+    # if selected_company:
+    #     expenses_filter["exp_ext_expense_number__exp_business__bvm_business"] = selected_company
+    #     budget_filter["bf_company__bvm_business"] = selected_company
+    expenses_filter['exp_ext_expense_number__exp_business__id'] = 1
+    budget_filter["bf_company__id"] = 1
 
     if selected_branch:
         expenses_filter["exp_ext_branch__loc_name"] = selected_branch
@@ -1976,13 +2039,13 @@ def fin_mis_warehouse(request):
         from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
         expenses_filter["exp_ext_expense_number__exp_service_start_date__gte"] = from_date
         budget_filter["bf_start_date_year__gte"] = from_date
-        warehouse_filter["wh_checkin_time__gte"] = from_date
+        warehouse_filter["wh_voucher_id__bill_invoice_date__gte"] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
         expenses_filter["exp_ext_expense_number__exp_service_start_date__lte"] = to_date
         budget_filter["bf_start_date_year__lte"] = to_date
-        warehouse_filter["wh_checkin_time__lte"] = to_date
+        warehouse_filter["wh_voucher_id__bill_invoice_date__lte"] = to_date
     if from_date and to_date:
         months_range = list(range(from_date.month, to_date.month + 1))
     else:
@@ -1993,7 +2056,7 @@ def fin_mis_warehouse(request):
     warehouse_queryset = (
         Warehouse_goods_info.objects
         .filter(**warehouse_filter)
-        .annotate(month=ExtractMonth("wh_checkin_time"))
+        .annotate(month=ExtractMonth("wh_voucher_id__bill_invoice_date"))
         .values("month")
         .annotate(**{
             f"{field}_sum": Sum(field) for field in WAREHOUSE_EXPENSE_FIELD_MAPPING.values() if field
@@ -2166,7 +2229,7 @@ def fin_mis_warehouse(request):
         other_expenses_summary,
     ]:
         for entry in category_dict:
-            if not entry.get("is_total"):  # Only accumulate actual categories, skip their own "Total" rows
+            if not entry.get("is_total"):
                 continue
             for month in months_range:
                 grand_monthly_budgets[month] += entry["monthly_budgets"].get(month, 0)
@@ -2282,7 +2345,7 @@ def fin_mis_warehouse(request):
         "companies": companies,
         "years": years,
         "selected_year": selected_year,
-        "selected_company": selected_company,
+
         "selected_branch": selected_branch,
         "selected_unit": selected_unit,
         "first_name": first_name,

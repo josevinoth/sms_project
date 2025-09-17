@@ -71,6 +71,7 @@
             <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Month"></th>
+            <th><input type="text" class="form-control filter-input" placeholder="Search Business Model"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Revenue"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Expenses"></th>
             <th><input type="text" class="form-control filter-input" placeholder="Search Profit/Loss"></th>
@@ -80,6 +81,7 @@
             <th>Branch</th>
             <th>Unit</th>
             <th>Month</th>
+             <th>Business model</th>
             <th>Revenue(In Lakhs)</th>
             <th>Expense(In Lakhs)</th>
             <th>Profit/Loss</th>
@@ -92,6 +94,7 @@
             <td>{{ result.branch }}</td>
             <td>{{ result.unit }}</td>
             <td>{{ result.month }}</td>
+            <td>{{ result.businessmodel }}</td>
             <td>{{ result.total_income|to_lakhs }}</td>
             <td>{{ result.total_expense|to_lakhs }}</td>
             <td>{{ result.profit_loss|to_lakhs }}</td>

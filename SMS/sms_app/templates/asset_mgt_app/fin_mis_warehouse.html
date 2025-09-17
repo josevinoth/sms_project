@@ -58,17 +58,7 @@
 
 <div class="container-fluid">
     <div class="row align-items-center">
-        <div class="col-md-2">
-            <label for="company-filter"><b>Company:</b></label>
-            <select id="company-filter" name="company" class="form-control box-shadow rounded">
-                <option value="">All</option>
-                {% for company in companies %}
-                <option value="{{ company }}" {% if company == selected_company %} selected {% endif %}>
-                    {{ company }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
+
         <div class="col-md-2">
             <label for="branch-filter"><b>Branch:</b></label>
             <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
@@ -112,310 +102,281 @@
 </div>
 <br>
 <div class="container-fluid shadow-box-table p-3">
-<table id="fin_table" class="table table-striped table-bordered">
-    <thead class="thead-dark">
-    <tr>
-        <th rowspan="2" style="text-align:center; vertical-align:middle;">Warehouse</th>
-        <th class="warehouse-budget" colspan="{{ months|length|add:'1' }}"> Budget </th>
-        <th class="warehouse-actuals" colspan="{{ months|length|add:'1' }}"> Actuals</th>
-        <th class="warehouse-variance" colspan="{{ months|length|add:'1' }}"> Variance</th>
-    </tr>
-    <tr>
-        {% for month_num, month_name in months %}<th>{{ month_name }}</th>{% endfor %}
-        <th>Total Budget</th>
+    <table id="fin_table" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th rowspan="2" style="text-align:center; vertical-align:middle;">Warehouse</th>
+            <th class="warehouse-budget" colspan="{{ months|length|add:'1' }}"> Budget </th>
+            <th class="warehouse-actuals" colspan="{{ months|length|add:'1' }}"> Actuals</th>
+            <th class="warehouse-variance" colspan="{{ months|length|add:'1' }}"> Variance</th>
+        </tr>
+        <tr>
+            {% for month_num, month_name in months %}<th>{{ month_name }}</th>{% endfor %}
+            <th>Total Budget</th>
 
-        {% for month_num, month_name in months %}<th>{{ month_name }}</th>{% endfor %}
-        <th>Total Actuals</th>
-        {% for month_num, month_name in months %}<th>{{ month_name }}</th>{% endfor %}
-        <th>Total Variance</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for summary in income_summary %}
-    <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
-        <td>{{ summary.expense_type }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}<th>{{ month_name }}</th>{% endfor %}
+            <th>Total Actuals</th>
+            {% for month_num, month_name in months %}<th>{{ month_name }}</th>{% endfor %}
+            <th>Total Variance</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for summary in income_summary %}
+        <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
+            <td>{{ summary.expense_type }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="expenses">{{ summary.total_expense|add:0.0|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+        </tr>
         {% endfor %}
-        <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="expenses">{{ summary.total_expense|add:0.0|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
-    </tr>
-    {% endfor %}
 
-    {% for summary in department_expenses_summary %}
-    <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
-        <td>{{ summary.expense_type }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+        {% for summary in department_expenses_summary %}
+        <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
+            <td>{{ summary.expense_type }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+        </tr>
         {% endfor %}
-        <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
-    </tr>
-    {% endfor %}
 
-    {% for summary in employee_benefits_summary %}
-    <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
-        <td>{{ summary.expense_type }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+        {% for summary in employee_benefits_summary %}
+        <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
+            <td>{{ summary.expense_type }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
 
-    </tr>
-    {% endfor %}
-
-    {% for summary in interest_summary %}
-    <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
-
-        <td>{{ summary.expense_type }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+        </tr>
         {% endfor %}
-        <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
 
-    </tr>
-    {% endfor %}
+        {% for summary in interest_summary %}
+        <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
 
-    {% for summary in operational_summary %}
-    <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
+            <td>{{ summary.expense_type }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
 
-        <td>{{ summary.expense_type }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+        </tr>
         {% endfor %}
-        <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
-    </tr>
-    {% endfor %}
 
-    {% for summary in non_operational_summary %}
-    <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
+        {% for summary in operational_summary %}
+        <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
 
-        <td>{{ summary.expense_type }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+            <td>{{ summary.expense_type }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+        </tr>
         {% endfor %}
-        <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
+
+        {% for summary in non_operational_summary %}
+        <tr {% if summary.is_total %} class="total-row total-income" {% endif %}>
+
+            <td>{{ summary.expense_type }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="income">{{ summary.total_budget|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
+        </tr>
         {% endfor %}
-        <td class="expenses">{{ summary.total_expense|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="variance">{{ summary.total_variance|floatformat:0 }}</td>
-    </tr>
-    {% endfor %}
 
-    <tr class="total-row total-income">
-        <td>{{ grand_totals_summary.expense_type }}</td>
+        <tr class="total-row total-income">
+            <td>{{ grand_totals_summary.expense_type }}</td>
 
-        {% for month_num, month_name in months %}
-        <td>{{ grand_totals_summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="income">{{ grand_totals_summary.total_budget|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ grand_totals_summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="income">{{ grand_totals_summary.total_budget|floatformat:0 }}</td>
 
-        {% for month_num, month_name in months %}
-        <td>{{ grand_totals_summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="expenses">{{ grand_totals_summary.total_expense|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ grand_totals_summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="expenses">{{ grand_totals_summary.total_expense|floatformat:0 }}</td>
 
-        {% for month_num, month_name in months %}
-        <td>{{ grand_totals_summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="variance">{{ grand_totals_summary.total_variance|floatformat:0 }}</td>
-    </tr>
+            {% for month_num, month_name in months %}
+            <td>{{ grand_totals_summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="variance">{{ grand_totals_summary.total_variance|floatformat:0 }}</td>
+        </tr>
 
-    <tr class="total-row total-income">
-        <td>{{ net_income_summary.expense_type }}</td>
+        <tr class="total-row total-income">
+            <td>{{ net_income_summary.expense_type }}</td>
 
-        {% for month_num, month_name in months %}
-        <td>{{ net_income_summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="income">{{ net_income_summary.total_budget|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ net_income_summary.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="income">{{ net_income_summary.total_budget|floatformat:0 }}</td>
 
-        {% for month_num, month_name in months %}
-        <td>{{ net_income_summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="expenses">{{ net_income_summary.total_expense|floatformat:0 }}</td>
-        {% for month_num, month_name in months %}
-        <td>{{ net_income_summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
-        {% endfor %}
-        <td class="variance">{{ net_income_summary.total_variance|floatformat:0 }}</td>
-    </tr>
+            {% for month_num, month_name in months %}
+            <td>{{ net_income_summary.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="expenses">{{ net_income_summary.total_expense|floatformat:0 }}</td>
+            {% for month_num, month_name in months %}
+            <td>{{ net_income_summary.monthly_variance|get_item:month_num|default:0|floatformat:0 }}</td>
+            {% endfor %}
+            <td class="variance">{{ net_income_summary.total_variance|floatformat:0 }}</td>
+        </tr>
 
-    <tr class="total-row total-income">
-        <td>{{ net_income_summary_percentage.expense_type }}</td>
+        <tr class="total-row total-income">
+            <td>{{ net_income_summary_percentage.expense_type }}</td>
 
-        {% for month_num, month_name in months %}
-        <td>{{ net_income_summary_percentage.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}%</td>
-        {% endfor %}
-        <td class="income">{{ net_income_summary_percentage.total_budget|floatformat:0 }}%</td>
+            {% for month_num, month_name in months %}
+            <td>{{ net_income_summary_percentage.monthly_budgets|get_item:month_num|default:0|floatformat:0 }}%</td>
+            {% endfor %}
+            <td class="income">{{ net_income_summary_percentage.total_budget|floatformat:0 }}%</td>
 
-        {% for month_num, month_name in months %}
-        <td>{{ net_income_summary_percentage.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}%</td>
-        {% endfor %}
-        <td class="expenses">{{ net_income_summary_percentage.total_expense|floatformat:0 }}%</td>
+            {% for month_num, month_name in months %}
+            <td>{{ net_income_summary_percentage.monthly_expenses|get_item:month_num|default:0|floatformat:0 }}%</td>
+            {% endfor %}
+            <td class="expenses">{{ net_income_summary_percentage.total_expense|floatformat:0 }}%</td>
 
-        {% for month_num, month_name in months %}
-        <td>{{ net_income_summary_percentage.monthly_variance|get_item:month_num|default:0|floatformat:0 }}%</td>
-        {% endfor %}
-        <td class="variance">{{ net_income_summary_percentage.total_variance|floatformat:0 }}%</td>
-    </tr>
+            {% for month_num, month_name in months %}
+            <td>{{ net_income_summary_percentage.monthly_variance|get_item:month_num|default:0|floatformat:0 }}%</td>
+            {% endfor %}
+            <td class="variance">{{ net_income_summary_percentage.total_variance|floatformat:0 }}%</td>
+        </tr>
 
-    </tbody>
-</table>
+        </tbody>
+    </table>
 </div>
 <script>
 
-  $(document).ready(function () {
-    $('#fin_table').DataTable({
-        scrollY: "600px",
-        scrollX: true,
-        scrollCollapse: true,
-        ordering: false,
-        dom: 'lBfrtip',
-        buttons: [
-            'copy',
-            'print',
-            {
-    extend: 'csvHtml5',
-    text: 'CSV',
+    $(document).ready(function () {
+      $('#fin_table').DataTable({
+          scrollY: "600px",
+          scrollX: true,
+          scrollCollapse: true,
+          ordering: false,
+          dom: 'lBfrtip',
+          buttons: [
+              'copy',
+              'print',
+              {
+      extend: 'csvHtml5',
+      text: 'CSV',
 
-    exportOptions: {
-        columns: ':visible'
-    },
-    customize: function (csv) {
-    const monthCount = {{ months|length }};
-    const topHeader = [
-        'Warehouse',
-        ...Array(monthCount).fill('Budget'),
-        'Total Budget',
-        ...Array(monthCount).fill('Actuals'),
-        'Total Actuals',
-        ...Array(monthCount).fill('Variance'),
-        'Total Variance'
-    ];
-    return topHeader.join(',') + '\n' + csv;
-}
-},
+      exportOptions: {
+          columns: ':visible'
+      },
+      customize: function (csv) {
+      const monthCount = {{ months|length }};
+      const topHeader = [
+          'Warehouse',
+          ...Array(monthCount).fill('Budget'),
+          'Total Budget',
+          ...Array(monthCount).fill('Actuals'),
+          'Total Actuals',
+          ...Array(monthCount).fill('Variance'),
+          'Total Variance'
+      ];
+      return topHeader.join(',') + '\n' + csv;
+  }
+  },
 
-            {
-                extend: 'excelHtml5',
-                text: 'Excel',
+              {
+                  extend: 'excelHtml5',
+                  text: 'Excel',
 
-                exportOptions: { columns: ':visible' },
-                customizeData: function (data) {
-                    const monthCount = {{ months|length }};
-                    const topHeader = [
-                        'Warehouse',
-                        ...Array(monthCount).fill('Budget'),
-                        'Total Budget',
-                        ...Array(monthCount).fill('Actuals'),
-                        'Total Actuals',
-                        ...Array(monthCount).fill('Variance'),
-                        'Total Variance'
-                    ];
-                    data.body.unshift(data.header);
-                    data.header = topHeader;
-                }
-            }
-        ]
-    });
-});
-       document.getElementById('branch-filter').addEventListener('change', updateFilters);
-      document.getElementById('unit-filter').addEventListener('change', updateFilters);
-      document.getElementById('company-filter').addEventListener('change', updateFilters);
-      document.getElementById('year').addEventListener('change', updateFilters);
-      document.getElementById('from-date').addEventListener('change', updateFilters);
-      document.getElementById('to-date').addEventListener('change', updateFilters);
+                  exportOptions: { columns: ':visible' },
+                  customizeData: function (data) {
+                      const monthCount = {{ months|length }};
+                      const topHeader = [
+                          'Warehouse',
+                          ...Array(monthCount).fill('Budget'),
+                          'Total Budget',
+                          ...Array(monthCount).fill('Actuals'),
+                          'Total Actuals',
+                          ...Array(monthCount).fill('Variance'),
+                          'Total Variance'
+                      ];
+                      data.body.unshift(data.header);
+                      data.header = topHeader;
+                  }
+              }
+          ]
+      });
+  });
+         document.getElementById('branch-filter').addEventListener('change', updateFilters);
+        document.getElementById('unit-filter').addEventListener('change', updateFilters);
 
-      function updateFilters() {
+        document.getElementById('year').addEventListener('change', updateFilters);
+        document.getElementById('from-date').addEventListener('change', updateFilters);
+        document.getElementById('to-date').addEventListener('change', updateFilters);
+
+        function updateFilters() {
       const branch = document.getElementById('branch-filter').value;
       const unit = document.getElementById('unit-filter').value;
-      const company = document.getElementById('company-filter').value;
       const year = document.getElementById('year').value;
       const fromDate = document.getElementById('from-date').value;
       const toDate = document.getElementById('to-date').value;
+
       const url = new URL(window.location.href);
 
-      if (branch) {
-          url.searchParams.set('branch', branch);
-      } else {
-          url.searchParams.delete('branch');
-      }
-
-      if (unit) {
-          url.searchParams.set('unit', unit);
-      } else {
-          url.searchParams.delete('unit');
-      }
-
-      if (company) {
-          url.searchParams.set('company', company);
-      } else {
-          url.searchParams.delete('company');
-      }
-
-      if (year) {
-          url.searchParams.set('year', year);
-      } else {
-          url.searchParams.delete('year');
-      }
-
-
-      if (fromDate) {
-          url.searchParams.set('from_date', fromDate);
-      } else {
-          url.searchParams.delete('from_date');
-      }
-
-      if (toDate) {
-          url.searchParams.set('to_date', toDate);
-      } else {
-          url.searchParams.delete('to_date');
-      }
+      url.search = "";
+      if (branch) url.searchParams.set('branch', branch);
+      if (unit) url.searchParams.set('unit', unit);
+      if (year) url.searchParams.set('year', year);
+      if (fromDate) url.searchParams.set('from_date', fromDate);
+      if (toDate) url.searchParams.set('to_date', toDate);
 
       console.log(url.toString());
       window.location.href = url.toString();
   }
+
 </script>
 {% endblock content %}
 

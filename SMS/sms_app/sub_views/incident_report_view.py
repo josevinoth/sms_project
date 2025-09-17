@@ -88,10 +88,10 @@ def incident_report(request):
     to_date = request.GET.get('to_date', None)
     incident_list = IncidentReportInfo.objects.all()
     if from_date:
-        incident_list = incident_list.filter(inc_updated_on__date__gte=from_date)
+        incident_list = incident_list.filter(inc_incident_date__date__gte=from_date)
 
     if to_date:
-        incident_list = incident_list.filter(inc_updated_on__date__lte=to_date)
+        incident_list = incident_list.filter(inc_incident_date__date__lte=to_date)
 
     context = {
         'incident_list': incident_list,

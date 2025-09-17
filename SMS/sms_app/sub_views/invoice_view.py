@@ -516,6 +516,7 @@ def invoice_delete(request,invoice_id):
     wh_jobs=list(Warehouse_goods_info.objects.filter(wh_voucher_num=invoice_ref).values_list('wh_job_no',flat=True))
     for i in wh_jobs:
         Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_voucher_num=None)
+        Warehouse_goods_info.objects.filter(wh_job_no=i).update(wh_voucher_id=None)
     invoice_del.delete()
     return redirect('/SMS/invoice_list')
 
@@ -561,6 +562,7 @@ def shipper_invoice_goods_add(request):
     first_name = request.session.get('first_name')
     for i in selected_stocks:
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_voucher_num=voucher_num_val)
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_voucher_id=voucher_id_val)
         print("Inside dispatch_add_goods end")
     invoice_list_1 = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
 
@@ -580,6 +582,7 @@ def shipper_invoice_goods_remove(request):
     first_name = request.session.get('first_name')
     for i in selected_stocks:
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_voucher_num=None)
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_voucher_id=None)
         print("Inside dispatch_add_goods end")
     invoice_list_1 = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
 

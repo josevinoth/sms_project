@@ -1,4 +1,5 @@
 import csv
+import json
 from itertools import chain
 from io import BytesIO
 
@@ -7,14 +8,14 @@ from django.http import StreamingHttpResponse
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, ExpressionWrapper, fields, F, DurationField
-from django.db.models.functions import Cast, Extract
+from django.db.models.functions import Cast, Extract, TruncMonth
 from django.shortcuts import render
 from django.template.loader import get_template
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.timezone import make_naive
 from xhtml2pdf import pisa
-from ..models import CustomerInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo,GoodsPartialDispatchInfo
+from ..models import CustomerInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo,GoodsPartialDispatchInfo,Location_info
 import datetime
 from datetime import timedelta
 
@@ -209,29 +210,46 @@ def revenue_report(request):
     first_name = request.session.get('first_name')
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
-
+    selected_branch = request.GET.get('branch')
+    branches = Location_info.objects.all()
     qs = Warehouse_goods_info.objects.exclude(wh_voucher_num__isnull=True)
 
     if from_date:
         qs = qs.filter(wh_checkout_time__date__gte=from_date)
     if to_date:
         qs = qs.filter(wh_checkout_time__date__lte=to_date)
+    if selected_branch:
+        qs = qs.filter(wh_branch__loc_name=selected_branch)
 
     revenue_summary = (
-        qs.values("wh_customer_name__cu_name", "wh_branch__loc_name", "wh_unit__unit_name")
+        qs.annotate(month=TruncMonth('wh_checkout_time')).values("wh_customer_name__cu_name", "wh_branch__loc_name", "wh_unit__unit_name","month")
         .annotate(
             storage_total=Sum("wh_storage_cost_total"),
             loading_total=Sum("wh_total_loading_cost"),
             forklift_total=Sum("wh_forklift_cost"),
             crane_total=Sum("wh_crane_cost"),
             total_invoice=Sum("wh_total_invoice_cost"),
-        ).order_by("wh_customer_name__cu_name", "wh_branch__loc_name", "wh_unit__unit_name"))
+        ).order_by("wh_customer_name__cu_name", "wh_branch__loc_name", "wh_unit__unit_name","month"))
+    # Aggregate customer-wise revenue (total_invoice)
+    customer_revenue = (
+        qs.values("wh_customer_name__cu_name")
+        .annotate(total_revenue=Sum("wh_total_invoice_cost"))
+        .order_by("wh_customer_name__cu_name")
+    )
+
+    chart_labels = [row["wh_customer_name__cu_name"] for row in customer_revenue]
+    chart_data = [float(row["total_revenue"] or 0) / 100000 for row in customer_revenue]  # in Lakhs
+
 
     context = {
         "revenue_summary": revenue_summary,
         "first_name": first_name,
         "from_date": from_date,
         "to_date": to_date,
+        "chart_labels": json.dumps(chart_labels),
+        "chart_data": json.dumps(chart_data),
+        "branches":branches,
+        "selected_branch":selected_branch
     }
     return render(request, "asset_mgt_app/revenue_report.html", context)
 
@@ -582,7 +600,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
 
         wb = openpyxl.Workbook()
         ws = wb.active
-        ws.title = "Stock Value Report"
+        ws.title = "Goods Movement Report"
 
         # Write the headers
         headers = [
@@ -828,7 +846,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             customer_name = CustomerInfo.objects.get(pk=int(customer_name)).cu_name
         else:
             customer_name = CustomerInfo.objects.filter(cu_name=customer_name).first()
-        file_name = str(customer_name)+'_Stock Value_report.xlsx'  # Set your desired file name
+        file_name = str(customer_name)+'_Goods_Movement_report.xlsx'  # Set your desired file name
         # Apply formatting to the first row
         # for cell in sheet[1]:
         #     cell.font = header_font
@@ -858,7 +876,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
         attachment = excel_file
         attachment_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         if subject==None:
-            subject = f"{customer_name}Stock Value Report"
+            subject = f"{customer_name}Goods Movement Report"
         else:
             subject = subject
         pre_gatein_id = request.session.get('ses_pre_gatein_id')

@@ -50,6 +50,12 @@
                                     {% render_field form.cc_claim_reason id="cc_claim_reason" class="form-control"  %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Amount</span>
+                                    </div>
+                                    {% render_field form.cc_amount id="cc_amount" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">CAPA Issued Date</span>
 									</div>
