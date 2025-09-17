@@ -6,38 +6,38 @@
 		<i class="fas fa-arrow-left"></i> Back
 	</a>
 </div>
-	<div class="col-12 col-md-10 col-lg-12 p-2">
-		<div class="gap-2 d-md-flex justify-content-md-center flex-wrap">
-			{% if gatein_list %}
-			{% for gateininfo in gatein_list %}
-			<a class="btn  border focus border-dark mb-2" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
-			{% endfor %}
-			{% else %}
-			<a class="btn  border focus border-dark mb-2" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
-			{% endif %}
+<div class="col-12 col-md-10 col-lg-12 p-2">
+	<div class="gap-2 d-md-flex justify-content-md-center flex-wrap">
+		{% if gatein_list %}
+		{% for gateininfo in gatein_list %}
+		<a class="btn  border focus border-dark mb-2" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn  border focus border-dark mb-2" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
+		{% endif %}
 
-			{% if loadingbay_list %}
-			{% for loadingbayinfo in loadingbay_list %}
-			<a class="btn  border focus border-dark mb-2" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
-			{% endfor %}
-			{% else %}
-			<a class="btn  border focus border-dark mb-2" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
-			{% endif %}
+		{% if loadingbay_list %}
+		{% for loadingbayinfo in loadingbay_list %}
+		<a class="btn  border focus border-dark mb-2" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn  border focus border-dark mb-2" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
+		{% endif %}
 
-			<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
+		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
 
-			{% if damagereport_list %}
-			{% for damagecheckinfo in damagereport_list %}
-			<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check</a>
-			{% endfor %}
-			{% else %}
-			<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check</a>
-			{% endif %}
+		{% if damagereport_list %}
+		{% for damagecheckinfo in damagereport_list %}
+		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check</a>
+		{% endfor %}
+		{% else %}
+		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check</a>
+		{% endif %}
 
-			<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
-			<a class="btn  border border-dark mb-2 disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
-		</div>
+		<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
+		<a class="btn  border border-dark mb-2 disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
 	</div>
+</div>
 
 <hr>
 <form method="POST" action="" enctype="multipart/form-data" id="loadingbay_add" data-currency_value-url="{% url 'load_currency_value' %}">
@@ -144,13 +144,21 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">E-way Bill#</span>
 									</div>
-									{% render_field loadingbay_form.lb_eway_bill class="form-control" %}
+									{% render_field loadingbay_form.lb_eway class="form-control" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">E-way Bill Validity</span>
+								<div id="eway-extra-fields">
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">E-way Bill Number#</span>
+										</div>
+										{% render_field loadingbay_form.lb_eway_bill class="form-control" %}
 									</div>
-									{% render_field loadingbay_form.lb_validity_date type="datetime-local" class="form-control" %}
+									<div class="input-group input-group-sm mb-3">
+										<div class="input-group-prepend">
+											<span class="input-group-text">E-way Bill Validity</span>
+										</div>
+										{% render_field loadingbay_form.lb_validity_date type="datetime-local" class="form-control" %}
+									</div>
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -550,6 +558,26 @@
         if (!lb_stock_unloading_end_time.value) { // If there is no value, assume "create" mode
             lb_stock_unloading_end_time.value = formattedNowIST; // Set current time as default value
         }
+    });
+</script>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+        const ewaySelect = document.getElementById("id_lb_eway");
+        const extraFields = document.getElementById("eway-extra-fields");
+
+        function toggleFields() {
+            if (ewaySelect.value === "1") {
+                extraFields.style.display = "block";
+            } else {
+                extraFields.style.display = "none";
+            }
+        }
+
+        // Run on page load
+        toggleFields();
+
+        // Run when selection changes
+        ewaySelect.addEventListener("change", toggleFields);
     });
 </script>
 {% endblock %}

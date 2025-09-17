@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth.decorators import login_required
 from ..forms import HighvalueForm
 from ..models import HighvalueInfo
@@ -92,3 +94,27 @@ def highvalue_cancel(request, pregateintruck_id=0):
     pregateintruck_id = request.session.get('ses_pregateintruck_id')
     return redirect(f'/SMS/pregateintruck_update/{pregateintruck_id}')
 
+
+@login_required(login_url='login_page')
+def highvalue_report_list(request):
+    first_name = request.session.get('first_name')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+
+    high_list = HighvalueInfo.objects.all()
+
+    if from_date:
+        from_date_obj = datetime.strptime(from_date, "%Y-%m-%d").date()
+        high_list = high_list.filter(hv_updated_on__gte=from_date_obj)
+
+    if to_date:
+        to_date_obj = datetime.strptime(to_date, "%Y-%m-%d").date()
+        high_list = high_list.filter(hv_updated_on__lte=to_date_obj)
+
+    context = {
+        'high_list': high_list,
+        'first_name': first_name,
+        'from_date': from_date or '',
+        'to_date': to_date or '',
+    }
+    return render(request, "asset_mgt_app/wh_highvaluecheck_report_list.html", context)

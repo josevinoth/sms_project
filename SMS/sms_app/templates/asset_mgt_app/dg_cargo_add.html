@@ -5,58 +5,170 @@
 <form method="POST" action="">
     {% csrf_token %}
 
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center">
-                        <h3>Add / Update DG Cargo Value</h3>
-                    </div>
-                    <div class="card-body bg-light">
-                        <div class="row">
-                            <div class="col-6">
-                                <!-- WH Job Number -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">WH Job Number</span>
-                                    </div>
-                                    {% render_field form.DG_wh_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href" %}
-                                </div>
+    <div class="container-fluid">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header text-center">
+                <h3>Add / Update DG Cargo Value</h3>
+            </div>
+            <div class="card-body bg-light">
+                <div class="row">
 
-                                <!-- Location -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Location</span>
-                                    </div>
-                                    {% render_field form.DG_wh_location id="DG_wh_location" class="form-control " %}
-                                </div>
+                    <!-- Column 1 -->
+                    <div class="col-3">
+                        <!-- WH Job Number -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">WH Job Number</span>
                             </div>
-                            <div class="col-6">
-                                <!-- Approval Status -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Approval Status</span>
-                                    </div>
-                                    {% render_field form.DG_wh_approval_status id="DG_wh_approval_status" class="form-control disable_a_href" %}
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Messages -->
-                        <div class="message text-center">
-                            {% for message in messages %}
-                            <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-                            {% endfor %}
+                            {% render_field form.DG_wh_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href" %}
                         </div>
 
-                        <!-- Submit and Cancel Buttons -->
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-                        <a class="btn btn-warning float-right" href="{% url 'gatein_update' gatein_wh_job_id %}">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
+                        <!-- Location -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Location</span>
+                            </div>
+                            {% render_field form.DG_wh_location class="form-control" %}
+                        </div>
+
+                        <!-- Date -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Date</span>
+                            </div>
+                            {% render_field form.DG_date type="datetime-local" class="form-control" %}
+                        </div>
+
+                        <!-- Customer -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Customer</span>
+                            </div>
+                            {% render_field form.DG_customer class="form-control" %}
+                        </div>
                     </div>
+
+                    <!-- Column 2 -->
+                    <div class="col-3">
+                        <!-- Shipper -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Shipper</span>
+                            </div>
+                            {% render_field form.DG_shipper class="form-control" %}
+                        </div>
+
+                        <!-- Customer Reference -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Customer Ref</span>
+                            </div>
+                            {% render_field form.DG_customer_reference_number class="form-control" %}
+                        </div>
+
+                        <!-- Invoice Reference -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Invoice Ref</span>
+                            </div>
+                            {% render_field form.DG_invoice_reference class="form-control" %}
+                        </div>
+
+                        <!-- Commodity -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Commodity</span>
+                            </div>
+                            {% render_field form.DG_commodity class="form-control" %}
+                        </div>
+                    </div>
+
+                    <!-- Column 3 -->
+                    <div class="col-3">
+                        <!-- Value -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Value</span>
+                            </div>
+                            {% render_field form.DG_value class="form-control" %}
+                        </div>
+
+                        <!-- No of Pcs -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">No. of Pcs</span>
+                            </div>
+                            {% render_field form.DG_no_of_pcs class="form-control" %}
+                        </div>
+
+                        <!-- Weight -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Weight</span>
+                            </div>
+                            {% render_field form.DG_weight class="form-control" %}
+                        </div>
+
+                        <!-- Dimension -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Dimension</span>
+                            </div>
+                            {% render_field form.DG_dimension class="form-control" %}
+                        </div>
+                    </div>
+
+                    <!-- Column 4 -->
+                    <div class="col-3">
+                        <!-- Approval Status -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Approval Status</span>
+                            </div>
+                            {% render_field form.DG_wh_approval_status id="DG_wh_approval_status" class="form-control disable_a_href" %}
+                        </div>
+
+                        <!-- Shipment Info Received -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Shipment Info Received</span>
+                            </div>
+                            {% render_field form.DG_shipment_info_received class="form-control" %}
+                        </div>
+
+                        <!-- Cargo Condition -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Cargo Condition</span>
+                            </div>
+                            {% render_field form.DG_condition_cargo_received class="form-control" %}
+                        </div>
+
+                        <!-- Tilt Watch Available -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Tilt Watch Available</span>
+                            </div>
+                            {% render_field form.DG_tilt_watch_sensor_available class="form-control" %}
+                        </div>
+                    </div>
+
                 </div>
+
+                <!-- Messages -->
+                <div class="message text-center">
+                    {% for message in messages %}
+                        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                    {% endfor %}
+                </div>
+
+                <!-- Submit & Cancel -->
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i> Submit
+                </button>
+                <a class="btn btn-warning float-right" href="{% url 'gatein_update' gatein_wh_job_id %}">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
             </div>
         </div>
     </div>
@@ -64,7 +176,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        var user_role = {{ role_id|default:0 }};  // inject safely
+        var user_role = {{ role_id|default:0 }};
         if (user_role === 2) {
             $('#DG_wh_approval_status').addClass('disable_a_href');
         } else {

@@ -143,15 +143,14 @@ def goods_add(request, goods_id=0):
                 damage_status = (
                     Warehouse_goods_info.objects
                     .filter(wh_gate_injob_no_id=gatein_wh_job_id)
-                    .exclude(wh_damages1__id=6)  # ✅ correct way
-                    .values_list('wh_damages1__id', flat=True)  # ✅ correct way
+                    .exclude(wh_damage_check=2)  # ✅ correct way
+                    .values_list('wh_damage_check__id', flat=True)  # ✅ correct way
                     .first()
                 )
-
                 # If no non-6 values are found, default to 6
                 damage_status = damage_status if damage_status is not None else 6
             except ObjectDoesNotExist:
-                damage_status = 6
+                damage_status = 2
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,
@@ -186,14 +185,14 @@ def goods_add(request, goods_id=0):
                 damage_status = (
                     Warehouse_goods_info.objects
                     .filter(wh_gate_injob_no_id=gatein_wh_job_id)
-                    .exclude(wh_damages1__id=6)  # ✅ correct way
-                    .values_list('wh_damages1__id', flat=True)  # ✅ correct way
+                    .exclude(wh_damage_check=2)  # ✅ correct way
+                    .values_list('wh_damage_check__id', flat=True)  # ✅ correct way
                     .first()
                 )
                 # If no non-6 values are found, default to 6
                 damage_status = damage_status if damage_status is not None else 6
             except ObjectDoesNotExist:
-                damage_status = 6
+                damage_status = 2
             context = {
                 'first_name': first_name,
                 'goods_form': goods_form,

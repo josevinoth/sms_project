@@ -105,3 +105,28 @@ def update_dg_cargo_approval(request, cargo_id):
         messages.success(request, "DG Cargo approval updated successfully.")
 
     return redirect("dg_cargo_approval_view")
+
+@login_required(login_url='login_page')
+def dg_cargo_report_list(request):
+    first_name = request.session.get('first_name')
+    wh_job_id = request.session.get('ses_gatein_id_nam')
+    print(wh_job_id)
+
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+
+    dg_cargo_list = DGcargovalueInfo.objects.all()
+
+    if from_date:
+        dg_cargo_list = dg_cargo_list.filter(dg_updated_on__date__gte=from_date)
+
+    if to_date:
+        dg_cargo_list = dg_cargo_list.filter(dg_updated_on__date__lte=to_date)
+
+    context = {
+        'dg_cargo_list': dg_cargo_list,
+        'first_name': first_name,
+        'from_date': from_date,
+        'to_date': to_date,
+    }
+    return render(request, "asset_mgt_app/dg_cargo_report_list.html", context)

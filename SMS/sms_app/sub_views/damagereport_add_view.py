@@ -180,6 +180,7 @@ def damagereport_add(request,damagereport_id=0):
             # url = 'damagereport_update/' + str(damagereport_id)
             # return redirect(url)
 
+
 # List damagereport
 @login_required(login_url='login_page')
 def damagereport_list(request):
