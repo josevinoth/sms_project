@@ -257,13 +257,15 @@ def enquirynote_delete(request,enquirynote_id):
 
 @login_required(login_url='login_page')
 def get_customer_details(request):
-    customer_id = request.GET.get('customer_id')  # Get customer ID from AJAX request
+    customer_id = request.GET.get('customer_id')
     try:
         customer = CustomerInfo.objects.get(id=customer_id)
         data = {
             'customer_contact': customer.cu_contactno,
             'customer_email': customer.cu_email,
+            'customer_businessmodel_id': customer.cu_businessmodel.id if customer.cu_businessmodel else None,
+            'customer_businessmodel_name': str(customer.cu_businessmodel) if customer.cu_businessmodel else "",
         }
-        return JsonResponse(data)  # Return JSON response
+        return JsonResponse(data)
     except CustomerInfo.DoesNotExist:
         return JsonResponse({'error': 'Customer not found'}, status=404)
