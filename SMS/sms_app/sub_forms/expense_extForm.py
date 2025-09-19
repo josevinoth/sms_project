@@ -11,3 +11,5 @@ class ExpenseextaddForm(forms.ModelForm):
         self.fields['exp_ext_expense_number'].empty_label = "--Select--"
         self.fields['exp_ext_branch'].empty_label = "--Select--"
         self.fields['exp_ext_unit'].empty_label = "--Select--"
+        self.fields['exp_ext_customer_name'].empty_label = "--Select--"
+        self.fields['exp_ext_businessmodel'].empty_label = "--Select--"

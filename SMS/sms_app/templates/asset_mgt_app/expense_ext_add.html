@@ -19,12 +19,30 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer Name</span>
+                                    </div>
+                                    {% render_field form.exp_ext_customer_name id="exp_ext_customer_name"  onchange="fetchCustomerDetails()"  class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">New Customer</span>
+                                    </div>
+                                    {% render_field form.exp_ext_customer_new_name id="exp_ext_customer_new_name"  class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Business model</span>
+                                    </div>
+                                    {% render_field form.exp_ext_businessmodel id="exp_ext_businessmodel"  class="form-control disable_a_href" %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
                                         <span class="input-group-text">Branch</span>
                                     </div>
                                     {% render_field form.exp_ext_branch id="exp_ext_branch"  class="form-control" %}
                                 </div>
-                            </div>
-                            <div class="col-6">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Unit</span>
@@ -89,6 +107,7 @@
                     document.getElementById("exp_ext_updated_by").value=updated_by;
                 }
             }
+            fetchCustomerDetails();
         });
 </script>
 
@@ -117,5 +136,31 @@
        });
      });
 </script>
+<script>
+    function fetchCustomerDetails() {
+    var customerId = $("#exp_ext_customer_name").val();  // Get selected customer ID
 
+    if (customerId == "210") {   // match string or int
+        $("#exp_ext_customer_new_name").closest(".input-group").show();   // show whole field row
+    } else {
+        $("#exp_ext_customer_new_name").closest(".input-group").hide();   // hide whole field row
+        $("#exp_ext_customer_new_name").val("");  // clear input
+    }
+
+    if (customerId) {
+        $.ajax({
+            url: "{% url 'get_customer_details' %}",
+            type: "GET",
+            data: { customer_id: customerId },
+            success: function(response) {
+                $("#exp_ext_businessmodel").val(response.customer_businessmodel_id);
+            },
+            error: function(xhr, status, error) {
+                console.log("Error fetching customer details:", error);
+            }
+        });
+    }
+}
+
+</script>
 {% endblock content %}
