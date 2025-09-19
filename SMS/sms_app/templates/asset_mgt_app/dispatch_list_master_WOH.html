@@ -221,20 +221,21 @@ $('#partial-dispatch-form').on('submit', function (e) {
       $('#add_btn').on('click', function(e){
     e.preventDefault();
 
-    let selectedValues = table.rows({ selected: true }).data();
-    let len1 = selectedValues.length;
+    let selectedIndexes = table.rows({ selected: true }).indexes();  // get indexes
+    let selectedData = table.rows({ selected: true }).data();
+    let len1 = selectedIndexes.length;
     console.log("Total selected: ", len1);
 
     var elements = [];
-    for (var i = 0; i < len1; i++) {
-        let row = table.row(i).node();
+    selectedIndexes.each(function(idx, loopIndex) {
+        let row = table.row(idx).node();
         let expiry = $(row).data('expiry');
         let today = new Date().toISOString().split('T')[0];
 
         if (!expiry || expiry >= today) {
-            elements.push(selectedValues[i][12]);  // column 12 = WH Stock Number
+            elements.push(selectedData[loopIndex][12]);  // column 12 = WH Stock Number
         }
-    }
+    });
 
     alert("Sending to backend: " + elements);
 
@@ -247,6 +248,7 @@ $('#partial-dispatch-form').on('submit', function (e) {
         }
     });
 });
+
     // Highlight expired rows
 $('#dispatch_master_list tbody tr').each(function () {
     let expiry = $(this).data('expiry');
