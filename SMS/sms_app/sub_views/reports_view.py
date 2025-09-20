@@ -16,9 +16,8 @@ from django.utils import timezone
 from django.utils.timezone import make_naive
 from xhtml2pdf import pisa
 from ..models import CustomerInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo,GoodsPartialDispatchInfo,Location_info
-import datetime
-from datetime import timedelta
-
+from datetime import datetime, timedelta, time
+from django.utils.dateparse import parse_date
 from django.db.models import Count, Sum
 import openpyxl
 from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
@@ -46,13 +45,77 @@ def warehouse_reports(request):
     return render(request,"asset_mgt_app/warehouse_reports.html",context)
 
 @login_required(login_url='login_page')
-def space_utilization_reports(request):
+def space_availability_reports(request):
     first_name = request.session.get('first_name')
     context = {
                 'space_utilization_list': LocationmasterInfo.objects.all(),
                 'first_name': first_name,
                 }
-    return render(request,"asset_mgt_app/space_utilization_report.html",context)
+    return render(request,"asset_mgt_app/space_availability_report.html",context)
+
+
+@login_required(login_url='login_page')
+def space_utilization_reports(request):
+    first_name = request.session.get('first_name')
+    branches = Location_info.objects.all()
+
+    selected_branch = request.GET.get('branch', '')
+    from_date_str = request.GET.get('from_date')
+    to_date_str = request.GET.get('to_date')
+
+    from_date = parse_date(from_date_str) if from_date_str else None
+    to_date = parse_date(to_date_str) if to_date_str else None
+
+    # Base filter
+    goods_filter = {'wh_check_in_out': 1}
+    if selected_branch:
+        goods_filter['wh_branch__loc_name'] = selected_branch
+    if from_date:
+        goods_filter['wh_checkin_time__gte'] = datetime.combine(from_date, time.min)
+    if to_date:
+        goods_filter['wh_checkin_time__lte'] = datetime.combine(to_date, time.max)
+
+    space_utilization_list = []
+
+    for loc in LocationmasterInfo.objects.all():
+        goods_qs = Warehouse_goods_info.objects.filter(
+            wh_branch=loc.lm_wh_location,
+            wh_unit=loc.lm_wh_unit,
+            wh_bay=loc.lm_areaside,
+            **goods_filter
+        )
+
+        # Sum occupied values
+        occupied_area = goods_qs.aggregate(total=Sum('wh_goods_area'))['total'] or 0
+        occupied_volume = goods_qs.aggregate(total=Sum('wh_goods_volume_weight'))['total'] or 0
+
+        # Available = Location total - occupied
+        available_area = loc.lm_size - occupied_area
+        available_volume = loc.lm_total_volume - occupied_volume
+
+        space_utilization_list.append({
+            'lm_wh_location': loc.lm_wh_location,
+            'lm_wh_unit': loc.lm_wh_unit,
+            'lm_areaside': loc.lm_areaside,
+            'lm_customer_name': loc.lm_customer_name,
+            'lm_customer_model': loc.lm_customer_model,
+            'lm_size': loc.lm_size,
+            'lm_area_occupied': round(occupied_area, 2),
+            'lm_available_area': round(available_area, 2),
+            'lm_total_volume': loc.lm_total_volume,
+            'lm_volume_occupied': round(occupied_volume, 2),
+            'lm_available_volume': round(available_volume, 2),
+        })
+
+    context = {
+        'space_utilization_list': space_utilization_list,
+        'first_name': first_name,
+        'selected_branch': selected_branch,
+        'branches': branches,
+        'from_date': from_date.strftime('%Y-%m-%d') if from_date else '',
+        'to_date': to_date.strftime('%Y-%m-%d') if to_date else '',
+    }
+    return render(request, "asset_mgt_app/space_utilization_report.html", context)
 
 @login_required(login_url='login_page')
 def stock_value_reports(request):
