@@ -326,6 +326,8 @@ def businessmodel_PL(request):
         expense_queryset = expense_queryset.filter(exp_ext_branch__loc_name=branch_filter)
     if unit_filter:
         expense_queryset = expense_queryset.filter(exp_ext_unit__unit_name=unit_filter)
+    if businessmodel_filter:
+        expense_queryset = expense_queryset.filter(exp_ext_businessmodel__tb_trbusinesstype=businessmodel_filter)
     if from_date:
         expense_queryset = expense_queryset.filter(exp_ext_expense_number__exp_service_start_date__gte=from_date)
     if to_date:
@@ -339,6 +341,7 @@ def businessmodel_PL(request):
             'month',
             branch_name=F('exp_ext_branch__loc_name'),
             unit_name=F('exp_ext_unit__unit_name'),
+            businessmodel=F('exp_ext_businessmodel__tb_trbusinesstype')
         )
         .annotate(total_expense=Sum('exp_ext_amount'))
     )

@@ -312,6 +312,7 @@ urlpatterns = [
     path('invoice_delete/<int:invoice_id>',views.invoice_delete,name='invoice_delete'), # delete invoice
     path('warehouse_reports/',views.warehouse_reports,name='warehouse_reports'),
     path('space_utilization_reports/',views.space_utilization_reports,name='space_utilization_reports'),
+    path('space_availability_reports/',views.space_availability_reports,name='space_availability_reports'),
     path('stock_value_report/',views.stock_value_reports,name='stock_value_report'),
     path('damage_report_list/',views.damage_reports_list,name='damage_report_list'),
     path('deviation_report/',views.deviation_report,name='deviation_report'),
