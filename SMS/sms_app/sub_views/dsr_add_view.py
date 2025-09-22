@@ -10,6 +10,7 @@ from django.shortcuts import redirect
 import openpyxl
 from io import BytesIO
 
+from ..sub_models.damagereport_mod import DamagereportInfo
 from ..sub_models.gatein_mod import Gatein_info
 
 
@@ -60,7 +61,7 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
             'Invoice Value', 'Invoice Currency', 'Invoice (INR)', 'E-Way Bill#', 'E-Way Bill Validity',
-            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Type of Damage','GRN Number','Remarks'
+            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage/Deviation?','GRN Number','Damages','Deviations','Remarks'
         ]
         ws.append(headers)
 
@@ -112,6 +113,16 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
                     top=Side(style='thin'),
                     bottom=Side(style='thin'),
                 )
+                damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
+
+                damage_names = ", ".join(
+                    damage_report.dam_damages1.values_list('damage_name', flat=True)) if damage_report else ""
+                deviation_names = ", ".join(
+                    damage_report.dam_deviation1.values_list('deviation_name', flat=True)) if damage_report else ""
+                grn_number = damage_report.dam_GRN_num if damage_report else ""
+                remarks = damage_report.dam_comments if damage_report else ""
+
+                damage_check_flag = stock_value.wh_damage_check_id == 1
                 row = [
                     stock_value.wh_job_no,  # Index 0
                     stock_value.wh_qr_rand_num,  # Index 1
@@ -181,14 +192,11 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
                     str(stock_value.wh_bay),  # Index 35
                     stock_value.wh_storage_time,# Index 36
                     # Damage Info
-                    getattr(stock_value.wh_damages, 'damage_name', ''),  # Index 37
-                    getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_GRN_num',# Index 38
-                            '') if stock_value.wh_damages_id and stock_value.wh_damages_id != 6 else '',
-                    stock_value.wh_comments if (
-                            stock_value.wh_weights_deviation_id != 2 or
-                            stock_value.wh_dimension_deviation_id != 2 or
-                            stock_value.wh_no_of_units_deviation_id != 2
-                    ) else '',
+                    "Yes" if damage_check_flag else "No",# Index 37: Damage Check
+                    grn_number,  # Index 38: GRN Number
+                    damage_names,  # Index 39: Damage Names (ManyToMany)
+                    deviation_names,  # Index 40: Deviation Names (ManyToMany)
+                    remarks,
                 ]
 
                 # # Debugging the row values
@@ -205,10 +213,10 @@ def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=No
 
                 for cell in ws[ws.max_row]:
                     cell.border = border_style
-                    if damage_flag:
+                    if damage_check_flag:
                         cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red
                     else:
-                        cell.font = cell_font  # Normal
+                        cell.font = cell_font
         sheet = wb.active
 
         # Format the first row (Header)

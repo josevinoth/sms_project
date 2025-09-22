@@ -16,9 +16,8 @@ from django.utils import timezone
 from django.utils.timezone import make_naive
 from xhtml2pdf import pisa
 from ..models import CustomerInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo,GoodsPartialDispatchInfo,Location_info
-import datetime
-from datetime import timedelta
-
+from datetime import datetime, timedelta, time
+from django.utils.dateparse import parse_date
 from django.db.models import Count, Sum
 import openpyxl
 from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
@@ -46,13 +45,77 @@ def warehouse_reports(request):
     return render(request,"asset_mgt_app/warehouse_reports.html",context)
 
 @login_required(login_url='login_page')
-def space_utilization_reports(request):
+def space_availability_reports(request):
     first_name = request.session.get('first_name')
     context = {
                 'space_utilization_list': LocationmasterInfo.objects.all(),
                 'first_name': first_name,
                 }
-    return render(request,"asset_mgt_app/space_utilization_report.html",context)
+    return render(request,"asset_mgt_app/space_availability_report.html",context)
+
+
+@login_required(login_url='login_page')
+def space_utilization_reports(request):
+    first_name = request.session.get('first_name')
+    branches = Location_info.objects.all()
+
+    selected_branch = request.GET.get('branch', '')
+    from_date_str = request.GET.get('from_date')
+    to_date_str = request.GET.get('to_date')
+
+    from_date = parse_date(from_date_str) if from_date_str else None
+    to_date = parse_date(to_date_str) if to_date_str else None
+
+    # Base filter
+    goods_filter = {'wh_check_in_out': 1}
+    if selected_branch:
+        goods_filter['wh_branch__loc_name'] = selected_branch
+    if from_date:
+        goods_filter['wh_checkin_time__gte'] = datetime.combine(from_date, time.min)
+    if to_date:
+        goods_filter['wh_checkin_time__lte'] = datetime.combine(to_date, time.max)
+
+    space_utilization_list = []
+
+    for loc in LocationmasterInfo.objects.all():
+        goods_qs = Warehouse_goods_info.objects.filter(
+            wh_branch=loc.lm_wh_location,
+            wh_unit=loc.lm_wh_unit,
+            wh_bay=loc.lm_areaside,
+            **goods_filter
+        )
+
+        # Sum occupied values
+        occupied_area = goods_qs.aggregate(total=Sum('wh_goods_area'))['total'] or 0
+        occupied_volume = goods_qs.aggregate(total=Sum('wh_goods_volume_weight'))['total'] or 0
+
+        # Available = Location total - occupied
+        available_area = loc.lm_size - occupied_area
+        available_volume = loc.lm_total_volume - occupied_volume
+
+        space_utilization_list.append({
+            'lm_wh_location': loc.lm_wh_location,
+            'lm_wh_unit': loc.lm_wh_unit,
+            'lm_areaside': loc.lm_areaside,
+            'lm_customer_name': loc.lm_customer_name,
+            'lm_customer_model': loc.lm_customer_model,
+            'lm_size': loc.lm_size,
+            'lm_area_occupied': round(occupied_area, 2),
+            'lm_available_area': round(available_area, 2),
+            'lm_total_volume': loc.lm_total_volume,
+            'lm_volume_occupied': round(occupied_volume, 2),
+            'lm_available_volume': round(available_volume, 2),
+        })
+
+    context = {
+        'space_utilization_list': space_utilization_list,
+        'first_name': first_name,
+        'selected_branch': selected_branch,
+        'branches': branches,
+        'from_date': from_date.strftime('%Y-%m-%d') if from_date else '',
+        'to_date': to_date.strftime('%Y-%m-%d') if to_date else '',
+    }
+    return render(request, "asset_mgt_app/space_utilization_report.html", context)
 
 @login_required(login_url='login_page')
 def stock_value_reports(request):
@@ -61,15 +124,22 @@ def stock_value_reports(request):
     form = DsrForm(request.POST or None)
     customer_name = request.POST.get('ds_customer', '').strip()
 
-    Warehouse_goods_info.objects.filter(wh_check_in_out=1).update(
-        wh_storage_time=Cast(
-            Extract(ExpressionWrapper(
-                datetime.date.today() - F('wh_checkin_time'),
-                output_field=DurationField()
-            ), 'days'),
-            output_field=fields.FloatField()
-        )
-    )
+    # Warehouse_goods_info.objects.filter(wh_check_in_out=1).update(
+    #     wh_storage_time=Cast(
+    #         Extract(ExpressionWrapper(
+    #             datetime.date.today() - F('wh_checkin_time'),
+    #             output_field=DurationField()
+    #         ), 'days'),
+    #         output_field=fields.FloatField()
+    #     )
+    # )
+    goods_list = Warehouse_goods_info.objects.filter(wh_check_in_out=1)
+    for stock in goods_list:
+        if stock.wh_checkin_time:
+            delta = datetime.now() - stock.wh_checkin_time.replace(tzinfo=None)
+            stock.wh_storage_time = delta.days
+            stock.save(update_fields=['wh_storage_time'])
+
     checkin_goods_list=Warehouse_goods_info.objects.all().values_list().distinct()
 
 
@@ -82,8 +152,7 @@ def stock_value_reports(request):
     page_obj = paginator.get_page(page_number)
 
 
-    current_date = datetime.date.today()
-
+    current_date = datetime.today().date()
     maa_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=1,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if maa_in_stock_value_cud is not None:
         maa_in_stock_value_cud_val = maa_in_stock_value_cud
@@ -610,7 +679,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
             'Invoice Value', 'Invoice Currency', 'Invoice (INR)', 'E-Way Bill#', 'E-Way Bill Validity',
-            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage Type','GRN Number','Remarks',
+            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage/Deviation?','GRN Number','Damages','Deviations','Remarks',
             'Truck_Number(Out)','Truck_Type(Out)','Truck_Depature_Time(Out)','Labels_Pasted_By',
             'MAWB','Dispatch_Number','Dispatch quantity','Stock On Hand'
         ]
@@ -687,7 +756,16 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                 mawb_list = []
 
                 dispatch_qty = 0  # initialize
-
+                damage_check_flag = stock_value.wh_damage_check_id == 1
+                damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
+                damage_names = ", ".join(
+                    damage_report.dam_damages1.values_list('damage_name', flat=True)
+                ) if damage_report else ""
+                deviation_names = ", ".join(
+                    damage_report.dam_deviation1.values_list('deviation_name', flat=True)
+                ) if damage_report else ""
+                grn_number = damage_report.dam_GRN_num if damage_report else ""
+                remarks = damage_report.dam_comments if damage_report else ""
                 for partial in partials:
                     dispatch = partial.pd_dispatch_info
                     if dispatch:
@@ -789,14 +867,11 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                     str(stock_value.wh_bay),  # Index 35
                     stock_value.wh_storage_time,# Index 36
                     # Damage Info
-                    getattr(stock_value.wh_damages, 'damage_name', ''),  # Index 37
-                    getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_GRN_num',
-                            '') if stock_value.wh_damages_id and stock_value.wh_damages_id != 6 else '',
-                    stock_value.wh_comments if (
-                            stock_value.wh_weights_deviation_id != 2 or
-                            stock_value.wh_dimension_deviation_id != 2 or
-                            stock_value.wh_no_of_units_deviation_id != 2
-                    ) else '',
+                    "Yes" if damage_check_flag else "No",  # 37: Damage/Deviation?
+                    grn_number,
+                    damage_names,# 38
+                    deviation_names,  # 39 merged damages+deviations
+                    remarks,  # 40
                     # getattr(stock_value.wh_dispatch_id, 'dispatch_truck_number', ''),# Index 37
                     # str(getattr(stock_value.wh_dispatch_id, 'dispatch_truck_type', '')),# Index 38
                     # # getattr(stock_value.wh_dispatch_id, 'dispatch_depature_date', ''),# Index 39
@@ -833,7 +908,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                 # Apply borders + font immediately for this row
                 for cell in ws[ws.max_row]:
                     cell.border = border_style
-                    if damage_flag:
+                    if damage_check_flag:
                         cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red font
                     else:
                         cell.font = Font(name="Arial", bold=False, size=10, color="000000")

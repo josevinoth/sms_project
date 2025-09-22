@@ -11,17 +11,17 @@
 <div class="row">
     <div class="col-2"></div>
     <div class="col-2">
-        <div class="card  mb-3 text-center">
-            <div class="card-header bg-primary text-white">Space Utilization Report</div>
+        <div class="card  mb-3 text-center border-primary">
+            <div class="card-header bg-primary text-white">Space Availability Report</div>
             <div class="card-body bg-light text-center">
-                <h1><a href="{% url 'space_utilization_reports' %}" class="badge badge-primary">
+                <h1><a href="{% url 'space_availability_reports' %}" class="badge badge-primary">
                     <i class="fas fa-arrows-alt"></i></a></h1>
             </div>
         </div>
     </div>
 
     <div class="col-2">
-        <div class="card  mb-3 text-center" >
+        <div class="card  mb-3 text-center border-primary" >
             <div class="card-header bg-primary text-white">Goods Movement Report</div>
             <div class="card-body bg-light text-center">
                 <h1><a href="{% url 'stock_value_report' %}" class="badge badge-primary">
@@ -31,7 +31,7 @@
     </div>
 
     <div class="col-2">
-        <div class="card text-center" >
+        <div class="card text-center border-primary" >
             <div class="card-header bg-primary text-white">Damage Report</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'damage_report_list' %}" class="badge badge-primary">
@@ -41,7 +41,7 @@
     </div>
 
     <div class="col-2">
-        <div class="card mb-3 text-center" >
+        <div class="card mb-3 text-center border-primary" >
             <div class="card-header bg-primary text-white">Deviation Report</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'deviation_report' %}" class="badge badge-primary">
@@ -54,7 +54,7 @@
 <div class="row">
     <div class="col-2"></div>
     <div class="col-2">
-        <div class="card mb-3 text-center" >
+        <div class="card mb-3 text-center border-primary" >
             <div class="card-header bg-primary text-white">DSR Reports</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'dsr_reports' %}" class="badge badge-primary">
@@ -63,7 +63,7 @@
         </div>
     </div>
     <div class="col-2">
-        <div class="card mb-3 text-center">
+        <div class="card mb-3 text-center border-primary">
             <div class="card-header bg-primary text-white">Incident Report</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'incident_report' %}" class="badge badge-primary">
@@ -73,7 +73,7 @@
     </div>
 
     <div class="col-2">
-        <div class="card mb-3 text-center" >
+        <div class="card mb-3 text-center border-primary" >
             <div class="card-header bg-primary text-white">Wrong Labelling Report</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'wrong_labelling_report' %}" class="badge badge-primary">
@@ -83,7 +83,7 @@
     </div>
 
     <div class="col-2">
-        <div class="card mb-3 text-center" >
+        <div class="card mb-3 text-center border-primary" >
             <div class="card-header bg-primary text-white">Customer Claims Report</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'customer_claims_report' %}" class="badge badge-primary">
@@ -98,7 +98,7 @@
 <div class="row">
     <div class="col-2"></div>
     <div class="col-2">
-        <div class="card mb-3 text-center" >
+        <div class="card mb-3 text-center border-primary" >
             <div class="card-header bg-primary text-white">High-Value Checklist </div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'highvalue_report_list' %}" class="badge badge-primary">
@@ -107,11 +107,20 @@
         </div>
     </div>
     <div class="col-2">
-        <div class="card mb-3 text-center">
+        <div class="card mb-3 text-center border-primary">
             <div class="card-header bg-primary text-white">DG-Cargo Report</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'dg_cargo_report_list' %}" class="badge badge-primary">
                     <i class="fas fa-arrows-alt"></i></a></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card  mb-3 text-center border-primary">
+            <div class="card-header bg-primary text-white">Space Utilization Report</div>
+            <div class="card-body bg-light text-center">
+                <h1><a href="{% url 'space_utilization_reports' %}" class="badge badge-primary">
+                    <i class="fas fa-arrows-alt"></i></a></h1>
             </div>
         </div>
     </div>
@@ -161,7 +170,7 @@
 <div class="row">
     <div class="col-2"></div>
     <div class="col-2">
-        <div class="card mb-3 text-center">
+        <div class="card mb-3 text-center border-secondary">
             <div class="card-header bg-secondary text-white">WH Space Utilization</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'wh_space_utilization_report' %}" class="badge badge-secondary">
@@ -171,7 +180,7 @@
     </div>
 
     <div class="col-2">
-        <div class="card mb-3 text-center" >
+        <div class="card mb-3 text-center border-secondary" >
             <div class="card-header bg-secondary text-white">WH Space Availability</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'wh_space_availability_report' %}" class="badge badge-secondary">
@@ -181,7 +190,7 @@
     </div>
 
     <div class="col-2">
-        <div class="card mb-3 text-center" >
+        <div class="card mb-3 text-center border-secondary" >
             <div class="card-header bg-secondary text-white">WH Damage Report</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'wh_damage_report' %}" class="badge badge-secondary">
@@ -191,7 +200,7 @@
     </div>
 
     <div class="col-2">
-        <div class="card mb-3 text-center" >
+        <div class="card mb-3 text-center border-secondary " >
             <div class="card-header bg-secondary text-white">WH Stock Report</div>
             <div class="card-body bg-light text-center">
                 <h2><a href="{% url 'wh_stock_report' %}" class="badge badge-secondary">

@@ -85,9 +85,9 @@ WSGI_APPLICATION = 'SMS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sms_002',
+        'NAME': 'asset_mgt_013',
         'USER': 'postgres',
-        'PASSWORD': 'password@1234',
+        'PASSWORD': '244613',
         'HOST': 'localhost'
     }
 }
@@ -178,7 +178,7 @@ DEPARTMENT_EMAILS = {
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'itadmin@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'Q/133158149266ap',
+        'EMAIL_HOST_PASSWORD' : 'B)437210387098ad',
     }
 }
 

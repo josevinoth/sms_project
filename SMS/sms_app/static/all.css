@@ -91,13 +91,10 @@
 
 /*other tags*/
 hr {
-    background-color:#0D2F3F;
-    border:none;
-    height:5px;
-    margin-left:10px;
-    margin-right:10px;
-    display: block;
-
+ border: none;                 /* remove default border */
+  height: 1px;                  /* thickness */
+  margin: 20px 0;               /* spacing above/below */
+  background-color: black;       /* light grey */
 }
 
 td {
@@ -450,10 +447,14 @@ nav > div a.nav-item.nav-link:focus
 }
 
 .box-shadow {
-box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.4);
-width: 200px;
-padding: 5px;
-font-size: 12px;
+  /* h-offset | v-offset | blur-radius | spread-radius | color */
+  box-shadow: 0 0 15px 0px rgba(0, 0, 0, 0.4);
+
+  width: 200px;
+  padding: 5px;
+  font-size: 12px;
+  background: white;           /* optional so shadow is visible */
+  border-radius: 8px;          /* optional for rounded look */
 }
 
 /* Default button layout */
@@ -474,12 +475,15 @@ font-size: 12px;
   box-shadow: 0 4px 12px rgba(0, 114, 255, 0.4);
 }
 .shadow-box-table {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* strong shadow */
-    transition: box-shadow 0.3s ease;
-    padding-block: 10px;
-    border-radius: 10px;
-    background-color:white;
+  /* h-offset | v-offset | blur-radius | spread-radius | color */
+  box-shadow: 0 0 20px 0px rgba(0, 0, 0, 0.25);
+
+  transition: box-shadow 0.3s ease;
+  padding-block: 10px;
+  border-radius: 10px;
+  background-color: white;
 }
+
 
 fieldset {
     display: block;
