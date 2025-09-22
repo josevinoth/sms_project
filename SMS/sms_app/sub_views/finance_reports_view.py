@@ -41,8 +41,6 @@ def branch_profit_loss(request):
         invoices_filter['wh_branch__loc_name'] = selected_branch
 
     expenses_filter['exp_ext_expense_number__exp_business__id'] = 1
-
-
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
         expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
@@ -112,7 +110,7 @@ def branch_profit_loss(request):
 
     for invoice in invoice_data:
         month = invoice['month']
-        if isinstance(month, datetime):  # convert only if datetime
+        if isinstance(month, datetime):
             month = month.date()
         key = (invoice['wh_branch'], invoice['wh_branch__loc_name'], month)
         if key in combined_data:
