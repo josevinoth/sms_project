@@ -352,7 +352,7 @@ def businessmodel_PL(request):
         (inc['branch_name'], inc['unit_name'], inc['businessmodel'], inc['month'])
         for inc in income_data
     ) | set(
-        (exp['branch_name'], exp['unit_name'], None, exp['month'])
+        (exp['branch_name'], exp['unit_name'], exp['businessmodel'], exp['month'])
         for exp in expense_data
     )
 
@@ -437,10 +437,12 @@ def customerwise_PL(request):
         expense_data = expense_data.filter(exp_ext_expense_number__exp_service_start_date__lte=to_date)
     if selected_branch:
         expense_data = expense_data.filter(exp_ext_branch__loc_name=selected_branch)
+    if selected_businessmodel:
+        expense_data = expense_data.filter(exp_ext_businessmodel__tb_trbusinesstype=selected_businessmodel)
 
     expense_summary = expense_data.annotate(
         month=TruncMonth('exp_ext_expense_number__exp_service_start_date')
-    ).values('month', 'exp_ext_branch__loc_name').annotate(
+    ).values('month', 'exp_ext_branch__loc_name','exp_ext_businessmodel__tb_trbusinesstype','exp_ext_customer_name__cu_nameshort').annotate(
         total_expense=Sum('exp_ext_amount')
     )
 
@@ -466,11 +468,14 @@ def customerwise_PL(request):
     # Build expense lookup dict safely
     expense_lookup = {}
     for exp in expense_summary:
-        month = exp['month']  # already a date
-        branch = exp.get('exp_ext_branch__loc_name') or 'Unknown'  # handle None
-        branch = branch.strip()
-        if month:
-            expense_lookup[(month, branch)] = exp['total_expense']
+        month = exp['month']
+        branch = exp.get('exp_ext_branch__loc_name') or 'Unknown'
+        bm = exp.get('exp_ext_businessmodel__tb_trbusinesstype') or 'N/A'
+        customer = exp.get('exp_ext_customer_name__cu_nameshort') or 'N/A'
+        if not month:
+            continue
+        key = (month, branch.strip(), bm, customer)
+        expense_lookup[key] = exp['total_expense']
 
     # Combine income + expense
     results = []
@@ -478,19 +483,22 @@ def customerwise_PL(request):
     for inc in income_summary:
         month = inc['month']
         branch = inc.get('wh_branch__loc_name') or 'Unknown'
-        branch = branch.strip()
+        bm = inc.get('wh_customer_type__tb_trbusinesstype') or 'N/A'
+        customer = inc.get('wh_customer_name__cu_nameshort') or 'N/A'
         if not month:
             continue
 
-        total_expense = expense_lookup.get((month, branch), 0)
+        key = (month, branch.strip(), bm, customer)
+        total_expense = expense_lookup.get(key, 0)
+
         profit_loss = inc['total_income'] - total_expense
         profit_loss_percentage = (profit_loss / inc['total_income'] * 100) if inc['total_income'] else 0
 
         results.append({
             'month_name': month.strftime('%B %Y'),
-            'branch': branch,
-            'businessmodel': inc.get('wh_customer_type__tb_trbusinesstype', 'N/A'),
-            'customer_name': inc.get('wh_customer_name__cu_nameshort', 'N/A'),
+            'branch': branch.strip(),
+            'businessmodel': bm,
+            'customer_name': customer,
             'total_income': inc['total_income'],
             'total_expense': total_expense,
             'profit_loss': profit_loss,
@@ -498,19 +506,27 @@ def customerwise_PL(request):
         })
 
     # Add expense-only rows (branches+months with expenses but no income)
-    income_keys = {(inc['month'], (inc.get('wh_branch__loc_name') or 'Unknown').strip()) for inc in income_summary}
+    income_keys = {
+        (inc['month'], (inc.get('wh_branch__loc_name') or 'Unknown').strip(),
+         inc.get('wh_customer_type__tb_trbusinesstype') or 'N/A',
+         inc.get('wh_customer_name__cu_nameshort') or 'N/A')
+        for inc in income_summary
+    }
+
     for exp in expense_summary:
         month = exp['month']
         branch = exp.get('exp_ext_branch__loc_name') or 'Unknown'
-        branch = branch.strip()
+        bm = exp.get('exp_ext_businessmodel__tb_trbusinesstype') or 'N/A'
+        customer = exp.get('exp_ext_customer_name__cu_nameshort') or 'N/A'
         if not month:
             continue
-        if (month, branch) not in income_keys:  # expense-only
+        key = (month, branch.strip(), bm, customer)
+        if key not in income_keys:
             results.append({
                 'month_name': month.strftime('%B %Y'),
-                'branch': branch,
-                'businessmodel': 'N/A',
-                'customer_name': 'N/A',
+                'branch': branch.strip(),
+                'businessmodel': bm,
+                'customer_name': customer,
                 'total_income': 0,
                 'total_expense': exp['total_expense'],
                 'profit_loss': -exp['total_expense'],
