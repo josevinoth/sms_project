@@ -218,7 +218,7 @@ $('#partial-dispatch-form').on('submit', function (e) {
     });
 });
 
-      $('#add_btn').on('click', function(e){
+     $('#add_btn').on('click', function(e){
     e.preventDefault();
 
     let selectedIndexes = table.rows({ selected: true }).indexes();  // get indexes
@@ -236,8 +236,6 @@ $('#partial-dispatch-form').on('submit', function (e) {
             elements.push(selectedData[loopIndex][12]);  // column 12 = WH Stock Number
         }
     });
-
-    alert("Sending to backend: " + elements);
 
     $.ajax({
         url: '{% url "dispatch_add_goods" %}',
