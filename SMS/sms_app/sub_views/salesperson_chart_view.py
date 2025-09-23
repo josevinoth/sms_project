@@ -319,12 +319,23 @@ def salesperson_productivity_performance(request):
         business_won=Count('id', filter=Q(s_bus_won_not=1), distinct=True),
     )
 
-    quotes_data = SalesmultipleitemInfo.objects.filter(
+    quotes_filter = Q(
         sm_lastmodifiedby__user_extinfo__department__dept_name="Sales",
-        sm_lastmodifiedby__is_active=True,
-        **({'sm_updated_at__gte': from_date} if from_date else {}),
-        **({'sm_updated_at__lte': to_date} if to_date else {})
-    ).values(
+        sm_lastmodifiedby__is_active=True
+    )
+
+    if from_date:
+        quotes_filter &= Q(sm_updated_at__gte=from_date)
+    if to_date:
+        quotes_filter &= Q(sm_updated_at__lte=to_date)
+
+    if selected_company:
+        quotes_filter &= Q(sm_sales_num__s_company__bvm_business=selected_company)
+
+    if selected_branch:
+        quotes_filter &= Q(sm_sales_num__s_location__loc_name=selected_branch)
+
+    quotes_data = SalesmultipleitemInfo.objects.filter(quotes_filter).values(
         'sm_lastmodifiedby__id', 'sm_lastmodifiedby__first_name'
     ).annotate(
         total_quotes=Count('id', distinct=True)
