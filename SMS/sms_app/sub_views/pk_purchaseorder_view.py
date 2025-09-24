@@ -7,13 +7,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete
 
-
 @login_required(login_url='login_page')
 def purchaseorder_add(request, purchaseorder_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+    role_id = role.id
 
     if request.method == "GET":
         if purchaseorder_id == 0:
@@ -28,17 +27,12 @@ def purchaseorder_add(request, purchaseorder_id=0):
         else:
             purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
             form = PkpurchaseorderForm(instance=purchaseorder)
-            purchaseorder_id = purchaseorder.id
-            purchaseorder_num = purchaseorder.po_assessment_num
-            request.session['purchaseorder_id'] = purchaseorder_id
-            na_id = purchaseorder.po_assessment_num.id
-            request.session['ses_na_id'] = na_id
             po_dimension_list = POdimension.objects.filter(pod_po_num=purchaseorder_id)
             context = {
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
-                'na_id': na_id,
+                'na_id': purchaseorder.po_assessment_num.id,
                 'po_dimension_list': po_dimension_list,
                 'role': role,
                 'role_id': role_id,
@@ -46,26 +40,23 @@ def purchaseorder_add(request, purchaseorder_id=0):
         return render(request, "asset_mgt_app/pk_purchaseorder_add.html", context)
 
     else:
-        form = PkpurchaseorderForm(request.POST, request.FILES)
-        if form.is_valid():
-            customer_po_num = form.cleaned_data['po_num']
+        if purchaseorder_id == 0:
+            # Add mode
+            form = PkpurchaseorderForm(request.POST, request.FILES)
+            if form.is_valid():
+                customer_po_num = form.cleaned_data['po_num']
 
-            # Check for uniqueness of PO Number
-            if not PkpurchaseorderInfo.objects.filter(po_num=customer_po_num).exclude(id=purchaseorder_id).exists():
-
-                if purchaseorder_id == 0:
-                    print("Inside post add")
+                if not PkpurchaseorderInfo.objects.filter(po_num=customer_po_num).exists():
                     instance = form.save(commit=False)
 
                     # Auto-generate sales_order_num
                     last_po = PkpurchaseorderInfo.objects.filter(sales_order_num__startswith="25-26-MP-SO-").order_by('-id').first()
+                    last_num = 0
                     if last_po and last_po.sales_order_num:
                         try:
                             last_num = int(last_po.sales_order_num.split("-")[-1])
                         except ValueError:
                             last_num = 0
-                    else:
-                        last_num = 0
 
                     if last_num >= 9999:
                         messages.error(request, 'Sales Order number limit (9999) reached.')
@@ -73,25 +64,35 @@ def purchaseorder_add(request, purchaseorder_id=0):
 
                     next_num = str(last_num + 1).zfill(4)
                     instance.sales_order_num = f"25-26-MP-SO-{next_num}"
-
                     instance.save()
                     messages.success(request, 'Purchase Order Added Successfully')
-
                 else:
-                    print("Inside post edit")
-                    purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
-                    form = PkpurchaseorderForm(request.POST, request.FILES, instance=purchaseorder)
-                    form.save()
-                    messages.success(request, 'Purchase Order Updated Successfully')
-
+                    messages.error(request, 'Please enter a Unique PO Number.')
             else:
-                messages.error(request, 'Please enter a Unique PO Number.')
+                print("FORM ERRORS:", form.errors.as_json())
+                messages.error(request, 'Please check your inputs.')
 
-            last_id = PkpurchaseorderInfo.objects.order_by('-id').values_list('id', flat=True).first()
-            return redirect('/SMS/purchaseorder_update/' + str(last_id))
         else:
-            messages.error(request, 'Please check your inputs.')
-            return redirect(request.META['HTTP_REFERER'])
+            # Edit mode
+            purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
+            form = PkpurchaseorderForm(request.POST, request.FILES, instance=purchaseorder)
+            if form.is_valid():
+                instance = form.save(commit=False)
+                # Do NOT regenerate sales_order_num when editing
+                instance.sales_order_num = purchaseorder.sales_order_num
+                instance.save()
+                messages.success(request, 'Purchase Order Updated Successfully')
+            else:
+                print("FORM ERRORS:", form.errors.as_json())
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{field}: {error}")
+                messages.error(request, "Update Failed")
+
+        # Redirect to the last purchase order or current edited one
+        last_id = purchaseorder_id if purchaseorder_id else PkpurchaseorderInfo.objects.order_by('-id').values_list('id', flat=True).first()
+        return redirect('/SMS/purchaseorder_update/' + str(last_id))
+
 
 # List purchaseorder
 @login_required(login_url='login_page')

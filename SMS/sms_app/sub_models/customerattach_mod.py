@@ -1,4 +1,6 @@
 from django.db import models
+
+from .attachment_category_mod import Attach_categoryInfo
 from ..models import CustomerInfo,MyUser,ActiveinactiveInfo
 
 def customer_attach_path(instance, filename):
@@ -26,6 +28,8 @@ class Customerattach(models.Model):
     ca_sop_due_days = models.IntegerField(blank=True, null=True)
     ca_kyc_due_days = models.IntegerField(blank=True, null=True)
     ca_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.CASCADE,default=1)
+    ca_category = models.ForeignKey(Attach_categoryInfo, on_delete=models.CASCADE, blank=True,null=True)
+
 
     def __str__(self):
         return self.ca_customer_name

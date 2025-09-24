@@ -20,108 +20,39 @@
                                     </div>
                                     {% render_field form.ca_customer_name id="ca_customer_name" class="form-control disable_a_href" %}
                                 </div>
-
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Attachment Category</span>
+                                    </div>
+                                    {% render_field form.ca_category id="ca_category" class="form-control " %}
+                                </div>
+                            </div>
+                            <div class="col-3">
                                 <!-- Contract Attachment Field -->
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Contract Attachment</span>
+                                        <span class="input-group-text"> Attachment</span>
                                     </div>
                                     {% render_field form.ca_contract_attach id="ca_contract_attach" class="form-control" %}
                                 </div>
-
+                            </div>
+                            <div class="col-3">
                                 <!-- Contract Start Date Field -->
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Contract Start Date</span>
+                                        <span class="input-group-text">Start Date</span>
                                     </div>
                                     {% render_field form.ca_contract_start_date id="ca_contract_start_date" type="date" class="form-control" %}
                                 </div>
-                            </div>
-                            <div class="col-3">
                                 <!-- Contract End Date Field -->
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Contract End Date</span>
+                                        <span class="input-group-text">End Date</span>
                                     </div>
                                     {% render_field form.ca_contract_end_date id="ca_contract_end_date" type="date" class="form-control" onchange="validateEndDate()" %}
                                 </div>
-
-                                <!-- SOP Attachment Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">SOP Attachment</span>
-                                    </div>
-                                    {% render_field form.ca_sop_attach id="ca_sop_attach" class="form-control" %}
-                                </div>
-
-                                <!-- SOP Start Date Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">SOP Start Date</span>
-                                    </div>
-                                    {% render_field form.ca_sop_start_date id="ca_sop_start_date" type="date" class="form-control" %}
-                                </div>
-                                <!-- SOP End Date Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">SOP End Date</span>
-                                    </div>
-                                    {% render_field form.ca_sop_end_date id="ca_sop_end_date" type="date" class="form-control"  %}
-                                </div>
-
-
-                                <!-- SOW Attachment Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">SOW Attachment</span>
-                                    </div>
-                                    {% render_field form.ca_sow_attach id="ca_sow_attach" class="form-control" %}
-                                </div>
                             </div>
                             <div class="col-3">
-                                <!-- KYC Attachment Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">KYC Attachment</span>
-                                    </div>
-                                    {% render_field form.ca_kyc_attach id="ca_kyc_attach" class="form-control" %}
-                                </div>
-                                <!-- Rate Attachment Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Rate Attachment</span>
-                                    </div>
-                                    {% render_field form.ca_rate_attach id="ca_rate_attach" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">KYC Start Date</span>
-                                    </div>
-                                    {% render_field form.ca_kyc_start_date id="ca_kyc_start_date" type="date" class="form-control" %}
-                                </div>
-                                <!-- KYC End Date Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">KYC End Date</span>
-                                    </div>
-                                    {% render_field form.ca_kyc_end_date id="ca_kyc_end_date" type="date" class="form-control"  %}
-                                </div>
-                                <!-- Rate Start Date Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Rate Start Date</span>
-                                    </div>
-                                    {% render_field form.ca_rate_start_date id="ca_rate_start_date" type="date" class="form-control" %}
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <!-- Rate End Date Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Rate End Date</span>
-                                    </div>
-                                    {% render_field form.ca_rate_end_date id="ca_rate_end_date" type="date" class="form-control" %}
-                                </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Status</span>
@@ -167,6 +98,30 @@
         </div>
     </div>
 </form>
+<div class="row">
+    <div class="col" id="customer_order_attach">
+        <div id="accordion" class="container-fluid">
+            <div class="card">
+                <div class="card-header bg-info" id="headingTwo">
+                    <h5 class="mb-0">
+                        <button class="btn btn-warning text-white collapsed" id="add_edit_attach" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                    <div class="card-body">
+                        <div class="card-body">
+                            <div id="customer_attach_list_WOH">
+                                {% include "asset_mgt_app/customer_attach_list_WOH.html" with customer_attach_list=customer_attachment_list %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     $(document).ready(function() {
