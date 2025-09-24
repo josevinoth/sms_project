@@ -68,13 +68,16 @@ def customer_delete(request,customer_id):
     customer.delete()
     return redirect('/SMS/customer_list')
 
-
 @login_required(login_url='login_page')
 def customer_attach_add(request, attach_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     customer_id = request.session.get('ses_customer_id')
-    print('customer_id',customer_id)
+
+    # Fetch all attachments for the current customer
+    customer_attachment_list = Customerattach.objects.filter(ca_customer_name_id=customer_id)
+    print("Customer ID:", customer_id)
+
     if request.method == "GET":
         if attach_id == 0:
             form = CustomerattachForm()
@@ -84,34 +87,71 @@ def customer_attach_add(request, attach_id=0):
                 form = CustomerattachForm(instance=attach)
             except Customerattach.DoesNotExist:
                 messages.error(request, 'Attachment not found')
-                return redirect('/SMS/customer_attachment_list')
-        return render(request, "asset_mgt_app/customer_attach_add.html", {'form': form, 'first_name': first_name,'customer_id':customer_id,'user_id':user_id})
+                return redirect(f'/SMS/customer_add/{customer_id}')
+
+        context = {
+            'form': form,
+            'first_name': first_name,
+            'user_id': user_id,
+            'customer_id': customer_id,
+            'customer_attachment_list': customer_attachment_list,  # pass the list here
+        }
+        return render(request, "asset_mgt_app/customer_attach_add.html", context)
 
     elif request.method == "POST":
-        if attach_id == 0:
-            form = CustomerattachForm(request.POST,request.FILES)
-            if form.is_valid():
-                form.save()
-                customer_id = request.session.get('ses_customer_id')
-                customer_attachment_id =  max(Customerattach.objects.filter(ca_customer_name=customer_id).values_list('id',flat=True))
-                print('customer_attachment_id',customer_attachment_id)
-                messages.success(request, 'Attachment saved successfully')
-                return redirect('/SMS/customer_attachment_update/'+str(customer_attachment_id))
-            else:
-                messages.error(request, 'Form is not valid')
-                print(form.errors)  # Print form errors to the console for debugging
-                return redirect('/SMS/customer_attachment_add')
+        instance = None if attach_id == 0 else Customerattach.objects.get(pk=attach_id)
+        form = CustomerattachForm(request.POST, request.FILES, instance=instance)
+
+        if form.is_valid():
+            new_category = form.cleaned_data['ca_category']
+            new_status = form.cleaned_data['ca_status']
+
+            # Allow only one active attachment per category
+            if new_status.id == 1:  # Assuming Status ID 1 = Active
+                active_exists = Customerattach.objects.filter(
+                    ca_customer_name=customer_id,
+                    ca_category=new_category,
+                    ca_status_id=1
+                )
+                if attach_id == 0 and active_exists.exists():
+                    messages.error(request, f"Only one active attachment is allowed for {new_category}.")
+                    # Re-render page with updated list
+                    context = {
+                        'form': form,
+                        'first_name': first_name,
+                        'user_id': user_id,
+                        'customer_id': customer_id,
+                        'customer_attachment_list': customer_attachment_list,
+                    }
+                    return render(request, "asset_mgt_app/customer_attach_add.html", context)
+
+            form.save()
+            messages.success(request, 'Attachment saved successfully')
+
+            # After saving, refresh the list and render the same page
+            customer_attachment_list = Customerattach.objects.filter(ca_customer_name_id=customer_id)
+            last_id = Customerattach.objects.filter(ca_customer_name=customer_id).latest('id').id
+            form = CustomerattachForm()  # reset form after saving
+            context = {
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'customer_id': customer_id,
+                'customer_attachment_list': customer_attachment_list,
+            }
+            return render(request, "asset_mgt_app/customer_attach_add.html", context)
+
         else:
-            attach = Customerattach.objects.get(pk=attach_id)
-            form = CustomerattachForm(request.POST,request.FILES, instance=attach)
-            if form.is_valid():
-                form.save()
-                messages.success(request, 'Attachment saved successfully')
-                return redirect(request.META['HTTP_REFERER'])
-            else:
-                messages.error(request, 'Form is not valid')
-                print(form.errors)  # Print form errors to the console for debugging
-                return redirect(request.META['HTTP_REFERER'])
+            messages.error(request, 'Form is not valid')
+            print(form.errors)
+            context = {
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'customer_id': customer_id,
+                'customer_attachment_list': customer_attachment_list,
+            }
+            return render(request, "asset_mgt_app/customer_attach_add.html", context)
 
 # List bay
 @login_required(login_url='login_page')
