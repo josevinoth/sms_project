@@ -75,9 +75,9 @@
             <th><input type="text" class="form-control filter-input" placeholder="Search Profit/Loss %"></th>
         </tr>
         <tr>
-            <th>Business Type</th>
             <th>Branch</th>
             <th>Month</th>
+            <th>Business Type</th>
             <th>Customer Name</th>
             <th>Revenue(In Lakhs)</th>
             <th>Expenses(In Lakhs)</th>
@@ -88,10 +88,10 @@
         <tbody>
         {% for summary in business_summary %}
         <tr>
-    <td>{{ summary.businessmodel }}</td>
     <td>{{ summary.branch }}</td>
     <td>{{ summary.month_name }}</td>
-    <td>{{ summary.customer_name }}</td> <!-- if you want customer names, add in results -->
+    <td>{{ summary.businessmodel }}</td>
+    <td>{{ summary.customer_name }}</td>
     <td>{{ summary.total_income|to_lakhs }}</td>
     <td>{{ summary.total_expense|to_lakhs }}</td>
     <td>{{ summary.profit_loss|to_lakhs }}</td>
