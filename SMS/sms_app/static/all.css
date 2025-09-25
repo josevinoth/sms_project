@@ -505,7 +505,17 @@ legend {
     }
 /* Remove margin-right for the last button */
 
-
-
+/* Warehouse reports card */
+.custom-card {
+  border: 2px solid rgba(47, 85, 151, 1) !important;
+}
+.custom-card-header {
+  background-color: rgba(47, 85, 151, 1) !important;
+  color: white !important;
+}
+.custom-badge {
+  background-color: rgba(47, 85, 151, 1) !important;
+  color: white !important;
+}
 
 
