@@ -27,15 +27,81 @@
                                     {% render_field form.ca_category id="ca_category" class="form-control " %}
                                 </div>
                             </div>
-                            <div class="col-3">
-                                <!-- Contract Attachment Field -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"> Attachment</span>
-                                    </div>
-                                    {% render_field form.ca_contract_attach id="ca_contract_attach" class="form-control" %}
-                                </div>
-                            </div>
+<div class="col-3">
+    <!-- Contract Attachment Field -->
+    <div class="input-group input-group-sm mb-3" id="contract-attach-div">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Attachment</span>
+        </div>
+        {% render_field form.ca_contract_attach id="ca_contract_attach" class="form-control" %}
+    </div>
+
+    <!-- Extra Fields for KYC -->
+    <div id="kyc-fields" style="display: none;">
+        <div class="row">
+            <!-- Left mini column -->
+            <div class="col-6 pr-1">
+                <!-- PAN -->
+                <div class="input-group input-group-sm mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">PAN</span>
+                    </div>
+                    {% render_field form.cu_pan id="cu_pan" class="form-control disable_a_href" placeholder="Enter PAN" %}
+                </div>
+                <div class="input-group input-group-sm mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">GST</span>
+                    </div>
+                    {% render_field form.cu_gst id="cu_gst" class="form-control disable_a_href" placeholder="Enter GST" %}
+                </div>
+                <div class="input-group input-group-sm mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Cheque</span>
+                    </div>
+                    {% render_field form.cu_cheque id="cu_cheque" class="form-control" placeholder="Enter Account No" %}
+                </div>
+                <div class="input-group input-group-sm mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">MSME</span>
+                    </div>
+                    {% render_field form.cu_msme id="cu_msme" class="form-control" placeholder="Enter MSME No" %}
+                </div>
+            </div>
+
+            <!-- Right mini column -->
+            <div class="col-6 pl-1">
+                <!-- PAN File -->
+                <div class="input-group input-group-sm mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">File</span>
+                    </div>
+                    {% render_field form.ca_pan_attach id="ca_pan_attach" class="form-control" %}
+                </div>
+                <!-- GST File -->
+                <div class="input-group input-group-sm mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">File</span>
+                    </div>
+                    {% render_field form.ca_gst_attach id="ca_gst_attach" class="form-control" %}
+                </div>
+                <!-- Cheque File -->
+                <div class="input-group input-group-sm mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">File</span>
+                    </div>
+                    {% render_field form.ca_cheque_attach id="ca_cheque_attach" class="form-control" %}
+                </div>
+                <!-- MSME File -->
+                <div class="input-group input-group-sm mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">File</span>
+                    </div>
+                    {% render_field form.ca_msme_attach id="ca_msme_attach" class="form-control" %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                             <div class="col-3">
                                 <!-- Contract Start Date Field -->
                                 <div class="input-group input-group-sm mb-3">
@@ -161,6 +227,78 @@
             document.getElementById('ca_contract_end_date').value = '';
         }
     }
+</script>
+<script>
+    $(document).ready(function () {
+        console.log("jQuery Ready");
+
+        // =========================
+        // 🔹 1. Toggle KYC / Contract fields
+        // =========================
+        function toggleFields() {
+            var category = $("#ca_category").val();
+            if (category == "1") {
+                // Show KYC fields, hide contract attachment
+                $("#kyc-fields").show();
+                $("#contract-attach-div").hide();
+                $("#ca_contract_attach").val(""); // clear contract attach
+            } else {
+                // Show contract attachment, hide KYC fields
+                $("#contract-attach-div").show();
+                $("#kyc-fields").hide();
+                $("#cu_pan, #ca_pan_attach, #cu_gst, #ca_gst_attach, #cu_cheque, #ca_cheque_attach, #cu_msme, #ca_msme_attach").val("");
+            }
+        }
+
+        toggleFields(); // run on page load
+        $("#ca_category").change(function () {
+            toggleFields(); // run on category change
+        });
+
+        // =========================
+        // 🔹 2. Validate End Date > Start Date
+        // =========================
+        $("#ca_contract_end_date").on("change", function () {
+            const startDate = $("#ca_contract_start_date").val();
+            const endDate = $(this).val();
+
+            if (endDate < startDate) {
+                alert("End date should be greater than start date");
+                $(this).val("");
+            }
+        });
+
+        // =========================
+        // 🔹 3. Fetch PAN & GST via AJAX
+        // =========================
+        function fetchCustomerPanGst(customer_id) {
+            if (customer_id) {
+                $.ajax({
+                    url: "{% url 'get_customer_pan_gst' %}",
+                    data: { customer_id: customer_id },
+                    dataType: "json",
+                    success: function (data) {
+                        $("#cu_pan").val(data.pan);
+                        $("#cu_gst").val(data.gst);
+                    }
+                });
+            } else {
+                $("#cu_pan").val("");
+                $("#cu_gst").val("");
+            }
+        }
+
+        // On customer change
+        $("#ca_customer_name").on("change", function () {
+            fetchCustomerPanGst($(this).val());
+        });
+
+        // On page load (if pre-filled customer)
+        var initial_customer_id = $("#ca_customer_name").val();
+        if (initial_customer_id) {
+            fetchCustomerPanGst(initial_customer_id);
+        }
+    });
 </script>
 
 

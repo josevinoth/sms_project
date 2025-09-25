@@ -29,6 +29,16 @@ class Customerattach(models.Model):
     ca_kyc_due_days = models.IntegerField(blank=True, null=True)
     ca_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.CASCADE,default=1)
     ca_category = models.ForeignKey(Attach_categoryInfo, on_delete=models.CASCADE, blank=True,null=True)
+    ca_pan_attach = models.FileField(upload_to=customer_attach_path, null=True, blank=True)
+    ca_gst_attach = models.FileField(upload_to=customer_attach_path, null=True, blank=True)
+    ca_cheque_attach = models.FileField(upload_to=customer_attach_path, null=True, blank=True)
+    ca_msme_attach = models.FileField(upload_to=customer_attach_path, null=True, blank=True)
+    cu_cheque =models.CharField(max_length=30,default = '', null=True, blank=True)
+    cu_msme =models.CharField(max_length=30,default = '', null=True, blank=True)
+    cu_pan =models.CharField(max_length=30,default = '', null=True, blank=True)
+    cu_gst =models.CharField(max_length=30,default = '', null=True, blank=True)
+
+
 
 
     def __str__(self):
