@@ -25,7 +25,7 @@ from .send_department_email import send_department_email
 from django.shortcuts import redirect
 from django.contrib import messages
 from ..forms import DsrForm
-
+from django.utils.timezone import make_aware, now
 from itertools import zip_longest
 
 @login_required(login_url='login_page')
@@ -647,10 +647,12 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
     to_date_str = request.POST.get('to_date') or request.GET.get('to_date')
 
     if from_date_str and to_date_str:
-        from_date = timezone.make_aware(datetime.datetime.strptime(from_date_str, "%Y-%m-%d"))
-        to_date = timezone.make_aware(datetime.datetime.strptime(to_date_str, "%Y-%m-%d")) + timedelta(days=1)
+        # Parse directly into naive datetime objects
+        from_date = make_aware(datetime.strptime(from_date_str, "%Y-%m-%d"))
+        to_date = make_aware(datetime.strptime(to_date_str, "%Y-%m-%d")) + timedelta(days=1)
     else:
-        to_date = timezone.now()
+        # Default to last 120 days
+        to_date = now()
         from_date = to_date - timedelta(days=120)
 
     print('Entering stcokvalue_send_email_view')
