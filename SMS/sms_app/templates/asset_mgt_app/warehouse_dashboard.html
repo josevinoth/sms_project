@@ -1,0 +1,243 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block title %}Branch Wise P/L Report{% endblock %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+{% load currency_format %}
+
+<div class="container-fluid d-flex align-items-center justify-content-between py-3">
+    <div>
+        <a href="{% url 'finance_reports' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="flex-grow-1 d-flex justify-content-center">
+        <div class="rounded text-center bg-info shadow-box px-4 py-2">
+            <h3>Warehouse Dashboard</h3>
+        </div>
+    </div>
+    <div style="width: 80px;"></div>
+</div>
+<br>
+<div class="container-fluid">
+    <div class="row align-items-center">
+        <div class="col-md-2">
+            <label for="branch-filter"><b>Branch:</b></label>
+            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for branch in branches %}
+                <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
+                    {{ branch.loc_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!--        <div class="col-md-2">-->
+        <!--            <label for="company-filter"><b>Company:</b></label>-->
+        <!--            <select id="company-filter" name="company" class="form-control box-shadow rounded">-->
+        <!--                <option value="">All</option>-->
+        <!--                {% for company in companies %}-->
+        <!--                <option value="{{ company.bvm_business }}" {% if company.bvm_business == selected_company %} selected {% endif %}>-->
+        <!--                    {{ company.bvm_business }}-->
+        <!--                </option>-->
+        <!--                {% endfor %}-->
+        <!--            </select>-->
+        <!--        </div>-->
+
+        <!-- From Date -->
+        <div class="col-md-2">
+            <label for="from-date"><b>From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+        </div>
+
+        <!-- To Date -->
+        <div class="col-md-3">
+            <label for="to-date"><b>To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+        </div>
+
+    </div>
+</div>
+
+<br>
+
+  <!-- Top KPI Cards -->
+  <div class="row">
+    <div class="col-md-2">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h5 class="card-title">Branches</h5>
+          <h3>{{ total_branches }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h5 class="card-title">Units</h5>
+          <h3>{{ total_units }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h5 class="card-title">Bays</h5>
+          <h3>{{ total_bays }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h5 class="card-title">Customers</h5>
+          <h3>{{ total_customers }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h5 class="card-title">Revenue</h5>
+          <h3>₹{{ revenue_summary.total_revenue|default:0 }}</h3>
+
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h5 class="card-title">Invoice Amount</h5>
+
+          <h3>₹{{ revenue_summary.total_invoice_amount|default:0 }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card shadow-sm text-center">
+        <div class="card-body">
+          <h5 class="card-title">Tonnage</h5>
+          <h3>{{ revenue_summary.total_tonnage|default:0 }} MT</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Space Utilization -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title flex-1" >Space Utilization</h5>
+          <canvas id="spacePie" width="100" height="50" class="bg-white box-shadow rounded"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Area & Volume Summary</h5>
+          <ul class="list-group">
+            <li class="list-group-item">Total Area: {{ space_summary.total_area|default:0 }} sq.ft</li>
+            <li class="list-group-item">Occupied Area: {{ space_summary.occupied_area|default:0 }} sq.ft</li>
+            <li class="list-group-item">Available Area: {{ space_summary.available_area|default:0 }} sq.ft</li>
+            <li class="list-group-item">Total Volume: {{ space_summary.total_volume|default:0 }} m³</li>
+            <li class="list-group-item">Occupied Volume: {{ space_summary.occupied_volume|default:0 }} m³</li>
+            <li class="list-group-item">Utilization: {{ space_utilization_percent }}%</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Customers -->
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Top Customers by Revenue</h5>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Total Revenue (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for customer in top_customers %}
+              <tr>
+                <td>{{ customer.wh_customer_name__cu_nameshort }}</td>
+                <td>{{ customer.total_revenue }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="2" class="text-center">No data available</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<script>
+  const ctx = document.getElementById('spacePie');
+  new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ['Occupied Space', 'Available Space'],
+      datasets: [{
+        data: [
+          {{ space_summary.occupied_area|default:0 }},
+          {{ space_summary.available_area|default:0 }}
+        ],
+        backgroundColor: ['#ff6384', '#36a2eb'],
+      }]
+    },
+    options: {
+      responsive: true,
+
+      plugins: {
+        legend: { position: 'bottom' },
+      }
+    }
+  });
+
+  document.getElementById('branch-filter').addEventListener('change', updateFilters);
+
+    document.getElementById('from-date').addEventListener('change', updateFilters);
+    document.getElementById('to-date').addEventListener('change', updateFilters);
+
+    function updateFilters() {
+    const branch = document.getElementById('branch-filter').value;
+
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const url = new URL(window.location.href);
+
+    if (branch) {
+        url.searchParams.set('branch', branch);
+    } else {
+        url.searchParams.delete('branch');
+    }
+
+    if (fromDate) {
+        url.searchParams.set('from_date', fromDate);
+    } else {
+        url.searchParams.delete('from_date');
+    }
+
+    if (toDate) {
+        url.searchParams.set('to_date', toDate);
+    } else {
+        url.searchParams.delete('to_date'); // Clear the parameter if no date is provided
+    }
+
+    console.log(url.toString());
+    window.location.href = url.toString();
+}
+</script>
+{% endblock %}

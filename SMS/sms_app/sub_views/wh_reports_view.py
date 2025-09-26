@@ -383,3 +383,69 @@ def wh_space_utilization_report(request):
     }
 
     return render(request, "asset_mgt_app/WH_space_utilization_report.html", context)
+
+def warehouse_dashboard(request):
+    first_name = request.session.get('first_name')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    selected_branch = request.session.get('branch')
+
+    branches = Location_info.objects.all()
+    filters = {}
+    if from_date:
+        filters["wh_checkin_time__gte"] = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
+    if to_date:
+        filters["wh_checkin_time__lte"] = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
+    if selected_branch:
+        filters["wh_branch__ui_branch_name__loc_name"] = selected_branch
+    # KPI Counts
+    total_branches = Location_info.objects.count()
+    total_units = UnitInfo.objects.count()
+    total_bays = BayInfo.objects.count()
+    total_customers = CustomerInfo.objects.count()
+
+    # Space Utilization
+    space_summary = LocationmasterInfo.objects.aggregate(
+        total_area=Sum("lm_size"),
+        occupied_area=Sum("lm_area_occupied"),
+        available_area=Sum("lm_available_area"),
+        total_volume=Sum("lm_total_volume"),
+        occupied_volume=Sum("lm_volume_occupied"),
+    )
+
+    space_utilization_percent = (
+        (space_summary["occupied_area"] / space_summary["total_area"] * 100)
+        if space_summary["total_area"] else 0
+    )
+
+    # Revenue
+    revenue_summary = Warehouse_goods_info.objects.filter(**filters).aggregate(
+        total_invoice_amount=Sum("wh_invoice_amount_inr"),
+        total_tonnage=Sum("wh_goods_weight"),
+        total_revenue = Sum("wh_total_invoice_cost")
+    )
+
+    # Top Customers
+    top_customers = (
+        Warehouse_goods_info.objects.filter(**filters)
+        .values("wh_customer_name__cu_nameshort")
+        .annotate(total_revenue=Sum("wh_total_invoice_cost"))
+        .order_by("-total_revenue")[:5]
+    )
+
+    context = {
+        "first_name": first_name,
+        "total_branches": total_branches,
+        "total_units": total_units,
+        "total_bays": total_bays,
+        "total_customers": total_customers,
+        "space_summary": space_summary,
+        "space_utilization_percent": round(space_utilization_percent, 2),
+        "revenue_summary": revenue_summary,
+        "top_customers": top_customers,
+        "from_date": from_date,
+        "to_date": to_date,
+        "branches": branches,
+        "selected_branch": selected_branch
+    }
+    return render(request, "asset_mgt_app/warehouse_dashboard.html", context)
