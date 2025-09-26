@@ -145,125 +145,123 @@
 <!--} );-->
 <!--</script>-->
 <script>
-    $(document).ready(function (){
-          var table=new DataTable('#dispatch_master_list', {
-            responsive: {
+$(document).ready(function () {
+    // Initialize DataTable
+    var table = new DataTable('#dispatch_master_list', {
+        responsive: {
             details: {
-                type: 'inline', // or 'column' for child row
-                target: 0       // First column reserved for details control
+                type: 'inline',
+                target: 0
             }
         },
         columnDefs: [
-            {
-                className: 'control',
-                orderable: false,
-                targets: 0   // First column for responsive toggle
-            },
-            {
-                orderable: false,
-                className: 'select-checkbox',
-                targets: 1   // Second column for checkbox
-            }
+            { className: 'control', orderable: false, targets: 0 },
+            { orderable: false, className: 'select-checkbox', targets: 1 }
         ],
-        select: {
-            style: 'os',
-            selector: 'td.select-checkbox' // Only enable selection from checkbox column
-        },
-        order: [[2, 'asc']], // Adjust because WH Job Number is now at index 2
+        select: { style: 'os', selector: 'td.select-checkbox' },
+        order: [[2, 'asc']],
         dom: 'lBfrtip',
-        scrollX: true,
-       });
-
-        $(document).on('click', '.partial-dispatch-btn', function () {
-    const id = $(this).data('id');
-    const job = $(this).data('job');
-    const qr = $(this).data('qr');
-    const pieces = $(this).data('pieces');
-    const remainingQty = $(this).data('remaining');
-    const totalWeight = $(this).data('weight');
-
-    $('#modal_goods_id').val(id);
-    $('#modal_job_no').val(job);
-    $('#modal_qr').val(qr);
-    $('#modal_total_pieces').val(pieces);
-    $('#modal_remaining_qty').val(remainingQty);
-    $('#modal_total_weight').val(totalWeight);
-    $('#modal_dispatch_qty').attr('max', remainingQty).val(remainingQty);
-    $('#modal_dispatch_weight').val('');
-    $('#partialDispatchModal').modal('show');
-});
-
-$('#partial-dispatch-form').on('submit', function (e) {
-    e.preventDefault();
-    const goodsId = $('#modal_goods_id').val();
-    const dispatchQty = $('#modal_dispatch_qty').val();
-    const dispatchWeight = $('#modal_dispatch_weight').val();
-
-    $.ajax({
-        url: '{% url "dispatch_partial_goods" %}',
-        method: 'POST',
-        data: {
-            'goods_id': goodsId,
-            'dispatch_qty': dispatchQty,
-            'dispatch_weight': dispatchWeight,
-            'csrfmiddlewaretoken': '{{ csrf_token }}'
-        },
-        success: function () {
-            $('#partialDispatchModal').modal('hide');
-            location.reload();  // or dynamically update the row
-        },
-        error: function (xhr) {
-            alert('Error: ' + xhr.responseText);
-        }
-    });
-});
-
-     $('#add_btn').on('click', function(e){
-    e.preventDefault();
-
-    let selectedIndexes = table.rows({ selected: true }).indexes();  // get indexes
-    let selectedData = table.rows({ selected: true }).data();
-    let len1 = selectedIndexes.length;
-    console.log("Total selected: ", len1);
-
-    var elements = [];
-    selectedIndexes.each(function(idx, loopIndex) {
-        let row = table.row(idx).node();
-        let expiry = $(row).data('expiry');
-        let today = new Date().toISOString().split('T')[0];
-
-        if (!expiry || expiry >= today) {
-            elements.push(selectedData[loopIndex][12]);  // column 12 = WH Stock Number
-        }
+        scrollX: true
     });
 
-    $.ajax({
-        url: '{% url "dispatch_add_goods" %}',
-        type: 'GET',
-        data: { 'myList[]': elements },
-        success: function(response) {
-            location.reload();
-        }
-    });
-});
-
-    // Highlight expired rows
-$('#dispatch_master_list tbody tr').each(function () {
-    let expiry = $(this).data('expiry');
-    if (expiry) {
-        let today = new Date().toISOString().split('T')[0];
-        if (expiry < today) {
-            $(this).css({"background-color": "red", "color": "white"});
-            let checkbox = $(this).find('.row-checkbox');
-            checkbox.prop("disabled", true);
-            // show alert once
-            $(this).click(function() {
-                alert("This stock is expired. You cannot select it!");
-            });
-        }
+    // Function to highlight expired rows
+    function highlightExpiredRows() {
+        $('#dispatch_master_list tbody tr').each(function () {
+            let expiry = $(this).data('expiry');
+            if (expiry) {
+                let today = new Date().toISOString().split('T')[0];
+                if (expiry < today) {
+                    $(this).css({"background-color": "red", "color": "white"});
+                    let checkbox = $(this).find('.row-checkbox');
+                    checkbox.prop("disabled", true);
+                    // Remove old click handler to avoid multiple alerts
+                    $(this).off('click').on('click', function() {
+                        alert("This stock is expired. You cannot select it!");
+                    });
+                }
+            }
+        });
     }
-});
 
+    // Highlight expired rows on initial load
+    highlightExpiredRows();
+
+    // Highlight expired rows every time table is redrawn (pagination, search, etc.)
+    table.on('draw', function() {
+        highlightExpiredRows();
     });
+
+    // Partial dispatch modal logic
+    $(document).on('click', '.partial-dispatch-btn', function () {
+        const id = $(this).data('id');
+        const job = $(this).data('job');
+        const qr = $(this).data('qr');
+        const pieces = $(this).data('pieces');
+        const remainingQty = $(this).data('remaining');
+        const totalWeight = $(this).data('weight');
+
+        $('#modal_goods_id').val(id);
+        $('#modal_job_no').val(job);
+        $('#modal_qr').val(qr);
+        $('#modal_total_pieces').val(pieces);
+        $('#modal_remaining_qty').val(remainingQty);
+        $('#modal_total_weight').val(totalWeight);
+        $('#modal_dispatch_qty').attr('max', remainingQty).val(remainingQty);
+        $('#modal_dispatch_weight').val('');
+        $('#partialDispatchModal').modal('show');
+    });
+
+    $('#partial-dispatch-form').on('submit', function (e) {
+        e.preventDefault();
+        const goodsId = $('#modal_goods_id').val();
+        const dispatchQty = $('#modal_dispatch_qty').val();
+        const dispatchWeight = $('#modal_dispatch_weight').val();
+
+        $.ajax({
+            url: '{% url "dispatch_partial_goods" %}',
+            method: 'POST',
+            data: {
+                'goods_id': goodsId,
+                'dispatch_qty': dispatchQty,
+                'dispatch_weight': dispatchWeight,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function () {
+                $('#partialDispatchModal').modal('hide');
+                location.reload();  // or dynamically update the row
+            },
+            error: function (xhr) {
+                alert('Error: ' + xhr.responseText);
+            }
+        });
+    });
+
+    // Check-Out button logic
+    $('#add_btn').on('click', function(e){
+        e.preventDefault();
+        let selectedIndexes = table.rows({ selected: true }).indexes();
+        let selectedData = table.rows({ selected: true }).data();
+        var elements = [];
+
+        selectedIndexes.each(function(idx, loopIndex) {
+            let row = table.row(idx).node();
+            let expiry = $(row).data('expiry');
+            let today = new Date().toISOString().split('T')[0];
+            if (!expiry || expiry >= today) {
+                elements.push(selectedData[loopIndex][12]);  // column 12 = WH Stock Number
+            }
+        });
+
+        $.ajax({
+            url: '{% url "dispatch_add_goods" %}',
+            type: 'GET',
+            data: { 'myList[]': elements },
+            success: function(response) {
+                location.reload();
+            }
+        });
+    });
+
+});
 </script>
 {% endblock content %}

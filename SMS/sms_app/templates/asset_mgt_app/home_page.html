@@ -69,10 +69,8 @@
                     </a>
                     <div class="content" >
                         <a href="{% url 'customer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer List</a>
-                        <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Dues <span class="badge bg-danger p-2 blink">{{ customer_contract_due_count }}</span></a>
-                        <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Rate Sheet Dues <span class="badge bg-danger p-2 blink">{{ customer_rate_due_count }}</span></a>
-                        <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> SOP Dues <span class="badge bg-danger p-2 blink">{{ customer_sop_due_count }}</span></a>
-                        <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> KYC Dues <span class="badge bg-danger p-2 blink">{{ customer_kyc_due_count }}</span></a>
+                        <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Dues <span class="badge bg-danger p-2 blink">{{ customer_rate_due_count }}</span></a>
+                        <a href="{% url 'customer_contract_rate_report' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Status </a>
                         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> CMS Misc</button>
                         <div class="content">
                             <a href="{% url 'crcountfrom_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Credit Count Type</a>

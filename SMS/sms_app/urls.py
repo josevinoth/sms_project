@@ -731,6 +731,9 @@ urlpatterns = [
     path('customer_claims_report/', views.customer_claims_report, name='customer_claims_report'),
     path('highvalue_report_list/', views.highvalue_report_list, name='highvalue_report_list'),
     path('warehouse_dashboard/', views.warehouse_dashboard, name='warehouse_dashboard'),
+    path('customer_contract_rate_report/', views.customer_contract_rate_report, name='customer_contract_rate_report'),
+    path("get-customer-pan-gst/", views.get_customer_pan_gst, name="get_customer_pan_gst"),
+
 ]
 
 

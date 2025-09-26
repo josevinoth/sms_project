@@ -36,12 +36,9 @@ def home_page(request):
     excess_count=len(PkcostingInfo.objects.filter(ct_excess_status=3))
     count_retrival=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status__in=[1, 3]))
     count_acceptance=len(PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2))
-    customer_contract_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30,ca_status=1))
-    customer_rate_due_count = len(Customerattach.objects.filter(ca_rate_due_days__lte=30,ca_status=1))
-    customer_sop_due_count = len(Customerattach.objects.filter(ca_sop_due_days__lte=30,ca_status=1))
-    customer_kyc_due_count = len(Customerattach.objects.filter(ca_kyc_due_days__lte=30,ca_status=1))
+    customer_rate_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30,ca_category_id=4,ca_status=1))
     DG_cargo_count = len(DGcargovalueInfo.objects.filter(DG_wh_approval_status__id=2))
-    total_dues = customer_contract_due_count + customer_rate_due_count
+    total_dues = customer_rate_due_count
     approval_count = TripdetailInfo.objects.filter( Q(tr_category=1),
         Q(tr_approval__isnull=True) | Q(tr_approval__ta_approval_status__id=3)
     ).count()
@@ -80,7 +77,6 @@ def home_page(request):
                'excess_count': excess_count,
                'count_retrival': count_retrival,
                'count_acceptance': count_acceptance,
-               'customer_contract_due_count': customer_contract_due_count,
                'customer_rate_due_count': customer_rate_due_count,
                'total_dues': total_dues,
                'approval_count':approval_count,
@@ -88,8 +84,6 @@ def home_page(request):
                'approval_count_wms1':approval_count_wms1,
                'approval_count_wms2':approval_count_wms2,
                'DG_cargo_count':DG_cargo_count,
-               'customer_sop_due_count':customer_sop_due_count,
-               'customer_kyc_due_count':customer_kyc_due_count
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 
@@ -176,19 +170,42 @@ def customer_contract_rate_due_days(request):
 
     return HttpResponse(status=204)
 
+
 @login_required(login_url='login_page')
 def customer_contract_rate_dues_list(request):
     first_name = request.session.get('first_name')
 
-    customer_attach_list = Customerattach.objects.filter(
-        Q(ca_contract_due_days__lte=30) |
-        Q(ca_rate_due_days__lte=30) |
-        Q(ca_sop_due_days__lte=30) |
-        Q(ca_kyc_due_days__lte=30)
-    )
+    # Group attachments by customer
+    customer_dict = {}
+    attachments = Customerattach.objects.all().select_related('ca_customer_name', 'ca_category')
+
+    for attach in attachments:
+        if attach.ca_customer_name is None or attach.ca_category is None:
+            continue
+
+        cust_id = attach.ca_customer_name.id
+        if cust_id not in customer_dict:
+            customer_dict[cust_id] = {
+                'customer_name': attach.ca_customer_name,
+                'contract': '',
+                'rate_sheet': '',
+                'sop': '',
+                'kyc': '',
+            }
+
+        due_days = attach.ca_contract_due_days or ''  # Convert None to empty string
+
+        if attach.ca_category.id == 2:  # Contract/SOW
+            customer_dict[cust_id]['contract'] = due_days
+        elif attach.ca_category.id == 4:  # Rate Sheet
+            customer_dict[cust_id]['rate_sheet'] = due_days
+        elif attach.ca_category.id == 3:  # SOP
+            customer_dict[cust_id]['sop'] = due_days
+        elif attach.ca_category.id == 1:  # KYC
+            customer_dict[cust_id]['kyc'] = due_days
 
     context = {
-        'customer_attach_list': customer_attach_list,
+        'customer_list': customer_dict.values(),
         'first_name': first_name,
     }
     return render(request, "asset_mgt_app/customer_contract_rate_due_days_list.html", context)
