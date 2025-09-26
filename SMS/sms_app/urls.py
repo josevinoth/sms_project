@@ -730,6 +730,7 @@ urlpatterns = [
     path('wrong_labelling_report/', views.wrong_labelling_report, name='wrong_labelling_report'),
     path('customer_claims_report/', views.customer_claims_report, name='customer_claims_report'),
     path('highvalue_report_list/', views.highvalue_report_list, name='highvalue_report_list'),
+    path('warehouse_dashboard/', views.warehouse_dashboard, name='warehouse_dashboard'),
 ]
 
 
