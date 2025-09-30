@@ -430,9 +430,9 @@ def warehouse_dashboard(request):
         Warehouse_goods_info.objects.filter(**filters)
         .values("wh_customer_name__cu_nameshort")
         .annotate(total_revenue=Sum("wh_total_invoice_cost"))
-        .order_by("-total_revenue")[:5]
+        .order_by("-total_revenue")[:10]
     )
-
+    top_customers_json = json.dumps(list(top_customers), default=str)
     context = {
         "first_name": first_name,
         "total_branches": total_branches,
@@ -443,6 +443,7 @@ def warehouse_dashboard(request):
         "space_utilization_percent": round(space_utilization_percent, 2),
         "revenue_summary": revenue_summary,
         "top_customers": top_customers,
+        "top_customers_json": top_customers_json,
         "from_date": from_date,
         "to_date": to_date,
         "branches": branches,

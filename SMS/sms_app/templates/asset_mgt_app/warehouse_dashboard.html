@@ -4,6 +4,50 @@
 {% block content %}
 {% load crispy_forms_tags %}
 {% load currency_format %}
+<style>
+.metric-card {
+  flex: 1;
+  min-width: 200px;
+  max-width: 250px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: 0.3s ease-in-out;
+}
+.metric-card:hover {
+  transform: translateY(-5px);
+}
+.metric-icon {
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+.metric-value {
+  font-size: 22px;
+  font-weight: bold;
+}
+.metric-label {
+  font-size: 14px;
+  color: #666;
+}
+.metric-change {
+  font-size: 12px;
+  margin-top: 5px;
+}
+.positive { color: #28a745; }
+.negative { color: #dc3545; }
+</style>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Load Matrix plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-matrix@1.2.0/dist/chartjs-plugin-matrix.min.js"></script>
 
 <div class="container-fluid d-flex align-items-center justify-content-between py-3">
     <div>
@@ -48,13 +92,13 @@
         <!-- From Date -->
         <div class="col-md-2">
             <label for="from-date"><b>From:</b></label>
-            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+            <input type="date" id="from-date" name="from_date" value="{{ from_date|default_if_none:'' }}" class="form-control box-shadow">
         </div>
 
         <!-- To Date -->
         <div class="col-md-3">
             <label for="to-date"><b>To:</b></label>
-            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+            <input type="date" id="to-date" name="to_date" value="{{ to_date|default_if_none:'' }}" class="form-control box-shadow">
         </div>
 
     </div>
@@ -62,94 +106,98 @@
 
 <br>
 
-  <!-- Top KPI Cards -->
-  <div class="row">
-    <div class="col-md-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <h5 class="card-title">Branches</h5>
-          <h3>{{ total_branches }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <h5 class="card-title">Units</h5>
-          <h3>{{ total_units }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <h5 class="card-title">Bays</h5>
-          <h3>{{ total_bays }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <h5 class="card-title">Customers</h5>
-          <h3>{{ total_customers }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <h5 class="card-title">Revenue</h5>
-          <h3>₹{{ revenue_summary.total_revenue|default:0 }}</h3>
+  <!-- KPI Row -->
+<div class="d-flex flex-wrap justify-content-between">
+  <div class="metric-card">
+    <div class="metric-icon text-primary"><i class="fas fa-code-branch"></i></div>
+    <div class="metric-value">{{ total_branches }}</div>
+    <div class="metric-label">Branches</div>
 
-        </div>
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <h5 class="card-title">Invoice Amount</h5>
+  </div>
 
-          <h3>₹{{ revenue_summary.total_invoice_amount|default:0 }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="card shadow-sm text-center">
-        <div class="card-body">
-          <h5 class="card-title">Tonnage</h5>
-          <h3>{{ revenue_summary.total_tonnage|default:0 }} MT</h3>
-        </div>
+  <div class="metric-card">
+    <div class="metric-icon text-success"><i class="fas fa-cubes"></i></div>
+    <div class="metric-value">{{ total_units }}</div>
+    <div class="metric-label">Units</div>
+
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon text-info"><i class="fas fa-warehouse"></i></div>
+    <div class="metric-value">{{ total_bays }}</div>
+    <div class="metric-label">Bays</div>
+
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon text-warning"><i class="fas fa-users"></i></div>
+    <div class="metric-value">{{ total_customers }}</div>
+    <div class="metric-label">Customers</div>
+
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon text-danger"><i class="fas fa-rupee-sign"></i></div>
+    <div class="metric-value">₹{{ revenue_summary.total_revenue|default:0|floatformat:2 }}</div>
+    <div class="metric-label">Revenue</div>
+
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon text-secondary"><i class="fas fa-file-invoice"></i></div>
+    <div class="metric-value">₹{{ revenue_summary.total_invoice_amount|default:0|floatformat:2 }}</div>
+    <div class="metric-label">Invoice Amount</div>
+
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon text-dark"><i class="fas fa-weight-hanging"></i></div>
+    <div class="metric-value">{{ revenue_summary.total_tonnage|default:0|floatformat:2 }} MT</div>
+    <div class="metric-label">Tonnage</div>
+
+  </div>
+</div>
+<div class="row mt-4">
+  <!-- Left: Space Utilization Pie -->
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body d-flex flex-column align-items-center justify-content-center">
+        <h5 class="card-title mb-3">Space Utilization</h5>
+        <canvas id="spacePie" class="bg-white box-shadow rounded"></canvas>
       </div>
     </div>
   </div>
 
-  <!-- Space Utilization -->
-  <div class="row mt-4">
-    <div class="col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title flex-1" >Space Utilization</h5>
-          <canvas id="spacePie" width="100" height="50" class="bg-white box-shadow rounded"></canvas>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">Area & Volume Summary</h5>
-          <ul class="list-group">
-            <li class="list-group-item">Total Area: {{ space_summary.total_area|default:0 }} sq.ft</li>
-            <li class="list-group-item">Occupied Area: {{ space_summary.occupied_area|default:0 }} sq.ft</li>
-            <li class="list-group-item">Available Area: {{ space_summary.available_area|default:0 }} sq.ft</li>
-            <li class="list-group-item">Total Volume: {{ space_summary.total_volume|default:0 }} m³</li>
-            <li class="list-group-item">Occupied Volume: {{ space_summary.occupied_volume|default:0 }} m³</li>
-            <li class="list-group-item">Utilization: {{ space_utilization_percent }}%</li>
-          </ul>
-        </div>
+  <!-- Middle: Area & Volume Donut -->
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body d-flex flex-column align-items-center justify-content-center">
+        <h5 class="card-title mb-3">Area & Volume Donut</h5>
+        <canvas id="areaVolumeDonut" class="bg-white box-shadow rounded"></canvas>
       </div>
     </div>
   </div>
+
+  <!-- Right: Area & Volume Summary -->
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Area & Volume Summary</h5>
+        <ul class="list-group">
+          <li class="list-group-item">Total Area: {{ space_summary.total_area|default:0 }} sq.ft</li>
+          <li class="list-group-item">Occupied Area: {{ space_summary.occupied_area|default:0 }} sq.ft</li>
+          <li class="list-group-item">Available Area: {{ space_summary.available_area|default:0 }} sq.ft</li>
+          <li class="list-group-item">Total Volume: {{ space_summary.total_volume|default:0 }} m³</li>
+          <li class="list-group-item">Occupied Volume: {{ space_summary.occupied_volume|default:0 }} m³</li>
+          <li class="list-group-item">Utilization: {{ space_utilization_percent }}%</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 
   <!-- Top Customers -->
   <div class="row mt-4">
@@ -180,64 +228,96 @@
     </div>
   </div>
 
+<div class="row mt-4">
+  <div class="col-md-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Top Customers by Revenue</h5>
+        <canvas id="customerRevenueBar"></canvas>
+      </div>
+    </div>
+  </div>
 </div>
 
 
 <script>
-  const ctx = document.getElementById('spacePie');
-  new Chart(ctx, {
+    // Space Pie Chart
+const spaceCtx = document.getElementById('spacePie').getContext('2d');
+const spacePieChart = new Chart(spaceCtx, {
     type: 'pie',
     data: {
-      labels: ['Occupied Space', 'Available Space'],
-      datasets: [{
-        data: [
-          {{ space_summary.occupied_area|default:0 }},
-          {{ space_summary.available_area|default:0 }}
-        ],
-        backgroundColor: ['#ff6384', '#36a2eb'],
-      }]
+        labels: ['Occupied Space', 'Available Space'],
+        datasets: [{
+            data: [
+              {{ space_summary.occupied_area|default:0 }},
+              {{ space_summary.available_area|default:0 }}
+            ],
+            backgroundColor: ['#ff6384', '#36a2eb'],
+        }]
     },
-    options: {
-      responsive: true,
-
-      plugins: {
-        legend: { position: 'bottom' },
-      }
-    }
-  });
-
-  document.getElementById('branch-filter').addEventListener('change', updateFilters);
-
-    document.getElementById('from-date').addEventListener('change', updateFilters);
-    document.getElementById('to-date').addEventListener('change', updateFilters);
-
-    function updateFilters() {
-    const branch = document.getElementById('branch-filter').value;
-
-    const fromDate = document.getElementById('from-date').value;
-    const toDate = document.getElementById('to-date').value;
-    const url = new URL(window.location.href);
-
-    if (branch) {
-        url.searchParams.set('branch', branch);
-    } else {
-        url.searchParams.delete('branch');
-    }
-
-    if (fromDate) {
-        url.searchParams.set('from_date', fromDate);
-    } else {
-        url.searchParams.delete('from_date');
-    }
-
-    if (toDate) {
-        url.searchParams.set('to_date', toDate);
-    } else {
-        url.searchParams.delete('to_date'); // Clear the parameter if no date is provided
-    }
-
-    console.log(url.toString());
-    window.location.href = url.toString();
-}
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
 </script>
+<script>
+const customerData = JSON.parse('{{ top_customers_json|escapejs }}');
+const barCtx = document.getElementById("customerRevenueBar").getContext("2d");
+
+new Chart(barCtx, {
+  type: 'bar',
+  data: {
+    labels: customerData.map(c => c.wh_customer_name__cu_nameshort),
+    datasets: [{
+      label: "Revenue (₹)",
+      data: customerData.map(c => c.total_revenue),
+      backgroundColor: "#36a2eb"
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: ctx => `${ctx.label}: ₹${ctx.formattedValue}`
+        }
+      },
+      legend: { display: false }
+    },
+    scales: {
+      x: { title: { display: true, text: "Customers" } },
+      y: { beginAtZero: true, title: { display: true, text: "Revenue (₹)" } }
+    }
+  }
+});
+</script>
+
+<script>
+const donutCtx = document.getElementById('areaVolumeDonut').getContext('2d');
+new Chart(donutCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Occupied Area', 'Available Area', 'Occupied Volume', 'Remaining Volume'],
+    datasets: [{
+      data: [
+        {{ space_summary.occupied_area|default:0 }},
+        {{ space_summary.available_area|default:0 }},
+        {{ space_summary.occupied_volume|default:0 }},
+        {{ space_summary.total_volume|default:0 }} - {{ space_summary.occupied_volume|default:0 }}
+      ],
+      backgroundColor: ['#ff6384', '#36a2eb', '#4bc0c0', '#ffcd56']
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: { legend: { position: 'bottom' } }
+  }
+});
+</script>
+
+
+
+
+
+
 {% endblock %}
