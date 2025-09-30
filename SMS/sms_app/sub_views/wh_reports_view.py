@@ -6,7 +6,7 @@ from django.db.models.functions import Coalesce,Round
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from datetime import datetime
-from ..models import Warehouse_goods_info,ExpenseExtinfo,BayInfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,DamagereportInfo,DamageInfo,LocationmasterInfo
+from ..models import Warehouse_goods_info,ExpenseExtinfo,BayInfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,DamagereportInfo,DamageInfo,LocationmasterInfo,Gatein_info
 
 
 def wh_damage_report(request):
@@ -402,8 +402,8 @@ def warehouse_dashboard(request):
     total_branches = Location_info.objects.count()
     total_units = UnitInfo.objects.count()
     total_bays = BayInfo.objects.count()
-    total_customers = CustomerInfo.objects.count()
-
+    total_customers  = Gatein_info.objects.values("gatein_customer").distinct().count()
+    vehicle_count = Gatein_info.objects.values("gatein_truck_number").distinct().count()
     # Space Utilization
     space_summary = LocationmasterInfo.objects.aggregate(
         total_area=Sum("lm_size"),
@@ -447,6 +447,7 @@ def warehouse_dashboard(request):
         "from_date": from_date,
         "to_date": to_date,
         "branches": branches,
-        "selected_branch": selected_branch
+        "selected_branch": selected_branch,
+        "vehicle_count": vehicle_count
     }
     return render(request, "asset_mgt_app/warehouse_dashboard.html", context)

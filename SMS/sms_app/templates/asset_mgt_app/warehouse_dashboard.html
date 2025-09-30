@@ -105,8 +105,6 @@
 </div>
 
 <br>
-
-  <!-- KPI Row -->
 <div class="d-flex flex-wrap justify-content-between">
   <div class="metric-card">
     <div class="metric-icon text-primary"><i class="fas fa-code-branch"></i></div>
@@ -135,24 +133,30 @@
     <div class="metric-label">Customers</div>
 
   </div>
+    <div class="metric-card">
+    <div class="metric-icon text-primary"><i class="fas fa-truck"></i></div>
+    <div class="metric-value">{{ vehicle_count }}</div>
+    <div class="metric-label">Vehicle count</div>
+
+  </div>
 
   <div class="metric-card">
     <div class="metric-icon text-danger"><i class="fas fa-rupee-sign"></i></div>
-    <div class="metric-value">₹{{ revenue_summary.total_revenue|default:0|floatformat:2 }}</div>
+    <div class="metric-value">₹{{ revenue_summary.total_revenue|default:0|floatformat:2|to_lakhs }}L</div>
     <div class="metric-label">Revenue</div>
 
   </div>
 
   <div class="metric-card">
     <div class="metric-icon text-secondary"><i class="fas fa-file-invoice"></i></div>
-    <div class="metric-value">₹{{ revenue_summary.total_invoice_amount|default:0|floatformat:2 }}</div>
+    <div class="metric-value">₹{{ revenue_summary.total_invoice_amount|default:0|floatformat:2|to_crores }}</div>
     <div class="metric-label">Invoice Amount</div>
 
   </div>
 
   <div class="metric-card">
     <div class="metric-icon text-dark"><i class="fas fa-weight-hanging"></i></div>
-    <div class="metric-value">{{ revenue_summary.total_tonnage|default:0|floatformat:2 }} MT</div>
+    <div class="metric-value">{{ revenue_summary.total_tonnage|default:0|floatformat:2 |to_tons }}</div>
     <div class="metric-label">Tonnage</div>
 
   </div>
@@ -167,7 +171,6 @@
       </div>
     </div>
   </div>
-
   <!-- Middle: Area & Volume Donut -->
   <div class="col-md-4">
     <div class="card shadow-sm">
@@ -177,7 +180,6 @@
       </div>
     </div>
   </div>
-
   <!-- Right: Area & Volume Summary -->
   <div class="col-md-4">
     <div class="card shadow-sm">
@@ -195,10 +197,6 @@
     </div>
   </div>
 </div>
-
-
-
-
   <!-- Top Customers -->
   <div class="row mt-4">
     <div class="col-md-12">
@@ -233,7 +231,7 @@
     <div class="card shadow-sm">
       <div class="card-body">
         <h5 class="card-title">Top Customers by Revenue</h5>
-        <canvas id="customerRevenueBar"></canvas>
+        <canvas id="customerRevenueBar" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
       </div>
     </div>
   </div>
@@ -314,10 +312,4 @@ new Chart(donutCtx, {
   }
 });
 </script>
-
-
-
-
-
-
 {% endblock %}
