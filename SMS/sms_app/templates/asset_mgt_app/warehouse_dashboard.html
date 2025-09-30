@@ -1,5 +1,5 @@
 {% extends "asset_mgt_app/base.html" %}
-{% block title %}Branch Wise P/L Report{% endblock %}
+{% block title %}Warehouse Dashboard{% endblock %}
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
@@ -236,12 +236,11 @@
     </div>
   </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 <script>
-    // Space Pie Chart
-const spaceCtx = document.getElementById('spacePie').getContext('2d');
-const spacePieChart = new Chart(spaceCtx, {
+    const spaceCtx = document.getElementById('spacePie').getContext('2d');
+new Chart(spaceCtx, {
     type: 'pie',
     data: {
         labels: ['Occupied Space', 'Available Space'],
@@ -253,8 +252,25 @@ const spacePieChart = new Chart(spaceCtx, {
             backgroundColor: ['#ff6384', '#36a2eb'],
         }]
     },
-    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            datalabels: {
+                formatter: (value, ctx) => {
+                    let dataset = ctx.chart.data.datasets[0].data;
+                    let total = dataset.reduce((a, b) => a + b, 0);
+                    let percentage = (value / total * 100).toFixed(1) + "%";
+                    return percentage;
+                },
+                color: "#fff",
+                font: { weight: "bold", size: 14 }
+            }
+        }
+    },
+    plugins: [ChartDataLabels]
 });
+
 </script>
 <script>
 const customerData = JSON.parse('{{ top_customers_json|escapejs }}');
@@ -308,8 +324,22 @@ new Chart(donutCtx, {
   options: {
     responsive: true,
     maintainAspectRatio: true,
-    plugins: { legend: { position: 'bottom' } }
-  }
+    plugins: {
+        legend: { position: 'bottom' },
+        datalabels: {
+            formatter: (value, ctx) => {
+                let dataset = ctx.chart.data.datasets[0].data;
+                let total = dataset.reduce((a, b) => a + b, 0);
+                let percentage = (value / total * 100).toFixed(1) + "%";
+                return percentage;
+            },
+            color: "#fff",
+            font: { weight: "bold", size: 14 }
+        }
+    }
+  },
+  plugins: [ChartDataLabels]
 });
+
 </script>
 {% endblock %}
