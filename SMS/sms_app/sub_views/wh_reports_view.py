@@ -420,7 +420,7 @@ def warehouse_dashboard(request):
     # Space Utilization
     space_filter = {}
     if selected_branch:
-        space_filter["lm_wh_unit__ui_branch_name__loc_name"] = selected_branch
+        space_filter["lm_wh_location__loc_name"] = selected_branch
     if selected_unit:
         space_filter["lm_wh_unit__unit_name"] = selected_unit
 
