@@ -167,45 +167,63 @@ def consignmentdetail_delete(request,consignmentdetail_id):
     # return redirect('/SMS/consignmentdetail_list')
     return redirect(request.META['HTTP_REFERER'])
 
+
 @login_required(login_url='login_page')
-def consignment_note_pdf(request,consignment_note_id=0):
-    consignment_num=ConsignmentdetailInfo.objects.get(pk=consignment_note_id).co_consignmentnumber
-    consignment_details = (ConsignmentdetailInfo.objects.filter(pk=consignment_note_id))
-    consignment_goods_list=(ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignment_note_id)).order_by('id')
-    vehicle_details=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id))
-    vehicle_number=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_vehiclenumber',flat=True))
-    Driver_name=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_drivername',flat=True))
-    Driver_lic=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_driver_lic',flat=True))
-    Driver_number=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_drivernumber',flat=True))
-    vehicle_number_val=[]
-    for i in vehicle_number:
-        reg_number=VehiclemasterInfo.objects.get(pk=i).vm_registrationnumber
-        vehicle_number_val.append(reg_number)
+def consignment_note_pdf(request, consignment_note_id=0):
+    try:
+        # Get the consignment record
+        consignment = ConsignmentdetailInfo.objects.get(pk=consignment_note_id)
+        consignment_num = consignment.co_consignmentnumber
 
-    context = {
-        'consignment_details': consignment_details,
-        'consignment_goods_list': consignment_goods_list,
-        'vehicle_details': vehicle_details,
-        'vehicle_number': list(vehicle_number_val),
-        'Driver_name': list(Driver_name),
-        'Driver_lic': list(Driver_lic),
-        'Driver_number': list(Driver_number),
-    }
-    file_name = str("Consignement Note_") + str(consignment_num) + str(".pdf")
-    template_path = 'asset_mgt_app/consignement_note_pdf.html'
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename={file_name}'
+        # Get all related goods
+        consignment_goods_list = ConsignmentgoodsInfo.objects.filter(
+            cg_consignmentnumber=consignment_note_id
+        ).order_by('id')
 
-    template = get_template(template_path)
-    html = template.render(context)
+        # Get the enquiry number from consignment
+        enquiry_id = consignment.co_enquirynumber_id
 
-    # Create PDF
-    pisa_status = pisa.CreatePDF(html, dest=response)
+        # Get all vehicle details related to that enquiry
+        vehicle_details = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_id)
+        vehicle_number = vehicle_details.values_list('va_vehiclenumber', flat=True)
+        Driver_name = vehicle_details.values_list('va_drivername', flat=True)
+        Driver_lic = vehicle_details.values_list('va_driver_lic', flat=True)
+        Driver_number = vehicle_details.values_list('va_drivernumber', flat=True)
 
-    if pisa_status.err:
-        return HttpResponse('We has some error <pre>' + html + '</pre>')
-    return response
+        # Convert vehicle FK IDs to registration numbers
+        vehicle_number_val = []
+        for i in vehicle_number:
+            if i:
+                reg_number = VehiclemasterInfo.objects.get(pk=i).vm_registrationnumber
+                vehicle_number_val.append(reg_number)
 
+        context = {
+            'consignment_details': [consignment],
+            'consignment_goods_list': consignment_goods_list,
+            'vehicle_details': vehicle_details,
+            'vehicle_number': list(vehicle_number_val),
+            'Driver_name': list(Driver_name),
+            'Driver_lic': list(Driver_lic),
+            'Driver_number': list(Driver_number),
+        }
+
+        # Prepare PDF
+        file_name = f"Consignment_Note_{consignment_num}.pdf"
+        template_path = 'asset_mgt_app/consignement_note_pdf.html'
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
+
+        template = get_template(template_path)
+        html = template.render(context)
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+
+        return response
+
+    except ConsignmentdetailInfo.DoesNotExist:
+        return HttpResponse("Invalid consignment note ID.")
 
 
 @login_required(login_url='login_page')

@@ -145,14 +145,11 @@
 <!--} );-->
 <!--</script>-->
 <script>
-$(document).ready(function () {
+    $(document).ready(function () {
     // Initialize DataTable
     var table = new DataTable('#dispatch_master_list', {
         responsive: {
-            details: {
-                type: 'inline',
-                target: 0
-            }
+            details: { type: 'inline', target: 0 }
         },
         columnDefs: [
             { className: 'control', orderable: false, targets: 0 },
@@ -171,24 +168,56 @@ $(document).ready(function () {
             if (expiry) {
                 let today = new Date().toISOString().split('T')[0];
                 if (expiry < today) {
-                    $(this).css({"background-color": "red", "color": "white"});
+                    $(this).css({ "background-color": "red", "color": "white" });
                     let checkbox = $(this).find('.row-checkbox');
                     checkbox.prop("disabled", true);
-                    // Remove old click handler to avoid multiple alerts
-                    $(this).off('click').on('click', function() {
-                        alert("This stock is expired. You cannot select it!");
+
+                    // Remove old handlers to avoid duplicate alerts
+                    $(this).off('click').on('click', function () {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Expired!",
+                            text: "This stock is expired. You cannot select it!"
+                        });
                     });
                 }
             }
         });
     }
 
-    // Highlight expired rows on initial load
+    // Highlight expired rows on load + redraw
     highlightExpiredRows();
-
-    // Highlight expired rows every time table is redrawn (pagination, search, etc.)
-    table.on('draw', function() {
+    table.on('draw', function () {
         highlightExpiredRows();
+    });
+
+    // Checkbox confirmation with auto reload
+    $(document).on("change", ".expiry-checkbox", function () {
+        if (this.checked) {
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Do you want to mark this as expired?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, mark it!",
+                cancelButtonText: "No, cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: "Marked!",
+                        text: "The row has been marked as expired.",
+                        icon: "success",
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Auto refresh after success
+                        window.location.reload();
+                    });
+                } else {
+                    this.checked = false; // reset if cancelled
+                }
+            });
+        }
     });
 
     // Partial dispatch modal logic
@@ -228,7 +257,7 @@ $(document).ready(function () {
             },
             success: function () {
                 $('#partialDispatchModal').modal('hide');
-                location.reload();  // or dynamically update the row
+                location.reload();
             },
             error: function (xhr) {
                 alert('Error: ' + xhr.responseText);
@@ -236,32 +265,43 @@ $(document).ready(function () {
         });
     });
 
-    // Check-Out button logic
-    $('#add_btn').on('click', function(e){
+    // Add button logic
+    $('#add_btn').on('click', function (e) {
         e.preventDefault();
         let selectedIndexes = table.rows({ selected: true }).indexes();
         let selectedData = table.rows({ selected: true }).data();
-        var elements = [];
+        let len1 = selectedIndexes.length;
+        console.log("Total selected: ", len1);
 
-        selectedIndexes.each(function(idx, loopIndex) {
+        var elements = [];
+        selectedIndexes.each(function (idx, loopIndex) {
             let row = table.row(idx).node();
             let expiry = $(row).data('expiry');
             let today = new Date().toISOString().split('T')[0];
+
             if (!expiry || expiry >= today) {
-                elements.push(selectedData[loopIndex][12]);  // column 12 = WH Stock Number
+                elements.push(selectedData[loopIndex][12]); // col 12 = WH Stock Number
             }
         });
 
-        $.ajax({
-            url: '{% url "dispatch_add_goods" %}',
-            type: 'GET',
-            data: { 'myList[]': elements },
-            success: function(response) {
-                location.reload();
-            }
-        });
+        if (elements.length > 0) {
+            $.ajax({
+                url: '{% url "dispatch_add_goods" %}',
+                type: 'GET',
+                data: { 'myList[]': elements },
+                success: function () {
+                    location.reload();
+                }
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "No valid items selected!",
+                text: "Please select non-expired stock only."
+            });
+        }
     });
-
 });
+
 </script>
 {% endblock content %}
