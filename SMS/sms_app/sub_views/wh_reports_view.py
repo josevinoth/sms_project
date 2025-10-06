@@ -6,7 +6,7 @@ from django.db.models.functions import Coalesce,Round
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from datetime import datetime
-from ..models import Warehouse_goods_info,ExpenseExtinfo,BayInfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,DamagereportInfo,DamageInfo,LocationmasterInfo
+from ..models import Warehouse_goods_info,ExpenseExtinfo,BayInfo,Location_info,UnitInfo,Business_Sol_info,TrbusinesstypeInfo,CustomerInfo,DamagereportInfo,DamageInfo,LocationmasterInfo,Gatein_info
 
 
 def wh_damage_report(request):
@@ -383,3 +383,113 @@ def wh_space_utilization_report(request):
     }
 
     return render(request, "asset_mgt_app/WH_space_utilization_report.html", context)
+
+def warehouse_dashboard(request):
+    first_name = request.session.get('first_name')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    selected_branch = request.GET.get('branch')
+    selected_unit = request.GET.get('unit')
+
+    # Get all branches and units
+    branches = Location_info.objects.all()
+    units = UnitInfo.objects.all()
+
+    # Filter units if branch is selected
+    if selected_branch:
+        units = units.filter(ui_branch_name__loc_name=selected_branch)
+
+    # Build a common filter for Warehouse_goods_info
+    filters = {}
+    if from_date:
+        filters["wh_checkin_time__gte"] = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+    if to_date:
+        filters["wh_checkin_time__lte"] = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+    if selected_branch:
+        filters["wh_unit__ui_branch_name__loc_name"] = selected_branch
+    if selected_unit:
+        filters["wh_unit__unit_name"] = selected_unit
+
+    # KPI Counts
+    total_branches = Location_info.objects.count()
+    total_units = units.count()
+    total_bays = BayInfo.objects.filter(**({"bay_branch_name__loc_name": selected_branch} if selected_branch else {})).count()
+    total_customers = Gatein_info.objects.values("gatein_customer").distinct().count()
+    vehicle_count = Gatein_info.objects.values("gatein_truck_number").distinct().count()
+
+    # Space Utilization
+    space_filter = {}
+    if selected_branch:
+        space_filter["lm_wh_location__loc_name"] = selected_branch
+    if selected_unit:
+        space_filter["lm_wh_unit__unit_name"] = selected_unit
+
+    space_summary = LocationmasterInfo.objects.filter(**space_filter).aggregate(
+        total_area=Sum("lm_size"),
+        occupied_area=Sum("lm_area_occupied"),
+        available_area=Sum("lm_available_area"),
+        total_volume=Sum("lm_total_volume"),
+        occupied_volume=Sum("lm_volume_occupied"),
+        available_volume=Sum("lm_available_volume"),
+    )
+
+    space_utilization_percent = (
+        (space_summary["occupied_area"] / space_summary["total_area"] * 100) if space_summary["total_area"] else 0
+    )
+
+    # Revenue and Top Customers
+    revenue_summary = Warehouse_goods_info.objects.filter(**filters).aggregate(
+        total_invoice_amount=Sum("wh_invoice_amount_inr"),
+        total_tonnage=Sum("wh_goods_weight"),
+        total_revenue=Sum("wh_total_invoice_cost")
+    )
+
+    top_customers = (
+        Warehouse_goods_info.objects.filter(**filters)
+        .values("wh_customer_name__cu_nameshort")
+        .annotate(total_revenue=Sum("wh_total_invoice_cost"))
+        .order_by("-total_revenue")[:10]
+    )
+    top_customers_json = json.dumps(list(top_customers), default=str)
+
+    # Branch-wise area utilization
+    branch_area = LocationmasterInfo.objects.filter(**space_filter).values("lm_wh_location__loc_name").annotate(
+        occupied=Sum("lm_area_occupied"),
+        available=Sum("lm_available_area")
+    )
+
+    # Unit-wise area utilization
+    unit_area = LocationmasterInfo.objects.filter(**space_filter).values("lm_wh_unit__unit_name").annotate(
+        occupied=Sum("lm_area_occupied"),
+        available=Sum("lm_available_area")
+    )
+
+    context = {
+        "first_name": first_name,
+        "branches": branches,
+        "units": units,
+        "selected_branch": selected_branch,
+        "selected_unit": selected_unit,
+        "from_date": from_date,
+        "to_date": to_date,
+
+        "total_branches": total_branches,
+        "total_units": total_units,
+        "total_bays": total_bays,
+        "total_customers": total_customers,
+        "vehicle_count": vehicle_count,
+
+        "space_summary": space_summary,
+        "space_summary_json": json.dumps(space_summary, default=str),
+        "space_utilization_percent": round(space_utilization_percent, 2),
+
+        "revenue_summary": revenue_summary,
+        "top_customers": top_customers,
+        "top_customers_json": top_customers_json,
+
+        "branch_area_json": json.dumps(list(branch_area), default=str),
+        "unit_area_json": json.dumps(list(unit_area), default=str),
+    }
+
+    return render(request, "asset_mgt_app/warehouse_dashboard.html", context)
+

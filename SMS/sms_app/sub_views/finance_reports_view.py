@@ -1040,7 +1040,6 @@ NON_OPERATIONAL_EXPENSES_CATEGORIES = {
     "Telephone & Mobile": "bf_telephone_mobile_expenses",
     "Training": "bf_training_expenses",
     "Travelling": "bf_travelling_expenses",
-
 }
 
 BUDGET_FIELD_MAPPING = {

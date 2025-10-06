@@ -1,0 +1,506 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block title %}Warehouse Dashboard{% endblock %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+{% load currency_format %}
+<style>
+  .metric-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: 0.3s ease-in-out;
+    height: 100%;
+  }
+
+  .metric-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .metric-icon {
+    font-size: 20px;
+  }
+
+  .metric-label {
+    font-size: 14px;
+    font-weight: 500;
+    padding:5px;
+    font-weight: bold;
+  }
+
+  .metric-value {
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 8px;
+  }
+</style>
+<div class="container-fluid d-flex align-items-center justify-content-between py-3">
+  <div>
+    <a href="{% url 'finance_reports' %}" class="btn btn-primary">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+  </div>
+  <div class="flex-grow-1 d-flex justify-content-center">
+    <div class="rounded text-center bg-info shadow-box px-4 py-2">
+      <h3>Warehouse Dashboard</h3>
+    </div>
+  </div>
+  <div style="width: 80px;"></div>
+</div>
+<br>
+<div class="container-fluid">
+  <div class="row align-items-center">
+    <div class="col-md-2">
+      <label for="branch-filter"><b>Branch:</b></label>
+      <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+        <option value="">All</option>
+        {% for branch in branches %}
+        <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
+          {{ branch.loc_name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!--        <div class="col-md-2">-->
+    <!--            <label for="company-filter"><b>Company:</b></label>-->
+    <!--            <select id="company-filter" name="company" class="form-control box-shadow rounded">-->
+    <!--                <option value="">All</option>-->
+    <!--                {% for company in companies %}-->
+    <!--                <option value="{{ company.bvm_business }}" {% if company.bvm_business == selected_company %} selected {% endif %}>-->
+    <!--                    {{ company.bvm_business }}-->
+    <!--                </option>-->
+    <!--                {% endfor %}-->
+    <!--            </select>-->
+    <!--        </div>-->
+
+    <!-- From Date -->
+    <div class="col-md-2">
+      <label for="from-date"><b>From:</b></label>
+      <input type="date" id="from-date" name="from_date" value="{{ from_date|default_if_none:'' }}" class="form-control box-shadow">
+    </div>
+
+    <!-- To Date -->
+    <div class="col-md-3">
+      <label for="to-date"><b>To:</b></label>
+      <input type="date" id="to-date" name="to_date" value="{{ to_date|default_if_none:'' }}" class="form-control box-shadow">
+    </div>
+
+  </div>
+</div>
+
+<br>
+<div class="container-fluid">
+  <!-- Top 4 cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="metric-card h-100 text-center">
+        <div class="d-flex align-items-center justify-content-center mb-2">
+          <div class="metric-icon text-primary me-2"><i class="fas fa-code-branch"></i></div>
+          <div class="metric-label">Branches</div>
+        </div>
+        <div class="metric-value">{{ total_branches }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="metric-card h-100 text-center">
+        <div class="d-flex align-items-center justify-content-center mb-2">
+          <div class="metric-icon text-success me-2"><i class="fas fa-cubes"></i></div>
+          <div class="metric-label">Units</div>
+        </div>
+        <div class="metric-value">{{ total_units }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="metric-card h-100 text-center">
+        <div class="d-flex align-items-center justify-content-center mb-2">
+          <div class="metric-icon text-info me-2"><i class="fas fa-warehouse"></i></div>
+          <div class="metric-label">Bays</div>
+        </div>
+        <div class="metric-value">{{ total_bays }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="metric-card h-100 text-center">
+        <div class="d-flex align-items-center justify-content-center mb-2">
+          <div class="metric-icon text-warning me-2"><i class="fas fa-users"></i></div>
+          <div class="metric-label">Customers</div>
+        </div>
+        <div class="metric-value">{{ total_customers }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom 4 cards -->
+  <div class="row g-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="metric-card h-100 text-center">
+        <div class="d-flex align-items-center justify-content-center mb-2">
+          <div class="metric-icon text-primary me-2"><i class="fas fa-truck"></i></div>
+          <div class="metric-label">Vehicle Count</div>
+        </div>
+        <div class="metric-value">{{ vehicle_count }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="metric-card h-100 text-center">
+        <div class="d-flex align-items-center justify-content-center mb-2">
+          <div class="metric-icon text-danger me-2"><i class="fas fa-rupee-sign"></i></div>
+          <div class="metric-label">Revenue</div>
+        </div>
+        <div class="metric-value">₹{{ revenue_summary.total_revenue|default:0|floatformat:2|to_lakhs }}L</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="metric-card h-100 text-center">
+        <div class="d-flex align-items-center justify-content-center mb-2">
+          <div class="metric-icon text-secondary me-2"><i class="fas fa-file-invoice"></i></div>
+          <div class="metric-label">Invoice Amount</div>
+        </div>
+        <div class="metric-value">₹{{ revenue_summary.total_invoice_amount|default:0|floatformat:2|to_crores }}</div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="metric-card h-100 text-center">
+        <div class="d-flex align-items-center justify-content-center mb-2">
+          <div class="metric-icon text-dark me-2"><i class="fas fa-weight-hanging"></i></div>
+          <div class="metric-label">Tonnage</div>
+        </div>
+        <div class="metric-value">{{ revenue_summary.total_tonnage|default:0|floatformat:2|to_tons }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="row g-4 mt-4">
+  <!-- Left: Space Utilization Pie -->
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body d-flex flex-column align-items-center justify-content-center">
+        <h5 class="card-title mb-3">Space Utilization</h5>
+        <canvas id="spacePie" class="bg-white box-shadow rounded"></canvas>
+      </div>
+    </div>
+  </div>
+  <!-- Middle: Area & Volume Donut -->
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body d-flex flex-column align-items-center justify-content-center">
+        <h5 class="card-title mb-3">Area & Volume</h5>
+        <canvas id="areaVolumeDonut" class="bg-white box-shadow rounded"></canvas>
+      </div>
+    </div>
+  </div>
+  <!-- Right: Area & Volume Summary -->
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Area & Volume Summary</h5>
+        <ul class="list-group shadow-sm">
+          <li class="list-group-item">Total Area: {{ space_summary.total_area|default:0|floatformat:2 }} sq.ft</li>
+          <li class="list-group-item">Occupied Area: {{ space_summary.occupied_area|default:0|floatformat:2 }} sq.ft</li>
+          <li class="list-group-item">Available Area: {{ space_summary.available_area|default:0|floatformat:2 }} sq.ft</li>
+          <li class="list-group-item">Total Volume: {{ space_summary.total_volume|default:0|floatformat:2 }} m³</li>
+          <li class="list-group-item">Occupied Volume: {{ space_summary.occupied_volume|default:0|floatformat:2 }} m³</li>
+          <li class="list-group-item">Utilization: {{ space_utilization_percent|floatformat:2 }}%</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Top Customers -->
+<div class="row mt-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Top Customers by Revenue</h5>
+        <table class="table table-striped shadow-sm">
+          <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Total Revenue (₹)</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for customer in top_customers %}
+          <tr>
+            <td>{{ customer.wh_customer_name__cu_nameshort }}</td>
+            <td>{{ customer.total_revenue|floatformat:2 }}</td>
+          </tr>
+
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Top Customers by Revenue</h5>
+        <canvas id="customerRevenueBar" width="300" height="200" class="bg-white box-shadow rounded"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+<br>
+<div class="col-md-4">
+  <div class="card shadow-sm">
+    <div class="card-body d-flex flex-column align-items-center justify-content-center">
+      <h5 class="card-title mb-3">Branch/Unit wise space Utilization</h5>
+      <canvas id="nestedDonut" class="bg-white box-shadow rounded"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  const spaceCtx = document.getElementById('spacePie').getContext('2d');
+new Chart(spaceCtx, {
+  type: 'pie',
+  data: {
+      labels: ['Occupied Space', 'Available Space'],
+      datasets: [{
+          data: [
+            {{ space_summary.occupied_area|default:0 }},
+            {{ space_summary.available_area|default:0 }}
+          ],
+          backgroundColor: ['#ff6384', '#36a2eb'],
+      }]
+  },
+  options: {
+      responsive: true,
+      plugins: {
+          legend: { position: 'bottom' },
+          datalabels: {
+              formatter: (value, ctx) => {
+                  let dataset = ctx.chart.data.datasets[0].data;
+                  let total = dataset.reduce((a, b) => a + b, 0);
+                  let percentage = (value / total * 100).toFixed(1) + "%";
+                  return percentage;
+              },
+              color: "#fff",
+              font: { weight: "bold", size: 14 }
+          }
+      }
+  },
+  plugins: [ChartDataLabels]
+});
+
+</script>
+<script>
+  const customerData = JSON.parse('{{ top_customers_json|escapejs }}');
+  const bubbleCtx = document.getElementById("customerRevenueBar").getContext("2d");
+
+  // Normalize bubble size based on revenue (so bubbles don’t get too huge)
+  function scaleRadius(value, maxRevenue) {
+    const minRadius = 5;
+    const maxRadius = 40; // adjust if bubbles are too small/large
+    return Math.max(minRadius, (value / maxRevenue) * maxRadius);
+  }
+
+  const maxRevenue = Math.max(...customerData.map(c => c.total_revenue));
+  const bubbleData = customerData.map((c, i) => ({
+    x: i + 1, // customer index
+    y: c.total_revenue,
+    r: scaleRadius(c.total_revenue, maxRevenue),
+    customer: c.wh_customer_name__cu_nameshort
+  }));
+
+  new Chart(bubbleCtx, {
+    type: 'bubble',
+    data: {
+      datasets: [{
+        label: "Customer Revenue",
+        data: bubbleData,
+        backgroundColor: "rgba(54, 162, 235, 0.5)",
+        borderColor: "#36a2eb",
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const data = ctx.raw;
+              return `${data.customer}: ₹${data.y}`;
+            }
+          }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: "Customers" },
+          ticks: {
+            callback: (val, index) => customerData[index]?.wh_customer_name__cu_nameshort || index + 1
+          }
+        },
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: "Revenue (₹)" }
+        }
+      }
+    }
+  });
+</script>
+
+
+<script>
+  const donutCtx = document.getElementById('areaVolumeDonut').getContext('2d');
+  new Chart(donutCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Occupied Area', 'Available Area', 'Occupied Volume', 'Remaining Volume'],
+      datasets: [{
+        data: [
+          {{ space_summary.occupied_area|default:0 }},
+          {{ space_summary.available_area|default:0 }},
+          {{ space_summary.occupied_volume|default:0 }},
+          {{ space_summary.total_volume|default:0 }} - {{ space_summary.occupied_volume|default:0 }}
+        ],
+        backgroundColor: ['#ff6384', '#36a2eb', '#4bc0c0', '#ffcd56']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+          legend: { position: 'bottom' },
+          datalabels: {
+              formatter: (value, ctx) => {
+                  let dataset = ctx.chart.data.datasets[0].data;
+                  let total = dataset.reduce((a, b) => a + b, 0);
+                  let percentage = (value / total * 100).toFixed(1) + "%";
+                  return percentage;
+              },
+              color: "#fff",
+              font: { weight: "bold", size: 14 }
+          }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+
+</script>
+<script>
+  const ctxNested = document.getElementById('nestedDonut').getContext('2d');
+
+  // Load space summary JSON
+  const spaceSummary = JSON.parse('{{ space_summary_json|escapejs }}');
+
+  // Inner Ring → Area
+  const areaData = [
+    spaceSummary.occupied_area || 0,
+    spaceSummary.available_area || 0
+  ];
+
+  // Outer Ring → Volume
+  const volumeData = [
+    spaceSummary.occupied_volume || 0,
+    spaceSummary.available_volume || 0
+  ];
+
+  new Chart(ctxNested, {
+    type: 'doughnut',
+    data: {
+      labels: [
+        'Occupied Area', 'Available Area',
+        'Occupied Volume', 'Available Volume'
+      ],
+      datasets: [
+        {
+          label: 'Area',
+          data: areaData,
+          backgroundColor: ['#ff6384', '#36a2eb'], // red + blue
+          cutout: '60%',
+          radius: '80%'
+        },
+        {
+          label: 'Volume',
+          data: volumeData,
+          backgroundColor: ['#ff9f40', '#4bc0c0'], // orange + teal
+          cutout: '80%',
+          radius: '100%'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        datalabels: {
+          color: '#fff',
+          font: {
+            weight: 'bold'
+          },
+          formatter: (value, ctx) => {
+            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return percentage + '%'; // show only percentage
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              let value = ctx.raw;
+              let percentage = ((value / total) * 100).toFixed(1);
+              return `${ctx.label} - ${ctx.label}: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]  // enable the plugin
+  });
+
+</script>
+
+
+<script>
+  document.getElementById('branch-filter').addEventListener('change', updateFilters);
+
+    document.getElementById('from-date').addEventListener('change', updateFilters);
+    document.getElementById('to-date').addEventListener('change', updateFilters);
+
+    function updateFilters() {
+    const branch = document.getElementById('branch-filter').value;
+
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const url = new URL(window.location.href);
+
+    if (branch) {
+        url.searchParams.set('branch', branch);
+    } else {
+        url.searchParams.delete('branch');
+    }
+
+    if (fromDate) {
+        url.searchParams.set('from_date', fromDate);
+    } else {
+        url.searchParams.delete('from_date');
+    }
+
+    if (toDate) {
+        url.searchParams.set('to_date', toDate);
+    } else {
+        url.searchParams.delete('to_date'); // Clear the parameter if no date is provided
+    }
+
+    console.log(url.toString());
+    window.location.href = url.toString();
+}
+</script>
+{% endblock %}
