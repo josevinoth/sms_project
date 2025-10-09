@@ -113,7 +113,7 @@ def tripdetail_add(request,tripdetail_id=0):
             tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
             request.session['ses_tripdetail_id']=tripdetail_id
             trip_det_form = TripdetailaddForm(instance=tripdetail)
-            tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
+            tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
             trip_list = TripdetailInfo.objects.select_related('tr_approval', 'tr_approval__ta_approval_status').filter(tr_enquirynumber=enquiry_num_id)
             status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3,8])
@@ -325,6 +325,12 @@ def trip_email(request):
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
     trip = TripdetailInfo.objects.get(pk=tripdetail_id)
+    status_map = {
+        'trip started': 'started',
+        'trip closed': 'closed',
+    }
+
+    trip_status_text = f"Trip has been {status_map.get(trip.tc_financestatus, trip.tc_financestatus)}"
 
     recipient_list = [email.strip() for email in recipient.split(',')]
 
@@ -360,6 +366,7 @@ def trip_email(request):
             </head>
             <body>
                 <p>Dear Team,</p>
+                <p>{trip_status_text}</p>
                 <p>Please find below the trip details:</p>
                 <table>
                     <tr><th>Trip Number</th><td>{trip.tr_tripnumber}</td></tr>

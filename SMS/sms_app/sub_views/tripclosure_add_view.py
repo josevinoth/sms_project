@@ -95,7 +95,7 @@ def tripclosure_add(request,tripclosure_id=0):
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
-            tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
+            tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
             status_selected = (TripdetailInfo.objects.get(pk=tripclosure_id).tc_financestatus.id)
             status_list = list(Tripstatusinfo.objects.filter(id__in=[4,5,6,7]))

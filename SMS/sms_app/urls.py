@@ -733,6 +733,7 @@ urlpatterns = [
     path('warehouse_dashboard/', views.warehouse_dashboard, name='warehouse_dashboard'),
     path('customer_contract_rate_report/', views.customer_contract_rate_report, name='customer_contract_rate_report'),
     path("get-customer-pan-gst/", views.get_customer_pan_gst, name="get_customer_pan_gst"),
+    path('vehicle_allotment_email/', views.vehicle_allotment_email, name='vehicle_allotment_email'),
 
 ]
 

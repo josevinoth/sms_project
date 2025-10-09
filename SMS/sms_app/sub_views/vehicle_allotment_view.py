@@ -7,6 +7,7 @@ from ..forms import VehicleallotmentForm
 from ..models import Enquirynotevehicle,TripdetailInfo,OwnershipInfo,VehiclemasterInfo,EnquirynoteInfo,Vehicle_allotmentInfo,VendorratemasterInfo1, RtratemasterInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
+from .send_department_email import send_department_email
 
 from ..sub_models.vendor_info_mod import Vendor_info
 
@@ -57,6 +58,7 @@ def vehicle_allotment_add(request,vehicle_allotment_id=0,enquiry_id=0):
     if request.method == "GET":
         if vehicle_allotment_id == 0:
             print("I am inside Get add vehicle_allotments")
+            request.session['ses_vehicle_allotment_id'] = vehicle_allotment_id
             enquiry_num_id = request.session.get('enquiry_num_id')
             enquiry_num_id = enquiry_num_id
             vehicle_allotment_form = VehicleallotmentForm()
@@ -399,3 +401,90 @@ def vendor_filter(request):
         return JsonResponse({'vendor_filter': [], 'error': 'Invalid Enquiry Number'}, status=400)
     except EnquirynoteInfo.DoesNotExist:
         return JsonResponse({'vendor_filter': [], 'error': 'Invalid Enquiry Number'}, status=400)
+
+@login_required(login_url='login_page')
+def vehicle_allotment_email(request):
+    recipient = request.POST.get('recipient')
+    va_id = request.POST.get('va_id')
+
+    if not va_id:
+        messages.error(request, "Vehicle Allotment ID is missing. Please try again.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    try:
+        va = Vehicle_allotmentInfo.objects.get(pk=va_id)
+    except Vehicle_allotmentInfo.DoesNotExist:
+        messages.error(request, "Vehicle allotment record not found.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    # Convert recipient string to list
+    recipient_list = [email.strip() for email in recipient.split(',') if email.strip()]
+
+    subject = f"Vehicle Allotment Update - {va.va_vehiclenumber}"
+
+    email_body = f"""
+        <html>
+            <head>
+                <style>
+                    table {{
+                        width: 60%;
+                        border-collapse: collapse;
+                        font-family: Arial, sans-serif;
+                        font-size: 14px;
+                        border: 1px solid black;
+                    }}
+                    th, td {{
+                        border: 1px solid black;
+                        padding: 10px;
+                    }}
+                    th {{
+                        background-color: #f4f4f4;
+                        color: #333;
+                        text-align: left;
+                    }}
+                    td {{
+                        vertical-align: top;
+                    }}
+                    .remarks div {{
+                        margin-bottom: 10px;
+                    }}
+                </style>
+            </head>
+            <body>
+                <p>Dear Team,</p>
+                <p>Please find below the vehicle allotment details:</p>
+                <table>
+                    <tr><th>Enquiry Number</th><td>{va.va_enquirynumber}</td></tr>
+                    <tr><th>Vehicle Source</th><td>{va.va_vehiclesource}</td></tr>
+                    <tr><th>Vehicle Type Requested</th><td>{va.va_vehicletype}</td></tr>
+                    <tr><th>Vehicle Type Placed</th><td>{va.va_vehicletype_placed}</td></tr>
+                    <tr><th>Vehicle Number</th><td>{va.va_vehiclenumber}</td></tr>
+                    <tr><th>Driver Name</th><td>{va.va_drivername}</td></tr>
+                    <tr><th>Driver License</th><td>{va.va_driver_lic}</td></tr>
+                    <tr><th>License Expiry</th><td>{va.va_driver_lic_expiry}</td></tr>
+                    <tr><th>Driver Contact</th><td>{va.va_drivernumber}</td></tr>
+                    <tr><th>Vendor</th><td>{va.va_vendor}</td></tr>
+                    <tr><th>Updated By</th><td>{va.va_updated_by}</td></tr>
+                    <tr>
+                        <th>Remarks</th>
+                        <td class="remarks">
+                            {''.join(f'<div>{remark}</div>' for remark in (va.va_remarks or '').splitlines())}
+                        </td>
+                    </tr>
+                </table>
+                <p>Regards,<br>Transport Admin</p>
+            </body>
+        </html>
+    """
+
+    # Send email (no attachment for allotment email)
+    send_department_email(
+        department='itadmin',
+        subject=subject,
+        message=email_body,
+        recipient_list=recipient_list,
+        email_type=1
+    )
+
+    messages.success(request, "Vehicle Allotment email sent successfully.")
+    return redirect(request.META.get('HTTP_REFERER', '/'))
