@@ -75,7 +75,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assigned To</span>
 									</div>
-									{% render_field form.en_assignedto class="form-control" %}
+									{% render_field form.en_assignedto id="en_assignedto" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -189,6 +189,7 @@
     });
 
     document.getElementById("en_updated_by").value = '{{user_id}}';
+    document.getElementById("en_assignedto").value = '{{user_id}}';
 
     var enquiry_num_id_val = document.getElementById("env_enquirynumber").value;
     var x = '{{enquiry_num_id}}';
@@ -235,7 +236,10 @@
     }
 </script>
 <script>
-	$("#en_fromlocaion").select2({
+	$("#en_customername").select2({
+    	width: 'resolve'
+    });
+    $("#en_fromlocaion").select2({
     	width: 'resolve'
     });
     $("#en_touchpoint").select2({

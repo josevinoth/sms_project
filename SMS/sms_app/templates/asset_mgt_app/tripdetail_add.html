@@ -476,6 +476,7 @@
     if (categoryValue === "2") {
         tripStatus.disabled = false;
         tripStatus.classList.remove("select-disabled-style");
+        tripStatus.value = "1";  // <-- set status id to 2
     } else if (categoryValue === "1") {
         if (isHighValueGoods) {
             // High Value Goods: need checklist approved and invoice approved
@@ -542,7 +543,17 @@ if (categoryValue == 1) {
         }
     };
 </script>
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    $("#tr_departedlocation, #tr_reportedlocation").select2({
+        width: 'resolve',
+        placeholder: "-- Select --",
+        allowClear: true
+    });
+});
 
-
+</script>
+{% endblock scripts %}
 
 {% endblock content %}
