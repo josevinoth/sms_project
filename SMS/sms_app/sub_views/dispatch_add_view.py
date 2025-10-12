@@ -319,7 +319,7 @@ def dispatch_add_goods(request):
         remaining_weight = goods_info.wh_goods_weight - total_dispatched_weight
         remaining_qty = goods_info.wh_goods_pieces - total_dispatched
 
-        if remaining_qty <= 0 or remaining_weight <= 0:
+        if remaining_qty < 0 or remaining_weight < 0:
             continue
 
         # Create dispatch entry with remaining quantity

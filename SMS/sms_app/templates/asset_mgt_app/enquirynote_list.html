@@ -55,21 +55,29 @@
             <td>{{ data.enquiry.en_tolocation }}</td>
             <td>{{ data.enquiry.en_assignedto }}</td>
 
-            <!-- Vehicle Number -->
-            <td>
-                {% if data.enquiry.id %}  {# Ensure enquiry exists #}
-                {# Always show "Add New" link first #}
-                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id 'none' %}" style="color: red;">Add New</a><br>
-                {# If vehicles are assigned, list them #}
-                {% if data.vehicles %}
-                {% for vehicle in data.vehicles %}
-                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id vehicle %}">{{ vehicle }}</a><br>
-                {% endfor %}
-                {% endif %}
-                {% else %}
-                <a class="link disable_a_href_list" style="color: red;">Add New</a>  {# Disable link when no enquiry exists #}
-                {% endif %}
-            </td>
+                     <!-- Vehicle Number -->
+<td>
+    {% if data.enquiry.id %}
+        {% if not data.limit_reached %}
+            <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id 'none' %}" style="color: red;">
+                Add New
+            </a><br>
+        {% else %}
+<span style="color: gray; font-weight: 600;">Allotted</span>
+        {% endif %}
+
+        {% if data.vehicles %}
+            {% for vehicle in data.vehicles %}
+                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id vehicle %}">
+                    {{ vehicle }}
+                </a><br>
+            {% endfor %}
+        {% endif %}
+    {% else %}
+        <a class="link disable_a_href_list" style="color: red;">Add New</a>
+    {% endif %}
+</td>
+
 
             <!-- Consignment Number -->
             <td>

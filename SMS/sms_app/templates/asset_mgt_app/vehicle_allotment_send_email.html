@@ -1,0 +1,41 @@
+{% load widget_tweaks %}
+{% block content %}
+<form method="post" action="{% url 'vehicle_allotment_email' %}">
+    {% csrf_token %}
+    <div class="input-group mb-2 mr-sm-2">
+        <div class="input-group-prepend">
+            <div class="input-group-text">To</div>
+        </div>
+        <input type="text" id="recipient" name="recipient" class="form-control"
+               placeholder="Recipient emails (comma separated)">
+    </div>
+
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-10">
+            <div class="message text-center">
+                {% for message in messages %}
+                <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-1"></div>
+    </div>
+
+    <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-envelope-square"></i> Send Email
+        </button>
+    </div>
+</form>
+
+<script>
+function email_message_fn() {
+    let message = "Dear Team,\n\n" +
+                  "Please find the vehicle allotment details below.\n\n" +
+                  "Regards,\n" +
+                  "BVM Transport Admin";
+    console.log("Prepared default email message:", message);
+}
+</script>
+{% endblock content %}
