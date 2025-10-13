@@ -1,7 +1,6 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-
 <form method="POST" id="enquiry_note" action=""  data-load_customer_model-url="{% url 'load_customer_model' %}">
 	{% csrf_token %}
 	<div class="row">
@@ -76,25 +75,25 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assigned To</span>
 									</div>
-									{% render_field form.en_assignedto class="form-control" %}
+									{% render_field form.en_assignedto id="en_assignedto" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">From Location</span>
 									</div>
-									{% render_field form.en_fromlocaion class="form-control" %}
+									{% render_field form.en_fromlocaion id="en_fromlocaion" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Touch Point 1</span>
 									</div>
-									{% render_field form.en_touchpoint class="form-control" %}
+									{% render_field form.en_touchpoint id="en_touchpoint" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Touch Point 2</span>
 									</div>
-									{% render_field form.en_touchpoint2 class="form-control" %}
+									{% render_field form.en_touchpoint2 id="en_touchpoint2" class="form-control" %}
 								</div>
 							</div>
 							<div class="col-3">
@@ -102,19 +101,19 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Touch Point 3</span>
 									</div>
-									{% render_field form.en_touchpoint3 class="form-control" %}
+									{% render_field form.en_touchpoint3 id="en_touchpoint3" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Touch Point 4</span>
 									</div>
-									{% render_field form.en_touchpoint4 class="form-control" %}
+									{% render_field form.en_touchpoint4 id="en_touchpoint4" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">To Location</span>
 									</div>
-									{% render_field form.en_tolocation class="form-control" %}
+									{% render_field form.en_tolocation id="en_tolocation" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -190,6 +189,7 @@
     });
 
     document.getElementById("en_updated_by").value = '{{user_id}}';
+    document.getElementById("en_assignedto").value = '{{user_id}}';
 
     var enquiry_num_id_val = document.getElementById("env_enquirynumber").value;
     var x = '{{enquiry_num_id}}';
@@ -234,6 +234,32 @@
             });
         }
     }
+</script>
+<script>
+	$("#en_customername").select2({
+    	width: 'resolve'
+    });
+    $("#en_fromlocaion").select2({
+    	width: 'resolve'
+    });
+    $("#en_touchpoint").select2({
+    	width: 'resolve'
+    });
+    $("#en_touchpoint1").select2({
+    	width: 'resolve'
+    });
+    $("#en_touchpoint2").select2({
+    	width: 'resolve'
+    });
+    $("#en_touchpoint3").select2({
+    	width: 'resolve'
+    });
+    $("#en_touchpoint4").select2({
+    	width: 'resolve'
+    });
+    $("#en_tolocation").select2({
+    	width: 'resolve'
+    });
 </script>
 
 {% endblock content %}

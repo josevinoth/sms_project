@@ -2,6 +2,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 import json
+
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
@@ -168,45 +170,68 @@ def consignmentdetail_delete(request,consignmentdetail_id):
     return redirect(request.META['HTTP_REFERER'])
 
 @login_required(login_url='login_page')
-def consignment_note_pdf(request,consignment_note_id=0):
-    consignment_num=ConsignmentdetailInfo.objects.get(pk=consignment_note_id).co_consignmentnumber
-    consignment_details = (ConsignmentdetailInfo.objects.filter(pk=consignment_note_id))
-    consignment_goods_list=(ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignment_note_id)).order_by('id')
-    vehicle_details=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id))
-    vehicle_number=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_vehiclenumber',flat=True))
-    Driver_name=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_drivername',flat=True))
-    Driver_lic=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_driver_lic',flat=True))
-    Driver_number=(Vehicle_allotmentInfo.objects.filter(va_consignmentnumber=consignment_note_id).values_list('va_drivernumber',flat=True))
-    vehicle_number_val=[]
-    for i in vehicle_number:
-        reg_number=VehiclemasterInfo.objects.get(pk=i).vm_registrationnumber
-        vehicle_number_val.append(reg_number)
+def consignment_note_pdf(request, consignment_note_id=0):
+    try:
+        consignment = ConsignmentdetailInfo.objects.get(pk=consignment_note_id)
+        consignment_num = consignment.co_consignmentnumber
+        vehicle_reg_num = consignment.co_vehicelnumber  # e.g., 'TN22DF8390'
+        enquiry_id = consignment.co_enquirynumber_id
 
-    context = {
-        'consignment_details': consignment_details,
-        'consignment_goods_list': consignment_goods_list,
-        'vehicle_details': vehicle_details,
-        'vehicle_number': list(vehicle_number_val),
-        'Driver_name': list(Driver_name),
-        'Driver_lic': list(Driver_lic),
-        'Driver_number': list(Driver_number),
-    }
-    file_name = str("Consignement Note_") + str(consignment_num) + str(".pdf")
-    template_path = 'asset_mgt_app/consignement_note_pdf.html'
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename={file_name}'
+        # Get all related goods
+        consignment_goods_list = ConsignmentgoodsInfo.objects.filter(
+            cg_consignmentnumber=consignment_note_id
+        ).order_by('id')
 
-    template = get_template(template_path)
-    html = template.render(context)
+        # Get the VehiclemasterInfo ID for this registration number
+        try:
+            vehicle_master = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_reg_num)
+        except VehiclemasterInfo.DoesNotExist:
+            vehicle_master = None
 
-    # Create PDF
-    pisa_status = pisa.CreatePDF(html, dest=response)
+        vehicle_detail = None
+        if vehicle_master:
+            # Now filter Vehicle_allotmentInfo using the FK ID
+            vehicle_detail = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=enquiry_id
+            ).filter(
+                Q(va_vehiclenumber=vehicle_master.id) | Q(va_vehiclenumber_mkt=vehicle_master.id)
+            ).first()
 
-    if pisa_status.err:
-        return HttpResponse('We has some error <pre>' + html + '</pre>')
-    return response
+        if vehicle_detail:
+            vehicle_number_val = [vehicle_reg_num]  # Already have registration number
+            driver_name = [vehicle_detail.va_drivername]
+            driver_lic = [vehicle_detail.va_driver_lic]
+            driver_number = [vehicle_detail.va_drivernumber]
+        else:
+            vehicle_number_val = driver_name = driver_lic = driver_number = []
 
+        context = {
+            'consignment_details': [consignment],
+            'consignment_goods_list': consignment_goods_list,
+            'vehicle_details': [vehicle_detail] if vehicle_detail else [],
+            'vehicle_number': vehicle_number_val,
+            'Driver_name': driver_name,
+            'Driver_lic': driver_lic,
+            'Driver_number': driver_number,
+        }
 
+        # Prepare PDF
+        file_name = f"Consignment_Note_{consignment_num}.pdf"
+        template_path = 'asset_mgt_app/consignement_note_pdf.html'
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
+
+        template = get_template(template_path)
+        html = template.render(context)
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+
+        return response
+
+    except ConsignmentdetailInfo.DoesNotExist:
+        return HttpResponse("Invalid consignment note ID.")
 
 @login_required(login_url='login_page')
 def vehicle_allotted(request):
