@@ -85,9 +85,9 @@ WSGI_APPLICATION = 'SMS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sms_002',
+        'NAME': 'asset_mgt_013',
         'USER': 'postgres',
-        'PASSWORD': 'root',
+        'PASSWORD': '244613',
         'HOST': 'localhost'
     }
 }
@@ -178,12 +178,11 @@ DEPARTMENT_EMAILS = {
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'itadmin@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'D^573929747466an',
+        'EMAIL_HOST_PASSWORD' : 'B)437210387098ad',
     }
 }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
-
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
