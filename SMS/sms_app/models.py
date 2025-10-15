@@ -220,3 +220,4 @@ from .sub_models.wronglabelling_mod import WrongLabellingInfo
 from .sub_models.DG_cargo_checklist_mod import DGcargovalueInfo
 from .sub_models.deviation_mod import DeviationInfo
 from .sub_models.attachment_category_mod import Attach_categoryInfo
+from .sub_models.DmrInfo_report import DmrInfo

@@ -158,3 +158,4 @@ from .sub_views.incident_report_view import incident_add,incident_list,incident_
 from .sub_views.customer_claims_view import customer_claims_add,customer_claims_list,customer_claims_delete,customer_claims_report
 from .sub_views.wrong_labelling_view import wrong_labelling_add,wrong_labelling_list,wrong_labelling_delete,wrong_labelling_report
 from .sub_views.DGcargo_add_view import dg_cargo_add,dg_cargo_list,dg_cargo_delete,dg_cargo_approval_view,update_dg_cargo_approval,dg_cargo_report_list
+from .sub_views.dmr_report_view import trip_report,trip_send_email
