@@ -9,7 +9,7 @@ from ..models import CustomerInfo,Warehouse_goods_info
 from django.shortcuts import redirect
 import openpyxl
 from io import BytesIO
-
+from datetime import datetime
 from ..sub_models.damagereport_mod import DamagereportInfo
 from ..sub_models.gatein_mod import Gatein_info
 
@@ -35,229 +35,378 @@ def dsr_reports(request):
     }
     return render(request, "asset_mgt_app/dsr_report.html", context)
 @login_required(login_url='login_page')
-def dsr_send_email_view(request,pre_gatein_id=None,customer_name=None,subject=None):
+def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject=None):
     print('Entering dsr_send_email_view')
     if request.method == 'POST':
         recipient = request.POST.get('recipient')
-        # subject = request.POST.get('subject')
         message = request.POST.get('message')
-        customer_name_1=customer_name
-        print(customer_name_1)
-        if customer_name_1==None:
+        customer_name_1 = customer_name
+        if customer_name_1 is None:
             customer_name = request.POST.get('ds_customer')
         else:
-            customer_name=customer_name
+            customer_name = customer_name
+
         recipient_list = [email.strip() for email in recipient.split(',')]
 
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "DSR Report"
 
-        # Write the headers
-        headers = [
-            'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival', 'Unloading Start Time',
-            'Unloading End Time', 'Transporter', 'Truck Number', 'Consignor', 'Consignee',
-            'Docs Received', 'HAWB', 'Destination', 'Invoice Number', 'Case Number',
-            'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
-            'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
-            'Invoice Value', 'Invoice Currency', 'Invoice (INR)', 'E-Way Bill#', 'E-Way Bill Validity',
-            'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage/Deviation?','GRN Number','Damages','Deviations','Remarks'
-        ]
+
+        # Get actual customer name
+        customer_obj = CustomerInfo.objects.get(id=customer_name)
+        customer_name_str = customer_obj.cu_name.upper()
+
+        # Step 1: Choose headers based on customer
+        if "DHL" in customer_name_str:
+            headers = ["S.No", "Date & Time Of Arrival", "Un-Loading Start Date & Time", "Un-Loading End Date & Time", "Transporter", "Truck Number","Consigner","Consignee",
+                "Docs Received", "HAWB", "Destination", "Invoice Number", "PO Number",
+                "Invoice Qty", "Invoice Weight (kg)", "Checkin Weight (kg)", "UOM", "Length",
+                "Width", "Height", "Dims Qty",
+                "Invoice Value", "Invoice Currency", "Invoice (INR)", "E-Way Bill#", "E-Way Bill Validity",
+                "Fumigation Status", "Branch", "Storage Days","Job Number", "Stock Number", "Remarks","Fumigation"
+                ]
+        elif "EIPL" in customer_name_str:
+            headers = ["S:NO", "DATE & TIME OF ARRIVAL","DATE & MAIL RECEIVED", "UNLODING START DATE & TIME", "UNLODING END DATE & TIME","FRD TIME","TRANSPORTERS", "TRUCK NUM","SHIPPER NAME","CONSIGNEE",
+                "DOCS RECEIVED","CUSTOMER SERVICE NAME","CHA","HAWB", "DESTINATION", "INVOICE NUM", "CASE NO",
+                "TOTAL NO OF PCS", "INVOICE WEIGHT(kg)", "ACTUAL WEIGHT(kg)", "UOM", "L CMS",
+                "B CMS", "H CMS", "Carton in DIM","VOLUME WEIGHT","CBM",
+                "INVOICE VALUE", "CURRENCY TYPE", "VALUE IN INR", "E-WAY BILL NO", "VALID TILL",
+                "FUMIGATION STATUS", "LOCATION", "DAYS IN WAREHOUSE","Job Number", "Stock Number", "REMARKS"]
+        elif "DBS" in customer_name_str:
+            headers = ["S:NO", "DATE OF ARRIVAL", "UNLODING START DATE & TIME", "UNLODING END DATE & TIME","TRUCK NUM","SHIPPER NAME",
+                "DESTINATION","VALUE IN","INVOICE VALUE","ORDER NO", "INVOICE NUM","INVOICE WEIGHT",
+                "TOTAL NO OF PCS", "TOTAL WEIGHT", "L CMS",
+                "B CMS", "H CMS", "Carton in DIM","VOLUME WEIGHT","DOCS RECD","LOCATION","DAYS IN WAREHOUSE",
+                "E-WAY BILL NO", "E-WAY BILL VALID DATE","Job Number", "Stock Number", "REMARKS"]
+
+        elif  "JEENA" in customer_name_str:
+            headers = ["S:NO", "DATE", "Dock Intime at unloading bay", "Dock Outime from unloading bay", "TRUCK NUM", "SHIPPER NAME", "CONSIGNEE", "DESTINATION",
+                "VALUE IN","Invoice Value", "Invoice Number", "INVOICE WEIGHT", "Total No of Cartons",
+                "Gross Weight","L CMS",
+                "B CMS", "H CMS", "Carton in DIM", "Volume weight", "LOCATION", "Documents received with goods",
+                "Job Number", "Stock Number", "REMARKS"]
+        elif "MAERSK" in customer_name_str:
+            headers = ["S:NO","IN DATE", "Dock Intime at unloading bay",
+                       "Dock Outime from unloading bay", "TRUCK NUM", "SHIPPER NAME", "Invoice Number", "PO NO","DESTINATION","Total No of Cartons",
+                       "QTY AS PER INV","CBM",
+                       "INVOICE WEIGHT", "GROSS WEIGHT", "L CMS",
+                       "B CMS", "H CMS", "Cartons", "Volume weight", "LOCATION","DOCS RECEIVED WITH GOODS",
+                       "OTL NO",
+                       "Job Number", "Stock Number", "REMARKS"]
+        elif "DSV" in customer_name_str:
+            headers = ["S:NO","DATE","Dock Intime at unloading bay","Dock Outime from unloading bay","TRUCK NUM","SHIPPER NAME","CONSIGNEE","DESTINATION",
+                "VALUE IN","VALUE","Invoice Number","PO NUMBER/BATCH NO","INVOICE WEIGHT","Total No of Cartons",
+                "WH WEIGHT","L CMS",
+                "B CMS", "H CMS", "Cartons","Volume weight","LOCATION","Documents received with goods","E-Way Bill", "E-Way Bill Validity",
+                "Job Number", "Stock Number", "REMARKS"]
+        else:
+            headers = [
+                "Job Number", "Stock Number", "Customer", "Date Of Arrival", "Unloading Start Time",
+                "Unloading End Time", "Transporter", "Truck Number", "Consignor", "Consignee",
+                "Docs Received", "HAWB", "Destination", "Invoice Number", "Case Number",
+                "Invoice Qty", "Invoice Weight (kg)", "Checkin Weight (kg)", "UOM", "Length",
+                "Width", "Height", "Dims Qty", "Package Type", "Volume Weight", "CBM",
+                "Invoice Value", "Invoice Currency", "Invoice (INR)", "E-Way Bill#", "E-Way Bill Validity",
+                "Fumigation Status", "Check In-Out?", "Branch", "Unit", "Bay", "Storage Days",
+                "Damage/Deviation?", "GRN Number", "Damages", "Deviations", "Remarks"
+            ]
         ws.append(headers)
 
-        # Fetch the IDs from Gatein_info
+        # 🎯 Step 2: Fetch data (same as before)
         gate_in_ids = Gatein_info.objects.filter(gatein_pre_id=pre_gatein_id).values_list('id', flat=True)
-
-        # Initialize query to none
         stock_values = None
 
-        # Build query conditions dynamically
         if customer_name and gate_in_ids.exists():
-            print ("Inside first loop")
             stock_values = Warehouse_goods_info.objects.filter(
                 wh_customer_name=customer_name,
                 wh_gate_injob_no_id__in=list(gate_in_ids)
             )
         elif customer_name:
-            print ("Inside second loop")
-            stock_values = Warehouse_goods_info.objects.filter(
-                wh_customer_name=customer_name
-            )
+            stock_values = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name)
         elif gate_in_ids.exists():
-            print ("Inside third loop")
-            stock_values = Warehouse_goods_info.objects.filter(
-                wh_gate_injob_no_id__in=list(gate_in_ids)
-            )
-        # Add a comment or log to explain cases where it isn't used
-        if stock_values is None:
-            print("No stock values found for the given conditions.")
-        else:
-            # Step 1: Filter stock_values and ensure the date fields are timezone-free
-            stock_values = stock_values.filter(wh_check_in_out="1").order_by(
-                '-wh_gate_injob_no_id__gatein_arrival_date'
-            )
+            stock_values = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id__in=list(gate_in_ids))
 
-            # Step 2: In the loop, replace the date with timezone-free date objects
-            for stock_value in stock_values:
-                date_of_arrival = stock_value.wh_gate_injob_no_id.gatein_arrival_date
-                if date_of_arrival:
-                    date_of_arrival = date_of_arrival.replace(tzinfo=None)  # Keep both date and time
-                # has_damage = "Yes" if stock_value.wh_Dam_rep_job_num_id else "No"
-                # damage_type = str(getattr(getattr(stock_value.wh_Dam_rep_job_num_id, 'dam_damage_type', ''), 'damage_name', '') or '')
-                header_font = Font(name="Arial", bold=True, size=11)  # Make the header row bold
-                cell_font = Font(name="Arial", bold=False, size=10)  # settings fro cells
-                yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Yellow fill
-                border_style = Border(
-                    left=Side(style='thin'),
-                    right=Side(style='thin'),
-                    top=Side(style='thin'),
-                    bottom=Side(style='thin'),
-                )
-                damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
+        if stock_values is not None:
+            stock_values = stock_values.filter(wh_check_in_out="1").order_by('-wh_gate_injob_no_id__gatein_arrival_date')
 
-                damage_names = ", ".join(
-                    damage_report.dam_damages1.values_list('damage_name', flat=True)) if damage_report else ""
-                deviation_names = ", ".join(
-                    damage_report.dam_deviation1.values_list('deviation_name', flat=True)) if damage_report else ""
-                grn_number = damage_report.dam_GRN_num if damage_report else ""
-                remarks = damage_report.dam_comments if damage_report else ""
+            for i, stock_value in enumerate(stock_values):
 
-                damage_check_flag = stock_value.wh_damage_check_id == 1
-                row = [
-                    stock_value.wh_job_no,  # Index 0
-                    stock_value.wh_qr_rand_num,  # Index 1
-                    str(stock_value.wh_customer_name),  # Index 2
-                    date_of_arrival if date_of_arrival else '',  # Index 3: Only Date, no time
-                    stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time.replace(tzinfo=None)
-                    if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time else '',
+                if "DHL" in customer_name_str:
+                    date_of_arrival = stock_value.wh_gate_injob_no_id.gatein_arrival_date
+                    if date_of_arrival:
+                        date_of_arrival = date_of_arrival.replace(tzinfo=None)
+                    damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
 
-                    stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time.replace(tzinfo=None)
-                    if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time else '',
+                    remarks = damage_report.dam_comments if damage_report else ""
 
-                    # Index 6: gatein_transporter
-                    getattr(stock_value.wh_gate_injob_no_id, 'gatein_transporter', ''),
+                    row = [
+                        i + 1,
+                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_transporter", ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
+                        stock_value.wh_consigner,
+                        stock_value.wh_consignee,
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_packing_list', '')),
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_hawb', ''),
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_invoice', ''),
+                        stock_value.wh_po_num,
+                        stock_value.wh_total_qty,
+                        stock_value.wh_invoice_weight_unit,
+                        stock_value.wh_gross_weight,
+                        str(stock_value.wh_uom),
+                        stock_value.wh_goods_length,
+                        stock_value.wh_goods_width,
+                        stock_value.wh_goods_height,
+                        stock_value.wh_goods_pieces,
+                        stock_value.wh_invoice_value,
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_stock_invoice_currency', '')),
+                        stock_value.wh_invoice_amount_inr,
+                        getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', "") or ""),
+                        str(stock_value.wh_fumigation_process or ''),
+                        str(stock_value.wh_branch),
+                        stock_value.wh_storage_time,
+                        stock_value.wh_job_no,
+                        stock_value.wh_qr_rand_num,
+                        stock_value.wh_comments,
+                        str(stock_value.wh_fumigation_process or ''),
+                    ]
 
-                    # Index 7: gatein_truck_number
-                    getattr(stock_value.wh_gate_injob_no_id, 'gatein_truck_number', ''),
 
-                    stock_value.wh_consigner,  # Index 8
-                    stock_value.wh_consignee,  # Index 9
+                # elif "EIPL" in customer_name_str:
+                #     row = [
+                #         i + 1,
+                #         getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", ""),
+                #         getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
+                #         stock_value.wh_consigner,
+                #         stock_value.wh_consignee,
+                #         getattr(stock_value.wh_gate_injob_no_id, "gatein_invoice", ""),
+                #         stock_value.wh_invoice_value,
+                #     ]
 
-                    # Index 10: lb_packing_list
-                    str(getattr(stock_value.wh_lb_job_no_id, 'lb_packing_list', '')),
+                elif "DBS" in customer_name_str:
+                    row = [
+                        i + 1,
+                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
+                        stock_value.wh_consigner,
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
+                        stock_value.wh_invoice_amount_inr,
+                        stock_value.wh_invoice_value,
+                        stock_value.wh_po_num,
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_invoice', ''),
+                        stock_value.wh_invoice_weight_unit,
+                        stock_value.wh_total_qty,
+                        stock_value.wh_gross_weight,
+                        stock_value.wh_goods_length,
+                        stock_value.wh_goods_width,
+                        stock_value.wh_goods_height,
+                        stock_value.wh_goods_pieces,
+                        stock_value.wh_chargeable_weight,
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_packing_list', '')),
+                        str(stock_value.wh_branch),
+                        stock_value.wh_storage_time,
+                        getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', "") or ""),
+                        stock_value.wh_job_no,
+                        stock_value.wh_qr_rand_num,
+                        stock_value.wh_comments,
 
-                    # Index 11-13: gatein_hawb, gatein_destination, gatein_invoice
-                    getattr(stock_value.wh_gate_injob_no_id, 'gatein_hawb', ''),
-                    getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
-                    getattr(stock_value.wh_gate_injob_no_id, 'gatein_invoice', ''),
+                    ]
+                elif "JEENA" in customer_name_str:
+                    row = [
+                        i + 1,
+                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
+                        stock_value.wh_consigner,
+                        stock_value.wh_consignee,
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
+                        stock_value.wh_invoice_amount_inr,
+                        stock_value.wh_invoice_value,
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_invoice', ''),
+                        stock_value.wh_invoice_weight_unit,
+                        stock_value.wh_total_qty,
+                        stock_value.wh_gross_weight,
+                        stock_value.wh_goods_length,
+                        stock_value.wh_goods_width,
+                        stock_value.wh_goods_height,
+                        stock_value.wh_goods_pieces,
+                        stock_value.wh_chargeable_weight,
+                        str(stock_value.wh_branch),
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_packing_list', '')),
+                        stock_value.wh_job_no,
+                        stock_value.wh_qr_rand_num,
+                        stock_value.wh_comments,
+                    ]
 
-                    stock_value.wh_po_num,  # Index 14
-                    stock_value.wh_total_qty,  # Index 15
-                    stock_value.wh_invoice_weight_unit,  # Index 16
-                    stock_value.wh_gross_weight,  # Index 17
+                elif "MAERSK" in customer_name_str:
+                    row = [
+                        i + 1,
+                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
+                        stock_value.wh_consigner,
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_invoice', ''),
+                        stock_value.wh_po_num,
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
+                        stock_value.wh_goods_pieces,
+                        stock_value.wh_total_qty,
+                        stock_value.wh_cbm,
+                        stock_value.wh_invoice_weight_unit,
+                        stock_value.wh_gross_weight,
+                        stock_value.wh_goods_length,
+                        stock_value.wh_goods_width,
+                        stock_value.wh_goods_height,
+                        stock_value.wh_goods_pieces,
+                        stock_value.wh_chargeable_weight,
+                        str(stock_value.wh_branch),
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_packing_list', '')),
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_otl', ''),
+                        stock_value.wh_job_no,
+                        stock_value.wh_qr_rand_num,
+                        stock_value.wh_comments,
+                    ]
 
-                    # Index 18: wh_uom
-                    str(stock_value.wh_uom),
+                elif "DSV" in customer_name_str:
+                    row = [
+                        i + 1,
+                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
+                        stock_value.wh_consigner,
+                        stock_value.wh_consignee,
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
+                        stock_value.wh_invoice_value,
+                        stock_value.wh_invoice_amount_inr,
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_invoice', ''),
+                        stock_value.wh_po_num,
+                        stock_value.wh_invoice_weight_unit,
+                        stock_value.wh_total_qty,
+                        stock_value.wh_gross_weight,
+                        stock_value.wh_goods_length,
+                        stock_value.wh_goods_width,
+                        stock_value.wh_goods_height,
+                        stock_value.wh_goods_pieces,
+                        stock_value.wh_chargeable_weight,
+                        str(stock_value.wh_branch),
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_packing_list', '')),
+                        getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', "") or ""),
+                        stock_value.wh_job_no,
+                        stock_value.wh_qr_rand_num,
+                        stock_value.wh_comments,
+                    ]
+                else:
 
-                    stock_value.wh_goods_length,  # Index 19
-                    stock_value.wh_goods_width,  # Index 20
-                    stock_value.wh_goods_height,  # Index 21
-                    stock_value.wh_goods_pieces,  # Index 22
+                    date_of_arrival = stock_value.wh_gate_injob_no_id.gatein_arrival_date
+                    if date_of_arrival:
+                        date_of_arrival = date_of_arrival.replace(tzinfo=None)
+                    damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
+                    damage_names = ", ".join(damage_report.dam_damages1.values_list('damage_name', flat=True)) if damage_report else ""
+                    deviation_names = ", ".join(damage_report.dam_deviation1.values_list('deviation_name', flat=True)) if damage_report else ""
+                    grn_number = damage_report.dam_GRN_num if damage_report else ""
+                    remarks = damage_report.dam_comments if damage_report else ""
+                    damage_check_flag = stock_value.wh_damage_check_id == 1
 
-                    # Index 23: wh_goods_package_type
-                    str(stock_value.wh_goods_package_type),
+                    row = [
+                        stock_value.wh_job_no,
+                        stock_value.wh_qr_rand_num,
+                        str(stock_value.wh_customer_name),
+                        date_of_arrival if date_of_arrival else '',
+                        stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time.replace(tzinfo=None)
+                        if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time else '',
+                        stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time.replace(tzinfo=None)
+                        if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time else '',
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_transporter', ''),
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_truck_number', ''),
+                        stock_value.wh_consigner,
+                        stock_value.wh_consignee,
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_packing_list', '')),
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_hawb', ''),
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_invoice', ''),
+                        stock_value.wh_po_num,
+                        stock_value.wh_total_qty,
+                        stock_value.wh_invoice_weight_unit,
+                        stock_value.wh_gross_weight,
+                        str(stock_value.wh_uom),
+                        stock_value.wh_goods_length,
+                        stock_value.wh_goods_width,
+                        stock_value.wh_goods_height,
+                        stock_value.wh_goods_pieces,
+                        str(stock_value.wh_goods_package_type),
+                        stock_value.wh_chargeable_weight,
+                        stock_value.wh_cbm,
+                        stock_value.wh_invoice_value,
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_stock_invoice_currency', '')),
+                        stock_value.wh_invoice_amount_inr,
+                        getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
+                        getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', None).replace(tzinfo=None)
+                        if getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', None) else None,
+                        str(stock_value.wh_fumigation_process or ''),
+                        "Stock on Hand" if str(stock_value.wh_check_in_out) == "Checked-In" else "Checked-In",
+                        str(stock_value.wh_branch),
+                        str(stock_value.wh_unit),
+                        str(stock_value.wh_bay),
+                        stock_value.wh_storage_time,
+                        "Yes" if damage_check_flag else "No",
+                        grn_number,
+                        damage_names,
+                        deviation_names,
+                        remarks,
+                    ]
 
-                    stock_value.wh_chargeable_weight,  # Index 24
-                    stock_value.wh_cbm,  # Index 25
-                    stock_value.wh_invoice_value,  # Index 26
+                ws.append(row)
 
-                    # Index 27: lb_stock_invoice_currency
-                    str(getattr(stock_value.wh_lb_job_no_id, 'lb_stock_invoice_currency', '')),
+        header_font = Font(name="Arial", bold=True, size=11)
+        yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+        border_style = Border(left=Side(style='thin'), right=Side(style='thin'),
+                              top=Side(style='thin'), bottom=Side(style='thin'))
 
-                    stock_value.wh_invoice_amount_inr,  # Index 28
-
-                    # Index 29: lb_eway_bill
-                    getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
-
-                    # Index 30: lb_validity_date (remove tzinfo)
-                    getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', None).replace(tzinfo=None)
-                    if getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', None) else None,
-
-                    # Index 31: wh_fumigation_process
-                    str(stock_value.wh_fumigation_process or ''),
-
-                    "Stock on Hand" if str(stock_value.wh_check_in_out) == "Checked-In" else "Checked-In",  # Index 32
-                    str(stock_value.wh_branch),  # Index 33
-                    str(stock_value.wh_unit),  # Index 34
-                    str(stock_value.wh_bay),  # Index 35
-                    stock_value.wh_storage_time,# Index 36
-                    # Damage Info
-                    "Yes" if damage_check_flag else "No",# Index 37: Damage Check
-                    grn_number,  # Index 38: GRN Number
-                    damage_names,  # Index 39: Damage Names (ManyToMany)
-                    deviation_names,  # Index 40: Deviation Names (ManyToMany)
-                    remarks,
-                ]
-
-                # # Debugging the row values
-                # for idx, value in enumerate(row):
-                #     print(f"Index {idx}: Value={value}, Type={type(value)}")
-
-                ws.append(row)  # Append the row to the worksheet
-                damage_flag = (
-                        (stock_value.wh_damages_id and stock_value.wh_damages_id != 6) or
-                        stock_value.wh_weights_deviation_id == 1 or
-                        stock_value.wh_dimension_deviation_id == 1 or
-                        stock_value.wh_no_of_units_deviation_id == 1
-                )
-
-                for cell in ws[ws.max_row]:
-                    cell.border = border_style
-                    if damage_check_flag:
-                        cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red
-                    else:
-                        cell.font = cell_font
-        sheet = wb.active
-
-        # Format the first row (Header)
-
-        customer_name =CustomerInfo.objects.get(id=customer_name).cu_name
-        file_name = str(customer_name)+'_DSR_report.xlsx'  # Set your desired file name
-        # Apply formatting to the first row
-        for cell in sheet[1]:
+        for cell in ws[1]:
             cell.font = header_font
             cell.fill = yellow_fill
             cell.border = border_style
             cell.alignment = Alignment(horizontal='center', vertical='center')
 
-        # Set column width for all columns
-        for col in sheet.columns:
+        for col in ws.columns:
             max_length = 0
-            column = col[0].column_letter  # Get the column name (e.g., 'A')
+            column = col[0].column_letter
             for cell in col:
                 try:
                     if len(str(cell.value)) > max_length:
                         max_length = len(cell.value)
                 except:
                     pass
-            adjusted_width = (max_length + 2)
-            sheet.column_dimensions[column].width =adjusted_width  # Set column width to 20
-            # Save the workbook to a BytesIO object
+            ws.column_dimensions[column].width = (max_length + 2)
+
         excel_file = BytesIO()
         wb.save(excel_file)
         excel_file.seek(0)
+        wb.close()
         attachment = excel_file
         attachment_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        if subject==None:
-            subject = f"{customer_name}_DSR Report"
-        else:
-            subject = subject
+
+        file_name = f"{customer_obj.cu_name}_DSR_report.xlsx"
+        if subject is None:
+            subject = f"{customer_obj.cu_name}_DSR Report"
+
         pre_gatein_id = request.session.get('ses_pre_gatein_id')
-        send_department_email('warehouse', subject, message, recipient_list,attachment,attachment_type,file_name)
-        # Redirect back to the previous page
-        messages.success(request, f"E-mail sent successfully")
+        send_department_email('warehouse', subject, message, recipient_list, attachment, attachment_type, file_name)
+        messages.success(request, "E-mail sent successfully")
         return redirect(request.META['HTTP_REFERER'])
+
     else:
         messages.error(request, 'Invalid input in the email form.')
     return redirect(request.META['HTTP_REFERER'])
-    # return render(request, "asset_mgt_app/dsr_send_email.html", context)
+

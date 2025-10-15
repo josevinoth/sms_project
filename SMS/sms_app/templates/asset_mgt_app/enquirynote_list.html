@@ -134,7 +134,7 @@
             <td>
                 {% if data.trips %}
                     {% for trip_cons,trip_num,trip_status,trip_status_id in data.trips %}
-                        {% if trip_status_id == 1 or trip_status_id == 5 %}
+                        {% if trip_status_id == 1 or trip_status_id == 5 or trip_status_id == 8%}
                             <a class="link disable_a_href_list " href="" style="pointer-events: none; color: gray;"> {{ trip_status }} ({{ trip_num }})</a><br>
                         {% else %}
                             <a class="link " href="{% url 'tripclosure_enquiry' data.enquiry.id trip_num %}"> {{ trip_status }} ({{ trip_num }})</a><br>
