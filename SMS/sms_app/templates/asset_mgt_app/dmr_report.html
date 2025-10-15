@@ -1,0 +1,212 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid d-flex justify-content-center py-3">
+    <div class="rounded text-center bg-info shadow-box px-4 py-2">
+        <h3>Trip Report - Customer Wise</h3>
+    </div>
+</div>
+<br>
+<div class="row">
+    <div class="col-2"></div>
+    <div class="col-8 message text-center">
+        {% for message in messages %}
+        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+        {% endfor %}
+    </div>
+    <div class="col-2"></div>
+</div>
+
+<form method="POST" action="{% url 'trip_report' %}" class="row g-3 align-items-end">
+    {% csrf_token %}
+    <div class="col-md-4">
+        <label for="dmr_customer" class="form-label fw-bold">Customer Name</label>
+        {% render_field form.dmr_customer id="dmr_customer" class="form-control" value=customer_id %}
+    </div>
+
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary mt-3">Filter</button>
+    </div>
+</form>
+<br>
+<br>
+
+<div class="row">
+    <div class="col-auto">
+        <a href="{% url 'home_page' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-auto">
+        <!-- Email Modal Trigger -->
+        <button type="button" class="btn btn-warning" onclick="email_message_fn()" data-toggle="modal" data-target="#sendDmrEmailModal">
+            <i class="fas fa-envelope-square"></i> Email DMR Report
+        </button>
+
+        <!-- Email Modal -->
+        <div class="modal fade" id="sendDmrEmailModal" tabindex="-1" role="dialog" aria-labelledby="sendDmrEmailModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title" id="sendDmrEmailModalLabel">Send DMR Report</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body text-dark">
+                        <form method="POST" action="{% url 'trip_send_email' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="customer_id" value="{{ customer_id }}">
+
+                            <div class="form-group mb-3">
+                                <label><strong>Customer</strong></label>
+                                {% render_field form.dmr_customer id="dmr_customer" class="form-control" value=customer_name %}
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label><strong>Recipient Emails (comma separated)</strong></label>
+                                <input type="text" name="recipient" id="recipient" class="form-control" placeholder="e.g. user1@company.com, user2@company.com">
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label><strong>Subject</strong></label>
+                                <input type="text" name="subject" class="form-control" value="DMR Report - Customer Wise">
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label><strong>Message</strong></label>
+                                <textarea name="message" id="message" rows="6" class="form-control">Dear Customer,
+
+Please find attached the DMR report for your reference.
+
+Regards,
+BVM Transport Team</textarea>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-paper-plane"></i> Send Email
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function email_message_fn() {
+                var msg = "Dear Customer,\n\nPlease find attached the DMR report for your reference.\n\nRegards,\nBVM Transport Team";
+                document.getElementById("message").value = msg;
+            }
+        </script>
+
+    </div>
+</div>
+<br>
+
+<div class="container-fluid shadow-box-table">
+    <table id="trip_report_table" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>SR. NO.</th>
+            <th>TRIP DATE</th>
+            <th>CONSIGNMENT NOTE NO</th>
+            <th>CUSTOMER NAME</th>
+            <th>CUSTOMER DEPT</th>
+            <th>SHIPPER</th>
+            <th>FROM</th>
+            <th>TO</th>
+            <th>VEH NO</th>
+            <th>VEH TYPE</th>
+            <th>TRIPCOST</th>
+            <th>AAI CHARGES</th>
+            <th>UNLOADING CHARGES</th>
+            <th>LOADING CHARGES</th>
+            <th>HALTING CHARGE</th>
+            <th>HANDLING CHARGES</th>
+            <th>SUPERVISOR CHARGES</th>
+            <th>TOTAL CHARGES</th>
+            <th>REFERENCE # (JOB ID/HAWB)</th>
+            <th>VEH REPORTED KM @ LOADING POINT</th>
+            <th>VEH REPORTED TIME @ LOADING POINT</th>
+            <th>LOADING DATE</th>
+            <th>LOADING TIME</th>
+            <th>VEH REPORTED KM @ UNLOADING POINT</th>
+            <th>VEH REPORTED TIME @ UNLOADING POINT</th>
+            <th>UNLOADING DATE</th>
+            <th>UNLOADING TIME</th>
+            <th>NO OF HALTING DAYS</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for trip in page_obj %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ trip.tr_departeddate|date:"d-m-Y" }}</td>
+            <td>{{ trip.tr_consignmentnumber.co_consignmentnumber }}</td>
+            <td>{{ trip.tr_enquirynumber.en_customername }}</td>
+            <td>{{ trip.tr_enquirynumber.en_customerdepartment }}</td>
+            <td>{{ trip.consigner_name }}</td>
+            <td>{{ trip.tr_departedlocation }}</td>
+            <td>{{ trip.tr_reportedlocation }}</td>
+            <td>{{ trip.tr_vehiclenumber }}</td>
+            <td>{{ trip.tr_vehicletype }}</td>
+            <td>{{ trip.tc_tripcost }}</td>
+            <td>{{ trip.tc_parkingcost }}</td>
+            <td>{{ trip.tc_unloadingcost }}</td>
+            <td>{{ trip.tc_loadingcost }}</td>
+            <td>{{ trip.tc_haltingcost }}</td>
+            <td>{{ trip.tc_handlingcost }}</td>
+            <td>{{ trip.tc_supervisorcost }}</td>
+            <td>{{ trip.tc_tripcost|add:trip.tc_parkingcost|add:trip.tc_unloadingcost|add:trip.tc_loadingcost|add:trip.tc_haltingcost|add:trip.tc_handlingcost|add:trip.tc_supervisorcost }}</td>
+            <td>{{ trip.co_cusrefnum }}</td>
+            <td>{{ trip.tr_departedkm }}</td>
+            <td>{{ trip.tr_departeddate|time:"H:i:s" }}</td>
+            <td>{{ trip.tr_loading_time|date:"d-m-Y" }}</td>
+            <td>{{ trip.tr_loading_time|time:"H:i:s" }}</td>
+            <td>{{ trip.tr_reportedkm }}</td>
+            <td>{{ trip.tr_reporteddate|time:"H:i:s" }}</td>
+            <td>{{ trip.tr_unloading_time|date:"d-m-Y" }}</td>
+            <td>{{ trip.tr_unloading_time|time:"H:i:s" }}</td>
+            <td>{{ trip.tc_no_of_days_halting|default:"0" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a class="btn btn-warning" href="?page=1">First</a>
+                <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.</span>
+
+            {% if page_obj.has_next %}
+                <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+        </span>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#trip_report_table').DataTable({
+            scrollX: true,
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            order: [[1, 'desc']]
+        });
+    });
+
+    function email_message_fn() {
+        $('#sendEmailModal').modal('show');
+    }
+</script>
+
+{% endblock content %}
