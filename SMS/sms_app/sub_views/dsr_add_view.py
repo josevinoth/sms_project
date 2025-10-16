@@ -37,7 +37,16 @@ def dsr_reports(request):
 @login_required(login_url='login_page')
 def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject=None):
     print('Entering dsr_send_email_view')
-    if request.method == 'POST':
+    header_font = Font(name="Arial", bold=True, size=11)  # Make the header row bold
+    cell_font = Font(name="Arial", bold=False, size=10)  # settings fro cells
+    yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Yellow fill
+    border_style = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin'),
+    )
+    if request.method == 'POST' or pre_gatein_id:
         recipient = request.POST.get('recipient')
         message = request.POST.get('message')
         customer_name_1 = customer_name
@@ -52,8 +61,6 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
         ws = wb.active
         ws.title = "DSR Report"
 
-
-        # Get actual customer name
         customer_obj = CustomerInfo.objects.get(id=customer_name)
         customer_name_str = customer_obj.cu_name.upper()
 
@@ -67,9 +74,9 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 "Fumigation Status", "Branch", "Storage Days","Job Number", "Stock Number", "Remarks","Fumigation"
                 ]
         elif "EIPL" in customer_name_str:
-            headers = ["S:NO", "DATE & TIME OF ARRIVAL","DATE & MAIL RECEIVED", "UNLODING START DATE & TIME", "UNLODING END DATE & TIME","FRD TIME","TRANSPORTERS", "TRUCK NUM","SHIPPER NAME","CONSIGNEE",
+            headers = ["S:NO", "DATE & TIME OF ARRIVAL","DATE & MAIL RECEIVED","UNLODING START DATE & TIME", "UNLODING END DATE & TIME","TRANSPORTERS", "TRUCK NUM","SHIPPER NAME","CONSIGNEE",
                 "DOCS RECEIVED","CUSTOMER SERVICE NAME","CHA","HAWB", "DESTINATION", "INVOICE NUM", "CASE NO",
-                "TOTAL NO OF PCS", "INVOICE WEIGHT(kg)", "ACTUAL WEIGHT(kg)", "UOM", "L CMS",
+                "TOTAL NO OF PCS", "INVOICE WEIGHT(kg)", "ACTUAL WEIGHT(kg)","L CMS",
                 "B CMS", "H CMS", "Carton in DIM","VOLUME WEIGHT","CBM",
                 "INVOICE VALUE", "CURRENCY TYPE", "VALUE IN INR", "E-WAY BILL NO", "VALID TILL",
                 "FUMIGATION STATUS", "LOCATION", "DAYS IN WAREHOUSE","Job Number", "Stock Number", "REMARKS"]
@@ -112,8 +119,6 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 "Damage/Deviation?", "GRN Number", "Damages", "Deviations", "Remarks"
             ]
         ws.append(headers)
-
-        # 🎯 Step 2: Fetch data (same as before)
         gate_in_ids = Gatein_info.objects.filter(gatein_pre_id=pre_gatein_id).values_list('id', flat=True)
         stock_values = None
 
@@ -173,20 +178,48 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         stock_value.wh_job_no,
                         stock_value.wh_qr_rand_num,
                         stock_value.wh_comments,
-                        str(stock_value.wh_fumigation_process or ''),
+                        str(getattr(stock_value.wh_fumigation_action, 'action_taken_by', '') or '')
+
                     ]
-
-
-                # elif "EIPL" in customer_name_str:
-                #     row = [
-                #         i + 1,
-                #         getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", ""),
-                #         getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
-                #         stock_value.wh_consigner,
-                #         stock_value.wh_consignee,
-                #         getattr(stock_value.wh_gate_injob_no_id, "gatein_invoice", ""),
-                #         stock_value.wh_invoice_value,
-                #     ]
+                elif "EIPL" in customer_name_str:
+                    row = [
+                        i + 1,
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_date_mail_received", ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_transporter", ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
+                        stock_value.wh_consigner,
+                        stock_value.wh_consignee,
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_packing_list', '')),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_customer_service_name", ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_CHA", ""),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_hawb", ""),
+                        getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
+                        getattr(stock_value.wh_gate_injob_no_id, "gatein_invoice", ""),
+                        stock_value.wh_po_num,
+                        stock_value.wh_total_qty,
+                        stock_value.wh_invoice_weight_unit,
+                        stock_value.wh_gross_weight,
+                        stock_value.wh_goods_length,
+                        stock_value.wh_goods_width,
+                        stock_value.wh_goods_height,
+                        stock_value.wh_goods_pieces,
+                        stock_value.wh_chargeable_weight,
+                        stock_value.wh_cbm,
+                        stock_value.wh_invoice_value,
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_stock_invoice_currency', '')),
+                        stock_value.wh_invoice_amount_inr,
+                        getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', "") or ""),
+                        str(stock_value.wh_fumigation_process or ''),
+                        str(stock_value.wh_branch),
+                        stock_value.wh_storage_time,
+                        stock_value.wh_job_no,
+                        stock_value.wh_qr_rand_num,
+                        stock_value.wh_comments,
+                    ]
 
                 elif "DBS" in customer_name_str:
                     row = [
@@ -307,13 +340,11 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         stock_value.wh_comments,
                     ]
                 else:
-
-                    date_of_arrival = stock_value.wh_gate_injob_no_id.gatein_arrival_date
-                    if date_of_arrival:
-                        date_of_arrival = date_of_arrival.replace(tzinfo=None)
                     damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
-                    damage_names = ", ".join(damage_report.dam_damages1.values_list('damage_name', flat=True)) if damage_report else ""
-                    deviation_names = ", ".join(damage_report.dam_deviation1.values_list('deviation_name', flat=True)) if damage_report else ""
+                    damage_names = ", ".join(
+                        damage_report.dam_damages1.values_list('damage_name', flat=True)) if damage_report else ""
+                    deviation_names = ", ".join(
+                        damage_report.dam_deviation1.values_list('deviation_name', flat=True)) if damage_report else ""
                     grn_number = damage_report.dam_GRN_num if damage_report else ""
                     remarks = damage_report.dam_comments if damage_report else ""
                     damage_check_flag = stock_value.wh_damage_check_id == 1
@@ -321,12 +352,10 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                     row = [
                         stock_value.wh_job_no,
                         stock_value.wh_qr_rand_num,
-                        str(stock_value.wh_customer_name),
-                        date_of_arrival if date_of_arrival else '',
-                        stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time.replace(tzinfo=None)
-                        if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time else '',
-                        stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time.replace(tzinfo=None)
-                        if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time else '',
+                        str(stock_value.wh_customer_name or ""),
+                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
+                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
                         getattr(stock_value.wh_gate_injob_no_id, 'gatein_transporter', ''),
                         getattr(stock_value.wh_gate_injob_no_id, 'gatein_truck_number', ''),
                         stock_value.wh_consigner,
@@ -351,8 +380,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         str(getattr(stock_value.wh_lb_job_no_id, 'lb_stock_invoice_currency', '')),
                         stock_value.wh_invoice_amount_inr,
                         getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
-                        getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', None).replace(tzinfo=None)
-                        if getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', None) else None,
+                        str(getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', "") or ""),
                         str(stock_value.wh_fumigation_process or ''),
                         "Stock on Hand" if str(stock_value.wh_check_in_out) == "Checked-In" else "Checked-In",
                         str(stock_value.wh_branch),
@@ -365,13 +393,12 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         deviation_names,
                         remarks,
                     ]
-
+                from datetime import datetime
+                row = [
+                    value.replace(tzinfo=None) if isinstance(value, datetime) and value.tzinfo else value
+                    for value in row
+                ]
                 ws.append(row)
-
-        header_font = Font(name="Arial", bold=True, size=11)
-        yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
-        border_style = Border(left=Side(style='thin'), right=Side(style='thin'),
-                              top=Side(style='thin'), bottom=Side(style='thin'))
 
         for cell in ws[1]:
             cell.font = header_font

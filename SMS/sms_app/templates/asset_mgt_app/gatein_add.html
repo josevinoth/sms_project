@@ -45,18 +45,18 @@
 		<div class="col">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-<div class=" col-12 card-header text-center">
-				<div class="row align-items-center">
-					<div class="col-12 col-md-8 col-lg-10 text-center">
-						<h3>Add/Update Gatein</h3>
-					</div>
-										<div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
-			<a id="dg_checklist_btn" href="{% url 'dg_cargo_add' %}"
-							   class="btn btn-warning btn-sm">
-								<i class="fas fa-plus"></i> DG Checklist
-							</a>
-			</div>
-				</div>
+					<div class=" col-12 card-header text-center">
+						<div class="row align-items-center">
+							<div class="col-12 col-md-8 col-lg-10 text-center">
+								<h3>Add/Update Gatein</h3>
+							</div>
+							<div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
+								<a id="dg_checklist_btn" href="{% url 'dg_cargo_add' %}"
+								   class="btn btn-warning btn-sm">
+									<i class="fas fa-plus"></i> DG Checklist
+								</a>
+							</div>
+						</div>
 					</div>
 					<div class="card-body bg-light" >
 						<div class="row">
@@ -157,6 +157,24 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">CHA</span>
+									</div>
+									{% render_field gatein_form.gatein_CHA id="gatein_CHA" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Service Name</span>
+									</div>
+									{% render_field gatein_form.gatein_customer_service_name id="gatein_customer_service_name" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Date & Mail Received</span>
+									</div>
+									{% render_field gatein_form.gatein_date_mail_received id='gatein_date_mail_received' type="datetime-local" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Pre-GateIn</span>
 									</div>
 									{% render_field gatein_form.gatein_pre_id class="form-control " id="gatein_pre_id" %}
@@ -174,6 +192,10 @@
 									</div>
 									{% render_field gatein_form.gatein_driver id="gatein_driver" class="form-control disable_a_href" %}
 								</div>
+
+							</div>
+
+							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Contact</span>
@@ -192,8 +214,6 @@
 									</div>
 									{% render_field gatein_form.gatein_otl id="gatein_otl" class="form-control disable_a_href" %}
 								</div>
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Transporter</span>
@@ -248,10 +268,10 @@
 </form>
 <!-- jQuery & jQuery UI -->
 <div id="collapseTwo"  aria-labelledby="headingTwo" data-parent="#accordion">
-			<div id="dispatch_goods_list">
-				{% include "asset_mgt_app/dg_cargo_list_woh.html" %}
-			</div>
-		</div>
+	<div id="dispatch_goods_list">
+		{% include "asset_mgt_app/dg_cargo_list_woh.html" %}
+	</div>
+</div>
 
 <script>
 	$(function() {
@@ -497,5 +517,28 @@
         dgCargoField.addEventListener("change", toggleDGChecklist);
     });
 </script>
+<script>
+$(document).ready(function () {
+    function toggleEIPLFields() {
+        var customerText = $("#gatein_customer option:selected").text().trim().toUpperCase();
+        if (customerText.includes("EIPL")) {
+            $("#gatein_CHA, #gatein_customer_service_name, #gatein_date_mail_received")
+                .removeAttr("disabled")
+                .removeClass("disable_a_href");
+        } else {
+            $("#gatein_CHA, #gatein_customer_service_name, #gatein_date_mail_received")
+                .attr("disabled", true)
+                .addClass("disable_a_href");
+        }
+    }
+
+    // Run on page load
+    toggleEIPLFields();
+
+    // Run whenever dropdown changes
+    $("#gatein_customer").change(toggleEIPLFields);
+});
+</script>
+
 
 {% endblock content %}

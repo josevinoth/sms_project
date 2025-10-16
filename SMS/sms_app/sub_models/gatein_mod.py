@@ -42,6 +42,9 @@ class Gatein_info(models.Model):
     gatein_driver_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
     gatein_supervisor_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
     gatein_invoice_att = models.FileField(upload_to=user_directory_path, null=True, blank=True)
+    gatein_date_mail_received= models.DateTimeField(blank=True, null=True)
+    gatein_CHA = models.CharField(blank=True, null=True, max_length=500)
+    gatein_customer_service_name = models.CharField(blank=True, null=True, max_length=500)
 
     class Meta:
         ordering = ["gatein_job_no"]
