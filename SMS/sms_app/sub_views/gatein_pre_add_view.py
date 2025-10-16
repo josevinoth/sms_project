@@ -134,7 +134,7 @@ def gatein_pre_list(request):
             # Pending count (status_id = 6)
             pending_count = Gatein_pre_info.objects.filter(
                 gatein_pre_status_id=6,
-                unit_field=unit_obj  # Replace with actual FK field in Gatein_pre_info
+                gatein_pre_branch_id=unit_id
             ).count()
             # Filter only for this unit
             Gatein_pre_list = Gatein_pre_info.objects.all().order_by('-id')

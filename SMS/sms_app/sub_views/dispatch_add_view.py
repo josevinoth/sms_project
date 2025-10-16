@@ -574,6 +574,7 @@ def gate_out_email(request, dispatch_id=0):
         subject = f"{dispatch_number}_Gate-Out Alert"
         gate_out_email_count = Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
         file_name = f"WH_Gate_Pass_{dispatch_number}.pdf"
+        message = message.replace('\n', '<br>')
         # Send the email with the PDF attachment
         send_department_email('warehouse', subject, message, recipient_list, pdf_data, 'application/pdf', file_name)
         gate_out_email_count=gate_out_email_count+1
