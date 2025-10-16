@@ -95,14 +95,6 @@ BVM Transport Team</textarea>
                 </div>
             </div>
         </div>
-
-        <script>
-            function email_message_fn() {
-                var msg = "Dear Customer,\n\nPlease find attached the DMR report for your reference.\n\nRegards,\nBVM Transport Team";
-                document.getElementById("message").value = msg;
-            }
-        </script>
-
     </div>
 </div>
 <br>
@@ -206,6 +198,12 @@ BVM Transport Team</textarea>
 
     function email_message_fn() {
         $('#sendEmailModal').modal('show');
+    }
+</script>
+<script>
+    function email_message_fn() {
+        var msg = "Dear Customer,\n\nPlease find attached the DMR report for your reference.\n\nRegards,\nBVM Transport Team";
+        document.getElementById("message").value = msg;
     }
 </script>
 
