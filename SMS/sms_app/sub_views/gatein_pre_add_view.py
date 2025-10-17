@@ -45,6 +45,8 @@ def gatein_pre_add(request, gatein_pre_id=0):
             gatein_num_id = Gatein_pre_info.objects.get(pk=gatein_pre_id).id
             request.session['gatein_num_id'] = gatein_num_id
             request.session['ses_pre_gatein_id'] = gatein_pre_id
+            user_branch_id = gatein_pre_info.gatein_pre_branch.id if gatein_pre_info.gatein_pre_branch else user_branch_id
+            user_branch = gatein_pre_info.gatein_pre_branch.loc_name if gatein_pre_info.gatein_pre_branch else user_branch
             print('gatein_pre_id',gatein_pre_id)
             gatein_pre_form = Gatein_preaddForm(instance=gatein_pre_info)
             pregateintruck_list = Pregateintruckinfo.objects.filter(pregatein_number=gatein_num_id)
@@ -53,6 +55,7 @@ def gatein_pre_add(request, gatein_pre_id=0):
             'gatein_pre_email_count': gatein_pre_email_count,
             'gatein_pre_form': gatein_pre_form,
             'user_branch_id': user_branch_id,
+            'user_branch': user_branch,
             'user_id': user_id,
             'pregateintruck_list': pregateintruck_list,
             'role': role,

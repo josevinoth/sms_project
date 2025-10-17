@@ -323,14 +323,16 @@ def dispatch_add_goods(request):
             continue
 
         # Create dispatch entry with remaining quantity
-        GoodsPartialDispatchInfo.objects.create(
-            pd_goods=goods_info,
-            pd_dispatch_info=dispatch_info,
-            pd_dispatch_qty=remaining_qty,
-            pd_updated_by=request.user,
-            pd_goods_weight=remaining_weight,
-            #pd_dispatch_time= current_date,
-        )
+        if remaining_qty > 0:
+            GoodsPartialDispatchInfo.objects.update_or_create(
+                pd_goods=goods_info,
+                pd_dispatch_info=dispatch_info,
+                defaults={
+                    'pd_dispatch_qty': remaining_qty,
+                    'pd_updated_by': request.user,
+                    'pd_goods_weight': remaining_weight,
+                }
+            )
 
         # Update goods_info fields
         goods_info.wh_dispatch_qty = total_dispatched + remaining_qty
