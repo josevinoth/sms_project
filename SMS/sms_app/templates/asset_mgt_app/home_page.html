@@ -1,6 +1,13 @@
 {% extends "asset_mgt_app/base_1.html" %}
 {% block content %}
 {% load crispy_forms_tags %}
+<style>
+    .main-content {
+    flex-grow: 1;
+    padding: 30px;
+    background-color: #f8f9fa; /* light background */
+}
+</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12 col-md-2 text-white p-3">
@@ -234,7 +241,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-10 pt-4 ">
+        <div id="main-content" class="col-12 col-md-10 pt-4 ">
             <div class="row">
                 <!-- Card 1 -->
                 <div class="col-6 col-sm-6 col-md-2 offset-md-2 mb-2">
@@ -478,4 +485,24 @@
         }
     });
 </script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function(){
+  $("#warehouse").on("click", function(e){
+    e.preventDefault();
+    $.ajax({
+      url: "{% url 'warehouse_dashboard' %}",
+      type: "GET",
+      success: function(data){
+        $("#main-content").html(data);
+        window.scrollTo(0, 0); // scroll to top for better UX
+      },
+      error: function(){
+        alert("Failed to load Warehouse Dashboard");
+      }
+    });
+  });
+});
+</script>
+
 {% endblock content %}
