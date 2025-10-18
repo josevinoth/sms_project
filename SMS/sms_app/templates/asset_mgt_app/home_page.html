@@ -416,6 +416,17 @@
             disableElement('transport'); // Disable transport for BVM Storage Solutions
             disableElement('warehouse');
 
+            if (user_id==57|| user_id==142)
+            {
+                enableElement('customer');
+                enableElement('vendor'); // Enable the vendor element for the Corporate department
+
+            }
+            else
+            {
+                disableElement('customer');
+                disableElement('vendor');
+            }
             if (department === 'Corporate')
             {
                 enableElement('customer');
@@ -458,6 +469,8 @@
         if (user_id==1 ||user_id==2 || user_id==57|| user_id==142 || user_id==86 || user_id==93)
         {
             $('#tripapproval').css('display', 'block');
+            enableElement('customer');
+
         }
         else
         {

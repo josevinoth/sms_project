@@ -19,11 +19,11 @@
   }
 
   .metric-icon {
-    font-size: 20px;
+    font-size: 30px;
   }
 
   .metric-label {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     padding:5px;
     font-weight: bold;
@@ -218,7 +218,7 @@
 </div>
 <!-- Top Customers -->
 <div class="row mt-4">
-  <div class="col-md-6">
+  <div class="col-md-4">
     <div class="card shadow-sm">
       <div class="card-body">
         <h5 class="card-title">Top Customers by Revenue</h5>
@@ -242,7 +242,31 @@
       </div>
     </div>
   </div>
-  <div class="col-md-6">
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Least Customers by Revenue</h5>
+        <table class="table table-striped shadow-sm">
+          <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Total Revenue (₹)</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for customer in least_customers %}
+          <tr>
+            <td>{{ customer.wh_customer_name__cu_nameshort }}</td>
+            <td>{{ customer.total_revenue|floatformat:2 }}</td>
+          </tr>
+
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
     <div class="card shadow-sm">
       <div class="card-body">
         <h5 class="card-title">Top Customers by Revenue</h5>

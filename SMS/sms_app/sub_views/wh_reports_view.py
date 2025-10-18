@@ -450,6 +450,13 @@ def warehouse_dashboard(request):
         .annotate(total_revenue=Sum("wh_total_invoice_cost"))
         .order_by("-total_revenue")[:10]
     )
+    least_customers = (
+        Warehouse_goods_info.objects.filter(**filters)
+        .values("wh_customer_name__cu_nameshort")
+        .annotate(total_revenue=Sum("wh_total_invoice_cost"))
+        .order_by("total_revenue")[:10]
+    )
+
     top_customers_json = json.dumps(list(top_customers), default=str)
 
     # Branch-wise area utilization
@@ -486,6 +493,7 @@ def warehouse_dashboard(request):
         "revenue_summary": revenue_summary,
         "top_customers": top_customers,
         "top_customers_json": top_customers_json,
+        "least_customers": least_customers,
 
         "branch_area_json": json.dumps(list(branch_area), default=str),
         "unit_area_json": json.dumps(list(unit_area), default=str),

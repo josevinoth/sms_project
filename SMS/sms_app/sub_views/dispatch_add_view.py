@@ -323,14 +323,16 @@ def dispatch_add_goods(request):
             continue
 
         # Create dispatch entry with remaining quantity
-        GoodsPartialDispatchInfo.objects.create(
-            pd_goods=goods_info,
-            pd_dispatch_info=dispatch_info,
-            pd_dispatch_qty=remaining_qty,
-            pd_updated_by=request.user,
-            pd_goods_weight=remaining_weight,
-            #pd_dispatch_time= current_date,
-        )
+        if remaining_qty > 0:
+            GoodsPartialDispatchInfo.objects.update_or_create(
+                pd_goods=goods_info,
+                pd_dispatch_info=dispatch_info,
+                defaults={
+                    'pd_dispatch_qty': remaining_qty,
+                    'pd_updated_by': request.user,
+                    'pd_goods_weight': remaining_weight,
+                }
+            )
 
         # Update goods_info fields
         goods_info.wh_dispatch_qty = total_dispatched + remaining_qty
@@ -574,6 +576,7 @@ def gate_out_email(request, dispatch_id=0):
         subject = f"{dispatch_number}_Gate-Out Alert"
         gate_out_email_count = Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
         file_name = f"WH_Gate_Pass_{dispatch_number}.pdf"
+        message = message.replace('\n', '<br>')
         # Send the email with the PDF attachment
         send_department_email('warehouse', subject, message, recipient_list, pdf_data, 'application/pdf', file_name)
         gate_out_email_count=gate_out_email_count+1
