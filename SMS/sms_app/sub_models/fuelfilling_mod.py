@@ -20,4 +20,4 @@ class Fuelfillinginfo(models.Model):
         ordering = ["ff_vehicle_num"]
 
     def __str__(self):
-        return self.ff_vehicle_num
+        return str(self.ff_vehicle_num)
