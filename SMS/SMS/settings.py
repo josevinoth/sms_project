@@ -170,8 +170,8 @@ DEPARTMENT_EMAILS = {
         'EMAIL_HOST' : 'smtp.office365.com',
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
-        'EMAIL_HOST_USER' : 'erpwarehouse@bvmstorage.com',
-        'EMAIL_HOST_PASSWORD' : 'L.166063956394ut',
+        'EMAIL_HOST_USER' : 'wms@thebvmgroup.com',
+        'EMAIL_HOST_PASSWORD' : 'M@094316254438uh',
     },
     'itadmin': {
         'EMAIL_HOST' : 'smtp.office365.com',

@@ -428,6 +428,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
         if subject is None:
             subject = f"{customer_obj.cu_name}_DSR Report"
 
+        message = message.replace('\n', '<br>')
         pre_gatein_id = request.session.get('ses_pre_gatein_id')
         send_department_email('warehouse', subject, message, recipient_list, attachment, attachment_type, file_name)
         messages.success(request, "E-mail sent successfully")
