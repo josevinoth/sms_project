@@ -543,6 +543,29 @@ if (categoryValue == 1) {
         }
     };
 </script>
+<script>
+function trip_type() {
+    var tripCategory = document.getElementById("tr_category").value;
+    var loadingTimeDiv = document.getElementById("tr_loading_time").closest('.input-group');
+    var unloadingTimeDiv = document.getElementById("tr_unloading_time").closest('.input-group');
+
+    if(tripCategory == "2") {
+        // Hide loading and unloading fields
+        loadingTimeDiv.style.display = "none";
+        unloadingTimeDiv.style.display = "none";
+    } else {
+        // Show them
+        loadingTimeDiv.style.display = "flex";  // or "block" depending on your layout
+        unloadingTimeDiv.style.display = "flex";
+    }
+}
+
+// Call it on page load in case trip_category is already selected
+document.addEventListener("DOMContentLoaded", function() {
+    trip_type();
+});
+</script>
+
 {% block scripts %}
 <script>
 $(document).ready(function() {

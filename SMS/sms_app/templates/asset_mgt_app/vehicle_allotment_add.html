@@ -605,5 +605,13 @@ $(document).ready(function () {
 });
 
 </script>
+{% block scripts %}
+
+<script>
+	 $("#va_vehiclenumber").select2({
+    	width: 'resolve'
+    });
+</script>
+{% endblock scripts %}
 
 {% endblock content %}
