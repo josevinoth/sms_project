@@ -18,15 +18,15 @@
 							   class="btn btn-warning ml-2 {% if va.va_status.status_title != "Completed" %}disable_a_href{% endif %}">
 							<i class="fas fa-truck-loading"></i> Empty Trip
 							</a>
-<div class="col-md-4 d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-	<!-- Email Alert Button -->
-<button type="button" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#vehicleAllotmentEmailModal">
-  <i class="fas fa-envelope-square"></i> Email Alert
-</button>
+							<div class="col-md-4 d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
+								<!-- Email Alert Button -->
+								<button type="button" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#vehicleAllotmentEmailModal">
+									<i class="fas fa-envelope-square"></i> Email Alert
+								</button>
 
-<!-- Modal -->
+								<!-- Modal -->
 
-</div>
+							</div>
 
 						</div>
 					</div>
@@ -192,34 +192,34 @@
 	</div>
 </form>
 <div class="modal fade" id="vehicleAllotmentEmailModal" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <form id="vehicleEmailForm" method="post" action="{% url 'vehicle_allotment_email' %}">
-        {% csrf_token %}
-        <div class="modal-header bg-info text-white">
-          <h5 class="modal-title">Vehicle Allotment Email Alert</h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<form id="vehicleEmailForm" method="post" action="{% url 'vehicle_allotment_email' %}">
+				{% csrf_token %}
+				<div class="modal-header bg-info text-white">
+					<h5 class="modal-title">Vehicle Allotment Email Alert</h5>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
 
-        <div class="modal-body">
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <div class="input-group-text">To</div>
-            </div>
-            <input type="text" name="recipient" class="form-control"
-                   placeholder="Recipient emails (comma separated)" required>
-          </div>
-          <input type="hidden" name="va_id" value="{{ va.id }}">
-        </div>
+				<div class="modal-body">
+					<div class="input-group mb-3">
+						<div class="input-group-prepend">
+							<div class="input-group-text">To</div>
+						</div>
+						<input type="text" name="recipient" class="form-control"
+							   placeholder="Recipient emails (comma separated)" required>
+					</div>
+					<input type="hidden" name="va_id" value="{{ va.id }}">
+				</div>
 
-        <div class="modal-footer justify-content-center">
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-envelope"></i> Send Email
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+				<div class="modal-footer justify-content-center">
+					<button type="submit" class="btn btn-primary">
+						<i class="fas fa-envelope"></i> Send Email
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
 </div>
 
 {% include "asset_mgt_app/vehicle_allotment_list_woh.html" %}

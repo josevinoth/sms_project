@@ -111,4 +111,4 @@ class VehiclemasterInfo(models.Model):
 
 
     def __str__(self):
-        return self.vm_registrationnumber
+        return str(self.vm_registrationnumber) if self.vm_registrationnumber else ""

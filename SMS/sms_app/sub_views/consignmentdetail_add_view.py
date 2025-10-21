@@ -219,7 +219,7 @@ def consignment_note_pdf(request, consignment_note_id=0):
         file_name = f"Consignment_Note_{consignment_num}.pdf"
         template_path = 'asset_mgt_app/consignement_note_pdf.html'
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename={file_name}'
+        response['Content-Disposition'] = f'inline; filename={file_name}'
 
         template = get_template(template_path)
         html = template.render(context)
