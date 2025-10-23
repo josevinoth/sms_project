@@ -269,7 +269,7 @@ def tripdetail_add(request, tripdetail_id=0):
             trip_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_tripnumber
             tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
             trip_det_form = TripdetailaddForm(request.POST, request.FILES, instance=tripdetail)
-            tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
+            tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES, instance=tripclosure_files)
             enquiry_num = tripdetail.tr_enquirynumber.id
 

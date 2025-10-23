@@ -257,7 +257,7 @@
 			<th>Consignee</th>
 			<th>Consigner Invoice</th>
 			<th>Value in INR</th>
-			<th>No. of Pieces</th>
+<th style="width: 100px; text-align: center;">No. of Pieces</th>
 			<th>Invoice Weight</th>
 			<th>E-Bill No.</th>
 			<th>Link / Attachment</th>
@@ -278,7 +278,7 @@
 			<td> {{consignmentgoodsinfo.cg_consignee}}</td>
 			<td> {{consignmentgoodsinfo.cg_consignerinvoice}}</td>
 			<td> {{consignmentgoodsinfo.cg_valueininr}}</td>
-			<td> {{consignmentgoodsinfo.cg_qty}}</td>
+<td>{{ consignmentgoodsinfo.cg_loaded_qty }}/{{ consignmentgoodsinfo.cg_qty }}</td>
 			<td> {{consignmentgoodsinfo.cg_weight}}</td>
 			<td> {{consignmentgoodsinfo.cg_ebillno}}</td>
 			<td style="min-width: 350px;">

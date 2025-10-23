@@ -115,22 +115,30 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
                 return redirect(request.META['HTTP_REFERER'])
             # return redirect('/SMS/enquirynote_list')
 
+from django.db.models import Q
+
 @login_required(login_url='login_page')
 def enquirynote_list(request):
-    print("Inside Enquiry List")
-
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     user_role = User_extInfo.objects.get(user_id=user_id).emp_role
 
-    enquirynote_queryset = EnquirynoteInfo.objects.order_by('id')
-    paginator = Paginator(enquirynote_queryset, 50)
+    enquiry_number = request.GET.get('enquiry_number', '')
 
+    # Filter enquiries based on search
+    if enquiry_number:
+        enquirynote_queryset = EnquirynoteInfo.objects.filter(
+            Q(en_enquirynumber__icontains=enquiry_number)
+        ).order_by('-id')
+    else:
+        enquirynote_queryset = EnquirynoteInfo.objects.all().order_by('-id')
+
+    paginator = Paginator(enquirynote_queryset, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number if page_number and page_number.isdigit() else 1)
     enquiry_ids = [enq.id for enq in page_obj if isinstance(enq.id, int)]
 
-    # --- Fetch related data ---
+    # Fetch related data
     consignment_data = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enquiry_ids)
     vehicle_data = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber__in=enquiry_ids
@@ -146,20 +154,20 @@ def enquirynote_list(request):
         'tc_financestatus'
     )
 
-    # --- Vehicle dict ---
+    # Vehicle dict
     vehicle_dict = {}
     for enq_id, reg_num, mkt_num in vehicle_data:
         valid_numbers = [num for num in (reg_num, mkt_num) if num]
         vehicle_dict.setdefault(enq_id, []).extend(valid_numbers or ["No Vehicle"])
 
-    # --- Trip dict ---
+    # Trip dict
     trip_dict = {}
-    for enq_id, trip_num, trip_cons, trip_status, trip_status_id in trip_data:
+    for enq_id, trip_cons, trip_num, trip_status, trip_status_id in trip_data:
         trip_dict.setdefault(enq_id, []).append(
-            (trip_num or "No Trip", trip_cons or "Not Applicable", trip_status or "", trip_status_id)
+            (trip_cons or "Not Applicable", trip_num or "No Trip", trip_status or "", trip_status_id)
         )
 
-    # --- Get total allowed vehicles (sum of quantity) from Enquirynotevehicle ---
+    # Vehicle limits
     vehicle_limits = (
         Enquirynotevehicle.objects.filter(env_enquirynumber__in=enquiry_ids)
         .values('env_enquirynumber')
@@ -167,7 +175,6 @@ def enquirynote_list(request):
     )
     vehicle_limit_dict = {v['env_enquirynumber']: v['total_allowed'] for v in vehicle_limits}
 
-    # --- Get total allotted vehicles (count) from Vehicle_allotmentInfo ---
     vehicle_allotted = (
         Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=enquiry_ids)
         .values('va_enquirynumber')
@@ -175,21 +182,28 @@ def enquirynote_list(request):
     )
     vehicle_allotted_dict = {v['va_enquirynumber']: v['total_allotted'] for v in vehicle_allotted}
 
-    # --- Build final data ---
+    # Build final data
     enquiry_data = []
     for enquiry in page_obj:
+        vehicles = vehicle_dict.get(enquiry.id, [])
+        consignments = consignment_data.filter(co_enquirynumber=enquiry)
+
         total_allowed = vehicle_limit_dict.get(enquiry.id, 0)
         total_allotted = vehicle_allotted_dict.get(enquiry.id, 0)
         limit_reached = total_allotted >= total_allowed if total_allowed > 0 else False
 
+        vehicles_with_consignment = consignments.values_list('co_vehicelnumber', flat=True).distinct()
+        consignment_limit_reached = len(vehicles_with_consignment) >= len(vehicles) if vehicles else False
+
         enquiry_data.append({
             'enquiry': enquiry,
-            'consignments': consignment_data.filter(co_enquirynumber=enquiry),
+            'consignments': consignments,
             'trips': trip_dict.get(enquiry.id, []),
-            'vehicles': vehicle_dict.get(enquiry.id, []),
+            'vehicles': vehicles,
             'vehicle_limit': total_allowed,
             'vehicle_allotted': total_allotted,
             'limit_reached': limit_reached,
+            'consignment_limit_reached': consignment_limit_reached,
         })
 
     context = {
@@ -197,6 +211,7 @@ def enquirynote_list(request):
         'first_name': first_name,
         'role': user_role,
         'enquiry_data': enquiry_data,
+        'enquiry_number': enquiry_number,
     }
     return render(request, "asset_mgt_app/enquirynote_list.html", context)
 
