@@ -23,4 +23,5 @@ class PregateintruckForm(forms.ModelForm):
         self.fields['pregatein_transporter_name'].queryset = Transporter_name.objects.all()
         self.fields['pregatein_commodity'].empty_label = "--Select--"
         self.fields['pregatein_approval_status'].empty_label = "--Select--"
+        self.fields['pregatein_invoice_ref'].required = True
 

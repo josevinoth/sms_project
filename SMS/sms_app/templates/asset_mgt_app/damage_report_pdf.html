@@ -1,41 +1,63 @@
 {% extends "asset_mgt_app/report_header_potrait.html" %}
 {% block content %}
-{% for damageinformation in damage_list %}
+
 <div class="report_title">
-  Damage/Deviation Report ({{damageinformation.dam_wh_job_num}})
-</div>
-<div class='report_details'>
-    <table>
-        <tr>
-            <th>Job Number</th>
-            <td>{{damageinformation.dam_wh_job_num}}</td>
-        </tr>
-        <tr>
-            <th>GRN Number</th>
-            <td>{{damageinformation.dam_GRN_num}}</td>
-        </tr>
-        <tr>
-            <th>Damage Type</th>
-            <td>{{damageinformation.dam_damage_type}}</td>
-        </tr>
-        <tr>
-            <th>No. of Units Deviating</th>
-            <td>{{damageinformation.dam_no_of_units_deviation}}</td>
-        </tr>
-        <tr>
-            <th>Ratification Process</th>
-            <td>{{damageinformation.dam_ratification_process}}</td>
-        </tr>
-        <tr>
-            <th>Marks & Number Deviation?</th>
-            <td>{{damageinformation.dam_marks_numbers}}</td>
-        </tr>
-        <tr>
-            <th>Comments</th>
-            <td>{{damageinformation.dam_comments}}</td>
-        </tr>
-    </table>
+  Damage/Deviation Report ({{ damage_list.dam_wh_job_num }})
 </div>
 
-{% endfor %}
+<div class="report_details">
+  <table>
+    <tr>
+      <th>Job Number</th>
+      <td>{{ damage_list.dam_wh_job_num }}</td>
+    </tr>
+    <tr>
+      <th>GRN Number</th>
+      <td>{{ damage_list.dam_GRN_num }}</td>
+    </tr>
+    <tr>
+      <th>Damage Type</th>
+      <td>{{ damage_names }}</td>
+    </tr>
+    <tr>
+      <th>Deviation Type</th>
+      <td>{{ deviation_names }}</td>
+    </tr>
+    <tr>
+      <th>No. of Units Deviating</th>
+      <td>{{ damage_list.dam_no_of_units_deviation }}</td>
+    </tr>
+    <tr>
+      <th>Ratification Process</th>
+      <td>{{ damage_list.dam_ratification_process }}</td>
+    </tr>
+    <tr>
+      <th>Marks & Number Deviation?</th>
+      <td>{{ damage_list.dam_marks_numbers }}</td>
+    </tr>
+
+    {% if warehouse_goods_list %}
+  {% for goods in warehouse_goods_list %}
+    <tr>
+      <th>Shipper Invoice</th>
+      <td>{{ goods.wh_goods_invoice }}</td>
+    </tr>
+    <tr>
+      <th>Shipper Name</th>
+      <td>{{ goods.wh_consigner }}</td>
+    </tr>
+  {% endfor %}
+{% else %}
+  <tr>
+    <td colspan="2">No warehouse goods found.</td>
+  </tr>
+{% endif %}
+
+    <tr>
+      <th>Comments</th>
+      <td>{{ damage_list.dam_comments }}</td>
+    </tr>
+  </table>
+</div>
+
 {% endblock content %}

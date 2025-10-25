@@ -360,7 +360,7 @@ def truck_send_email_view(request, pre_gatein_id=None):
             file_name='Truck_Wise_Report.xlsx'
         )
 
-        messages.success(request, "Truck-wise report sent successfully.")
+        messages.success(request, "Truck-wise E-mail sent successfully.")
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
     else:

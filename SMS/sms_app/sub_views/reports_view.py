@@ -380,24 +380,42 @@ def expense_report(request):
 @login_required(login_url='login_page')
 def damage_report_pdf(request):
     wh_job_id = request.session.get('ses_gatein_id_nam')
-    damage_list=DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id)
-    context={
-        'damage_list':damage_list,
+    damage_list = DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id).first()
+
+    damage_names = ", ".join(damage_list.dam_damages1.values_list('damage_name', flat=True))
+    deviation_names = ", ".join(damage_list.dam_deviation1.values_list('deviation_name', flat=True))
+
+    # First, try to find goods linked by FK
+    warehouse_goods_list = Warehouse_goods_info.objects.filter(
+        wh_Dam_rep_job_num_id=damage_list.id
+    )
+
+    # If none found, fall back to job number match
+    if not warehouse_goods_list.exists():
+        warehouse_goods_list = Warehouse_goods_info.objects.filter(
+            wh_job_no=damage_list.dam_wh_job_num
+        )
+
+    context = {
+        'damage_list': damage_list,
+        'damage_names': damage_names,
+        'deviation_names': deviation_names,
+        'warehouse_goods_list': warehouse_goods_list,
     }
-    file_name=str("Damage_Report_")+str(wh_job_id)+str(".pdf")
-    template_path='asset_mgt_app/damage_report_pdf.html'
-    response=HttpResponse(content_type='application/pdf')
-    response['Content-Disposition']=f'attachment; filename={file_name}'
 
-    template=get_template(template_path)
-    html=template.render(context)
+    file_name = f"Damage_Report_{wh_job_id}.pdf"
+    template_path = 'asset_mgt_app/damage_report_pdf.html'
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename={file_name}'
 
-    # Create PDF
-    pisa_status=pisa.CreatePDF(html,dest=response)
+    template = get_template(template_path)
+    html = template.render(context)
+    pisa_status = pisa.CreatePDF(html, dest=response)
 
     if pisa_status.err:
-        return HttpResponse('We has some error <pre>'+ html +'</pre>')
+        return HttpResponse('Error generating PDF: <pre>' + html + '</pre>')
     return response
+
 
 
 
