@@ -466,20 +466,24 @@
 
 <script>
 	var checklistApprovalStatus = {% if checklist %}{{ checklist.thc_approval_status_id }}{% else %}null{% endif %};
-    var tripApprovalApproved = {{ trip_approvallist|yesno:"true,false" }};
-    var isHighValueGoods = {% if trip_instance.tr_high_value_id == 1 %}true{% else %}false{% endif %};
+var tripApprovalApproved = {{ trip_approvallist|yesno:"true,false" }};
+var isHighValueGoods = {% if trip_instance.tr_high_value_id == 1 %}true{% else %}false{% endif %};
 
-	function trip_type() {
+function trip_type() {
     var categoryValue = document.getElementById('tr_category').value;
     var tripStatus = document.getElementById('tc_financestatus');
+    var loadingTimeDiv = document.getElementById("tr_loading_time").closest('.input-group');
+    var unloadingTimeDiv = document.getElementById("tr_unloading_time").closest('.input-group');
 
+    // ----------------------
+    // 1️⃣ Finance Status Logic
+    // ----------------------
     if (categoryValue === "2") {
         tripStatus.disabled = false;
         tripStatus.classList.remove("select-disabled-style");
-        tripStatus.value = "1";  // <-- set status id to 2
+        tripStatus.value = "1";  // Set default status
     } else if (categoryValue === "1") {
         if (isHighValueGoods) {
-            // High Value Goods: need checklist approved and invoice approved
             if (checklistApprovalStatus === 1 && tripApprovalApproved) {
                 tripStatus.disabled = false;
                 tripStatus.classList.remove("select-disabled-style");
@@ -489,7 +493,6 @@
                 tripStatus.selectedIndex = 0;
             }
         } else {
-            // No High Value Goods: only invoice approval needed
             if (tripApprovalApproved) {
                 tripStatus.disabled = false;
                 tripStatus.classList.remove("select-disabled-style");
@@ -504,27 +507,37 @@
         tripStatus.classList.add("select-disabled-style");
         tripStatus.selectedIndex = 0;
     }
-if (categoryValue == 1) {
-    $('#tc_pod_attachment').removeClass('disable_a_href');
-    $('#tc_pod').removeClass('disable_a_href');
-    $('#pod-sign-btn').prop('disabled', false).removeClass('disable_a_href');
-} else {
-    $('#tc_pod_attachment').addClass('disable_a_href');
-    $('#tc_pod').addClass('disable_a_href');
 
-    $('#tc_pod_attachment').val('');
-    $('#tc_pod').val('');
+    // ----------------------
+    // 2️⃣ POD Attachment Logic
+    // ----------------------
+    if (categoryValue == 1) {
+        $('#tc_pod_attachment').removeClass('disable_a_href');
+        $('#tc_pod').removeClass('disable_a_href');
+        $('#pod-sign-btn').prop('disabled', false).removeClass('disable_a_href');
+    } else {
+        $('#tc_pod_attachment').addClass('disable_a_href');
+        $('#tc_pod').addClass('disable_a_href');
+        $('#tc_pod_attachment').val('');
+        $('#tc_pod').val('');
+        $('#pod-sign-btn').prop('disabled', true).addClass('disable_a_href');
+    }
 
-    $('#pod-sign-btn').prop('disabled', true).addClass('disable_a_href');
+    // ----------------------
+    // 3️⃣ Loading & Unloading Time Visibility
+    // ----------------------
+    if (categoryValue == "2") {
+        loadingTimeDiv.style.display = "none";
+        unloadingTimeDiv.style.display = "none";
+    } else {
+        loadingTimeDiv.style.display = "flex";  // adjust based on layout
+        unloadingTimeDiv.style.display = "flex";
+    }
 }
 
-
-
-}
-
-	document.addEventListener("DOMContentLoaded", function() {
-		trip_type();
-	});
+document.addEventListener("DOMContentLoaded", function() {
+    trip_type();
+});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
 <script>
@@ -543,6 +556,7 @@ if (categoryValue == 1) {
         }
     };
 </script>
+
 {% block scripts %}
 <script>
 $(document).ready(function() {

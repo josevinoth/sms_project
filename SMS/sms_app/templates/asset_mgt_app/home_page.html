@@ -159,6 +159,7 @@
                         <!--        <a href="{% url 'vehicle_allotment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Allotment </a>-->
                         <a href="{% url 'tripdetail_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip Detail </a>
                         <a href="{% url 'tripclosure_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip Closure </a>
+                        <a href="{% url 'transport_reports' %}"><i class="fa fa-book" aria-hidden="true"></i> Reports </a>
                         <a href="{% url 'fuelfilling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fuel Filling </a>
                         <a href="{% url 'vehicle_availability' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Vehicle Availability </a>
                         <a id="tripapproval" href="{% url 'trip_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Trip Approval <span class="badge bg-danger p-2 blink">{{ approval_count }}</span></a>
@@ -422,8 +423,7 @@
             disableElement('packing'); // Disable packing for BVM Storage Solutions
             disableElement('transport'); // Disable transport for BVM Storage Solutions
             disableElement('warehouse');
-
-            if (user_id==57|| user_id==142)
+             if (user_id==57|| user_id==142)
             {
                 enableElement('customer');
                 enableElement('vendor'); // Enable the vendor element for the Corporate department
@@ -473,11 +473,9 @@
                 enableElement('transport'); // Enable transport for BVM Trans Solutions
             }
         }
-        if (user_id==1 ||user_id==2 || user_id==57|| user_id==142 || user_id==86 || user_id==93)
+        if (user_id==1 ||user_id==2 || user_id==57 || user_id==86 || user_id==93|| user_id==142)
         {
             $('#tripapproval').css('display', 'block');
-            enableElement('customer');
-
         }
         else
         {

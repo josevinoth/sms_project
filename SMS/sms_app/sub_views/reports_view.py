@@ -965,3 +965,12 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
         messages.error(request, 'Invalid input in the email form.')
     return redirect(request.META['HTTP_REFERER'])
     # return render(request, "asset_mgt_app/dsr_send_email.html", context)
+
+
+@login_required(login_url='login_page')
+def transport_reports(request):
+    first_name = request.session.get('first_name')
+    context = {
+               'first_name': first_name
+               }
+    return render(request,"asset_mgt_app/trans_report.html",context)

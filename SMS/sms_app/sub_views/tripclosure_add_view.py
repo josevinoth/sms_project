@@ -136,7 +136,7 @@ def tripclosure_add(request,tripclosure_id=0):
             trip_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_tripnumber
             tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
             tripclosure_form = TripclosureaddForm(request.POST,instance=tripclosure)
-            tripclosure_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=trip_num)
+            tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             tripclosurefiles_form = TripclosurefilesForm(request.POST,request.FILES,instance=tripclosure_files)
 
             if tripclosure_form.is_valid():

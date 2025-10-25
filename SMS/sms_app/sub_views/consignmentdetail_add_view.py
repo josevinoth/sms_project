@@ -9,7 +9,7 @@ from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
 
 from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
-from ..models import VehiclemasterInfo,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
+from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
 @login_required(login_url='login_page')
@@ -31,6 +31,8 @@ def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
 def consignmentdetail_nav(request,consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+    user_branch_id = Location_info.objects.get(loc_name=user_branch).id
     print("I am inside Get add consignmentdetails")
     enquiry_num = EnquirynoteInfo.objects.get(pk=consignmentdetail_id).en_enquirynumber
     enquiry_num_id = consignmentdetail_id
@@ -45,12 +47,15 @@ def consignmentdetail_nav(request,consignmentdetail_id=0):
         'enquiry_num_id': enquiry_num_id,
         'consignmentdetail_list': consignmentdetail_list,
         'consignmentdetail_id': consignmentdetail_id,
+        'user_branch': user_branch,
     }
     return render(request, "asset_mgt_app/consignmentdetail_nav.html", context)
 @login_required(login_url='login_page')
 def consignmentdetail_add(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+    user_branch_id = Location_info.objects.get(loc_name=user_branch).id
     enquiry_num = request.session.get('ses_enqiury_num')
     enquiry_num_id = request.session.get('ses_enqiury_id')
 
@@ -101,6 +106,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'consignmentdetail_list': ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id),
             'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentdetail_id),
             'vehicle_type': vehicle_type,
+            'user_branch': user_branch,
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
@@ -112,9 +118,16 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             if consignmentdetail_id == 0:
                 consignment_detail = con_det_form.save(commit=False)
                 consignment_detail.save()  # Save to generate ID
-
+                if user_branch_id == 1:
+                    branch = 'BLR_'
+                elif user_branch_id == 2:
+                    branch = 'MAA_'
+                elif user_branch_id == 3:
+                    branch = 'PNY_'
+                else:
+                    branch = 'HYD_'
                 # Generate consignment number based on its own ID
-                consignment_detail.co_consignmentnumber = f"CON_{1000000 + consignment_detail.id}"
+                consignment_detail.co_consignmentnumber = str(branch)+f"CON_{1000000 + consignment_detail.id}"
                 consignment_detail.co_vehicletype = vehicle_type
                 consignment_detail.save(update_fields=['co_consignmentnumber', 'co_vehicletype'])
 
@@ -219,7 +232,7 @@ def consignment_note_pdf(request, consignment_note_id=0):
         file_name = f"Consignment_Note_{consignment_num}.pdf"
         template_path = 'asset_mgt_app/consignement_note_pdf.html'
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename={file_name}'
+        response['Content-Disposition'] = f'inline; filename={file_name}'
 
         template = get_template(template_path)
         html = template.render(context)
