@@ -394,10 +394,9 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         remarks,
                     ]
                 from datetime import datetime
-                row = [
-                    value.replace(tzinfo=None) if isinstance(value, datetime) and value.tzinfo else value
-                    for value in row
-                ]
+
+                row = [str(value).replace("+00:00", "") for value in row]
+
                 ws.append(row)
 
         for cell in ws[1]:

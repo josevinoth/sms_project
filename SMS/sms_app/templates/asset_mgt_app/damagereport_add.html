@@ -10,36 +10,36 @@
 	<div class="col-2"></div>
 	<div class="col-12 col-md-10 col-lg-12 p-2">
 		<div class="gap-2 d-md-flex justify-content-md-center flex-wrap">
-		{% if gatein_list %}
-		{% for gateininfo in gatein_list %}
-		<a class="btn  border border-dark mb-2" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
-		{% endfor %}
-		{% else %}
-		<a class="btn  border border-dark mb-2" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
-		{% endif %}
+			{% if gatein_list %}
+			{% for gateininfo in gatein_list %}
+			<a class="btn  border border-dark mb-2" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+			{% endfor %}
+			{% else %}
+			<a class="btn  border border-dark mb-2" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
+			{% endif %}
 
-		{% if loadingbay_list %}
-		{% for loadingbayinfo in loadingbay_list %}
-		<a class="btn  border border-dark mb-2" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
-		{% endfor %}
-		{% else %}
-		<a class="btn  border border-dark mb-2" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
-		{% endif %}
+			{% if loadingbay_list %}
+			{% for loadingbayinfo in loadingbay_list %}
+			<a class="btn  border border-dark mb-2" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
+			{% endfor %}
+			{% else %}
+			<a class="btn  border border-dark mb-2" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
+			{% endif %}
 
-		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
+			<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
 
-		{% if damagereport_list %}
-		{% for damagecheckinfo in damagereport_list %}
-		<a class="btn  border focus border-dark mb-2" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check</a>
-		{% endfor %}
-		{% else %}
-		<a class="btn  border focus border-dark mb-2" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check</a>
-		{% endif %}
+			{% if damagereport_list %}
+			{% for damagecheckinfo in damagereport_list %}
+			<a class="btn  border focus border-dark mb-2" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check</a>
+			{% endfor %}
+			{% else %}
+			<a class="btn  border focus border-dark mb-2" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check</a>
+			{% endif %}
 
-		<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}" >Warehouse In</a>-->
-		<a class="btn  border border-dark mb-2 disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
-	</div>
+			<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}" >Warehouse In</a>-->
+			<a class="btn  border border-dark mb-2 disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
 		</div>
+	</div>
 	<div class="col-2"></div>
 </div>
 
@@ -57,142 +57,143 @@
 							<div class="row text-center text-md-left align-items-center">
 								<div class="col-12 col-md-5 offset-md-3 mb-2">
 									<h3>Add/Update Damage Check/Before</h3>
-							</div>
-							<div class="col-12 col-md-4">
+								</div>
+								<div class="col-12 col-md-4">
 									<div class="row">
-<!--										<div class="col-6">-->
-<!--								<a href="#" class="btn btn-warning btn-block " id="delivery_chalan_btn">-->
-<!--									Delivery Chelan          <i class="fa fa-download " aria-hidden="true"></i>-->
-<!--								</a>-->
-<!--							</div>-->
-							<div class="col-6">
-								<a href="{% url 'damage_report' %}" class="btn btn-warning btn-block " id="damage_report_btn">
-									Damage Report          <i class="fa fa-download" aria-hidden="true"></i>
-								</a>
+										<!--										<div class="col-6">-->
+										<!--								<a href="#" class="btn btn-warning btn-block " id="delivery_chalan_btn">-->
+										<!--									Delivery Chelan          <i class="fa fa-download " aria-hidden="true"></i>-->
+										<!--								</a>-->
+										<!--							</div>-->
+										<div class="col-6">
+											<a href="{% url 'damage_report' %}" class="btn btn-warning btn-block " id="damage_report_btn">
+												Damage/Deviation Report          <i class="fa fa-download" aria-hidden="true"></i>
+											</a>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
-								</div>
-							</div>
-</div>					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">WH Job Number</span>
-									</div>
-									{% render_field damagereport_form.dam_wh_job_num id="dam_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control" readonly=True %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">GRN Number</span>
-									</div>
-									{% render_field damagereport_form.dam_GRN_num id="grn_num" class="form-control" readonly="True"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text"> Deviation </span>
-									</div>
-									{% render_field damagereport_form.dam_deviation1 id="dam_deviation1" class="form-control"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text"> Damages? </span>
-									</div>
-									{% render_field damagereport_form.dam_damages1 id="dam_damages1" class="form-control"%}
-								</div>
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Ratification Process?</span>
-									</div>
-									{% render_field damagereport_form.dam_ratification_process id="dam_ratification_process" class="form-control"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Marks & Numbers?</span>
-									</div>
-									{% render_field damagereport_form.dam_marks_numbers id="dam_marks_numbers" onchange="challan_damage_btn_active()" class="form-control"%}
-								</div>
-								<div class="input-group input-group mb-3 bg-dark">
-									<div class="input-group-prepend">
-										<span class="input-group-text">OTL Pic</span>
-									</div>
-									{% render_field damagereportimg_form.dam_OTL_pic class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Documents</span>
-									</div>
-									{% render_field damagereportimg_form.dam_document name="dam_document" id="dam_document" class="form-control" %}
-								</div>
-								{% render_field damagereportimg_form.damimage_wh_job_num name="damimage_wh_job_num" id="damimage_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control" %}
-
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Closed Door Pic</span>
-									</div>
-									{% render_field damagereportimg_form.dam_closed_door_pic class="form-control" %}
-								</div>
-
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Opened Door Pic</span>
-									</div>
-									{% render_field damagereportimg_form.dam_open_door_pic class="form-control"%}
-								</div>
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">50% offload Pics</span>
-									</div>
-									{% render_field damagereportimg_form.dam_50_offload_pic class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Empty Pics</span>
-									</div>
-									{% render_field damagereportimg_form.dam_empty_vehicle class="form-control" %}
-								</div>
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Approval</span>
-									</div>
-									{% render_field damagereportimg_form.dam_customer_approval name="dam_customer_approval" id="dam_customer_approval" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
-									</div>
-									{% render_field damagereport_form.dam_status id="dam_status" class="form-control" %}
-								</div>
-							</div>
-
-							<div class="input-group input-group-sm mb-3 container-fluid">
+					<div class="card-body bg-light" >
+					<div class="row">
+						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
-									<span class="input-group-text">Comments</span>
+									<span class="input-group-text">WH Job Number</span>
 								</div>
-								{% render_field damagereport_form.dam_comments id="dam_comments" class="form-control"%}
+								{% render_field damagereport_form.dam_wh_job_num id="dam_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control" readonly=True %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">GRN Number</span>
+								</div>
+								{% render_field damagereport_form.dam_GRN_num id="grn_num" class="form-control" readonly="True"%}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text"> Deviation </span>
+								</div>
+								{% render_field damagereport_form.dam_deviation1 id="dam_deviation1" class="form-control"%}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text"> Damages? </span>
+								</div>
+								{% render_field damagereport_form.dam_damages1 id="dam_damages1" class="form-control"%}
 							</div>
 						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
+						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text" >Ratification Process?</span>
 								</div>
+								{% render_field damagereport_form.dam_ratification_process id="dam_ratification_process" class="form-control"%}
 							</div>
-							<div class="col-1"></div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text" >Marks & Numbers?</span>
+								</div>
+								{% render_field damagereport_form.dam_marks_numbers id="dam_marks_numbers" onchange="challan_damage_btn_active()" class="form-control"%}
+							</div>
+							<div class="input-group input-group mb-3 bg-dark">
+								<div class="input-group-prepend">
+									<span class="input-group-text">OTL Pic</span>
+								</div>
+								{% render_field damagereportimg_form.dam_OTL_pic class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3 bg-dark block">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Documents</span>
+								</div>
+								{% render_field damagereportimg_form.dam_document name="dam_document" id="dam_document" class="form-control" %}
+							</div>
+							{% render_field damagereportimg_form.damimage_wh_job_num name="damimage_wh_job_num" id="damimage_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control" %}
+
 						</div>
-						<button type="submit" class="btn btn-success " ><i class="fas fa-check"></i> Save</button>
+						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+							<div class="input-group input-group-sm mb-3 bg-dark block">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Closed Door Pic</span>
+								</div>
+								{% render_field damagereportimg_form.dam_closed_door_pic class="form-control" %}
+							</div>
+
+							<div class="input-group input-group-sm mb-3 bg-dark block">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Opened Door Pic</span>
+								</div>
+								{% render_field damagereportimg_form.dam_open_door_pic class="form-control"%}
+							</div>
+							<div class="input-group input-group-sm mb-3 bg-dark block">
+								<div class="input-group-prepend">
+									<span class="input-group-text">50% offload Pics</span>
+								</div>
+								{% render_field damagereportimg_form.dam_50_offload_pic class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3 bg-dark block">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Empty Pics</span>
+								</div>
+								{% render_field damagereportimg_form.dam_empty_vehicle class="form-control" %}
+							</div>
+						</div>
+						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+							<div class="input-group input-group-sm mb-3 bg-dark block">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Customer Approval</span>
+								</div>
+								{% render_field damagereportimg_form.dam_customer_approval name="dam_customer_approval" id="dam_customer_approval" class="form-control disable_a_href" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Status</span>
+								</div>
+								{% render_field damagereport_form.dam_status id="dam_status" class="form-control" %}
+							</div>
+						</div>
+
+						<div class="input-group input-group-sm mb-3 container-fluid">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Comments</span>
+							</div>
+							{% render_field damagereport_form.dam_comments id="dam_comments" class="form-control"%}
+						</div>
 					</div>
+					<div class="row">
+						<div class="col-1"></div>
+						<div class="col-10">
+							<div class="message text-center">
+								{% for message in messages %}
+								<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+								{% endfor %}
+							</div>
+						</div>
+						<div class="col-1"></div>
+					</div>
+					<button type="submit" class="btn btn-success " ><i class="fas fa-check"></i> Save</button>
+				</div>
 				</div>
 			</div>
 		</div>

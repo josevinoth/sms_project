@@ -80,8 +80,7 @@
 </div>
 {% endif %}
 
-<form method="POST" action="" enctype="multipart/form-data">
-	{% csrf_token %}
+
 	<div class="container-fluid">
 		<div class="card text-white bg-info mb-2" style="max-width: 100%;">
 			<div class=" col-12 card-header text-center">
@@ -90,6 +89,31 @@
 						<h3>Add/Update Truck Details</h3>
 					</div>
 					<div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
+							<button id="email_alert" type="button" onclick="email_message_fn()"
+									class="btn btn-warning btn-sm d-inline-flex align-items-center"
+									data-toggle="modal" data-target="#sendEmailModal">
+								<i class="fas fa-envelope-square mr-2"></i>
+								Email Alert
+
+							</button>
+						</div>
+					<!-- Email Modal (outside card-header) -->
+				<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-lg">
+						<div class="modal-content">
+							<div class="modal-header bg-info">
+								<h5 class="modal-title" id="sendEmailModalLabel">Email Alert</h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body text-dark">
+								{% include "asset_mgt_app/pregatein_truck_send_email.html" %}
+							</div>
+						</div>
+					</div>
+				</div>
+					<div class="col-12 col-md-4 col-lg-2 text-md-left text-center">
 						{% if truck and truck.pregatein_driver_signature and truck.pregatein_supervisor_signature %}
 						{% if truck.pregatein_job_category.id == 2 or truck.pregatein_job_category.id == 3 %}
 						{% if approval_status_id == 1 or truck.pregatein_high_value.id == 2 %}
@@ -117,8 +141,9 @@
 				</div>
 			</div>
 			<div class="card-body bg-light" >
+				<form method="POST" action="" enctype="multipart/form-data">
+	{% csrf_token %}
 				<div class="row">
-
 					<div class=" col-12 col-md-6 col-lg-3 p-1 border  ">
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
@@ -230,7 +255,7 @@
 						</div>
 						<div class="input-group input-group-sm mb-2">
 							<div class="input-group-prepend">
-								<span class="input-group-text">Invoice Number</span>
+								<span class="input-group-text">Invoice Count</span>
 							</div>
 							{% render_field form.pregatein_invoice_ref id="pregatein_invoice_ref" class="form-control" %}
 						</div>

@@ -1,15 +1,31 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+
+<!-- Main Incident Form -->
 <form method="POST" action="" id="incident_add" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="row">
         <div class="col">
             <div class="container-fluid">
                 <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center"><h3>Add/Update Incident Report</h3></div>
+                    <div class="col-12 card-header text-center">
+                        <div class="row align-items-center">
+                            <div class="col-12 col-md-8 col-lg-10 text-center">
+                                <h3>Add/Update Incident Report</h3>
+                            </div>
+                            <div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
+                                <!-- Email Modal Trigger -->
+<button type="button" class="btn btn-warning w-100" data-toggle="modal" data-target="#sendEmailModal" onclick="email_message_fn()">
+    <i class="fas fa-envelope-square"></i> Email To Customer
+</button>
+
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-body bg-light">
                         <div class="row">
+                            <!-- Left Column -->
                             <div class="col">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -21,13 +37,13 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Unit</span>
                                     </div>
-                                    {% render_field form.inc_unit id="inc_unit" class="form-control disable_a_href" id="inc_unit" %}
+                                    {% render_field form.inc_unit id="inc_unit" class="form-control disable_a_href" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Customer</span>
                                     </div>
-                                    {% render_field form.inc_customer id="inc_customer"  class="form-control" %}
+                                    {% render_field form.inc_customer id="inc_customer" class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -39,7 +55,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Details Of Incident</span>
                                     </div>
-                                    {% render_field form.inc_details id="inc_details" class="form-control"  %}
+                                    {% render_field form.inc_details id="inc_details" class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3 row-2">
                                     <div class="input-group-prepend">
@@ -48,12 +64,14 @@
                                     {% render_field form.inc_analysis id="inc_analysis" class="form-control" rows="2" %}
                                 </div>
                             </div>
+
+                            <!-- Right Column -->
                             <div class="col-6">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Action Taken</span>
                                     </div>
-                                    {% render_field form.inc_action_taken id="inc_action_taken" class="form-control"  %}
+                                    {% render_field form.inc_action_taken id="inc_action_taken" class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -82,6 +100,8 @@
                                 {% render_field form.inc_updated_by id="inc_updated_by" hidden="True" class="form-control" %}
                             </div>
                         </div>
+
+                        <!-- Messages -->
                         <div class="row">
                             <div class="col-1"></div>
                             <div class="col-10">
@@ -93,10 +113,12 @@
                             </div>
                             <div class="col-1"></div>
                         </div>
+
+                        <!-- Submit & Cancel Buttons -->
                         <button type="submit" class="btn btn-success" id="save-btn">
                             <i class="fas fa-check"></i> Submit
                         </button>
-                        <a href="{% url 'incident_list'  %}" class="btn btn-danger float-right">
+                        <a href="{% url 'incident_list' %}" class="btn btn-danger float-right">
                             <i class="fas fa-times"></i> Cancel
                         </a>
                     </div>
@@ -106,47 +128,109 @@
     </div>
 </form>
 
+<!-- Email Modal (outside the main form!) -->
+<div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title" id="sendEmailModalLabel">Send Email</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-dark">
+                <form method="post" action="{% url 'incident_send_email' %}">
+                    {% csrf_token %}
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">To</span>
+                        </div>
+                        {{ form_incident_email.recipient|add_class:"form-control" }}
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Subject</span>
+                        </div>
+                        {{ form_incident_email.subject|add_class:"form-control" }}
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Message</span>
+                        </div>
+                        {{ form_incident_email.message|add_class:"form-control" }}
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-envelope-square"></i> Send Email
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
 <script>
     $(document).ready(function() {
+        // Set updated_by
+        let updated_by = $("#inc_updated_by").val();
+        if (!updated_by) {
+            $("#inc_updated_by").val('{{user_id}}');
+        }
 
-            {
-                var updated_by = document.getElementById("inc_updated_by").value
-                if (updated_by == "")
-                {
-                    document.getElementById("inc_updated_by").value='{{user_id}}'
+        // Branch -> Unit AJAX
+        $("#inc_branch").change(function () {
+            let branchId = $(this).val();
+            $.ajax({
+                url: '{% url 'load_units' %}',
+                data: { 'branchId': branchId },
+                success: function (data) {
+                    let unit_name = JSON.parse(data)["unit_name_list"];
+                    let unit_id = JSON.parse(data)["unit_id"];
+                    $("#inc_unit").empty().append("<option value='0'>--Select--</option>");
+                    for (let i = 0; i < unit_name.length; i++) {
+                        $("#inc_unit").append("<option value='" + unit_id[i] + "'>" + unit_name[i] + "</option>");
+                    }
+                    $('#inc_unit').removeClass('disable_a_href');
                 }
-                else
-                {
-                    document.getElementById("inc_updated_by").value=updated_by;
-                }
-            }
+            });
         });
+    });
+</script>
+<script>
+    function email_message_fn() {
+        var customer = document.getElementById("inc_customer").value;
+        var branch = document.getElementById("inc_branch").value;
+        var unit = document.getElementById("inc_unit").value;
+        var date = document.getElementById("inc_incident_date").value;
+        var root_cause = document.getElementById("inc_analysis").value;
+        var action_taken = document.getElementById("inc_action_taken").value;
+        var capa_issued = document.getElementById("inc_CAPA_issueddate").value;
+        var capa_closed = document.getElementById("inc_CAPA_closeddate").value;
+        var status = document.getElementById("inc_status").value;
+
+        var message = "Dear Customer,\n\n" +
+            "Please find below the details of the reported incident:\n\n" +
+            "Customer: " + customer + "\n" +
+            "Branch: " + branch + "\n" +
+            "Unit: " + unit + "\n" +
+            "Incident Date: " + (date || "N/A") + "\n" +
+            "Root Cause: " + (root_cause || "N/A") + "\n" +
+            "Action Taken: " + (action_taken || "N/A") + "\n" +
+            "CAPA Issued Date: " + (capa_issued || "N/A") + "\n" +
+            "CAPA Closed Date: " + (capa_closed || "N/A") + "\n" +
+            "Current Status: " + (status || "N/A") + "\n\n" +
+            "Please review and confirm if any further action is needed.\n\n" +
+            "Regards,\n" +
+            "Warehouse Management Team";
+
+        document.getElementById("message").value = message;
+
+    }
+
 </script>
 
-<script>
-    $("#inc_branch").change(function () {
-       var branchId = $(this).val();
-       $.ajax({
-         url: '{% url 'load_units' %}',
-         data: {
-           'branchId': branchId,
-         },
-         success: function (data) {
-             console.log(data);
-             $('#inc_unit').removeClass('disable_a_href');
-             $("#inc_unit").empty();
-             $('#wh_bay').empty().append("<option value='0'>--Select--</option>");
-             $("#wh_stack_layer").val($("#selectBox option:first").val());
-             var unit_name=JSON.parse(data)["unit_name_list"];
-             var unit_id=JSON.parse(data)["unit_id"];
-             var len = (unit_name).length;
-             $('#inc_unit').empty().append("<option value='0'>--Select--</option>");
-             for( var i = 0; i<len; i++){
-                 $("#inc_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-             }
-         }
-       });
-     });
-</script>
 
 {% endblock content %}

@@ -1,56 +1,59 @@
 from django.contrib.auth.decorators import login_required
 from django.utils.dateparse import parse_date
-
-from ..forms import IncidentReportForm
+from ..forms import IncidentReportForm,IncidentEmailForm
 from ..models import IncidentReportInfo
 from django.contrib import messages
 from django.shortcuts import render, redirect,get_object_or_404
 from django.core.paginator import Paginator
+from ..views import send_department_email
 
 
 @login_required(login_url='login_page')
-def incident_add(request,incident_id=0):
+def incident_add(request, incident_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+
+    form_incident_email = IncidentEmailForm()  # initialize for both add/edit
+
     if request.method == "GET":
         if incident_id == 0:
             form = IncidentReportForm()
-            context = {
-                'form': form,
-                'first_name': first_name,
-                'user_id': user_id,
-            }
         else:
             incident = IncidentReportInfo.objects.get(pk=incident_id)
             form = IncidentReportForm(instance=incident)
-            context = {
-                'form': form,
-                'first_name': first_name,
-            }
-        return render(request, "asset_mgt_app/incident_report_add.html", context)
 
+        context = {
+            'form': form,
+            'first_name': first_name,
+            'form_incident_email': form_incident_email,
+            'user_id': user_id,
+        }
+        return render(request, "asset_mgt_app/incident_report_add.html", context)
     else:
+        # POST - save the incident
         if incident_id == 0:
             form = IncidentReportForm(request.POST)
         else:
             incident = IncidentReportInfo.objects.get(pk=incident_id)
             form = IncidentReportForm(request.POST, instance=incident)
+
         if form.is_valid():
             instance = form.save(commit=False)
-
             instance.save()
+
             if incident_id == 0:
                 messages.success(request, 'Record Saved Successfully')
             else:
                 messages.success(request, 'Record Updated Successfully')
         else:
             messages.error(request, 'Error: Please correct the errors below.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Error in {field}: {error}")
 
-        for field, errors in form.errors.items():
-            for error in errors:
-                print(f"Error in {field}: {error}")
-                messages.error(request, f"Error in {field}: {error}")
         return redirect(request.META['HTTP_REFERER'])
+
+
 
 @login_required(login_url='login_page')
 def incident_list(request):
@@ -100,3 +103,33 @@ def incident_report(request):
         'to_date': to_date,
     }
     return render(request, "asset_mgt_app/incident_report.html", context)
+
+
+
+@login_required(login_url='login_page')
+def incident_send_email(request):
+    if request.method == 'POST':
+        form_incident_email = IncidentEmailForm(request.POST)
+        if form_incident_email.is_valid():
+            recipient = form_incident_email.cleaned_data.get("recipient")
+            subject = form_incident_email.cleaned_data.get("subject", "Incident Report")
+            message = form_incident_email.cleaned_data.get("message", "")
+
+            if not recipient:
+                messages.error(request, "Please provide a recipient email.")
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+
+            recipient_list = [email.strip() for email in recipient.split(",") if email.strip()]
+            send_department_email('warehouse', subject, message.replace('\n', '<br>'), recipient_list, email_type=1)
+
+            messages.success(request, "Incident email sent successfully.")
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+        else:
+            messages.error(request, "Form is invalid. Please check your input.")
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    messages.error(request, "Invalid request method.")
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+
+
