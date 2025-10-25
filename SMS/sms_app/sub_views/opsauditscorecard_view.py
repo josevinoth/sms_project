@@ -290,7 +290,7 @@ def send_ops_audit_email(request):
         </html>
         """
 
-    recipient_list = ['joseph@thebvmgroup.com','sony@thebvmgroup.com','sridhar@precise.org.in']
+    recipient_list = ['joseph@thebvmgroup.com','sony@thebvmgroup.com','sridhar@precise.org.in','niranjankumar@bvmstorage.com','vinoth@bvmstorage.com','vivek@bvmstorage.com','gulsan@bvmstorage.com']
 
 
     subject = f"Ops Audit Scorecard Report - {branch} - {unit} ({date})"

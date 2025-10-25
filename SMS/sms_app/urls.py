@@ -736,7 +736,8 @@ urlpatterns = [
     path('vehicle_allotment_email/', views.vehicle_allotment_email, name='vehicle_allotment_email'),
     path('trip_report/', views.trip_report, name='trip_report'),
     path('trip_send_email/', views.trip_send_email, name='trip_send_email'),
-
+    path('incident_send_email/', views.incident_send_email, name='incident_send_email'),
+    path('truck_send_email_view', views.truck_send_email_view, name='truck_send_email_view'),
 ]
 
 

@@ -83,7 +83,7 @@ def gate_meeting_send_email(request):
     gate_meet_email_count = Gatemeetinginfo.objects.get(pk=gate_meet_id).gm_email_count
 
     recipient_list = [
-        'venkat@bvmstorage.com','prem@bvmtranssolutions.com','Deepa@thebvmgroup.com'
+        'venkat@bvmstorage.com','prem@bvmtranssolutions.com','Deepa@thebvmgroup.com','niranjankumar@bvmstorage.com','vinoth@bvmstorage.com','vivek@bvmstorage.com','gulsan@bvmstorage.com'
     ]
 
 
