@@ -207,26 +207,65 @@ def load_vehicle_number(request):
     vehicletype_placed = request.GET.get('vehicletype_placed')
     vehicletype_source = request.GET.get('vehicletype_source')
 
-    active_vehicle_numbers = TripdetailInfo.objects.filter(
+    # basic validation
+    if not vehicletype_placed or not vehicletype_source:
+        return JsonResponse({'vehicle_number_list': [], 'vehicle_number_list_id': []})
+
+    # 1) registration numbers that are in closed (2) or settled (7) trips for the given type+source
+    inactive_regs = TripdetailInfo.objects.filter(
+        tc_financestatus_id__in=[2, 7],
+        tr_vehicletype_placed=vehicletype_placed,
+        tr_vehiclesource=vehicletype_source,
+        tr_vehiclenumber__isnull=False
+    ).values_list('tr_vehiclenumber', flat=True).distinct()
+    inactive_regs = list(inactive_regs)  # make membership checks reliable
+
+    # 2) registration numbers that are currently active (exclude these)
+    active_regs = TripdetailInfo.objects.filter(
         tc_financestatus_id=1,
         tr_vehiclenumber__isnull=False
     ).values_list('tr_vehiclenumber', flat=True)
+    active_regs = list(active_regs)
 
-    used_vehicle_ids = Vehicle_allotmentInfo.objects.values_list('va_vehiclenumber_id', flat=True)
+    # 3) vehicle ids already allotted (you may want to filter this to only 'active' allotments if you have a status field)
+    used_vehicle_ids = list(Vehicle_allotmentInfo.objects.values_list('va_vehiclenumber_id', flat=True))
+    # remove None if present
     used_vehicle_ids = [vid for vid in used_vehicle_ids if vid is not None]
 
-    available_vehicles = VehiclemasterInfo.objects.filter(
+    # 4) Get vehicles matching type+ownership
+    candidate_qs = VehiclemasterInfo.objects.filter(
         vm_vehicletype=vehicletype_placed,
         vm_ownership=vehicletype_source
-    ).exclude(
-        vm_registrationnumber__in=active_vehicle_numbers
-    ).exclude(
-        id__in=used_vehicle_ids
-    ).values_list('vm_registrationnumber', 'id')
+    ).values_list('id', 'vm_registrationnumber')
+
+    vehicle_data = []
+    seen_regs = set()
+
+    for vid, reg in candidate_qs:
+        # skip duplicates
+        if reg in seen_regs:
+            continue
+
+        # Skip vehicles that are currently active in a trip
+        if reg in active_regs:
+            continue
+
+        # If vehicle is already allotted (and NOT part of inactive list), skip it
+        # (This keeps vehicles that were used in closed/settled trips available.)
+        if vid in used_vehicle_ids and reg not in inactive_regs:
+            continue
+
+        # Add hint if it was in closed/settled trips
+        label = reg
+        if reg in inactive_regs:
+            label = f"{reg}"
+
+        vehicle_data.append({'id': vid, 'number': label})
+        seen_regs.add(reg)
 
     return JsonResponse({
-        'vehicle_number_list': [v[0] for v in available_vehicles],
-        'vehicle_number_list_id': [v[1] for v in available_vehicles]
+        'vehicle_number_list': [v['number'] for v in vehicle_data],
+        'vehicle_number_list_id': [v['id'] for v in vehicle_data]
     })
 
 

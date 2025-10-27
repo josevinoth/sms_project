@@ -1,6 +1,13 @@
 {% extends "asset_mgt_app/base_1.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<style>
+    .input-error {
+        background-color: #ffcccc !important;   /* Light red background */
+        border: 2px solid red !important;       /* Red border */
+    }
+</style>
+
 <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="row">
@@ -203,5 +210,48 @@
         </div>
     </div>
 </form>
+<script>
+    function highlightIfNo(fieldId) {
+        var field = document.getElementById(fieldId);
+        if (field.value == "2") {  // Assuming 2 represents "No"
+            field.classList.add("input-error");
+        } else {
+            field.classList.remove("input-error");
+        }
+    }
+
+    // Call this function on page load for default selected values
+    window.onload = function () {
+        var fields = [
+            "thc_vehicleRC",
+            "thc_vehicle_insurance",
+            "thc_goodspermit",
+            "thc_outside_undercarriage",
+            "thc_inoutside_doors",
+            "thc_rightinnerwall",
+            "thc_leftinnerwall",
+            "thc_frontinnerwall",
+            "thc_roof",
+            "thc_floorinside",
+            "thc_gpsfit",
+            "thc_simtracking",
+            "thc_smartlock",
+            "thc_smartlockbaterry",
+            "thc_bottle_otlseal",
+            "thc_packagesloaded",
+            "thc_commercialinvoice",
+            "thc_packinglist",
+            "thc_eipl_coc",
+            "thc_consignmentnote",
+            "thc_ewaybill"
+        ];
+        fields.forEach(function (id) {
+            highlightIfNo(id);
+            document.getElementById(id).addEventListener("change", function () {
+                highlightIfNo(id);
+            });
+        });
+    };
+</script>
 
 {% endblock content %}
