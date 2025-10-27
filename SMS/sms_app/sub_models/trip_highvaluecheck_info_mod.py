@@ -27,6 +27,7 @@ class TripHighvalueInfo(models.Model):
     thc_packagesloaded = models.IntegerField(default=0)
     thc_remarks = models.TextField(max_length=50, blank=True, null=True)
     thc_approval_status = models.ForeignKey(approval_status_info, on_delete=models.CASCADE, blank=True, null=True,default=2)
+    thc_vehiclenumber = models.CharField(max_length=10,blank=True,null=True)
 
     def __str__(self):
         return self.thc_tripnumber

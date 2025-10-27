@@ -98,7 +98,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number (Market)</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control market-input" maxlength="10" pattern="[A-Z0-9]{10}" title="Enter exactly 10 uppercase letters or digits" %}
+									{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control market-input" maxlength="10" pattern="[A-Z0-9]{9,10}" title="Enter exactly 10 uppercase letters or digits" %}
 								</div>
 							</div>
 							<div class="col-3">
