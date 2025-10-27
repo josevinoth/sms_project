@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var user_role = {{ role_id }};  // inject as number, no quotes
     var approvalField = document.getElementById("hc_approval_status");
 
-    if (user_role === 2) {  // role 2 -> disable
+    if (user_role === 57) {  // role 2 -> disable
     	$('#hc_approval_status').addClass('disable_a_href');
     } else {
    		$('#hc_approval_status').removeClass('disable_a_href');

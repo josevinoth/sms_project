@@ -107,7 +107,7 @@ def goods_add(request, goods_id=0):
         Gatein_info.objects.filter(gatein_job_no=ses_gatein_id_nam).update(gatein_actual_weight=goods_checkin_weight_val)
 
     if goods_checkin_count:
-        goods_checkin_count_val = round(goods_checkin_count, 2)
+        goods_checkin_count_val = int(goods_checkin_count)
         Gatein_info.objects.filter(gatein_job_no=ses_gatein_id_nam).update(gatein_actual_count=goods_checkin_count_val)
     else:
         goods_checkin_count_val = 0

@@ -1,6 +1,27 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<div class="d-flex justify-content-center align-items-center flex-wrap gap-4">
+
+	{% if gatein_no_of_pkg_val != goods_checkin_count %}
+	<div class="alert alert-danger text-center fw-bold mr-2" role="alert">
+		 Quantity Deviation :
+		Invoice = {{ gatein_no_of_pkg_val }},
+		Check-In = {{ goods_checkin_count }}
+	</div>
+	{% endif %}
+
+	{% if gatein_weight_val != goods_checkin_weight %}
+	<div class="alert alert-danger text-center fw-bold mr-2" role="alert">
+		 Weight Deviation :
+		Invoice = {{ gatein_weight_val }},
+		Check-In = {{ goods_checkin_weight }}
+	</div>
+	{% endif %}
+
+</div>
+
+
 <div class="col-5 col-md-2 p-2 col-lg-1">
 	<a href="{% url 'search' %}" class="btn btn-primary">
 		<i class="fas fa-arrow-left"></i> Back
@@ -242,6 +263,12 @@
 									</div>
 									{% render_field goods_form.wh_fumigation_date type="datetime-local" id="wh_fumigation_date" class="form-control disable_a_href"%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" >Fumigation Cost</span>
+									</div>
+									{% render_field goods_form.wh_fumigation_cost id="wh_fumigation_cost" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -617,10 +644,12 @@
         if (fumigation_action==1)
              {
                  $('#wh_fumigation_date').removeClass('disable_a_href');
+                 $('#wh_fumigation_cost').removeClass('disable_a_href');
              }
         else
              {
                  $('#wh_fumigation_date').addClass('disable_a_href');
+                 $('#wh_fumigation_cost').addClass('disable_a_href');
              }
     }
 </script>

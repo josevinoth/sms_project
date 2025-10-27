@@ -29,7 +29,7 @@ def highvalue_approval_view(request):
 def update_highvalue_approval(request, highvalue_id):
     if request.method == "POST":
         # Only certain users can approve
-        if request.user.id not in [93, 1, 86, 7]:
+        if request.user.id not in [93, 1, 86, 89,137]:
             messages.error(request, "You are not authorized to update this approval.")
             return redirect("highvalue_approval_view")
 
@@ -71,7 +71,7 @@ def highvalue_approval2_view(request):
 def update_highvalue_approval2(request, highvalue_id):
     if request.method == "POST":
         # Sony approvers only
-        allowed_users = [93, 1, 2]
+        allowed_users = [93, 1, 57,86]
         if request.user.id not in allowed_users:
             messages.error(request, "You are not authorized to update this approval.")
             return redirect("highvalue_approval2_view")
@@ -85,6 +85,6 @@ def update_highvalue_approval2(request, highvalue_id):
         highvalue.hc_second_approval = status_obj
         highvalue.save()
 
-        messages.success(request, "Highvalue approved by Sony.")
+        messages.success(request, "Highvalue approved by Prem Sundar.")
 
     return redirect("highvalue_approval2_view")

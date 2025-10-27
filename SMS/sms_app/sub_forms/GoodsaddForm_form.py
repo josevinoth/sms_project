@@ -11,7 +11,7 @@ class GoodsaddForm(forms.ModelForm):
                   'wh_goods_weight', 'wh_goods_package_type', 'wh_goods_area', 'wh_goods_volume_weight',
                   'wh_chargeable_weight', 'wh_cbm', 'wh_weights_deviation', 'wh_dimension_deviation',
                   'wh_no_of_units_deviation', 'wh_damages1', 'wh_mismatches',
-                  'wh_branch','wh_unit','wh_bay','wh_available_area','wh_available_volume','wh_check_in_out','wh_customer_name','wh_customer_type','wh_goods_invoice','wh_stack_layer','wh_qr_rand_num','wh_consigner','wh_consignee','wh_damage_check']
+                  'wh_branch','wh_unit','wh_bay','wh_available_area','wh_available_volume','wh_check_in_out','wh_customer_name','wh_customer_type','wh_goods_invoice','wh_stack_layer','wh_qr_rand_num','wh_consigner','wh_consignee','wh_damage_check','wh_fumigation_cost']
         # fields = '__all__'
 
     wh_comments = forms.CharField(widget=forms.Textarea(attrs={'rows': 3, 'style': 'resize:none; overflow:hidden;'}),required=False)

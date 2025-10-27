@@ -81,23 +81,26 @@
 {% endif %}
 
 
-	<div class="container-fluid">
-		<div class="card text-white bg-info mb-2" style="max-width: 100%;">
-			<div class=" col-12 card-header text-center">
-				<div class="row align-items-center">
-					<div class="col-12 col-md-8 col-lg-10 text-center">
-						<h3>Add/Update Truck Details</h3>
-					</div>
-					<div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
-							<button id="email_alert" type="button" onclick="email_message_fn()"
-									class="btn btn-warning btn-sm d-inline-flex align-items-center"
-									data-toggle="modal" data-target="#sendEmailModal">
-								<i class="fas fa-envelope-square mr-2"></i>
-								Email Alert
+<div class="container-fluid">
+	<div class="card text-white bg-info mb-2" style="max-width: 100%;">
+		<div class=" col-12 card-header text-center">
+			<div class="row align-items-center">
+				<div class="col-12 col-md-4 col-lg-2 text-md-right text-center mt-2">
+					<button type="button"
+							class="btn btn-warning btn-block d-inline-flex align-items-center justify-content-center {% if not email_enable %}disabled{% endif %}"
+							{% if email_enable %}onclick="email_message_fn()" data-toggle="modal" data-target="#sendEmailModal"{% endif %}>
+						<i class="fas fa-envelope-square mr-2"></i>
+						Email Alert
+					</button>
 
-							</button>
-						</div>
-					<!-- Email Modal (outside card-header) -->
+					{% if not email_enable %}
+					<p class="text-danger small mb-0">
+						Invoice Count: {{ invoice_count }} | Created Jobs: {{ job_count }}
+					</p>
+					{% endif %}
+				</div>
+
+				<!-- Email Modal (outside card-header) -->
 				<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
 					<div class="modal-dialog modal-lg">
 						<div class="modal-content">
@@ -113,36 +116,40 @@
 						</div>
 					</div>
 				</div>
-					<div class="col-12 col-md-4 col-lg-2 text-md-left text-center">
-						{% if truck and truck.pregatein_driver_signature and truck.pregatein_supervisor_signature %}
-						{% if truck.pregatein_job_category.id == 2 or truck.pregatein_job_category.id == 3 %}
-						{% if approval_status_id == 1 or truck.pregatein_high_value.id == 2 %}
-						<a href="{% url 'pregatein_gatepass_pdf_download' truck.id %}"
-						   target="_blank"
-						   class="btn btn-warning">
-							Gate Pass
-						</a>
-						{% else %}
-						<button type="button" class="btn btn-warning" disabled>
-							Gate Pass (Waiting for Approval)
-						</button>
-						{% endif %}
-						{% else %}
-						<button type="button" class="btn btn-warning" disabled>
-							Gate Pass
-						</button>
-						{% endif %}
-						{% else %}
-						<button type="button" class="btn btn-warning" disabled>
-							Gate Pass (Signature Pending)
-						</button>
-						{% endif %}
-					</div>
+				<div class="col-12 col-md-4 col-lg-8 text-center">
+					<h3>Add/Update Truck Details</h3>
+				</div>
+
+				<div class="col-12 col-md-4 col-lg-2 text-md-left text-center">
+					{% if truck and truck.pregatein_driver_signature and truck.pregatein_supervisor_signature %}
+					{% if truck.pregatein_job_category.id == 2 or truck.pregatein_job_category.id == 3 %}
+					{% if approval_status_id == 1 or truck.pregatein_high_value.id == 2 %}
+					<a href="{% url 'pregatein_gatepass_pdf_download' truck.id %}"
+					   target="_blank"
+					   class="btn btn-warning">
+						Gate Pass
+					</a>
+					{% else %}
+					<button type="button" class="btn btn-warning" disabled>
+						Gate Pass (Waiting for Approval)
+					</button>
+					{% endif %}
+					{% else %}
+					<button type="button" class="btn btn-warning" disabled>
+						Gate Pass
+					</button>
+					{% endif %}
+					{% else %}
+					<button type="button" class="btn btn-warning" disabled>
+						Gate Pass (Signature Pending)
+					</button>
+					{% endif %}
 				</div>
 			</div>
-			<div class="card-body bg-light" >
-				<form method="POST" action="" enctype="multipart/form-data">
-	{% csrf_token %}
+		</div>
+		<div class="card-body bg-light" >
+			<form method="POST" action="" enctype="multipart/form-data">
+				{% csrf_token %}
 				<div class="row">
 					<div class=" col-12 col-md-6 col-lg-3 p-1 border  ">
 						<div class="input-group input-group-sm mb-2">
@@ -446,9 +453,9 @@
 				<a href="{% url 'pregateintruck_cancel' %}" class="btn btn-danger float-right">
 					<i class="fas fa-times"></i> Cancel
 				</a>
-			</div>
 		</div>
 	</div>
+</div>
 </form>
 <!-- Modal -->
 <div class="modal fade" id="addTransporterModal" tabindex="-1" role="dialog" aria-labelledby="addTransporterModalLabel" aria-hidden="true">

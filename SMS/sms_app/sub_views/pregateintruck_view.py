@@ -46,12 +46,19 @@ def pregateintruck_add(request, pregateintruck_id=0):
             form = PregateintruckForm()
             truck = None
             high_value_check = None
+            email_enable = False
+            invoice_count = 0
+            job_count = 0
         else:
             pregateintruck = get_object_or_404(Pregateintruckinfo, pk=pregateintruck_id)
             truck = pregateintruck
             form = PregateintruckForm(instance=pregateintruck)
             request.session['ses_pregateintruck_id'] = pregateintruck_id
             high_value_check = getattr(pregateintruck, 'pregatein_high_value_id', None)
+
+            invoice_count = int(truck.pregatein_invoice_ref or 0)
+            job_count = Gatein_info.objects.filter(gatein_truck_number_n=truck).count()
+            email_enable = (invoice_count == job_count)
 
         context = {
             'form': form,
@@ -64,7 +71,9 @@ def pregateintruck_add(request, pregateintruck_id=0):
             'checklist': checklist,
             'high_value_check': high_value_check,
             'approval_status_id': approval_status_id,  # ✅ add this
-
+            'email_enable': email_enable,
+            'invoice_count': invoice_count,
+            'job_count': job_count,
         }
         return render(request, "asset_mgt_app/pregateintruck_add.html", context)
 
@@ -290,7 +299,7 @@ def truck_send_email_view(request, pre_gatein_id=None):
                 for item in goods:
 
                     shipper = item.wh_consigner or ""
-                    shipper_value = getattr(item.wh_lb_job_no_id, 'lb_stock_invoice_value', '')
+                    shipper_value = item.wh_invoice_value,
                     invoice = getattr(item.wh_gate_injob_no_id, 'gatein_invoice', '')
                     loading_start = getattr(item.wh_lb_job_no_id, "lb_stock_unloading_start_time", "")
                     loading_end = getattr(item.wh_lb_job_no_id, "lb_stock_unloading_end_time", "")
