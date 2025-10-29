@@ -63,7 +63,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text">Vehicle Type Placed</span>
 											</div>
-											{% render_field vehicle_allotment_form.va_vehicletype_placed id="va_vehicletype_placed" onchange="loadVendorSaleRate()" class="form-control" %}
+											{% render_field vehicle_allotment_form.va_vehicletype_placed id="va_vehicletype_placed"  class="form-control" %}
 										</div>
 									</div>
 									<div class="col-2" style="display:flex; align-items:center; justify-content:center; height:38px;">
@@ -495,14 +495,41 @@
 </script>
 <script>
 	$(document).ready(function() {
-    // Ensure only one checkbox can be checked
+    // Ensure only one checkbox is checked at a time
     $('.vehicle-check').on('change', function() {
         $('.vehicle-check').not(this).prop('checked', false); // uncheck others
 
+        // Trigger rate load if this checkbox is checked
         if ($(this).is(':checked')) {
-            loadVendorSaleRate($(this).attr('id'));
+            const checkboxId = $(this).attr('id');
+            loadVendorSaleRate(checkboxId);
+        } else {
+            $('#va_sale').val(''); // clear sale rate if no checkbox
+            calculateProfit();
         }
     });
+
+    // Trigger rate load if vehicle type is changed AND its corresponding checkbox is checked
+   $('#va_vehicletype').on('change', function() {
+    if ($('#chk_requested').is(':checked')) {
+        loadVendorSaleRate('chk_requested'); // pass checkbox ID
+    }
+});
+
+$('#va_vehicletype_placed').on('change', function() {
+    if ($('#chk_placed').is(':checked')) {
+        loadVendorSaleRate('chk_placed'); // pass checkbox ID
+    }
+});
+
+
+    // On page load, if a checkbox is already checked, load rate
+    if ($('#chk_requested').is(':checked')) {
+    loadVendorSaleRate('chk_requested');
+} else if ($('#chk_placed').is(':checked')) {
+    loadVendorSaleRate('chk_placed');
+}
+
 });
 
 function loadVendorSaleRate(checkboxId) {
@@ -516,12 +543,14 @@ function loadVendorSaleRate(checkboxId) {
         },
         dataType: 'json',
         success: function(data) {
-            var saleRate = data.sale_rate;
-            if (saleRate === 0 || saleRate === "0") {
+            const saleRate = data.sale_rate;
+            if (!saleRate || saleRate === "0") {
                 alert("Rate not assigned for this customer");
+                $('#va_sale').val('');
+            } else {
+                $('#va_sale').val(saleRate);
             }
-            $('#va_sale').val(saleRate);
-            calculateProfit();  // Trigger profit calculation
+            calculateProfit();
         },
         error: function() {
             alert('Error fetching vendor sale rate.');
