@@ -24,4 +24,5 @@ class VehiclemasteraddForm(forms.ModelForm):
         self.fields['vm_permittype'].empty_label = "--Select--"
         self.fields['vm_permitcopy'].empty_label = "--Select--"
         self.fields['vm_pollutioncertificatecopy'].empty_label = "--Select--"
+        self.fields['vm_vendor'].empty_label = "--Select--"
 

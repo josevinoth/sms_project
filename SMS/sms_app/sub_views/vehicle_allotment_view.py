@@ -384,33 +384,39 @@ def get_vendor_buy_rate(request):
     return JsonResponse(data)
 @login_required(login_url='login_page')
 def get_vendor_sale_rate(request):
-    vehicle_id = request.GET.get('vehicle_id')  # This is actually a vehicle type ID, not the Vehicle_allotmentInfo ID
+    checkbox_id = request.GET.get('checkbox_id')  # 'chk_requested' or 'chk_placed'
+    vehicle_requested = request.GET.get('vehicle_requested')
+    vehicle_placed = request.GET.get('vehicle_placed')
     vendor_id = request.GET.get('vendor_id')
     enquiry_id = request.session.get('enquiry_num_id')
 
-    print("vehicle_id:", vehicle_id)
-    print("vendor_id:", vendor_id)
-    print("enquiry_id:", enquiry_id)
-
+    if not enquiry_id:
+        return JsonResponse({'sale_rate': "0"})
 
     enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)
 
+    # Determine which vehicle type to use based on the checkbox
+    if checkbox_id == 'chk_requested':
+        vehicle_id = vehicle_requested
+    elif checkbox_id == 'chk_placed':
+        vehicle_id = vehicle_placed
+    else:
+        return JsonResponse({'sale_rate': "0"})
+
+    if not vehicle_id:
+        return JsonResponse({'sale_rate': "0"})
 
     # Filter for the matching vendor rate
     rate = RtratemasterInfo.objects.filter(
         ro_customer=enquiry.en_customername,
         ro_fromlocation=enquiry.en_fromlocaion,
         ro_tolocation=enquiry.en_tolocation,
-        ro_vehicletype=vehicle_id  # This is likely a ForeignKey ID
+        ro_vehicletype=vehicle_id  # ForeignKey to vehicle type
     ).first()
 
     sale_rate = str(rate.ro_rate) if rate else "0"
-    print("sale_rate Rate:", sale_rate)
 
-    data = {
-        'sale_rate': sale_rate,
-    }
-    return JsonResponse(data)
+    return JsonResponse({'sale_rate': sale_rate})
 
 @login_required(login_url='login_page')
 def vendor_filter(request):

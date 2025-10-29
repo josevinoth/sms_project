@@ -39,9 +39,9 @@
 									</div>
 									{% render_field vehicle_allotment_form.va_enquirynumber id="va_enquirynumber" class="form-control disable_a_href" %}
 								</div>
-								<div class="row">
+								<div class="row align-items-center mb-3">
 									<div class="col-10">
-										<div class="input-group input-group-sm mb-3">
+										<div class="input-group input-group-sm">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Vehicle Type Requested</span>
 											</div>
@@ -51,33 +51,25 @@
 											</div>
 										</div>
 									</div>
-									<div class="col-2">
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Verify"></i>
-												<!--										<span class="input-group-text">Vehicle Type Requested</span>-->
-											</div>
-											{% render_field vehicle_allotment_form.va_vehicletype_selection_requested id="va_vehicletype_selection_requested" class="form-control" %}
-										</div>
+									<div class="col-2" style="display:flex; align-items:center; justify-content:center; height:38px;">
+										<input type="checkbox" id="chk_requested" class="vehicle-check mr-2"
+											   style="width:22px; height:22px; cursor:pointer; vertical-align:middle;">
+										<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Verify Requested"></i>
 									</div>
 								</div>
-								<div class="row">
+								<div class="row align-items-center mb-3">
 									<div class="col-10">
-										<div class="input-group input-group-sm mb-3">
+										<div class="input-group input-group-sm">
 											<div class="input-group-prepend">
 												<span class="input-group-text">Vehicle Type Placed</span>
 											</div>
 											{% render_field vehicle_allotment_form.va_vehicletype_placed id="va_vehicletype_placed" onchange="loadVendorSaleRate()" class="form-control" %}
 										</div>
 									</div>
-									<div class="col-2">
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Verify"></i>
-												<!--										<span class="input-group-text">Vehicle Type Requested</span>-->
-											</div>
-											{% render_field vehicle_allotment_form.va_vehicletype_selection_placed id="va_vehicletype_selection_placed" class="form-control " %}
-										</div>
+									<div class="col-2" style="display:flex; align-items:center; justify-content:center; height:38px;">
+										<input type="checkbox" id="chk_placed" class="vehicle-check mr-2"
+											   style="width:22px; height:22px; cursor:pointer; vertical-align:middle;">
+										<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Verify Placed"></i>
 									</div>
 								</div>
 							</div>
@@ -502,22 +494,39 @@
 
 </script>
 <script>
-	function loadVendorSaleRate() {
-  var vehicleId = $('#va_vehicletype_placed').val();
-  $.ajax({
-    url: '{% url 'get_vendor_sale_rate' %}',
-    type: 'GET',
-    data: {vehicle_id: vehicleId},
-    dataType: 'json',
-    success: function(data) {
-      var saleRate = data.sale_rate;
-      if (saleRate === 0 || saleRate === "0") {
-        alert("Rate not assigned for this customer");
-      }
-      document.getElementById("va_sale").value = saleRate;
-      calculateProfit();  // Trigger profit calculation after setting buy
-    }
-  });
+	$(document).ready(function() {
+    // Ensure only one checkbox can be checked
+    $('.vehicle-check').on('change', function() {
+        $('.vehicle-check').not(this).prop('checked', false); // uncheck others
+
+        if ($(this).is(':checked')) {
+            loadVendorSaleRate($(this).attr('id'));
+        }
+    });
+});
+
+function loadVendorSaleRate(checkboxId) {
+    $.ajax({
+        url: '{% url "get_vendor_sale_rate" %}',
+        type: 'GET',
+        data: {
+            checkbox_id: checkboxId,
+            vehicle_requested: $('#va_vehicletype').val(),
+            vehicle_placed: $('#va_vehicletype_placed').val()
+        },
+        dataType: 'json',
+        success: function(data) {
+            var saleRate = data.sale_rate;
+            if (saleRate === 0 || saleRate === "0") {
+                alert("Rate not assigned for this customer");
+            }
+            $('#va_sale').val(saleRate);
+            calculateProfit();  // Trigger profit calculation
+        },
+        error: function() {
+            alert('Error fetching vendor sale rate.');
+        }
+    });
 }
 
 </script>
@@ -608,9 +617,9 @@ $(document).ready(function () {
 {% block scripts %}
 
 <script>
-	 $("#va_vehiclenumber").select2({
-    	width: 'resolve'
-    });
+	$("#va_vehiclenumber").select2({
+       width: 'resolve'
+   });
 </script>
 {% endblock scripts %}
 
