@@ -299,7 +299,7 @@ def truck_send_email_view(request, pre_gatein_id=None):
                 for item in goods:
 
                     shipper = item.wh_consigner or ""
-                    shipper_value = item.wh_invoice_value,
+                    shipper_value = item.wh_invoice_value or ""
                     invoice = getattr(item.wh_gate_injob_no_id, 'gatein_invoice', '')
                     loading_start = getattr(item.wh_lb_job_no_id, "lb_stock_unloading_start_time", "")
                     loading_end = getattr(item.wh_lb_job_no_id, "lb_stock_unloading_end_time", "")

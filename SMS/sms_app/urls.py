@@ -739,6 +739,10 @@ urlpatterns = [
     path('trip_send_email/', views.trip_send_email, name='trip_send_email'),
     path('incident_send_email/', views.incident_send_email, name='incident_send_email'),
     path('truck_send_email_view', views.truck_send_email_view, name='truck_send_email_view'),
+    path("dispatch/upload/<int:pk>/", views.dispatch_upload_attachment, name="dispatch_upload_attachment"),
+    path('dispatch/<int:pk>/upload/<str:att_type>/', views.dispatch_upload_attachment, name='dispatch_upload_attachment'),
+    path('dispatch/<int:pk>/delete/<str:att_type>/', views.dispatch_delete_attachment, name='dispatch_delete_attachment'),
+
 ]
 
 

@@ -37,21 +37,19 @@
     </tr>
 
     {% if warehouse_goods_list %}
-  {% for goods in warehouse_goods_list %}
     <tr>
       <th>Shipper Invoice</th>
-      <td>{{ goods.wh_goods_invoice }}</td>
+      <td>{{ warehouse_goods_list.0.wh_goods_invoice }}</td>
     </tr>
     <tr>
       <th>Shipper Name</th>
-      <td>{{ goods.wh_consigner }}</td>
+      <td>{{ warehouse_goods_list.0.wh_consigner }}</td>
     </tr>
-  {% endfor %}
-{% else %}
-  <tr>
-    <td colspan="2">No warehouse goods found.</td>
-  </tr>
-{% endif %}
+    {% else %}
+    <tr>
+      <td colspan="2">No warehouse goods found.</td>
+    </tr>
+    {% endif %}
 
     <tr>
       <th>Comments</th>

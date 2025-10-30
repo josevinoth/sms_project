@@ -11,9 +11,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_exempt
 from xhtml2pdf import pisa
 from django.db.models import CharField, Value
 from django.db.models.functions import Concat
@@ -630,3 +631,34 @@ def dispatch_partial_goods(request):
 
     goods.save()
     return JsonResponse({'message': f'{dispatch_qty} units dispatched successfully.'})
+
+@csrf_exempt
+@login_required(login_url='login_page')
+def dispatch_upload_attachment(request, pk, att_type):
+    if request.method == 'POST' and request.FILES.get('attachment'):
+        instance = get_object_or_404(Dispatch_info, pk=pk)
+        uploaded_file = request.FILES['attachment']
+
+        if att_type == 'gatepass':
+            instance.dispatch_gatepass_att = uploaded_file
+
+        instance.save()
+        messages.success(request, 'Attachment uploaded successfully.')
+    else:
+        messages.error(request, 'Attachment upload failed. Please try again.')
+
+    return redirect(request.META.get('HTTP_REFERER', 'gatein_list'))
+@csrf_exempt
+@login_required(login_url='login_page')
+def dispatch_delete_attachment(request, pk, att_type):
+    if request.method == 'POST':
+        instance = get_object_or_404(Dispatch_info, pk=pk)
+
+        if att_type == 'gatepass' and instance.dispatch_gatepass_att:
+            instance.dispatch_gatepass_att.delete(save=False)
+            instance.dispatch_gatepass_att = None
+
+        instance.save()
+        messages.success(request, 'Attachment deleted successfully.')
+
+    return redirect(request.META.get('HTTP_REFERER', 'gatein_list'))

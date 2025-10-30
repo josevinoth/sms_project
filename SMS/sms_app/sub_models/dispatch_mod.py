@@ -39,3 +39,4 @@ class Dispatch_info(models.Model):
     dispatch_reference = models.CharField(null=True,blank=True, max_length=40)
     dispatch_driver_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
     dispatch_supervisor_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
+    dispatch_gatepass_att = models.FileField(upload_to=user_directory_path, null=True, blank=True)
