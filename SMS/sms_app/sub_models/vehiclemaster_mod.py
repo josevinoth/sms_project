@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import VehiclecategoryInfo,VhmanufacturerInfo,VehiclemodelInfo,OwnershipInfo,BodyInfo,VehicletypeInfo,AxletypeInfo,FueltypeInfo,VehiclecolourInfo,Insurance_Type,PermittypeInfo,StatusList
+from ..models import Vendor_info,VehiclecategoryInfo,VhmanufacturerInfo,VehiclemodelInfo,OwnershipInfo,BodyInfo,VehicletypeInfo,AxletypeInfo,FueltypeInfo,VehiclecolourInfo,Insurance_Type,PermittypeInfo,StatusList
 
 def insurance_attach_path(instance, filename):
     return 'Insurance attachfiles/{0}/{1}'.format(instance.vm_vehiclemanufacturer, filename)
@@ -108,6 +108,7 @@ class VehiclemasterInfo(models.Model):
     vm_rto_attach = models.FileField(upload_to=rto_attach_path, null=True, blank=True)
     vm_permit_attach = models.FileField(upload_to=permit_attach_path, null=True, blank=True)
     vm_pollution_attach = models.FileField(upload_to=pollution_attach_path, null=True, blank=True)
+    vm_vendor = models.ForeignKey(Vendor_info,on_delete=models.CASCADE, default='',blank=True, null=True)
 
 
     def __str__(self):

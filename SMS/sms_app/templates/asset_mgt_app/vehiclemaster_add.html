@@ -45,8 +45,13 @@
 															<div class="input-group-prepend">
 																<span class="input-group-text">Ownership</span>
 															</div>
-															{% render_field form.vm_ownership class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+															{% render_field form.vm_ownership class="form-control" id="id_vm_ownership" %}
+														</div>
+														<div class="input-group input-group-sm mb-3" id="vendor_group">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Vendor Name</span>
+															</div>
+															{% render_field form.vm_vendor class="form-control" id="id_vm_vendor" %}
 														</div>
 														<div class="input-group input-group-sm mb-3">
 															<div class="input-group-prepend">
@@ -811,4 +816,24 @@
 
 </form>
 
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+        const ownershipField = document.getElementById('id_vm_ownership');
+        const vendorGroup = document.getElementById('vendor_group');
+
+        function toggleVendor() {
+            if (ownershipField.value == '2') { // Ownership id = 2
+                vendorGroup.style.display = 'flex'; // show field
+            } else {
+                vendorGroup.style.display = 'none'; // hide field
+            }
+        }
+
+        // Initialize on page load
+        toggleVendor();
+
+        // Listen for changes
+        ownershipField.addEventListener('change', toggleVendor);
+    });
+</script>
 {% endblock content %}
