@@ -65,6 +65,12 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     # enquiry_num_id = request.session.get('enquiry_num_id')
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
     enquiry_num_id = request.session.get('ses_enqiury_id')
+    has_invoice_or_ewaybill = ConsignmentgoodsInfo.objects.filter(
+        cg_consignmentnumber=consignmentdetail_id
+    ).filter(
+        Q(cg_consignerinvoice__isnull=False, cg_consignerinvoice__gt='') |
+        Q(cg_ebillno__isnull=False, cg_ebillno__gt='')
+    ).exists()
 
     if consignmentdetail_id != 0:
         enquiry_num_id = ConsignmentdetailInfo.objects.get(id=consignmentdetail_id).co_enquirynumber.id
@@ -107,6 +113,8 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentdetail_id),
             'vehicle_type': vehicle_type,
             'user_branch': user_branch,
+            'has_invoice_or_ewaybill': has_invoice_or_ewaybill,  # ✅ Add this flag
+
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 

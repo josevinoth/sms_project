@@ -190,7 +190,7 @@ def transport_calculate_trip_charges(request):
     enquiry_number = EnquirynoteInfo.objects.get(pk=enquiry_number_id).en_enquirynumber
     customer_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_customername
     customer_department_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_customerdepartment
-    vehicle_category_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_vehiclecategory
+    # vehicle_category_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_vehiclecategory
 
     if trip_category_id == '1':
         # Retrieve RoRateInfo based on the selected values
@@ -201,7 +201,7 @@ def transport_calculate_trip_charges(request):
                 ro_vehicletype=vehicle_type_id,
                 ro_customer=customer_id,
                 ro_customerdepartment=customer_department_id,
-                ro_vehiclecategory_id=vehicle_category_id
+                # ro_vehiclecategory_id=vehicle_category_id
             ).ro_rate
             print('ro_rate',ro_rate)
             return JsonResponse({'ro_rate': ro_rate})
