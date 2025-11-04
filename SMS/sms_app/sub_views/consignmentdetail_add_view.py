@@ -144,13 +144,18 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
                 con_det_form = ConsignmentdetailaddForm(request.POST, instance=consignmentdetail)
                 if con_det_form.is_valid():
-                    consignment_detail = con_det_form.save(commit=False)  # <-- Don't save yet
+                    consignment_detail = con_det_form.save(commit=False)
                     consignment_detail.co_vehicletype = vehicle_type
-                    con_det_form.save()
+                    consignment_detail.save()
+
                     enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
-                    consignmentdetail_list = list(ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id).values_list('co_consignmentnumber', flat=True))
+                    consignmentdetail_list = list(
+                        ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+                        .values_list('co_consignmentnumber', flat=True)
+                    )
                     consignmentdetail_list.sort()
-                    EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_consignmentdetails=consignmentdetail_list)
+                    EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(
+                        en_consignmentdetails=consignmentdetail_list)
 
                     messages.success(request, 'Record Updated Successfully')
 
