@@ -20,9 +20,11 @@
 					</div>
 					<div class="col-2 d-flex align-items-center ">
 						{% if has_invoice_or_ewaybill %}
-						<a href="{% url 'consignment_note_pdf' consignmentdetail_id %}" class="btn btn-warning">
+						<button type="button" class="btn btn-warning"
+								onclick="window.open('{% url 'consignment_note_pdf' consignmentdetail_id %}', '_blank');">
 							Consignment note <i class="fa fa-download" aria-hidden="true"></i>
-						</a>
+						</button>
+
 						{% else %}
 						<button class="btn btn-secondary" disabled>
 							Consignment note <i class="fa fa-download" aria-hidden="true"></i>

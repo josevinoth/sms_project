@@ -739,6 +739,13 @@ urlpatterns = [
     path('trip_send_email/', views.trip_send_email, name='trip_send_email'),
     path('incident_send_email/', views.incident_send_email, name='incident_send_email'),
     path('truck_send_email_view', views.truck_send_email_view, name='truck_send_email_view'),
+    path('driver_settlement_add/', views.driver_settlement_add, name='driver_settlement_add'),
+    path('driver_settlement_update/<int:ds_id>/', views.driver_settlement_add, name='driver_settlement_update'),
+    path('driver_settlement_list/', views.driver_settlement_list, name='driver_settlement_list'),
+    path('driver_settlement_delete/<int:ds_id>/', views.driver_settlement_delete, name='driver_settlement_delete'),
+    path('driver_get_full_name/', views.get_full_name_driver, name='driver_get_full_name'),
+    path('get_trip_totalcost/', views.get_trip_totalcost, name='get_trip_totalcost'),
+
 ]
 
 

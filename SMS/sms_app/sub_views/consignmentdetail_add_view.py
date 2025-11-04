@@ -81,7 +81,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         return redirect('some_fallback_view')
 
     customer = EnquirynoteInfo.objects.get(pk=enquiry_num_id).en_customername
-    customer_obj = CustomerInfo.objects.get(cu_name=customer)
+    customer_obj = CustomerInfo.objects.filter(cu_name=customer).first()
     customer_id = customer_obj.id
     customer_code = customer_obj.cu_customercode
 

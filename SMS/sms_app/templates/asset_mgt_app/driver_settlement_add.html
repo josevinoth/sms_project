@@ -1,0 +1,227 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center"><h3>Add/Update Driver Settlement</h3></div>
+                    <div class="card-body bg-light">
+                        <div class="row">
+                            <!-- LEFT COLUMN -->
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">DS Number</span>
+                                    </div>
+                                    {% render_field form.ds_number id="ds_number" class="form-control disable_a_href" %}
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Business Type</span>
+                                    </div>
+                                    {% render_field form.business_type id="business_type" class="form-control" %}
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Driver ID</span>
+                                    </div>
+                                    {% render_field form.staff_id id="staff_id" class="form-control" onchange="getFullNameDriver()" %}
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Driver Name</span>
+                                    </div>
+                                    {% render_field form.staff_name id="staff_name" class="form-control disable_a_href" %}
+                                </div>
+                            </div>
+
+                            <!-- RIGHT COLUMN -->
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Transaction Date</span>
+                                    </div>
+                                    {% render_field form.transaction_date id="transaction_date" type="Date" class="form-control" %}
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Transaction Type</span>
+                                    </div>
+                                    {% render_field form.transaction_type id="transaction_type" class="form-control" %}
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Advance Amount</span>
+                                    </div>
+                                    {% render_field form.amount id="amount" class="form-control" %}
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Trip Number</span>
+                                    </div>
+                                    {% render_field form.trip id="trip_select" class="form-control" %}
+                                </div>
+
+                                <!-- TOTAL TRIP COST WITH VIEW BUTTON -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Total Trip Cost</span>
+                                    </div>
+                                    {% render_field form.total_trip_cost id="total_trip_cost_field" class="form-control" readonly="readonly" %}
+                                    <button type="button" class="btn btn-info" id="view_trip_cost_btn">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Balance</span>
+                                    </div>
+                                    {% render_field form.balance id="balance_field" class="form-control" readonly="readonly" %}
+                                </div>
+
+                                {% render_field form.ds_updated_by id="ds_updated_by" hidden="True" class="form-control" %}
+                            </div>
+                        </div>
+
+                        <!-- MESSAGE SECTION -->
+                        <div class="row">
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
+
+                        <!-- BUTTONS -->
+                        <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Submit</button>
+                        <a href="{% url 'driver_settlement_list' %}" class="btn btn-danger float-right">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- MODAL FOR TRIP COST BREAKDOWN -->
+<div class="modal fade" id="tripCostModal" tabindex="-1" aria-labelledby="tripCostModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="tripCostModalLabel">Trip Cost Breakdown</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Charge Type</th>
+                    <th>Amount (₹)</th>
+                </tr>
+            </thead>
+            <tbody id="tripCostBody">
+                <!-- Filled dynamically -->
+            </tbody>
+            <tfoot>
+                <tr class="fw-bold">
+                    <td>Total</td>
+                    <td id="tripTotalCost">0</td>
+                </tr>
+            </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script>
+    $(document).ready(function() {
+        // Set updated_by
+        $('#ds_updated_by').val('{{ user_id }}');
+
+        // Update balance
+        function calculateBalance() {
+            var amount = parseFloat($('#amount').val()) || 0;
+            var totalCost = parseFloat($('#total_trip_cost_field').val()) || 0;
+            var balance = amount - totalCost;
+            $('#balance_field').val(balance.toFixed(2));
+        }
+
+        $('#amount').on('input', calculateBalance);
+
+        // Fetch total trip cost on trip change
+        $('#trip_select').change(function() {
+            var tripId = $(this).val();
+            if (tripId) {
+                $.ajax({
+                    url: "{% url 'get_trip_totalcost' %}",
+                    data: { 'trip_id': tripId },
+                    dataType: 'json',
+                    success: function(data) {
+                        $('#total_trip_cost_field').val(data.total_cost.toFixed(2));
+                        calculateBalance();
+                        $('#view_trip_cost_btn').data('trip-id', tripId);
+                    }
+                });
+            } else {
+                $('#total_trip_cost_field').val('0.00');
+                calculateBalance();
+            }
+        });
+
+        // Fetch driver full name
+        window.getFullNameDriver = function() {
+            var selectedUsername = $("#staff_id").val();
+            $.ajax({
+                url: '{% url "driver_get_full_name" %}',
+                data: { 'username': selectedUsername },
+                dataType: 'json',
+                success: function(data) {
+                    if ('full_name' in data) {
+                        $("#staff_name").val(data.full_name);
+                    }
+                }
+            });
+        }
+
+        // View trip cost breakdown in modal
+        $('#view_trip_cost_btn').click(function() {
+            var tripId = $(this).data('trip-id');
+            if (!tripId) return alert("Select a trip first!");
+
+            $.ajax({
+                url: "{% url 'get_trip_totalcost' %}",
+                data: { 'trip_id': tripId },
+                dataType: 'json',
+                success: function(data) {
+                    var tbody = $('#tripCostBody');
+                    tbody.empty();
+                    $.each(data.details, function(key, value) {
+                        tbody.append('<tr><td>' + key + '</td><td>₹' + parseFloat(value).toFixed(2) + '</td></tr>');
+                    });
+                    $('#tripTotalCost').text('₹' + parseFloat(data.total_cost).toFixed(2));
+                    var tripModal = new bootstrap.Modal(document.getElementById('tripCostModal'));
+                    tripModal.show();
+                }
+            });
+        });
+    });
+</script>
+{% endblock content %}
