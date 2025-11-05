@@ -70,25 +70,31 @@ def driver_settlement_add(request, ds_id=0):
             messages.error(request, 'Record Not Saved. Please Fill All Required Fields')
             return redirect(request.META['HTTP_REFERER'])
 
-
 @login_required(login_url='login_page')
 def driver_settlement_list(request):
+    from django.db.models import Sum
+
     first_name = request.session.get('first_name')
 
     driver_settlements = driver_settlement_info.objects.all().order_by('-id')
-    driver_ids = driver_settlement_info.objects.values_list('staff_id', flat=True).distinct()
 
-    driver_id = request.GET.get('driver_id')
-    if driver_id:
-        driver_settlements = driver_settlements.filter(staff_id=driver_id)
+    # Get unique, cleaned driver names
+    all_names = driver_settlement_info.objects.values_list('staff_name', flat=True)
+    driver_names = sorted(set(name.strip() for name in all_names if name))
+
+    # Get selected driver name from query
+    driver_name = request.GET.get('driver_name')
+
+    if driver_name:
+        driver_settlements = driver_settlements.filter(staff_name__iexact=driver_name.strip())
 
     total_advance = driver_settlements.aggregate(total_advance=Sum('amount'))['total_advance'] or 0
     total_balance = driver_settlements.aggregate(total_balance=Sum('balance'))['total_balance'] or 0
 
     context = {
         'driver_settlement_list': driver_settlements,
-        'driver_ids': driver_ids,
-        'selected_driver': driver_id,
+        'driver_names': driver_names,
+        'selected_driver': driver_name,
         'total_advance': total_advance,
         'total_balance': total_balance,
         'first_name': first_name,

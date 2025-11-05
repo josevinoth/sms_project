@@ -5,38 +5,44 @@
 <!-- Heading -->
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
-              <div class="col-5"></div>
-        <div class="col-12 col-md-8 col-lg-2 rounded text-center bg-info shadow-box">
+              <div class="col-4"></div>
+        <div class="col-12 col-md-12 col-lg-4 rounded text-center bg-info shadow-box">
             <h3>Driver Settlement List</h3>
         </div>
-              <div class="col-5"></div>
+              <div class="col-4"></div>
 
     </div>
 </div>
 
 <!-- Buttons & Filter & Totals Section -->
 <div class="container-fluid mb-3">
-    <div class="row g-2 align-items-center">
+    <div class="row align-items-center gy-2">
 
-        <!-- Buttons Section -->
-        <div class="col-12 col-lg-4 d-flex flex-wrap gap-2 mb-2">
-            <a href="{% url 'home_page' %}" class="btn btn-primary d-flex align-items-center px-3">
-                <i class="fas fa-arrow-left me-2"></i> Back
+        <!-- Back Button -->
+        <div class="col-6 col-md-2 col-lg-1 text-center text-md-start">
+            <a href="{% url 'home_page' %}" class="btn btn-primary w-100 btn-lg">
+                <i class="fas fa-arrow-left"></i> Back
             </a>
-            <a href="{% url 'driver_settlement_add' %}" class="btn btn-success d-flex align-items-center px-3">
-                <i class="fas fa-plus me-2"></i> Add
+        </div>
+
+        <!-- Add Button -->
+        <div class="col-6 col-md-2 col-lg-1 text-center text-md-start">
+            <a href="{% url 'driver_settlement_add' %}" class="btn btn-success w-100 btn-lg">
+                <i class="fas fa-plus"></i> Add
             </a>
         </div>
 
         <!-- Filter Section -->
-        <div class="col-12 col-lg-4 mb-2">
-            <form method="get" id="filterForm">
-                <label for="driver_filter" class="form-label"><strong>Filter by Driver ID</strong></label>
-                <select name="driver_id" id="driver_filter" class="form-control">
+        <div class="col-12 col-md-6 col-lg-4">
+            <form method="get" id="filterForm" class="d-flex flex-column">
+                <label for="driver_filter" class="form-label mb-1">
+                    <strong>Filter by Driver Name</strong>
+                </label>
+                <select name="driver_name" id="driver_filter" class="form-control">
                     <option value="">-- All Drivers --</option>
-                    {% for driver_id in driver_ids %}
-                        <option value="{{ driver_id }}" {% if driver_id == selected_driver %}selected{% endif %}>
-                            {{ driver_id }}
+                    {% for name in driver_names %}
+                        <option value="{{ name }}" {% if name == selected_driver %}selected{% endif %}>
+                            {{ name }}
                         </option>
                     {% endfor %}
                 </select>
@@ -44,15 +50,15 @@
         </div>
 
         <!-- Totals Section -->
-        <div class="col-12 col-lg-4 mb-2">
-            <div class="d-flex justify-content-lg-end justify-content-start gap-3">
-                <div class="p-2 bg-light border rounded shadow-sm text-center">
+        <div class="col-12 col-md-12 col-lg-6 mt-3 mt-lg-0">
+            <div class="d-flex justify-content-lg-end justify-content-start gap-3 flex-wrap">
+                <div class="p-2 bg-light border rounded shadow-sm text-center flex-grow-1 flex-lg-grow-0">
                     <strong>Total Advance:</strong>
-                  <span class="text-primary"><strong>₹{{ total_advance|floatformat:2 }}</strong></span>
+                    <span class="text-primary"><strong>₹{{ total_advance|floatformat:2 }}</strong></span>
                 </div>
-                <div class="p-2 bg-light border rounded shadow-sm text-center">
+                <div class="p-2 bg-light border rounded shadow-sm text-center flex-grow-1 flex-lg-grow-0">
                     <strong>Total Balance:</strong>
-                  <span class="text-success"><strong>₹{{ total_balance|floatformat:2 }}</strong></span>
+                    <span class="text-success"><strong>₹{{ total_balance|floatformat:2 }}</strong></span>
                 </div>
             </div>
         </div>
@@ -136,7 +142,7 @@
 
 <script>
     // Submit form on driver filter change
-    document.getElementById('driver_filter').addEventListener('change', function() {
+     document.getElementById('driver_filter').addEventListener('change', function() {
         document.getElementById('filterForm').submit();
     });
 
