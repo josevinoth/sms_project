@@ -1,10 +1,12 @@
 import base64
+from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 from django.core.files.base import ContentFile
 from django.db.models import Q
+from django.utils.timezone import make_aware
 
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm,TripdetailaddForm
@@ -374,23 +376,61 @@ def trip_email(request):
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
     trip = TripdetailInfo.objects.get(pk=tripdetail_id)
-    status_map = {
-        'trip started': 'started',
-        'trip closed': 'closed',
-    }
 
+    # ---- Helper function: parse and format date ----
+    def parse_dt(value):
+        if not value:
+            return None
+        try:
+            if isinstance(value, datetime):
+                return value
+            return make_aware(datetime.strptime(str(value).split('+')[0].strip(), "%Y-%m-%d %H:%M:%S"))
+        except Exception:
+            return None
+
+    def format_datetime(value):
+        if not value:
+            return ""
+        try:
+            if isinstance(value, str):
+                value = datetime.fromisoformat(value.replace('Z', '').split('+')[0].strip())
+            return value.strftime("%Y-%m-%d %H:%M")  # 👈 no seconds
+        except Exception:
+            return str(value)
+
+    # ---- Parse date fields ----
+    departed_date = parse_dt(trip.tr_departeddate)
+    loading_time = parse_dt(trip.tr_loading_time)
+    unloading_time = parse_dt(trip.tr_unloading_time)
+    reported_date = parse_dt(trip.tr_reporteddate)
+
+    # ---- Date validation ----
+    invalid_dates = []
+    if departed_date and loading_time and departed_date > loading_time:
+        invalid_dates.append("Loading Time cannot be before Departed Date.")
+    if loading_time and unloading_time and loading_time > unloading_time:
+        invalid_dates.append("Unloading Time cannot be before Loading Time.")
+    if departed_date and reported_date and departed_date > reported_date:
+        invalid_dates.append("Reported Date cannot be before Departed Date.")
+
+    if invalid_dates:
+        messages.error(request, "⚠️ Date format or order issue:\n" + "\n".join(invalid_dates))
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    # ---- Email text ----
+    status_map = {'trip started': 'started', 'trip closed': 'closed'}
     trip_status_text = f"Trip has been {status_map.get(trip.tc_financestatus, trip.tc_financestatus)}"
 
     recipient_list = [email.strip() for email in recipient.split(',')]
-
     subject = f"Trip {trip.tr_tripnumber} - Update"
 
+    # ---- Build HTML Email ----
     email_body = f"""
         <html>
             <head>
                <style>
                     table {{
-                        width: 60%;
+                        width: 70%;
                         border-collapse: collapse;
                         font-family: Arial, sans-serif;
                         font-size: 14px;
@@ -398,20 +438,19 @@ def trip_email(request):
                     }}
                     th, td {{
                         border: 1px solid black;
-                        padding: 10px;
+                        padding: 8px;
                     }}
                     th {{
                         background-color: #f4f4f4;
-                        color: #333;
                         text-align: left;
                     }}
                     td {{
                         vertical-align: top;
                     }}
                     .remarks div {{
-                        margin-bottom: 10px;
+                        margin-bottom: 5px;
                     }}
-                </style>
+               </style>
             </head>
             <body>
                 <p>Dear Team,</p>
@@ -422,26 +461,26 @@ def trip_email(request):
                     <tr><th>Enquiry Number</th><td>{trip.tr_enquirynumber}</td></tr>
                     <tr><th>Consignment Number</th><td>{trip.tr_consignmentnumber}</td></tr>
                     <tr><th>Vehicle Type</th><td>{trip.tr_vehicletype}</td></tr>
-                    <tr><th>Vehicle Number</th><td>{trip.tr_vehiclenumber}</td></tr>
                     <tr><th>Vehicle Type Placed</th><td>{trip.tr_vehicletype_placed}</td></tr>
+                    <tr><th>Vehicle Number</th><td>{trip.tr_vehiclenumber}</td></tr>
                     <tr><th>Driver Name</th><td>{trip.tr_drivername}</td></tr>
                     <tr><th>Driver Number</th><td>{trip.tr_drivernumber}</td></tr>
                     <tr><th>Trip Category</th><td>{trip.tr_category}</td></tr>
                     <tr><th>Departed Location</th><td>{trip.tr_departedlocation}</td></tr>
                     <tr><th>Departed KM</th><td>{trip.tr_departedkm}</td></tr>
-                    <tr><th>Departed Date</th><td>{trip.tr_departeddate}</td></tr>
-                    <tr><th>Loading Time</th><td>{trip.tr_loading_time}</td></tr>
-                    <tr><th>Un-Loading Time</th><td>{trip.tr_unloading_time}</td></tr>
+                    <tr><th>Departed Date</th><td>{format_datetime(trip.tr_departeddate)}</td></tr>
+                    <tr><th>Loading Time</th><td>{format_datetime(trip.tr_loading_time)}</td></tr>
+                    <tr><th>Un-Loading Time</th><td>{format_datetime(trip.tr_unloading_time)}</td></tr>
                     <tr><th>Reported Location</th><td>{trip.tr_reportedlocation}</td></tr>
                     <tr><th>Reported KM</th><td>{trip.tr_reportedkm}</td></tr>
-                    <tr><th>Reported Date</th><td>{trip.tr_reporteddate}</td></tr>
+                    <tr><th>Reported Date</th><td>{format_datetime(trip.tr_reporteddate)}</td></tr>
                     <tr><th>Trip Status</th><td>{trip.tc_financestatus}</td></tr>
                     <tr><th>POD Number</th><td>{trip.tc_pod}</td></tr>
                     <tr><th>Updated By</th><td>{trip.tr_updated_by}</td></tr>
                     <tr>
                         <th>Remarks</th>
                         <td class="remarks">
-                            {''.join(f'<div>{remark}</div>' for remark in trip.tr_remarks.splitlines())}
+                            {''.join(f'<div>{remark}</div>' for remark in (trip.tr_remarks or '').splitlines())}
                         </td>
                     </tr>
                 </table>
@@ -450,24 +489,19 @@ def trip_email(request):
         </html>
     """
 
-    # Get the attachment details
-    if trip.tc_pod_attachment:
-        attachment_path = trip.tc_pod_attachment.path
-        attachment_type = "application/octet-stream"  # Default MIME type
-        file_name = trip.tc_pod_attachment.name.split("/")[-1]  # Extract file name
-    else:
-        attachment_path = None
-        attachment_type = None
-        file_name = None
+    # ---- Attachment Handling ----
+    attachment_path = trip.tc_pod_attachment.path if trip.tc_pod_attachment else None
+    attachment_file = open(attachment_path, 'rb') if attachment_path else None
+    file_name = trip.tc_pod_attachment.name.split("/")[-1] if trip.tc_pod_attachment else None
 
-    # Send email with attachment (if available)
+    # ---- Send Email ----
     send_department_email(
         department='itadmin',
         subject=subject,
         message=email_body,
         recipient_list=recipient_list,
-        attachment=open(attachment_path, 'rb') if attachment_path else None,
-        attachment_type=attachment_type,
+        attachment=attachment_file,
+        attachment_type="application/octet-stream" if attachment_file else None,
         file_name=file_name,
         email_type=1
     )

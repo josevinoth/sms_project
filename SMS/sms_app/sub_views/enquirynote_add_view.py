@@ -164,7 +164,7 @@ def enquirynote_list(request):
     trip_dict = {}
     for enq_id, trip_cons, trip_num, trip_status, trip_status_id in trip_data:
         trip_dict.setdefault(enq_id, []).append(
-            (trip_cons or "Not Applicable", trip_num or "No Trip", trip_status or "", trip_status_id)
+            (trip_cons or "Empty trip", trip_num or "No Trip", trip_status or "", trip_status_id)
         )
 
     # Vehicle limits

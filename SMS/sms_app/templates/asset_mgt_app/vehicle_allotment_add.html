@@ -643,6 +643,25 @@ $(document).ready(function () {
 });
 
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("vehicle_allotment");
+    const chkRequested = document.getElementById("chk_requested");
+    const chkPlaced = document.getElementById("chk_placed");
+
+    form.addEventListener("submit", function(event) {
+        // Check if neither checkbox is selected
+        if (!chkRequested.checked && !chkPlaced.checked) {
+            event.preventDefault(); // stop form submission
+            alert("Please verify either 'Requested' or 'Placed' before submitting the form.");
+            // Optional: Highlight checkboxes to guide user
+            chkRequested.focus();
+            return false;
+        }
+    });
+});
+</script>
+
 {% block scripts %}
 
 <script>

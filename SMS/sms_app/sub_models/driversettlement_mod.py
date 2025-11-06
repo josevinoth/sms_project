@@ -3,6 +3,7 @@ from django.db import models
 
 from .driversettlement_expense_mod import Driversettlement_ExpenseInfo
 from .tripdetail_mod import TripdetailInfo
+from .user_ext_mod import User_extInfo
 from ..models import User, ExpenseCategoryInfo, MyUser, Business_Sol_info
 from django.urls import reverse
 
@@ -21,6 +22,7 @@ class driver_settlement_info(models.Model):
     trip = models.ForeignKey(TripdetailInfo, null=True,on_delete=models.CASCADE, default='')
     total_trip_cost = models.FloatField(default=0.0, blank=True, null=True)
     balance = models.FloatField(default=0.0)  # 👈 new field
+    staf_name = models.ForeignKey(User_extInfo, null=True,on_delete=models.CASCADE, default='')
 
     class Meta:
         ordering = ["ds_number"]

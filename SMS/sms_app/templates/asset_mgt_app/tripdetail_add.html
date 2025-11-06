@@ -526,13 +526,22 @@ function trip_type() {
     // ----------------------
     // 3️⃣ Loading & Unloading Time Visibility
     // ----------------------
-    if (categoryValue == "2") {
-        loadingTimeDiv.style.display = "none";
-        unloadingTimeDiv.style.display = "none";
-    } else {
-        loadingTimeDiv.style.display = "flex";  // adjust based on layout
-        unloadingTimeDiv.style.display = "flex";
-    }
+   if (categoryValue == "2") {
+    loadingTimeDiv.style.display = "none";
+    unloadingTimeDiv.style.display = "none";
+
+    // Make fields non-mandatory
+    document.getElementById("id_trip_loading_time").required = false;
+    document.getElementById("id_trip_unloading_time").required = false;
+} else {
+    loadingTimeDiv.style.display = "flex";
+    unloadingTimeDiv.style.display = "flex";
+
+    // Make fields mandatory
+    document.getElementById("id_trip_loading_time").required = true;
+    document.getElementById("id_trip_unloading_time").required = true;
+}
+
 }
 
 document.addEventListener("DOMContentLoaded", function() {
