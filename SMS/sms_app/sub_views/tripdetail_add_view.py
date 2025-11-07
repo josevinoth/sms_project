@@ -602,3 +602,13 @@ def get_sim_tracking_data(request):
         })
 
     return JsonResponse(sim_data, safe=False)
+
+@login_required(login_url='login_page')
+def get_customer_ref(request):
+    consignment_id = request.GET.get('consignment_id')
+    try:
+        consignment = ConsignmentdetailInfo.objects.get(id=consignment_id)
+        data = {'customer_ref': consignment.co_cusrefnum}
+    except ConsignmentdetailInfo.DoesNotExist:
+        data = {'customer_ref': ''}
+    return JsonResponse(data)

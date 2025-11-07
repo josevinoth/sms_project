@@ -118,9 +118,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Seal No/Smart Lock No</span>
+										<span class="input-group-text">Seal No</span>
 									</div>
-									{% render_field con_det_form.co_seal_number id="co_seal_number" class="form-control disable_a_href" %}
+									{% render_field con_det_form.co_seal_number id="co_seal_number" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Smart Lock No</span>
+									</div>
+									{% render_field con_det_form.co_smart_lock_number id="co_smart_lock_number" class="form-control " %}
 								</div>
 							</div>
 							<div class="col-3">
@@ -338,31 +344,31 @@
 </script>
 <script>
 	function updateFieldsBasedOnVehicleType(vehicleType) {
-        const sealField = $('#co_seal_number');
+<!--        const sealField = $('#co_seal_number');-->
         const containerNumberField = $('#co_container_number');
         const containerDescriptionField = $('#co_containerdescription');
 
         if (vehicleType.toLowerCase().includes('closed')) {
 
-            sealField.prop('disabled', false).removeClass('disable_a_href');
+<!--            sealField.prop('disabled', false).removeClass('disable_a_href');-->
             containerNumberField.prop('disabled', true).addClass('disable_a_href');
             containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
 
         } else if (vehicleType.toLowerCase().includes('trailer')) {
 
-            sealField.prop('disabled', false).removeClass('disable_a_href');
+<!--            sealField.prop('disabled', false).removeClass('disable_a_href');-->
             containerNumberField.prop('disabled', false).removeClass('disable_a_href');
             containerDescriptionField.prop('disabled', false).removeClass('disable_a_href');
 
         } else if (vehicleType.toLowerCase().includes('open')) {
 
-            sealField.prop('disabled', true).addClass('disable_a_href');
+<!--            sealField.prop('disabled', true).addClass('disable_a_href');-->
             containerNumberField.prop('disabled', true).addClass('disable_a_href');
             containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
 
         } else {
 
-            sealField.prop('disabled', true).addClass('disable_a_href');
+<!--            sealField.prop('disabled', true).addClass('disable_a_href');-->
             containerNumberField.prop('disabled', true).addClass('disable_a_href');
             containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
         }

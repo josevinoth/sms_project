@@ -39,7 +39,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Ref no </span>
 									</div>
-									{% render_field tripclosure_form.tr_customerref id="tr_customerref" class="form-control " %}
+									{% render_field tripclosure_form.tr_customerref id="tr_customerref" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -139,21 +139,21 @@
 												View
 											</button>
 										</div>
-<div class="modal fade" id="tollTxnModal" tabindex="-1" aria-labelledby="tollTxnModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title" id="tollTxnModalLabel">Toll Transaction List</h5>
-        <button type="button" class="btn-close bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="tollTxnContent">
-        <p>Loading toll data...</p>
-      </div>
-      <div class="modal-footer">
-      </div>
-    </div>
-  </div>
-</div>
+										<div class="modal fade" id="tollTxnModal" tabindex="-1" aria-labelledby="tollTxnModalLabel" aria-hidden="true">
+											<div class="modal-dialog modal-xl modal-dialog-scrollable">
+												<div class="modal-content">
+													<div class="modal-header bg-dark text-white">
+														<h5 class="modal-title" id="tollTxnModalLabel">Toll Transaction List</h5>
+														<button type="button" class="btn-close bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body" id="tollTxnContent">
+														<p>Loading toll data...</p>
+													</div>
+													<div class="modal-footer">
+													</div>
+												</div>
+											</div>
+										</div>
 									</div>
 									<div class="col-3 text-center">
 										<input type="checkbox" id="tc_tollcost">
@@ -212,6 +212,19 @@
 									</div>
 									<div class="col-3 text-center">
 										<input type="checkbox" id="tc_supervisorcost">
+									</div>
+								</div>
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Halting Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_haltingcost class="form-control" %}
+										</div>
+									</div>
+									<div class="col-3 text-center">
+										<input type="checkbox" id="tc_haltingcost">
 									</div>
 								</div>
 								<div class="row mb-2 align-items-center">
@@ -409,123 +422,160 @@
     });
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Run dummy toll data fetch once the page is ready
-    fetchTollCost();
+	document.addEventListener("DOMContentLoaded", function() {
+        // Run dummy toll data fetch once the page is ready
+        fetchTollCost();
 
-    // Ensure "View" button works even if fetch hasn't been called yet
-    window.showTollTxnDialog = function() {
-        const modal = new bootstrap.Modal(document.getElementById('tollTxnModal'));
-        modal.show();
-    };
+        // Ensure "View" button works even if fetch hasn't been called yet
+        window.showTollTxnDialog = function() {
+            const modal = new bootstrap.Modal(document.getElementById('tollTxnModal'));
+            modal.show();
+        };
+    });
+
+    function fetchTollCost() {
+        console.log("🚧 Dummy data mode — API offline, showing fake toll transactions.");
+
+        const dummyData = {
+            success: true,
+            txn_list: [
+                {
+                    txnPostedtime: "2025-09-18 09:12:30",
+                    vehicleNo: "TN22DF6750",
+                    originalTxnId: "TXN0012345",
+                    tollplazaname: "Chengalpattu Toll Plaza",
+                    vehicleDesc: "LCV / Truck",
+                    txnAmt: "125.50",
+                    laneId: "L2"
+                },
+                {
+                    txnPostedtime: "2025-09-19 14:45:10",
+                    vehicleNo: "TN22DF6750",
+                    originalTxnId: "TXN0012346",
+                    tollplazaname: "Sriperumbudur Toll Plaza",
+                    vehicleDesc: "LCV / Truck",
+                    txnAmt: "180.75",
+                    laneId: "L4"
+                },
+                {
+                    txnPostedtime: "2025-09-21 10:28:40",
+                    vehicleNo: "TN22DF6750",
+                    originalTxnId: "TXN0012347",
+                    tollplazaname: "Krishnagiri Toll Plaza",
+                    vehicleDesc: "LCV / Truck",
+                    txnAmt: "200.00",
+                    laneId: "L1"
+                }
+            ]
+        };
+
+        buildTxnTable(dummyData.txn_list);
+    }
+
+    function buildTxnTable(txn_list) {
+        if (!txn_list || txn_list.length === 0) {
+            document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
+            return;
+        }
+
+        let table = `
+            <p style="color: black;">
+                <strong>Total Transactions:</strong> ${txn_list.length}
+            </p>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Select</th>
+                            <th>Date</th>
+                            <th>Vehicle No</th>
+                            <th>Txn ID</th>
+                            <th>Plaza</th>
+                            <th>Vehicle Type</th>
+                            <th>Amount</th>
+                            <th>Lane</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        txn_list.forEach((txn, idx) => {
+            table += `
+                <tr>
+                    <td class="text-center">
+                        <input type="checkbox" class="toll-checkbox" data-amount="${parseFloat(txn.txnAmt)}" checked>
+                    </td>
+                    <td>${txn.txnPostedtime}</td>
+                    <td>${txn.vehicleNo}</td>
+                    <td>${txn.originalTxnId}</td>
+                    <td>${txn.tollplazaname}</td>
+                    <td>${txn.vehicleDesc}</td>
+                    <td>₹${parseFloat(txn.txnAmt).toFixed(2)}</td>
+                    <td>${txn.laneId}</td>
+                </tr>`;
+        });
+
+        table += `</tbody></table></div>`;
+
+        document.getElementById("tollTxnContent").innerHTML = table;
+
+        // Attach checkbox listeners
+        document.querySelectorAll('.toll-checkbox').forEach(chk => {
+            chk.addEventListener('change', updateSelectedTollCost);
+        });
+
+        // Update total immediately
+        updateSelectedTollCost();
+    }
+
+    function updateSelectedTollCost() {
+        let total = 0;
+        document.querySelectorAll('.toll-checkbox:checked').forEach(c => {
+            total += parseFloat(c.dataset.amount);
+        });
+
+        // Try both ID and name selectors to ensure it finds the input
+        const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
+        if (tollField) {
+            tollField.value = total.toFixed(2);
+        }
+    }
+</script>
+
+<script>
+$(document).ready(function() {
+    function fetchCustomerRef() {
+        var consignmentId = $('#tr_consignmentnumber').val();
+
+        if (consignmentId) {
+            $.ajax({
+                url: "{% url 'get_customer_ref' %}",
+                data: {
+                    'consignment_id': consignmentId
+                },
+                dataType: 'json',
+                success: function(data) {
+                    console.log("Fetched Customer Ref:", data);
+                    if (data.customer_ref) {
+                        $('#tr_customerref').val(data.customer_ref);
+                    } else {
+                        $('#tr_customerref').val('');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", error);
+                }
+            });
+        } else {
+            $('#tr_customerref').val('');
+        }
+    }
+
+    // Run automatically if field already has a value
+    fetchCustomerRef();
+
+    // Also run if user changes consignment manually later
+    $(document).on('change', '#tr_consignmentnumber', fetchCustomerRef);
 });
-
-function fetchTollCost() {
-    console.log("🚧 Dummy data mode — API offline, showing fake toll transactions.");
-
-    const dummyData = {
-        success: true,
-        txn_list: [
-            {
-                txnPostedtime: "2025-09-18 09:12:30",
-                vehicleNo: "TN22DF6750",
-                originalTxnId: "TXN0012345",
-                tollplazaname: "Chengalpattu Toll Plaza",
-                vehicleDesc: "LCV / Truck",
-                txnAmt: "125.50",
-                laneId: "L2"
-            },
-            {
-                txnPostedtime: "2025-09-19 14:45:10",
-                vehicleNo: "TN22DF6750",
-                originalTxnId: "TXN0012346",
-                tollplazaname: "Sriperumbudur Toll Plaza",
-                vehicleDesc: "LCV / Truck",
-                txnAmt: "180.75",
-                laneId: "L4"
-            },
-            {
-                txnPostedtime: "2025-09-21 10:28:40",
-                vehicleNo: "TN22DF6750",
-                originalTxnId: "TXN0012347",
-                tollplazaname: "Krishnagiri Toll Plaza",
-                vehicleDesc: "LCV / Truck",
-                txnAmt: "200.00",
-                laneId: "L1"
-            }
-        ]
-    };
-
-    buildTxnTable(dummyData.txn_list);
-}
-
-function buildTxnTable(txn_list) {
-    if (!txn_list || txn_list.length === 0) {
-        document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
-        return;
-    }
-
-    let table = `
-        <p style="color: black;">
-            <strong>Total Transactions:</strong> ${txn_list.length}
-        </p>
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Select</th>
-                        <th>Date</th>
-                        <th>Vehicle No</th>
-                        <th>Txn ID</th>
-                        <th>Plaza</th>
-                        <th>Vehicle Type</th>
-                        <th>Amount</th>
-                        <th>Lane</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-    txn_list.forEach((txn, idx) => {
-        table += `
-            <tr>
-                <td class="text-center">
-                    <input type="checkbox" class="toll-checkbox" data-amount="${parseFloat(txn.txnAmt)}" checked>
-                </td>
-                <td>${txn.txnPostedtime}</td>
-                <td>${txn.vehicleNo}</td>
-                <td>${txn.originalTxnId}</td>
-                <td>${txn.tollplazaname}</td>
-                <td>${txn.vehicleDesc}</td>
-                <td>₹${parseFloat(txn.txnAmt).toFixed(2)}</td>
-                <td>${txn.laneId}</td>
-            </tr>`;
-    });
-
-    table += `</tbody></table></div>`;
-
-    document.getElementById("tollTxnContent").innerHTML = table;
-
-    // Attach checkbox listeners
-    document.querySelectorAll('.toll-checkbox').forEach(chk => {
-        chk.addEventListener('change', updateSelectedTollCost);
-    });
-
-    // Update total immediately
-    updateSelectedTollCost();
-}
-
-function updateSelectedTollCost() {
-    let total = 0;
-    document.querySelectorAll('.toll-checkbox:checked').forEach(c => {
-        total += parseFloat(c.dataset.amount);
-    });
-
-    // Try both ID and name selectors to ensure it finds the input
-    const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-    if (tollField) {
-        tollField.value = total.toFixed(2);
-    }
-}
 </script>
 
 {% endblock content %}

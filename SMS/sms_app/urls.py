@@ -745,6 +745,7 @@ urlpatterns = [
     path('driver_settlement_delete/<int:ds_id>/', views.driver_settlement_delete, name='driver_settlement_delete'),
     path('driver_get_full_name/', views.get_full_name_driver, name='driver_get_full_name'),
     path('get_trip_totalcost/', views.get_trip_totalcost, name='get_trip_totalcost'),
+    path('get_customer_ref/', views.get_customer_ref, name='get_customer_ref'),
 
 ]
 

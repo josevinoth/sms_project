@@ -21,7 +21,11 @@ def trip_report(request):
     trips = TripdetailInfo.objects.all().order_by('-tr_tripnumber')
 
     if customer_id:
-        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+        # ✅ Get only trips that belong to Category 1
+        trips = TripdetailInfo.objects.filter(
+            tr_enquirynumber__en_customername_id=customer_id,
+            tr_category_id=1  # 🔹 Only include trips with category = 1
+        ).order_by('-tr_tripnumber')
 
     for trip in trips:
         # 🔹 Attach consigner name from ConsignmentgoodsInfo
@@ -86,18 +90,33 @@ def trip_send_email(request):
             messages.error(request, "Selected customer does not exist.")
             return redirect('trip_report')
 
-        # Get trips for this customer
-        trips = TripdetailInfo.objects.filter(tr_enquirynumber__en_customername_id=customer_id).order_by('-tr_tripnumber')
+        # ✅ Get only trips that belong to Category 1
+        trips = TripdetailInfo.objects.filter(
+            tr_enquirynumber__en_customername_id=customer_id,
+            tr_category_id=1  # 🔹 Only include trips with category = 1
+        ).order_by('-tr_tripnumber')
 
         # Generate Excel
         from openpyxl import Workbook
         from io import BytesIO
+        from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 
         wb = Workbook()
         ws = wb.active
         ws.title = "DMR Report"
 
-        # Headers
+        # ✅ Define header style
+        header_font = Font(name="Arial", bold=True, size=11)
+        yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+        border_style = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+        # ✅ Headers
         headers = [
             "SR. NO.", "TRIP DATE", "CONSIGNMENT NOTE NO", "CUSTOMER NAME", "CUSTOMER DEPT",
             "SHIPPER", "FROM", "TO", "VEH NO", "VEH TYPE", "TRIPCOST", "AAI CHARGES",
@@ -110,26 +129,33 @@ def trip_send_email(request):
         ]
         ws.append(headers)
 
-        # Append trip data
+        # ✅ Apply header styling
+        for cell in ws[1]:
+            cell.font = header_font
+            cell.fill = yellow_fill
+            cell.border = border_style
+            cell.alignment = center_align
+
+        # ✅ Add data rows
         for idx, trip in enumerate(trips, start=1):
             consigner_name = ''
             co_cusrefnum = ''
 
             if trip.tr_consignmentnumber:
                 try:
-                    # Get consignment details
-                    consignment = ConsignmentdetailInfo.objects.get(co_consignmentnumber=trip.tr_consignmentnumber)
-                    co_cusrefnum = consignment.co_cusrefnum or ''
+                    consignment = ConsignmentdetailInfo.objects.filter(
+                        co_consignmentnumber=trip.tr_consignmentnumber
+                    ).first()
+                    if consignment:
+                        co_cusrefnum = consignment.co_cusrefnum or ''
 
-                    # Get consigner name from goods
                     consignment_goods = ConsignmentgoodsInfo.objects.filter(
-                        cg_consignmentnumber=trip.tr_consignmentnumber).first()
+                        cg_consignmentnumber=trip.tr_consignmentnumber
+                    ).first()
                     if consignment_goods and consignment_goods.cg_consigner:
                         consigner_name = str(consignment_goods.cg_consigner)
-                except ConsignmentdetailInfo.DoesNotExist:
-                    co_cusrefnum = ''
                 except Exception as e:
-                    print(f"Error fetching consignment for trip {trip.id}: {e}")
+                    print(f"Error fetching consignment data for trip {trip.id}: {e}")
 
             ws.append([
                 idx,
@@ -158,7 +184,7 @@ def trip_send_email(request):
                     trip.tc_handlingcost or 0,
                     trip.tc_supervisorcost or 0
                 ]),
-                co_cusrefnum,  # 🔹 This will now appear in the Excel
+                co_cusrefnum,
                 trip.tr_departedkm or 0,
                 trip.tr_departeddate.strftime("%H:%M") if trip.tr_departeddate else '',
                 trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else '',
@@ -170,29 +196,44 @@ def trip_send_email(request):
                 trip.tc_no_of_days_halting or 0
             ])
 
-        # Save to BytesIO
+        # ✅ Adjust column widths
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            ws.column_dimensions[column].width = max_length + 2
+
+        # ✅ Save Excel
         excel_file = BytesIO()
         wb.save(excel_file)
         excel_file.seek(0)
+        wb.close()
 
-        # Prepare recipient list
+        # ✅ Prepare recipient list
         recipient_list = [x.strip() for x in recipient.split(',') if x.strip()]
 
-        # Prepare email subject
+        # ✅ Prepare subject
         if not subject:
-            subject = f"{customer_obj.cu_name}_DMRReport"
+            subject = f"DMR Report - {customer_obj.cu_name}"
 
-        # Send email with attachment
+        # ✅ Format message with HTML line breaks
+        message = message_body.replace('\n', '<br>')
+
+        # ✅ Send email
         file_name = f"{customer_obj.cu_name}_DMR_Report.xlsx"
-        attachment = excel_file
         attachment_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
         send_department_email(
             department='itadmin',
             subject=subject,
-            message=message_body,
+            message=message,
             recipient_list=recipient_list,
-            attachment=attachment,
+            attachment=excel_file,
             attachment_type=attachment_type,
             file_name=file_name
         )

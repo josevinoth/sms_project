@@ -5,7 +5,7 @@
 
 <div class="container-fluid d-flex justify-content-center py-3">
     <div class="rounded text-center bg-info shadow-box px-4 py-2">
-        <h3>Trip Report - Customer Wise</h3>
+        <h3>DMR Report</h3>
     </div>
 </div>
 <br>
@@ -62,27 +62,21 @@
 
                             <div class="form-group mb-3">
                                 <label><strong>Customer</strong></label>
-                                {% render_field form.dmr_customer id="dmr_customer" class="form-control" value=customer_name %}
+    {% render_field form.dmr_customer id="dmr_customer" class="form-control" value=customer_name disabled="disabled" %}
                             </div>
 
                             <div class="form-group mb-3">
                                 <label><strong>Recipient Emails (comma separated)</strong></label>
-                                <input type="text" name="recipient" id="recipient" class="form-control" placeholder="e.g. user1@company.com, user2@company.com">
+                                <input type="text" name="recipient" id="recipient" class="form-control" >
                             </div>
 
-                            <div class="form-group mb-3">
-                                <label><strong>Subject</strong></label>
-                                <input type="text" name="subject" class="form-control" value="DMR Report - Customer Wise">
-                            </div>
+                         <div class="input-group mb-2 mr-sm-2">
+        <div class="input-group-prepend">
+            <div class="input-group-text">Message</div>
+        </div>
+        <textarea id="message" name="message" class="form-control" rows="6" placeholder="Enter email message">{{ form.message.value }}</textarea>
+    </div>
 
-                            <div class="form-group mb-3">
-                                <label><strong>Message</strong></label>
-                                <textarea name="message" id="message" rows="6" class="form-control">Dear Customer,
-
-Please find attached the DMR report for your reference.
-
-Regards,
-BVM Transport Team</textarea>
                             </div>
 
                             <div class="text-end">
@@ -202,9 +196,16 @@ BVM Transport Team</textarea>
 </script>
 <script>
     function email_message_fn() {
-        var msg = "Dear Customer,\n\nPlease find attached the DMR report for your reference.\n\nRegards,\nBVM Transport Team";
-        document.getElementById("message").value = msg;
+     // Assign Django template variables to JavaScript variables
+       var message = 	"Dear Customer,\n\n" +
+                "Please find the DMR report attached.\n\n" +
+                  "Regards,\n" +
+                  "BVM Transport Team";
+
+        // Set the consolidated message as the value of the form field with id 'message'
+        document.getElementById("message").value = message;
     }
 </script>
+
 
 {% endblock content %}
