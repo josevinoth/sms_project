@@ -565,6 +565,52 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     };
 </script>
+<script>
+$(document).ready(function () {
+    function loadEnquiryLocations() {
+        var enquiry_number = $("#tr_enquirynumber").val();   // Enquiry number (ID)
+        var trip_category = $("#tr_category").val();          // Trip category (1 = Normal, 2 = Special)
+
+        console.log("Triggered fetch. Enquiry:", enquiry_number, "| Category:", trip_category);
+
+        // 🔸 Skip fetching if category = 2
+        if (trip_category == "2") {
+            console.log("Trip Category is 2 — Skipping location autofill.");
+            return;
+        }
+
+        if (enquiry_number) {
+            $.ajax({
+                url: '/SMS/fetch_enquiry_locations/',   // Update path if needed
+                type: 'GET',
+                data: { 'enquiry_number': enquiry_number },
+                dataType: 'json',
+                success: function (data) {
+                    console.log("Response received:", data);
+
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        // ✅ Fill only if category is normal
+                        $("#tr_departedlocation").val(data.from_location_id).trigger('change');
+                        $("#tr_reportedlocation").val(data.to_location_id).trigger('change');
+                        console.log("From Location:", data.from_location_id, "| To Location:", data.to_location_id);
+                    }
+                },
+                error: function () {
+                    alert("Failed to load enquiry locations.");
+                }
+            });
+        }
+    }
+
+    // 🔹 Fetch when enquiry number changes
+    $("#tr_enquirynumber").change(loadEnquiryLocations);
+
+    // 🔹 Also fetch automatically when page loads
+    loadEnquiryLocations();
+});
+</script>
 
 {% block scripts %}
 <script>

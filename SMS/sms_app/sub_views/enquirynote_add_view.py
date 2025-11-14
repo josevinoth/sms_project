@@ -295,3 +295,18 @@ def get_customer_details(request):
         return JsonResponse(data)
     except CustomerInfo.DoesNotExist:
         return JsonResponse({'error': 'Customer not found'}, status=404)
+@login_required(login_url='login_page')
+def fetch_enquiry_locations(request):
+    enquiry_number = request.GET.get('enquiry_number', '').strip()
+    if not enquiry_number:
+        return JsonResponse({'error': 'Missing enquiry number'}, status=400)
+
+    try:
+        enquiry = EnquirynoteInfo.objects.select_related('en_fromlocaion', 'en_tolocation').get(id=enquiry_number)
+        data = {
+            'from_location_id': enquiry.en_fromlocaion.id if enquiry.en_fromlocaion else None,
+            'to_location_id': enquiry.en_tolocation.id if enquiry.en_tolocation else None,
+        }
+        return JsonResponse(data)
+    except EnquirynoteInfo.DoesNotExist:
+        return JsonResponse({'error': 'Enquiry not found'}, status=404)

@@ -40,7 +40,7 @@ def fastag_enquiry_view(request):
 
             try:
                 response = requests.post(
-                    "https://1paytag.hdfcbank.com/walletmware/api/wallet/txn/tollenquiry",
+                    "https://corptag.hdfc.bank.in/walletmware/api/wallet/txn/tollenquiry",
                     json=payload,
                     headers=headers,
                     timeout=15

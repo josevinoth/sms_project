@@ -217,6 +217,9 @@ def transport_calculate_trip_charges(request):
 @csrf_exempt
 @require_GET
 def get_fastag_toll_cost_ajax(request):
+    """
+    AJAX endpoint to return FASTag toll cost details for a trip.
+    """
     result = {"success": False, "error": None, "total_amount": 0.0, "txn_list": []}
 
     trip_num = request.GET.get('trip_num')
@@ -245,18 +248,21 @@ def get_fastag_toll_cost_ajax(request):
 
 
 def calculate_toll(vehicle_num, from_date, to_date):
-    result = {}
+    """
+    Calls HDFC FASTag toll API and calculates total toll cost.
+    """
     txn_list = []
     total_amount = 0.0
+
+    # Convert dates to required format
     from_date_str = from_date.strftime("%Y%m%d %H%M%S")
-    print(from_date_str)
     to_date_str = to_date.strftime("%Y%m%d %H%M%S")
-    print(to_date_str)
-    print(vehicle_num.strip())
     contact = "9677022115"
-    print(contact)
+
+    print(f"🔹 Fetching toll data for vehicle {vehicle_num} from {from_date_str} to {to_date_str}")
+
     payload = {
-        "requestID": datetime.now().strftime("%Y%m%d%H%M%S%f"),
+        "requestID": datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3],
         "requestTime": datetime.now().strftime("%Y%m%d%H%M"),
         "merchantID": "HDFCWL",
         "walletId": "W0122122713156600041",
@@ -268,53 +274,51 @@ def calculate_toll(vehicle_num, from_date, to_date):
     }
 
     headers = {
-        'Authorization': 'C223611027:95ef659313847c7485d43d66b8c5b9e8b817c9c136d2798333c5df693b6efc2a',
-        'Content-Type': 'application/json',
-        'salt': '95ef659313847c7485d43d66b8c5b9e8b817c9c136d2798333c5df693b6efc2a'
+        "Authorization": "C223611027:95ef659313847c7485d43d66b8c5b9e8b817c9c136d2798333c5df693b6efc2a",
+        "Content-Type": "application/json",
+        "salt": "95ef659313847c7485d43d66b8c5b9e8b817c9c136d2798333c5df693b6efc2a"
     }
+
     try:
         response = requests.post(
-            "https://1paytag.hdfcbank.com/walletmware/api/wallet/txn/tollenquiry",
+            "https://corptag.hdfc.bank.in/walletmware/api/wallet/txn/tollenquiry",
             json=payload,
             headers=headers,
-            timeout=15
+            timeout=20
         )
+
+        print(f"🌐 FASTag API Response Status: {response.status_code}")
+
         if response.status_code == 200:
-            api_data = response.json()
+            try:
+                api_data = response.json()
+            except ValueError:
+                print("❌ API did not return valid JSON. Response was:")
+                print(response.text[:300])
+                return 0.0, []
+
             res_code = api_data.get("resCode", "").strip().upper()
             res_msg = api_data.get("resMessage", "")
             txn_list = api_data.get("data", [])
-            print("DEBUG resCode:", repr(api_data.get("resCode")))
-            print("DEBUG resMessage:", repr(api_data.get("resMessage")))
-            print("DEBUG txn_list type:", type(api_data.get("data")))
 
-            print(f"res_code = {res_code}, txn_list count = {len(txn_list)}")
+            print(f"resCode={res_code}, Message={res_msg}, Transactions={len(txn_list)}")
 
-            if res_code in [res_code, "SUCCESS"] and isinstance(txn_list, list):
-                toll_count = len(txn_list)
-                total_amount = 0.0
-
+            if res_code == "SUCCESS" and isinstance(txn_list, list):
                 for idx, txn in enumerate(txn_list):
-                    raw_amt = txn.get("txnAmt", "0")
                     try:
-                        amount = float(str(raw_amt).strip())
-                        print(f"[{idx}] txnAmt = {amount}")
+                        amount = float(txn.get("txnAmt", 0))
                         total_amount += amount
+                        print(f"  ✅ {txn.get('tollplazaname', '')}: ₹{amount}")
                     except Exception as e:
-                        print(f"[{idx}] Failed to parse txnAmt={raw_amt}: {e}")
-
-                result["success"] = f"{res_msg}: {toll_count} transactions"
-                result["error"] = None
+                        print(f"  ⚠️ Failed to parse txnAmt for {txn}: {e}")
             else:
-                result["success"] = None
-                result["error"] = f"API ERROR: {res_msg or 'No message'}"
+                print(f"⚠️ API returned error: {res_msg}")
         else:
-            result = {
-                "success": None,
-                "error": f"API returned status {response.status_code}: {response.text}"
-            }
+            print(f"❌ API returned HTTP {response.status_code}")
+            print(response.text[:300])
 
     except requests.exceptions.RequestException as e:
-        result = {"success": None, "error": str(e)}
-    print(f"Total toll amount for vehicle {vehicle_num}: {total_amount}")
-    return total_amount,txn_list
+        print("❌ Request failed:", str(e))
+
+    print(f"✅ Total toll amount for {vehicle_num}: ₹{total_amount}")
+    return total_amount, txn_list

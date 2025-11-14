@@ -57,7 +57,16 @@ def tripdetail_nav(request,tripdetail_id=0):
 def tripdetail_add(request, tripdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    enquiry_num_id = request.session.get('ses_enqiury_id')
+
+    # ✅ Get enquiry_num_id safely from URL or session
+    enquiry_num_id = request.GET.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
+
+    # ✅ Always refresh session with current enquiry_num_id for consistency
+    if enquiry_num_id:
+        request.session['ses_enqiury_id'] = enquiry_num_id
+    else:
+        messages.error(request, "No enquiry number found. Please try again.")
+        return redirect('tripdetail_nav')  # fallback in case it’s missing
 
     if request.method == "GET":
         if tripdetail_id == 0:
@@ -68,8 +77,11 @@ def tripdetail_add(request, tripdetail_id=0):
             if vehicle_allotment_id:
                 try:
                     va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
+                    # ✅ Choose correct vehicle number based on vehicle source
+                    vehicle_number = va.va_vehiclenumber_mkt if va.va_vehiclesource_id == 3 else va.va_vehiclenumber
+
                     initial_data = {
-                        'tr_vehiclenumber': va.va_vehiclenumber,
+                        'tr_vehiclenumber': vehicle_number,
                         'tr_drivername': va.va_drivername,
                         'tr_vehicletype': va.va_vehicletype,
                         'tr_vehiclesource': va.va_vehiclesource,
@@ -94,7 +106,6 @@ def tripdetail_add(request, tripdetail_id=0):
                 print("No previous trip or reported location found.")
 
             tripclosurefiles_form = TripclosurefilesForm()
-            enquiry_num_id = request.session.get('ses_enqiury_id')
             trip_list = TripdetailInfo.objects.select_related(
                 'tr_approval', 'tr_approval__ta_approval_status'
             ).filter(tr_enquirynumber=enquiry_num_id)
@@ -524,7 +535,7 @@ def load_truck_details(request):
         vehicle_info = filtered_records.filter(
             Q(va_vehiclenumber__vm_registrationnumber=truck_number) | Q(va_vehiclenumber_mkt=truck_number)
         ).first()  # Get first matching record
-
+        print(vehicle_info.va_sale)
         if vehicle_info:
             data = {
                 "truck_number": truck_number,
@@ -534,6 +545,7 @@ def load_truck_details(request):
                 "va_vehicletype_placed": vehicle_info.va_vehicletype_placed.id if vehicle_info.va_vehicletype_placed else None,
                 "va_vehicletype": vehicle_info.va_vehicletype.id if vehicle_info.va_vehicletype else None,
                 "va_driver_lic": vehicle_info.va_driver_lic,
+                "va_sale": vehicle_info.va_sale,
             }
         else:
             data = {"error": "No vehicle allotment details found for this Consignment number"}

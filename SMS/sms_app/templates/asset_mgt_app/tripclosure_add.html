@@ -434,43 +434,39 @@
     });
 
     function fetchTollCost() {
-        console.log("🚧 Dummy data mode — API offline, showing fake toll transactions.");
-
-        const dummyData = {
-            success: true,
-            txn_list: [
-                {
-                    txnPostedtime: "2025-09-18 09:12:30",
-                    vehicleNo: "TN22DF6750",
-                    originalTxnId: "TXN0012345",
-                    tollplazaname: "Chengalpattu Toll Plaza",
-                    vehicleDesc: "LCV / Truck",
-                    txnAmt: "125.50",
-                    laneId: "L2"
-                },
-                {
-                    txnPostedtime: "2025-09-19 14:45:10",
-                    vehicleNo: "TN22DF6750",
-                    originalTxnId: "TXN0012346",
-                    tollplazaname: "Sriperumbudur Toll Plaza",
-                    vehicleDesc: "LCV / Truck",
-                    txnAmt: "180.75",
-                    laneId: "L4"
-                },
-                {
-                    txnPostedtime: "2025-09-21 10:28:40",
-                    vehicleNo: "TN22DF6750",
-                    originalTxnId: "TXN0012347",
-                    tollplazaname: "Krishnagiri Toll Plaza",
-                    vehicleDesc: "LCV / Truck",
-                    txnAmt: "200.00",
-                    laneId: "L1"
-                }
-            ]
-        };
-
-        buildTxnTable(dummyData.txn_list);
+    const trip_num = document.getElementById("tr_tripnumber").value;
+    if (!trip_num) {
+        alert("Trip number missing.");
+        return;
     }
+
+    console.log("🚀 Fetching toll cost for Trip:", trip_num);
+
+    $.ajax({
+        url: "{% url 'get_fastag_toll_cost_ajax' %}",
+        method: "GET",
+        data: { 'trip_num': trip_num },
+        success: function(data) {
+            if (data.success) {
+                console.log("✅ Toll data fetched successfully:", data);
+                buildTxnTable(data.txn_list);
+
+                // Update toll cost total field
+                const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
+                if (tollField) {
+                    tollField.value = data.total_amount.toFixed(2);
+                }
+            } else {
+                alert("⚠️ " + (data.error || "No toll transactions found."));
+                document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("❌ AJAX Error:", error);
+            alert("Failed to fetch toll data. Please try again.");
+        }
+    });
+}
 
     function buildTxnTable(txn_list) {
         if (!txn_list || txn_list.length === 0) {

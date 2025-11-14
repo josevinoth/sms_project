@@ -484,7 +484,7 @@ urlpatterns = [
     path('pk_quotationsummary_update/<int:pk_quotationsummary_id>', views.pk_quotationsummary_add, name='pk_quotationsummary_update'),  # update pk_quotationsummary
     path('pk_quotationsummary_delete/<int:pk_quotationsummary_id>', views.pk_quotationsummary_delete, name='pk_quotationsummary_delete'),  # delete pk_quotationsummary
     path('pk_quotation_summary_check_unique_field/', views.pk_quotation_summary_check_unique_field, name='pk_quotation_summary_check_unique_field'),  # pk_quotation_summary_check_unique_field
-    path('transport_calculate_trip_charges/', views.transport_calculate_trip_charges, name='transport_calculate_trip_charges'),   # transport_calculate_trip_charges
+    # path('transport_calculate_trip_charges/', views.transport_calculate_trip_charges, name='transport_calculate_trip_charges'),   # transport_calculate_trip_charges
     path('iou_get_full_name/', views.get_full_name_iou, name='iou_get_full_name'),   # iou_get_full_name
     path('iou_list/', views.iou_list, name='iou_list'),  # List IOU
     path('iou_insert/', views.iou_add, name='iou_insert'),  # Add IOU
@@ -746,6 +746,7 @@ urlpatterns = [
     path('driver_get_full_name/', views.get_full_name_driver, name='driver_get_full_name'),
     path('get_trip_totalcost/', views.get_trip_totalcost, name='get_trip_totalcost'),
     path('get_customer_ref/', views.get_customer_ref, name='get_customer_ref'),
+    path('fetch_enquiry_locations/', views.fetch_enquiry_locations, name='fetch_enquiry_locations'),
 
 ]
 

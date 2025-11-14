@@ -50,7 +50,11 @@
         </tr>
         <tr>
             <td><b>To:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_enquirynumber.en_tolocation}} {% endfor %}</td>
-            <td><b>Truck Number:</b> {% for vehicle_detail in vehicle_details %} {{vehicle_detail.va_vehiclenumber}} {% endfor %}</td>
+<td><b>Truck Number:</b>
+    {% if vehicle_number %}
+        {{ vehicle_number.0 }}
+    {% endif %}
+</td>
         </tr>
         <tr>
             <td><b>Special Instruction:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_remarks}} {% endfor %}</td>
