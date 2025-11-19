@@ -63,11 +63,39 @@
             <td><b>GST Tax Payable By:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_gst_payable_by}} {% endfor %}</td>
         </tr>
         <tr>
-            <td><b>Container No:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_container_number}} {% endfor %}</td>
-            <td><b>Seal No/Smart Lock No:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_seal_number}} {% endfor %}</td>
-            <td><b>Bill To Party Name And Address:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_enquirynumber.en_customername}} <p>{{consignment_detail.co_enquirynumber.en_customername.cu_address}}</p>{% endfor %} </td>
-            <td><b>Freight Charges:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_freight_amount}}{% endfor %} </td>
-        </tr>
+    <td><b>Container No:</b>
+        {% for consignment_detail in consignment_details %}
+            {{ consignment_detail.co_container_number }}
+        {% endfor %}
+    </td>
+
+    <!-- Seal No + Smart Lock No in one column -->
+    <td>
+        <b>Seal No:</b><br>
+        {% for consignment_detail in consignment_details %}
+            {{ consignment_detail.co_seal_number }}<br>
+        {% endfor %}
+<hr>
+        <b>Smart Lock No:</b><br>
+        {% for consignment_detail in consignment_details %}
+            {{ consignment_detail.co_smart_lock_number }}<br>
+        {% endfor %}
+    </td>
+
+    <td><b>Bill To Party Name And Address:</b>
+        {% for consignment_detail in consignment_details %}
+            {{ consignment_detail.co_enquirynumber.en_customername }}
+            <p>{{ consignment_detail.co_enquirynumber.en_customername.cu_address }}</p>
+        {% endfor %}
+    </td>
+
+    <td><b>Freight Charges:</b>
+        {% for consignment_detail in consignment_details %}
+            {{ consignment_detail.co_freight_amount }}
+        {% endfor %}
+    </td>
+</tr>
+
     </table>
     <h3>Invoice Details</h3>
     <hr class="report_hrItem"/>

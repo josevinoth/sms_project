@@ -31,7 +31,7 @@ class ConsignmentgoodsInfo(models.Model):
     cg_ewaybill_att = models.FileField(upload_to=consignmentgoods_directory_path, null=True, blank=True)
     cg_invoice_att = models.FileField(upload_to=consignmentgoods_directory_path, null=True, blank=True)
     cg_otl_att = models.FileField(upload_to=consignmentgoods_directory_path, null=True, blank=True)
-    cg_hawbno = models.CharField(max_length=12,default = '', null=True, blank=True)
+    cg_hawbno = models.CharField(max_length=1000,default = '', null=True, blank=True)
 
     def __str__(self):
         return self.cg_consignmentnumber
