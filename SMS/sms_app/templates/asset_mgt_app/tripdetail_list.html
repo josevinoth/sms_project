@@ -91,11 +91,13 @@
 </div>
 
 <script>
-    $(document).ready(function() {
-        var table = $('#tripdetail_list').DataTable({
-        responsive: true,
+$(document).ready(function () {
+    $('#tripdetail_list').DataTable({
+        responsive: true
     });
+});
 </script>
+
 
 <script>
 function fetchLiveTracking(vehicleNumber, rowId) {
