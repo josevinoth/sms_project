@@ -124,18 +124,47 @@ def enquirynote_list(request):
     user_role = User_extInfo.objects.get(user_id=user_id).emp_role
 
     enquiry_number = request.GET.get('enquiry_number', '')
+    consignment_number = request.GET.get('consignment_number', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    select_all = request.GET.get('select_all', '')
 
-    # Filter enquiries based on search
+    enquirynote_queryset = EnquirynoteInfo.objects.all()
+
     if enquiry_number:
-        enquirynote_queryset = EnquirynoteInfo.objects.filter(
-            Q(en_enquirynumber__icontains=enquiry_number)
-        ).order_by('-id')
-    else:
-        enquirynote_queryset = EnquirynoteInfo.objects.all().order_by('-id')
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_enquirynumber__icontains=enquiry_number
+        )
 
-    paginator = Paginator(enquirynote_queryset, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number if page_number and page_number.isdigit() else 1)
+    # 🔍 Filter by consignment number
+    if consignment_number:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            consignmentdetailinfo__co_consignmentnumber__icontains=consignment_number
+        ).distinct()
+
+    # 📅 Filter by created date range
+    if date_from:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_created_at__date__gte=date_from
+        )
+    if date_to:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_created_at__date__lte=date_to
+        )
+
+    enquirynote_queryset = enquirynote_queryset.order_by('-id')
+
+    select_all = request.GET.get('select_all', '')
+
+    if select_all == "true":
+        # Load ALL records (no pagination)
+        page_obj = enquirynote_queryset
+    else:
+        # Normal pagination
+        paginator = Paginator(enquirynote_queryset, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number if page_number and page_number.isdigit() else 1)
+
     enquiry_ids = [enq.id for enq in page_obj if isinstance(enq.id, int)]
 
     # Fetch related data
