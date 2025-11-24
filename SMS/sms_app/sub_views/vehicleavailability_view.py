@@ -6,10 +6,12 @@ def vehicle_availability_list(request):
     vehicles = VehiclemasterInfo.objects.all()
     vehicle_data = []
 
+    AVAILABLE_STATUS_IDS = [2, 3, 4, 6, 7]   # <-- new rule
+
     for vehicle in vehicles:
-        # Get the most recent trip for the vehicle
+
         latest_trip = TripdetailInfo.objects.filter(
-            tr_vehiclenumber=vehicle.vm_registrationnumber  # Use vehicle number field correctly
+            tr_vehiclenumber=vehicle.vm_registrationnumber
         ).order_by('-tr_created_at').first()
 
         availability = "No"
@@ -18,14 +20,15 @@ def vehicle_availability_list(request):
         date_time = "N/A"
 
         if latest_trip:
-            # Check if trip is closed
-            if latest_trip.tc_financestatus and latest_trip.tc_financestatus.id == 2:
-                availability = "Yes"   # Vehicle is available if trip is closed
-                trip_status = latest_trip.tc_financestatus.status
-            else:
-                availability = "No"    # Not available if not closed
-                trip_status = latest_trip.tc_financestatus.status if latest_trip.tc_financestatus else "Unknown"
+            status_id = latest_trip.tc_financestatus.id if latest_trip.tc_financestatus else None
 
+            # 🔥 Check availability by status list
+            if status_id in AVAILABLE_STATUS_IDS:
+                availability = "Yes"
+            else:
+                availability = "No"
+
+            trip_status = latest_trip.tc_financestatus.status if latest_trip.tc_financestatus else "Unknown"
             location = latest_trip.tr_reportedlocation.place_name if latest_trip.tr_reportedlocation else "N/A"
             date_time = latest_trip.tr_reporteddate if latest_trip.tr_reporteddate else "N/A"
 

@@ -213,7 +213,7 @@ def load_vehicle_number(request):
 
     # 1) registration numbers that are in closed (2) or settled (7) trips for the given type+source
     inactive_regs = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 7],
+        tc_financestatus_id__in=[2,3,4,6,7],
         tr_vehicletype_placed=vehicletype_placed,
         tr_vehiclesource=vehicletype_source,
         tr_vehiclenumber__isnull=False
