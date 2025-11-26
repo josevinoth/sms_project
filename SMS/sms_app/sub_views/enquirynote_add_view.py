@@ -168,7 +168,7 @@ def enquirynote_list(request):
     enquiry_ids = [enq.id for enq in page_obj if isinstance(enq.id, int)]
 
     # Fetch related data
-    consignment_data = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enquiry_ids)
+    consignment_data = ConsignmentdetailInfo.objects.filter(co_enquirynumber_id__in=enquiry_ids)
     vehicle_data = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber__in=enquiry_ids
     ).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt')
@@ -215,7 +215,7 @@ def enquirynote_list(request):
     enquiry_data = []
     for enquiry in page_obj:
         vehicles = vehicle_dict.get(enquiry.id, [])
-        consignments = consignment_data.filter(co_enquirynumber=enquiry)
+        consignments = consignment_data.filter(co_enquirynumber_id=enquiry.id)
 
         total_allowed = vehicle_limit_dict.get(enquiry.id, 0)
         total_allotted = vehicle_allotted_dict.get(enquiry.id, 0)

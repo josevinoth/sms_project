@@ -14,24 +14,31 @@ from ..sub_models.vendor_info_mod import Vendor_info
 
 @login_required(login_url='login_page')
 def vehicle_allotment_enquiry(request, enquiry_id, vehicle_number):
-    # You can now use enquiry_id and vehicle_number
+
     enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
-    print('vehicle_number',vehicle_number)
+
+    # find vehicle ID if exists
     try:
-        vehicle_number_id = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_number).id
+        vehicle_number_id = VehiclemasterInfo.objects.get(
+            vm_registrationnumber=vehicle_number
+        ).id
     except VehiclemasterInfo.DoesNotExist:
         vehicle_number_id = None
-    print('vehicle_number_id',vehicle_number_id)
-    # Example: filter vehicle allotment by both
-    vehicle_allotment = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry).filter(Q(va_vehiclenumber_mkt=vehicle_number) | Q(va_vehiclenumber=vehicle_number_id)).first()  # get first matching record or None
+
+    # check if allotment exists already
+    vehicle_allotment = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber=enquiry
+    ).filter(
+        Q(va_vehiclenumber_mkt=vehicle_number) |
+        Q(va_vehiclenumber=vehicle_number_id)
+    ).first()
+
     if vehicle_allotment:
-        # Redirect to the update URL with the found vehicle_allotment id
-        return redirect('vehicle_allotment_update', vehicle_allotment_id=vehicle_allotment.id)
-    else:
-        # Handle case when no allotment found, e.g. redirect to a create page or show error
-        # For example, redirect to a create page:
-        request.session['enquiry_num_id'] = enquiry_id
-        return redirect('vehicle_allotment_insert')  # Adjust this as per your URL names
+        return redirect('vehicle_allotment_update',
+                        vehicle_allotment_id=vehicle_allotment.id)
+
+    # if no allotment → go to ADD PAGE with that enquiry_id
+    return redirect('vehicle_allotment_insert', enquiry_id=enquiry_id)
 
 @login_required(login_url='login_page')
 def vehicle_allotment_nav(request,vehicle_allotment_id=0):
@@ -51,78 +58,69 @@ def vehicle_allotment_nav(request,vehicle_allotment_id=0):
     return render(request, "asset_mgt_app/vehicle_allotment_add.html", context)
 
 @login_required(login_url='login_page')
-def vehicle_allotment_add(request,vehicle_allotment_id=0,enquiry_id=0):
+def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
 
-    if request.method == "GET":
-        if vehicle_allotment_id == 0:
-            print("I am inside Get add vehicle_allotments")
-            request.session['ses_vehicle_allotment_id'] = vehicle_allotment_id
-            enquiry_num_id = request.session.get('enquiry_num_id')
-            enquiry_num_id = enquiry_num_id
-            vehicle_allotment_form = VehicleallotmentForm()
-            print('enquiry_num_id',enquiry_num_id)
-            try:
-                vehicle_allotment_list= Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id)
-            except ObjectDoesNotExist:
-                vehicle_allotment_list = []
-            vehicles = VehiclemasterInfo.objects.all()
+    # ---------- ADD MODE (GET) ----------
+    if request.method == "GET" and vehicle_allotment_id == 0:
 
-            context = {
-                'first_name': first_name,
-                'user_id': user_id,
-                'vehicle_allotment_form': vehicle_allotment_form,
-                'enquiry_num_id': enquiry_num_id,
-                'vehicle_allotment_list': vehicle_allotment_list,
-                'vehicles_data': vehicles,
-            }
-        else:
-            print("I am inside Get edit vehicle_allotments")
-            enquiry_num= Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id).va_enquirynumber
-            enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
-            vehicle_allotment = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
-            vehicle_allotment_form = VehicleallotmentForm(instance=vehicle_allotment)
-            vehicles = VehiclemasterInfo.objects.all()
-            for v in VehiclemasterInfo.objects.all():
-                print(v.id, v.vm_policyexpirydate)
-            context = {
-                'first_name': first_name,
-                'user_id': user_id,
-                'vehicle_allotment_form': vehicle_allotment_form,
-                'enquiry_num_id': enquiry_num_id,
-                'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id),
-                'va': vehicle_allotment,
-                'vehicles_data': vehicles,
-            }
-        return render(request, "asset_mgt_app/vehicle_allotment_add.html", context)
-    else:
+        form = VehicleallotmentForm()
+
+        return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
+            'first_name': first_name,
+            'user_id': user_id,
+            'vehicle_allotment_form': form,
+            'enquiry_num_id': enquiry_id,  # ALWAYS CORRECT
+            'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=enquiry_id
+            ),
+            'vehicles_data': VehiclemasterInfo.objects.all(),
+        })
+
+    # ---------- UPDATE MODE (GET) ----------
+    if request.method == "GET" and vehicle_allotment_id != 0:
+
+        va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
+        enquiry_id = va.va_enquirynumber.id  # FIXED
+
+        form = VehicleallotmentForm(instance=va)
+
+        return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
+            'first_name': first_name,
+            'user_id': user_id,
+            'vehicle_allotment_form': form,
+            'va': va,
+            'enquiry_num_id': enquiry_id,
+            'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=enquiry_id
+            ),
+            'vehicles_data': VehiclemasterInfo.objects.all(),
+        })
+
+    # ------------ POST SAVE (ADD + UPDATE) ------------
+    if request.method == "POST":
+
         if vehicle_allotment_id == 0:
-            print("I am inside post add vehicle_allotments")
-            vehicle_allotment_form = VehicleallotmentForm(request.POST)
+            form = VehicleallotmentForm(request.POST)
         else:
-            print("I am inside post edit vehicle_allotments")
-            vehicle_allotment = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
-            vehicle_allotment_form = VehicleallotmentForm(request.POST, instance=vehicle_allotment)
-        enquiry_num_id = request.session.get('ses_enqiury_id')
-        if vehicle_allotment_form.is_valid():
-            vehicle_allotment_form.save()
-            print("Main Form is Valid")
-            # vehicle_allotment_list = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id).values_list('va_vehiclenumber', flat=True))
-            # vehicle_numbers=[]
-            # for i in vehicle_allotment_list:
-            #     vehicle_numbers.append(str(VehiclemasterInfo.objects.get(id=i).vm_registrationnumber))
-            # EnquirynoteInfo.objects.filter(id=enquiry_num_id).update(en_vehicle_allotment=vehicle_numbers)
-            messages.success(request, 'Record Updated Successfully')
-        else:
-            print("Main Form is not Valid")
-            for field, errors in vehicle_allotment_form.errors.items():
-                for error in errors:
-                    print(f"Error in {field}: {error}")
-                    messages.error(request, f"Error in {field}: {error}")
-            messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-        return redirect(request.META['HTTP_REFERER'])
-        # return redirect('/SMS/enquirynote_list')
+            va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
+            form = VehicleallotmentForm(request.POST, instance=va)
+
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.va_enquirynumber_id = enquiry_id  # ALWAYS CORRECT ENQUIRY
+            obj.save()
+
+            messages.success(request, "Vehicle Allotment Saved Successfully")
+            return redirect('vehicle_allotment_insert', enquiry_id=enquiry_id)
+
+        messages.error(request, "Please fix form errors!")
+        return redirect(request.META.get('HTTP_REFERER'))
+
+    # ---------- ADD THIS MISSING RETURN --------------
+    return redirect('enquirynote_list')
+
 
 # List vehicle_allotment
 @login_required(login_url='login_page')
