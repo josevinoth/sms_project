@@ -88,7 +88,11 @@ def gatein_add(request, gatein_id=0):
                 gatein_status = "No Status"
             # Loading Bay Status Check
             try:
-                loadingbay_status = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
+                loadingbay_record = Loadingbay_Info.objects.filter(lb_job_no=wh_job_id).first()
+                if loadingbay_record:
+                    loadingbay_status = loadingbay_record.lb_status
+                else:
+                    loadingbay_status = None  # or handle missing case
             except ObjectDoesNotExist:
                 loadingbay_status = "No Status"
             # Damage/Before Status Check

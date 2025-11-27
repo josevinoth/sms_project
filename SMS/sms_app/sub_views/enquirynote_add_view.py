@@ -124,22 +124,51 @@ def enquirynote_list(request):
     user_role = User_extInfo.objects.get(user_id=user_id).emp_role
 
     enquiry_number = request.GET.get('enquiry_number', '')
+    consignment_number = request.GET.get('consignment_number', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    select_all = request.GET.get('select_all', '')
 
-    # Filter enquiries based on search
+    enquirynote_queryset = EnquirynoteInfo.objects.all()
+
     if enquiry_number:
-        enquirynote_queryset = EnquirynoteInfo.objects.filter(
-            Q(en_enquirynumber__icontains=enquiry_number)
-        ).order_by('-id')
-    else:
-        enquirynote_queryset = EnquirynoteInfo.objects.all().order_by('-id')
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_enquirynumber__icontains=enquiry_number
+        )
 
-    paginator = Paginator(enquirynote_queryset, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number if page_number and page_number.isdigit() else 1)
+    # 🔍 Filter by consignment number
+    if consignment_number:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            consignmentdetailinfo__co_consignmentnumber__icontains=consignment_number
+        ).distinct()
+
+    # 📅 Filter by created date range
+    if date_from:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_created_at__date__gte=date_from
+        )
+    if date_to:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_created_at__date__lte=date_to
+        )
+
+    enquirynote_queryset = enquirynote_queryset.order_by('-id')
+
+    select_all = request.GET.get('select_all', '')
+
+    if select_all == "true":
+        # Load ALL records (no pagination)
+        page_obj = enquirynote_queryset
+    else:
+        # Normal pagination
+        paginator = Paginator(enquirynote_queryset, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number if page_number and page_number.isdigit() else 1)
+
     enquiry_ids = [enq.id for enq in page_obj if isinstance(enq.id, int)]
 
     # Fetch related data
-    consignment_data = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enquiry_ids)
+    consignment_data = ConsignmentdetailInfo.objects.filter(co_enquirynumber_id__in=enquiry_ids)
     vehicle_data = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber__in=enquiry_ids
     ).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt')
@@ -164,7 +193,7 @@ def enquirynote_list(request):
     trip_dict = {}
     for enq_id, trip_cons, trip_num, trip_status, trip_status_id in trip_data:
         trip_dict.setdefault(enq_id, []).append(
-            (trip_cons or "Not Applicable", trip_num or "No Trip", trip_status or "", trip_status_id)
+            (trip_cons or "Empty trip", trip_num or "No Trip", trip_status or "", trip_status_id)
         )
 
     # Vehicle limits
@@ -186,7 +215,7 @@ def enquirynote_list(request):
     enquiry_data = []
     for enquiry in page_obj:
         vehicles = vehicle_dict.get(enquiry.id, [])
-        consignments = consignment_data.filter(co_enquirynumber=enquiry)
+        consignments = consignment_data.filter(co_enquirynumber_id=enquiry.id)
 
         total_allowed = vehicle_limit_dict.get(enquiry.id, 0)
         total_allotted = vehicle_allotted_dict.get(enquiry.id, 0)
@@ -295,3 +324,18 @@ def get_customer_details(request):
         return JsonResponse(data)
     except CustomerInfo.DoesNotExist:
         return JsonResponse({'error': 'Customer not found'}, status=404)
+@login_required(login_url='login_page')
+def fetch_enquiry_locations(request):
+    enquiry_number = request.GET.get('enquiry_number', '').strip()
+    if not enquiry_number:
+        return JsonResponse({'error': 'Missing enquiry number'}, status=400)
+
+    try:
+        enquiry = EnquirynoteInfo.objects.select_related('en_fromlocaion', 'en_tolocation').get(id=enquiry_number)
+        data = {
+            'from_location_id': enquiry.en_fromlocaion.id if enquiry.en_fromlocaion else None,
+            'to_location_id': enquiry.en_tolocation.id if enquiry.en_tolocation else None,
+        }
+        return JsonResponse(data)
+    except EnquirynoteInfo.DoesNotExist:
+        return JsonResponse({'error': 'Enquiry not found'}, status=404)

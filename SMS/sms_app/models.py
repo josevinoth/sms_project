@@ -221,3 +221,5 @@ from .sub_models.DG_cargo_checklist_mod import DGcargovalueInfo
 from .sub_models.deviation_mod import DeviationInfo
 from .sub_models.attachment_category_mod import Attach_categoryInfo
 from .sub_models.DmrInfo_report import DmrInfo
+from .sub_models.driversettlement_mod import driver_settlement_info
+from .sub_models.driversettlement_expense_mod import Driversettlement_ExpenseInfo

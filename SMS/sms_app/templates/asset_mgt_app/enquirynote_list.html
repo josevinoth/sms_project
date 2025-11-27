@@ -26,12 +26,59 @@
             <i class="fas fa-check-double"></i> Select All
         </a>
     </div>
-    <div class="col-md-3">
-        <form class="form-inline" method="get" action="{% url 'enquirynote_list' %}">
-            <input type="text" name="enquiry_number" class="form-control mr-2" placeholder="Search Enquiry Number" value="{{ enquiry_number }}">
-            <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Search</button>
-        </form>
-    </div>
+        <div class="col-12 col-lg-6 mb-2">
+            <form method="get" action="{% url 'enquirynote_list' %}">
+                <div class="row g-2">
+
+                    <div class="col-12 col-sm-3">
+                        <input type="text"
+                               class="form-control"
+                               placeholder="Enquiry No"
+                               name="enquiry_number"
+                               value="{{ enquiry_number }}">
+                    </div>
+
+                    <div class="col-12 col-sm-3">
+                        <input type="text"
+                               class="form-control"
+                               placeholder="Consignment No"
+                               name="consignment_number"
+                               value="{{ consignment_number }}">
+                    </div>
+
+                    <div class="col-12 col-sm-3">
+                        <input type="date"
+                               class="form-control"
+                               name="date_from"
+                               value="{{ date_from }}">
+                    </div>
+
+                    <div class="col-12 col-sm-3">
+                        <input type="date"
+                               class="form-control"
+                               name="date_to"
+                               value="{{ date_to }}">
+                    </div>
+
+
+            <!-- Search Button -->
+            <div class="col-6 mt-2">
+                <button class="btn btn-primary w-100" type="submit">
+                    <i class="fa fa-search mr-1"></i> Search
+                </button>
+            </div>
+
+            <!-- Clear Button -->
+            <div class="col-6 mt-2">
+                <a href="{% url 'enquirynote_list' %}" class="btn btn-secondary w-100">
+                    <i class="fa fa-times-circle mr-1"></i> Clear
+                </a>
+            </div>
+
+
+                </div>
+            </form>
+        </div>
 </div>
 <hr>
 <div class="container-fluid shadow-box-table">

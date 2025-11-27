@@ -27,7 +27,7 @@ class VehiclemasterInfo(models.Model):
     vm_body = models.ForeignKey(BodyInfo,on_delete=models.CASCADE, default='',null=True,blank=True)
     vm_vehicletype = models.ForeignKey(VehicletypeInfo,on_delete=models.CASCADE, default='',null=True,blank=True)
     vm_axletype = models.ForeignKey(AxletypeInfo,on_delete=models.CASCADE, default='',null=True,blank=True)
-    vm_registrationnumber = models.CharField(max_length=30,null=True,blank=True)
+    vm_registrationnumber = models.CharField(max_length=30, unique=True,null=False,blank=False,default="Null")
     vm_millage = models.CharField(max_length=30,null=True,blank=True)
     vm_cost = models.CharField(max_length=30,null=True,blank=True)
     vm_fueltype = models.ForeignKey(FueltypeInfo, on_delete=models.CASCADE, default='',null=True,blank=True)

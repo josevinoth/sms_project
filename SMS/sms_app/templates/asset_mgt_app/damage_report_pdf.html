@@ -36,20 +36,20 @@
       <td>{{ damage_list.dam_marks_numbers }}</td>
     </tr>
 
-    {% if warehouse_goods_list %}
-    <tr>
-      <th>Shipper Invoice</th>
-      <td>{{ warehouse_goods_list.0.wh_goods_invoice }}</td>
-    </tr>
-    <tr>
-      <th>Shipper Name</th>
-      <td>{{ warehouse_goods_list.0.wh_consigner }}</td>
-    </tr>
-    {% else %}
-    <tr>
-      <td colspan="2">No warehouse goods found.</td>
-    </tr>
-    {% endif %}
+    {%              if warehouse_goods_list %}
+  <tr>
+    <th>Shipper Invoice</th>
+    <td>{{ warehouse_goods_list.0.wh_goods_invoice }}</td>
+  </tr>
+  <tr>
+    <th>Shipper Name</th>
+    <td>{{ warehouse_goods_list.0.wh_consigner }}</td>
+  </tr>
+{% else %}
+  <tr>
+    <td colspan="2">No warehouse goods found.</td>
+  </tr>
+{% endif %}
 
     <tr>
       <th>Comments</th>

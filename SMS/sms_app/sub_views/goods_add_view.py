@@ -346,8 +346,10 @@ def goods_update(request):
     gross_wt = 0
     total_qty = 0
     for j in stock_id:
-        gross_wt = gross_wt + (Warehouse_goods_info.objects.get(wh_qr_rand_num=j).wh_goods_weight)
-        total_qty = total_qty + (Warehouse_goods_info.objects.get(wh_qr_rand_num=j).wh_goods_pieces)
+        goods = Warehouse_goods_info.objects.filter(wh_qr_rand_num=j).first()
+        if goods:
+            gross_wt += goods.wh_goods_weight
+            total_qty += goods.wh_goods_pieces
 
     for i in range(0, len(invoice_id)):
         if i == 0:

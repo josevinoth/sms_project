@@ -14,6 +14,7 @@ class ConsignmentdetailInfo(models.Model):
     co_containerdescription = models.CharField(max_length=10,default = '',null=True,blank=True)
     co_freight_amount = models.CharField(max_length=100,default = 'As Agreed',null=True,blank=True)
     co_seal_number = models.CharField(max_length=100,default ='',null=True,blank=True)
+    co_smart_lock_number = models.CharField(max_length=100,default ='',null=True,blank=True)
     co_container_number = models.CharField(max_length=100,default ='',null=True,blank=True)
     co_status = models.ForeignKey(StatusList,on_delete=models.CASCADE, default=6)
     co_gst_payable_by = models.ForeignKey(GST_payable_info, on_delete=models.CASCADE,default='1', null=True,blank=True)

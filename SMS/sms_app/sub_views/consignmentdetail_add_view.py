@@ -65,6 +65,12 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     # enquiry_num_id = request.session.get('enquiry_num_id')
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
     enquiry_num_id = request.session.get('ses_enqiury_id')
+    has_invoice_or_ewaybill = ConsignmentgoodsInfo.objects.filter(
+        cg_consignmentnumber=consignmentdetail_id
+    ).filter(
+        Q(cg_consignerinvoice__isnull=False, cg_consignerinvoice__gt='') |
+        Q(cg_ebillno__isnull=False, cg_ebillno__gt='')
+    ).exists()
 
     if consignmentdetail_id != 0:
         enquiry_num_id = ConsignmentdetailInfo.objects.get(id=consignmentdetail_id).co_enquirynumber.id
@@ -75,7 +81,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         return redirect('some_fallback_view')
 
     customer = EnquirynoteInfo.objects.get(pk=enquiry_num_id).en_customername
-    customer_obj = CustomerInfo.objects.get(cu_name=customer)
+    customer_obj = CustomerInfo.objects.filter(cu_name=customer).first()
     customer_id = customer_obj.id
     customer_code = customer_obj.cu_customercode
 
@@ -107,6 +113,8 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentdetail_id),
             'vehicle_type': vehicle_type,
             'user_branch': user_branch,
+            'has_invoice_or_ewaybill': has_invoice_or_ewaybill,  # ✅ Add this flag
+
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
@@ -136,13 +144,18 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
                 con_det_form = ConsignmentdetailaddForm(request.POST, instance=consignmentdetail)
                 if con_det_form.is_valid():
-                    consignment_detail = con_det_form.save(commit=False)  # <-- Don't save yet
+                    consignment_detail = con_det_form.save(commit=False)
                     consignment_detail.co_vehicletype = vehicle_type
-                    con_det_form.save()
+                    consignment_detail.save()
+
                     enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
-                    consignmentdetail_list = list(ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id).values_list('co_consignmentnumber', flat=True))
+                    consignmentdetail_list = list(
+                        ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+                        .values_list('co_consignmentnumber', flat=True)
+                    )
                     consignmentdetail_list.sort()
-                    EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_consignmentdetails=consignmentdetail_list)
+                    EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(
+                        en_consignmentdetails=consignmentdetail_list)
 
                     messages.success(request, 'Record Updated Successfully')
 
@@ -187,36 +200,57 @@ def consignment_note_pdf(request, consignment_note_id=0):
     try:
         consignment = ConsignmentdetailInfo.objects.get(pk=consignment_note_id)
         consignment_num = consignment.co_consignmentnumber
-        vehicle_reg_num = consignment.co_vehicelnumber  # e.g., 'TN22DF8390'
+        vehicle_reg_num = consignment.co_vehicelnumber  # e.g., TN22DF8390
         enquiry_id = consignment.co_enquirynumber_id
 
-        # Get all related goods
+        # All related goods
         consignment_goods_list = ConsignmentgoodsInfo.objects.filter(
             cg_consignmentnumber=consignment_note_id
         ).order_by('id')
 
-        # Get the VehiclemasterInfo ID for this registration number
-        try:
-            vehicle_master = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_reg_num)
-        except VehiclemasterInfo.DoesNotExist:
-            vehicle_master = None
-
         vehicle_detail = None
-        if vehicle_master:
-            # Now filter Vehicle_allotmentInfo using the FK ID
-            vehicle_detail = Vehicle_allotmentInfo.objects.filter(
-                va_enquirynumber=enquiry_id
-            ).filter(
-                Q(va_vehiclenumber=vehicle_master.id) | Q(va_vehiclenumber_mkt=vehicle_master.id)
-            ).first()
+
+        # ----------------------------------------------------
+        # 1️⃣ FIRST TRY → MARKET VEHICLE MATCH (string match)
+        # ----------------------------------------------------
+        vehicle_detail = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber=enquiry_id,
+            va_vehiclenumber_mkt=vehicle_reg_num
+        ).first()
+
+        # ----------------------------------------------------
+        # 2️⃣ IF NOT MARKET → TRY OWN VEHICLE MATCH (FK)
+        # ----------------------------------------------------
+        if not vehicle_detail:
+            try:
+                vehicle_master = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_reg_num)
+                vehicle_detail = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber=enquiry_id,
+                    va_vehiclenumber=vehicle_master.id
+                ).first()
+            except VehiclemasterInfo.DoesNotExist:
+                vehicle_detail = None
+
+        # ----------------------------------------------------
+        # 3️⃣ EXTRACT VALUES TO SEND TO TEMPLATE
+        # ----------------------------------------------------
+        vehicle_number_val = []
+        driver_name = []
+        driver_lic = []
+        driver_number = []
 
         if vehicle_detail:
-            vehicle_number_val = [vehicle_reg_num]  # Already have registration number
-            driver_name = [vehicle_detail.va_drivername]
-            driver_lic = [vehicle_detail.va_driver_lic]
-            driver_number = [vehicle_detail.va_drivernumber]
-        else:
-            vehicle_number_val = driver_name = driver_lic = driver_number = []
+            # OWN VEHICLE
+            if vehicle_detail.va_vehiclenumber:
+                vehicle_number_val.append(vehicle_detail.va_vehiclenumber.vm_registrationnumber)
+
+            # MARKET VEHICLE
+            if vehicle_detail.va_vehiclenumber_mkt:
+                vehicle_number_val.append(vehicle_detail.va_vehiclenumber_mkt)
+
+            driver_name.append(vehicle_detail.va_drivername)
+            driver_lic.append(vehicle_detail.va_driver_lic)
+            driver_number.append(vehicle_detail.va_drivernumber)
 
         context = {
             'consignment_details': [consignment],
@@ -228,16 +262,19 @@ def consignment_note_pdf(request, consignment_note_id=0):
             'Driver_number': driver_number,
         }
 
-        # Prepare PDF
+        # ----------------------------------------------------
+        #           CREATE PDF
+        # ----------------------------------------------------
         file_name = f"Consignment_Note_{consignment_num}.pdf"
         template_path = 'asset_mgt_app/consignement_note_pdf.html'
+
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename={file_name}'
 
         template = get_template(template_path)
         html = template.render(context)
-        pisa_status = pisa.CreatePDF(html, dest=response)
 
+        pisa_status = pisa.CreatePDF(html, dest=response)
         if pisa_status.err:
             return HttpResponse('We had some errors <pre>' + html + '</pre>')
 

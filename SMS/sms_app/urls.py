@@ -411,12 +411,12 @@ urlpatterns = [
     path('costingsummary_delete/<int:costingsummary_id>', views.costingsummary_delete, name='costingsummary_delete'),  # delete costingsummary
     path('pk_costing_summary_check_unique_field/', views.pk_costing_summary_check_unique_field, name='pk_costing_summary_check_unique_field'),  # costing_summary_check_unique_field
     path('pk_costing_get_customer/', views.pk_costing_get_customer, name='pk_costing_get_customer'),  # costing_summary_check_unique_field
-    path('vehicle_allotment_list/', views.vehicle_allotment_list, name='vehicle_allotment_list'),  # List vehicle_allotment
-    path('vehicle_allotment_insert/', views.vehicle_allotment_add, name='vehicle_allotment_insert'),  # Add vehicle_allotment
-    path('vehicle_allotment_update_enquiry/<int:enquiry_id>/<str:vehicle_number>/', views.vehicle_allotment_enquiry, name='vehicle_allotment_update_enquiry'),  # update vehicle_allotment
-    path('vehicle_allotment_update/<int:vehicle_allotment_id>', views.vehicle_allotment_add, name='vehicle_allotment_update'),  # update vehicle_allotment
-    path('vehicle_allotment_delete/<int:vehicle_allotment_id>', views.vehicle_allotment_delete, name='vehicle_allotment_delete'),  # delete vehicle_allotment
-    path('vehicle_allotment_nav/<int:vehicle_allotment_id>', views.vehicle_allotment_nav, name='vehicle_allotment_nav'),  # nav vehicle_allotment
+    path('vehicle_allotment_list/', views.vehicle_allotment_list, name='vehicle_allotment_list'),
+    path('vehicle_allotment_insert/<int:enquiry_id>/',views.vehicle_allotment_add,name='vehicle_allotment_insert'),
+    path('vehicle_allotment_update/<int:vehicle_allotment_id>/',views.vehicle_allotment_add,name='vehicle_allotment_update'),
+    path('vehicle_allotment_update_enquiry/<int:enquiry_id>/<str:vehicle_number>/',views.vehicle_allotment_enquiry,name='vehicle_allotment_update_enquiry'),
+    path('vehicle_allotment_delete/<int:vehicle_allotment_id>/',views.vehicle_allotment_delete,name='vehicle_allotment_delete'),
+    path('vehicle_allotment_nav/<int:vehicle_allotment_id>/',views.vehicle_allotment_nav,name='vehicle_allotment_nav'),
     path('search/', views.get_queryset, name='search'),  # View Gate-in search
     path('pre_gatein_search/', views.pre_gatein_search, name='pre_gatein_search'),  # View pre Gate-in search
     path('partcode_search/', views.partcode_search, name='partcode_search'),  # View pre Gate-in search
@@ -739,9 +739,14 @@ urlpatterns = [
     path('trip_send_email/', views.trip_send_email, name='trip_send_email'),
     path('incident_send_email/', views.incident_send_email, name='incident_send_email'),
     path('truck_send_email_view', views.truck_send_email_view, name='truck_send_email_view'),
-    path("dispatch/upload/<int:pk>/", views.dispatch_upload_attachment, name="dispatch_upload_attachment"),
-    path('dispatch/<int:pk>/upload/<str:att_type>/', views.dispatch_upload_attachment, name='dispatch_upload_attachment'),
-    path('dispatch/<int:pk>/delete/<str:att_type>/', views.dispatch_delete_attachment, name='dispatch_delete_attachment'),
+    path('driver_settlement_add/', views.driver_settlement_add, name='driver_settlement_add'),
+    path('driver_settlement_update/<int:ds_id>/', views.driver_settlement_add, name='driver_settlement_update'),
+    path('driver_settlement_list/', views.driver_settlement_list, name='driver_settlement_list'),
+    path('driver_settlement_delete/<int:ds_id>/', views.driver_settlement_delete, name='driver_settlement_delete'),
+    path('driver_get_full_name/', views.get_full_name_driver, name='driver_get_full_name'),
+    path('get_trip_totalcost/', views.get_trip_totalcost, name='get_trip_totalcost'),
+    path('get_customer_ref/', views.get_customer_ref, name='get_customer_ref'),
+    path('fetch_enquiry_locations/', views.fetch_enquiry_locations, name='fetch_enquiry_locations'),
 
 ]
 
