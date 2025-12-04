@@ -1,0 +1,80 @@
+{% extends "asset_mgt_app/base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Trip Settlement</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid row">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<hr>
+
+<div class="container-fluid">
+
+<table id="tripsettlement_list" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Enquiry Number</th>
+            <th>Consignment Number</th>
+            <th>Trip Number</th>
+            <th>Trip Cost</th>
+            <th>Parking Cost</th>
+            <th>Toll Cost</th>
+            <th>Loading Cost</th>
+            <th>Unloading Cost</th>
+            <th>Weighment Cost</th>
+            <th>Handling Cost</th>
+            <th>POD</th>
+            <th>Settlement Status</th>
+            <th>Edit</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for trip in tripsettlement_list %}
+        <tr>
+            <td>{{ trip.tr_enquirynumber }}</td>
+            <td>{{ trip.tr_consignmentnumber }}</td>
+            <td>{{ trip.tr_tripnumber }}</td>
+
+            <td>{{ trip.tc_tripcost }}</td>
+            <td>{{ trip.tc_parkingcost }}</td>
+            <td>{{ trip.tc_tollcost }}</td>
+            <td>{{ trip.tc_loadingcost }}</td>
+            <td>{{ trip.tc_unloadingcost }}</td>
+            <td>{{ trip.tc_weighmentcost }}</td>
+            <td>{{ trip.tc_handlingcost }}</td>
+
+            <td>{{ trip.tc_pod }}</td>
+            <td>{{ trip.tc_financestatus.status }}</td>
+
+            <td>
+                <a class="btn btn-primary" href="{% url 'trip_settlement_edit' trip.id %}">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#tripsettlement_list').DataTable();
+});
+</script>
+
+{% endblock content %}

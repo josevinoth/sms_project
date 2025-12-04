@@ -1,10 +1,13 @@
 import json
+from datetime import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Sum, Q
+from django.core.paginator import Paginator
+from django.db.models import Sum, Q, Count
 from ..forms import VehicleallotmentForm
-from ..models import Enquirynotevehicle,TripdetailInfo,OwnershipInfo,VehiclemasterInfo,EnquirynoteInfo,Vehicle_allotmentInfo,VendorratemasterInfo1, RtratemasterInfo
+from ..models import Enquirynotevehicle,TripdetailInfo,OwnershipInfo,User_extInfo,ConsignmentdetailInfo,VehiclemasterInfo,EnquirynoteInfo,Vehicle_allotmentInfo,VendorratemasterInfo1, RtratemasterInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from .send_department_email import send_department_email
@@ -14,31 +17,24 @@ from ..sub_models.vendor_info_mod import Vendor_info
 
 @login_required(login_url='login_page')
 def vehicle_allotment_enquiry(request, enquiry_id, vehicle_number):
-
+    # You can now use enquiry_id and vehicle_number
     enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
-
-    # find vehicle ID if exists
+    print('vehicle_number',vehicle_number)
     try:
-        vehicle_number_id = VehiclemasterInfo.objects.get(
-            vm_registrationnumber=vehicle_number
-        ).id
+        vehicle_number_id = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_number).id
     except VehiclemasterInfo.DoesNotExist:
         vehicle_number_id = None
-
-    # check if allotment exists already
-    vehicle_allotment = Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber=enquiry
-    ).filter(
-        Q(va_vehiclenumber_mkt=vehicle_number) |
-        Q(va_vehiclenumber=vehicle_number_id)
-    ).first()
-
+    print('vehicle_number_id',vehicle_number_id)
+    # Example: filter vehicle allotment by both
+    vehicle_allotment = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry).filter(Q(va_vehiclenumber_mkt=vehicle_number) | Q(va_vehiclenumber=vehicle_number_id)).first()  # get first matching record or None
     if vehicle_allotment:
-        return redirect('vehicle_allotment_update',
-                        vehicle_allotment_id=vehicle_allotment.id)
-
-    # if no allotment → go to ADD PAGE with that enquiry_id
-    return redirect('vehicle_allotment_insert', enquiry_id=enquiry_id)
+        # Redirect to the update URL with the found vehicle_allotment id
+        return redirect('vehicle_allotment_update', vehicle_allotment_id=vehicle_allotment.id)
+    else:
+        # Handle case when no allotment found, e.g. redirect to a create page or show error
+        # For example, redirect to a create page:
+        request.session['enquiry_num_id'] = enquiry_id
+        return redirect('vehicle_allotment_insert')  # Adjust this as per your URL names
 
 @login_required(login_url='login_page')
 def vehicle_allotment_nav(request,vehicle_allotment_id=0):
@@ -67,22 +63,34 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
         form = VehicleallotmentForm()
 
+        # Store enquiry ID in session for POST usage
+        request.session['ses_enquiry_id'] = enquiry_id
+        enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)  # ⬅ Fetch enquiry
+
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
             'first_name': first_name,
             'user_id': user_id,
             'vehicle_allotment_form': form,
-            'enquiry_num_id': enquiry_id,  # ALWAYS CORRECT
+            'enquiry_num_id': enquiry_id,
             'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(
                 va_enquirynumber=enquiry_id
             ),
             'vehicles_data': VehiclemasterInfo.objects.all(),
+            'customer_name': enquiry.en_customername.cu_name,
+            'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
+            'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
+
         })
 
     # ---------- UPDATE MODE (GET) ----------
     if request.method == "GET" and vehicle_allotment_id != 0:
 
         va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
-        enquiry_id = va.va_enquirynumber.id  # FIXED
+        enquiry_id = va.va_enquirynumber.id
+
+        # Store correct enquiry ID in session
+        request.session['ses_enquiry_id'] = enquiry_id
+        enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)  # ⬅ Fetch enquiry
 
         form = VehicleallotmentForm(instance=va)
 
@@ -96,38 +104,226 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 va_enquirynumber=enquiry_id
             ),
             'vehicles_data': VehiclemasterInfo.objects.all(),
+            'customer_name': enquiry.en_customername.cu_name,
+            'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
+            'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
         })
 
-    # ------------ POST SAVE (ADD + UPDATE) ------------
+    # ---------- POST SAVE (ADD + UPDATE) ----------
     if request.method == "POST":
 
+        # VERY IMPORTANT — Correct enquiry_id always comes from session
+        enquiry_id = request.session.get('ses_enquiry_id')
+
+        if not enquiry_id:
+            messages.error(request, "Enquiry ID missing. Please try again.")
+            return redirect(request.META.get('HTTP_REFERER'))
+
+        # ADD MODE
         if vehicle_allotment_id == 0:
             form = VehicleallotmentForm(request.POST)
+            obj = form.save(commit=False)
+            obj.va_enquirynumber_id = enquiry_id
+
+        # UPDATE MODE
         else:
             va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
             form = VehicleallotmentForm(request.POST, instance=va)
+            obj = form.save(commit=False)
+            obj.va_enquirynumber = va.va_enquirynumber  # Always correct
 
         if form.is_valid():
-            obj = form.save(commit=False)
-            obj.va_enquirynumber_id = enquiry_id  # ALWAYS CORRECT ENQUIRY
             obj.save()
-
             messages.success(request, "Vehicle Allotment Saved Successfully")
-            return redirect('vehicle_allotment_insert', enquiry_id=enquiry_id)
+            return redirect('vehicle_allotment_update', vehicle_allotment_id=obj.id)
+        else:
+            # show form errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
 
-        messages.error(request, "Please fix form errors!")
+            messages.error(request, "Please fix the errors.")
+
         return redirect(request.META.get('HTTP_REFERER'))
 
-    # ---------- ADD THIS MISSING RETURN --------------
+    # fallback return
     return redirect('enquirynote_list')
-
 
 # List vehicle_allotment
 @login_required(login_url='login_page')
 def vehicle_allotment_list(request):
+
     first_name = request.session.get('first_name')
-    context = {'vehicle_allotment_list' : Vehicle_allotmentInfo.objects.all(),'first_name': first_name}
-    return render(request,"asset_mgt_app/vehicle_allotment_add.html",context)
+    user_id = request.session.get('ses_userID')
+
+    user_ext = User_extInfo.objects.get(user_id=user_id)
+    user_role = user_ext.emp_role     # Role object
+    user_branch_obj = user_ext.emp_branch  # Location_info object
+
+    # Extract "MAA" / "BLR" from "BVM MAA"
+    branch_code = user_branch_obj.loc_name.split()[-1]
+
+    # Filters from HTML
+    enquiry_number = request.GET.get('enquiry_number', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    select_all = request.GET.get('select_all', '')
+
+    # -----------------------------
+    # BASE QUERYSET
+    # -----------------------------
+    enquirynote_queryset = EnquirynoteInfo.objects.all()
+
+    from datetime import datetime, timedelta
+
+    # DEFAULT – Show last 3 days only
+    if not select_all and not date_from and not date_to and not enquiry_number:
+        today = datetime.today().date()
+        last_3_days = today - timedelta(days=5)  # Last 3 days
+
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_created_at__date__gte=last_3_days,
+            en_created_at__date__lte=today
+        )
+
+    # -----------------------------
+    # BRANCH FILTER (Only for non-admin users)
+    # -----------------------------
+    if user_role.id != 1:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_customername__cu_name__icontains=branch_code
+        )
+
+    # -----------------------------
+    # Apply search filters
+    # -----------------------------
+    if enquiry_number:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_enquirynumber__icontains=enquiry_number
+        )
+
+    if date_from:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_created_at__date__gte=date_from
+        )
+
+    if date_to:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_created_at__date__lte=date_to
+        )
+
+    # -----------------------------
+    # SELECT ALL – No pagination
+    # -----------------------------
+    if select_all == "true":
+        page_obj = enquirynote_queryset.order_by('-id')
+    else:
+        paginator = Paginator(enquirynote_queryset.order_by('-id'), 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number if page_number and page_number.isdigit() else 1)
+
+    enquiry_ids = [enq.id for enq in page_obj]
+
+    # -----------------------------
+    # RELATED DATA
+    # -----------------------------
+    consignment_data = ConsignmentdetailInfo.objects.filter(
+        co_enquirynumber_id__in=enquiry_ids
+    )
+
+    vehicle_data = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber__in=enquiry_ids
+    ).values_list(
+        'va_enquirynumber',
+        'va_vehiclenumber__vm_registrationnumber',
+        'va_vehiclenumber_mkt'
+    )
+
+    trip_data = TripdetailInfo.objects.filter(
+        tr_enquirynumber_id__in=enquiry_ids
+    ).values_list(
+        'tr_enquirynumber',
+        'tr_consignmentnumber__co_consignmentnumber',
+        'tr_tripnumber',
+        'tc_financestatus__status',
+        'tc_financestatus'
+    )
+
+    # -----------------------------
+    # BUILD VEHICLE DICT
+    # -----------------------------
+    vehicle_dict = {}
+    for enq_id, reg_num, mkt_num in vehicle_data:
+        nums = [x for x in (reg_num, mkt_num) if x]
+        vehicle_dict.setdefault(enq_id, []).extend(nums or ["No Vehicle"])
+
+    # -----------------------------
+    # BUILD TRIP DICT
+    # -----------------------------
+    trip_dict = {}
+    for enq_id, trip_cons, trip_num, trip_status, trip_status_id in trip_data:
+        trip_dict.setdefault(enq_id, []).append(
+            (trip_cons or "Empty trip", trip_num or "No Trip", trip_status or "", trip_status_id)
+        )
+
+    # -----------------------------
+    # FIND VEHICLE LIMITS
+    # -----------------------------
+    vehicle_limits = Enquirynotevehicle.objects.filter(
+        env_enquirynumber__in=enquiry_ids
+    ).values('env_enquirynumber').annotate(total_allowed=Sum('env_quantity'))
+
+    vehicle_limit_dict = {
+        v['env_enquirynumber']: v['total_allowed'] for v in vehicle_limits
+    }
+
+    vehicle_allotted = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber__in=enquiry_ids
+    ).values('va_enquirynumber').annotate(total_allotted=Count('id'))
+
+    vehicle_allotted_dict = {
+        v['va_enquirynumber']: v['total_allotted'] for v in vehicle_allotted
+    }
+
+    # -----------------------------
+    # FINAL DATA BUILD
+    # -----------------------------
+    enquiry_data = []
+    for enquiry in page_obj:
+        vehicles = vehicle_dict.get(enquiry.id, [])
+        consignments = consignment_data.filter(co_enquirynumber_id=enquiry.id)
+
+        total_allowed = vehicle_limit_dict.get(enquiry.id, 0)
+        total_allotted = vehicle_allotted_dict.get(enquiry.id, 0)
+        limit_reached = total_allotted >= total_allowed if total_allowed > 0 else False
+
+        vehicles_with_cons = consignments.values_list('co_vehicelnumber', flat=True).distinct()
+        cons_limit_reached = len(vehicles_with_cons) >= len(vehicles) if vehicles else False
+
+        enquiry_data.append({
+            'enquiry': enquiry,
+            'consignments': consignments,
+            'trips': trip_dict.get(enquiry.id, []),
+            'vehicles': vehicles,
+            'vehicle_limit': total_allowed,
+            'vehicle_allotted': total_allotted,
+            'limit_reached': limit_reached,
+            'consignment_limit_reached': cons_limit_reached,
+        })
+
+    return render(
+        request,
+        "asset_mgt_app/vehicle_allotment_list.html",
+        {
+            'page_obj': page_obj,
+            'first_name': first_name,
+            'role': user_role,
+            'enquiry_data': enquiry_data,
+            'enquiry_number': enquiry_number,
+            'date_from': date_from,
+            'date_to': date_to,
+        }
+    )
 
 #Delete vehicle_allotment
 @login_required(login_url='login_page')

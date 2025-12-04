@@ -1,4 +1,6 @@
 from django.db import models
+
+from .Consignmenttype_mod import Consignment_type
 from ..models import Stock_type,ConsignmentdetailInfo,Currency_type,MyUser,ConsignerInfo,ConsigneeInfo
 
 def consignmentgoods_directory_path(instance, filename):
@@ -32,6 +34,8 @@ class ConsignmentgoodsInfo(models.Model):
     cg_invoice_att = models.FileField(upload_to=consignmentgoods_directory_path, null=True, blank=True)
     cg_otl_att = models.FileField(upload_to=consignmentgoods_directory_path, null=True, blank=True)
     cg_hawbno = models.CharField(max_length=1000,default = '', null=True, blank=True)
+    cg_consignmenttype = models.ForeignKey(Consignment_type, on_delete=models.CASCADE, null=True,blank=True)
+
 
     def __str__(self):
         return self.cg_consignmentnumber

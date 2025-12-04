@@ -242,32 +242,18 @@
         </tbody>
     </table>
 
-    <div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a class="btn btn-warning" href="?page=1">First</a>
-            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
-
-        {% if page_obj.has_next %}
-            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
-            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-        {% endif %}
-    </span>
-    </div>
 </div>
 <script>
     $(document).ready(function() {
         var table = $('#enquirynote_list').DataTable({
-            scrollX: true,
-            order: [[0, 'desc']],
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
-        });
+    paging: false,       // disable DataTables pagination
+    info: false,         // remove "showing 1 of 50"
+    scrollX: true,
+    order: [[0, 'desc']],
+    dom: 'lBfrtip',
+    buttons: ['copy', 'csv', 'excel', 'print']
+});
+
 
         // Apply column search
         $('.filter-input').on('keyup change', function () {

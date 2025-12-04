@@ -12,11 +12,11 @@
 					<div class="card-header text-center ">
 						<div class="d-flex align-items-center"><h3>Add Vehicle Allotment</h3>
 							<a href="{% url 'vehicle_allotment_insert' enquiry_num_id %}"
-   class="btn btn-primary ml-3">
-   <i class="fas fa-plus"></i> Add
-</a>
+							   class="btn btn-primary ml-3">
+								<i class="fas fa-plus"></i> Add
+							</a>
 
-<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}&enquiry_num_id={{ enquiry_num_id }}"
+							<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}&enquiry_num_id={{ enquiry_num_id }}"
 							   class="btn btn-warning ml-2 {% if va.va_status.status_title != "Completed" %}disable_a_href{% endif %}">
 							<i class="fas fa-truck-loading"></i> Empty Trip
 							</a>
@@ -41,6 +41,28 @@
 									</div>
 									{% render_field vehicle_allotment_form.va_enquirynumber id="va_enquirynumber" class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text">Customer</span>
+    </div>
+    <input type="text" class="form-control" value="{{ customer_name }}" readonly>
+</div>
+
+<div class="input-group input-group-sm mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text">From</span>
+    </div>
+    <input type="text" class="form-control" value="{{ from_location }}" readonly>
+</div>
+
+<div class="input-group input-group-sm mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text">To</span>
+    </div>
+    <input type="text" class="form-control" value="{{ to_location }}" readonly>
+</div>
+							</div>
+							<div class="col-3">
 								<div class="row align-items-center mb-3">
 									<div class="col-10">
 										<div class="input-group input-group-sm">
@@ -74,8 +96,6 @@
 										<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Verify Placed"></i>
 									</div>
 								</div>
-							</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Source</span>
@@ -88,14 +108,14 @@
 									</div>
 									{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control" %}
 								</div>
+							</div>
+							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number (Market)</span>
 									</div>
 									{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control market-input" maxlength="10" pattern="[A-Z0-9]{9,10}" title="Enter exactly 10 uppercase letters or digits" %}
 								</div>
-							</div>
-							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vendor Name</span>
@@ -646,22 +666,22 @@ $(document).ready(function () {
 
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const form = document.getElementById("vehicle_allotment");
-    const chkRequested = document.getElementById("chk_requested");
-    const chkPlaced = document.getElementById("chk_placed");
+	document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById("vehicle_allotment");
+        const chkRequested = document.getElementById("chk_requested");
+        const chkPlaced = document.getElementById("chk_placed");
 
-    form.addEventListener("submit", function(event) {
-        // Check if neither checkbox is selected
-        if (!chkRequested.checked && !chkPlaced.checked) {
-            event.preventDefault(); // stop form submission
-            alert("Please verify either 'Requested' or 'Placed' before submitting the form.");
-            // Optional: Highlight checkboxes to guide user
-            chkRequested.focus();
-            return false;
-        }
+        form.addEventListener("submit", function(event) {
+            // Check if neither checkbox is selected
+            if (!chkRequested.checked && !chkPlaced.checked) {
+                event.preventDefault(); // stop form submission
+                alert("Please verify either 'Requested' or 'Placed' before submitting the form.");
+                // Optional: Highlight checkboxes to guide user
+                chkRequested.focus();
+                return false;
+            }
+        });
     });
-});
 </script>
 
 {% block scripts %}

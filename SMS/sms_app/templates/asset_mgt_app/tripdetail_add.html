@@ -3,40 +3,44 @@
 {% block content %}
 <div class="row">
 	<div class="col">
-		{% if trip_instance.tr_category.id == 1 %}
-		<div class="d-flex flex-row gap-2">
-			{% if trip_instance.tr_high_value.id == 1 and not checklist %}
-			<div class="alert alert-warning w-50" role="alert">
-				Please fill the high value checklist.
-			</div>
 
-			{% elif checklist %}
-			{% if checklist.thc_approval_status_id == 2 %}
-			<div class="alert alert-danger w-50" role="alert">
-				Awaiting High Value Checklist Approval.
-			</div>
-			{% elif checklist.thc_approval_status_id == 1 %}
-			<div class="alert alert-success w-50" role="alert">
-				High Value Checklist Approved.
-			</div>
-			{% else %}
-			<div class="alert alert-secondary w-50" role="alert">
-				Status unknown.
-			</div>
-			{% endif %}
-			{% endif %}
 
-			{% if trip_approvallist %}
-			<div class="alert alert-success w-50 ml-2" role="alert">
-				Invoice & E-WayBill Approved
-			</div>
-			{% else %}
-			<div class="alert alert-danger w-50 ml-2" role="alert">
-				Awaiting For Invoice & E-WayBill Approval
-			</div>
-			{% endif %}
-		</div>
-		{% endif %}
+        {% if trip_instance and trip_instance.tr_category and trip_instance.tr_category.id == 1 %}
+        <div class="d-flex flex-row gap-2">
+
+            {% if trip_instance and trip_instance.tr_high_value and trip_instance.tr_high_value.id == 1 and not checklist %}
+                <div class="alert alert-warning w-50" role="alert">
+                    Please fill the high value checklist.
+                </div>
+
+            {% elif checklist %}
+                {% if checklist.thc_approval_status_id == 2 %}
+                <div class="alert alert-danger w-50" role="alert">
+                    Awaiting High Value Checklist Approval.
+                </div>
+                {% elif checklist.thc_approval_status_id == 1 %}
+                <div class="alert alert-success w-50" role="alert">
+                    High Value Checklist Approved.
+                </div>
+                {% else %}
+                <div class="alert alert-secondary w-50" role="alert">
+                    Status unknown.
+                </div>
+                {% endif %}
+            {% endif %}
+
+            {% if trip_approvallist %}
+            <div class="alert alert-success w-50 ml-2" role="alert">
+                Invoice & E-WayBill Approved
+            </div>
+            {% else %}
+            <div class="alert alert-danger w-50 ml-2" role="alert">
+                Awaiting For Invoice & E-WayBill Approval
+            </div>
+            {% endif %}
+
+        </div>
+        {% endif %}
 
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
@@ -364,6 +368,46 @@
 						$("#tr_vehicletype_placed").val(data.va_vehicletype_placed || "");
 						$("#tr_vehicletype").val(data.va_vehicletype || "");
 						$("#tr_driver_lic").val(data.va_driver_lic || "");
+						$("#tr_vehiclenumber").data("sell-value", data.va_sale);
+						$("#tr_vehiclenumber").data("buy-value", data.va_buy);
+
+						// NEW RULES
+let sell = parseFloat(data.va_sale);
+let buy = parseFloat(data.va_buy);
+let vehSource = $("#tr_vehiclesource").val();  // vehicle source
+let statusField = document.getElementById("tc_financestatus");
+
+// ----------------------------
+// RULES APPLY ONLY FOR VEHICLE SOURCE = 3
+// ----------------------------
+if (vehSource == "3") {
+
+    // Case 1 & 2 -> Sell = Buy OR Sell < Buy
+    if (sell == buy || sell < buy) {
+        statusField.value = 8;
+        statusField.disabled = true;
+    }
+
+    // Case 3 -> Sell > Buy
+    else if (sell > buy) {
+        statusField.value = 1;
+        statusField.disabled = false;
+    }
+}
+
+// ----------------------------
+// VEHICLE SOURCE != 3 (Others)
+// MUST NOT ALLOW SAVE IF SALE IS EMPTY
+// ----------------------------
+else {
+    if (!sell || sell == 0) {
+        alert("Sale value missing! Cannot save this trip.");
+        $("#tripdetail_submit_id").prop("disabled", true);
+    } else {
+        $("#tripdetail_submit_id").prop("disabled", false);
+    }
+}
+
 					}
 				},
 				error: function (xhr, status, error) {
@@ -430,7 +474,7 @@
 	function trip_status_update()
 	{
 		var trip_status = document.getElementById("tc_financestatus").value;
-		alert
+
 		if (trip_status == 1) {
 			tr_departedlocation.setAttribute("required", "required");  // Make it mandatory
 			tr_departedkm.setAttribute("required", "required");  // Make it mandatory
@@ -463,90 +507,155 @@
 	});
 
 </script>
-
+<script>
+var isEdit = {% if trip_instance and trip_instance.pk %}true{% else %}false{% endif %};
+</script>
 <script>
 	var checklistApprovalStatus = {% if checklist %}{{ checklist.thc_approval_status_id }}{% else %}null{% endif %};
 var tripApprovalApproved = {{ trip_approvallist|yesno:"true,false" }};
 var isHighValueGoods = {% if trip_instance.tr_high_value_id == 1 %}true{% else %}false{% endif %};
 
 function trip_type() {
-    var categoryValue = document.getElementById('tr_category').value;
-    var tripStatus = document.getElementById('tc_financestatus');
-    var loadingTimeDiv = document.getElementById("tr_loading_time").closest('.input-group');
-    var unloadingTimeDiv = document.getElementById("tr_unloading_time").closest('.input-group');
 
-    // ----------------------
-    // 1️⃣ Finance Status Logic
-    // ----------------------
-    if (categoryValue === "2") {
+    let categoryValue = document.getElementById("tr_category").value;
+    let tripStatus = document.getElementById("tc_financestatus");
+    let vehSource = document.getElementById("tr_vehiclesource").value;
+
+    let sell = parseFloat($("#tr_vehiclenumber").data("sell-value"));
+    let buy = parseFloat($("#tr_vehiclenumber").data("buy-value"));
+
+    let loadingTime = document.getElementById("tr_loading_time");
+    let unloadingTime = document.getElementById("tr_unloading_time");
+
+    let loadingDiv = loadingTime.closest(".input-group");
+    let unloadingDiv = unloadingTime.closest(".input-group");
+
+    // =====================================
+    // 1️⃣ CATEGORY = 2 (FULL OVERRIDE)
+    // =====================================
+    if (categoryValue == "2") {
+
         tripStatus.disabled = false;
-        tripStatus.classList.remove("select-disabled-style");
-        tripStatus.value = "1";  // Set default status
-    } else if (categoryValue === "1") {
+        tripStatus.value = "1";
+
+        // Disable POD fields
+        $('#tc_pod_attachment, #tc_pod')
+            .addClass('disable_a_href')
+            .val('');
+
+        $('#pod-sign-btn').prop('disabled', true)
+            .addClass('disable_a_href');
+
+        // Hide times
+        loadingDiv.style.display = "none";
+        unloadingDiv.style.display = "none";
+
+  document.getElementById("id_trip_loading_time").required = false;
+document.getElementById("id_trip_unloading_time").required = false;
+
+
+        return;  // STOP EVERYTHING
+    }
+
+    // Show fields for other categories
+    loadingDiv.style.display = "flex";
+    unloadingDiv.style.display = "flex";
+   document.getElementById("id_trip_loading_time").required = true;
+document.getElementById("id_trip_unloading_time").required = true;
+
+
+    // Enable POD
+    $('#tc_pod_attachment, #tc_pod').removeClass('disable_a_href');
+    $('#pod-sign-btn').prop('disabled', false).removeClass('disable_a_href');
+
+    // =====================================
+    // 2️⃣ VEHICLE SOURCE 1 or 2 (ALWAYS)
+    // =====================================
+   // VEHICLE SOURCE 1 or 2 (OWN or COMPANY) — ALWAYS ALLOW EDIT
+if (vehSource === "1" || vehSource === "2") {
+
+    // ALWAYS enable for EDIT mode
+    if (isEdit) {
+        tripStatus.disabled = false;
+    }
+    else {
+        // ADD mode — default status Open
+        tripStatus.value = "1";
+        tripStatus.disabled = false;
+    }
+
+    // STOP further restrictions
+    return;
+}
+
+
+    // =====================================
+    // 3️⃣ VEHICLE SOURCE 3
+    // =====================================
+    // VEHICLE SOURCE = MARKET (3)
+if (vehSource === "3" && !isNaN(sell) && !isNaN(buy)) {
+
+    // SELL = BUY OR SELL < BUY
+    if (sell => buy) {
+
+        // CREATE MODE → lock it
+        if (!isEdit) {
+            tripStatus.value = "8";
+            tripStatus.disabled = true;
+        }
+
+        // UPDATE MODE → keep value but allow editing
+        else {
+            tripStatus.disabled = false;
+        }
+
+        return;
+    }
+
+    // SELL > BUY → always enable
+    if (sell > buy) {
+        tripStatus.value = "1";
+        tripStatus.disabled = false;
+        return;
+    }
+}
+
+    // =====================================
+    // 4️⃣ CATEGORY 1 (NORMAL TRIP SPECIFIC)
+    // =====================================
+    if (categoryValue == "1") {
+
+        // HIGH VALUE RULES
         if (isHighValueGoods) {
+
+            // Approved
             if (checklistApprovalStatus === 1 && tripApprovalApproved) {
                 tripStatus.disabled = false;
-                tripStatus.classList.remove("select-disabled-style");
-            } else {
-                tripStatus.disabled = true;
-                tripStatus.classList.add("select-disabled-style");
-                tripStatus.selectedIndex = 0;
             }
-        } else {
-            if (tripApprovalApproved) {
-                tripStatus.disabled = false;
-                tripStatus.classList.remove("select-disabled-style");
-            } else {
+
+            // Not Approved — disable
+            else {
                 tripStatus.disabled = true;
-                tripStatus.classList.add("select-disabled-style");
                 tripStatus.selectedIndex = 0;
             }
         }
-    } else {
-        tripStatus.disabled = true;
-        tripStatus.classList.add("select-disabled-style");
-        tripStatus.selectedIndex = 0;
+
+        // NON-HIGH VALUE
+        else {
+
+            if (tripApprovalApproved) {
+                tripStatus.disabled = false;
+            } else {
+                tripStatus.disabled = true;
+                tripStatus.selectedIndex = 0;
+            }
+        }
     }
-
-    // ----------------------
-    // 2️⃣ POD Attachment Logic
-    // ----------------------
-    if (categoryValue == 1) {
-        $('#tc_pod_attachment').removeClass('disable_a_href');
-        $('#tc_pod').removeClass('disable_a_href');
-        $('#pod-sign-btn').prop('disabled', false).removeClass('disable_a_href');
-    } else {
-        $('#tc_pod_attachment').addClass('disable_a_href');
-        $('#tc_pod').addClass('disable_a_href');
-        $('#tc_pod_attachment').val('');
-        $('#tc_pod').val('');
-        $('#pod-sign-btn').prop('disabled', true).addClass('disable_a_href');
-    }
-
-    // ----------------------
-    // 3️⃣ Loading & Unloading Time Visibility
-    // ----------------------
-   if (categoryValue == "2") {
-    loadingTimeDiv.style.display = "none";
-    unloadingTimeDiv.style.display = "none";
-
-    // Make fields non-mandatory
-    document.getElementById("id_trip_loading_time").required = false;
-    document.getElementById("id_trip_unloading_time").required = false;
-} else {
-    loadingTimeDiv.style.display = "flex";
-    unloadingTimeDiv.style.display = "flex";
-
-    // Make fields mandatory
-    document.getElementById("id_trip_loading_time").required = true;
-    document.getElementById("id_trip_unloading_time").required = true;
 }
 
-}
+// Run on load
+document.addEventListener("DOMContentLoaded", trip_type);
 
-document.addEventListener("DOMContentLoaded", function() {
-    trip_type();
-});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
 <script>
@@ -624,5 +733,29 @@ $(document).ready(function() {
 
 </script>
 {% endblock scripts %}
+<script>
+	$("#tripdetail_add").on("submit", function(e) {
 
+    let isAdd = "{{ trip_instance }}" === "";   // trip_instance is empty only in ADD mode
+    let vehSource = $("#tr_vehiclesource").val();
+    let sell = $("#tr_vehiclenumber").data("sell-value");
+    let tripCategory = $("#tr_category").val();  // NEW
+
+    if (isAdd) {
+
+        // 🔥 ALLOW SAVE IF TRIP CATEGORY = 2
+        if (tripCategory == "2") {
+            return true;
+        }
+
+        // Existing rule for other categories
+        if (vehSource != "3" && (!sell || sell == 0)) {
+            alert("Sale value missing! Cannot save this trip.");
+            e.preventDefault();
+            return false;
+        }
+    }
+});
+
+</script>
 {% endblock content %}
