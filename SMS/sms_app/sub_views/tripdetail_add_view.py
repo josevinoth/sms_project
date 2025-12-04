@@ -246,7 +246,30 @@ def tripdetail_add(request, tripdetail_id=0):
                         pass
 
                 trip = trip_det_form.save(commit=False)
-                trip.tc_financestatus_id = 8
+                trip = trip_det_form.save(commit=False)
+
+                veh_source = trip.tr_vehiclesource.id
+                cons = trip.tr_consignmentnumber  # ConsignmentdetailInfo
+
+                va = None
+                if cons:
+                    vehicle_num = cons.co_vehicelnumber
+
+                    va = Vehicle_allotmentInfo.objects.filter(
+                        va_enquirynumber=enquiry_num
+                    ).filter(
+                        Q(va_vehiclenumber__vm_registrationnumber=vehicle_num) |
+                        Q(va_vehiclenumber_mkt=vehicle_num)
+                    ).first()
+
+                sell = va.va_sale if va and va.va_sale else 0
+                buy = va.va_buy if va and va.va_buy else 0
+
+                if tripdetail_id == 0:
+                    if veh_source in (1, 2):
+                        trip.tc_financestatus_id = 1
+                    elif veh_source == 3:
+                        trip.tc_financestatus_id = 1 if sell > buy else 8
 
                 # ✅ Process POD signature
                 pod_data = request.POST.get('pod_signature_data')
@@ -545,8 +568,10 @@ def load_truck_details(request):
                 "va_vehicletype_placed": vehicle_info.va_vehicletype_placed.id if vehicle_info.va_vehicletype_placed else None,
                 "va_vehicletype": vehicle_info.va_vehicletype.id if vehicle_info.va_vehicletype else None,
                 "va_driver_lic": vehicle_info.va_driver_lic,
-                "va_sale": vehicle_info.va_sale,
+                "va_sale": float(vehicle_info.va_sale or 0),
+                "va_buy": float(vehicle_info.va_buy or 0),
             }
+
         else:
             data = {"error": "No vehicle allotment details found for this Consignment number"}
 

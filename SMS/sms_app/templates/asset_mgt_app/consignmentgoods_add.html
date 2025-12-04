@@ -43,6 +43,7 @@
 									{% render_field form.cg_hawbno class="form-control" %}
 								</div>
 
+
 							</div>
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
@@ -66,6 +67,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Consignment Type</span>
+									</div>
+									{% render_field form.cg_consignmenttype id="cg_consignmenttype" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Currency Type</span>
 									</div>
 									{% render_field form.cg_currency_type id="cg_currency_type" class="form-control" %}
@@ -74,7 +81,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Invoice Value</span>
 									</div>
-									{% render_field form.cg_consignervalue class="form-control" %}
+									{% render_field form.cg_consignervalue id="cg_consignervalue" class="form-control" %}
 								</div>
 
 							</div>
@@ -83,7 +90,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Value in INR</span>
 									</div>
-									{% render_field form.cg_valueininr class="form-control" %}
+									{% render_field form.cg_valueininr id="cg_valueininr" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -107,7 +114,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Date Of Issue</span>
 									</div>
-									{% render_field form.cg_dateofissue type="Date" class="form-control" %}
+									{% render_field form.cg_dateofissue id="cg_dateofissue" type="Date" class="form-control" %}
 								</div>
 
 							</div>
@@ -116,7 +123,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Date Of Validity</span>
 									</div>
-									{% render_field form.cg_dateofvalidity type="Date" class="form-control" %}
+									{% render_field form.cg_dateofvalidity id="cg_dateofvalidity" type="Date" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -577,4 +584,98 @@
         }
     });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const consType = document.getElementById("cg_consignmenttype");
+
+    // hide helper
+    function hideField(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        // hide parent
+        let group = el.closest(".input-group");
+        if (group) group.style.display = "none";
+    }
+
+    // show helper
+    function showField(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        let group = el.closest(".input-group");
+        if (group) group.style.display = "";
+    }
+
+    function applyRules() {
+
+        let val = (consType.options[consType.selectedIndex].text || "").trim().toLowerCase();
+
+        // always show all first
+        ["cg_consignervalue", "cg_currency_type", "cg_valueininr",
+         "cg_ebillno", "cg_dateofissue", "cg_dateofvalidity"].forEach(showField);
+
+
+        // ======================================================
+        // LESS VALUE
+        // ======================================================
+        if (val === "less value") {
+
+            // hide fields
+            hideField("cg_ebillno");
+            hideField("cg_dateofissue");
+            hideField("cg_dateofvalidity");
+
+            // make NON mandatory only these hidden fields
+            ["cg_ebillno","cg_dateofissue","cg_dateofvalidity"].forEach(id => {
+                let el = document.getElementById(id);
+                if (el){
+                    el.required = false;
+                    el.value = ""; // optional: clear value
+                }
+            });
+        }
+
+
+        // ======================================================
+        // SEZ
+        // ======================================================
+        else if (val.includes("sez")) {
+
+            // hide fields
+            ["cg_consignervalue","cg_currency_type","cg_valueininr",
+             "cg_ebillno","cg_dateofissue","cg_dateofvalidity"]
+             .forEach(hideField);
+
+            // make NON mandatory only these hidden fields
+            ["cg_consignervalue","cg_currency_type","cg_valueininr",
+             "cg_ebillno","cg_dateofissue","cg_dateofvalidity"]
+             .forEach(id => {
+                let el = document.getElementById(id);
+                if (el){
+                    el.required = false;
+                    el.value = ""; // optional: clear value
+                }
+            });
+        }
+
+
+        // ======================================================
+        // NORMAL
+        // ======================================================
+        else {
+            // show all (already done above)
+            // do not change required here
+        }
+    }
+
+    // init
+    applyRules();
+    consType.addEventListener("change", applyRules);
+    consType.addEventListener("click", applyRules);
+
+});
+</script>
+
 {% endblock content %}

@@ -747,6 +747,10 @@ urlpatterns = [
     path('get_trip_totalcost/', views.get_trip_totalcost, name='get_trip_totalcost'),
     path('get_customer_ref/', views.get_customer_ref, name='get_customer_ref'),
     path('fetch_enquiry_locations/', views.fetch_enquiry_locations, name='fetch_enquiry_locations'),
+    path('trip_settlement/', views.trip_settlement_view, name='trip_settlement_view'),
+    path('trip_settlement/edit/<int:trip_id>/', views.trip_settlement_edit, name='trip_settlement_edit'),
+    path("trip_finance_approval/", views.trip_finance_approval_view, name="trip_finance_approval_view"),
+    path("trip_finance_approval/update/<int:trip_id>/", views.update_trip_finance_approval, name="update_trip_finance_approval"),
 
 ]
 

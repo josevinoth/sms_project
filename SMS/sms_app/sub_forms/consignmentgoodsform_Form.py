@@ -19,3 +19,4 @@ class ConsignmentgoodsaddForm(forms.ModelForm):
         self.fields['cg_description'].queryset = Stock_type.objects.all()
         self.fields['cg_consigner'].queryset = ConsignerInfo.objects.all()
         self.fields['cg_consignee'].queryset = ConsigneeInfo.objects.all()
+        self.fields['cg_consignmenttype'].empty_label = "--Select--"

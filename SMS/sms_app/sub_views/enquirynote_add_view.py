@@ -131,18 +131,19 @@ def enquirynote_list(request):
 
     enquirynote_queryset = EnquirynoteInfo.objects.all()
 
+    # Filter by enquiry no.
     if enquiry_number:
         enquirynote_queryset = enquirynote_queryset.filter(
             en_enquirynumber__icontains=enquiry_number
         )
 
-    # 🔍 Filter by consignment number
+    # Filter by consignment
     if consignment_number:
         enquirynote_queryset = enquirynote_queryset.filter(
             consignmentdetailinfo__co_consignmentnumber__icontains=consignment_number
         ).distinct()
 
-    # 📅 Filter by created date range
+    # Date filters
     if date_from:
         enquirynote_queryset = enquirynote_queryset.filter(
             en_created_at__date__gte=date_from
@@ -150,6 +151,16 @@ def enquirynote_list(request):
     if date_to:
         enquirynote_queryset = enquirynote_queryset.filter(
             en_created_at__date__lte=date_to
+        )
+
+    user_ext = User_extInfo.objects.get(user_id=user_id)
+    user_role_obj = user_ext.emp_role  # This is RoleInfo object
+
+    # Extract actual role name safely
+    role_name = str(user_role_obj).lower()
+    if role_name not in ["admin", "super user", "superuser"]:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_assignedto=user_id
         )
 
     enquirynote_queryset = enquirynote_queryset.order_by('-id')
@@ -161,7 +172,7 @@ def enquirynote_list(request):
         page_obj = enquirynote_queryset
     else:
         # Normal pagination
-        paginator = Paginator(enquirynote_queryset, 50)
+        paginator = Paginator(enquirynote_queryset, 75)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number if page_number and page_number.isdigit() else 1)
 
