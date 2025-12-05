@@ -550,8 +550,8 @@ function trip_type() {
         loadingDiv.style.display = "none";
         unloadingDiv.style.display = "none";
 
-  document.getElementById("id_trip_loading_time").required = false;
-document.getElementById("id_trip_unloading_time").required = false;
+       document.getElementById("id_trip_loading_time").required = false;
+	   document.getElementById("id_trip_unloading_time").required = false;
 
 
         return;  // STOP EVERYTHING
@@ -560,89 +560,71 @@ document.getElementById("id_trip_unloading_time").required = false;
     // Show fields for other categories
     loadingDiv.style.display = "flex";
     unloadingDiv.style.display = "flex";
-   document.getElementById("id_trip_loading_time").required = true;
-document.getElementById("id_trip_unloading_time").required = true;
 
+    // ✅ USE CORRECT ELEMENTS HERE
+    loadingTime.required = true;
+    unloadingTime.required = true;
 
-    // Enable POD
-    $('#tc_pod_attachment, #tc_pod').removeClass('disable_a_href');
-    $('#pod-sign-btn').prop('disabled', false).removeClass('disable_a_href');
+    // ENABLE ALL POD FIELDS WHEN NOT CATEGORY = 2
+    $('#tc_pod_attachment, #tc_pod, #pod-sign-btn')
+        .prop('disabled', false)
+        .removeClass('disable_a_href');
 
     // =====================================
     // 2️⃣ VEHICLE SOURCE 1 or 2 (ALWAYS)
     // =====================================
-   // VEHICLE SOURCE 1 or 2 (OWN or COMPANY) — ALWAYS ALLOW EDIT
-if (vehSource === "1" || vehSource === "2") {
+    if (vehSource === "1" || vehSource === "2") {
 
-    // ALWAYS enable for EDIT mode
-    if (isEdit) {
-        tripStatus.disabled = false;
+        if (isEdit) {
+            tripStatus.disabled = false;
+        } else {
+            tripStatus.value = "1";
+            tripStatus.disabled = false;
+        }
+        return;
     }
-    else {
-        // ADD mode — default status Open
-        tripStatus.value = "1";
-        tripStatus.disabled = false;
-    }
-
-    // STOP further restrictions
-    return;
-}
-
 
     // =====================================
     // 3️⃣ VEHICLE SOURCE 3
     // =====================================
-    // VEHICLE SOURCE = MARKET (3)
-if (vehSource === "3" && !isNaN(sell) && !isNaN(buy)) {
+    if (vehSource === "3" && !isNaN(sell) && !isNaN(buy)) {
 
-    // SELL = BUY OR SELL < BUY
-    if (sell => buy) {
+        // SELL = BUY OR SELL < BUY
+        if (sell >= buy) {
 
-        // CREATE MODE → lock it
-        if (!isEdit) {
-            tripStatus.value = "8";
-            tripStatus.disabled = true;
+            // CREATE MODE → lock it
+            if (!isEdit) {
+                tripStatus.value = "8";
+                tripStatus.disabled = true;
+            } else {
+                tripStatus.disabled = false;
+            }
+
+            return;
         }
 
-        // UPDATE MODE → keep value but allow editing
-        else {
+        // SELL > BUY → always enable
+        if (sell > buy) {
+            tripStatus.value = "1";
             tripStatus.disabled = false;
+            return;
         }
-
-        return;
     }
-
-    // SELL > BUY → always enable
-    if (sell > buy) {
-        tripStatus.value = "1";
-        tripStatus.disabled = false;
-        return;
-    }
-}
 
     // =====================================
     // 4️⃣ CATEGORY 1 (NORMAL TRIP SPECIFIC)
     // =====================================
     if (categoryValue == "1") {
 
-        // HIGH VALUE RULES
         if (isHighValueGoods) {
 
-            // Approved
             if (checklistApprovalStatus === 1 && tripApprovalApproved) {
                 tripStatus.disabled = false;
-            }
-
-            // Not Approved — disable
-            else {
+            } else {
                 tripStatus.disabled = true;
                 tripStatus.selectedIndex = 0;
             }
-        }
-
-        // NON-HIGH VALUE
-        else {
-
+        } else {
             if (tripApprovalApproved) {
                 tripStatus.disabled = false;
             } else {
