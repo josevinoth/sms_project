@@ -170,10 +170,8 @@ def vehicle_allotment_list(request):
     user_ext = User_extInfo.objects.get(user_id=user_id)
     user_role = user_ext.emp_role     # Role object
     user_branch_obj = user_ext.emp_branch  # Location_info object
-
     # Extract "MAA" / "BLR" from "BVM MAA"
     branch_code = user_branch_obj.loc_name.split()[-1]
-
     # Filters from HTML
     enquiry_number = request.GET.get('enquiry_number', '')
     date_from = request.GET.get('date_from', '')
@@ -187,22 +185,19 @@ def vehicle_allotment_list(request):
 
     from datetime import datetime, timedelta
 
-    # DEFAULT – Show last 3 days only
-    if not select_all and not date_from and not date_to and not enquiry_number:
-        today = datetime.today().date()
-        last_3_days = today - timedelta(days=5)  # Last 3 days
-
-        enquirynote_queryset = enquirynote_queryset.filter(
-            en_created_at__date__gte=last_3_days,
-            en_created_at__date__lte=today
-        )
-
-    # -----------------------------
-    # BRANCH FILTER (Only for non-admin users)
-    # -----------------------------
     if user_role.id != 1:
+        # Filter by branch
         enquirynote_queryset = enquirynote_queryset.filter(
             en_customername__cu_name__icontains=branch_code
+        )
+
+        # Filter last 30 days only
+        today = datetime.today().date()
+        last_days = today - timedelta(days=30)
+
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_created_at__date__gte=last_days,
+            en_created_at__date__lte=today
         )
 
     # -----------------------------
