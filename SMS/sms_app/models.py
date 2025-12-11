@@ -224,3 +224,6 @@ from .sub_models.DmrInfo_report import DmrInfo
 from .sub_models.driversettlement_mod import driver_settlement_info
 from .sub_models.driversettlement_expense_mod import Driversettlement_ExpenseInfo
 from .sub_models.Consignmenttype_mod import Consignment_type
+from .sub_models.haltingcharges_mod import Haltingcharges
+from .sub_models.emailmaster_mod import  Emailmaster
+from .sub_models.emailtype_mod import Email_type

@@ -162,3 +162,7 @@ from .sub_views.dmr_report_view import trip_report,trip_send_email
 from .sub_views.driver_settlement_view import driver_settlement_add,driver_settlement_list,driver_settlement_delete,get_full_name_driver,get_trip_totalcost
 from .sub_views.trip_settlement_view import trip_settlement_view,trip_settlement_edit
 from .sub_views.trip_finance_approval_view import trip_finance_approval_view,update_trip_finance_approval
+from .sub_views.haltingcharges_view import halting_charges_add,halting_list,halting_delete
+from .sub_views.emailmaster_view import email_master_add,email_master_list,email_delete
+
+

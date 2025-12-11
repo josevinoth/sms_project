@@ -1,0 +1,88 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center text-light bg-info shadow-box">
+            <h3>Halting Charges List</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+
+<!-- Buttons (MATCHING ENQUIRY LIST PAGE) -->
+<div class="container-fluid row">
+
+    <!-- BACK BUTTON -->
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <!-- ADD BUTTON -->
+    <div class="col-md-1">
+        <a href="{% url 'halting_charges_add' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+
+</div>
+
+<hr>
+
+<!-- Table -->
+<div class="container-fluid">
+    <table id="halting_list" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>Customer</th>
+                <th>Trip Type</th>
+                <th>Charges (₹)</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in halting_list %}
+            <tr>
+                <td>{{ item.hc_Customer_name }}</td>
+                <td>{{ item.hc_trip_type }}</td>
+                <td>{{ item.hc_charges }}</td>
+
+                <td>
+                    <a class="btn btn-primary"
+                       href="{% url 'halting_charges_edit' item.id %}">
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+
+                <td>
+                    <form action="{% url 'halting_delete' item.id %}"
+                          method="post"
+                          onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- DataTable Script -->
+<script>
+    $(document).ready(function() {
+        $('#halting_list').DataTable();
+    });
+</script>
+
+{% endblock %}

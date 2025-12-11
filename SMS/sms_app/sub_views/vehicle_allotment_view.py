@@ -15,26 +15,37 @@ from .send_department_email import send_department_email
 from ..sub_models.vendor_info_mod import Vendor_info
 
 
+
 @login_required(login_url='login_page')
 def vehicle_allotment_enquiry(request, enquiry_id, vehicle_number):
-    # You can now use enquiry_id and vehicle_number
+
+    if vehicle_number == "0" or vehicle_number == 0:
+        return redirect('vehicle_allotment_insert', enquiry_id=enquiry_id)
+
     enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
-    print('vehicle_number',vehicle_number)
+
+    # find vehicle ID if exists
     try:
-        vehicle_number_id = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_number).id
+        vehicle_number_id = VehiclemasterInfo.objects.get(
+            vm_registrationnumber=vehicle_number
+        ).id
     except VehiclemasterInfo.DoesNotExist:
         vehicle_number_id = None
-    print('vehicle_number_id',vehicle_number_id)
-    # Example: filter vehicle allotment by both
-    vehicle_allotment = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry).filter(Q(va_vehiclenumber_mkt=vehicle_number) | Q(va_vehiclenumber=vehicle_number_id)).first()  # get first matching record or None
+
+    # check if allotment exists already
+    vehicle_allotment = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber=enquiry
+    ).filter(
+        Q(va_vehiclenumber_mkt=vehicle_number) |
+        Q(va_vehiclenumber=vehicle_number_id)
+    ).first()
+
     if vehicle_allotment:
-        # Redirect to the update URL with the found vehicle_allotment id
-        return redirect('vehicle_allotment_update', vehicle_allotment_id=vehicle_allotment.id)
-    else:
-        # Handle case when no allotment found, e.g. redirect to a create page or show error
-        # For example, redirect to a create page:
-        request.session['enquiry_num_id'] = enquiry_id
-        return redirect('vehicle_allotment_insert')  # Adjust this as per your URL names
+        return redirect('vehicle_allotment_update',
+                        vehicle_allotment_id=vehicle_allotment.id)
+
+    # if no allotment → go to ADD PAGE with that enquiry_id
+    return redirect('vehicle_allotment_insert', enquiry_id=enquiry_id)
 
 @login_required(login_url='login_page')
 def vehicle_allotment_nav(request,vehicle_allotment_id=0):
@@ -159,10 +170,8 @@ def vehicle_allotment_list(request):
     user_ext = User_extInfo.objects.get(user_id=user_id)
     user_role = user_ext.emp_role     # Role object
     user_branch_obj = user_ext.emp_branch  # Location_info object
-
     # Extract "MAA" / "BLR" from "BVM MAA"
     branch_code = user_branch_obj.loc_name.split()[-1]
-
     # Filters from HTML
     enquiry_number = request.GET.get('enquiry_number', '')
     date_from = request.GET.get('date_from', '')
@@ -176,22 +185,19 @@ def vehicle_allotment_list(request):
 
     from datetime import datetime, timedelta
 
-    # DEFAULT – Show last 3 days only
-    if not select_all and not date_from and not date_to and not enquiry_number:
-        today = datetime.today().date()
-        last_3_days = today - timedelta(days=5)  # Last 3 days
-
-        enquirynote_queryset = enquirynote_queryset.filter(
-            en_created_at__date__gte=last_3_days,
-            en_created_at__date__lte=today
-        )
-
-    # -----------------------------
-    # BRANCH FILTER (Only for non-admin users)
-    # -----------------------------
     if user_role.id != 1:
+        # Filter by branch
         enquirynote_queryset = enquirynote_queryset.filter(
             en_customername__cu_name__icontains=branch_code
+        )
+
+        # Filter last 30 days only
+        today = datetime.today().date()
+        last_days = today - timedelta(days=30)
+
+        enquirynote_queryset = enquirynote_queryset.filter(
+            en_created_at__date__gte=last_days,
+            en_created_at__date__lte=today
         )
 
     # -----------------------------

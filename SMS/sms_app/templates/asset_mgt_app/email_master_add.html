@@ -1,0 +1,103 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" id="email_master_add">
+    {% csrf_token %}
+
+    <div class="row">
+        <div class="col-3"></div>
+        <div class="col-6">
+
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center">
+                        <h3>Email Master – Add / Update</h3>
+                    </div>
+
+                    <div class="card-body bg-light">
+
+                        <div class="row">
+                            <div class="col">
+
+                                <!-- Email Type Dropdown -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Email Type</span>
+                                    </div>
+                                    {% render_field form.em_emailtype class="form-control" %}
+                                </div>
+
+                                <!-- Customer Name -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer</span>
+                                    </div>
+                                    {% render_field form.em_Customer_name id="em_Customer_name" class="form-control" %}
+                                </div>
+
+                                <!-- Customer Department Dropdown -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Department</span>
+                                    </div>
+                                    {% render_field form.em_customerdepartment id="em_customerdepartment" class="form-control " %}
+                                </div>
+
+                                <!-- TO Email List -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">To Email(s)</span>
+                                    </div>
+                                    {% render_field form.em_to_names class="form-control" rows="1" placeholder="Comma-separated emails" %}
+                                </div>
+
+                                <!-- CC Email List -->
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">CC Email(s)</span>
+                                    </div>
+                                    {% render_field form.em_cc_names class="form-control" rows="1" placeholder="Comma-separated emails" %}
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Messages -->
+                        <div class="row">
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                                            {{ message }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Save
+                        </button>
+
+                        <a href="/SMS/email_list/" class="btn btn-danger float-right">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-3"></div>
+    </div>
+</form>
+<script>
+    $("#em_Customer_name").select2({
+    	width: 'resolve'
+    });
+</script>
+{% endblock content %}

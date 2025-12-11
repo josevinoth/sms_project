@@ -3,6 +3,9 @@ from django.views.generic import TemplateView
 
 from . import views
 from django.contrib.auth import views as auth_views #import this
+
+from .sub_views.haltingcharges_view import halting_charges_add, halting_delete, halting_list
+
 urlpatterns = [
     path('print_pdf', views.print_pdf, name='print_pdf'),  # Print PDF
     path('asset_qr_id/<int:asset_qr_id>', views.qr_code_asset, name='asset_qr_id'),  # qr_code
@@ -751,6 +754,16 @@ urlpatterns = [
     path('trip_settlement/edit/<int:trip_id>/', views.trip_settlement_edit, name='trip_settlement_edit'),
     path("trip_finance_approval/", views.trip_finance_approval_view, name="trip_finance_approval_view"),
     path("trip_finance_approval/update/<int:trip_id>/", views.update_trip_finance_approval, name="update_trip_finance_approval"),
+    path('halting_charges/<int:halting_id>/', views.halting_charges_add, name='halting_charges'),
+    path('halting_charges_add/', views.halting_charges_add, name='halting_charges_add'),
+    path('halting_list/', views.halting_list, name='halting_list'),
+    path('halting_delete/<int:halting_id>/', views.halting_delete, name='halting_delete'),
+    path('halting_charges_edit/<int:halting_id>/', views.halting_charges_add, name='halting_charges_edit'),
+    path("email_master_add/", views.email_master_add, name="email_master_add"),  # Add new
+    path("email_master/<int:record_id>/", views.email_master_add, name="email_master_edit"),  # Edit existing
+    path("email_master_list/", views.email_master_list, name="email_master_list"),  # List page
+    path("email_delete/<int:record_id>/", views.email_delete, name="email_delete"),  # Delete record
+
 
 ]
 

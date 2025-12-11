@@ -1,0 +1,81 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<div class="row">
+    <div class="col-3"></div>
+    <div class="col-6">
+
+        <div class="container-fluid">
+            <div class="card text-white bg-info mb-3">
+
+                <div class="card-header text-center">
+                    <h3>Add/Update Halting Charges</h3>
+                </div>
+
+                <div class="card-body bg-light">
+
+                    <form method="POST" action="">
+                        {% csrf_token %}
+
+                        <!-- CUSTOMER NAME -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Customer Name</span>
+                            </div>
+                            {% render_field form.hc_Customer_name class="form-control" %}
+                        </div>
+
+                        <!-- TRIP TYPE -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Trip Type</span>
+                            </div>
+                            {% render_field form.hc_trip_type class="form-control" %}
+                        </div>
+
+                        <!-- HALTING CHARGES -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Charges (₹)</span>
+                            </div>
+                            {% render_field form.hc_charges class="form-control" %}
+                        </div>
+
+                        <!-- Messages -->
+                        <div class="row">
+                            <div class="col text-center">
+                                {% for message in messages %}
+                                    <span class="{{ message.tags }}">{{ message }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="row mt-3">
+
+                            <div class="col-6 text-left">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Submit
+                                </button>
+                            </div>
+
+                            <div class="col-6 text-right">
+                                <a href="/SMS/halting_list/" class="btn btn-danger">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="col-3"></div>
+</div>
+
+{% endblock %}

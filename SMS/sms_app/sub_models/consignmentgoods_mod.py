@@ -35,6 +35,7 @@ class ConsignmentgoodsInfo(models.Model):
     cg_otl_att = models.FileField(upload_to=consignmentgoods_directory_path, null=True, blank=True)
     cg_hawbno = models.CharField(max_length=1000,default = '', null=True, blank=True)
     cg_consignmenttype = models.ForeignKey(Consignment_type, on_delete=models.CASCADE, null=True,blank=True)
+    cg_mawbno = models.CharField(max_length=11, default='', null=True, blank=True)
 
 
     def __str__(self):

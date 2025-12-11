@@ -666,23 +666,54 @@ $(document).ready(function () {
 
 </script>
 <script>
-	document.addEventListener("DOMContentLoaded", function() {
-        const form = document.getElementById("vehicle_allotment");
+document.addEventListener("DOMContentLoaded", function() {
+
+    const form = document.getElementById("vehicle_allotment");
+
+    form.addEventListener("submit", function(event) {
+
         const chkRequested = document.getElementById("chk_requested");
         const chkPlaced = document.getElementById("chk_placed");
 
-        form.addEventListener("submit", function(event) {
-            // Check if neither checkbox is selected
-            if (!chkRequested.checked && !chkPlaced.checked) {
-                event.preventDefault(); // stop form submission
-                alert("Please verify either 'Requested' or 'Placed' before submitting the form.");
-                // Optional: Highlight checkboxes to guide user
-                chkRequested.focus();
+        const vehicleSource = parseInt(document.getElementById("va_vehiclesource").value);
+        const buyRate = document.getElementById("va_buy").value.trim();
+        const sellRate = document.getElementById("va_sale").value.trim();
+
+        // -----------------------------------------
+        // 1️⃣ Validate Requested / Placed Checkbox
+        // -----------------------------------------
+        if (!chkRequested.checked && !chkPlaced.checked) {
+            event.preventDefault();
+            alert("Please verify either 'Requested' or 'Placed' before submitting the form.");
+            return false;
+        }
+
+        // -----------------------------------------
+        // 2️⃣ MARKET VEHICLE (ID = 3) → BUY RATE REQUIRED
+        // -----------------------------------------
+        if (vehicleSource === 3) {   // Market
+            if (buyRate === "" || buyRate === "0") {
+                event.preventDefault();
+                alert("Buy Rate is required for Market Vehicles. Please assign a Buy Rate before submitting.");
                 return false;
             }
-        });
+        }
+
+        // -----------------------------------------
+        // 3️⃣ OWN / ATTACHED VEHICLES (ID = 1 or 2) → SELL RATE REQUIRED
+        // -----------------------------------------
+        if (vehicleSource === 1 || vehicleSource === 2) {
+            if (sellRate === "" || sellRate === "0") {
+                event.preventDefault();
+                alert("Sell Rate is required for Own or Attached Vehicles. Please assign a Sell Rate before submitting.");
+                return false;
+            }
+        }
+
     });
+});
 </script>
+
 
 {% block scripts %}
 

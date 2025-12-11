@@ -10,6 +10,7 @@ from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 
 from ..sub_models.customer_mod import CustomerInfo
+from ..sub_models.location_info_mod import Location_info
 
 
 @login_required(login_url='login_page')
@@ -85,8 +86,21 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
                 instance = form.save(commit=False)
                 instance.save()  # ID is generated after this
 
-                # Generate enquiry number based on current instance ID
-                enquiry_num_next = f"EN_{1000000 + instance.id}"
+                # Determine branch prefix
+                user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
+                branch_id = Location_info.objects.get(loc_name=user_branch).id
+
+                if branch_id == 1:
+                    branch_prefix = "BLR_"
+                elif branch_id == 2:
+                    branch_prefix = "MAA_"
+                elif branch_id == 3:
+                    branch_prefix = "PNY_"
+                else:
+                    branch_prefix = "HYD_"
+
+                # Generate enquiry number with branch prefix
+                enquiry_num_next = f"{branch_prefix}EN_{1000000 + instance.id}"
 
                 # Update the enquiry number and save
                 instance.en_enquirynumber = enquiry_num_next
