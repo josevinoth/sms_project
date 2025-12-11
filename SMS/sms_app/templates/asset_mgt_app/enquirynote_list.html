@@ -136,7 +136,7 @@
             <td>
                 {% if data.enquiry.id %}
                 {% if not data.limit_reached %}
-                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id 'none' %}" style="color: red;">
+                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id 0 %}" style="color: red;">
                     Add New
                 </a><br>
                 {% else %}
