@@ -12,6 +12,11 @@ from ..forms import TripclosurefilesForm,TripclosureaddForm
 from ..models import RtratemasterInfo,User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,Tripstatusinfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+
+from django.http import JsonResponse
+from ..sub_models.haltingcharges_mod import Haltingcharges
+from ..models import EnquirynoteInfo
+
 @login_required(login_url='login_page')
 def tripclosure_enquiry(request,enquiry_id,trip_num):
     # Fetch the enquiry object (optional - only needed if you want to verify or log it)
@@ -322,3 +327,40 @@ def calculate_toll(vehicle_num, from_date, to_date):
 
     print(f"✅ Total toll amount for {vehicle_num}: ₹{total_amount}")
     return total_amount, txn_list
+
+
+@login_required(login_url='login_page')
+def get_halting_charge(request):
+    enquiry_id = request.GET.get('enquiry_id')
+    trip_type_id = request.GET.get('trip_type')
+
+    print("==============================================")
+    print("🔍 Enquiry ID Received:", enquiry_id)
+    print("🔍 Trip Type ID Received:", trip_type_id)
+    print("==============================================")
+
+    if not enquiry_id:
+        print("❌ enquiry_id missing!")
+        return JsonResponse({'status': False, 'halting_charge': 0})
+
+    try:
+        enquiry = EnquirynoteInfo.objects.get(pk=enquiry_id)
+        customer_id = enquiry.en_customername_id
+        print("✅ Customer ID fetched:", customer_id)
+    except EnquirynoteInfo.DoesNotExist:
+        print("❌ Enquiry not found by ID")
+        return JsonResponse({'status': False, 'halting_charge': 0})
+
+    try:
+        halting = Haltingcharges.objects.get(
+            hc_Customer_name=customer_id,
+            hc_trip_type=trip_type_id
+        )
+        print("🎉 Halting Charge Found:", halting.hc_charges)
+        return JsonResponse({'status': True, 'halting_charge': halting.hc_charges})
+
+    except Haltingcharges.DoesNotExist:
+        print("❌ No halting match found")
+        return JsonResponse({'status': False, 'halting_charge': 0})
+
+

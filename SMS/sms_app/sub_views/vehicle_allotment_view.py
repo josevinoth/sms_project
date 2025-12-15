@@ -624,7 +624,7 @@ def vendor_filter(request):
 
     try:
         enquiry = EnquirynoteInfo.objects.get(id=enquiry_num)
-        from_location = enquiry.en_fromlocaion
+        from_location = enquiry.en_fromlocation
         to_location = enquiry.en_tolocation
 
         vendors = VendorratemasterInfo1.objects.filter(
@@ -733,3 +733,34 @@ def vehicle_allotment_email(request):
 
     messages.success(request, "Vehicle Allotment email sent successfully.")
     return redirect(request.META.get('HTTP_REFERER', '/'))
+
+@login_required(login_url='login_page')
+def get_vendor_buy_rate(request):
+    vendor_id = request.GET.get('vendor_id')
+    vehicle_type_id = request.GET.get('vehicle_id')
+    enquiry_id = request.session.get('ses_enquiry_id')
+
+    if not vendor_id or not vehicle_type_id or not enquiry_id:
+        return JsonResponse({'standard_buy': 0, 'special_buy': 0})
+
+    try:
+        enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)
+    except EnquirynoteInfo.DoesNotExist:
+        return JsonResponse({'standard_buy': 0, 'special_buy': 0})
+
+    rate_obj = VendorratemasterInfo1.objects.filter(
+        vr1_vendor_id=vendor_id,
+        vr1_fromlocation=enquiry.en_fromlocaion,
+        vr1_tolocation=enquiry.en_tolocation,
+        vr1_vehicletype_id=vehicle_type_id
+    ).first()
+
+    if not rate_obj:
+        return JsonResponse({'standard_buy': 0, 'special_buy': 0})
+
+    rate = float(rate_obj.vr1_rate)
+
+    return JsonResponse({
+        'standard_buy': rate,
+        'special_buy': rate
+    })

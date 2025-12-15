@@ -98,11 +98,23 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Consignment Number</span>
 									</div>
-									<select name="tr_consignmentnumber" id="tr_consignmentnumber" class="form-control">
-										<option value="0">--Select--</option>
-										{% for item in consignment_list  %}
-										<option value="{{item.id}}">{{item.co_consignmentnumber}}</option>
-										{% endfor %}
+
+									<select name="tr_consignmentnumber" id="tr_consignmentnumber" class="form-control select2-consignment">
+    <option value="">--Select--</option>
+
+    {% for item in consignment_list %}
+        <option value="{{ item.id }}">
+            {{ item.co_consignmentnumber }}
+            {% if item.co_vehicelnumber %}
+                ({{ item.co_vehicelnumber }})
+            {% endif %}
+        </option>
+    {% endfor %}
+</select>
+
+
+
+
 									</select>
 								</div>
 								<div class="input-group input-group-sm m-1">
@@ -331,7 +343,6 @@
 		document.getElementById("tr_updated_by").value ='{{user_id}}';
 		document.getElementById("tc_financestatus").value ='{{status_selected}}';
 		document.getElementById("tr_enquirynumber").value ='{{enquiry_num_id}}';
-		document.getElementById("tr_consignmentnumber").value ='{{consignment_selected}}'
 
 		trip_type();
 		trip_status_update();
@@ -623,6 +634,7 @@ $(document).ready(function() {
 });
 
 </script>
+
 {% endblock scripts %}
 
 {% endblock content %}
