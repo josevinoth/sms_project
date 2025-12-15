@@ -164,5 +164,7 @@ from .sub_views.trip_settlement_view import trip_settlement_view,trip_settlement
 from .sub_views.trip_finance_approval_view import trip_finance_approval_view,update_trip_finance_approval
 from .sub_views.haltingcharges_view import halting_charges_add,halting_list,halting_delete
 from .sub_views.emailmaster_view import email_master_add,email_master_list,email_delete
+from .sub_views.tripclosure_add_view import get_halting_charge
+
 
 

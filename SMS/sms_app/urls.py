@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 from . import views
 from django.contrib.auth import views as auth_views #import this
 
-from .sub_views.haltingcharges_view import halting_charges_add, halting_delete, halting_list
+
 
 urlpatterns = [
     path('print_pdf', views.print_pdf, name='print_pdf'),  # Print PDF
@@ -763,6 +763,8 @@ urlpatterns = [
     path("email_master/<int:record_id>/", views.email_master_add, name="email_master_edit"),  # Edit existing
     path("email_master_list/", views.email_master_list, name="email_master_list"),  # List page
     path("email_delete/<int:record_id>/", views.email_delete, name="email_delete"),  # Delete record
+    path('get_halting_charge/', views.get_halting_charge, name='get_halting_charge'),
+    path('get_route_rate/', views.get_vendor_buy_rate, name='get_route_rate'),
 
 
 ]

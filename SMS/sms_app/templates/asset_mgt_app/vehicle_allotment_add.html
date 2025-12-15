@@ -42,25 +42,25 @@
 									{% render_field vehicle_allotment_form.va_enquirynumber id="va_enquirynumber" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
-    <div class="input-group-prepend">
-        <span class="input-group-text">Customer</span>
-    </div>
-    <input type="text" class="form-control" value="{{ customer_name }}" readonly>
-</div>
+								<div class="input-group-prepend">
+									<span class="input-group-text">Customer</span>
+								</div>
+								<input type="text" class="form-control" value="{{ customer_name }}" readonly>
+							</div>
 
-<div class="input-group input-group-sm mb-3">
-    <div class="input-group-prepend">
-        <span class="input-group-text">From</span>
-    </div>
-    <input type="text" class="form-control" value="{{ from_location }}" readonly>
-</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">From</span>
+								</div>
+								<input type="text" class="form-control" value="{{ from_location }}" readonly>
+							</div>
 
-<div class="input-group input-group-sm mb-3">
-    <div class="input-group-prepend">
-        <span class="input-group-text">To</span>
-    </div>
-    <input type="text" class="form-control" value="{{ to_location }}" readonly>
-</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">To</span>
+								</div>
+								<input type="text" class="form-control" value="{{ to_location }}" readonly>
+							</div>
 							</div>
 							<div class="col-3">
 								<div class="row align-items-center mb-3">
@@ -151,10 +151,17 @@
 								</div>
 								<div class="input-group input-group-sm mb-3 ">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Buy</span>
+										<span class="input-group-text">Standard Buy</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_buy id="va_buy"  class="form-control" %}
+									{% render_field vehicle_allotment_form.va_standardbuy id="va_standardbuy"  class="form-control disable_a_href" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Special Buy</span>
+									</div>
+									{% render_field vehicle_allotment_form.va_specialbuy id="va_specialbuy" class="form-control" %}
+								</div>
+
 								<div class="input-group input-group-sm mb-3 ">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Sell</span>
@@ -436,14 +443,14 @@
 		{
 			$('#va_vehiclenumber_mkt').removeClass('disable_a_href');
 			$('#va_vendor').removeClass('disable_a_href');
-			$('#va_buy').removeClass('disable_a_href');
+			$('#va_standardbuy').removeClass('disable_a_href');
 			$('#va_sale').removeClass('disable_a_href');
 		}
 		else
 		{
 			$('#va_vehiclenumber_mkt').addClass('disable_a_href');
 			$('#va_vendor').addClass('disable_a_href');
-			$('#va_buy').addClass('disable_a_href');
+			$('#va_standardbuy').addClass('disable_a_href');
 			$('#va_sale').addClass('disable_a_href');
 
 
@@ -496,25 +503,29 @@
 	});
 </script>
 <script>
-	function loadVendorBuyRate() {
-		  var vendorId = $('#va_vendor').val();
-		  var vehicleId = $('#va_vehicletype_placed').val();
-		$.ajax({
-			url: '{% url 'get_vendor_buy_rate' %}',
-			type: 'GET',
-			data: {vendor_id: vendorId,
-            vehicle_id: vehicleId},
-			dataType: 'json',
-			success: function(data) {
-				var buy_rate = data.buy_rate;
-				document.getElementById("va_buy").value = buy_rate;
-				      calculateProfit();  // ✅ Trigger profit calculation after setting buy
+function loadVendorBuyRate() {
+    var vendorId = $('#va_vendor').val();
+    var vehicleTypeId = $('#va_vehicletype_placed').val();
 
-			}
-		});
-	}
+    if (!vendorId || !vehicleTypeId) return;
 
+    $.ajax({
+        url: "{% url 'get_vendor_buy_rate' %}",
+        type: "GET",
+        data: {
+            vendor_id: vendorId,
+            vehicle_id: vehicleTypeId
+        },
+        success: function(data) {
+            $("#va_standardbuy").val(data.standard_buy);
+            $("#va_specialbuy").val(data.special_buy);
+
+            calculateProfit();   // <-- IMPORTANT
+        }
+    });
+}
 </script>
+
 <script>
 	$(document).ready(function() {
     // Ensure only one checkbox is checked at a time
@@ -616,7 +627,7 @@ function loadVendorSaleRate(checkboxId) {
 </script>
 <script>
 	function calculateProfit() {
-      const buyVal = parseFloat(document.getElementById("va_buy").value) || 0;
+      const buyVal = parseFloat(document.getElementById("va_standardbuy").value) || 0;
       const sellVal = parseFloat(document.getElementById("va_sale").value) || 0;
       const profitField = document.getElementById("va_profit_percentage");
 
@@ -629,7 +640,7 @@ function loadVendorSaleRate(checkboxId) {
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-      document.getElementById("va_buy").addEventListener("input", calculateProfit);
+      document.getElementById("va_standardbuy").addEventListener("input", calculateProfit);
       document.getElementById("va_sale").addEventListener("input", calculateProfit);
     });
 </script>
@@ -653,8 +664,10 @@ function loadVendorSaleRate(checkboxId) {
                 dropdown.append(`<option value="${vendor.id}" ${isSelected}>${vendor.name}</option>`);
             });
         },
-        error: function() {
-            alert("Could not load vendors.");
+        error: function(xhr) {
+		console.log("STATUS:", xhr.status);
+		console.log("RESPONSE:", xhr.responseText);
+		alert("Could not load vendors.");
         }
     });
 }
@@ -676,7 +689,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const chkPlaced = document.getElementById("chk_placed");
 
         const vehicleSource = parseInt(document.getElementById("va_vehiclesource").value);
-        const buyRate = document.getElementById("va_buy").value.trim();
+        const buyRate = document.getElementById("va_standardbuy").value.trim();
         const sellRate = document.getElementById("va_sale").value.trim();
 
         // -----------------------------------------
@@ -721,6 +734,66 @@ document.addEventListener("DOMContentLoaded", function() {
 	$("#va_vehiclenumber").select2({
        width: 'resolve'
    });
+</script>
+
+<script>
+	function loadVendorBuyRate() {
+    var vendorId = $('#va_vendor').val();
+    var vehicleType = $('#va_vehicletype_placed').val();
+
+    if (!vendorId || !vehicleType) return;
+
+    $.ajax({
+        url: '{% url "get_vendor_buy_rate" %}',
+        type: 'GET',
+        data: {
+            vendor_id: vendorId,
+            vehicle_id: vehicleType
+        },
+        dataType: 'json',
+        success: function(data) {
+
+            $("#va_standardbuy").val(data.standard_buy);
+            $("#va_specialbuy").val(data.special_buy);
+
+            calculateProfit();
+        }
+    });
+}
+
+
+</script>
+
+<script>
+	$("#va_vehicletype_placed").on("change", function() {
+    loadRouteBuyRates();
+});
+
+</script>
+
+<script>
+	$(document).ready(function() {
+    loadRouteBuyRates();
+});
+
+</script>
+<script>
+function calculateProfit() {
+    const specialBuy = parseFloat($("#va_specialbuy").val()) || 0;
+    const sale = parseFloat($("#va_sale").val()) || 0;
+
+    if (specialBuy > 0) {
+        const profit = ((sale - specialBuy) / specialBuy) * 100;
+        $("#va_profit_percentage").val(profit.toFixed(2));
+    } else {
+        $("#va_profit_percentage").val("");
+    }
+}
+
+$(document).ready(function () {
+    $("#va_specialbuy").on("input", calculateProfit);
+    $("#va_sale").on("input", calculateProfit);
+});
 </script>
 {% endblock scripts %}
 
