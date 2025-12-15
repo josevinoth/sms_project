@@ -62,6 +62,7 @@ class TripdetailInfo(models.Model):
     tc_handlingcost = models.FloatField(default=0.0)
     tc_haltingcost = models.FloatField(default=0.0)
     tc_supervisorcost = models.FloatField(default=0.0)
+    tc_cancellation = models.FloatField(default=0.0)
     tc_no_of_days_halting = models.IntegerField(null=True, blank=True,default=0)
     tc_pod = models.CharField(default=" ")
     tc_financestatus = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE,blank=True,null=True)
