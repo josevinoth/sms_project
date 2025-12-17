@@ -661,6 +661,21 @@ def vehicle_allotment_email(request):
     except Vehicle_allotmentInfo.DoesNotExist:
         messages.error(request, "Vehicle allotment record not found.")
         return redirect(request.META.get('HTTP_REFERER', '/'))
+    # Fetch Enquiry details based on enquiry number
+    try:
+        enquiry = EnquirynoteInfo.objects.select_related(
+            'en_customername',
+            'en_customerdepartment',
+            'en_fromlocaion',
+            'en_tolocation'
+        ).get(en_enquirynumber=va.va_enquirynumber)
+    except EnquirynoteInfo.DoesNotExist:
+        enquiry = None
+
+    customer_name = enquiry.en_customername.cu_name if enquiry else "N/A"
+    department_name = enquiry.en_customerdepartment.ct_customerdepartment if enquiry else "N/A"
+    from_location = enquiry.en_fromlocaion.place_name if enquiry and enquiry.en_fromlocaion else "N/A"
+    to_location = enquiry.en_tolocation.place_name if enquiry and enquiry.en_tolocation else "N/A"
 
     # Convert recipient string to list
     recipient_list = [email.strip() for email in recipient.split(',') if email.strip()]
@@ -696,20 +711,26 @@ def vehicle_allotment_email(request):
                 </style>
             </head>
             <body>
-                <p>Dear Team,</p>
-                <p>Please find below the vehicle allotment details:</p>
-                <table>
-                    <tr><th>Enquiry Number</th><td>{va.va_enquirynumber}</td></tr>
-                    <tr><th>Vehicle Source</th><td>{va.va_vehiclesource}</td></tr>
-                    <tr><th>Vehicle Type Requested</th><td>{va.va_vehicletype}</td></tr>
-                    <tr><th>Vehicle Type Placed</th><td>{va.va_vehicletype_placed}</td></tr>
-                    <tr><th>Vehicle Number</th><td>{va.va_vehiclenumber}</td></tr>
+                <p>Dear Customer,</p>
+                <p>Thank you for your business, below booking details is for your reference:</p>
+                <table style="width: 100%; border-collapse: collapse;">
+    <tr>
+        <th colspan="2" style="background-color: #007bff; color: white; padding: 10px; text-align: center; font-size: 18px;">
+            Booking
+        </th>
+    </tr>
+                    <tr><th>Customer Name</th><td>{customer_name}</td></tr>
+                    <tr><th>Department</th><td>{department_name}</td></tr>
+                    <tr><th>From Location</th><td>{from_location}</td></tr>
+                    <tr><th>To Location</th><td>{to_location}</td></tr>
                     <tr><th>Driver Name</th><td>{va.va_drivername}</td></tr>
-                    <tr><th>Driver License</th><td>{va.va_driver_lic}</td></tr>
-                    <tr><th>License Expiry</th><td>{va.va_driver_lic_expiry}</td></tr>
-                    <tr><th>Driver Contact</th><td>{va.va_drivernumber}</td></tr>
-                    <tr><th>Vendor</th><td>{va.va_vendor}</td></tr>
-                    <tr><th>Updated By</th><td>{va.va_updated_by}</td></tr>
+                    <tr><th>Driver Mobile</th><td>{va.va_drivernumber}</td></tr>
+                    <tr><th>Truck Type</th><td>{va.va_vehicletype}</td></tr>
+                    <tr><th>Truck Number</th><td>{va.va_vehiclenumber}</td></tr>
+                    <!--# <tr><th>Driver License</th><td>{va.va_driver_lic}</td></tr>
+                    # <tr><th>License Expiry</th><td>{va.va_driver_lic_expiry}</td></tr>
+                    # <tr><th>Vendor</th><td>{va.va_vendor}</td></tr>
+                    #<tr><th>Updated By</th><td>{va.va_updated_by}</td></tr>-->
                     <tr>
                         <th>Remarks</th>
                         <td class="remarks">
@@ -764,3 +785,24 @@ def get_vendor_buy_rate(request):
         'standard_buy': rate,
         'special_buy': rate
     })
+
+@login_required(login_url='login_page')
+def get_vendor_by_vehicle(request):
+    vehicle_id = request.GET.get('vehicle_id')
+
+    if not vehicle_id:
+        return JsonResponse({'vendor_id': '', 'vendor_name': ''})
+
+    try:
+        vehicle = VehiclemasterInfo.objects.select_related('vm_vendor').get(id=vehicle_id)
+
+        if vehicle.vm_vendor:
+            return JsonResponse({
+                'vendor_id': vehicle.vm_vendor.id,
+                'vendor_name': vehicle.vm_vendor.vend_name
+            })
+
+        return JsonResponse({'vendor_id': '', 'vendor_name': ''})
+
+    except VehiclemasterInfo.DoesNotExist:
+        return JsonResponse({'vendor_id': '', 'vendor_name': ''})

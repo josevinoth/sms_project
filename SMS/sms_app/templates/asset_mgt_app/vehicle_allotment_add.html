@@ -258,7 +258,6 @@
 			document.getElementById("va_vehicletype").value =vehicle_type;
 		}
 		market_vehicle_enable_disable();
-		loadVendorOptions();
 	});
 </script>
 <script>
@@ -320,12 +319,12 @@
 				if (vehicle_number_id!="")
 				{
 					$('#va_vehiclenumber').removeClass('disable_a_href');
-					$('#va_vendor_name').addClass('disable_a_href');
+					$('#va_vendor').addClass('disable_a_href');
 				}
 				else
 				{
 					$('#va_vehiclenumber').addClass('disable_a_href');
-					$('#va_vendor_name').removeClass('disable_a_href');
+					$('#va_vendor').removeClass('disable_a_href');
 				}
 				var len1 = (vehicle_number).length;
 				$("#va_vehiclenumber").empty();
@@ -672,11 +671,6 @@ function loadVendorSaleRate(checkboxId) {
     });
 }
 
-$(document).ready(function () {
-    const selectedVendorId = $('#va_vendor').data('selected');  // get pre-selected value
-    loadVendorOptions(selectedVendorId); // load on page load with value
-});
-
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -726,7 +720,20 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
+<script>
+	$("#va_vehiclesource").on("change", function () {
+    const vehicleSource = $(this).val();
 
+    if (vehicleSource == 3) {
+        loadVendorOptions(null);   // load market vendors
+    } else {
+        $("#va_vendor").val("");   // clear for attached
+    }
+
+    market_vehicle_enable_disable();
+});
+
+</script>
 
 {% block scripts %}
 
@@ -777,6 +784,40 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 </script>
+<script>
+
+	$("#va_vehiclenumber").change(function () {
+
+    const vehicleSource = $("#va_vehiclesource").val();
+    const vehicleId = $(this).val();
+
+    if (vehicleSource != 2 || !vehicleId) return;
+
+    $.ajax({
+        url: "{% url 'get_vendor_by_vehicle' %}",
+        data: { vehicle_id: vehicleId },
+        success: function (data) {
+
+            if (!data.vendor_id) return;
+
+            const vendorDropdown = $("#va_vendor");
+
+            // 🔥 ADD OPTION IF MISSING
+            if (vendorDropdown.find(`option[value='${data.vendor_id}']`).length === 0) {
+                vendorDropdown.append(
+                    `<option value="${data.vendor_id}">${data.vendor_name}</option>`
+                );
+            }
+
+            // ✅ NOW SELECT
+            vendorDropdown.val(data.vendor_id);
+        }
+    });
+});
+
+
+</script>
+
 <script>
 function calculateProfit() {
     const specialBuy = parseFloat($("#va_specialbuy").val()) || 0;

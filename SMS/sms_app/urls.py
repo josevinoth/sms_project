@@ -765,6 +765,8 @@ urlpatterns = [
     path("email_delete/<int:record_id>/", views.email_delete, name="email_delete"),  # Delete record
     path('get_halting_charge/', views.get_halting_charge, name='get_halting_charge'),
     path('get_route_rate/', views.get_vendor_buy_rate, name='get_route_rate'),
+    path('get-vendor-by-vehicle/', views.get_vendor_by_vehicle, name='get_vendor_by_vehicle'),
+
 
 
 ]
