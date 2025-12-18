@@ -509,11 +509,11 @@ function loadVendorBuyRate() {
     if (!vendorId || !vehicleTypeId) return;
 
     $.ajax({
-        url: "{% url 'get_vendor_buy_rate' %}",
-        type: "GET",
+          url: "{% url 'get_vendor_buy_rate' %}",
         data: {
-            vendor_id: vendorId,
-            vehicle_id: vehicleTypeId
+            enquiry_id: "{{ enquiry_num_id }}",  // ✅ ADD THIS
+            vendor_id: $('#va_vendor').val(),
+            vehicle_id: $('#va_vehicletype_placed').val()
         },
         success: function(data) {
             $("#va_standardbuy").val(data.standard_buy);
@@ -569,12 +569,14 @@ function loadVendorSaleRate(checkboxId) {
         url: '{% url "get_vendor_sale_rate" %}',
         type: 'GET',
         data: {
+                    enquiry_id: "{{ enquiry_num_id }}",  // ✅ ADD THIS
             checkbox_id: checkboxId,
             vehicle_requested: $('#va_vehicletype').val(),
             vehicle_placed: $('#va_vehicletype_placed').val()
         },
         dataType: 'json',
         success: function(data) {
+        var x = {{ enquiry_num_id }};
             const saleRate = data.sale_rate;
             if (!saleRate || saleRate === "0") {
                 alert("Rate not assigned for this customer");

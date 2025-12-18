@@ -156,29 +156,30 @@
             </td>
 
 
-            <td>
-                {% if data.vehicles %}
-                {% if not data.consignment_limit_reached %}
-                <a class="link" href="{% url 'consignmentdetail_enquiry' data.enquiry.id 'none' %}" style="color: red;">
-                    Add New
-                </a><br>
-                {% else %}
-                <span style="color: gray; font-weight: 600;">Allotted</span><br>
-                {% endif %}
+<td>
+    {% if not data.vehicles %}
+        <!-- No vehicle -->
+        <span style="color: gray; font-weight:600;">Add vehicle first</span>
 
-                {% for vehicle in data.vehicles %}
-                {% for consignment in data.consignments %}
-                {% if consignment.co_vehicelnumber == vehicle %}
-                <a class="link" href="{% url 'consignmentdetail_enquiry' data.enquiry.id consignment.id %}">
-                    {{ consignment.co_consignmentnumber }}
-                </a><br>
-                {% endif %}
-                {% endfor %}
-                {% endfor %}
-                {% else %}
-                <span style="color: gray; pointer-events: none;">Add New</span>
-                {% endif %}
-            </td>
+    {% else %}
+        {% if data.consignment_limit_reached %}
+            <!-- Limit reached -->
+            <span style="color: gray; font-weight:600;">Allotted</span><br>
+        {% else %}
+            <!-- Can add more -->
+            <a class="link" href="{% url 'consignmentdetail_enquiry' data.enquiry.id 'none' %}" style="color:red;">
+                Add New
+            </a><br>
+        {% endif %}
+
+        <!-- Always show existing consignments -->
+        {% for consignment in data.consignments %}
+            <a class="link" href="{% url 'consignmentdetail_enquiry' data.enquiry.id consignment.id %}">
+                {{ consignment.co_consignmentnumber }}
+            </a><br>
+        {% endfor %}
+    {% endif %}
+</td>
 
             <!--Trips-->
             <td>

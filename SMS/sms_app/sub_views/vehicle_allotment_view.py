@@ -18,6 +18,7 @@ from ..sub_models.vendor_info_mod import Vendor_info
 
 @login_required(login_url='login_page')
 def vehicle_allotment_enquiry(request, enquiry_id, vehicle_number):
+    request.session['ses_enquiry_id'] = enquiry_id  # 🔥 ADD THIS
 
     if vehicle_number == "0" or vehicle_number == 0:
         return redirect('vehicle_allotment_insert', enquiry_id=enquiry_id)
@@ -557,7 +558,7 @@ def get_remaining_quantity(request, enquiry_id, vehicle_type_id):
 def get_vendor_buy_rate(request):
     vehicle_id = request.GET.get('vehicle_id')  # This is actually a vehicle type ID, not the Vehicle_allotmentInfo ID
     vendor_id = request.GET.get('vendor_id')
-    enquiry_id = request.session.get('enquiry_num_id')
+    enquiry_id = request.GET.get('enquiry_id')  # ✅ NO SESSION
 
     print("vehicle_id:", vehicle_id)
     print("vendor_id:", vendor_id)
@@ -588,7 +589,7 @@ def get_vendor_sale_rate(request):
     vehicle_requested = request.GET.get('vehicle_requested')
     vehicle_placed = request.GET.get('vehicle_placed')
     vendor_id = request.GET.get('vendor_id')
-    enquiry_id = request.session.get('enquiry_num_id')
+    enquiry_id = request.GET.get('enquiry_id')  # ✅ NO SESSION
 
     if not enquiry_id:
         return JsonResponse({'sale_rate': "0"})
