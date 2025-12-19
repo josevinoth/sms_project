@@ -122,41 +122,76 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
         })
 
     # ---------- POST SAVE (ADD + UPDATE) ----------
+    # ---------- POST SAVE (ADD + UPDATE) ----------
     if request.method == "POST":
 
-        # VERY IMPORTANT — Correct enquiry_id always comes from session
         enquiry_id = request.session.get('ses_enquiry_id')
 
         if not enquiry_id:
             messages.error(request, "Enquiry ID missing. Please try again.")
             return redirect(request.META.get('HTTP_REFERER'))
 
+        # ------------------
         # ADD MODE
+        # ------------------
         if vehicle_allotment_id == 0:
             form = VehicleallotmentForm(request.POST)
+
+            if not form.is_valid():
+                messages.error(request, "Invalid form data")
+                return redirect(request.META.get('HTTP_REFERER'))
+
             obj = form.save(commit=False)
             obj.va_enquirynumber_id = enquiry_id
 
-        # UPDATE MODE
-        else:
-            va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
-            form = VehicleallotmentForm(request.POST, instance=va)
-            obj = form.save(commit=False)
-            obj.va_enquirynumber = va.va_enquirynumber  # Always correct
+            # 🚫 DUPLICATE VEHICLE CHECK (✅ CORRECT PLACE)
+            vehicle_source = obj.va_vehiclesource_id
 
-        if form.is_valid():
+            duplicate_qs = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber_id=enquiry_id
+            )
+
+            # OWN / ATTACHED
+            if vehicle_source in [1, 2] and obj.va_vehiclenumber:
+                duplicate_qs = duplicate_qs.filter(
+                    va_vehiclenumber=obj.va_vehiclenumber
+                )
+
+            # MARKET
+            elif vehicle_source == 3 and obj.va_vehiclenumber_mkt:
+                duplicate_qs = duplicate_qs.filter(
+                    va_vehiclenumber_mkt__iexact=obj.va_vehiclenumber_mkt.strip()
+                )
+
+            if duplicate_qs.exists():
+                messages.error(
+                    request,
+                    "This vehicle number is already allotted for this enquiry."
+                )
+                return redirect(request.META.get('HTTP_REFERER'))
+
+            # ✅ SAVE
             obj.save()
             messages.success(request, "Vehicle Allotment Saved Successfully")
             return redirect('vehicle_allotment_update', vehicle_allotment_id=obj.id)
+
+        # ------------------
+        # UPDATE MODE
+        # ------------------
         else:
-            # show form errors
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field}: {error}")
+            va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
+            form = VehicleallotmentForm(request.POST, instance=va)
 
-            messages.error(request, "Please fix the errors.")
+            if not form.is_valid():
+                messages.error(request, "Invalid form data")
+                return redirect(request.META.get('HTTP_REFERER'))
 
-        return redirect(request.META.get('HTTP_REFERER'))
+            obj = form.save(commit=False)
+            obj.va_enquirynumber = va.va_enquirynumber
+            obj.save()
+
+            messages.success(request, "Vehicle Allotment Updated Successfully")
+            return redirect('vehicle_allotment_update', vehicle_allotment_id=obj.id)
 
     # fallback return
     return redirect('enquirynote_list')
