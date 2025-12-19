@@ -624,7 +624,7 @@ def vendor_filter(request):
 
     try:
         enquiry = EnquirynoteInfo.objects.get(id=enquiry_num)
-        from_location = enquiry.en_fromlocation
+        from_location = enquiry.en_fromlocaion
         to_location = enquiry.en_tolocation
 
         vendors = VendorratemasterInfo1.objects.filter(

@@ -227,3 +227,4 @@ from .sub_models.Consignmenttype_mod import Consignment_type
 from .sub_models.haltingcharges_mod import Haltingcharges
 from .sub_models.emailmaster_mod import  Emailmaster
 from .sub_models.emailtype_mod import Email_type
+from .sub_models.driver_expense_mod import Driverexpense

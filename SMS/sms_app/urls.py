@@ -765,6 +765,17 @@ urlpatterns = [
     path("email_delete/<int:record_id>/", views.email_delete, name="email_delete"),  # Delete record
     path('get_halting_charge/', views.get_halting_charge, name='get_halting_charge'),
     path('get_route_rate/', views.get_vendor_buy_rate, name='get_route_rate'),
+    path('driver_expense_add/',views.driver_expense_add,name='driver_expense_add'),
+    path('driver_expense_list/',views.driver_expense_list,name='driver_expense_list'),
+    path('driver_expense_update/', views.driver_expense_update, name='driver_expense_update'),
+    path('driver_expense_delete/',views.driver_expense_delete,name='driver_expense_delete'),
+    path('driver-expense-by-driver/', views.driver_expense_by_driver,name='driver_expense_by_driver'),
+    path('get-driver-name-by-staff-id/', views.get_driver_name_by_staff_id, name='get_driver_name_by_staff_id'),
+    path('get-driver-details/', views.get_driver_details, name='get_driver_details' ),
+
+
+
+
 
 
 ]

@@ -9,7 +9,6 @@ from django.urls import reverse
 
 class driver_settlement_info(models.Model):
     staff_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ds_staff_id', to_field='username', db_column='staff_id')
-    staff_name = models.CharField(max_length=255)
     transaction_type = models.ForeignKey(ExpenseCategoryInfo, on_delete=models.CASCADE)
     transaction_date = models.DateField()
     business_type = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE)
@@ -22,13 +21,21 @@ class driver_settlement_info(models.Model):
     trip = models.ForeignKey(TripdetailInfo, null=True,on_delete=models.CASCADE, default='')
     total_trip_cost = models.FloatField(default=0.0, blank=True, null=True)
     balance = models.FloatField(default=0.0)  # 👈 new field
-    staf_name = models.ForeignKey(User_extInfo, null=True,on_delete=models.CASCADE, default='')
+    staff_name = models.ForeignKey(User_extInfo, null=True,on_delete=models.CASCADE, default='')
+    ds_phonenumber=models.CharField(User_extInfo,max_length=10, null=True, blank=True)
+    ds_tripadvance = models.FloatField(default=0.0)
+    ds_tripexpense = models.FloatField(default=0.0)
+    ds_balance = models.FloatField(default=0.0)
+
+
+
+
 
     class Meta:
-        ordering = ["ds_number"]
+        ordering = ["staff_name"]
 
     def __str__(self):
-        return self.ds_number or str(self.id)
+        return self.staff_name or str(self.id)
 
     def get_absolute_url_ds(self):
         return reverse('driver_settlement_update', args=[str(self.id)])

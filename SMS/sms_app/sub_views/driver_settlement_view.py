@@ -139,3 +139,61 @@ def get_trip_totalcost(request):
         return JsonResponse({'details': details, 'total_cost': total_cost})
     except TripdetailInfo.DoesNotExist:
         return JsonResponse({'details': {}, 'total_cost': 0})
+
+
+
+
+    @login_required(login_url='login_page')
+    def driver_settlement_add(request):
+        expense_list = Driverexpense.objects.all().order_by('-id')
+
+        if request.method == "POST":
+            form = DriverSettlementForm(request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Driver Settlement saved")
+                return redirect('driver_settlement_list')
+        else:
+            form = DriverSettlementForm()
+
+        return render(request, 'asset_mgt_app/driver_settlement_add.html', {
+            'form': form,
+            'expense_list': expense_list
+        })
+
+@login_required(login_url='login_page')
+def get_driver_name_by_staff_id(request):
+    user_id = request.GET.get('user_id')
+
+    if not user_id:
+        return JsonResponse({
+            'driver_name': '',
+            'driver_ext_id': ''
+        })
+
+    try:
+        user = User.objects.select_related('user_extinfo').get(id=user_id)
+
+        return JsonResponse({
+            'driver_name': user.get_full_name() or user.username,
+            'driver_ext_id': user.user_extinfo.id if hasattr(user, 'user_extinfo') else ''
+        })
+
+    except User.DoesNotExist:
+        return JsonResponse({
+            'driver_name': '',
+            'driver_ext_id': ''
+        })
+
+@login_required(login_url='login_page')
+def get_driver_details(request):
+    user_id = request.GET.get('user_id')
+
+    try:
+        user = User.objects.select_related('user_extinfo').get(id=user_id)
+        return JsonResponse({
+            'driver_ext_id': user.user_extinfo.id,
+            'phone': user.user_extinfo.emp_contact
+        })
+    except:
+        return JsonResponse({})
