@@ -18,6 +18,7 @@ from ..sub_models.vendor_info_mod import Vendor_info
 
 @login_required(login_url='login_page')
 def vehicle_allotment_enquiry(request, enquiry_id, vehicle_number):
+    request.session['ses_enquiry_id'] = enquiry_id  # 🔥 ADD THIS
 
     if vehicle_number == "0" or vehicle_number == 0:
         return redirect('vehicle_allotment_insert', enquiry_id=enquiry_id)
@@ -121,41 +122,76 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
         })
 
     # ---------- POST SAVE (ADD + UPDATE) ----------
+    # ---------- POST SAVE (ADD + UPDATE) ----------
     if request.method == "POST":
 
-        # VERY IMPORTANT — Correct enquiry_id always comes from session
         enquiry_id = request.session.get('ses_enquiry_id')
 
         if not enquiry_id:
             messages.error(request, "Enquiry ID missing. Please try again.")
             return redirect(request.META.get('HTTP_REFERER'))
 
+        # ------------------
         # ADD MODE
+        # ------------------
         if vehicle_allotment_id == 0:
             form = VehicleallotmentForm(request.POST)
+
+            if not form.is_valid():
+                messages.error(request, "Invalid form data")
+                return redirect(request.META.get('HTTP_REFERER'))
+
             obj = form.save(commit=False)
             obj.va_enquirynumber_id = enquiry_id
 
-        # UPDATE MODE
-        else:
-            va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
-            form = VehicleallotmentForm(request.POST, instance=va)
-            obj = form.save(commit=False)
-            obj.va_enquirynumber = va.va_enquirynumber  # Always correct
+            # 🚫 DUPLICATE VEHICLE CHECK (✅ CORRECT PLACE)
+            vehicle_source = obj.va_vehiclesource_id
 
-        if form.is_valid():
+            duplicate_qs = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber_id=enquiry_id
+            )
+
+            # OWN / ATTACHED
+            if vehicle_source in [1, 2] and obj.va_vehiclenumber:
+                duplicate_qs = duplicate_qs.filter(
+                    va_vehiclenumber=obj.va_vehiclenumber
+                )
+
+            # MARKET
+            elif vehicle_source == 3 and obj.va_vehiclenumber_mkt:
+                duplicate_qs = duplicate_qs.filter(
+                    va_vehiclenumber_mkt__iexact=obj.va_vehiclenumber_mkt.strip()
+                )
+
+            if duplicate_qs.exists():
+                messages.error(
+                    request,
+                    "This vehicle number is already allotted for this enquiry."
+                )
+                return redirect(request.META.get('HTTP_REFERER'))
+
+            # ✅ SAVE
             obj.save()
             messages.success(request, "Vehicle Allotment Saved Successfully")
             return redirect('vehicle_allotment_update', vehicle_allotment_id=obj.id)
+
+        # ------------------
+        # UPDATE MODE
+        # ------------------
         else:
-            # show form errors
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field}: {error}")
+            va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
+            form = VehicleallotmentForm(request.POST, instance=va)
 
-            messages.error(request, "Please fix the errors.")
+            if not form.is_valid():
+                messages.error(request, "Invalid form data")
+                return redirect(request.META.get('HTTP_REFERER'))
 
-        return redirect(request.META.get('HTTP_REFERER'))
+            obj = form.save(commit=False)
+            obj.va_enquirynumber = va.va_enquirynumber
+            obj.save()
+
+            messages.success(request, "Vehicle Allotment Updated Successfully")
+            return redirect('vehicle_allotment_update', vehicle_allotment_id=obj.id)
 
     # fallback return
     return redirect('enquirynote_list')
@@ -557,7 +593,7 @@ def get_remaining_quantity(request, enquiry_id, vehicle_type_id):
 def get_vendor_buy_rate(request):
     vehicle_id = request.GET.get('vehicle_id')  # This is actually a vehicle type ID, not the Vehicle_allotmentInfo ID
     vendor_id = request.GET.get('vendor_id')
-    enquiry_id = request.session.get('enquiry_num_id')
+    enquiry_id = request.GET.get('enquiry_id')  # ✅ NO SESSION
 
     print("vehicle_id:", vehicle_id)
     print("vendor_id:", vendor_id)
@@ -588,7 +624,7 @@ def get_vendor_sale_rate(request):
     vehicle_requested = request.GET.get('vehicle_requested')
     vehicle_placed = request.GET.get('vehicle_placed')
     vendor_id = request.GET.get('vendor_id')
-    enquiry_id = request.session.get('enquiry_num_id')
+    enquiry_id = request.GET.get('enquiry_id')  # ✅ NO SESSION
 
     if not enquiry_id:
         return JsonResponse({'sale_rate': "0"})
@@ -661,6 +697,21 @@ def vehicle_allotment_email(request):
     except Vehicle_allotmentInfo.DoesNotExist:
         messages.error(request, "Vehicle allotment record not found.")
         return redirect(request.META.get('HTTP_REFERER', '/'))
+    # Fetch Enquiry details based on enquiry number
+    try:
+        enquiry = EnquirynoteInfo.objects.select_related(
+            'en_customername',
+            'en_customerdepartment',
+            'en_fromlocaion',
+            'en_tolocation'
+        ).get(en_enquirynumber=va.va_enquirynumber)
+    except EnquirynoteInfo.DoesNotExist:
+        enquiry = None
+
+    customer_name = enquiry.en_customername.cu_name if enquiry else "N/A"
+    department_name = enquiry.en_customerdepartment.ct_customerdepartment if enquiry else "N/A"
+    from_location = enquiry.en_fromlocaion.place_name if enquiry and enquiry.en_fromlocaion else "N/A"
+    to_location = enquiry.en_tolocation.place_name if enquiry and enquiry.en_tolocation else "N/A"
 
     # Convert recipient string to list
     recipient_list = [email.strip() for email in recipient.split(',') if email.strip()]
@@ -696,20 +747,26 @@ def vehicle_allotment_email(request):
                 </style>
             </head>
             <body>
-                <p>Dear Team,</p>
-                <p>Please find below the vehicle allotment details:</p>
-                <table>
-                    <tr><th>Enquiry Number</th><td>{va.va_enquirynumber}</td></tr>
-                    <tr><th>Vehicle Source</th><td>{va.va_vehiclesource}</td></tr>
-                    <tr><th>Vehicle Type Requested</th><td>{va.va_vehicletype}</td></tr>
-                    <tr><th>Vehicle Type Placed</th><td>{va.va_vehicletype_placed}</td></tr>
-                    <tr><th>Vehicle Number</th><td>{va.va_vehiclenumber}</td></tr>
+                <p>Dear Customer,</p>
+                <p>Thank you for your business, below booking details is for your reference:</p>
+                <table style="width: 100%; border-collapse: collapse;">
+    <tr>
+        <th colspan="2" style="background-color: #007bff; color: white; padding: 10px; text-align: center; font-size: 18px;">
+            Booking
+        </th>
+    </tr>
+                    <tr><th>Customer Name</th><td>{customer_name}</td></tr>
+                    <tr><th>Department</th><td>{department_name}</td></tr>
+                    <tr><th>From Location</th><td>{from_location}</td></tr>
+                    <tr><th>To Location</th><td>{to_location}</td></tr>
                     <tr><th>Driver Name</th><td>{va.va_drivername}</td></tr>
-                    <tr><th>Driver License</th><td>{va.va_driver_lic}</td></tr>
-                    <tr><th>License Expiry</th><td>{va.va_driver_lic_expiry}</td></tr>
-                    <tr><th>Driver Contact</th><td>{va.va_drivernumber}</td></tr>
-                    <tr><th>Vendor</th><td>{va.va_vendor}</td></tr>
-                    <tr><th>Updated By</th><td>{va.va_updated_by}</td></tr>
+                    <tr><th>Driver Mobile</th><td>{va.va_drivernumber}</td></tr>
+                    <tr><th>Truck Type</th><td>{va.va_vehicletype}</td></tr>
+                    <tr><th>Truck Number</th><td>{va.va_vehiclenumber}</td></tr>
+                    <!--# <tr><th>Driver License</th><td>{va.va_driver_lic}</td></tr>
+                    # <tr><th>License Expiry</th><td>{va.va_driver_lic_expiry}</td></tr>
+                    # <tr><th>Vendor</th><td>{va.va_vendor}</td></tr>
+                    #<tr><th>Updated By</th><td>{va.va_updated_by}</td></tr>-->
                     <tr>
                         <th>Remarks</th>
                         <td class="remarks">
@@ -764,3 +821,24 @@ def get_vendor_buy_rate(request):
         'standard_buy': rate,
         'special_buy': rate
     })
+
+@login_required(login_url='login_page')
+def get_vendor_by_vehicle(request):
+    vehicle_id = request.GET.get('vehicle_id')
+
+    if not vehicle_id:
+        return JsonResponse({'vendor_id': '', 'vendor_name': ''})
+
+    try:
+        vehicle = VehiclemasterInfo.objects.select_related('vm_vendor').get(id=vehicle_id)
+
+        if vehicle.vm_vendor:
+            return JsonResponse({
+                'vendor_id': vehicle.vm_vendor.id,
+                'vendor_name': vehicle.vm_vendor.vend_name
+            })
+
+        return JsonResponse({'vendor_id': '', 'vendor_name': ''})
+
+    except VehiclemasterInfo.DoesNotExist:
+        return JsonResponse({'vendor_id': '', 'vendor_name': ''})

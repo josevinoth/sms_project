@@ -42,7 +42,6 @@
             <th>Edit</th>
             <th>Created On</th>
             <th>Dispatch Number</th>
-            <th>Attachment</th>
             <th>Gate Pass</th>
             <th>Customer Name</th>
             <th>Transporter</th>
@@ -71,37 +70,6 @@
             </td>
             <td> {{dispatchinfo.dispatch_created_at}}</td>
             <td> {{dispatchinfo.dispatch_num}}</td>
-            <!-- Invoice Attachment -->
-                <td style="min-width: 200px;">
-                    <div class="mb-2">
-                        {% if dispatchinfo.dispatch_gatepass_att %}
-                            <a href="{{ dispatchinfo.dispatch_gatepass_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
-
-                            <!-- Re-attach -->
-                            <form method="post" action="{% url 'dispatch_upload_attachment' dispatchinfo.id 'gatepass' %}" enctype="multipart/form-data" class="d-inline">
-                                {% csrf_token %}
-                                <label class="btn btn-sm btn-warning mb-0">
-                                    Re-attach
-                                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-                                </label>
-                            </form>
-
-                            <!-- Delete -->
-                            <form method="post" action="{% url 'dispatch_delete_attachment' dispatchinfo.id 'gatepass' %}" class="d-inline" onsubmit="return confirm('Delete gatepass attachment?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
-                            </form>
-                        {% else %}
-                            <form method="post" action="{% url 'dispatch_upload_attachment' dispatchinfo.id 'gatepass' %}" enctype="multipart/form-data" class="d-inline">
-                                {% csrf_token %}
-                                <label class="btn btn-sm btn-primary mb-0">
-                                    Upload
-                                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-                                </label>
-                            </form>
-                        {% endif %}
-                    </div>
-                </td>
             <td>
                 <div class="d-flex justify-content-center gap-1">
                     {% if dispatchinfo.driver_signature_base64 and dispatchinfo.supervisor_signature_base64 %}

@@ -246,8 +246,18 @@ def enquirynote_list(request):
         total_allotted = vehicle_allotted_dict.get(enquiry.id, 0)
         limit_reached = total_allotted >= total_allowed if total_allowed > 0 else False
 
-        vehicles_with_consignment = consignments.values_list('co_vehicelnumber', flat=True).distinct()
-        consignment_limit_reached = len(vehicles_with_consignment) >= len(vehicles) if vehicles else False
+        # 🔥 FIX HERE
+        # Consignment limit logic
+        if vehicles and total_allowed > 0:
+            consignment_limit_reached = consignments.count() >= total_allowed
+        else:
+            consignment_limit_reached = True
+        print(
+            enquiry.id,
+            "Vehicles:", vehicles,
+            "Consignments:", consignments.count(),
+            "Limit reached:", consignment_limit_reached
+        )
 
         enquiry_data.append({
             'enquiry': enquiry,

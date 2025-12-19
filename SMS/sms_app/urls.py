@@ -776,6 +776,8 @@ urlpatterns = [
 
 
 
+    path('get-vendor-by-vehicle/', views.get_vendor_by_vehicle, name='get_vendor_by_vehicle'),
+
 
 
 ]

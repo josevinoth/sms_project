@@ -258,7 +258,6 @@
 			document.getElementById("va_vehicletype").value =vehicle_type;
 		}
 		market_vehicle_enable_disable();
-		loadVendorOptions();
 	});
 </script>
 <script>
@@ -320,12 +319,12 @@
 				if (vehicle_number_id!="")
 				{
 					$('#va_vehiclenumber').removeClass('disable_a_href');
-					$('#va_vendor_name').addClass('disable_a_href');
+					$('#va_vendor').addClass('disable_a_href');
 				}
 				else
 				{
 					$('#va_vehiclenumber').addClass('disable_a_href');
-					$('#va_vendor_name').removeClass('disable_a_href');
+					$('#va_vendor').removeClass('disable_a_href');
 				}
 				var len1 = (vehicle_number).length;
 				$("#va_vehiclenumber").empty();
@@ -510,11 +509,11 @@ function loadVendorBuyRate() {
     if (!vendorId || !vehicleTypeId) return;
 
     $.ajax({
-        url: "{% url 'get_vendor_buy_rate' %}",
-        type: "GET",
+          url: "{% url 'get_vendor_buy_rate' %}",
         data: {
-            vendor_id: vendorId,
-            vehicle_id: vehicleTypeId
+            enquiry_id: "{{ enquiry_num_id }}",  // ✅ ADD THIS
+            vendor_id: $('#va_vendor').val(),
+            vehicle_id: $('#va_vehicletype_placed').val()
         },
         success: function(data) {
             $("#va_standardbuy").val(data.standard_buy);
@@ -570,12 +569,14 @@ function loadVendorSaleRate(checkboxId) {
         url: '{% url "get_vendor_sale_rate" %}',
         type: 'GET',
         data: {
+                    enquiry_id: "{{ enquiry_num_id }}",  // ✅ ADD THIS
             checkbox_id: checkboxId,
             vehicle_requested: $('#va_vehicletype').val(),
             vehicle_placed: $('#va_vehicletype_placed').val()
         },
         dataType: 'json',
         success: function(data) {
+        var x = {{ enquiry_num_id }};
             const saleRate = data.sale_rate;
             if (!saleRate || saleRate === "0") {
                 alert("Rate not assigned for this customer");
@@ -672,11 +673,6 @@ function loadVendorSaleRate(checkboxId) {
     });
 }
 
-$(document).ready(function () {
-    const selectedVendorId = $('#va_vendor').data('selected');  // get pre-selected value
-    loadVendorOptions(selectedVendorId); // load on page load with value
-});
-
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -726,7 +722,20 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
+<script>
+	$("#va_vehiclesource").on("change", function () {
+    const vehicleSource = $(this).val();
 
+    if (vehicleSource == 3) {
+        loadVendorOptions(null);   // load market vendors
+    } else {
+        $("#va_vendor").val("");   // clear for attached
+    }
+
+    market_vehicle_enable_disable();
+});
+
+</script>
 
 {% block scripts %}
 
@@ -777,6 +786,40 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 </script>
+<script>
+
+	$("#va_vehiclenumber").change(function () {
+
+    const vehicleSource = $("#va_vehiclesource").val();
+    const vehicleId = $(this).val();
+
+    if (vehicleSource != 2 || !vehicleId) return;
+
+    $.ajax({
+        url: "{% url 'get_vendor_by_vehicle' %}",
+        data: { vehicle_id: vehicleId },
+        success: function (data) {
+
+            if (!data.vendor_id) return;
+
+            const vendorDropdown = $("#va_vendor");
+
+            // 🔥 ADD OPTION IF MISSING
+            if (vendorDropdown.find(`option[value='${data.vendor_id}']`).length === 0) {
+                vendorDropdown.append(
+                    `<option value="${data.vendor_id}">${data.vendor_name}</option>`
+                );
+            }
+
+            // ✅ NOW SELECT
+            vendorDropdown.val(data.vendor_id);
+        }
+    });
+});
+
+
+</script>
+
 <script>
 function calculateProfit() {
     const specialBuy = parseFloat($("#va_specialbuy").val()) || 0;

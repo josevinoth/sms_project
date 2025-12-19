@@ -102,6 +102,7 @@
     <table class='report_details'>
         <tr>
             <th>Invoice Number</th>
+            <th>HAWB</th>
             <th>Invoice Date</th>
             <th>Consignor</th>
             <th>Consignee</th>
@@ -120,6 +121,7 @@
         {% for consignment_goods in consignment_goods_list %}
         <tr>
             <td>{{consignment_goods.cg_consignerinvoice}}</td>
+            <td>{{consignment_goods.cg_hawbno}}</td>
             <td>{{consignment_goods.cg_consignerinvoice_date}}</td>
             <td>{{consignment_goods.cg_consigner}}</td>
             <td>{{consignment_goods.cg_consignee}}</td>
