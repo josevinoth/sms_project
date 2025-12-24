@@ -246,11 +246,7 @@ def tripdetail_add(request, tripdetail_id=0):
                         pass
 
                 trip = trip_det_form.save(commit=False)
-
-                # Respect user-selected status
-                selected_status = request.POST.get("tc_financestatus")
-                if selected_status:
-                    trip.tc_financestatus_id = int(selected_status)
+                trip.tc_financestatus_id = 8
 
                 # ✅ Process POD signature
                 pod_data = request.POST.get('pod_signature_data')
