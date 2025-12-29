@@ -113,20 +113,19 @@
                                 <textarea id="message" name="message" class="form-control" rows="6" placeholder="Enter email message">{{ form.message.value }}</textarea>
                             </div>
 
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-paper-plane"></i> Send Email
+                                </button>
+                            </div>
+                        </form>
                     </div>
-
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-paper-plane"></i> Send Email
-                        </button>
-                    </div>
-                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
-</div>
+
 <br>
 
 <div class="container-fluid shadow-box-table">
@@ -226,22 +225,60 @@
         });
     });
 
-    function email_message_fn() {
-        $('#sendEmailModal').modal('show');
-    }
 </script>
+
 <script>
     function email_message_fn() {
-     // Assign Django template variables to JavaScript variables
-       var message = 	"Dear Customer,\n\n" +
-                "Please find the DMR report attached.\n\n" +
-                  "Regards,\n" +
-                  "BVM Transport Team";
 
-        // Set the consolidated message as the value of the form field with id 'message'
-        document.getElementById("message").value = message;
+        // Open modal
+        $('#sendDmrEmailModal').modal('show');
+
+        // Default message
+        $("#message").val(
+            "Dear Customer,\n\n" +
+            "Please find the DMR report attached.\n\n" +
+            "Regards,\n" +
+            "BVM Transport Team"
+        );
+
+        // Get values directly from dropdowns
+        const customerId = $("#id_dmr_customer").val();
+        const departmentId = $("#id_customer_department").val();
+
+        console.log("customerId =", customerId);
+        console.log("departmentId =", departmentId);
+
+        if (!customerId) {
+            alert("Please select customer");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_dmr_email_details' %}",
+            type: "GET",
+            data: {
+                customer_id: customerId,
+                department_id: departmentId
+            },
+            success: function (res) {
+                console.log("AJAX response =", res);
+
+                if (res.status === true && res.to_mail) {
+                    $("#recipient").val(res.to_mail);
+                } else {
+                    $("#recipient").val("");
+                    alert("No email found for this customer");
+                }
+            },
+            error: function (err) {
+                console.error("AJAX error", err);
+                alert("Failed to fetch email");
+            }
+        });
     }
 </script>
+
+
 
 
 {% endblock content %}

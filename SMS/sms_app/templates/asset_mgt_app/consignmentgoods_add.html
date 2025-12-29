@@ -694,4 +694,66 @@ $("#cg_consignee").select2({
 });
 
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const consType = document.getElementById("cg_consignmenttype");
+
+    function applyConsignmentRules() {
+
+        const selectedText =
+            consType.options[consType.selectedIndex].text.toLowerCase();
+
+        // ===============================
+        // RESET (SHOW ALL + REQUIRED)
+        // ===============================
+        [
+            "cg_consignervalue",
+            "cg_currency_type",
+            "cg_valueininr",
+            "cg_ebillno",
+            "cg_dateofissue",
+            "cg_dateofvalidity"
+        ].forEach(showFieldAndRequired);
+
+
+        // ===============================
+        // LESS VALUE
+        // ===============================
+        if (selectedText === "less value") {
+
+            hideFieldAndNotRequired("cg_ebillno");
+            hideFieldAndNotRequired("cg_dateofissue");
+            hideFieldAndNotRequired("cg_dateofvalidity");
+        }
+
+        // ===============================
+        // SEZ
+        // ===============================
+        else if (selectedText.includes("sez")) {
+
+            hideFieldAndNotRequired("cg_consignervalue");
+            hideFieldAndNotRequired("cg_currency_type");
+            hideFieldAndNotRequired("cg_valueininr");
+
+            hideFieldAndNotRequired("cg_ebillno");
+            hideFieldAndNotRequired("cg_dateofissue");
+            hideFieldAndNotRequired("cg_dateofvalidity");
+        }
+
+        // ===============================
+        // NORMAL
+        // ===============================
+        // Nothing hidden → all required
+    }
+
+    // init on load
+    applyConsignmentRules();
+
+    // apply on change
+    consType.addEventListener("change", applyConsignmentRules);
+});
+</script>
+
 {% endblock content %}

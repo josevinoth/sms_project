@@ -100,21 +100,16 @@
 									</div>
 
 									<select name="tr_consignmentnumber" id="tr_consignmentnumber" class="form-control select2-consignment">
-    <option value="">--Select--</option>
+										<option value="">--Select--</option>
 
-    {% for item in consignment_list %}
-        <option value="{{ item.id }}">
-            {{ item.co_consignmentnumber }}
-            {% if item.co_vehicelnumber %}
-                ({{ item.co_vehicelnumber }})
-            {% endif %}
-        </option>
-    {% endfor %}
-</select>
-
-
-
-
+										{% for item in consignment_list %}
+											<option value="{{ item.id }}">
+												{{ item.co_consignmentnumber }}
+												{% if item.co_vehicelnumber %}
+													({{ item.co_vehicelnumber }})
+												{% endif %}
+											</option>
+										{% endfor %}
 									</select>
 								</div>
 								<div class="input-group input-group-sm m-1">

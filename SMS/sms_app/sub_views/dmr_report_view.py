@@ -3,6 +3,7 @@ from datetime import datetime, date
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from io import BytesIO
@@ -16,6 +17,9 @@ from ..sub_forms.dmr_report_form import DmrForm
 from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+
+from ..models import Emailmaster
+
 
 
 @login_required(login_url='login_page')
@@ -785,3 +789,28 @@ def trip_send_email(request):
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
+
+@login_required(login_url='login_page')
+def get_dmr_email_details(request):
+    customer_id = request.GET.get("customer_id")
+    department_id = request.GET.get("department_id")
+
+    if not customer_id:
+        return JsonResponse({'status': False})
+
+    qs = Emailmaster.objects.filter(
+        em_Customer_name_id=customer_id
+    )
+
+    if department_id:
+        qs = qs.filter(em_customerdepartment_id=department_id)
+
+    email_obj = qs.first()   # renamed variable (important)
+
+    if not email_obj or not email_obj.em_to_names:
+        return JsonResponse({'status': False})
+
+    return JsonResponse({
+        'status': True,
+        'to_mail': email_obj.em_to_names
+    })

@@ -167,6 +167,6 @@ from .sub_views.emailmaster_view import email_master_add,email_master_list,email
 from .sub_views.tripclosure_add_view import get_halting_charge
 from .sub_views.driver_expense_view import driver_expense_add,driver_expense_list,driver_expense_delete,driver_expense_update,driver_expense_by_driver
 from .sub_views.driver_settlement_view import get_driver_name_by_staff_id,get_driver_details
-
+from .sub_views.dmr_report_view import get_dmr_email_details
 
 
