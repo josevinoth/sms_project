@@ -772,6 +772,8 @@ urlpatterns = [
     path('driver-expense-by-driver/', views.driver_expense_by_driver,name='driver_expense_by_driver'),
     # path('get-driver-name-by-staff-id/', views.get_driver_name_by_staff_id, name='get_driver_name_by_staff_id'),
     # path('get-driver-details/', views.get_driver_details, name='get_driver_details' ),
+    path('get-driver-name-by-staff-id/', views.get_driver_name_by_staff_id, name='get_driver_name_by_staff_id'),
+    path('get-driver-details/', views.get_driver_details, name='get_driver_details' ),
     path('get-vendor-by-vehicle/', views.get_vendor_by_vehicle, name='get_vendor_by_vehicle'),
     path('driver_add/', views.driver_add, name='driver_add'),
     path('driver_edit/<int:driver_id>/', views.driver_add, name='driver_edit'),
@@ -782,6 +784,7 @@ urlpatterns = [
         views.get_driver_details_from_master,
         name='get_driver_details_from_master'
     ),
+    path( 'get-dmr-email-details/',views.get_dmr_email_details,name='get_dmr_email_details'),
 
 
 
