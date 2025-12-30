@@ -746,7 +746,7 @@ urlpatterns = [
     path('driver_settlement_update/<int:ds_id>/', views.driver_settlement_add, name='driver_settlement_update'),
     path('driver_settlement_list/', views.driver_settlement_list, name='driver_settlement_list'),
     path('driver_settlement_delete/<int:ds_id>/', views.driver_settlement_delete, name='driver_settlement_delete'),
-    path('driver_get_full_name/', views.get_full_name_driver, name='driver_get_full_name'),
+    # path('driver_get_full_name/', views.get_full_name_driver, name='driver_get_full_name'),
     path('get_trip_totalcost/', views.get_trip_totalcost, name='get_trip_totalcost'),
     path('get_customer_ref/', views.get_customer_ref, name='get_customer_ref'),
     path('fetch_enquiry_locations/', views.fetch_enquiry_locations, name='fetch_enquiry_locations'),
@@ -767,12 +767,21 @@ urlpatterns = [
     path('get_route_rate/', views.get_vendor_buy_rate, name='get_route_rate'),
     path('driver_expense_add/',views.driver_expense_add,name='driver_expense_add'),
     path('driver_expense_list/',views.driver_expense_list,name='driver_expense_list'),
-    path('driver_expense_update/', views.driver_expense_update, name='driver_expense_update'),
+    # path('driver_expense_update/', views.driver_expense_update, name='driver_expense_update'),
     path('driver_expense_delete/',views.driver_expense_delete,name='driver_expense_delete'),
     path('driver-expense-by-driver/', views.driver_expense_by_driver,name='driver_expense_by_driver'),
-    path('get-driver-name-by-staff-id/', views.get_driver_name_by_staff_id, name='get_driver_name_by_staff_id'),
-    path('get-driver-details/', views.get_driver_details, name='get_driver_details' ),
+    # path('get-driver-name-by-staff-id/', views.get_driver_name_by_staff_id, name='get_driver_name_by_staff_id'),
+    # path('get-driver-details/', views.get_driver_details, name='get_driver_details' ),
     path('get-vendor-by-vehicle/', views.get_vendor_by_vehicle, name='get_vendor_by_vehicle'),
+    path('driver_add/', views.driver_add, name='driver_add'),
+    path('driver_edit/<int:driver_id>/', views.driver_add, name='driver_edit'),
+    path('driver_list/', views.driver_list, name='driver_list'),
+    path('driver_delete/<int:driver_id>/', views.driver_delete, name='driver_delete'),
+    path(
+        'ajax/get-driver-details/',
+        views.get_driver_details_from_master,
+        name='get_driver_details_from_master'
+    ),
     path( 'get-dmr-email-details/',views.get_dmr_email_details,name='get_dmr_email_details'),
 
 

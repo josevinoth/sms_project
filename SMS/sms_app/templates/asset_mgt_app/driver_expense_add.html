@@ -1,0 +1,223 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST" action="">
+    {% csrf_token %}
+    <input type="hidden" name="settlement_id" value="{{ settlement.id }}">
+    <input type="hidden" name="next" value="{{ next }}">
+
+    <div class="row">
+        <div class="col">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width:100%;">
+                    <div class="card-header text-center">
+                        <h4>Add / Update Driver Expense</h4>
+                    </div>
+
+                    <div class="card-body bg-light text-dark">
+                        <div class="row">
+
+                            <!-- COLUMN 1 -->
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Driver Name</span>
+                                    </div>
+                                    {% render_field form.de_driver_name class="form-control" %}
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Driver ID</span>
+                                    </div>
+                                    <input type="text"
+                                           class="form-control"
+                                           value="{{ settlement.driver_id_value }}"
+                                           readonly>
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Expense Type</span>
+                                    </div>
+                                    {% render_field form.de_expense_type id="de_expense_type" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3" >
+    <div class="input-group-prepend">
+        <span class="input-group-text">Trip Number</span>
+    </div>
+{% render_field form.trip_number id="trip_number" class="form-control" %}
+</div>
+
+
+                            </div>
+
+                            <!-- COLUMN 2 -->
+
+                            <!-- COLUMN 3 -->
+                            <div class="col-6">
+
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Total Cost</span>
+                                    </div>
+                                    {% render_field form.de_total_cost id="de_total_cost" class="form-control" %}
+                                </div>
+
+                                <div id="expense-cost-fields">
+
+    <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Parking Cost</span>
+        </div>
+        {% render_field form.de_parkingcost class="form-control cost-field" %}
+    </div>
+
+    <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Loading Cost</span>
+        </div>
+        {% render_field form.de_loadingcost class="form-control cost-field" %}
+    </div>
+
+    <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Unloading Cost</span>
+        </div>
+        {% render_field form.de_unloadingcost class="form-control cost-field" %}
+    </div>
+
+    <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Weighment Cost</span>
+        </div>
+        {% render_field form.de_weighmentcost class="form-control cost-field" %}
+    </div>
+
+    <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Supervisor Cost</span>
+        </div>
+        {% render_field form.de_supervisorcost class="form-control cost-field" %}
+    </div>
+                                </div>
+                            </div>
+</div>
+
+
+
+                        <!-- MESSAGES -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                {% for message in messages %}
+                                    <span class="{{ message.tags }}">{{ message }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- BUTTONS (LIKE DRIVER MASTER) -->
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Submit
+                        </button>
+
+                        <a href="{{ next|default:'#' }}" class="btn btn-danger float-right">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- ================= JS ================= -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const costFields = document.querySelectorAll(".cost-field");
+    const totalCostField = document.getElementById("de_total_cost");
+
+    function calculateTotal() {
+        let total = 0;
+        costFields.forEach(field => {
+            total += parseFloat(field.value) || 0;
+        });
+        totalCostField.value = total.toFixed(2);
+    }
+
+    costFields.forEach(field => {
+        field.addEventListener("input", calculateTotal);
+    });
+
+    calculateTotal();
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const expenseType = document.getElementById("de_expense_type");
+    const costWrapper = document.getElementById("expense-cost-fields");
+    const costFields = document.querySelectorAll(".cost-field");
+    const totalCostField = document.getElementById("de_total_cost");
+    const tripNumberField = document.getElementById("trip_number");
+
+    function calculateTotal() {
+        let total = 0;
+        costFields.forEach(field => {
+            total += parseFloat(field.value) || 0;
+        });
+        totalCostField.value = total.toFixed(2);
+    }
+
+    function toggleFields() {
+        const selectedId = expenseType.value; // Expense Type ID
+
+        if (selectedId === "1") {
+            // ✅ Expense Type = 1
+            costWrapper.style.display = "none";
+            totalCostField.readOnly = false;
+            totalCostField.value = "";
+
+            // 🔓 Trip Number NOT mandatory
+            tripNumberField.required = false;
+
+        } else {
+            // ✅ Other Expense Types
+            costWrapper.style.display = "block";
+            totalCostField.readOnly = true;
+
+            // 🔒 Trip Number mandatory
+            tripNumberField.required = true;
+
+            calculateTotal();
+        }
+    }
+
+    expenseType.addEventListener("change", toggleFields);
+
+    costFields.forEach(field => {
+        field.addEventListener("input", calculateTotal);
+    });
+
+    toggleFields(); // run once on page load
+});
+</script>
+<script>
+document.getElementById("settlement_id").addEventListener("change", function () {
+
+    const settlementId = this.value;
+    if (!settlementId) return;
+
+    fetch(`/SMS/get_driver_settlement_details/?settlement_id=${settlementId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("driver_name").value = data.driver_name;
+            document.getElementById("driver_id").value = data.driver_id;
+        })
+        .catch(error => console.error(error));
+});
+</script>
+
+{% endblock content %}

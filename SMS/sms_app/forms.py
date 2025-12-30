@@ -139,3 +139,4 @@ from.sub_forms.incident_email_form import IncidentEmailForm
 from.sub_forms.driver_settlement_form import DriverSettlementForm
 from.sub_forms.trip_settlement_form import TripSettlementForm
 from.sub_forms.haltingcharges_Form import Haltingcharges
+from.sub_forms.driver_master_form import DriverMasterForm
