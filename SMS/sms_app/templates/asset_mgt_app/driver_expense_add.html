@@ -1,0 +1,161 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="container-fluid">
+        <div class="card bg-info text-white mb-3">
+            <div class="card-header text-center">
+                <h4>Add / Update Driver Expense</h4>
+            </div>
+
+            <div class="card-body bg-light text-dark">
+
+                <div class="row">
+                    <!-- LEFT COLUMN -->
+                    <div class="col-6">
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Driver Name</span>
+                            </div>
+                            {% render_field form.de_driver_name class="form-control" %}
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Trip Number</span>
+                            </div>
+                            {% render_field form.de_trip_number  class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Driver ID</span>
+                            </div>
+                            {% render_field form.de_driver_id class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Expense Type</span>
+                            </div>
+                            {% render_field form.de_expense_type id="de_expense_type" class="form-control" %}
+                        </div>
+
+                    </div>
+
+                    <!-- RIGHT COLUMN -->
+                <div class="col-6">
+
+                    <!-- TOTAL COST (ALWAYS VISIBLE) -->
+                    <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Total Cost</span>
+                        </div>
+                        {% render_field form.de_total_cost id="de_total_cost" class="form-control" %}
+                    </div>
+
+                    <!-- COST FIELDS (HIDE / SHOW) -->
+                    <div id="expense-cost-fields">
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Parking Cost</span>
+                            </div>
+                            {% render_field form.de_parkingcost class="form-control cost-field" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Loading Cost</span>
+                            </div>
+                            {% render_field form.de_loadingcost class="form-control cost-field" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Unloading Cost</span>
+                            </div>
+                            {% render_field form.de_unloadingcost class="form-control cost-field" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Weighment Cost</span>
+                            </div>
+                            {% render_field form.de_weighmentcost class="form-control cost-field" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Supervisor Cost</span>
+                            </div>
+                            {% render_field form.de_supervisorcost class="form-control cost-field" %}
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- BUTTONS -->
+                <div class="text-center mt-6">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        Save
+                    </button>
+
+                        <a href="{% url 'driver_settlement_add' %}" class="btn btn-secondary btn-lg ml-2">
+                            Back
+                        </a>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- ================= JS LOGIC ================= -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const expenseType = document.getElementById("de_expense_type");
+    const costFieldsDiv = document.getElementById("expense-cost-fields");
+    const costFields = document.querySelectorAll(".cost-field");
+    const totalCostField = document.getElementById("de_total_cost");
+
+    function calculateTotal() {
+        let total = 0;
+        costFields.forEach(field => {
+            total += parseFloat(field.value) || 0;
+        });
+        totalCostField.value = total.toFixed(2);
+    }
+
+    function toggleFields() {
+        const selectedText =
+            expenseType.options[expenseType.selectedIndex].text.toLowerCase().trim();
+
+        if (selectedText === "advance") {
+            costFieldsDiv.style.display = "none";
+            totalCostField.readOnly = false;
+            totalCostField.value = "";
+        } else {
+            costFieldsDiv.style.display = "block";
+            totalCostField.readOnly = true;
+            calculateTotal();
+        }
+    }
+
+    expenseType.addEventListener("change", toggleFields);
+
+    costFields.forEach(field => {
+        field.addEventListener("input", calculateTotal);
+    });
+
+    toggleFields();
+});
+</script>
+
+{% endblock %}
