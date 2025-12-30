@@ -1,6 +1,7 @@
 # models.py
 from django.db import models
 
+from .driver_master_mod import DrivermasterInfo
 from .driversettlement_expense_mod import Driversettlement_ExpenseInfo
 from .tripdetail_mod import TripdetailInfo
 from .user_ext_mod import User_extInfo
@@ -8,34 +9,21 @@ from ..models import User, ExpenseCategoryInfo, MyUser, Business_Sol_info
 from django.urls import reverse
 
 class driver_settlement_info(models.Model):
-    staff_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ds_staff_id', to_field='username', db_column='staff_id')
-    transaction_type = models.ForeignKey(ExpenseCategoryInfo, on_delete=models.CASCADE)
-    transaction_date = models.DateField()
-    business_type = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE)
-    amount = models.FloatField(default=0.0)
+    driver = models.ForeignKey(DrivermasterInfo,on_delete=models.CASCADE,related_name='driver_settlements',null=True, blank=True)
+    driver_id_value = models.CharField(max_length=100,null=True, blank=True)
+    driver_name = models.CharField(max_length=100,null=True, blank=True)
+    driver_phone = models.CharField(max_length=10, null=True, blank=True)
+    driver_licence = models.CharField(max_length=100, null=True, blank=True)
     ds_created_at = models.DateTimeField(null=True, auto_now_add=True)
     ds_updated_at = models.DateTimeField(null=True, auto_now=True)
     ds_updated_by = models.ForeignKey(MyUser, null=True, blank=True, on_delete=models.CASCADE, related_name='ds_updated_by', db_column='ds_updated_by')
-    ds_number = models.CharField(max_length=20, null=True, blank=True)
-    ds_expense_category = models.ForeignKey(Driversettlement_ExpenseInfo, null=True,blank=True,on_delete=models.CASCADE, default='')
-    trip = models.ForeignKey(TripdetailInfo, null=True,on_delete=models.CASCADE, default='')
-    total_trip_cost = models.FloatField(default=0.0, blank=True, null=True)
-    balance = models.FloatField(default=0.0)  # 👈 new field
-    staff_name = models.ForeignKey(User_extInfo, null=True,on_delete=models.CASCADE, default='')
-    ds_phonenumber=models.CharField(User_extInfo,max_length=10, null=True, blank=True)
     ds_tripadvance = models.FloatField(default=0.0)
     ds_tripexpense = models.FloatField(default=0.0)
     ds_balance = models.FloatField(default=0.0)
-
-
-
-
+    driver_licence_expiry = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
-        ordering = ["staff_name"]
+        ordering = ["driver_name"]
 
     def __str__(self):
-        return self.staff_name or str(self.id)
-
-    def get_absolute_url_ds(self):
-        return reverse('driver_settlement_update', args=[str(self.id)])
+        return self.driver_name

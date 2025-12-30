@@ -24,6 +24,7 @@ from .send_department_email import send_department_email
 from ..sub_models.damagereport_mod import DamagereportInfo
 from ..sub_models.loadingbay_mod import Loadingbay_Info
 from ..sub_models.transporter_mod import Transporter_name
+from django.utils import timezone
 
 @login_required(login_url='login_page')
 def pregateintruck_add(request, pregateintruck_id=0):
@@ -328,8 +329,8 @@ def truck_send_email_view(request, pre_gatein_id=None):
                         shipper,
                         shipper_value,
                         invoice,
-                        loading_start.strftime("%d-%b-%Y %H:%M") if loading_start else "",
-                        loading_end.strftime("%d-%b-%Y %H:%M") if loading_end else "",
+                        timezone.localtime(loading_start).strftime("%d-%b-%Y %H:%M") if loading_start else "",
+                        timezone.localtime(loading_end).strftime("%d-%b-%Y %H:%M") if loading_end else "",
                         pieces,
                         damage,
                         wh_job_no,
