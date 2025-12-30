@@ -561,17 +561,24 @@ def fleet_management_view(request):
     vehicle_status_list = []
 
     for vehicle in vehicles:
-        trip = TripdetailInfo.objects.filter(tr_vehiclenumber=vehicle.vm_registrationnumber).order_by(
-            '-tr_created_at').first()
+        trip = TripdetailInfo.objects.filter(
+            tr_vehiclenumber=vehicle.vm_registrationnumber
+        ).select_related(
+            'tr_enquirynumber__en_customername'
+        ).order_by('-tr_created_at').first()
 
         if trip:
+            enquiry = trip.tr_enquirynumber
+            customer = enquiry.en_customername if enquiry else None
+
             status = {
                 'registration_number': vehicle.vm_registrationnumber,
+                'customer_name': customer.cu_name if customer else '',
                 'driver_name': trip.tr_drivername,
-                'from_location': trip.tr_departedlocation.place_name if trip.tr_departedlocation else None,
-                'to_location': trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else None,
-                'vehicle_type': trip.tr_vehicletype_placed.vt_vehicletype if trip.tr_vehicletype_placed else None,
-                'vehicle_source': trip.tr_vehiclesource.ow_ownership if trip.tr_vehiclesource else None,
+                'from_location': trip.tr_departedlocation.place_name if trip.tr_departedlocation else '',
+                'to_location': trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else '',
+                'vehicle_type': trip.tr_vehicletype_placed.vt_vehicletype if trip.tr_vehicletype_placed else '',
+                'vehicle_source': trip.tr_vehiclesource.ow_ownership if trip.tr_vehiclesource else '',
                 'departed_date': trip.tr_departeddate,
                 'reported_date': trip.tr_reporteddate,
                 'trip_status': trip.tc_financestatus.status if trip.tc_financestatus else 'Unknown',
@@ -581,6 +588,7 @@ def fleet_management_view(request):
         else:
             status = {
                 'registration_number': vehicle.vm_registrationnumber,
+                'customer_name': '',
                 'driver_name': '',
                 'from_location': '',
                 'to_location': '',
@@ -595,7 +603,11 @@ def fleet_management_view(request):
 
         vehicle_status_list.append(status)
 
-    return render(request, "asset_mgt_app/fleet_management.html", {'vehicle_status_list': vehicle_status_list})
+    return render(
+        request,
+        "asset_mgt_app/fleet_management.html",
+        {'vehicle_status_list': vehicle_status_list}
+    )
 
 @login_required(login_url='login_page')
 def get_sim_tracking_data(request):

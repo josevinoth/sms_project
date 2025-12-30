@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.paginator import Paginator
+from django.utils import timezone
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from .send_department_email import send_department_email
 from ..forms import DsrForm
@@ -19,10 +20,16 @@ def dsr_reports(request):
     first_name = request.session.get('first_name')
     form = DsrForm(request.POST or None)
     customer_name = request.POST.get('ds_customer', '')
-    goods_list = Warehouse_goods_info.objects.all()
+    goods_list = Warehouse_goods_info.objects.select_related(
+        'wh_gate_injob_no_id'
+    )
+
     if customer_name:
         goods_list = goods_list.filter(wh_customer_name=customer_name)
-        print(f"Filtering by customer name: {customer_name}")
+
+    goods_list = goods_list.order_by('-wh_gate_injob_no_id__gatein_arrival_date')
+
+    print(f"Filtering by customer name: {customer_name}")
     paginator = Paginator(goods_list, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -34,6 +41,30 @@ def dsr_reports(request):
         'customer_name': customer_name,
     }
     return render(request, "asset_mgt_app/dsr_report.html", context)
+
+
+def format_dt_str(dt):
+    if not dt:
+        return ""
+    dt = timezone.localtime(dt)
+    return dt.strftime("%d-%m-%Y %I:%M %p")
+
+
+def format_dt_excel(dt):
+    """
+    Return timezone-naive datetime for Excel.
+    Excel does NOT support tz-aware datetime.
+    """
+    if not dt:
+        return None
+
+    # Convert to local time (IST)
+    local_dt = timezone.localtime(dt)
+
+    # Remove timezone info (Excel requirement)
+    return local_dt.replace(tzinfo=None)
+
+
 @login_required(login_url='login_page')
 def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject=None):
     print('Entering dsr_send_email_view')
@@ -63,6 +94,8 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
 
         customer_obj = CustomerInfo.objects.get(id=customer_name)
         customer_name_str = customer_obj.cu_name.upper()
+
+
 
         # Step 1: Choose headers based on customer
         if "DHL" in customer_name_str:
@@ -138,18 +171,15 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
             for i, stock_value in enumerate(stock_values):
 
                 if "DHL" in customer_name_str:
-                    date_of_arrival = stock_value.wh_gate_injob_no_id.gatein_arrival_date
-                    if date_of_arrival:
-                        date_of_arrival = date_of_arrival.replace(tzinfo=None)
                     damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
 
                     remarks = damage_report.dam_comments if damage_report else ""
 
                     row = [
                         i + 1,
-                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        format_dt_excel(stock_value.wh_gate_injob_no_id.gatein_arrival_date),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time),
                         getattr(stock_value.wh_gate_injob_no_id, "gatein_transporter", ""),
                         getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
                         stock_value.wh_consigner,
@@ -184,10 +214,10 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 elif "EIPL" in customer_name_str:
                     row = [
                         i + 1,
-                        getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", ""),
-                        getattr(stock_value.wh_gate_injob_no_id, "gatein_date_mail_received", ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        format_dt_excel(stock_value.wh_gate_injob_no_id.gatein_arrival_date),
+                        format_dt_excel(stock_value.wh_gate_injob_no_id.gatein_date_mail_received),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time),
                         getattr(stock_value.wh_gate_injob_no_id, "gatein_transporter", ""),
                         getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
                         stock_value.wh_consigner,
@@ -224,9 +254,9 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 elif "DBS" in customer_name_str:
                     row = [
                         i + 1,
-                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        format_dt_excel(stock_value.wh_gate_injob_no_id.gatein_arrival_date),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time),
                         getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
                         stock_value.wh_consigner,
                         getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
@@ -255,9 +285,9 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 elif "JEENA" in customer_name_str:
                     row = [
                         i + 1,
-                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        format_dt_excel(stock_value.wh_gate_injob_no_id.gatein_arrival_date),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time),
                         getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
                         stock_value.wh_consigner,
                         stock_value.wh_consignee,
@@ -283,9 +313,9 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 elif "MAERSK" in customer_name_str:
                     row = [
                         i + 1,
-                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        format_dt_excel(stock_value.wh_gate_injob_no_id.gatein_arrival_date),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time),
                         getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
                         stock_value.wh_consigner,
                         getattr(stock_value.wh_gate_injob_no_id, 'gatein_invoice', ''),
@@ -312,9 +342,9 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 elif "DSV" in customer_name_str:
                     row = [
                         i + 1,
-                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        format_dt_excel(stock_value.wh_gate_injob_no_id.gatein_arrival_date),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time),
                         getattr(stock_value.wh_gate_injob_no_id, "gatein_truck_number", ""),
                         stock_value.wh_consigner,
                         stock_value.wh_consignee,
@@ -353,9 +383,9 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         stock_value.wh_job_no,
                         stock_value.wh_qr_rand_num,
                         str(stock_value.wh_customer_name or ""),
-                        str(getattr(stock_value.wh_gate_injob_no_id, "gatein_arrival_date", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_start_time", "") or ""),
-                        str(getattr(stock_value.wh_lb_job_no_id, "lb_stock_unloading_end_time", "") or ""),
+                        format_dt_excel(stock_value.wh_gate_injob_no_id.gatein_arrival_date),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time),
+                        format_dt_excel(stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time),
                         getattr(stock_value.wh_gate_injob_no_id, 'gatein_transporter', ''),
                         getattr(stock_value.wh_gate_injob_no_id, 'gatein_truck_number', ''),
                         stock_value.wh_consigner,
@@ -393,9 +423,6 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         deviation_names,
                         remarks,
                     ]
-                from datetime import datetime
-
-                row = [str(value).replace("+00:00", "") for value in row]
 
                 ws.append(row)
 
@@ -415,6 +442,8 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 except:
                     pass
             ws.column_dimensions[column].width = (max_length + 2)
+
+
 
         excel_file = BytesIO()
         wb.save(excel_file)

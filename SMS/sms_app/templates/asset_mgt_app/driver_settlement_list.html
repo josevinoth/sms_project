@@ -1,4 +1,4 @@
- {% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% block content %}
 
 <!-- ================= HEADER ================= -->
@@ -24,25 +24,8 @@
             </a>
         </div>
 
-        <!-- FILTER -->
-        <div class="col-md-4 mb-2">
-            <form method="GET" class="form-inline">
-                <select name="driver_name"
-                        class="form-control form-control-sm w-100"
-                        onchange="this.form.submit()">
-                    <option value="">-- Filter by Driver --</option>
-                    {% for name in driver_names %}
-                        <option value="{{ name }}"
-                            {% if selected_driver == name %}selected{% endif %}>
-                            {{ name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </form>
-        </div>
-
         <!-- TOTALS -->
-        <div class="col-md-6 text-right mb-2">
+        <div class="col-md-10 text-right mb-2">
             <span class="badge badge-primary p-2 mr-2">
                 Total Advance : ₹ {{ total_advance }}
             </span>
@@ -62,14 +45,15 @@
         <thead class="thead-dark">
             <tr>
                 <th>ID</th>
-                <th>DS No</th>
-                <th>Driver</th>
-                <th>Transaction Type</th>
-                <th>Date</th>
-                <th>Business</th>
-                <th>Advance</th>
-                <th>Trip Cost</th>
-                <th>Balance</th>
+                <th>Driver Name</th>
+                <th>Driver ID</th>
+                <th>Phone</th>
+                <th>Licence No</th>
+                <th>Licence Expiry</th>
+                <th class="text-right">Trip Advance</th>
+                <th class="text-right">Trip Expense</th>
+                <th class="text-right">Balance</th>
+                <th>Created At</th>
                 <th>Edit</th>
                 <th>Delete</th>
             </tr>
@@ -79,14 +63,17 @@
         {% for ds in driver_settlement_list %}
             <tr>
                 <td>{{ ds.id }}</td>
-                <td>{{ ds.ds_number }}</td>
-                <td>{{ ds.staff_name }}</td>
-                <td>{{ ds.transaction_type }}</td>
-                <td>{{ ds.transaction_date }}</td>
-                <td>{{ ds.business_type }}</td>
-                <td class="text-right">{{ ds.amount }}</td>
-                <td class="text-right">{{ ds.total_trip_cost }}</td>
-                <td class="text-right fw-bold">{{ ds.balance }}</td>
+                <td>{{ ds.driver_name }}</td>
+                <td>{{ ds.driver_id_value }}</td>
+                <td>{{ ds.driver_phone }}</td>
+                <td>{{ ds.driver_licence }}</td>
+                <td>{{ ds.driver_licence_expiry }}</td>
+
+                <td class="text-right">{{ ds.ds_tripadvance }}</td>
+                <td class="text-right">{{ ds.ds_tripexpense }}</td>
+                <td class="text-right fw-bold">{{ ds.ds_balance }}</td>
+
+                <td>{{ ds.ds_created_at|date:"d-m-Y" }}</td>
 
                 <!-- EDIT -->
                 <td class="text-center">
