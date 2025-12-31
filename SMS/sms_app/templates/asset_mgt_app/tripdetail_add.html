@@ -99,18 +99,25 @@
 										<span class="input-group-text">Consignment Number</span>
 									</div>
 
-									<select name="tr_consignmentnumber" id="tr_consignmentnumber" class="form-control select2-consignment">
-										<option value="">--Select--</option>
+								<select name="tr_consignmentnumber" id="tr_consignmentnumber"
+										class="form-control select2-consignment">
 
-										{% for item in consignment_list %}
-											<option value="{{ item.id }}">
-												{{ item.co_consignmentnumber }}
-												{% if item.co_vehicelnumber %}
-													({{ item.co_vehicelnumber }})
-												{% endif %}
-											</option>
-										{% endfor %}
-									</select>
+									<option value="">--Select--</option>
+
+									{% for item in consignment_list %}
+									<option value="{{ item.id }}"
+										{% if trip_instance and trip_instance.tr_consignmentnumber_id == item.id %}
+											selected
+										{% elif request.POST.tr_consignmentnumber|default_if_none:'' == item.id|stringformat:'s' %}
+											selected
+										{% endif %}
+									>
+										{{ item.co_consignmentnumber }}
+										{% if item.co_vehicelnumber %} ({{ item.co_vehicelnumber }}){% endif %}
+									</option>
+									{% endfor %}
+								</select>
+
 								</div>
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
