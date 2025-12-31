@@ -306,9 +306,8 @@ def tripdetail_add(request, tripdetail_id=0):
                     tr_enquirynumber=enquiry_num
                 ).values_list('tr_tripnumber', flat=True)
                 EnquirynoteInfo.objects.filter(pk=enquiry_num).update(en_tripdetails=list(tripdetail_list))
-                messages.success(request, "Record Updated Successfully")
+                messages.success(request, 'Record Updated Successfully')
                 return redirect('tripdetail_update', tripdetail_id=tripdetail_id)
-
 
 
             else:
