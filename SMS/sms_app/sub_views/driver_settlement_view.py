@@ -26,9 +26,8 @@ def driver_settlement_add(request, ds_id=0):
             settlement = get_object_or_404(driver_settlement_info, pk=ds_id)
             form = DriverSettlementForm(instance=settlement)
 
-            # 🔑 THIS IS THE MISSING PART
             expense_list = Driverexpense.objects.filter(
-                driver_settlement=settlement
+                de_driver_id=settlement
             ).select_related('de_expense_type').order_by('-id')
 
         return render(request, "asset_mgt_app/driver_settlement_add.html", {
@@ -36,9 +35,8 @@ def driver_settlement_add(request, ds_id=0):
             'first_name': first_name,
             'user_id': user_id,
             'settlement': settlement,
-            'expense_list': expense_list,   # ✅ PASS TO TEMPLATE
+            'expense_list': expense_list,
         })
-
 
     # ---------- POST ----------
     # ---------- POST ----------
@@ -150,3 +148,26 @@ def get_driver_details_from_master(request):
     except DrivermasterInfo.DoesNotExist:
         return JsonResponse({})
 
+def recalc_driver_settlement(settlement):
+    """
+    Recalculate total advance, total expense, and balance
+    """
+
+    advance_total = Driverexpense.objects.filter(
+        de_driver_id=settlement,
+        de_expense_type__id=1   # ADVANCE
+    ).aggregate(total=Sum('de_total_cost'))['total'] or 0
+
+    expense_total = Driverexpense.objects.filter(
+        de_driver_id=settlement,
+        de_expense_type__id=2   # EXPENSE
+    ).aggregate(total=Sum('de_total_cost'))['total'] or 0
+
+    settlement.ds_tripadvance = advance_total
+    settlement.ds_tripexpense = expense_total
+    settlement.ds_balance = advance_total - expense_total
+    settlement.save(update_fields=[
+        'ds_tripadvance',
+        'ds_tripexpense',
+        'ds_balance'
+    ])

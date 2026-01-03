@@ -1,87 +1,87 @@
-from django.db.models import Sum
-from django.http import JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-
-from ..models import driver_settlement_info
-from ..sub_models.driver_expense_mod import Driverexpense
-from ..sub_forms.driver_expense_form import DriverExpenseForm
-
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
+
+from .driver_settlement_view import recalc_driver_settlement
+from ..models import Driverexpense
 from ..sub_forms.driver_expense_form import DriverExpenseForm
-from ..sub_models.driver_expense_mod import Driverexpense
-from ..models import driver_settlement_info
+from ..sub_models.driversettlement_mod import driver_settlement_info
 
 
 @login_required(login_url='login_page')
 def driver_expense_add(request, expense_id=0):
+    first_name = request.session.get('first_name')
+
+    # 1️⃣ GET settlement_id ONLY from URL
     settlement_id = request.GET.get('settlement_id')
+    if not settlement_id:
+        messages.error(request, "Please open expense from Driver Settlement")
+        return redirect('driver_settlement_list')
 
-    settlement = None
-    if settlement_id:
-        settlement = get_object_or_404(driver_settlement_info, pk=settlement_id)
+    settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
 
-    if request.method == "GET":
-        if expense_id == 0:
-            form = DriverExpenseForm()
-        else:
-            expense = get_object_or_404(Driverexpense, pk=expense_id)
-            form = DriverExpenseForm(instance=expense)
+    expense = None
+    if expense_id:
+        expense = get_object_or_404(Driverexpense, pk=expense_id)
 
-        return render(request, "asset_mgt_app/driver_expense_add.html", {
-            'form': form,
-            'settlement': settlement
-        })
-
-    else:
-        if expense_id == 0:
-            form = DriverExpenseForm(request.POST)
-        else:
-            expense = get_object_or_404(Driverexpense, pk=expense_id)
-            form = DriverExpenseForm(request.POST, instance=expense)
-
+    # ================= POST =================
+    if request.method == "POST":
+        form = DriverExpenseForm(request.POST, instance=expense)
         if form.is_valid():
             exp = form.save(commit=False)
+            exp.driver_name = settlement.driver
+            exp.de_driver_id = settlement
+            exp.save()
 
-            # 🔒 FORCE settlement + driver data
-            exp.driver_settlement = settlement
-            exp.de_driver_name = settlement.driver_name
-            exp.de_driver_id = settlement.driver_id_value
+            messages.success(request, "Driver expense saved successfully ✅")
+            return redirect(f"/SMS/driver_settlement_update/{settlement.id}/")
+    # ================= GET =================
+    else:
+        if expense:
+            # EDIT MODE
+            form = DriverExpenseForm(instance=expense)
+        else:
+            # ADD MODE ✅ IMPORTANT
+            form = DriverExpenseForm(initial={
+                'driver_name': settlement.driver,
+            })
 
-            exp.save()   # ✅ GUARANTEED SAVE
-            return redirect('/SMS/driver_expense_list')
+    return render(request, "asset_mgt_app/driver_expense_add.html", {
+        'form': form,
+        'first_name': first_name,
+    })
 
-        return render(request, "asset_mgt_app/driver_expense_add.html", {
-            'form': form,
-            'settlement': settlement
-        })
 
+
+# ============================================================
+# LIST DRIVER EXPENSE
+# ============================================================
 @login_required(login_url='login_page')
 def driver_expense_list(request):
+    first_name = request.session.get('first_name')
+
     context = {
-        'expense_list': Driverexpense.objects.all()
+        'expense_list': Driverexpense.objects.all().order_by('-id'),
+        'first_name': first_name
     }
-    return render(request, "asset_mgt_app/driver_expense_list.html", context)
+
+    return render(
+        request,
+        "asset_mgt_app/driver_expense_list.html",
+        context
+    )
+
 
 @login_required(login_url='login_page')
 def driver_expense_delete(request, expense_id):
     expense = get_object_or_404(Driverexpense, pk=expense_id)
+    settlement = expense.de_driver_id
+
     expense.delete()
-    return redirect('/SMS/driver_expense_list')
 
-@login_required(login_url='login_page')
-def driver_expense_by_driver(request):
-    driver_id = request.GET.get('driver_id')
+    # 🔥 RECALC AFTER DELETE
+    recalc_driver_settlement(settlement)
 
-    expenses = Driverexpense.objects.filter(
-        driverexpense__dm_id=driver_id
-    ).select_related('expense_type').values(
-        'expense_type__exp_category_name',   # ✅ FIXED
-        'expense_type__id'
-    ).annotate(
-        total_amount=Sum('de_amount')
-    )
+    messages.success(request, "Driver expense deleted successfully 🗑️")
+    return redirect('driver_settlement_add', ds_id=settlement.id)
 
-    return JsonResponse(list(expenses), safe=False)

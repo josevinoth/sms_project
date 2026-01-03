@@ -767,9 +767,9 @@ urlpatterns = [
     path('get_route_rate/', views.get_vendor_buy_rate, name='get_route_rate'),
     path('driver_expense_add/',views.driver_expense_add,name='driver_expense_add'),
     path('driver_expense_list/',views.driver_expense_list,name='driver_expense_list'),
-    # path('driver_expense_update/', views.driver_expense_update, name='driver_expense_update'),
-    path('driver_expense_delete/',views.driver_expense_delete,name='driver_expense_delete'),
-    path('driver-expense-by-driver/', views.driver_expense_by_driver,name='driver_expense_by_driver'),
+    path('driver_expense_add/<int:expense_id>/',views.driver_expense_add,name='driver_expense_add'),
+    path( 'driver_expense_delete/<int:expense_id>/',views.driver_expense_delete,name='driver_expense_delete'),
+    # path('driver-expense-by-driver/', views.driver_expense_by_driver,name='driver_expense_by_driver'),
     # path('get-driver-name-by-staff-id/', views.get_driver_name_by_staff_id, name='get_driver_name_by_staff_id'),
     # path('get-driver-details/', views.get_driver_details, name='get_driver_details' ),
     path('get-vendor-by-vehicle/', views.get_vendor_by_vehicle, name='get_vendor_by_vehicle'),
@@ -777,12 +777,9 @@ urlpatterns = [
     path('driver_edit/<int:driver_id>/', views.driver_add, name='driver_edit'),
     path('driver_list/', views.driver_list, name='driver_list'),
     path('driver_delete/<int:driver_id>/', views.driver_delete, name='driver_delete'),
-    path(
-        'ajax/get-driver-details/',
-        views.get_driver_details_from_master,
-        name='get_driver_details_from_master'
-    ),
+    path('ajax/get-driver-details/',views.get_driver_details_from_master,name='get_driver_details_from_master'),
     path( 'get-dmr-email-details/',views.get_dmr_email_details,name='get_dmr_email_details'),
+    path('ajax/get-employee-driver/',views.get_employee_driver_details,name='get_employee_driver_details'),
 
 
 

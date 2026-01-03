@@ -4,8 +4,7 @@
 
 <form method="POST" action="">
     {% csrf_token %}
-    <input type="hidden" name="settlement_id" value="{{ settlement.id }}">
-    <input type="hidden" name="next" value="{{ next }}">
+
 
     <div class="row">
         <div class="col">
@@ -24,18 +23,9 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Driver Name</span>
                                     </div>
-                                    {% render_field form.de_driver_name class="form-control" %}
+{% render_field form.driver_name class="form-control" readonly="readonly" %}
                                 </div>
 
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver ID</span>
-                                    </div>
-                                    <input type="text"
-                                           class="form-control"
-                                           value="{{ settlement.driver_id_value }}"
-                                           readonly>
-                                </div>
 
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -44,11 +34,11 @@
                                     {% render_field form.de_expense_type id="de_expense_type" class="form-control" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3" >
-    <div class="input-group-prepend">
-        <span class="input-group-text">Trip Number</span>
-    </div>
-{% render_field form.trip_number id="trip_number" class="form-control" %}
-</div>
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Trip Number</span>
+                                    </div>
+                                    {% render_field form.trip_number id="trip_number" class="form-control" %}
+                                </div>
 
 
                             </div>
@@ -67,43 +57,43 @@
 
                                 <div id="expense-cost-fields">
 
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Parking Cost</span>
-        </div>
-        {% render_field form.de_parkingcost class="form-control cost-field" %}
-    </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Parking Cost</span>
+                                        </div>
+                                        {% render_field form.de_parkingcost class="form-control cost-field" %}
+                                    </div>
 
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Loading Cost</span>
-        </div>
-        {% render_field form.de_loadingcost class="form-control cost-field" %}
-    </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Loading Cost</span>
+                                        </div>
+                                        {% render_field form.de_loadingcost class="form-control cost-field" %}
+                                    </div>
 
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Unloading Cost</span>
-        </div>
-        {% render_field form.de_unloadingcost class="form-control cost-field" %}
-    </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Unloading Cost</span>
+                                        </div>
+                                        {% render_field form.de_unloadingcost class="form-control cost-field" %}
+                                    </div>
 
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Weighment Cost</span>
-        </div>
-        {% render_field form.de_weighmentcost class="form-control cost-field" %}
-    </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Weighment Cost</span>
+                                        </div>
+                                        {% render_field form.de_weighmentcost class="form-control cost-field" %}
+                                    </div>
 
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Supervisor Cost</span>
-        </div>
-        {% render_field form.de_supervisorcost class="form-control cost-field" %}
-    </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Supervisor Cost</span>
+                                        </div>
+                                        {% render_field form.de_supervisorcost class="form-control cost-field" %}
+                                    </div>
                                 </div>
                             </div>
-</div>
+                        </div>
 
 
 
@@ -111,7 +101,7 @@
                         <div class="row">
                             <div class="col-12 text-center">
                                 {% for message in messages %}
-                                    <span class="{{ message.tags }}">{{ message }}</span>
+                                <span class="{{ message.tags }}">{{ message }}</span>
                                 {% endfor %}
                             </div>
                         </div>
@@ -121,9 +111,11 @@
                             <i class="fas fa-check"></i> Submit
                         </button>
 
-                        <a href="{{ next|default:'#' }}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
+                       <a href="{% url 'driver_settlement_update' request.session.expense_settlement_id %}"
+   class="btn btn-danger float-right">
+    <i class="fas fa-times"></i> Cancel
+</a>
+
 
                     </div>
                 </div>
@@ -134,28 +126,7 @@
 
 <!-- ================= JS ================= -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    const costFields = document.querySelectorAll(".cost-field");
-    const totalCostField = document.getElementById("de_total_cost");
-
-    function calculateTotal() {
-        let total = 0;
-        costFields.forEach(field => {
-            total += parseFloat(field.value) || 0;
-        });
-        totalCostField.value = total.toFixed(2);
-    }
-
-    costFields.forEach(field => {
-        field.addEventListener("input", calculateTotal);
-    });
-
-    calculateTotal();
-});
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
 
     const expenseType = document.getElementById("de_expense_type");
     const costWrapper = document.getElementById("expense-cost-fields");
@@ -172,26 +143,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function toggleFields() {
-        const selectedId = expenseType.value; // Expense Type ID
+        const selectedId = expenseType.value;
 
         if (selectedId === "1") {
-            // ✅ Expense Type = 1
+            // ✅ ADVANCE
             costWrapper.style.display = "none";
             totalCostField.readOnly = false;
-            totalCostField.value = "";
-
-            // 🔓 Trip Number NOT mandatory
             tripNumberField.required = false;
 
+            // ❗ DO NOTHING to totalCostField
+            // Let Django keep the saved value
+
         } else {
-            // ✅ Other Expense Types
+            // ✅ EXPENSE
             costWrapper.style.display = "block";
             totalCostField.readOnly = true;
-
-            // 🔒 Trip Number mandatory
             tripNumberField.required = true;
 
-            calculateTotal();
+            calculateTotal(); // only here
         }
     }
 
@@ -203,21 +172,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     toggleFields(); // run once on page load
 });
-</script>
-<script>
-document.getElementById("settlement_id").addEventListener("change", function () {
 
-    const settlementId = this.value;
-    if (!settlementId) return;
-
-    fetch(`/SMS/get_driver_settlement_details/?settlement_id=${settlementId}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("driver_name").value = data.driver_name;
-            document.getElementById("driver_id").value = data.driver_id;
-        })
-        .catch(error => console.error(error));
-});
 </script>
 
 {% endblock content %}
