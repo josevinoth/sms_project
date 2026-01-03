@@ -271,7 +271,8 @@ def tripdetail_add(request, tripdetail_id=0):
                 EnquirynoteInfo.objects.filter(
                     en_enquirynumber=enquiry_num
                 ).update(en_tripdetails=list(tripdetail_list))
-                messages.success(request, 'Record Updated Successfully')
+                messages.success(request, "Record Updated Successfully")
+                return redirect('tripdetail_update', tripdetail_id=trip.id)
 
             else:
                 print("Main Form is not Valid")
@@ -306,6 +307,8 @@ def tripdetail_add(request, tripdetail_id=0):
                 ).values_list('tr_tripnumber', flat=True)
                 EnquirynoteInfo.objects.filter(pk=enquiry_num).update(en_tripdetails=list(tripdetail_list))
                 messages.success(request, 'Record Updated Successfully')
+                return redirect('tripdetail_update', tripdetail_id=tripdetail_id)
+
 
             else:
                 for field, errors in trip_det_form.errors.items():
@@ -315,7 +318,9 @@ def tripdetail_add(request, tripdetail_id=0):
                 print("Trip Details Main Form is not Valid")
                 messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
 
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect('tripdetail_add', tripdetail_id=tripdetail_id)  # ✅ stay on same record
+
+
 # List tripdetail
 @login_required(login_url='login_page')
 def tripdetail_list(request):
