@@ -16,48 +16,47 @@
                         <div class="row">
 
                             <!-- Column 1 -->
-                            <div class="col-3">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Vehicle Source</span>
-                                    </div>
-                                    {% render_field form.dm_vehiclesource class="form-control" %}
-                                </div>
-
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">User</span>
-                                    </div>
-                                    {% render_field form.dm_user_id class="form-control" %}
-                                </div>
-
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver Name</span>
-                                    </div>
-                                    {% render_field form.dm_name class="form-control" required="true" %}
-                                </div>
-                            </div>
-
-                            <!-- Column 2 -->
-                            <div class="col-3">
+                            <div class="col-6">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Driver ID</span>
                                     </div>
-                                    {% render_field form.dm_id class="form-control" %}
+                                    {% render_field form.dm_id class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Transporter Type</span>
+                                    </div>
+                                    {% render_field form.dm_vehiclesource class="form-control" %}
                                 </div>
 
-                                <div class="input-group input-group-sm mb-3">
+                                <div class="input-group input-group-sm mb-3" id="employee_id_div">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Employee ID</span>
+                                    </div>
+                                    {% render_field form.dm_user_id class="form-control" %}
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3" id="driver_name_div">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Driver Name</span>
+                                    </div>
+                                    {% render_field form.dm_name class="form-control" %}
+                                </div>
+
+
+                            </div>
+
+                            <!-- Column 2 -->
+                            <div class="col-6">
+
+                                <div class="input-group input-group-sm mb-3" id="driver_mobile_div">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Mobile No</span>
                                     </div>
-                                    {% render_field form.dm_drivernumber class="form-control" pattern="\d*" title="Numbers only" %}
+                                    {% render_field form.dm_drivernumber class="form-control" %}
                                 </div>
-                            </div>
 
-                            <!-- Column 3 -->
-                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">License No</span>
@@ -71,12 +70,11 @@
                                     </div>
                                     {% render_field form.dm_driver_lic_expiry type="date" class="form-control" %}
                                 </div>
-                            </div>
-
-                            <!-- Column 4 -->
-                            <div class="col-3">
 
                             </div>
+
+                            <!-- Column 3 -->
+
 
                         </div>
 
@@ -85,9 +83,9 @@
                             <div class="col-1"></div>
                             <div class="col-10 text-center">
                                 {% for message in messages %}
-                                    <a {% if message.tags %}class="{{ message.tags }}"{% endif %}>
-                                        {{ message }}
-                                    </a>
+                                <a {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                    {{ message }}
+                                </a>
                                 {% endfor %}
                             </div>
                             <div class="col-1"></div>
@@ -108,5 +106,49 @@
         </div>
     </div>
 </form>
+<script>
+$(document).ready(function () {
+
+    function toggleFields() {
+        const sourceId = $('#id_dm_vehiclesource').val();
+
+        if (sourceId === "1") {
+            // OWN vehicle
+            $('#employee_id_div').show();
+
+        } else {
+            // ATTACHED vehicle
+            $('#employee_id_div').hide();
+
+            // clear auto-filled fields
+            $('#id_dm_user_id').val('');
+        }
+    }
+
+    // Initial load
+    toggleFields();
+
+    // On vehicle source change
+    $('#id_dm_vehiclesource').change(function () {
+        toggleFields();
+    });
+
+    // On employee select → fetch name & mobile
+    $('#id_dm_user_id').change(function () {
+        const userId = $(this).val();
+        if (!userId) return;
+
+        $.ajax({
+            url: "{% url 'get_employee_driver_details' %}",
+            data: { user_id: userId },
+            success: function (data) {
+                $('#id_dm_name').val(data.name);
+                $('#id_dm_drivernumber').val(data.mobile);
+            }
+        });
+    });
+
+});
+</script>
 
 {% endblock content %}

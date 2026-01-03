@@ -15,6 +15,7 @@ class DriverMasterForm(forms.ModelForm):
         # Vehicle source: Own (1), Attached (2)
         self.fields['dm_vehiclesource'].queryset = OwnershipInfo.objects.filter(id__in=[1, 2])
         self.fields['dm_vehiclesource'].empty_label = "--Select Vehicle Source--"
+        self.fields['dm_user_id'].empty_label = "--Select "
 
         # Employee drivers only
         self.fields['dm_user_id'].queryset = User.objects.filter(

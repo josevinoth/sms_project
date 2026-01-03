@@ -20,6 +20,12 @@ class driver_settlement_info(models.Model):
 
     class Meta:
         ordering = ["driver_name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['driver', 'driver_id_value', 'driver_licence'],
+                name='unique_driver_settlement'
+            )
+        ]
 
     def __str__(self):
         return self.driver_name
