@@ -2,11 +2,7 @@
 from django.db import models
 
 from .driver_master_mod import DrivermasterInfo
-from .driversettlement_expense_mod import Driversettlement_ExpenseInfo
-from .tripdetail_mod import TripdetailInfo
-from .user_ext_mod import User_extInfo
-from ..models import User, ExpenseCategoryInfo, MyUser, Business_Sol_info
-from django.urls import reverse
+from ..models import MyUser
 
 class driver_settlement_info(models.Model):
     driver = models.ForeignKey(DrivermasterInfo,on_delete=models.CASCADE,related_name='driver_settlements',null=True, blank=True)

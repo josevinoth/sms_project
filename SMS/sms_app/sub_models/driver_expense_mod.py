@@ -8,11 +8,7 @@ from .tripdetail_mod import TripdetailInfo
 
 
 class Driverexpense(models.Model):
-    driver_settlement = models.ForeignKey(
-        driver_settlement_info,
-        on_delete=models.CASCADE,
-        related_name="expenses"
-    )
+    driver_settlement = models.ForeignKey(driver_settlement_info,on_delete=models.CASCADE,related_name="expenses",null=True, blank=True)
     driver_name = models.ForeignKey(DrivermasterInfo,on_delete=models.CASCADE,null=True, blank=True)
 
     de_driver_name = models.CharField(driver_settlement_info,max_length=100, default='')
