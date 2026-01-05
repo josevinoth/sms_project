@@ -4,26 +4,23 @@
 
 <form method="POST" action="">
     {% csrf_token %}
-<div class="row mb-3">
-    <div class="col-md-4">
-        <div class="alert alert-success">
-            <strong>Advance:</strong> ₹ {{ advance_total }}
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="alert alert-success">
+                <strong>Advance:</strong> ₹ {{ advance_total }}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-warning">
+                <strong>Expense:</strong> ₹ {{ expense_total }}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-info">
+                <strong>Balance:</strong> ₹ <span id="live_balance">{{ current_balance }}</span>
+            </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="alert alert-warning">
-            <strong>Expense:</strong> ₹ {{ expense_total }}
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="alert alert-info">
-    <strong>Balance:</strong> ₹ <span id="live_balance">{{ current_balance }}</span>
-</div>
-
-    </div>
-</div>
-
-
     <div class="row">
         <div class="col">
             <div class="container-fluid">
@@ -31,10 +28,8 @@
                     <div class="card-header text-center">
                         <h4>Add / Update Driver Expense</h4>
                     </div>
-
                     <div class="card-body bg-light text-dark">
                         <div class="row">
-
                             <!-- COLUMN 1 -->
                             <div class="col-6">
                                 <div class="input-group input-group-sm mb-3">
@@ -43,8 +38,6 @@
                                     </div>
                                     {% render_field form.driver_name class="form-control" readonly="readonly" %}
                                 </div>
-
-
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Expense Type</span>
@@ -53,7 +46,7 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Expense Date</span>
+                                        <span class="input-group-text">Advance/Expense Date</span>
                                     </div>
                                     {% render_field form.de_date type="Datetime-local" class="form-control" %}
                                 </div>
@@ -232,33 +225,33 @@
     });
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
 
-    const totalCostInput = document.getElementById("de_total_cost");
-    const expenseType = document.getElementById("de_expense_type");
+        const totalCostInput = document.getElementById("de_total_cost");
+        const expenseType = document.getElementById("de_expense_type");
 
-    const balanceBox = document.getElementById("live_balance");
+        const balanceBox = document.getElementById("live_balance");
 
-    const baseBalance = parseFloat("{{ current_balance }}");
+        const baseBalance = parseFloat("{{ current_balance }}");
 
-    function updateLiveBalance() {
-        const cost = parseFloat(totalCostInput.value) || 0;
-        const type = expenseType.value;
+        function updateLiveBalance() {
+            const cost = parseFloat(totalCostInput.value) || 0;
+            const type = expenseType.value;
 
-        let newBalance = baseBalance;
+            let newBalance = baseBalance;
 
-        if (type === "1") {
-            newBalance += cost; // advance
-        } else if (type === "2") {
-            newBalance -= cost; // expense
+            if (type === "1") {
+                newBalance += cost; // advance
+            } else if (type === "2") {
+                newBalance -= cost; // expense
+            }
+
+            balanceBox.innerText = newBalance.toFixed(2);
         }
 
-        balanceBox.innerText = newBalance.toFixed(2);
-    }
-
-    totalCostInput.addEventListener("input", updateLiveBalance);
-    expenseType.addEventListener("change", updateLiveBalance);
-});
+        totalCostInput.addEventListener("input", updateLiveBalance);
+        expenseType.addEventListener("change", updateLiveBalance);
+    });
 </script>
 
 {% endblock content %}

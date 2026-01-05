@@ -781,6 +781,7 @@ urlpatterns = [
     path( 'get-dmr-email-details/',views.get_dmr_email_details,name='get_dmr_email_details'),
     path('ajax/get-employee-driver/',views.get_employee_driver_details,name='get_employee_driver_details'),
     path('ajax/get-trip-charges/',views.get_trip_charges,name='get_trip_charges'),
+    path('driver-autocomplete/', views.driver_autocomplete, name='driver_autocomplete'),
 
 
 

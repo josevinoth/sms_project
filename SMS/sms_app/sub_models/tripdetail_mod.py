@@ -52,6 +52,7 @@ class TripdetailInfo(models.Model):
     tr_reporteddate_pickup = models.DateTimeField(null=True, blank=True)
     tr_reportedkm_delivery = models.IntegerField(null=True, blank=True)
     tr_reporteddate_delivery = models.DateTimeField(null=True, blank=True)
+    tr_driver_master_id = models.IntegerField(null=True, blank=True)
 
     tc_tripcost = models.FloatField(default=0.0)
     tc_parkingcost = models.FloatField(default=0.0)

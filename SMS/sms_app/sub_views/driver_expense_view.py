@@ -50,7 +50,7 @@ def driver_expense_add(request, expense_id=0):
 
     # ================= 3️⃣ POST =================
     if request.method == "POST":
-        form = DriverExpenseForm(request.POST, instance=expense)
+        form = DriverExpenseForm(request.POST, instance=expense, settlement=settlement)
         if form.is_valid():
             exp = form.save(commit=False)
             exp.driver_name = settlement.driver
@@ -66,11 +66,12 @@ def driver_expense_add(request, expense_id=0):
     # ================= 4️⃣ GET =================
     else:
         if expense:
-            form = DriverExpenseForm(instance=expense)
+            form = DriverExpenseForm(instance=expense,settlement=settlement)
         else:
-            form = DriverExpenseForm(initial={
-                'driver_name': settlement.driver,
-            })
+            form = DriverExpenseForm(
+                initial={'driver_name': settlement.driver},
+                settlement=settlement
+            )
 
     # ================= 5️⃣ RENDER =================
     return render(request, "asset_mgt_app/driver_expense_add.html", {
