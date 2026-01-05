@@ -111,10 +111,11 @@
                             <i class="fas fa-check"></i> Submit
                         </button>
 
-                       <a href="{% url 'driver_settlement_update' request.session.expense_settlement_id %}"
+                      <a href="{% url 'driver_settlement_update' settlement.id %}"
    class="btn btn-danger float-right">
     <i class="fas fa-times"></i> Cancel
 </a>
+
 
 
                     </div>
@@ -173,6 +174,37 @@
     toggleFields(); // run once on page load
 });
 
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const tripField = document.getElementById("trip_number");
+
+    const parking = document.getElementById("id_de_parkingcost");
+    const loading = document.getElementById("id_de_loadingcost");
+    const unloading = document.getElementById("id_de_unloadingcost");
+    const weighment = document.getElementById("id_de_weighmentcost");
+    const supervisor = document.getElementById("id_de_supervisorcost");
+    const total = document.getElementById("de_total_cost");
+
+    tripField.addEventListener("change", function () {
+        const tripId = this.value;
+        if (!tripId) return;
+
+        fetch(`/SMS/ajax/get-trip-charges/?trip_id=${tripId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) return;
+                parking.value = data.parking;
+                loading.value = data.loading;
+                unloading.value = data.unloading;
+                weighment.value = data.weighment;
+                supervisor.value = data.supervisor;
+                total.value = data.total.toFixed(2);
+            })
+            .catch(err => console.error(err));
+    });
+});
 </script>
 
 {% endblock content %}

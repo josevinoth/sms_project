@@ -1,28 +1,33 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from .driver_settlement_view import recalc_driver_settlement
-from ..models import Driverexpense
+from ..models import Driverexpense,TripdetailInfo,driver_settlement_info
 from ..sub_forms.driver_expense_form import DriverExpenseForm
-from ..sub_models.driversettlement_mod import driver_settlement_info
 
 
 @login_required(login_url='login_page')
 def driver_expense_add(request, expense_id=0):
     first_name = request.session.get('first_name')
 
-    # 1️⃣ GET settlement_id ONLY from URL
-    settlement_id = request.GET.get('settlement_id')
-    if not settlement_id:
-        messages.error(request, "Please open expense from Driver Settlement")
-        return redirect('driver_settlement_list')
-
-    settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
-
     expense = None
+    settlement = None
+
+    # ================= EDIT MODE =================
     if expense_id:
         expense = get_object_or_404(Driverexpense, pk=expense_id)
+        settlement = expense.de_driver_id   # ✅ FIX HERE
+
+    # ================= ADD MODE =================
+    else:
+        settlement_id = request.GET.get('settlement_id')
+        if not settlement_id:
+            messages.error(request, "Please open expense from Driver Settlement")
+            return redirect('driver_settlement_list')
+
+        settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
 
     # ================= POST =================
     if request.method == "POST":
@@ -34,14 +39,13 @@ def driver_expense_add(request, expense_id=0):
             exp.save()
 
             messages.success(request, "Driver expense saved successfully ✅")
-            return redirect(f"/SMS/driver_settlement_update/{settlement.id}/")
+            return redirect('driver_settlement_update', ds_id=settlement.id)
+
     # ================= GET =================
     else:
         if expense:
-            # EDIT MODE
             form = DriverExpenseForm(instance=expense)
         else:
-            # ADD MODE ✅ IMPORTANT
             form = DriverExpenseForm(initial={
                 'driver_name': settlement.driver,
             })
@@ -49,8 +53,8 @@ def driver_expense_add(request, expense_id=0):
     return render(request, "asset_mgt_app/driver_expense_add.html", {
         'form': form,
         'first_name': first_name,
+        'settlement': settlement,  # ✅ IMPORTANT
     })
-
 
 
 # ============================================================
@@ -85,3 +89,26 @@ def driver_expense_delete(request, expense_id):
     messages.success(request, "Driver expense deleted successfully 🗑️")
     return redirect('driver_settlement_add', ds_id=settlement.id)
 
+def get_trip_charges(request):
+    trip_id = request.GET.get('trip_id')
+
+    if not trip_id:
+        return JsonResponse({'error': 'No trip id'}, status=400)
+
+    try:
+        trip = TripdetailInfo.objects.get(id=trip_id)
+
+        data = {
+            'parking': trip.tc_parkingcost or 0,
+            'loading': trip.tc_loadingcost or 0,
+            'unloading': trip.tc_unloadingcost or 0,
+            'weighment': trip.tc_weighmentcost or 0,
+            'supervisor': trip.tc_supervisorcost or 0,
+        }
+
+        data['total'] = sum(data.values())
+
+        return JsonResponse(data)
+
+    except TripdetailInfo.DoesNotExist:
+        return JsonResponse({'error': 'Trip not found'}, status=404)
