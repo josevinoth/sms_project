@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 from .driver_master_mod import DrivermasterInfo
 from .driversettlement_mod import driver_settlement_info
@@ -29,7 +30,7 @@ class Driverexpense(models.Model):
     de_weighmentcost = models.FloatField(default=0.0)
     de_supervisorcost = models.FloatField(default=0.0)
     de_total_cost=models.FloatField(default=0.0)
-
+    de_date = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
 
     class Meta:
