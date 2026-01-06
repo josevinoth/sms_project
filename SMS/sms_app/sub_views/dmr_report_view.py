@@ -1,135 +1,25 @@
 import calendar
 from datetime import datetime, date
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from io import BytesIO
-import openpyxl
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl import Workbook
-
-from ..models import TripdetailInfo, EnquirynoteInfo, ConsignmentdetailInfo, MyUser
+from ..models import TripdetailInfo, EnquirynoteInfo, ConsignmentdetailInfo, MyUser, Places, Emailmaster
 from .send_department_email import send_department_email
 from ..sub_forms.dmr_report_form import DmrForm
 from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from ..sub_models.customer_mod import CustomerInfo
+from ..sub_models.customerdepartment_mod import CustomerdepartmentInfo
 from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 
-from ..models import Emailmaster
 
-
-
-@login_required(login_url='login_page')
-def trip_report(request):
-    first_name = request.session.get('first_name')
-    form = DmrForm(request.POST or None)
-
-    # -------------------------
-    # GET FILTER VALUES
-    # -------------------------
-    customer_id = request.POST.get('dmr_customer')
-    dept_id = request.POST.get('customer_department')   # Add this field in your form
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
-
-    # -------------------------
-    # BASE QUERY
-    # -------------------------
-    trips = TripdetailInfo.objects.all().order_by('-tr_tripnumber')
-
-    # -------------------------
-    # FILTER BY CUSTOMER
-    # -------------------------
-    if customer_id:
-        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
-
-    # -------------------------
-    # FILTER BY DEPARTMENT
-    # -------------------------
-    if dept_id:
-        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
-
-    # -------------------------
-    # FILTER BY MONTH/YEAR
-    # -------------------------
-    if selected_month and selected_year:
-        selected_month = int(selected_month)
-        selected_year = int(selected_year)
-
-        first_day = date(selected_year, selected_month, 1)
-        last_day = date(selected_year, selected_month, calendar.monthrange(selected_year, selected_month)[1])
-
-        trips = trips.filter(
-            tr_departeddate__date__gte=first_day,
-            tr_departeddate__date__lte=last_day
-        )
-
-    # -------------------------
-    # ATTACH CONSIGNER + REF NO
-    # -------------------------
-    for trip in trips:
-        # Consigner name
-        cons_name = ''
-        cg = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=trip.tr_consignmentnumber).first()
-        if cg and cg.cg_consigner:
-            cons_name = str(cg.cg_consigner)
-        trip.consigner_name = cons_name
-
-        # Reference number
-        ref = ''
-        cd = ConsignmentdetailInfo.objects.filter(co_consignmentnumber=trip.tr_consignmentnumber).first()
-        if cd:
-            ref = cd.co_cusrefnum
-        trip.co_cusrefnum = ref
-
-    # -------------------------
-    # PAGINATION
-    # -------------------------
-    from_loc = request.POST.get('from_location')
-    to_loc = request.POST.get('to_location')
-
-    # Filter by FROM location
-    if from_loc:
-        trips = trips.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
-
-    # Filter by TO location
-    if to_loc:
-        trips = trips.filter(tr_enquirynumber__en_tolocation_id=to_loc)
-
-    # Now paginate AFTER all filters
-    paginator = Paginator(trips, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    current_month = datetime.now().month
-
-    # -------------------------
-    # YEAR LIST FOR DROPDOWN
-    # -------------------------
-    current_year = datetime.now().year
-    years_list = list(range(current_year - 5, current_year + 1))
-    # -------------------------
-    # CONTEXT
-    # -------------------------
-    context = {
-        'first_name': first_name,
-        'form': form,
-        'page_obj': page_obj,
-        'customer_id': customer_id or '',
-        'dept_id': dept_id or '',
-        'selected_month': int(selected_month) if selected_month else current_month,
-        'selected_year': int(selected_year) if selected_year else current_year,
-        'years': range(current_year - 5, current_year + 1),
-        'from_location': int(from_loc) if from_loc else '',
-        'to_location': int(to_loc) if to_loc else '',
-
-    }
-
-    return render(request, "asset_mgt_app/dmr_report.html", context)
-
+# -------------------------------------------------------------------------
+# CONSTANTS & TEMPLATES (Consolidated)
+# -------------------------------------------------------------------------
 
 DMR_TEMPLATES = {
     "Air Export": [
@@ -273,7 +163,7 @@ DMR_TEMPLATES = {
         "FROM", "DELIVERY PLACE", "TRUCK NO", "TRUCK TYPE", "REACHED CFS", "DELIVERY DATE",
         "UNLOADING CHARGES", "TRIP COST", "TOTAL COST", "POD STATUS"
     ],
-    "DHL SEA IMPORT": [
+    "DHL Sea Import": [
         "DATE", "CONSIGNEE NAME", "HBL NO", "BE #", "PKGS", "G WEIGHT", "CBM", "FROM",
         "DELIVERY PLACE", "TRUCK NO", "TRUCK TYPE", "REACHED PLANT", "DELIVERY DATE",
         "HBL WISE SPLIT COST", "LOADING/UNLOADING CHARGES", "HALTING CHARGES",
@@ -291,10 +181,24 @@ DMR_TEMPLATES = {
         "CLOSING KM", "USED KM", "STARTING PLACE", "CLOSING PLACE", "HBL NO/REFERENCE NO",
         "DETENTION HOURS", "RATE PER KM", "TRIP CHARGE", "PARKING CHARGES", "HALTING CHARGES",
         "DETENTION CHARGES", "TOTAL COST"
+    ],
+    "EIPL Nagalkeni To Airport": [
+        "S.NO", "DEPT", "DATE", "SHIPPER NAME", "FROM", "TO", "CUTOMER SERVICE", "HBL #",
+        "TRUCK NO", "TRUCK TYPE", "DRIVER MOBILE", "IN DATE", "IN TIME", "OUT DATE",
+        "OUT TIME", "NO OF PIECES", "CARGO WEIGHT", "AIRPORT/BVM GATE IN DATE",
+        "AIRPORT/BVM   GATE IN TIME", "UNLOADING  POINT", "IN TIME @ UNLOADING POINT",
+        "UNLOADING  TIME", "DLV OUT  DATE", "DLV OUT TIME", "HALTING STATUS   (YES / NO)",
+        "NO OF DAYS  HALTING", "ADDITIONAL CHARGES", "CANCELLING CHARGES", "HALTING CHARGES",
+        "CHARGES", "WEIGHMENT PASS", "PARKING CHARGES", "TOTAL CHARGES", "REMARKS"
+    ],
+    "DHL Other": [
+        "DATE", "BVM JOB NO", "CONSIGNEE NAME", "HBL NO", "PKGS", "G WEIGHT", "CBM",
+        "VENDOR CODE", "FROM", "DELIVERY PLACE", "TRUCK NO", "TRUCK TYPE", "REACHED",
+        "DELIVERY DATE", "HBL WISE SPLIT COST", "TRANSPORT COST", "TOTAL COST",
+        "REMARK", "POD STATUS"
     ]
 }
 
-# default headers (your original DMR view used these)
 DEFAULT_HEADERS = [
     "SR. NO.", "TRIP DATE", "CONSIGNMENT NOTE NO", "CUSTOMER NAME", "CUSTOMER DEPT",
     "SHIPPER", "FROM", "TO", "VEH NO", "VEH TYPE", "TRIPCOST", "AAI CHARGES",
@@ -306,53 +210,558 @@ DEFAULT_HEADERS = [
     "NO OF HALTING DAYS"
 ]
 
-# --------------------------
-# Helper: safe getter
-# --------------------------
+CUSTOMER_DMR_TEMPLATES = {
+    "EIPL": {
+        "Air Export": DMR_TEMPLATES["Air Export"],
+        "Air Import": DMR_TEMPLATES["Air Import"],
+        "Sea Import": DMR_TEMPLATES["Sea Import"],
+        "Sea Export": DMR_TEMPLATES["Sea Export"],
+        "Order Management": DMR_TEMPLATES["Order Management"],
+        "CHB": DMR_TEMPLATES["CHB"],
+        "TCS Local": DMR_TEMPLATES["TCS Local"],
+        "TCS Outstation": DMR_TEMPLATES["TCS Outstation"],
+        "TCS Reefer": DMR_TEMPLATES["TCS Reefer"],
+        "Hub Movement": DMR_TEMPLATES["Hub Movement"],  # Added for EIPL
+    },
+    "TVS": {
+        "Hub Movement": DMR_TEMPLATES["Hub Movement"],
+    },
+    "FORD": {
+        "Order Management": DMR_TEMPLATES["Order Management"],
+    },
+    "CEVA": {
+        "Air Import": DMR_TEMPLATES["CEVA Air Import"],
+        "Air Export": DMR_TEMPLATES["CEVA Export"], # Note: Original code mapped Air Export to "CEVA Export".
+        "Sea Import": DMR_TEMPLATES["CEVA Air Import"], # Note: Original code mapped Sea Import to "CEVA Air Import".
+        "Sea Export": DMR_TEMPLATES["CEVA Export"],
+    },
+    "DHL": {
+        "Air Import": DMR_TEMPLATES["DHL Other"],
+        "Air Export": DMR_TEMPLATES["DHL Other"],
+        "Sea Import": DMR_TEMPLATES["DHL Sea Import"],
+        "Sea Export": DMR_TEMPLATES["DHL Other"],
+    },
+    "DSVDD": {
+        # Catch-all: if customer is DSVDD, use DSV DD REPORT for any department
+        "DSVDD": DMR_TEMPLATES["DSV DD REPORT"],
+        "Air Export": DMR_TEMPLATES["DSV DD REPORT"],
+        "Air Import": DMR_TEMPLATES["DSV DD REPORT"],
+        "Sea Export": DMR_TEMPLATES["DSV DD REPORT"],
+        "Sea Import": DMR_TEMPLATES["DSV DD REPORT"],
+        "CHB": DMR_TEMPLATES["DSV DD REPORT"],
+        "Transcon": DMR_TEMPLATES["DSV DD REPORT"],
+        "Order Management": DMR_TEMPLATES["DSV DD REPORT"],
+        "Transport": DMR_TEMPLATES["DSV DD REPORT"],
+    },
+    "APMT": {
+        # APMT uses APMT template for all departments
+        "APMT": DMR_TEMPLATES["APMT"],
+        "Air Export": DMR_TEMPLATES["APMT"],
+        "Air Import": DMR_TEMPLATES["APMT"],
+        "Sea Export": DMR_TEMPLATES["APMT"],
+        "Sea Import": DMR_TEMPLATES["APMT"],
+        "CHB": DMR_TEMPLATES["APMT"],
+        "Transcon": DMR_TEMPLATES["APMT"],
+        "Order Management": DMR_TEMPLATES["APMT"],
+        "Transport": DMR_TEMPLATES["APMT"],
+    },
+}
+
+COMMON_DMR_MAP = {
+    "Air Export": DMR_TEMPLATES.get("Air Export", DEFAULT_HEADERS),
+    "Air Import": DMR_TEMPLATES.get("Air Import", DEFAULT_HEADERS),
+    "Sea Export": DMR_TEMPLATES.get("Sea Export", DEFAULT_HEADERS),
+    "Sea Import": DMR_TEMPLATES.get("Sea Import", DEFAULT_HEADERS),
+    "CHB": DMR_TEMPLATES.get("CHB", DEFAULT_HEADERS),
+    "Transcon": DEFAULT_HEADERS,
+    "Order Management": DMR_TEMPLATES.get("Order Management", DEFAULT_HEADERS),
+    "APMT": DMR_TEMPLATES.get("APMT", DEFAULT_HEADERS),
+}
+
+ADDITIONAL_CUSTOMERS = [
+    "APMT",
+    "ABRECO-MAA-WH", "AERTRANS-M", "AIR CARGO-", "AJITH-MAA", "ANOOP-MAA", "BVMPACK-MA",
+    "CHROB-MAA", "CARGO-MAA", "CONT-MAA", "DACH-MAA", "DEURGO-MAA", "DHL-MAA", "EIPL-MAA",
+    "FREI-MAA", "HAIKO-MAA", "HERPO-MAA", "INSIG-MAA", "JEENA-MAA", "KASA-MAA", "KWE(W)MAA",
+    "KRISH-MAA", "LF-MAA", "MARINE-MAA", "MOVE-MAA", "NAVEEN-MAA", "PSKT-MAA", "ROHLIG-MAA",
+    "DBS-MAA", "SHIFT-MAA", "TRANSY-MAA", "TVS-MAA", "VILLA-MAA", "VRRDI-MAA", "BOLLO-BLR",
+    "CEVA-BLR", "DART-BLR", "DHL-BLR", "DM-BLR", "DSV-BLR", "EIPL-BLR", "FEDEX-BLR",
+    "GEODIS-BLR", "HARI-BLR", "HELL-BLR", "HNC-BLR", "KSR-BLR", "KWE-BLR", "KRISH-BLR",
+    "POSH-BLR", "RINGO-BLR", "DBS-BLR", "VTL-BLR", "SEAMAN-BLR", "SHIFT-BLR", "SUN-BLR",
+    "TVS-BLR", "UPS-BLR", "EIPL-HYD", "EIPL-PNY", "LAU-MAA-PKG", "DBS-MAA-PKG", "GE-MAA-PKG",
+    "WIT-MAA-PKG", "POW-MAA-PKG", "WALLA-MAA-PKG", "TULSI-MAA-PKG", "BENZ-MAA-PKG",
+    "NORDEX-MAA-PKG", "GEA-MAA-PKG", "METAL-MAA-PKG", "GEODIS-MAA-PKG", "JUSDA-MAA-PKG",
+    "PSKT-MAA-PKG", "TECRA-MAA-PKG", "EICK-MAA-PKG", "FLEX-MAA-PKG", "WHEELS-MAA-PKG",
+    "VRDHI-MAA-PKG", "BVM-MAA-PKG", "SWAS-MAA-PKG", "EXP-MAA-PKG", "SHIFCO-MAA-PKG",
+    "SWE-MAA-PKG", "FEDEX-MAA-PKG", "DIM-MAA-PKG", "ABRECO-MAA-PKG", "MCWNE-MAA-PKG",
+    "CRAFT-MAA-PKG", "COOP-MAA-PKG", "MANGAL-MAA-PKG", "FLENDER-MAA-PKG", "TOTAL-MAA-PKG",
+    "AARGUS-MAA-TRANS", "CONTINENTAL(T)MAA", "BROEKCLP(T)MAA", "BONFICLP(T)MAA",
+    "DHL LCLP(T)MAA", "DSVAIRSEA(T)MAA", "HAIKO(T)MAA", "INSIGHT(T)MAA", "JUSDA(T)MAA",
+    "ROBIN(T)MAA", "KWE(T)MAA", "KRISHKO(T)MAA", "DBS(T)MAA", "TRANSYS(T)MAA", "UCS)(T)MAA",
+    "FLOMIC - MAA", "FFAF-MAA", "SM-MAA", "Leadking-MAA", "Dimerco-MAA", "MAERSK-MAA",
+    "RCS - MAA", "R.M ENT - MAA", "SAR TRANSPORT - MAA", "VKL-MAA", "HIGHLIGHT-MAA",
+    "GOODLUCK-MAA", "GE-MAA", "Wen-parker-MAA", "BROEKMAN-MAA", "FCSG-MAA", "DSV-SEA",
+    "Freight Bridge -MAA", "APEX -MAA", "Reliance - MAA", "Penta-MAA", "Capricorn-MAA",
+    "Gonsai-BLR", "KENSHO-MAA", "AVK-MAA", "MJOSE-MAA", "FLOMICLOG-MAA", "LUCAS-MAA",
+    "KERRY-MAA", "AARGUS-MAA", "TOLL - BLR", "GEODIS-MAA", "TRIO-MAA", "JAGJA-MAA",
+    "MRLOG-MAA", "APEX -BLR", "NAUT-MAA", "TRANSSAFE-MAA", "GAERISH-MAA", "VINAYAK-MAA",
+    "OLS-MAA", "EAGLE-BLR", "LEAAP-MAA", "FEDEX(DD)-BLR", "ALONSO-BLR", "LIGI-MAA",
+    "20CUBE-MAA", "ROBINSON-MAA", "KSR-MAA", "SUDHARSHAN-MAA", "EVO-MAA", "CARGOTRANS-MAA",
+    "RENISHAW-BLR", "ROHLIG-BLR", "ASW-MAA", "QUICK-MAA", "SIJA-MAA", "SARVAM-MAA",
+    "SHREE-MAA", "DAHNAY-MAA", "SA-MAA", "VNAI-MAA", "Asian-Maa - PKG", "DAMCO-MAA",
+    "NNR-MAA", "DSV DD-MAA", "MARIANA-MAA", "RYAN-MAA", "TAG-MAA", "LA-MAA",
+    "VRRDIc2c-MAA", "FLYCON-MAA", "SCAN-MAA", "India Impex - PKG", "Dukane-PKG",
+    "GEODIS(H&M)-BLR", "DAMCO-BLR", "ORBIS-MAA", "Krishya(W)MAA", "SOL(W)MAA", "APM(W)MAA",
+    "NILPETER-PKG", "KRR-PKG", "New Customer", "PACKDD-MAA", "APM(W)BLR", "BLUELION(W)BLR",
+    "Eshwa- MAA - PKG", "BVM Trans - MAA - PKG", "DHL - MAA - PKG", "DPack - MAA - PKG",
+    "Dsv - MAA - PKG", "EIPL-MAA-PKG", "KCP-MAA-PKG", "KWE-MAA-PKG", "Mogli-MAA-PKG",
+    "NNR-MAA-PKG", "Nuventura-MAA-PKG", "TASE-MAA-PKG", "Willfred-MAA-PKG", "Bvmtrans(W)MAA",
+    "PALANIAPPA(W)MAA", "UNIWORLD(W)MAA", "Scrab-pkg", "IR INDIA-MAA-PKG", "Sri Balaji(W)Blr",
+    "AIR CONNECTION(W)MAA", "DBS-MAA(APPLE)", "DBS-MAA(LAND)", "JTB(W)BLR", "ROUND(W)BLR",
+    "ANVAL-MAA-PKG", "CARRLANE-MAA-PKG", "Insaplex-MAA-PKG", "Techno Products-MAA-PKG",
+    "VFG-MAA-PKG", "Excel-MAA-PKG", "Fretlog-MAA-PKG", "Aircargo-MAA-PKG",
+    "Broekman-MAA-PKG", "Capricorn-MAA-PKG", "JEENA-MAA-PKG", "KCP-MAA-PKG", "KRISHKO-MAA-PKG",
+    "SA-MAA-PKG", "SS ROADLINE-MAA-PKG", "UPS-MAA-PKG", "Sks-MAA-PKG", "LIMRA-MAA",
+    "BRISK-MAA", "SHIFTCO(W)MAA", "NETWORK(W)MAA", "KAYVEE(W)MAA", "BVMTRANS(W)BLR",
+    "KGL(T)MAA", "SRISAI(W)BLR", "COMPASS(W)BLR", "INBA(W)BLR", "BNR(W)BLR", "JUSDA(S)BLR",
+    "SCANWELL(W)BLR", "INDEV(W)BLR", "BVMPACK(D)-MAA", "SF(E)MAA", "EIPL(T)MAA",
+    "DBS(T)MAA", "DSVINTER(T)MAA", "SA GROUP(T)MAA", "GEODIS(T)MAA", "CONTI(T)MAA",
+    "UPS(T)MAA", "SUDHARSHAN(T)MAA", "SHIFTCO(T)MAA", "APMT(T)MAA", "4G(T)MAA",
+    "AARGUS(T)MAA", "AVA(T)MAA", "AIRCARGO(T)MAA", "BRISK(T)MAA", "BROKEMAN(T)MAA",
+    "BROKEMAN CLE(T)MAA", "CEVA(T)MAA", "COMEN(T)MAA", "COMPASS(T)MAA", "TVS(T)MAA",
+    "TRIPADAM(T)MAA", "HANKYU(T)MAA", "PROLOGIS(T)MAA", "DEUGRO(T)MAA", "MAGNUM(T)MAA",
+    "DACHSER(T)MAA", "FEDEX(T)MAA", "KWE(T)MAA", "FCSG(T)MAA", "BVM PACK(T)MAA",
+    "EXECUTIVE(T)MAA", "DUKANE(T)MAA", "RIKUN(T)MAA", "Udhaya Kumar D"
+]
+
+# Helper to normalize for matching
+def _norm(s):
+    return (s or "").lower().replace(" ", "")
+
+# INITIALIZE DYNAMIC MAPPINGS ON IMPORT
+for cust_str in ADDITIONAL_CUSTOMERS:
+    found_existing = False
+    n_cust = _norm(cust_str)
+    for existing_key in CUSTOMER_DMR_TEMPLATES:
+        if _norm(existing_key) in n_cust:
+            for k, v in COMMON_DMR_MAP.items():
+                CUSTOMER_DMR_TEMPLATES[existing_key].setdefault(k, v)
+            found_existing = True
+            break
+    if not found_existing:
+        CUSTOMER_DMR_TEMPLATES[cust_str] = COMMON_DMR_MAP.copy()
+
+    if "apmt" in n_cust:
+        if cust_str in CUSTOMER_DMR_TEMPLATES:
+            CUSTOMER_DMR_TEMPLATES[cust_str]["Transport"] = DMR_TEMPLATES.get("APMT", DEFAULT_HEADERS)
+        else:
+            for existing_key in CUSTOMER_DMR_TEMPLATES:
+                if _norm(existing_key) in n_cust:
+                    CUSTOMER_DMR_TEMPLATES[existing_key]["Transport"] = DMR_TEMPLATES.get("APMT", DEFAULT_HEADERS)
+
+    if "dsv" in n_cust:
+        if cust_str in CUSTOMER_DMR_TEMPLATES:
+            if "dsv" not in CUSTOMER_DMR_TEMPLATES[cust_str]:
+                CUSTOMER_DMR_TEMPLATES[cust_str]["DSV"] = DMR_TEMPLATES.get("DSV", DEFAULT_HEADERS)
+        if "dsvdd" in n_cust:
+            if cust_str in CUSTOMER_DMR_TEMPLATES:
+                CUSTOMER_DMR_TEMPLATES[cust_str]["DSV DD"] = DMR_TEMPLATES.get("DSV DD REPORT", DEFAULT_HEADERS)
+
+
+# -------------------------------------------------------------------------
+# VIEW HELPERS
+# -------------------------------------------------------------------------
+
+def get_dmr_headers(customer_name, dept_name, from_loc_id, to_loc_id):
+    # 1. Resolve Location Names (for Route matching)
+    from_loc_name = ""
+    to_loc_name = ""
+    if from_loc_id:
+        try:
+            from_obj = Places.objects.get(id=from_loc_id)
+            from_loc_name = from_obj.place_name
+        except:
+            pass
+    if to_loc_id:
+        try:
+            to_obj = Places.objects.get(id=to_loc_id)
+            to_loc_name = to_obj.place_name
+        except:
+            pass
+
+    # Clean inputs
+    cust_value = _norm(customer_name)
+    n_dept = _norm(dept_name)
+
+    # 3. Construct Search Strings
+    n_route = _norm(f"{from_loc_name}-{to_loc_name}") if from_loc_name or to_loc_name else ""
+    n_combined = ""
+    if n_dept and n_route:
+        n_combined = _norm(f"{dept_name}_{from_loc_name}-{to_loc_name}")
+    elif n_route:
+        n_combined = n_route
+    elif n_dept:
+        n_combined = n_dept
+
+    template_key = None
+    headers = DEFAULT_HEADERS
+
+    # Search Logic
+    for cust_key, dept_map in CUSTOMER_DMR_TEMPLATES.items():
+        if _norm(cust_key) in cust_value:
+            matches = []
+            for key, template in dept_map.items():
+                n_key = _norm(key)
+                prio = 0
+                if n_combined and n_key in n_combined:
+                    is_simple_dept = n_dept and (n_key in n_dept)
+                    is_simple_route = n_route and (n_key in n_route)
+                    if not is_simple_dept and not is_simple_route:
+                        prio = 3
+                    elif is_simple_route:
+                        prio = 2
+                    elif is_simple_dept:
+                        prio = 1
+                if prio == 0 and n_key in cust_value:
+                    prio = 1
+                if prio > 0:
+                    matches.append((prio, len(n_key), key, template))
+
+            if matches:
+                matches.sort(key=lambda x: (x[0], x[1]), reverse=True)
+                template_key = matches[0][2]
+                headers = matches[0][3]
+            break
+
+    return headers, template_key
+
 def safe(value):
-    if value is None:
-        return ""
+    if value is None: return ""
     return str(value)
 
+def safe_str(v):
+    return "" if v is None else str(v)
+
+def safe_num(v):
+    try: return float(v) if v not in ("", None, "None") else 0
+    except: return 0
+
+def get_dmr_rows(trips, headers, template_key, customer_name):
+    rows = []
+    cust_value = _norm(customer_name)
+
+    for idx, trip in enumerate(trips, start=1):
+        cons_detail = ConsignmentdetailInfo.objects.filter(co_consignmentnumber=trip.tr_consignmentnumber).first()
+        cons_goods = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=trip.tr_consignmentnumber).first()
+        va = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=trip.tr_enquirynumber).first()
+
+        row = []
+        for h in headers:
+            hh = h.strip().lower()
+            if "s.no" in hh or hh == "sr. no." or hh == "so no":
+                row.append(idx); continue
+            if hh == "job no":
+                row.append(safe_str(trip.tr_tripnumber)); continue
+            if "department name" in hh:
+                row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment)); continue
+
+            # --- DATE & LOCATIONS ---
+            if hh == "pickup date":
+                row.append(trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""); continue
+            if hh == "pickup location":
+                row.append(safe_str(trip.tr_departedlocation)); continue
+            if hh == "pickup point in date":
+                row.append(trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""); continue
+            if hh == "pickup point in time":
+                row.append(trip.tr_departeddate.strftime("%H:%M") if trip.tr_departeddate else ""); continue
+            if hh == "pickup point out date":
+                row.append(trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else ""); continue
+            if hh == "pickup point out time":
+                row.append(trip.tr_loading_time.strftime("%H:%M") if trip.tr_loading_time else ""); continue
+            if hh == "from":
+                row.append(safe_str(trip.tr_departedlocation)); continue
+            if hh in ("delivery location", "to"):
+                if cons_goods and getattr(cons_goods, "cg_deliverylocation", None):
+                    row.append(safe(cons_goods.cg_deliverylocation))
+                else:
+                    row.append(safe(trip.tr_enquirynumber.en_tolocation))
+                continue
+            if hh == "planning received date":
+                en_date = getattr(trip.tr_enquirynumber, "en_created_at", None)
+                row.append(en_date.strftime("%d-%m-%Y") if en_date else ""); continue
+            if hh == "planning received time":
+                en_date = getattr(trip.tr_enquirynumber, "en_created_at", None)
+                row.append(en_date.strftime("%H:%M") if en_date else ""); continue
+
+            # --- SHIPPER / CONSIGNEE ---
+            if "shipper" in hh:
+                row.append(safe_str(cons_goods.cg_consigner) if cons_goods else ""); continue
+            if "llr no" in hh or "lr no" in hh:
+                row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else ""); continue
+            if "consignee" in hh:
+                row.append(safe_str(cons_goods.cg_consignee) if cons_goods else ""); continue
+            if "cs name" in hh or hh == "cutomer service":
+                row.append(safe_str(trip.tr_enquirynumber.en_assignedto)); continue
+            if "vehicle placed time" in hh:
+                row.append(va.va_created_at.strftime("%H:%M") if va else ""); continue
+            if "hawb" in hh or "hbl" in hh:
+                row.append(safe_str(cons_goods.cg_hawbno) if cons_goods else ""); continue
+            if "boe" in hh or "ewaybill" in hh:
+                row.append(safe_str(cons_goods.cg_ebillno) if cons_goods else ""); continue
+            if "reference" in hh:
+                row.append(safe_str(cons_detail.co_cusrefnum if cons_detail else "")); continue
+            if "truck no" in hh or "veh no" in hh:
+                row.append(safe_str(trip.tr_vehiclenumber)); continue
+            if "truck type" in hh or "veh type" in hh:
+                row.append(safe_str(trip.tr_vehicletype)); continue
+
+            # --- DHL SPECIFIC ---
+            if template_key in ["Sea Import", "Air Export", "Air Import", "Sea Export"] and "dhl" in cust_value:
+                if hh == "date":
+                    row.append(trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""); continue
+                if hh == "consignee name":
+                    row.append(safe_str(cons_goods.cg_consignee) if cons_goods else ""); continue
+                if hh == "hbl no":
+                    row.append(safe_str(cons_goods.cg_hawbno) if cons_goods else ""); continue
+                if hh == "be #":
+                    row.append(safe_str(cons_goods.cg_ebillno) if cons_goods else ""); continue
+                if hh == "pkgs":
+                    row.append(safe_str(cons_goods.cg_qty) if cons_goods else ""); continue
+                if hh == "g weight":
+                    row.append(safe_str(cons_goods.cg_weight) if cons_goods else ""); continue
+                if hh == "cbm":
+                    row.append(""); continue
+                if hh == "from":
+                    row.append(safe_str(trip.tr_departedlocation)); continue
+                if hh == "delivery place":
+                    row.append(safe_str(trip.tr_reportedlocation)); continue
+                if hh == "reached plant" or hh == "reached":
+                    row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if trip.tr_reporteddate else ""); continue
+                if hh == "delivery date":
+                    row.append(trip.tr_unloading_time.strftime("%d-%m-%Y") if trip.tr_unloading_time else ""); continue
+                if hh == "transport cost":
+                    row.append(safe_num(trip.tc_tripcost)); continue
+                if hh == "total cost":
+                    row.append(safe_num(trip.tc_tripcost) + safe_num(trip.tc_haltingcost) + safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_loadingcost)); continue
+                if hh == "vendor code":
+                    row.append(safe_str(getattr(trip, "tr_vendorcode", ""))); continue
+                if hh == "remark":
+                    row.append(safe_str(trip.tr_remarks)); continue
+                if hh == "bvm job no":
+                    row.append(safe_str(trip.tr_tripnumber)); continue
+                if hh == "pod status":
+                    row.append(safe_str(getattr(trip, "tr_pod_status", ""))); continue
+
+            # --- GENERIC FIELDS ---
+            if "vendor" in hh or "transporter" in hh:
+                vendor = safe_str(va.va_vendor) if (va and trip.tr_vehiclesource_id in (2, 3)) else "OWN VEHICLE"
+                row.append(vendor); continue
+            if "driver name" in hh:
+                row.append(safe_str(trip.tr_drivername)); continue
+            if "driver mobile" in hh:
+                row.append(safe_str(trip.tr_drivernumber)); continue
+            if "driver dl" in hh:
+                row.append(safe_str(trip.tr_driver_lic)); continue
+            if "no of pieces" in hh:
+                qty = cons_goods.cg_loaded_qty if cons_goods and cons_goods.cg_loaded_qty else (cons_goods.cg_qty if cons_goods else "")
+                row.append(safe_str(qty)); continue
+            if "actual weight" in hh or "invoice weight" in hh or "gross weight" in hh or "cargo weight" in hh:
+                row.append(safe_str(cons_goods.cg_weight) if cons_goods else ""); continue
+            if "chargeable weight" in hh:
+                row.append(""); continue
+            if "cbm" in hh or "volume" in hh:
+                row.append(""); continue
+
+            # --- UNLOADING ---
+            if hh == "unloading point in date" or hh == "in date":
+                row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if trip.tr_reporteddate else ""); continue
+            if hh == "unloading point in time" or hh == "in time":
+                row.append(trip.tr_reporteddate.strftime("%H:%M") if trip.tr_reporteddate else ""); continue
+            if hh == "unloading point":
+                row.append(safe_str(trip.tr_reportedlocation)); continue
+            if hh == "unloading point out date" or hh == "dlv out  date" or hh == "out date":
+                row.append(trip.tr_unloading_time.strftime("%d-%m-%Y") if trip.tr_unloading_time else ""); continue
+            if hh == "unloading point out time" or hh == "dlv out time" or hh == "unloading  time" or hh == "out time":
+                row.append(trip.tr_unloading_time.strftime("%H:%M") if trip.tr_unloading_time else ""); continue
+            if "gate in date" in hh:
+                row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if trip.tr_reporteddate else ""); continue
+            if "gate in time" in hh or "in time @ unloading point" in hh:
+                row.append(trip.tr_reporteddate.strftime("%H:%M") if trip.tr_reporteddate else ""); continue
+
+            # --- CHARGES ---
+            if "no of days halting" in hh:
+                row.append(safe_num(trip.tc_no_of_days_halting)); continue
+            if "additional charges" in hh:
+                row.append(safe_num(trip.tc_handlingcost)); continue
+            if "cancellation charges" in hh or "cancelling charges" in hh:
+                row.append(safe_num(trip.tc_cancellation)); continue
+            if "halting charges" in hh:
+                row.append(safe_num(trip.tc_haltingcost)); continue
+            if hh == "charges":
+                row.append(safe_num(trip.tc_tripcost)); continue
+            if "weightment charges" in hh or hh == "weighment pass":
+                row.append(safe_num(trip.tc_weighmentcost)); continue
+            if hh == "parking charges":
+                row.append(safe_num(trip.tc_parkingcost)); continue
+            if hh == "unloading charges":
+                row.append(safe_num(trip.tc_unloadingcost)); continue
+            if "parking / unloading charges" in hh or "unloading charges and parking charges" in hh:
+                row.append(safe_num(trip.tc_parkingcost) + safe_num(trip.tc_unloadingcost)); continue
+            if "unloading charges & lashing charges" in hh:
+                row.append(safe_num(trip.tc_unloadingcost)); continue
+            if "total charges" in hh:
+                row.append(safe_num(trip.tc_tripcost) + safe_num(trip.tc_parkingcost) + safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_loadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost) + safe_num(trip.tc_supervisorcost) + safe_num(trip.tc_haltingcost)); continue
+
+            # --- OTHERS ---
+            if "remarks" in hh:
+                row.append(safe_str(cons_detail.co_remarks) if cons_detail else safe_str(trip.tr_remarks)); continue
+
+            row.append("")
+        rows.append(row)
+    return rows
 
 
-def get_consignment_objects(trip):
-    """Return consignmentdetail and consignmentgoods related to trip.consignmentnumber"""
-    cons_detail = None
-    cons_goods = None
-    try:
-        if getattr(trip, "tr_consignmentnumber", None):
-            cons_detail = ConsignmentdetailInfo.objects.filter(
-                co_consignmentnumber=trip.tr_consignmentnumber
-            ).first()
-            cons_goods = ConsignmentgoodsInfo.objects.filter(
-                cg_consignmentnumber=trip.tr_consignmentnumber
-            ).first()
-    except Exception:
-        cons_detail = None
-        cons_goods = None
-    return cons_detail, cons_goods
+# -------------------------------------------------------------------------
+# VIEWS
+# -------------------------------------------------------------------------
+
+@login_required(login_url='login_page')
+def trip_report(request):
+    first_name = request.session.get('first_name')
+    form = DmrForm(request.POST or None)
+
+    # -------------------------
+    # GET FILTER VALUES FROM FORM
+    # -------------------------
+    customer_id = request.POST.get('dmr_customer')  # Correct field name from DmrForm
+    dept_id = request.POST.get('customer_department')
+    selected_month = request.POST.get('month')
+    selected_year = request.POST.get('year')
+    from_loc = request.POST.get('from_location')
+    to_loc = request.POST.get('to_location')
+
+    # -------------------------
+    # GET CUSTOMER + DEPT NAMES
+    # -------------------------
+    cust_name = ""
+    dept_name = ""
+
+    if customer_id:
+        try:
+            cust_name = CustomerInfo.objects.get(id=customer_id).cu_name
+        except:
+            cust_name = ""
+
+    if dept_id:
+        try:
+            dept_name = CustomerdepartmentInfo.objects.get(id=dept_id).ct_customerdepartment
+        except:
+            dept_name = ""
+
+    cust_value = (cust_name or "").lower()
+    dept_value = (dept_name or "").lower()
+
+    # -------------------------
+    # BASE QUERY
+    # -------------------------
+    trips = TripdetailInfo.objects.filter(tr_category_id=1).order_by('-tr_tripnumber')  # Match Excel export filter
+
+    if customer_id:
+        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if dept_id:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
+    if selected_month and selected_year:
+        selected_month = int(selected_month)
+        selected_year = int(selected_year)
+        first_day = date(selected_year, selected_month, 1)
+        last_day = date(selected_year, selected_month, calendar.monthrange(selected_year, selected_month)[1])
+        trips = trips.filter(
+            tr_departeddate__date__gte=first_day,
+            tr_departeddate__date__lte=last_day
+        )
+    if from_loc:
+        trips = trips.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
+    if to_loc:
+        trips = trips.filter(tr_enquirynumber__en_tolocation_id=to_loc)
+
+    # -------------------------
+    # ATTACH CONSIGNER + REF NO (Required for template logic)
+    # -------------------------
+    for trip in trips:
+        cons_name = ''
+        cg = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=trip.tr_consignmentnumber).first()
+        if cg and cg.cg_consigner:
+            cons_name = str(cg.cg_consigner)
+        trip.consigner_name = cons_name
+
+        ref = ''
+        cd = ConsignmentdetailInfo.objects.filter(co_consignmentnumber=trip.tr_consignmentnumber).first()
+        if cd:
+            ref = cd.co_cusrefnum
+        trip.co_cusrefnum = ref
+
+    # -------------------------
+    # PAGINATION
+    # -------------------------
+    paginator = Paginator(trips, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+
+    # -------------------------
+    # PREPARE DYNAMIC HEADERS & ROWS (for HTML View)
+    # -------------------------
+    cust_name = ""
+    dept_name = ""
+    if customer_id:
+        try: cust_name = CustomerInfo.objects.get(id=customer_id).cu_name
+        except: pass
+    if dept_id:
+        try: dept_name = CustomerdepartmentInfo.objects.get(id=dept_id).ct_customerdepartment  # FIXED
+        except: pass
+
+    # Fallback to trip data if filter names missing
+    if not cust_name and page_obj:
+        try: cust_name = str(page_obj[0].tr_enquirynumber.en_customername)
+        except: pass
+    if not dept_name and page_obj:
+        try: dept_name = str(page_obj[0].tr_enquirynumber.en_customerdepartment)
+        except: pass
+
+    headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc)
+    data_rows = get_dmr_rows(page_obj, headers, template_key, cust_name)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'page_obj': page_obj,
+        'headers': headers,
+        'data_rows': data_rows,
+        'customer_id': customer_id or '',
+        'dept_id': dept_id or '',
+        'selected_month': int(selected_month) if selected_month else current_month,
+        'selected_year': int(selected_year) if selected_year else current_year,
+        'years': range(current_year - 5, current_year + 1),
+        'from_location': int(from_loc) if from_loc else '',
+        'to_location': int(to_loc) if to_loc else '',
+    }
+    return render(request, "asset_mgt_app/dmr_report.html", context)
 
 
-# --------------------------
-# Main view: send DMR by email
-# --------------------------
 @login_required(login_url='login_page')
 def trip_send_email(request):
     if request.method != 'POST':
         messages.error(request, "Invalid request.")
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
-    # -------------------
-    # READ FILTER INPUTS
-    # -------------------
     customer_id = request.POST.get('customer_id')
     dept_id = request.POST.get('customer_department') or request.POST.get('dept_id')
     month = request.POST.get('month')
     year = request.POST.get('year')
     from_loc = request.POST.get('from_location')
     to_loc = request.POST.get('to_location')
-
     recipient = request.POST.get('recipient', "")
     subject = request.POST.get('subject', "")
     message_body = request.POST.get('message', "")
@@ -361,102 +770,50 @@ def trip_send_email(request):
         messages.error(request, "Please select a customer.")
         return redirect('trip_report')
 
-    if not recipient:
-        messages.error(request, "Please enter recipient emails.")
-        return redirect('trip_report')
-
-    # Validate customer exists
     try:
         customer_obj = CustomerInfo.objects.get(id=customer_id)
     except CustomerInfo.DoesNotExist:
         messages.error(request, "Customer not found.")
         return redirect('trip_report')
 
-    # -------------------
-    # BASE QUERY
-    # -------------------
+    # Query Trips
     qs = TripdetailInfo.objects.filter(
         tr_enquirynumber__en_customername_id=customer_id,
         tr_category_id=1
-    ).order_by('-tr_tripnumber')
+    ).order_by('tr_departeddate') # Date sort
 
-    # Department filter
     if dept_id:
-        try:
-            qs = qs.filter(tr_enquirynumber__en_customerdepartment_id=int(dept_id))
-        except:
-            qs = qs.filter(tr_enquirynumber__en_customerdepartment__icontains=str(dept_id))
+        try: qs = qs.filter(tr_enquirynumber__en_customerdepartment_id=int(dept_id))
+        except: qs = qs.filter(tr_enquirynumber__en_customerdepartment__icontains=str(dept_id))
 
-    # Date filter
     if month and year:
         try:
-            m = int(month)
-            y = int(year)
+            m, y = int(month), int(year)
             first_day = date(y, m, 1)
             last_day = date(y, m, calendar.monthrange(y, m)[1])
+            qs = qs.filter(tr_departeddate__date__gte=first_day, tr_departeddate__date__lte=last_day)
+        except: pass
 
-            qs = qs.filter(
-                tr_departeddate__date__gte=first_day,
-                tr_departeddate__date__lte=last_day
-            )
-        except:
-            pass
-
-    # From / To filter
-    if from_loc:
-        qs = qs.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
-
-    if to_loc:
-        qs = qs.filter(tr_enquirynumber__en_tolocation_id=to_loc)
+    if from_loc: qs = qs.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
+    if to_loc: qs = qs.filter(tr_enquirynumber__en_tolocation_id=to_loc)
 
     trips = list(qs)
 
-    # ---------------------------
-    # SORT TRIPS BY PICKUP DATE ASCENDING
-    # ---------------------------
-    def pickup_sort_key(t):
-        try:
-            return t.tr_departeddate or datetime.max
-        except:
-            return datetime.max
+    # Identify Template
+    department = CustomerdepartmentInfo.objects.filter(id=dept_id).first()
+    dept_name = str(department) if department else None
 
-    trips = sorted(trips, key=pickup_sort_key)
+    headers, template_key = get_dmr_headers(customer_obj.cu_name, dept_name, from_loc, to_loc)
 
-    # ---------------------------
-    # DETECT TEMPLATE HEADER
-    # ---------------------------
-    dept_name = None
-    if trips:
-        try:
-            dept_name = str(trips[0].tr_enquirynumber.en_customerdepartment)
-        except:
-            dept_name = None
-
-    template_key = None
-    if dept_name:
-        lookup = dept_name.lower()
-        for key in DMR_TEMPLATES.keys():
-            if key.lower() in lookup or lookup in key.lower():
-                template_key = key
-                break
-
-    headers = DMR_TEMPLATES.get(template_key, DEFAULT_HEADERS)
-
-    # ---------------------------
-    # PREPARE EXCEL WORKBOOK
-    # ---------------------------
+    # Prepare Excel
     wb = Workbook()
     ws = wb.active
     ws.title = "DMR Report"
 
+    # Styles
     header_font = Font(bold=True)
     yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
-    border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
-    )
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
     center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
     ws.append(headers)
@@ -466,311 +823,24 @@ def trip_send_email(request):
         cell.border = border
         cell.alignment = center_align
 
-    def safe_str(v):
-        return "" if v is None else str(v)
-
-    def safe_num(v):
-        try:
-            return float(v) if v not in ("", None, "None") else 0
-        except:
-            return 0
-
-    # ---------------------------
-    # BUILD ROWS
-    # ---------------------------
-    for idx, trip in enumerate(trips, start=1):
-
-        cons_detail = ConsignmentdetailInfo.objects.filter(
-            co_consignmentnumber=trip.tr_consignmentnumber
-        ).first()
-
-        cons_goods = ConsignmentgoodsInfo.objects.filter(
-            cg_consignmentnumber=trip.tr_consignmentnumber
-        ).first()
-
-        va = Vehicle_allotmentInfo.objects.filter(
-            va_enquirynumber=trip.tr_enquirynumber
-        ).first()
-
-        row = []
-
-        for h in headers:
-            hh = h.strip().lower()
-
-            # ---------------------------------------------------
-            # BASIC FIELDS
-            # ---------------------------------------------------
-            if "s.no" in hh or hh == "sr. no.":
-                row.append(idx)
-                continue
-
-            if "department name" in hh:
-                row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment))
-                continue
-
-            # ---------------------------------------------------
-            # PICKUP DATE / TIME / LOCATION  (FIXED)
-            # ---------------------------------------------------
-            if hh == "pickup date":
-                row.append(trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else "")
-                continue
-
-            if hh == "pickup location":
-                row.append(safe_str(trip.tr_departedlocation))
-                continue
-
-            if hh == "pickup point in date":
-                row.append(trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else "")
-                continue
-
-            if hh == "pickup point in time":
-                row.append(trip.tr_departeddate.strftime("%H:%M") if trip.tr_departeddate else "")
-                continue
-
-            if hh == "pickup point out date":
-                row.append(trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else "")
-                continue
-
-            if hh == "pickup point out time":
-                row.append(trip.tr_loading_time.strftime("%H:%M") if trip.tr_loading_time else "")
-                continue
-
-            # Correct FROM/TO mapping
-            if hh == "from":
-                row.append(safe_str(trip.tr_departedlocation))
-                continue
-
-            # DELIVERY LOCATION
-            if hh in ("delivery location",):
-                if cons_goods and getattr(cons_goods, "cg_deliverylocation", None):
-                    row.append(safe(cons_goods.cg_deliverylocation))
-                else:
-                    row.append(safe(trip.tr_enquirynumber.en_tolocation))
-                continue
-
-            # PLANNING RECEIVED DATE
-            if hh == "planning received date":
-                en_date = getattr(trip.tr_enquirynumber, "en_created_at", None)
-                row.append(en_date.strftime("%d-%m-%Y") if en_date else "")
-                continue
-
-            # PLANNING RECEIVED TIME
-            if hh == "planning received time":
-                en_date = getattr(trip.tr_enquirynumber, "en_created_at", None)
-                row.append(en_date.strftime("%H:%M") if en_date else "")
-                continue
-
-            # ---------------------------------------------------
-            # CONSIGNOR / CONSIGNEE
-            # ---------------------------------------------------
-            if "shipper" in hh:
-                row.append(safe_str(cons_goods.cg_consigner) if cons_goods else "")
-                continue
-
-            if "llr no" in hh or "lr no" in hh:
-                row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else "")
-                continue
-
-            if "consignee" in hh:
-                row.append(safe_str(cons_goods.cg_consignee) if cons_goods else "")
-                continue
-
-            # ---------------------------------------------------
-            # CS NAME
-            # ---------------------------------------------------
-            if "cs name" in hh:
-                row.append(safe_str(trip.tr_enquirynumber.en_assignedto))
-                continue
-
-            # ---------------------------------------------------
-            # VEHICLE PLACED TIME
-            # ---------------------------------------------------
-            if "vehicle placed time" in hh:
-                row.append(va.va_created_at.strftime("%H:%M") if va else "")
-                continue
-
-            # ---------------------------------------------------
-            # HAWB / HBL / BOE
-            # ---------------------------------------------------
-            if "hawb" in hh or "hbl" in hh:
-                row.append(safe_str(cons_goods.cg_hawbno) if cons_goods else "")
-                continue
-
-            if "boe" in hh or "ewaybill" in hh:
-                row.append(safe_str(cons_goods.cg_ebillno) if cons_goods else "")
-                continue
-
-            # ---------------------------------------------------
-            # REFERENCE #
-            # ---------------------------------------------------
-            if "reference" in hh:
-                row.append(safe_str(cons_detail.co_cusrefnum if cons_detail else ""))
-                continue
-
-            # ---------------------------------------------------
-            # VEHICLE DETAILS
-            # ---------------------------------------------------
-            if "truck no" in hh or "veh no" in hh:
-                row.append(safe_str(trip.tr_vehiclenumber))
-                continue
-
-            if "truck type" in hh or "veh type" in hh:
-                row.append(safe_str(trip.tr_vehicletype))
-                continue
-
-            # VENDOR
-            if "vendor" in hh or "transporter" in hh:
-                if trip.tr_vehiclesource_id in (2, 3):
-                    vendor = safe_str(va.va_vendor) if va else ""
-                else:
-                    vendor = "OWN VEHICLE"
-                row.append(vendor)
-                continue
-
-            # ---------------------------------------------------
-            # DRIVER DETAILS
-            # ---------------------------------------------------
-            if "driver name" in hh:
-                row.append(safe_str(trip.tr_drivername))
-                continue
-
-            if "driver mobile" in hh:
-                row.append(safe_str(trip.tr_drivernumber))
-                continue
-
-            if "driver dl" in hh:
-                row.append(safe_str(trip.tr_driver_lic))
-                continue
-
-            # ---------------------------------------------------
-            # PIECES / WEIGHT
-            # ---------------------------------------------------
-            if "no of pieces" in hh:
-                qty = cons_goods.cg_loaded_qty if cons_goods and cons_goods.cg_loaded_qty else (
-                    cons_goods.cg_qty if cons_goods else "")
-                row.append(safe_str(qty))
-                continue
-
-            if "actual weight" in hh or "invoice weight" in hh or "gross weight" in hh:
-                val = ""
-                if cons_goods and getattr(cons_goods, "cg_weight", None):
-                    val = cons_goods.cg_weight
-                row.append(safe_str(val))
-                continue
-
-            if "chargeable weight" in hh:
-                row.append("")
-                continue
-
-            if "cbm" in hh or "volume" in hh:
-                row.append("")
-                continue
-
-            # ---------------------------------------------------
-            # UNLOADING FIELDS
-            # ---------------------------------------------------
-            if hh == "unloading point in date":
-                row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if trip.tr_reporteddate else "")
-                continue
-
-            if hh == "unloading point in time":
-                row.append(trip.tr_reporteddate.strftime("%H:%M") if trip.tr_reporteddate else "")
-                continue
-
-            if hh == "unloading point":
-                row.append(safe_str(trip.tr_reportedlocation))
-                continue
-
-            if hh == "unloading point out date":
-                row.append(trip.tr_unloading_time.strftime("%d-%m-%Y") if trip.tr_unloading_time else "")
-                continue
-
-            if hh == "unloading point out time":
-                row.append(trip.tr_unloading_time.strftime("%H:%M") if trip.tr_unloading_time else "")
-                continue
-
-            # ---------------------------------------------------
-            # CHARGES
-            # ---------------------------------------------------
-            if "no of days halting" in hh:
-                row.append(safe_num(trip.tc_no_of_days_halting))
-                continue
-
-            if "additional charges" in hh:
-                row.append(safe_num(trip.tc_handlingcost))
-                continue
-
-            if "cancellation charges" in hh:
-                row.append(safe_num(trip.tc_cancellation))
-                continue
-
-            if "halting charges" in hh:
-                row.append(safe_num(trip.tc_haltingcost))
-                continue
-
-            if hh == "charges":
-                row.append(safe_num(trip.tc_tripcost))
-                continue
-
-            if "weightment charges" in hh:
-                row.append(safe_num(trip.tc_weighmentcost))
-                continue
-
-            # For Air Import – Separate Parking Charges
-            if hh == "parking charges":
-                row.append(safe_num(trip.tc_parkingcost))
-                continue
-
-            # For Air Import – Separate Unloading Charges
-            if hh == "unloading charges":
-                row.append(safe_num(trip.tc_unloadingcost))
-                continue
-
-            if "parking / unloading charges" in hh:
-                row.append(safe_num(trip.tc_parkingcost) + safe_num(trip.tc_unloadingcost))
-                continue
-
-            if "total charges" in hh:
-                total = (
-                    safe_num(trip.tc_tripcost) +
-                    safe_num(trip.tc_parkingcost) +
-                    safe_num(trip.tc_unloadingcost) +
-                    safe_num(trip.tc_loadingcost) +
-                    safe_num(trip.tc_weighmentcost) +
-                    safe_num(trip.tc_handlingcost) +
-                    safe_num(trip.tc_supervisorcost) +
-                    safe_num(trip.tc_haltingcost)
-                )
-                row.append(total)
-                continue
-
-            # ---------------------------------------------------
-            # REMARKS
-            # ---------------------------------------------------
-            if "remarks" in hh:
-                row.append(
-                    safe_str(cons_detail.co_remarks) if cons_detail else safe_str(trip.tr_remarks)
-                )
-                continue
-
-            # ---------------------------------------------------
-            # DEFAULT EMPTY CELL
-            # ---------------------------------------------------
-            row.append("")
-
+    # Write Rows
+    rows = get_dmr_rows(trips, headers, template_key, customer_obj.cu_name)
+    for row in rows:
         ws.append(row)
 
-    # Auto column width
+    # Auto Width
     for col in ws.columns:
-        max_len = max(len(str(cell.value)) for cell in col)
+        max_len = 0
+        for cell in col:
+            try:
+                if cell.value: max_len = max(max_len, len(str(cell.value)))
+            except: pass
         ws.column_dimensions[col[0].column_letter].width = max_len + 2
 
-    # Save file
     excel_file = BytesIO()
     wb.save(excel_file)
     excel_file.seek(0)
 
-    # Send email
     recipient_list = [x.strip() for x in recipient.split(",") if x.strip()]
     subject = subject or f"{customer_obj.cu_name} - {template_key or 'DMR'} Report"
     message = message_body.replace("\n", "<br>")
@@ -784,33 +854,28 @@ def trip_send_email(request):
         attachment_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         file_name=f"{customer_obj.cu_name}_DMR_Report.xlsx"
     )
-
     messages.success(request, "DMR Report sent successfully.")
     return redirect(request.META.get('HTTP_REFERER', '/'))
-
 
 
 @login_required(login_url='login_page')
 def get_dmr_email_details(request):
     customer_id = request.GET.get("customer_id")
     department_id = request.GET.get("department_id")
+    if not customer_id: return JsonResponse({'status': False})
 
-    if not customer_id:
-        return JsonResponse({'status': False})
-
-    qs = Emailmaster.objects.filter(
-        em_Customer_name_id=customer_id
-    )
-
+    qs = Emailmaster.objects.filter(em_Customer_name_id=customer_id)
     if department_id:
         qs = qs.filter(em_customerdepartment_id=department_id)
 
-    email_obj = qs.first()   # renamed variable (important)
-
+    email_obj = qs.first()
     if not email_obj or not email_obj.em_to_names:
         return JsonResponse({'status': False})
 
-    return JsonResponse({
-        'status': True,
-        'to_mail': email_obj.em_to_names
-    })
+    return JsonResponse({'status': True, 'to_mail': email_obj.em_to_names})
+
+
+def get_dmr_template(customer_name, dept_name):
+    # Backward compatibility wrapper
+    h, k = get_dmr_headers(customer_name, dept_name, None, None)
+    return h

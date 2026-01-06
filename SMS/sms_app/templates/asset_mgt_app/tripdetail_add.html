@@ -118,9 +118,6 @@
 										{% endfor %}
 
 									</select>
-
-
-
 								</div>
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
@@ -373,6 +370,12 @@
 					if (data.error) {
 						alert(data.error);
 					} else {
+										  // ⛽ Vehicle auto-filled
+						$("#tr_vehiclenumber").val(data.truck_number);
+
+						// 🔹 Trigger Departed-KM auto-fetch
+						fetchLastKM();
+
 						$("#tr_vehiclenumber").val(data.truck_number);
 						$("#tr_drivername").val(data.va_drivername || "");
 						$("#tr_drivernumber").val(data.va_drivernumber || "");
@@ -639,16 +642,29 @@ $(document).ready(function() {
 });
 
 </script>
-<script>
-    $("#tr_vehiclenumber").change(function () {
-        let vehicle = $(this).val();
 
-        $.get("/SMS/get_last_reported_km/", { vehicle: vehicle }, function (data) {
-            if (data.reported_km) {
-                $("#tr_departedkm").val(data.reported_km);
-            }
-        });
+
+<script>
+	function fetchLastKM() {
+
+    // ❌ If this is an update page, do NOT auto-fill
+    let tripId = "{{ trip_instance.id|default:'' }}";
+    if (tripId) {
+        console.log("Edit mode — KM autofill disabled");
+        return;
+    }
+
+    let vehicle = $("#tr_vehiclenumber").val();
+    if (!vehicle) return;
+
+    $.get("/SMS/get_last_reported_km/", { vehicle: vehicle }, function (data) {
+        console.log("KM API:", data);
+        if (data.reported_km) {
+            $("#tr_departedkm").val(data.reported_km);
+        }
     });
+}
+
 </script>
 {% endblock scripts %}
 

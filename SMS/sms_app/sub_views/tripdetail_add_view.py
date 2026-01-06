@@ -14,6 +14,11 @@ from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 import json
+
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from ..models import TripdetailInfo
+
 @login_required(login_url='login_page')
 def tripdetail_enquiry(request, enquiry_id, trip_num):
     # Fetch the enquiry object (optional - only needed if you want to verify or log it)
@@ -641,3 +646,22 @@ def get_customer_ref(request):
     except ConsignmentdetailInfo.DoesNotExist:
         data = {'customer_ref': ''}
     return JsonResponse(data)
+
+
+
+@login_required(login_url='login_page')
+def get_last_reported_km(request):
+    vehicle = request.GET.get("vehicle")
+
+    last_trip = (
+        TripdetailInfo.objects
+        .filter(tr_vehiclenumber=vehicle)
+        .exclude(tr_reportedkm__isnull=True)
+        .exclude(tr_reportedkm=0)
+        .order_by('-id')      # most recent trip globally
+        .first()
+    )
+
+    return JsonResponse({
+        "reported_km": last_trip.tr_reportedkm if last_trip else None
+    })

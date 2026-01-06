@@ -132,67 +132,19 @@
     <table id="trip_report_table" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
-            <th>SR. NO.</th>
-            <th>TRIP DATE</th>
-            <th>CONSIGNMENT NOTE NO</th>
-            <th>CUSTOMER NAME</th>
-            <th>CUSTOMER DEPT</th>
-            <th>SHIPPER</th>
-            <th>FROM</th>
-            <th>TO</th>
-            <th>VEH NO</th>
-            <th>VEH TYPE</th>
-            <th>TRIPCOST</th>
-            <th>AAI CHARGES</th>
-            <th>UNLOADING CHARGES</th>
-            <th>LOADING CHARGES</th>
-            <th>HALTING CHARGE</th>
-            <th>HANDLING CHARGES</th>
-            <th>SUPERVISOR CHARGES</th>
-            <th>TOTAL CHARGES</th>
-            <th>REFERENCE # (JOB ID/HAWB)</th>
-            <th>VEH REPORTED KM @ LOADING POINT</th>
-            <th>VEH REPORTED TIME @ LOADING POINT</th>
-            <th>LOADING DATE</th>
-            <th>LOADING TIME</th>
-            <th>VEH REPORTED KM @ UNLOADING POINT</th>
-            <th>VEH REPORTED TIME @ UNLOADING POINT</th>
-            <th>UNLOADING DATE</th>
-            <th>UNLOADING TIME</th>
-            <th>NO OF HALTING DAYS</th>
+            <!-- DYNAMIC HEADERS -->
+            {% for h in headers %}
+            <th>{{ h }}</th>
+            {% endfor %}
         </tr>
         </thead>
         <tbody>
-        {% for trip in page_obj %}
+        <!-- DYNAMIC ROWS -->
+        {% for row in data_rows %}
         <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ trip.tr_departeddate|date:"d-m-Y" }}</td>
-            <td>{{ trip.tr_consignmentnumber.co_consignmentnumber }}</td>
-            <td>{{ trip.tr_enquirynumber.en_customername }}</td>
-            <td>{{ trip.tr_enquirynumber.en_customerdepartment }}</td>
-            <td>{{ trip.consigner_name }}</td>
-            <td>{{ trip.tr_departedlocation }}</td>
-            <td>{{ trip.tr_reportedlocation }}</td>
-            <td>{{ trip.tr_vehiclenumber }}</td>
-            <td>{{ trip.tr_vehicletype }}</td>
-            <td>{{ trip.tc_tripcost }}</td>
-            <td>{{ trip.tc_parkingcost }}</td>
-            <td>{{ trip.tc_unloadingcost }}</td>
-            <td>{{ trip.tc_loadingcost }}</td>
-            <td>{{ trip.tc_haltingcost }}</td>
-            <td>{{ trip.tc_handlingcost }}</td>
-            <td>{{ trip.tc_supervisorcost }}</td>
-            <td>{{ trip.tc_tripcost|add:trip.tc_parkingcost|add:trip.tc_unloadingcost|add:trip.tc_loadingcost|add:trip.tc_haltingcost|add:trip.tc_handlingcost|add:trip.tc_supervisorcost }}</td>
-            <td>{{ trip.co_cusrefnum }}</td>
-            <td>{{ trip.tr_departedkm }}</td>
-            <td>{{ trip.tr_departeddate|time:"H:i:s" }}</td>
-            <td>{{ trip.tr_loading_time|date:"d-m-Y" }}</td>
-            <td>{{ trip.tr_loading_time|time:"H:i:s" }}</td>
-            <td>{{ trip.tr_reportedkm }}</td>
-            <td>{{ trip.tr_reporteddate|time:"H:i:s" }}</td>
-            <td>{{ trip.tr_unloading_time|date:"d-m-Y" }}</td>
-            <td>{{ trip.tr_unloading_time|time:"H:i:s" }}</td>
-            <td>{{ trip.tc_no_of_days_halting|default:"0" }}</td>
+            {% for cell in row %}
+            <td>{{ cell }}</td>
+            {% endfor %}
         </tr>
         {% endfor %}
         </tbody>

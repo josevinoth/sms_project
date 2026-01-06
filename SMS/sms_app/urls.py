@@ -783,6 +783,7 @@ urlpatterns = [
         name='get_driver_details_from_master'
     ),
     path( 'get-dmr-email-details/',views.get_dmr_email_details,name='get_dmr_email_details'),
+    path("get_last_reported_km/", views.get_last_reported_km, name="get_last_reported_km"),
 
 
 
