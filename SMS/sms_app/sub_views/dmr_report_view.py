@@ -196,6 +196,42 @@ DMR_TEMPLATES = {
         "VENDOR CODE", "FROM", "DELIVERY PLACE", "TRUCK NO", "TRUCK TYPE", "REACHED",
         "DELIVERY DATE", "HBL WISE SPLIT COST", "TRANSPORT COST", "TOTAL COST",
         "REMARK", "POD STATUS"
+    ],
+    "DHL BLR Import": [
+        "DATE", "CONSIGNEE NAME", "HBL No", "BE #", "PKGS", "G WEIGHT", "CBM", "FROM",
+        "DELIVERY PLACE", "TRUCK NO", "TRUCK TYPE", "REACHED PLANT", "DELIVERY DATE",
+        "HBL WISE SPLIT COST", "LOADING/UNLOADING CHARGES", "TOLL CHARGES", "PARKING CHARGES",
+        "HALTING CHARGES", "TRANSPORT COST", "TOTAL COST", "VENDOR CODE", "REMARK", "Cnote No"
+    ],
+    "DHL BLR Export": [
+        "DATE", "CONSIGNEE NAME", "HBL No", "PKGS", "G WEIGHT", "CBM", "FROM",
+        "DELIVERY PLACE", "TRUCK NO", "TRUCK TYPE", "REACHED PLANT", "DELIVERY DATE",
+        "HBL WISE SPLIT COST", "LOADING/UNLOADING CHARGES", "TOLL CHARGES", "PARKING CHARGES",
+        "HALTING CHARGES", "TRANSPORT COST", "TOTAL COST", "VENDOR CODE", "REMARK", "BVM JOB NO"
+    ],
+    "UPS BLR": [
+        "SE.No", "Indent Date", "BVM JOB NUMBER", "Customer Name",
+        "Air AIR IMPORT &Air AIR EXPORT  &  Ocean AIR EXPORT & DOM",
+        "Shipper", "From", "To", "PCS", "Weight", "INVOICE NO", "PO #;",
+        "MAWB", "HAWB", "Vehicle Number", "VEHILE  SIZE", "TRIPCOST",
+        "TOLL PASS", "AAI charges", "UnLoading charges", "Loading charges",
+        "Halting charge", "Handling charges", "Total charges", "BVM IN", "UPDATE STATUS"
+    ],
+    "FEDEX BLR": [
+        "SE.No", "Indent Date", "BVM JOB NUMBER", "Customer Name",
+        "Air AIR IMPORT &Air AIR EXPORT  &  Ocean AIR EXPORT & DOM",
+        "Shipper", "From", "To", "PCS", "Weight", "INVOICE NO",
+        "Vehicle Number", "VEHILE  SIZE", "TRIPCOST", "TOLL PASS",
+        "AAI charges", "UnLoading charges", "Loading charges", "Halting charge",
+        "Handling charges", "Total charges", "BVM IN", "UPDATE STATUS"
+    ],
+    "GEODIS BLR": [
+        "SE.No", "Indent Date", "BVM JOB NUMBER", "Customer Name",
+        "Air AIR IMPORT &Air AIR EXPORT  &  Ocean AIR EXPORT & DOM",
+        "Shipper", "From", "To", "PCS", "Weight", "INVOICE NO", "HAWB",
+        "Vehicle Number", "VEHILE  SIZE", "TRIPCOST", "TOLL PASS",
+        "AAI charges", "UnLoading charges", "Loading charges", "Halting charge",
+        "Handling charges", "Total charges", "BVM IN"
     ]
 }
 
@@ -235,6 +271,12 @@ CUSTOMER_DMR_TEMPLATES = {
         "Sea Import": DMR_TEMPLATES["CEVA Air Import"], # Note: Original code mapped Sea Import to "CEVA Air Import".
         "Sea Export": DMR_TEMPLATES["CEVA Export"],
     },
+    "DHL BLR": {
+        "Air Import": DMR_TEMPLATES["DHL BLR Import"],
+        "Sea Import": DMR_TEMPLATES["DHL BLR Import"],
+        "Air Export": DMR_TEMPLATES["DHL BLR Export"],
+        "Sea Export": DMR_TEMPLATES["DHL BLR Export"],
+    },
     "DHL": {
         "Air Import": DMR_TEMPLATES["DHL Other"],
         "Air Export": DMR_TEMPLATES["DHL Other"],
@@ -264,6 +306,30 @@ CUSTOMER_DMR_TEMPLATES = {
         "Transcon": DMR_TEMPLATES["APMT"],
         "Order Management": DMR_TEMPLATES["APMT"],
         "Transport": DMR_TEMPLATES["APMT"],
+    },
+    "UPS BLR": {
+        "UPS BLR": DMR_TEMPLATES["UPS BLR"],
+        "Air Export": DMR_TEMPLATES["UPS BLR"],
+        "Air Import": DMR_TEMPLATES["UPS BLR"],
+        "Sea Export": DMR_TEMPLATES["UPS BLR"],
+        "Sea Import": DMR_TEMPLATES["UPS BLR"],
+        "Transport": DMR_TEMPLATES["UPS BLR"],
+    },
+    "FEDEX BLR": {
+        "FEDEX BLR": DMR_TEMPLATES["FEDEX BLR"],
+        "Air Export": DMR_TEMPLATES["FEDEX BLR"],
+        "Air Import": DMR_TEMPLATES["FEDEX BLR"],
+        "Sea Export": DMR_TEMPLATES["FEDEX BLR"],
+        "Sea Import": DMR_TEMPLATES["FEDEX BLR"],
+        "Transport": DMR_TEMPLATES["FEDEX BLR"],
+    },
+    "GEODIS BLR": {
+        "GEODIS BLR": DMR_TEMPLATES["GEODIS BLR"],
+        "Air Export": DMR_TEMPLATES["GEODIS BLR"],
+        "Air Import": DMR_TEMPLATES["GEODIS BLR"],
+        "Sea Export": DMR_TEMPLATES["GEODIS BLR"],
+        "Sea Import": DMR_TEMPLATES["GEODIS BLR"],
+        "Transport": DMR_TEMPLATES["GEODIS BLR"],
     },
 }
 
@@ -336,7 +402,7 @@ ADDITIONAL_CUSTOMERS = [
 
 # Helper to normalize for matching
 def _norm(s):
-    return (s or "").lower().replace(" ", "")
+    return (s or "").lower().replace(" ", "").replace("-", "")
 
 # INITIALIZE DYNAMIC MAPPINGS ON IMPORT
 for cust_str in ADDITIONAL_CUSTOMERS:
@@ -458,11 +524,13 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
         row = []
         for h in headers:
             hh = h.strip().lower()
-            if "s.no" in hh or hh == "sr. no." or hh == "so no":
+            if "s.no" in hh or hh == "sr. no." or hh == "so no" or hh == "se.no":
                 row.append(idx); continue
-            if hh == "job no":
+            if hh in ("job no", "bvm job no", "bvm job number"):
                 row.append(safe_str(trip.tr_tripnumber)); continue
-            if "department name" in hh:
+            if hh == "indent date":
+                row.append(trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""); continue
+            if "department name" in hh or hh == "air air import &air air export  &  ocean air export & dom":
                 row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment)); continue
 
             # --- DATE & LOCATIONS ---
@@ -515,15 +583,45 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
             if "truck type" in hh or "veh type" in hh:
                 row.append(safe_str(trip.tr_vehicletype)); continue
 
+            # --- UPS / FEDEX / GEODIS BLR SPECIFIC ---
+            if hh == "pcs":
+                row.append(safe_str(cons_goods.cg_qty) if cons_goods else ""); continue
+            if hh == "weight":
+                row.append(safe_str(cons_goods.cg_weight) if cons_goods else ""); continue
+            if hh == "invoice no":
+                row.append(safe_str(cons_detail.co_cusrefnum) if cons_detail else ""); continue
+            if hh == "po #;":
+                row.append(safe_str(trip.tr_customerref)); continue
+            if hh == "mawb":
+                row.append(safe_str(cons_goods.cg_mawbno) if cons_goods else ""); continue
+            if hh == "vehile  size":
+                row.append(safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype)); continue
+            if hh == "toll pass":
+                row.append(safe_num(trip.tc_tollcost)); continue
+            if hh == "aai charges":
+                row.append(safe_num(trip.tc_supervisorcost)); continue
+            if hh == "unloading charges":
+                row.append(safe_num(trip.tc_unloadingcost)); continue
+            if hh == "loading charges":
+                row.append(safe_num(trip.tc_loadingcost)); continue
+            if hh == "halting charge":
+                row.append(safe_num(trip.tc_haltingcost)); continue
+            if hh == "handling charges":
+                row.append(safe_num(trip.tc_handlingcost)); continue
+            if hh == "bvm in":
+                row.append(trip.tr_reporteddate.strftime("%d-%m-%Y %H:%M") if trip.tr_reporteddate else ""); continue
+            if hh == "update status":
+                row.append(safe_str(trip.tc_financestatus)); continue
+
             # --- DHL SPECIFIC ---
-            if template_key in ["Sea Import", "Air Export", "Air Import", "Sea Export"] and "dhl" in cust_value:
+            if template_key in ["Sea Import", "Air Export", "Air Import", "Sea Export", "DHL BLR Import", "DHL BLR Export"] and "dhl" in cust_value:
                 if hh == "date":
                     row.append(trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""); continue
                 if hh == "consignee name":
                     row.append(safe_str(cons_goods.cg_consignee) if cons_goods else ""); continue
                 if hh == "hbl no":
                     row.append(safe_str(cons_goods.cg_hawbno) if cons_goods else ""); continue
-                if hh == "be #":
+                if hh == "be #" or hh == "be #":
                     row.append(safe_str(cons_goods.cg_ebillno) if cons_goods else ""); continue
                 if hh == "pkgs":
                     row.append(safe_str(cons_goods.cg_qty) if cons_goods else ""); continue
@@ -535,20 +633,32 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                     row.append(safe_str(trip.tr_departedlocation)); continue
                 if hh == "delivery place":
                     row.append(safe_str(trip.tr_reportedlocation)); continue
-                if hh == "reached plant" or hh == "reached":
+                if hh in ["reached plant", "reached"]:
                     row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if trip.tr_reporteddate else ""); continue
                 if hh == "delivery date":
                     row.append(trip.tr_unloading_time.strftime("%d-%m-%Y") if trip.tr_unloading_time else ""); continue
+                if hh == "hbl wise split cost":
+                    row.append(""); continue # No direct field for per-HBL split cost in TripdetailInfo
+                if hh == "loading/unloading charges":
+                    row.append(safe_num(trip.tc_loadingcost) + safe_num(trip.tc_unloadingcost)); continue
+                if hh == "toll charges":
+                    row.append(safe_num(trip.tc_tollcost)); continue
+                if hh == "parking charges":
+                    row.append(safe_num(trip.tc_parkingcost)); continue
+                if hh == "halting charges":
+                    row.append(safe_num(trip.tc_haltingcost)); continue
                 if hh == "transport cost":
                     row.append(safe_num(trip.tc_tripcost)); continue
                 if hh == "total cost":
-                    row.append(safe_num(trip.tc_tripcost) + safe_num(trip.tc_haltingcost) + safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_loadingcost)); continue
+                    row.append(safe_num(trip.tc_tripcost) + safe_num(trip.tc_haltingcost) + safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_loadingcost) + safe_num(trip.tc_tollcost) + safe_num(trip.tc_parkingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost)); continue
                 if hh == "vendor code":
                     row.append(safe_str(getattr(trip, "tr_vendorcode", ""))); continue
                 if hh == "remark":
                     row.append(safe_str(trip.tr_remarks)); continue
                 if hh == "bvm job no":
                     row.append(safe_str(trip.tr_tripnumber)); continue
+                if hh == "cnote no":
+                    row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else ""); continue
                 if hh == "pod status":
                     row.append(safe_str(getattr(trip, "tr_pod_status", ""))); continue
 
@@ -610,7 +720,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
             if "unloading charges & lashing charges" in hh:
                 row.append(safe_num(trip.tc_unloadingcost)); continue
             if "total charges" in hh:
-                row.append(safe_num(trip.tc_tripcost) + safe_num(trip.tc_parkingcost) + safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_loadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost) + safe_num(trip.tc_supervisorcost) + safe_num(trip.tc_haltingcost)); continue
+                row.append(safe_num(trip.tc_tripcost) + safe_num(trip.tc_parkingcost) + safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_loadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost) + safe_num(trip.tc_supervisorcost) + safe_num(trip.tc_haltingcost) + safe_num(trip.tc_tollcost)); continue
 
             # --- OTHERS ---
             if "remarks" in hh:
