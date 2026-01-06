@@ -88,6 +88,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     initial_data = {
                         'tr_vehiclenumber': vehicle_number,
                         'tr_drivername': va.va_drivername,
+                        'tr_driver_master_id': va.va_driver_master_id,
                         'tr_vehicletype': va.va_vehicletype,
                         'tr_vehiclesource': va.va_vehiclesource,
                         'tr_vehicletype_placed': va.va_vehicletype_placed,
@@ -252,6 +253,8 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 trip = trip_det_form.save(commit=False)
                 trip.tc_financestatus_id = 8
+                if vehicle_allotment_id:
+                    trip.tr_driver_master_id = va.va_driver_master_id
 
                 # ✅ Process POD signature
                 pod_data = request.POST.get('pod_signature_data')

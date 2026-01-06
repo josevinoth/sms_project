@@ -68,21 +68,21 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Trip Advance</span>
                             </div>
-                            {% render_field form.ds_tripadvance class="form-control" %}
+                            {% render_field form.ds_tripadvance class="form-control disable_a_href " %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Trip Expense</span>
                             </div>
-                            {% render_field form.ds_tripexpense class="form-control" %}
+                            {% render_field form.ds_tripexpense class="form-control disable_a_href" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Balance</span>
                             </div>
-                            {% render_field form.ds_balance class="form-control" %}
+                            {% render_field form.ds_balance class="form-control disable_a_href" %}
                         </div>
 
                         {% render_field form.ds_updated_by id="ds_updated_by" class="form-control"   hidden=true%}

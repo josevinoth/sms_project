@@ -30,66 +30,66 @@
 <div class="container-fluid">
     <table id="driver_expense_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
-            <tr>
-                <th>ID</th>
-                <th>Driver Name</th>
-                <th>Driver ID</th>
-                <th>Expense Type</th>
-                <th>Parking</th>
-                <th>Loading</th>
-                <th>Unloading</th>
-                <th>Weighment</th>
-                <th>Supervisor</th>
-                <th>Total Cost</th>
-                <th>Edit</th>
-                <th>Delete</th>
-            </tr>
+        <tr>
+            <th>ID</th>
+            <th>Driver Name</th>
+            <th>Driver ID</th>
+            <th>Expense Type</th>
+            <th>Parking</th>
+            <th>Loading</th>
+            <th>Unloading</th>
+            <th>Weighment</th>
+            <th>Supervisor</th>
+            <th>Total Cost</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
         </thead>
 
         <tbody>
         {% for exp in expense_list %}
-            <tr>
-                <td>{{ exp.id }}</td>
-                <td>{{ exp.de_driver_name }}</td>
-                <td>{{ exp.de_driver_id }}</td>
-                <td>{{ exp.de_expense_type }}</td>
-                <td>{{ exp.de_parkingcost }}</td>
-                <td>{{ exp.de_loadingcost }}</td>
-                <td>{{ exp.de_unloadingcost }}</td>
-                <td>{{ exp.de_weighmentcost }}</td>
-                <td>{{ exp.de_supervisorcost }}</td>
-                <td class="fw-bold">{{ exp.de_total_cost }}</td>
+        <tr>
+            <td>{{ exp.id }}</td>
+            <td>{{ exp.de_driver_name }}</td>
+            <td>{{ exp.de_driver_id }}</td>
+            <td>{{ exp.de_expense_type }}</td>
+            <td>{{ exp.de_parkingcost }}</td>
+            <td>{{ exp.de_loadingcost }}</td>
+            <td>{{ exp.de_unloadingcost }}</td>
+            <td>{{ exp.de_weighmentcost }}</td>
+            <td>{{ exp.de_supervisorcost }}</td>
+            <td class="fw-bold">{{ exp.de_total_cost }}</td>
 
-                <td>
-                    <a href="{% url 'driver_expense_update' exp.id %}" class="btn btn-primary btn-sm">
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
+            <td>
+                <a href="{% url 'driver_expense_add' exp.id %}" class="btn btn-primary btn-sm">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
 
-                <td>
-                    <form method="POST"
-                          action="{% url 'driver_expense_delete' exp.id %}"
-                          onsubmit="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
+            <td>
+                <form method="POST"
+                      action="{% url 'driver_expense_delete' exp.id %}"
+                      onsubmit="return confirm('Are you sure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
         {% endfor %}
         </tbody>
     </table>
 </div>
 
 <script>
-$(document).ready(function () {
-    $('#driver_expense_list').DataTable({
-        order: [[0, 'desc']],
-        dom: 'Bfrtip',
-        buttons: ['copy', 'csv', 'excel', 'print']
+    $(document).ready(function () {
+        $('#driver_expense_list').DataTable({
+            order: [[0, 'desc']],
+            dom: 'Bfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
     });
-});
 </script>
 
 {% endblock content %}

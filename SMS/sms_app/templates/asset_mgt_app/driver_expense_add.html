@@ -4,9 +4,23 @@
 
 <form method="POST" action="">
     {% csrf_token %}
-    <input type="hidden" name="settlement_id" value="{{ settlement.id }}">
-    <input type="hidden" name="next" value="{{ next }}">
-
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="alert alert-success">
+                <strong>Advance:</strong> ₹ {{ advance_total }}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-warning">
+                <strong>Expense:</strong> ₹ {{ expense_total }}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-info">
+                <strong>Balance:</strong> ₹ <span id="live_balance">{{ current_balance }}</span>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col">
             <div class="container-fluid">
@@ -14,41 +28,30 @@
                     <div class="card-header text-center">
                         <h4>Add / Update Driver Expense</h4>
                     </div>
-
                     <div class="card-body bg-light text-dark">
                         <div class="row">
-
                             <!-- COLUMN 1 -->
                             <div class="col-6">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Driver Name</span>
                                     </div>
-                                    {% render_field form.de_driver_name class="form-control" %}
+                                    {% render_field form.driver_name class="form-control" readonly="readonly" %}
                                 </div>
-
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver ID</span>
-                                    </div>
-                                    <input type="text"
-                                           class="form-control"
-                                           value="{{ settlement.driver_id_value }}"
-                                           readonly>
-                                </div>
-
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Expense Type</span>
                                     </div>
                                     {% render_field form.de_expense_type id="de_expense_type" class="form-control" %}
                                 </div>
-                                <div class="input-group input-group-sm mb-3" >
-    <div class="input-group-prepend">
-        <span class="input-group-text">Trip Number</span>
-    </div>
-{% render_field form.trip_number id="trip_number" class="form-control" %}
-</div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Advance/Expense Date</span>
+                                    </div>
+                                    {% render_field form.de_date type="Datetime-local" class="form-control" %}
+                                </div>
+
+
 
 
                             </div>
@@ -66,44 +69,49 @@
                                 </div>
 
                                 <div id="expense-cost-fields">
+<div class="input-group input-group-sm mb-3" >
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Trip Number</span>
+                                    </div>
+                                    {% render_field form.trip_number id="trip_number" class="form-control" %}
+                                </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Parking Cost</span>
+                                        </div>
+                                        {% render_field form.de_parkingcost class="form-control cost-field" %}
+                                    </div>
 
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Parking Cost</span>
-        </div>
-        {% render_field form.de_parkingcost class="form-control cost-field" %}
-    </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Loading Cost</span>
+                                        </div>
+                                        {% render_field form.de_loadingcost class="form-control cost-field" %}
+                                    </div>
 
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Loading Cost</span>
-        </div>
-        {% render_field form.de_loadingcost class="form-control cost-field" %}
-    </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Unloading Cost</span>
+                                        </div>
+                                        {% render_field form.de_unloadingcost class="form-control cost-field" %}
+                                    </div>
 
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Unloading Cost</span>
-        </div>
-        {% render_field form.de_unloadingcost class="form-control cost-field" %}
-    </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Weighment Cost</span>
+                                        </div>
+                                        {% render_field form.de_weighmentcost class="form-control cost-field" %}
+                                    </div>
 
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Weighment Cost</span>
-        </div>
-        {% render_field form.de_weighmentcost class="form-control cost-field" %}
-    </div>
-
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Supervisor Cost</span>
-        </div>
-        {% render_field form.de_supervisorcost class="form-control cost-field" %}
-    </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Supervisor Cost</span>
+                                        </div>
+                                        {% render_field form.de_supervisorcost class="form-control cost-field" %}
+                                    </div>
                                 </div>
                             </div>
-</div>
+                        </div>
 
 
 
@@ -111,7 +119,7 @@
                         <div class="row">
                             <div class="col-12 text-center">
                                 {% for message in messages %}
-                                    <span class="{{ message.tags }}">{{ message }}</span>
+                                <span class="{{ message.tags }}">{{ message }}</span>
                                 {% endfor %}
                             </div>
                         </div>
@@ -121,9 +129,12 @@
                             <i class="fas fa-check"></i> Submit
                         </button>
 
-                        <a href="{{ next|default:'#' }}" class="btn btn-danger float-right">
+                        <a href="{% url 'driver_settlement_update' settlement.id %}"
+                           class="btn btn-danger float-right">
                             <i class="fas fa-times"></i> Cancel
                         </a>
+
+
 
                     </div>
                 </div>
@@ -134,28 +145,7 @@
 
 <!-- ================= JS ================= -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    const costFields = document.querySelectorAll(".cost-field");
-    const totalCostField = document.getElementById("de_total_cost");
-
-    function calculateTotal() {
-        let total = 0;
-        costFields.forEach(field => {
-            total += parseFloat(field.value) || 0;
-        });
-        totalCostField.value = total.toFixed(2);
-    }
-
-    costFields.forEach(field => {
-        field.addEventListener("input", calculateTotal);
-    });
-
-    calculateTotal();
-});
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
 
     const expenseType = document.getElementById("de_expense_type");
     const costWrapper = document.getElementById("expense-cost-fields");
@@ -172,26 +162,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function toggleFields() {
-        const selectedId = expenseType.value; // Expense Type ID
+        const selectedId = expenseType.value;
 
         if (selectedId === "1") {
-            // ✅ Expense Type = 1
+            // ✅ ADVANCE
             costWrapper.style.display = "none";
             totalCostField.readOnly = false;
-            totalCostField.value = "";
-
-            // 🔓 Trip Number NOT mandatory
             tripNumberField.required = false;
 
+            // ❗ DO NOTHING to totalCostField
+            // Let Django keep the saved value
+
         } else {
-            // ✅ Other Expense Types
+            // ✅ EXPENSE
             costWrapper.style.display = "block";
             totalCostField.readOnly = true;
-
-            // 🔒 Trip Number mandatory
             tripNumberField.required = true;
 
-            calculateTotal();
+            calculateTotal(); // only here
         }
     }
 
@@ -203,21 +191,67 @@ document.addEventListener("DOMContentLoaded", function () {
 
     toggleFields(); // run once on page load
 });
+
 </script>
 <script>
-document.getElementById("settlement_id").addEventListener("change", function () {
+    document.addEventListener("DOMContentLoaded", function () {
 
-    const settlementId = this.value;
-    if (!settlementId) return;
+        const tripField = document.getElementById("trip_number");
 
-    fetch(`/SMS/get_driver_settlement_details/?settlement_id=${settlementId}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("driver_name").value = data.driver_name;
-            document.getElementById("driver_id").value = data.driver_id;
-        })
-        .catch(error => console.error(error));
-});
+        const parking = document.getElementById("id_de_parkingcost");
+        const loading = document.getElementById("id_de_loadingcost");
+        const unloading = document.getElementById("id_de_unloadingcost");
+        const weighment = document.getElementById("id_de_weighmentcost");
+        const supervisor = document.getElementById("id_de_supervisorcost");
+        const total = document.getElementById("de_total_cost");
+
+        tripField.addEventListener("change", function () {
+            const tripId = this.value;
+            if (!tripId) return;
+
+            fetch(`/SMS/ajax/get-trip-charges/?trip_id=${tripId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) return;
+                    parking.value = data.parking;
+                    loading.value = data.loading;
+                    unloading.value = data.unloading;
+                    weighment.value = data.weighment;
+                    supervisor.value = data.supervisor;
+                    total.value = data.total.toFixed(2);
+                })
+                .catch(err => console.error(err));
+        });
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const totalCostInput = document.getElementById("de_total_cost");
+        const expenseType = document.getElementById("de_expense_type");
+
+        const balanceBox = document.getElementById("live_balance");
+
+        const baseBalance = parseFloat("{{ current_balance }}");
+
+        function updateLiveBalance() {
+            const cost = parseFloat(totalCostInput.value) || 0;
+            const type = expenseType.value;
+
+            let newBalance = baseBalance;
+
+            if (type === "1") {
+                newBalance += cost; // advance
+            } else if (type === "2") {
+                newBalance -= cost; // expense
+            }
+
+            balanceBox.innerText = newBalance.toFixed(2);
+        }
+
+        totalCostInput.addEventListener("input", updateLiveBalance);
+        expenseType.addEventListener("change", updateLiveBalance);
+    });
 </script>
 
 {% endblock content %}
