@@ -51,12 +51,7 @@
                                     {% render_field form.de_date type="Datetime-local" class="form-control" %}
                                 </div>
 
-                                <div class="input-group input-group-sm mb-3" >
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Trip Number</span>
-                                    </div>
-                                    {% render_field form.trip_number id="trip_number" class="form-control" %}
-                                </div>
+
 
 
                             </div>
@@ -74,7 +69,12 @@
                                 </div>
 
                                 <div id="expense-cost-fields">
-
+<div class="input-group input-group-sm mb-3" >
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Trip Number</span>
+                                    </div>
+                                    {% render_field form.trip_number id="trip_number" class="form-control" %}
+                                </div>
                                     <div class="input-group input-group-sm mb-3">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Parking Cost</span>
