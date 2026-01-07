@@ -229,3 +229,5 @@ from .sub_models.emailmaster_mod import  Emailmaster
 from .sub_models.emailtype_mod import Email_type
 from .sub_models.driver_expense_mod import Driverexpense
 from .sub_models.driver_master_mod import DrivermasterInfo
+from .sub_models.trans_invoice_mod import TransInvoiceInfo
+from .sub_models.maintenance_mod import MaintenanceInfo

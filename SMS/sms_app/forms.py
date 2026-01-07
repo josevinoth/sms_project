@@ -140,3 +140,5 @@ from.sub_forms.driver_settlement_form import DriverSettlementForm
 from.sub_forms.trip_settlement_form import TripSettlementForm
 from.sub_forms.haltingcharges_Form import Haltingcharges
 from.sub_forms.driver_master_form import DriverMasterForm
+from .sub_forms.trans_invoice_Form import TransInvoiceForm
+from .sub_forms.maintenance_form import MaintenanceForm
