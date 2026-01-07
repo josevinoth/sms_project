@@ -8,13 +8,30 @@ from ..sub_models.trip_status_mod import Tripstatusinfo
 
 @login_required
 def trip_settlement_view(request):
+    veh_no = request.GET.get('veh_no', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
     trip_list = TripdetailInfo.objects.select_related(
         'tr_consignmentnumber',
         'tr_approval',
         'tr_approval__ta_approval_status'
-    ).filter( tc_financestatus_id=4 )# Awaiting trip settlement)
+    ).filter(tc_financestatus_id=4)  # Awaiting trip settlement
+
+    if veh_no:
+        trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
+    if date_from:
+        trip_list = trip_list.filter(tr_departeddate__date__gte=date_from)
+    if date_to:
+        trip_list = trip_list.filter(tr_departeddate__date__lte=date_to)
+
+    trip_list = trip_list.order_by('-tr_tripnumber')
+
     return render(request, "asset_mgt_app/trip_settlement.html", {
-        'tripsettlement_list': trip_list
+        'tripsettlement_list': trip_list,
+        'veh_no': veh_no,
+        'date_from': date_from,
+        'date_to': date_to,
     })
 
 

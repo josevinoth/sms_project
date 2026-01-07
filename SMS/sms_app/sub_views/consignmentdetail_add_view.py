@@ -9,7 +9,7 @@ from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
 
 from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
-from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
+from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo, MyUser
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
 
@@ -178,11 +178,93 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
 @login_required(login_url='login_page')
 def consignmentdetail_list(request):
     first_name = request.session.get('first_name')
+
+    # Get Filter values
+    customer_id = request.GET.get('customer')
+    updated_by_id = request.GET.get('updated_by')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    # Dropdown Options
+    customers = CustomerInfo.objects.all().order_by('cu_name')
+    employees = User_extInfo.objects.filter(
+        emp_organisation_id=2
+    ).select_related('user').order_by('user__first_name')
+
+    # Base Query
+    consignmentdetail_queryset = ConsignmentdetailInfo.objects.select_related(
+        'co_enquirynumber',
+        'co_enquirynumber__en_movement_type',
+        'co_customer',
+        'co_status',
+        'co_lastmodifiedby'
+    ).prefetch_related('cg_consignmentnumber')
+
+    # Apply Filters
+    if customer_id:
+        consignmentdetail_queryset = consignmentdetail_queryset.filter(co_customer_id=customer_id)
+    if updated_by_id:
+        consignmentdetail_queryset = consignmentdetail_queryset.filter(co_lastmodifiedby_id=updated_by_id)
+    if date_from:
+        consignmentdetail_queryset = consignmentdetail_queryset.filter(co_consignmentdate__gte=date_from)
+    if date_to:
+        consignmentdetail_queryset = consignmentdetail_queryset.filter(co_consignmentdate__lte=date_to)
+
+    consignmentdetail_objects = consignmentdetail_queryset.all().order_by('-id')
+    
+    consignmentdetail_list = []
+    for obj in consignmentdetail_objects:
+        goods = obj.cg_consignmentnumber.first()
+        
+        # properties from model calculated in view
+        obj.co_consigner = goods.cg_consigner if goods else ''
+        obj.co_consignee = goods.cg_consignee if goods else ''
+        obj.co_consignerinvoice = goods.cg_consignerinvoice if goods else ''
+        obj.co_consignervalue = goods.cg_consignervalue if goods else ''
+        obj.co_valueininr = goods.cg_valueininr if goods else ''
+        obj.co_noofpieces = goods.cg_qty if goods else ''
+        obj.co_weight = goods.cg_weight if goods else ''
+        obj.co_ebillno = goods.cg_ebillno if goods else ''
+        obj.co_dateofissue = goods.cg_dateofissue if goods else ''
+        obj.co_dateofvalidity = goods.cg_dateofvalidity if goods else ''
+        
+        if goods:
+            obj.co_dimension = f"{goods.cg_length}x{goods.cg_width}x{goods.cg_height}"
+        else:
+            obj.co_dimension = ''
+
+        if obj.co_enquirynumber:
+            obj.co_movement = obj.co_enquirynumber.en_movement_type
+        else:
+            obj.co_movement = ''
+
+        if obj.co_fromlocaion:
+            obj.display_from_location = obj.co_fromlocaion
+        elif obj.co_enquirynumber:
+            obj.display_from_location = obj.co_enquirynumber.en_fromlocaion
+        else:
+            obj.display_from_location = ''
+
+        if obj.co_tolocation:
+            obj.display_to_location = obj.co_tolocation
+        elif obj.co_enquirynumber:
+            obj.display_to_location = obj.co_enquirynumber.en_tolocation
+        else:
+            obj.display_to_location = ''
+            
+        consignmentdetail_list.append(obj)
+
     context = {
-                'consignmentdetail_list' : ConsignmentdetailInfo.objects.all(),
-                'first_name': first_name
-            }
-    return render(request,"asset_mgt_app/consignmentdetail_list.html",context)
+        'consignmentdetail_list': consignmentdetail_list,
+        'first_name': first_name,
+        'customers': customers,
+        'employees': employees,
+        'selected_customer': int(customer_id) if customer_id else None,
+        'selected_updated_by': int(updated_by_id) if updated_by_id else None,
+        'date_from': date_from,
+        'date_to': date_to,
+    }
+    return render(request, "asset_mgt_app/consignmentdetail_list.html", context)
 
 #Delete consignmentdetail
 @login_required(login_url='login_page')
