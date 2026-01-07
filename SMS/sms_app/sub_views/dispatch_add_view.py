@@ -26,7 +26,8 @@ from ..models import Check_in_out,Warehouse_goods_info,Dispatch_info,GoodsPartia
 from django.contrib import messages
 import cv2
 import numpy as np
-from pyzbar.pyzbar import decode
+#from pyzbar.pyzbar import decode
+qr_detector = cv2.QRCodeDetector()
 
 from ..sub_models.loadingbay_mod import Loadingbay_Info
 from ..views import warehousevolme_area_calc
@@ -378,55 +379,94 @@ def dispatch_invoice_job_update(dispatch_num_val):
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_total_goods=total_goods)
     return ()
 @login_required(login_url='login_page')
-def qr_dispatch_decoder(request,dispatch_id):
-    # Scanning QR Code from Camera Feed
+def qr_dispatch_decoder(request, dispatch_id):
+    # Scanning QR Code from Camera Feed (OpenCV only)
     cap = cv2.VideoCapture(0)
-    cap.set(3, 640)
-    cap.set(4, 740)
-    used_code=[]
-    camera=True
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 740)
+
     dispatch_num_val = request.session.get('ses_dispatch_num_val')
     stock_num_val = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_qr_rand_num
-    while camera==True:
+
+    while True:
         success, img = cap.read()
-        for qrcode in decode(img):
-            text = qrcode.data.decode('utf-8')
-            t1=text.replace("{","")
-            t2=t1.replace("}","")
-            t3=t2.replace("'","")
-            polygon_Points = np.array([qrcode.polygon], np.int32)
-            polygon_Points = polygon_Points.reshape(-1, 1, 2)
-            rect_Points = qrcode.rect
-            cv2.polylines(img, [polygon_Points], True, (255, 255, 0), 5)
-            cv2.putText(img, text, (rect_Points[0], rect_Points[1]), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255, 255, 0), 2)
-            if t3 ==stock_num_val:
+        if not success:
+            break
+
+        # ✅ OpenCV QR Decode
+        data, points, _ = qr_detector.detectAndDecode(img)
+
+        if data:
+            text = data.strip()
+
+            # sanitize text (same as your logic)
+            t1 = text.replace("{", "")
+            t2 = t1.replace("}", "")
+            t3 = t2.replace("'", "")
+
+            if points is not None:
+                # QRCodeDetector returns shape (1, 4, 2)
+                pts = points[0].astype(int)  # shape → (4, 2)
+
+                # ✅ Draw QR bounding box
+                cv2.polylines(img, [pts], True, (255, 255, 0), 5)
+
+                # ✅ Text position (top-left corner)
+                text_x, text_y = pts[0][0], pts[0][1] - 10
+                if text_y < 10:
+                    text_y = pts[0][1] + 20
+
+                cv2.putText(
+                    img,
+                    text,
+                    (int(text_x), int(text_y)),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    0.8,
+                    (255, 255, 0),
+                    2
+                )
+
+            # ✅ MATCHED STOCK
+            if t3 == stock_num_val:
+                cap.release()
                 cv2.destroyAllWindows()
-                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_check_in_out=2)
-                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_dispatch_num=dispatch_num_val)
-                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_checkout_time=datetime.now())
-                messages.success(request,'Stock Matching.Approved for Dispatch')
-                time.sleep(5)
-                check_in_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkin_time
-                check_out_date = Warehouse_goods_info.objects.get(pk=dispatch_id).wh_checkout_time
-                date_diff=(check_out_date - check_in_date) # Differnce between dates
-                date_diff_days = date_diff.days
-                duration_in_s = date_diff.total_seconds() # Total number of seconds between dates
-                storage_hours = divmod(duration_in_s, 3600)[0]  # Seconds in an hour = 3600
-                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(wh_storage_time=date_diff_days)
+
+                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(
+                    wh_check_in_out=2,
+                    wh_dispatch_num=dispatch_num_val,
+                    wh_checkout_time=datetime.datetime.now()
+                )
+
+                messages.success(request, 'Stock Matching. Approved for Dispatch')
+
+                goods = Warehouse_goods_info.objects.get(pk=dispatch_id)
+                check_in_date = goods.wh_checkin_time
+                check_out_date = goods.wh_checkout_time
+                date_diff_days = (check_out_date - check_in_date).days
+
+                Warehouse_goods_info.objects.filter(pk=dispatch_id).update(
+                    wh_storage_time=date_diff_days
+                )
+
                 return redirect(request.META['HTTP_REFERER'])
+
+            # ❌ NOT MATCHED
             else:
-                time.sleep(5)
+                cap.release()
                 cv2.destroyAllWindows()
                 messages.error(request, 'Stock Not Matching')
                 return redirect(request.META['HTTP_REFERER'])
 
-        cv2.imshow("Video", img)
-        k=cv2.waitKey(1)
-        if k == 27:  # wait for ESC key to exit and terminate program,
-            cv2.destroyAllWindows()
+        cv2.imshow("QR Scanner", img)
+
+        # ESC to exit
+        if cv2.waitKey(1) & 0xFF == 27:
             break
 
+    cap.release()
+    cv2.destroyAllWindows()
     return redirect(request.META['HTTP_REFERER'])
+
 
 @login_required(login_url='login_page')
 def dispatch_search(request):
