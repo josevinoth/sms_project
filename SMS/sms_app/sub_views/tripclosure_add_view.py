@@ -102,7 +102,13 @@ def tripclosure_add(request,tripclosure_id=0):
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
-            status_selected = (TripdetailInfo.objects.get(pk=tripclosure_id).tc_financestatus.id)
+            trip = TripdetailInfo.objects.get(pk=tripclosure_id)
+
+            status_selected = (
+                trip.tc_financestatus.id
+                if trip.tc_financestatus
+                else None
+            )
             status_list = list(Tripstatusinfo.objects.filter(id__in=[4,5,6,7]))
             context = {
                 'tripclosure_form': tripclosure_form,

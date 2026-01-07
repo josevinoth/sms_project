@@ -252,12 +252,6 @@ def enquirynote_list(request):
             consignment_limit_reached = consignments.count() >= total_allowed
         else:
             consignment_limit_reached = True
-        print(
-            enquiry.id,
-            "Vehicles:", vehicles,
-            "Consignments:", consignments.count(),
-            "Limit reached:", consignment_limit_reached
-        )
 
         enquiry_data.append({
             'enquiry': enquiry,

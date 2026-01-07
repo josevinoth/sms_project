@@ -1,134 +1,141 @@
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
 
-from ..models import driver_settlement_info
-from ..sub_models.driver_expense_mod import Driverexpense
+from .driver_settlement_view import recalc_driver_settlement
+from ..models import Driverexpense,TripdetailInfo,driver_settlement_info
 from ..sub_forms.driver_expense_form import DriverExpenseForm
 
 
+from django.db.models import Sum
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+
 @login_required(login_url='login_page')
-def driver_expense_add(request):
+def driver_expense_add(request, expense_id=0):
+    first_name = request.session.get('first_name')
 
-    if request.method == "POST":
-        form = DriverExpenseForm(request.POST)
-        next_url = request.POST.get('next')   # ✅ READ FROM POST
+    expense = None
+    settlement = None
 
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Expense Saved")
-
-            if next_url:
-                return redirect(next_url)
-
+    # ================= 1️⃣ RESOLVE SETTLEMENT FIRST =================
+    if expense_id:
+        # EDIT MODE
+        expense = get_object_or_404(Driverexpense, pk=expense_id)
+        settlement = expense.de_driver_id
+    else:
+        # ADD MODE
+        settlement_id = request.GET.get('settlement_id')
+        if not settlement_id:
+            messages.error(request, "Please open expense from Driver Settlement")
             return redirect('driver_settlement_list')
 
-    else:
-        form = DriverExpenseForm()
-        next_url = request.GET.get('next')    # ✅ READ FROM GET
+        settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
 
-    return render(request, 'asset_mgt_app/driver_expense_add.html', {
-        'form': form,
-        'next': next_url
-    })
+    # ================= 2️⃣ CALCULATE TOTALS (AFTER settlement) =================
+    advance_total = Driverexpense.objects.filter(
+        de_driver_id=settlement,
+        de_expense_type__id=1   # ADVANCE
+    ).aggregate(t=Sum('de_total_cost'))['t'] or 0
 
+    expense_total = Driverexpense.objects.filter(
+        de_driver_id=settlement,
+        de_expense_type__id=2   # EXPENSE
+    ).aggregate(t=Sum('de_total_cost'))['t'] or 0
 
-# ============================================================
-# UPDATE DRIVER EXPENSE
-# ============================================================
-@login_required(login_url='login_page')
-def driver_expense_update(request, exp_id):
-    expense = get_object_or_404(Driverexpense, id=exp_id)
-    settlement = expense.driver_settlement_info
+    current_balance = advance_total - expense_total
 
+    # ================= 3️⃣ POST =================
     if request.method == "POST":
-        form = DriverExpenseForm(request.POST, instance=expense)
-
+        form = DriverExpenseForm(request.POST, instance=expense, settlement=settlement)
         if form.is_valid():
             exp = form.save(commit=False)
-
-            # 🔒 Keep settlement & driver fixed
-            exp.driver_settlement_info = settlement
-            exp.de_driver_name = settlement.staff_name
-            exp.de_driver_id = settlement.staff_id.username
-
+            exp.driver_name = settlement.driver
+            exp.de_driver_id = settlement
             exp.save()
 
-            messages.success(request, "Driver Expense updated successfully")
-            return redirect('driver_settlement_update', settlement.id)
+            # 🔥 ALWAYS recalc after save
+            recalc_driver_settlement(settlement)
 
+            messages.success(request, "Driver expense saved successfully ✅")
+            return redirect('driver_settlement_update', ds_id=settlement.id)
+
+    # ================= 4️⃣ GET =================
     else:
-        form = DriverExpenseForm(instance=expense)
+        if expense:
+            form = DriverExpenseForm(instance=expense,settlement=settlement)
+        else:
+            form = DriverExpenseForm(
+                initial={'driver_name': settlement.driver},
+                settlement=settlement
+            )
 
+    # ================= 5️⃣ RENDER =================
     return render(request, "asset_mgt_app/driver_expense_add.html", {
         'form': form,
+        'first_name': first_name,
         'settlement': settlement,
+        'advance_total': advance_total,
+        'expense_total': expense_total,
+        'current_balance': current_balance,
     })
 
 
 # ============================================================
-# DELETE DRIVER EXPENSE
-# ============================================================
-@login_required(login_url='login_page')
-def driver_expense_delete(request, exp_id):
-    expense = get_object_or_404(Driverexpense, id=exp_id)
-    settlement_id = expense.driver_settlement_info.id
-
-    expense.delete()
-    messages.success(request, "Driver Expense deleted successfully")
-
-    return redirect('driver_settlement_update', settlement_id)
-
-
-# ============================================================
-# DRIVER EXPENSE LIST (OPTIONAL / STANDALONE)
+# LIST DRIVER EXPENSE
 # ============================================================
 @login_required(login_url='login_page')
 def driver_expense_list(request):
-    expenses = Driverexpense.objects.select_related(
-        'driver_settlement_info'
-    ).order_by('-id')
+    first_name = request.session.get('first_name')
 
-    return render(request, "asset_mgt_app/driver_expense_list.html", {
-        'expense_list': expenses
-    })
+    context = {
+        'expense_list': Driverexpense.objects.all().order_by('-id'),
+        'first_name': first_name
+    }
+
+    return render(
+        request,
+        "asset_mgt_app/driver_expense_list.html",
+        context
+    )
 
 
 @login_required(login_url='login_page')
-def driver_expense_by_driver(request):
-    driver_id = request.GET.get('driver_id')
+def driver_expense_delete(request, expense_id):
+    expense = get_object_or_404(Driverexpense, pk=expense_id)
+    settlement = expense.de_driver_id
 
-    if not driver_id:
-        return JsonResponse([], safe=False)
+    expense.delete()
 
-    expenses = Driverexpense.objects.filter(
-        de_driver_id=driver_id
-    ).values(
-        'id',
-        'de_driver_name',
-        'de_driver_id',
-        'de_expense_type__ds_exp_category_name',
-        'de_parkingcost',
-        'de_loadingcost',
-        'de_unloadingcost',
-        'de_weighmentcost',
-        'de_supervisorcost',
-        'de_total_cost'
-    )
+    # 🔥 RECALC AFTER DELETE
+    recalc_driver_settlement(settlement)
 
-    data = []
-    for exp in expenses:
-        data.append({
-            'id': exp['id'],
-            'de_driver_name': exp['de_driver_name'],
-            'de_driver_id': exp['de_driver_id'],
-            'de_expense_type': exp['de_expense_type'],
-            'de_parkingcost': exp['de_parkingcost'],
-            'de_loadingcost': exp['de_loadingcost'],
-            'de_unloadingcost': exp['de_unloadingcost'],
-            'de_weighmentcost': exp['de_weighmentcost'],
-            'de_supervisorcost': exp['de_supervisorcost'],
-            'de_total_cost': exp['de_total_cost'],
-        })
+    messages.success(request, "Driver expense deleted successfully 🗑️")
+    return redirect('driver_settlement_add', ds_id=settlement.id)
 
-    return JsonResponse(data, safe=False)
+def get_trip_charges(request):
+    trip_id = request.GET.get('trip_id')
+
+    if not trip_id:
+        return JsonResponse({'error': 'No trip id'}, status=400)
+
+    try:
+        trip = TripdetailInfo.objects.get(id=trip_id)
+
+        data = {
+            'parking': trip.tc_parkingcost or 0,
+            'loading': trip.tc_loadingcost or 0,
+            'unloading': trip.tc_unloadingcost or 0,
+            'weighment': trip.tc_weighmentcost or 0,
+            'supervisor': trip.tc_supervisorcost or 0,
+        }
+
+        data['total'] = sum(data.values())
+
+        return JsonResponse(data)
+
+    except TripdetailInfo.DoesNotExist:
+        return JsonResponse({'error': 'Trip not found'}, status=404)

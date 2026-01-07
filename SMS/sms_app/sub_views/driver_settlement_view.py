@@ -3,127 +3,121 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Sum
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
-from ..forms import DriverSettlementForm
-from ..models import driver_settlement_info, User
-from ..sub_models.tripdetail_mod import TripdetailInfo
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.dateparse import parse_date
 
+from ..forms import DriverSettlementForm
+from ..models import driver_settlement_info,Driverexpense
+from ..sub_models.driver_master_mod import DrivermasterInfo
+from ..sub_models.tripdetail_mod import TripdetailInfo
 
 @login_required(login_url='login_page')
 def driver_settlement_add(request, ds_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
 
+    settlement = None
+    expense_list = Driverexpense.objects.none()
+
+    # ---------- GET ----------
     if request.method == "GET":
         if ds_id == 0:
             form = DriverSettlementForm()
         else:
-            ds = driver_settlement_info.objects.get(pk=ds_id)
-            form = DriverSettlementForm(instance=ds)
+            settlement = get_object_or_404(driver_settlement_info, pk=ds_id)
+            form = DriverSettlementForm(instance=settlement)
+
+            start_date = request.GET.get('start_date')
+            end_date = request.GET.get('end_date')
+
+            expense_qs = Driverexpense.objects.filter(de_driver_id=settlement)
+
+            if start_date:
+                expense_qs = expense_qs.filter(de_date__date__gte=parse_date(start_date))
+
+            if end_date:
+                expense_qs = expense_qs.filter(de_date__date__lte=parse_date(end_date))
+
+            expense_list = expense_qs.order_by('-de_date')
+
         return render(request, "asset_mgt_app/driver_settlement_add.html", {
             'form': form,
             'first_name': first_name,
             'user_id': user_id,
+            'settlement': settlement,
+            'expense_list': expense_list,
         })
 
-    else:
+    # ---------- POST ----------
+    # ---------- POST ----------
+    if ds_id == 0:
         form = DriverSettlementForm(request.POST)
-        if form.is_valid():
-            staff_id = form.cleaned_data['staff_id']
-            staff_name = form.cleaned_data['staff_name']
-            transaction_type = form.cleaned_data['transaction_type']
-            transaction_date = form.cleaned_data['transaction_date']
-            business_type = form.cleaned_data['business_type']
-            amount = form.cleaned_data['amount']
+    else:
+        settlement_obj = get_object_or_404(driver_settlement_info, pk=ds_id)
+        form = DriverSettlementForm(request.POST, instance=settlement_obj)
 
-            # Duplicate check
-            if not driver_settlement_info.objects.filter(
-                staff_id=staff_id,
-                staff_name=staff_name,
-                transaction_type=transaction_type,
-                transaction_date=transaction_date,
-                business_type=business_type,
-                amount=amount
-            ).exclude(id=ds_id).exists():
-                if ds_id == 0:
-                    new_record = form.save()
-                    try:
-                        last_id = driver_settlement_info.objects.values_list('id', flat=True).last()
-                        ran_number = 200000 + last_id
-                    except ObjectDoesNotExist:
-                        ran_number = 200000
-                    ds_num = f"DS_{ran_number}"
-                    driver_settlement_info.objects.filter(id=new_record.id).update(ds_number=ds_num)
-                    messages.success(request, 'Record Saved Successfully')
-                    return redirect(new_record.get_absolute_url_ds())
-                else:
-                    ds = driver_settlement_info.objects.get(pk=ds_id)
-                    form = DriverSettlementForm(request.POST, instance=ds)
-                    form.save()
-                    messages.success(request, 'Record Updated Successfully')
-                    return redirect(request.META['HTTP_REFERER'])
-            else:
-                messages.error(request, 'Duplicate Record Found.')
-                return redirect(request.META['HTTP_REFERER'])
-        else:
-            print(form.errors)
-            messages.error(request, 'Record Not Saved. Please Fill All Required Fields')
-            return redirect(request.META['HTTP_REFERER'])
+    if form.is_valid():
+        settlement = form.save(commit=False)
+
+        # 🔑 Snapshot driver master details
+        driver = settlement.driver
+        settlement.driver_id_value = driver.dm_id
+        settlement.driver_name = driver.dm_name
+        settlement.driver_phone = driver.dm_drivernumber
+        settlement.driver_licence = driver.dm_driver_lic
+        settlement.driver_licence_expiry = driver.dm_driver_lic_expiry
+
+        settlement.save()
+
+        messages.success(request, "Driver settlement updated successfully")
+        return redirect('driver_settlement_list')
+
+    messages.error(request, "Record not saved. Please fill all required fields")
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
 
 @login_required(login_url='login_page')
 def driver_settlement_list(request):
-    from django.db.models import Sum
-
     first_name = request.session.get('first_name')
 
-    driver_settlements = driver_settlement_info.objects.all().order_by('-id')
+    settlements = driver_settlement_info.objects.select_related(
+        'driver'
+    ).order_by('-id')
 
-    # Get unique, cleaned driver names
-    all_names = driver_settlement_info.objects.values_list('staff_name', flat=True)
-    driver_names = sorted(set(name.strip() for name in all_names if name))
+    driver_id = request.GET.get('driver_id')
+    if driver_id:
+        settlements = settlements.filter(driver__dm_id=driver_id)
 
-    # Get selected driver name from query
-    driver_name = request.GET.get('driver_name')
-
-    if driver_name:
-        driver_settlements = driver_settlements.filter(staff_name__iexact=driver_name.strip())
-
-    total_advance = driver_settlements.aggregate(total_advance=Sum('amount'))['total_advance'] or 0
-    total_balance = driver_settlements.aggregate(total_balance=Sum('balance'))['total_balance'] or 0
+    totals = settlements.aggregate(
+        total_advance=Sum('ds_tripadvance'),
+        total_balance=Sum('ds_balance')
+    )
 
     context = {
-        'driver_settlement_list': driver_settlements,
-        'driver_names': driver_names,
-        'selected_driver': driver_name,
-        'total_advance': total_advance,
-        'total_balance': total_balance,
+        'driver_settlement_list': settlements,
+        'drivers': DrivermasterInfo.objects.all().order_by('dm_name'),
+        'selected_driver': driver_id,
+        'total_advance': totals['total_advance'] or 0,
+        'total_balance': totals['total_balance'] or 0,
         'first_name': first_name,
     }
-    return render(request, "asset_mgt_app/driver_settlement_list.html", context)
 
+    return render(request, "asset_mgt_app/driver_settlement_list.html", context)
 
 @login_required(login_url='login_page')
 def driver_settlement_delete(request, ds_id):
-    ds = driver_settlement_info.objects.get(pk=ds_id)
-    ds.delete()
-    return redirect('/SMS/driver_settlement_list')
+    settlement = get_object_or_404(driver_settlement_info, pk=ds_id)
+    settlement.delete()
+    messages.success(request, "Driver settlement deleted successfully")
+    return redirect('driver_settlement_list')
 
-
-@login_required(login_url='login_page')
-def get_full_name_driver(request):
-    username = request.GET.get('username', None)
-    if username:
-        user = User.objects.get(username=username)
-        return JsonResponse({'full_name': user.get_full_name()})
-    return JsonResponse({'error': 'Username not provided'}, status=400)
-
-
-# ✅ UPDATED VIEW — full breakdown for modal
 @login_required(login_url='login_page')
 def get_trip_totalcost(request):
     trip_id = request.GET.get('trip_id')
+
     try:
         trip = TripdetailInfo.objects.get(id=trip_id)
+
         details = {
             'Trip Charges': trip.tc_tripcost or 0,
             'Parking Charges': trip.tc_parkingcost or 0,
@@ -135,65 +129,55 @@ def get_trip_totalcost(request):
             'Halting Charges': trip.tc_haltingcost or 0,
             'Supervisor Charges': trip.tc_supervisorcost or 0,
         }
-        total_cost = sum(details.values())
-        return JsonResponse({'details': details, 'total_cost': total_cost})
+
+        return JsonResponse({
+            'details': details,
+            'total_cost': sum(details.values())
+        })
+
     except TripdetailInfo.DoesNotExist:
         return JsonResponse({'details': {}, 'total_cost': 0})
 
-
-
-
-    @login_required(login_url='login_page')
-    def driver_settlement_add(request):
-        expense_list = Driverexpense.objects.all().order_by('-id')
-
-        if request.method == "POST":
-            form = DriverSettlementForm(request.POST)
-            if form.is_valid():
-                form.save()
-                messages.success(request, "Driver Settlement saved")
-                return redirect('driver_settlement_list')
-        else:
-            form = DriverSettlementForm()
-
-        return render(request, 'asset_mgt_app/driver_settlement_add.html', {
-            'form': form,
-            'expense_list': expense_list
-        })
-
 @login_required(login_url='login_page')
-def get_driver_name_by_staff_id(request):
-    user_id = request.GET.get('user_id')
+def get_driver_details_from_master(request):
+    driver_id = request.GET.get('driver_id')
 
-    if not user_id:
-        return JsonResponse({
-            'driver_name': '',
-            'driver_ext_id': ''
-        })
-
-    try:
-        user = User.objects.select_related('user_extinfo').get(id=user_id)
-
-        return JsonResponse({
-            'driver_name': user.get_full_name() or user.username,
-            'driver_ext_id': user.user_extinfo.id if hasattr(user, 'user_extinfo') else ''
-        })
-
-    except User.DoesNotExist:
-        return JsonResponse({
-            'driver_name': '',
-            'driver_ext_id': ''
-        })
-
-@login_required(login_url='login_page')
-def get_driver_details(request):
-    user_id = request.GET.get('user_id')
-
-    try:
-        user = User.objects.select_related('user_extinfo').get(id=user_id)
-        return JsonResponse({
-            'driver_ext_id': user.user_extinfo.id,
-            'phone': user.user_extinfo.emp_contact
-        })
-    except:
+    if not driver_id:
         return JsonResponse({})
+
+    try:
+        driver = DrivermasterInfo.objects.get(id=driver_id)
+        return JsonResponse({
+            'driver_id': driver.id,                     # primary key
+            'driver_code': driver.dm_id,                # business driver id (optional)
+            'driver_name': driver.dm_name,
+            'phone': driver.dm_drivernumber,
+            'licence': driver.dm_driver_lic,
+            'licence_expiry': driver.dm_driver_lic_expiry  # ✅ NEW
+        })
+    except DrivermasterInfo.DoesNotExist:
+        return JsonResponse({})
+
+def recalc_driver_settlement(settlement):
+    """
+    Recalculate total advance, total expense, and balance
+    """
+
+    advance_total = Driverexpense.objects.filter(
+        de_driver_id=settlement,
+        de_expense_type__id=1   # ADVANCE
+    ).aggregate(total=Sum('de_total_cost'))['total'] or 0
+
+    expense_total = Driverexpense.objects.filter(
+        de_driver_id=settlement,
+        de_expense_type__id=2   # EXPENSE
+    ).aggregate(total=Sum('de_total_cost'))['total'] or 0
+
+    settlement.ds_tripadvance = advance_total
+    settlement.ds_tripexpense = expense_total
+    settlement.ds_balance = advance_total - expense_total
+    settlement.save(update_fields=[
+        'ds_tripadvance',
+        'ds_tripexpense',
+        'ds_balance'
+    ])

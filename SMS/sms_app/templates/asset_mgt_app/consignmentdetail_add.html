@@ -193,7 +193,7 @@
 				</a>
 			</div>
 		</div>
-		<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+		<div id="collapseOne" class="collapse-show" aria-labelledby="headingOne" data-parent="#accordionExample">
 			<div class="card-body">
 				{% include "asset_mgt_app/consignmentgoods_add.html" %}
 			</div>
@@ -374,4 +374,17 @@
         }
     }
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const submitBtn = form.querySelector("button[type='submit']");
+
+    form.addEventListener("submit", function () {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Please wait...";
+    });
+});
+</script>
+
 {% endblock content %}

@@ -2,10 +2,10 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="">
+<form method="POST">
     {% csrf_token %}
 
-     <div class="container-fluid">
+    <div class="container-fluid">
         <div class="card bg-info text-white mb-3">
             <div class="card-header text-center">
                 <h4>Add / Update Driver Settlement</h4>
@@ -14,225 +14,140 @@
             <div class="card-body bg-light text-dark">
 
                 <div class="row">
+
                     <!-- LEFT COLUMN -->
-                            <div class="col-6">
+                    <div class="col-6">
 
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver Name</span>
-                                    </div>
-                                     {% render_field form.staff_name class="form-control disable_a_href"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver ID</span>
-                                    </div>
-                                    {% render_field form.staff_id class="form-control" %}
-                                </div>
-
-
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver Phone No</span>
-                                    </div>
-                                    {% render_field form.ds_phonenumber  id="phonenumber" class="form-control " %}
-                                </div>
-                                <div class="col-6">
-                               <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Submit</button>
-                                </div>
-
-
-
+                        <!-- DRIVER (MANDATORY) -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Driver name</span>
                             </div>
-                            <div class="col-6">
+                            {% render_field form.driver class="form-control" required="required" %}
+                        </div>
 
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Trip Advance</span>
-                                    </div>
-                                    {% render_field form.ds_tripadvance id="tripadvance" class="form-control" %}
-                                </div>
-
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Trip Expense</span>
-                                    </div>
-                                    {% render_field form.ds_tripexpense id="tripexpense" class="form-control" %}
-                                </div>
-
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Balance</span>
-                                    </div>
-                                    {% render_field form.balance id="balance_field" class="form-control"%}
-                                </div>
-
-                                {% render_field form.ds_updated_by id="ds_updated_by" hidden="True" class="form-control" %}
-                                  <div>
-                                    <a href="{% url 'driver_settlement_list' %}" class="btn btn-danger float-right">
-                                        <i class="fas fa-times"></i> Cancel
-                                    </a>
-                                  </div>
+                        <!-- DRIVER ID -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Driver ID</span>
                             </div>
-
-
-                        <div class="row">
-                            <div class="col-1"></div>
-                            <div class="col-10">
-                                <div class="message text-center">
-                                    {% for message in messages %}
-                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
+                            {% render_field form.driver_id_value id="driver_id_value" class="form-control disable_a_href" readonly="readonly" %}
                         </div>
 
 
-
-
-                    </div> </div> </div> </div> </div> </form>
-
-
-
-                        <div class="row">
-                            <div class="col">
-                                <div id="accordionExpense" class="container-fluid">
-
-                                   <hr>
-
-                                    <div class="card border-info mt-3">
-                                        <div class="card-header bg-info text-center text-white">
-                                           <h3>Driver Expense List</h3>
-                                            <a href="{% url 'driver_expense_add' %}?next={{ request.path }}"
-                                               class="btn btn-success btn-sm float-right">
-                                                <i class="fas fa-plus"></i> Add Expense
-                                            </a>
-                                        </div>
-
-                                        <div class="card-body bg-light">\
-                                            <table id="driver_expense_list" class="table table-striped table-bordered">
-                                                <thead class="thead-dark">
-                                                    <tr>
-                                                        <th>ID</th>
-                                                        <th>Driver Name</th>
-                                                        <th>Driver ID</th>
-                                                        <th>Expense Type</th>
-                                                        <th>Parking</th>
-                                                        <th>Loading</th>
-                                                        <th>Unloading</th>
-                                                        <th>Weighment</th>
-                                                        <th>Supervisor</th>
-                                                        <th>Total Cost</th>
-                                                        <th>Edit</th>
-                                                        <th>Delete</th>
-                                                    </tr>
-                                                 </thead>
-                                           </table>
-                                     </div>
-                                </div>
+                        <!-- PHONE -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Phone No</span>
                             </div>
+                            {% render_field form.driver_phone class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+
+                        <!-- LICENCE -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Licence No</span>
+                            </div>
+                            {% render_field form.driver_licence class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+                        <!-- LICENCE EXPIRY -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Licence Expiry</span>
+                            </div>
+                            {% render_field form.driver_licence_expiry class="form-control disable_a_href" readonly="readonly" %}
                         </div>
 
 
+                    </div>
+
+                    <!-- RIGHT COLUMN -->
+                    <div class="col-6">
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Trip Advance</span>
+                            </div>
+                            {% render_field form.ds_tripadvance class="form-control disable_a_href " %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Trip Expense</span>
+                            </div>
+                            {% render_field form.ds_tripexpense class="form-control disable_a_href" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Balance</span>
+                            </div>
+                            {% render_field form.ds_balance class="form-control disable_a_href" %}
+                        </div>
+
+                        {% render_field form.ds_updated_by id="ds_updated_by" class="form-control"   hidden=true%}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i> Submit
+                </button>
+
+                <a href="{% url 'driver_settlement_list' %}"
+                   class="btn btn-danger float-right">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- MESSAGES -->
+        <div class="row mt-3">
+            <div class="col-12 text-center">
+                {% for message in messages %}
+                <span class="{{ message.tags }}">{{ message }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</form>
+
+<div id="driver_expense_list_woh">
+    {% include "asset_mgt_app/driver_expense_list_woh.html" %}
+</div>
 
 <script>
-$(document).ready(function () {
-    $('#driver_expense_list').DataTable({
-        order: [[0, 'desc']],
-        destroy: true
+    $(document).ready(function () {
+
+            document.getElementById("ds_updated_by").value = '{{user_id}}';
+
     });
-});
-
 </script>
-
-    <script>
-$("#staff_id").change(function () {
-    let driverId = $(this).val();
-
-    if (!driverId) return;
-
-    $.ajax({
-        url: "{% url 'driver_expense_by_driver' %}",
-        data: { driver_id: driverId },
-        success: function (data) {
-
-            let table = $("#driver_expense_list").DataTable();
-            table.clear();
-
-            data.forEach(function (exp) {
-                table.row.add([
-                    exp.id,
-                    exp.de_driver_name,
-                    exp.de_driver_id,
-                    exp.de_expense_type,
-                    exp.de_parkingcost,
-                    exp.de_loadingcost,
-                    exp.de_unloadingcost,
-                    exp.de_weighmentcost,
-                    exp.de_supervisorcost,
-                    `<strong>${exp.de_total_cost}</strong>`,
-                    `<a href="/driver-expense-update/${exp.id}/" class="btn btn-primary btn-sm">
-                        <i class="far fa-edit"></i>
-                     </a>`,
-                    `<form method="POST" action="/driver-expense-delete/${exp.id}/"
-                        onsubmit="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                     </form>`
-                ]).draw(false);
-            });
-        }
-    });
-});
-</script>
-
 <script>
-$(document).ready(function () {
+    $(document).ready(function () {
 
-    $("#id_staff_id").change(function () {
-        let userId = $(this).val();
+        $("#id_driver").change(function () {
 
-        if (!userId) {
-            $("#id_staff_name").val("").trigger("change");
-            return;
-        }
+            let driverId = $(this).val();
+            if (!driverId) return;
 
-        $.ajax({
-            url: "{% url 'get_driver_name_by_staff_id' %}",
-            data: { user_id: userId },
-            success: function (data) {
-                if (data.driver_ext_id) {
-                    $("#id_staff_name")
-                        .val(data.driver_ext_id)
-                        .trigger("change");
+            $.ajax({
+                url: "{% url 'get_driver_details_from_master' %}",
+                data: { driver_id: driverId },
+                success: function (data) {
+
+                    $("#driver_id_value").val(data.driver_code );
+                    $("#id_driver_name").val(data.driver_name);
+                    $("#id_driver_phone").val(data.phone);
+                    $("#id_driver_licence").val(data.licence);
+                    $("#id_driver_licence_expiry").val(data.licence_expiry); // ✅ NEW
                 }
-            }
+            });
         });
+
     });
-
-});
 </script>
-
-                            <script>
-$("#id_staff_id").change(function () {
-    let userId = $(this).val();
-
-    if (!userId) return;
-
-    $.ajax({
-    url: "{% url 'get_driver_details' %}",
-    data: { user_id: userId },
-    success: function (data) {
-        $("#id_staff_name").val(data.driver_ext_id).trigger("change");
-        $("#phonenumber").val(data.phone);
-    }
-});
-});
-</script>
-
 
 
 {% endblock content %}

@@ -12,6 +12,10 @@ from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
 from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
+
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.contrib.auth.decorators import login_required
+
 @login_required(login_url='login_page')
 def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
     enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
@@ -50,6 +54,7 @@ def consignmentdetail_nav(request,consignmentdetail_id=0):
         'user_branch': user_branch,
     }
     return render(request, "asset_mgt_app/consignmentdetail_nav.html", context)
+
 @login_required(login_url='login_page')
 def consignmentdetail_add(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
@@ -196,6 +201,7 @@ def consignmentdetail_delete(request,consignmentdetail_id):
     return redirect(request.META['HTTP_REFERER'])
 
 @login_required(login_url='login_page')
+@xframe_options_exempt
 def consignment_note_pdf(request, consignment_note_id=0):
     try:
         consignment = ConsignmentdetailInfo.objects.get(pk=consignment_note_id)

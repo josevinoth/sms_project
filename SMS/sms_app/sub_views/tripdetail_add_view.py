@@ -14,6 +14,11 @@ from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 import json
+
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from ..models import TripdetailInfo
+
 @login_required(login_url='login_page')
 def tripdetail_enquiry(request, enquiry_id, trip_num):
     # Fetch the enquiry object (optional - only needed if you want to verify or log it)
@@ -83,6 +88,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     initial_data = {
                         'tr_vehiclenumber': vehicle_number,
                         'tr_drivername': va.va_drivername,
+                        'tr_driver_master_id': va.va_driver_master_id,
                         'tr_vehicletype': va.va_vehicletype,
                         'tr_vehiclesource': va.va_vehiclesource,
                         'tr_vehicletype_placed': va.va_vehicletype_placed,
@@ -247,6 +253,8 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 trip = trip_det_form.save(commit=False)
                 trip.tc_financestatus_id = 8
+                if vehicle_allotment_id:
+                    trip.tr_driver_master_id = va.va_driver_master_id
 
                 # ✅ Process POD signature
                 pod_data = request.POST.get('pod_signature_data')
@@ -271,7 +279,8 @@ def tripdetail_add(request, tripdetail_id=0):
                 EnquirynoteInfo.objects.filter(
                     en_enquirynumber=enquiry_num
                 ).update(en_tripdetails=list(tripdetail_list))
-                messages.success(request, 'Record Updated Successfully')
+                messages.success(request, "Record Updated Successfully")
+                return redirect('tripdetail_update', tripdetail_id=trip.id)
 
             else:
                 print("Main Form is not Valid")
@@ -306,6 +315,8 @@ def tripdetail_add(request, tripdetail_id=0):
                 ).values_list('tr_tripnumber', flat=True)
                 EnquirynoteInfo.objects.filter(pk=enquiry_num).update(en_tripdetails=list(tripdetail_list))
                 messages.success(request, 'Record Updated Successfully')
+                return redirect('tripdetail_update', tripdetail_id=tripdetail_id)
+
 
             else:
                 for field, errors in trip_det_form.errors.items():
@@ -315,7 +326,9 @@ def tripdetail_add(request, tripdetail_id=0):
                 print("Trip Details Main Form is not Valid")
                 messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
 
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect('tripdetail_add', tripdetail_id=tripdetail_id)  # ✅ stay on same record
+
+
 # List tripdetail
 @login_required(login_url='login_page')
 def tripdetail_list(request):
@@ -561,17 +574,24 @@ def fleet_management_view(request):
     vehicle_status_list = []
 
     for vehicle in vehicles:
-        trip = TripdetailInfo.objects.filter(tr_vehiclenumber=vehicle.vm_registrationnumber).order_by(
-            '-tr_created_at').first()
+        trip = TripdetailInfo.objects.filter(
+            tr_vehiclenumber=vehicle.vm_registrationnumber
+        ).select_related(
+            'tr_enquirynumber__en_customername'
+        ).order_by('-tr_created_at').first()
 
         if trip:
+            enquiry = trip.tr_enquirynumber
+            customer = enquiry.en_customername if enquiry else None
+
             status = {
                 'registration_number': vehicle.vm_registrationnumber,
+                'customer_name': customer.cu_name if customer else '',
                 'driver_name': trip.tr_drivername,
-                'from_location': trip.tr_departedlocation.place_name if trip.tr_departedlocation else None,
-                'to_location': trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else None,
-                'vehicle_type': trip.tr_vehicletype_placed.vt_vehicletype if trip.tr_vehicletype_placed else None,
-                'vehicle_source': trip.tr_vehiclesource.ow_ownership if trip.tr_vehiclesource else None,
+                'from_location': trip.tr_departedlocation.place_name if trip.tr_departedlocation else '',
+                'to_location': trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else '',
+                'vehicle_type': trip.tr_vehicletype_placed.vt_vehicletype if trip.tr_vehicletype_placed else '',
+                'vehicle_source': trip.tr_vehiclesource.ow_ownership if trip.tr_vehiclesource else '',
                 'departed_date': trip.tr_departeddate,
                 'reported_date': trip.tr_reporteddate,
                 'trip_status': trip.tc_financestatus.status if trip.tc_financestatus else 'Unknown',
@@ -581,6 +601,7 @@ def fleet_management_view(request):
         else:
             status = {
                 'registration_number': vehicle.vm_registrationnumber,
+                'customer_name': '',
                 'driver_name': '',
                 'from_location': '',
                 'to_location': '',
@@ -595,7 +616,11 @@ def fleet_management_view(request):
 
         vehicle_status_list.append(status)
 
-    return render(request, "asset_mgt_app/fleet_management.html", {'vehicle_status_list': vehicle_status_list})
+    return render(
+        request,
+        "asset_mgt_app/fleet_management.html",
+        {'vehicle_status_list': vehicle_status_list}
+    )
 
 @login_required(login_url='login_page')
 def get_sim_tracking_data(request):
@@ -624,3 +649,22 @@ def get_customer_ref(request):
     except ConsignmentdetailInfo.DoesNotExist:
         data = {'customer_ref': ''}
     return JsonResponse(data)
+
+
+
+@login_required(login_url='login_page')
+def get_last_reported_km(request):
+    vehicle = request.GET.get("vehicle")
+
+    last_trip = (
+        TripdetailInfo.objects
+        .filter(tr_vehiclenumber=vehicle)
+        .exclude(tr_reportedkm__isnull=True)
+        .exclude(tr_reportedkm=0)
+        .order_by('-id')      # most recent trip globally
+        .first()
+    )
+
+    return JsonResponse({
+        "reported_km": last_trip.tr_reportedkm if last_trip else None
+    })

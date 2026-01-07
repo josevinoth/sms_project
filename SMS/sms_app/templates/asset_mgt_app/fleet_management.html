@@ -24,35 +24,37 @@
         <thead class="thead-dark">
         <tr>
 
-                <th>Registration Number</th>
-                <th>Trip Number</th>
-                <th>Vehicle Type</th>
-                <th>Vehicle Source</th>
-                <th>Driver Name</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Departed Date</th>
-                <th>Reported Date</th>
-                <th>Status</th>
-                <th>Trip Status</th>
-            </tr>
+            <th>Registration Number</th>
+            <th>Customer</th>
+            <th>Trip Number</th>
+            <th>Vehicle Type</th>
+            <th>Vehicle Source</th>
+            <th>Driver Name</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Departed Date</th>
+            <th>Reported Date</th>
+            <th>Status</th>
+            <th>Trip Status</th>
+        </tr>
         </thead>
         <tbody>
-            {% for vehicle in vehicle_status_list %}
-            <tr class="{% if vehicle.status == 'Available' %}available{% else %}in-trip{% endif %}">
-                <td>{{ vehicle.registration_number }}</td>
-                <td>{{ vehicle.trip_number }}</td>
-                <td>{{ vehicle.vehicle_type }}</td>
-                <td>{{ vehicle.vehicle_source }}</td>
-                <td>{{ vehicle.driver_name }}</td>
-                <td>{{ vehicle.from_location }}</td>
-                <td>{{ vehicle.to_location }}</td>
-                <td>{{ vehicle.departed_date }}</td>
-                <td>{{ vehicle.reported_date }}</td>
-                <td>{{ vehicle.status }}</td>
-                <td>{{ vehicle.trip_status }}</td>
-            </tr>
-            {% endfor %}
+        {% for vehicle in vehicle_status_list %}
+        <tr class="{% if vehicle.status == 'Available' %}available{% else %}in-trip{% endif %}">
+            <td>{{ vehicle.registration_number }}</td>
+            <td>{{ vehicle.customer_name }}</td>
+            <td>{{ vehicle.trip_number }}</td>
+            <td>{{ vehicle.vehicle_type }}</td>
+            <td>{{ vehicle.vehicle_source }}</td>
+            <td>{{ vehicle.driver_name }}</td>
+            <td>{{ vehicle.from_location }}</td>
+            <td>{{ vehicle.to_location }}</td>
+            <td>{{ vehicle.departed_date }}</td>
+            <td>{{ vehicle.reported_date }}</td>
+            <td>{{ vehicle.status }}</td>
+            <td>{{ vehicle.trip_status }}</td>
+        </tr>
+        {% endfor %}
         </tbody>
     </table>
 </div>

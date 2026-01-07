@@ -128,6 +128,9 @@
 									</div>
 									{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control " %}
 								</div>
+								<input type="hidden" id="va_driver_master_id"
+       name="va_driver_master_id">
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Driver Number</span>
@@ -818,6 +821,53 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
+</script>
+<script>
+$(function () {
+    $("#va_drivername").autocomplete({
+    minLength: 2,
+
+    source: function (request, response) {
+        $.ajax({
+            url: "{% url 'driver_autocomplete' %}",
+            data: { term: request.term },
+            success: function (data) {
+                response($.map(data, function (item) {
+                    return {
+                        label: item.name,
+                        value: item.name,
+                        id: item.id,                 // 🔥 DRIVER ID
+                        number: item.number,
+                        lic: item.lic,
+                        expiry: item.expiry
+                    };
+                }));
+            }
+        });
+    },
+
+    select: function (event, ui) {
+        // ✅ Save BOTH
+        $("#va_drivername").val(ui.item.value);
+        $("#va_driver_master_id").val(ui.item.id);
+
+        $("#va_drivernumber").val(ui.item.number || "");
+        $("#va_driver_lic").val(ui.item.lic || "");
+        $("#va_driver_lic_expiry").val(ui.item.expiry || "");
+    },
+
+    change: function (event, ui) {
+        // ❌ Manual typing → clear ID
+        if (!ui.item) {
+            $("#va_driver_master_id").val("");
+            $("#va_drivernumber").val("");
+            $("#va_driver_lic").val("");
+            $("#va_driver_lic_expiry").val("");
+        }
+    }
+});
+
+});
 </script>
 
 <script>
