@@ -333,8 +333,43 @@ def tripdetail_add(request, tripdetail_id=0):
 @login_required(login_url='login_page')
 def tripdetail_list(request):
     first_name = request.session.get('first_name')
-    context = {'tripdetail_list' : TripdetailInfo.objects.all(),'first_name': first_name}
-    return render(request,"asset_mgt_app/tripdetail_list.html",context)
+    
+    # Get Filter values
+    branch = request.GET.get('branch', '')
+    selected_status_id = request.GET.get('trip_status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    # Base Query
+    tripdetail_queryset = TripdetailInfo.objects.all()
+    
+    # Apply Filters
+    if branch == 'MAA':
+        tripdetail_queryset = tripdetail_queryset.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='MAA')
+    elif branch == 'BLR':
+        tripdetail_queryset = tripdetail_queryset.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='BLR')
+        
+    if selected_status_id:
+        tripdetail_queryset = tripdetail_queryset.filter(tc_financestatus_id=selected_status_id)
+        
+    if date_from:
+        tripdetail_queryset = tripdetail_queryset.filter(tr_created_at__date__gte=date_from)
+    if date_to:
+        tripdetail_queryset = tripdetail_queryset.filter(tr_created_at__date__lte=date_to)
+        
+    # Get Status Options from Database (following tripdetail insert logic)
+    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8])
+        
+    context = {
+        'tripdetail_list': tripdetail_queryset.order_by('-id'),
+        'first_name': first_name,
+        'branch': branch,
+        'status_list': status_list,
+        'selected_status': int(selected_status_id) if selected_status_id else None,
+        'date_from': date_from,
+        'date_to': date_to,
+    }
+    return render(request, "asset_mgt_app/tripdetail_list.html", context)
 
 #Delete tripdetail
 @login_required(login_url='login_page')
