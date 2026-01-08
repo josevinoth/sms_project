@@ -25,7 +25,7 @@ class TripdetailaddForm(forms.ModelForm):
         self.fields['tr_vehiclesource'].empty_label = "--Select--"
         self.fields['tr_vehicletype_placed'].empty_label = "--Select--"
         self.fields['tr_vehicletype'].empty_label = "--Select--"
-        self.fields['tr_vehiclenumber'].empty_label = "--Select--"
+        #self.fields['tr_vehiclenumber'].empty_label = "--Select--"
         self.fields['tr_departedlocation'].empty_label = "--Select--"
         self.fields['tr_reportedlocation'].empty_label = "--Select--"
         self.fields['tc_financestatus'].empty_label = "--Select--"

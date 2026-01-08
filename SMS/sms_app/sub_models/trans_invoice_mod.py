@@ -1,0 +1,33 @@
+from django.db import models
+from ..models import CustomerInfo
+from ..models import TripdetailInfo
+from ..models import ConsignmentdetailInfo
+from ..models import ConsignmentgoodsInfo
+
+class TransInvoiceInfo(models.Model):
+    is_woh = models.BooleanField(default=False)
+    ti_inv_date = models.DateField()
+    ti_customer = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE)
+    ti_trip = models.ForeignKey(TripdetailInfo,on_delete=models.SET_NULL,null=True,blank=True)
+    ti_goods = models.ForeignKey(ConsignmentgoodsInfo,on_delete=models.SET_NULL,null=True,blank=True)
+    ti_consignment = models.ForeignKey(ConsignmentdetailInfo,on_delete=models.SET_NULL,null=True,blank=True)
+    ti_inv_no = models.CharField(max_length=50,unique=True)
+    ti_gst_in = models.CharField(max_length=50,unique=True,null=True,blank=True)
+    ti_customer_short_name = models.CharField(max_length=50)
+    ti_state= models.CharField(max_length=10,null=True,blank=True )
+    ti_pincode = models.CharField(max_length=10,null=True,blank=True )
+    ti_transportation_charges = models.FloatField(default=0, null=True, blank=True, )
+    ti_toll_charges = models.FloatField(default=0, null=True, blank=True, )
+    ti_parking_charges = models.FloatField(default=0, null=True, blank=True, )
+    ti_loading_charges = models.FloatField(default=0, null=True, blank=True, )
+    ti_unloading_charges = models.FloatField(default=0, null=True, blank=True,  )
+    ti_halting_charges = models.FloatField(default=0, null=True, blank=True,  )
+    ti_docket_charges = models.FloatField(default=0, null=True, blank=True, )
+    ti_weighment_charges = models.FloatField(default=0, null=True, blank=True, )
+    ti_handling_charges = models.FloatField(default=0, null=True, blank=True  ,)
+    ti_cancellation_charges = models.FloatField(default=0, null=True, blank=True, )
+    ti_total = models.FloatField(default=0)
+
+
+    def __str__(self):
+        return self.ti_inv_no

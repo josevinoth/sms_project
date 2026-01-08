@@ -3,13 +3,29 @@
         <div class="card-header bg-info text-white d-flex align-items-center justify-content-between">
             <h3 class="mb-0">Driver Expense List</h3>
 
-            <a href="{% url 'driver_expense_add' %}" class="btn btn-success btn-m">
+            <a href="{% url 'driver_expense_add' %}?settlement_id={{ settlement.id }}"
+               class="btn btn-success btn-m">
                 <i class="fas fa-plus"></i> Add
             </a>
+
         </div>
 
 
         <div class="card-body bg-light">
+            <form method="get" class="form-inline mb-3">
+                <label class="mr-2">From</label>
+                <input type="date" name="start_date" class="form-control mr-3"
+                       value="{{ request.GET.start_date }}">
+
+                <label class="mr-2">To</label>
+                <input type="date" name="end_date" class="form-control mr-3"
+                       value="{{ request.GET.end_date }}">
+
+                <button type="submit" class="btn btn-info btn-sm">
+                    Filter
+                </button>
+            </form>
+
             <table id="driver_expense_list" class="table table-striped table-bordered">
                 <thead class="thead-dark">
                 <tr>

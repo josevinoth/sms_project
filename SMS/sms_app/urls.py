@@ -780,8 +780,24 @@ urlpatterns = [
     path('ajax/get-driver-details/',views.get_driver_details_from_master,name='get_driver_details_from_master'),
     path( 'get-dmr-email-details/',views.get_dmr_email_details,name='get_dmr_email_details'),
     path('ajax/get-employee-driver/',views.get_employee_driver_details,name='get_employee_driver_details'),
+    path('ajax/get-trip-charges/',views.get_trip_charges,name='get_trip_charges'),
+    path('driver-autocomplete/', views.driver_autocomplete, name='driver_autocomplete'),
+    path("get_last_reported_km/", views.get_last_reported_km, name="get_last_reported_km"),
 
 
+    path('trans_invoice_add/',views.trans_invoice_add,name='trans_invoice_add'),
+    path('trans_invoice_edit/<int:invoice_id>/',views.trans_invoice_add,name='trans_invoice_edit'),
+    path('trans_invoice_list/',views.trans_invoice_list,name='trans_invoice_list' ),
+    path('trans_invoice_list_woh/<int:customer_id>/',views.trans_invoice_list_woh,name='trans_invoice_list_woh'),
+    path('trans_invoice_delete/<int:invoice_id>/',views.trans_invoice_delete,name='trans_invoice_delete'),
+    path('fetch_customer_details/',views.fetch_customer_details,name='fetch_customer_details'),
+    path('trans_invoice_remove_woh/',views.trans_invoice_remove_woh,name='trans_invoice_remove_woh'),
+    path('trans_invoice_add_woh/', views.trans_invoice_add_woh, name='trans_invoice_add_woh'),
+    path('maintenance_add/',views.maintenance_add, name='maintenance_add'),
+    path('fetch_vehicle_details/', views.fetch_vehicle_details, name='fetch_vehicle_details'),
+    path('maintenance_edit/<int:id>/', views.maintenance_edit, name='maintenance_edit'),
+    path('maintenance_delete/<int:id>/', views.maintenance_delete, name='maintenance_delete'),
+    path('maintenance_list/', views.maintenance_list, name='maintenance_list'),
 
 ]
 

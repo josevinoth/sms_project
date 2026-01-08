@@ -66,3 +66,20 @@ def get_employee_driver_details(request):
         })
     except User.DoesNotExist:
         return JsonResponse({'error': 'Invalid user'}, status=400)
+
+def driver_autocomplete(request):
+    term = request.GET.get('term', '').strip()
+
+    drivers = DrivermasterInfo.objects.filter(
+        dm_name__icontains=term
+    )[:10]
+
+    data = [{
+        'id': d.id,  # 🔥 ADD THIS
+        'name': d.dm_name,
+        'number': d.dm_drivernumber,
+        'lic': d.dm_driver_lic,
+        'expiry': d.dm_driver_lic_expiry
+    } for d in drivers]
+
+    return JsonResponse(data, safe=False)

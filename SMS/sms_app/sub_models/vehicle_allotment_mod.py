@@ -1,4 +1,6 @@
 from django.db import models
+
+from .driver_master_mod import DrivermasterInfo
 from ..models import EnquirynoteInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo,Vendor_info,StatusList
 
 class Vehicle_allotmentInfo(models.Model):
@@ -24,6 +26,8 @@ class Vehicle_allotmentInfo(models.Model):
     va_profit_percentage = models.FloatField(null=True, blank=True)
     va_standardbuy = models.FloatField(max_length=100, null=True, blank=True)
     va_specialbuy = models.FloatField(max_length=100, null=True, blank=True)
+    va_driver = models.ForeignKey(DrivermasterInfo,on_delete=models.CASCADE,related_name='driver_name',null=True, blank=True)
+    va_driver_master_id = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
             if self.va_vehiclenumber and str(self.va_vehiclenumber):

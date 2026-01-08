@@ -1,0 +1,291 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form id="maintenanceForm" method="POST">
+{% csrf_token %}
+
+<div class="container-fluid">
+  <div class="card text-white bg-info mb-3" style="max-width:100%;">
+
+    <!-- ================= HEADER ================= -->
+    <div class="card-header text-center">
+      <h3 class="mb-0">Vehicle Maintenance</h3>
+    </div>
+
+    <!-- ================= BODY ================= -->
+    <div class="card-body bg-light">
+
+      <!-- ================= ROW 1 : TWO COLUMNS ================= -->
+      <div class="row">
+
+        <!-- ========== COLUMN 1 : TRUCK DETAILS ========== -->
+        <div class="col-12 col-md-6">
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Registration No</span>
+            </div>
+            {% render_field form.registration_no class="form-control" id="registration_no" %}
+          </div>
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Model</span>
+            </div>
+            {% render_field form.make_model class="form-control" id="make_model" readonly="readonly" %}
+          </div>
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Registration Date</span>
+            </div>
+            {% render_field form.registration_date class="form-control" id="registration_date" readonly="readonly" %}
+          </div>
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Chassis No</span>
+            </div>
+            {% render_field form.chassis_no class="form-control" id="chassis_no" readonly="readonly" %}
+          </div>
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Engine No</span>
+            </div>
+            {% render_field form.engine_no class="form-control" id="engine_no" readonly="readonly" %}
+          </div>
+
+        </div>
+
+        <!-- ========== COLUMN 2 : JOB CARD DETAILS ========== -->
+        <div class="col-12 col-md-6">
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Current KM</span>
+            </div>
+            {% render_field form.current_km class="form-control" %}
+          </div>
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Total KM Run</span>
+            </div>
+            {% render_field form.total_km_run class="form-control" %}
+          </div>
+
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Service Type</span>
+            </div>
+            {% render_field form.service_type class="form-control" %}
+          </div>
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Driver</span>
+            </div>
+            {% render_field form.driver_name class="form-control" %}
+          </div>
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Technician</span>
+            </div>
+            {% render_field form.technician class="form-control" %}
+          </div>
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Est. Delivery</span>
+            </div>
+            {% render_field form.est_delivery type="datetime-local" class="form-control" placeholder="DD-MM-YYYY HH:MM" %}
+          </div>
+
+          <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Work Area</span>
+            </div>
+            {% render_field form.work_area class="form-control" %}
+          </div>
+
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- ================= JOB CARD META ================= -->
+
+
+      <!-- ================= COMPLAINT SECTION ================= -->
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Complaint</span>
+        </div>
+        {% render_field form.complaint class="form-control" %}
+      </div>
+
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Description</span>
+        </div>
+        {% render_field form.description class="form-control" %}
+      </div>
+
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Remarks</span>
+        </div>
+        {% render_field form.remarks class="form-control" %}
+      </div>
+
+      <!-- ================= ACTION ================= -->
+
+     <div class="row mb-3">
+  <div class="col-md-6">
+    <div class="input-group input-group-sm">
+      <div class="input-group-prepend">
+        <span class="input-group-text">Job Card Creator</span>
+      </div>
+      <input
+        type="text"
+        id="job_creator"
+        class="form-control"
+        readonly
+        value="{{ job_creator }}"
+      >
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="input-group input-group-sm">
+      <div class="input-group-prepend">
+        <span class="input-group-text">Created On</span>
+      </div>
+      <input
+        type="text"
+        id="created_on"
+        class="form-control"
+        readonly
+        value="{{ created_on|date:'d-m-Y H:i' }}"
+      >
+    </div>
+  </div>
+</div>
+
+
+      <div id="msgBox" class="mb-2"></div>
+
+      <button type="submit" class="btn btn-success">
+        <i class="fas fa-check"></i> Save
+      </button>
+
+      <!--<a href="{% url 'home_page' %}" class="btn btn-danger float-right">
+        <i class="fas fa-times"></i> Cancel
+      </a>-->
+
+    </div>
+  </div>
+</div>
+</form>
+
+<!-- ================= FETCH VEHICLE DETAILS ================= -->
+<script>
+document.getElementById("registration_no").addEventListener("change", function () {
+    const regNo = this.value;
+
+    fetch(`/SMS/fetch_vehicle_details/?reg_no=${regNo}`)
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("make_model").value = data.make_model || "";
+        document.getElementById("registration_date").value = data.registration_date || "";
+        document.getElementById("chassis_no").value = data.chassis_no || "";
+        document.getElementById("engine_no").value = data.engine_no || "";
+    });
+});
+
+
+</script>
+
+
+
+
+
+
+
+<!-- ================= SAVE AJAX =================
+
+<script>
+document.getElementById("maintenanceForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch("", {
+        method: "POST",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.status === "success") {
+
+            document.getElementById("job_creator").innerText =
+                data.job_card_creator;
+
+            document.getElementById("created_on").innerText =
+                data.job_card_created_on;
+
+            document.getElementById("jobInfoRow").style.display = "flex";
+
+            document.getElementById("msgBox").innerHTML =
+                `<div class="alert alert-success mt-2">
+                    Maintenance saved successfully
+                </div>`;
+        }
+        else {
+            document.getElementById("msgBox").innerHTML =
+                `<div class="alert alert-danger mt-2">
+                    ${JSON.stringify(data.errors)}
+                </div>`;
+        }
+    })
+    .catch(() => {
+        document.getElementById("msgBox").innerHTML =
+            `<div class="alert alert-danger mt-2">
+                Server error
+            </div>`;
+    });
+});
+</script>-->
+
+<!-- ================= FETCH VEHICLE DETAILS ================= -->
+<!--<script>
+document.getElementById("registration_no").addEventListener("change", function () {
+    const regNo = this.value;
+
+    if (!regNo) {
+        make_model.value = "";
+        registration_date.value = "";
+        chassis_no.value = "";
+        engine_no.value = "";
+        return;
+    }
+
+    fetch(`/SMS/fetch_vehicle_details/?reg_no=${regNo}`)
+    .then(res => res.json())
+    .then(data => {
+        make_model.value = data.make_model || "";
+        registration_date.value = data.registration_date || "";
+        chassis_no.value = data.chassis_no || "";
+        engine_no.value = data.engine_no || "";
+    });
+});
+</script>-->
+
+{% endblock %}
