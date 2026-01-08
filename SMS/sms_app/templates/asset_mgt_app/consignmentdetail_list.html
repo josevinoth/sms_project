@@ -153,12 +153,15 @@
         </tbody>
     </table>
 </div>
+
+
 <script>
     $(document).ready(function () {
         $('#consignmentdetail_list').DataTable({
             scrollX: true,
             order: [0, 'desc'],
             dom: 'lBfrtip',
+            pageLength: 100,
             buttons: [
                 'copy', 'csv', 'excel', 'print'
             ]
