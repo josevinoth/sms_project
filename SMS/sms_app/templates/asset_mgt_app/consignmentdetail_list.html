@@ -22,7 +22,7 @@
             <div class="card shadow">
                 <div class="card-body">
                     <form method="GET" class="form-row align-items-end">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="customer" class="font-weight-bold">Customer Name</label>
                             <select name="customer" id="customer" class="form-control select2">
                                 <option value="">-- All Customers --</option>
@@ -31,7 +31,15 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label for="branch" class="font-weight-bold">Branch</label>
+                            <select name="branch" id="branch" class="form-control select2">
+                                <option value="">-- All Branches --</option>
+                                <option value="MAA" {% if branch == 'MAA' %}selected{% endif %}>MAA</option>
+                                <option value="BLR" {% if branch == 'BLR' %}selected{% endif %}>BLR</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <label for="updated_by" class="font-weight-bold">Updated By</label>
                             <select name="updated_by" id="updated_by" class="form-control select2">
                                 <option value="">-- All Employees --</option>

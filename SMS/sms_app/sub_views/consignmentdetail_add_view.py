@@ -184,6 +184,7 @@ def consignmentdetail_list(request):
     updated_by_id = request.GET.get('updated_by')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
+    branch = request.GET.get('branch', '')
 
     # Dropdown Options
     customers = CustomerInfo.objects.all().order_by('cu_name')
@@ -209,6 +210,10 @@ def consignmentdetail_list(request):
         consignmentdetail_queryset = consignmentdetail_queryset.filter(co_consignmentdate__gte=date_from)
     if date_to:
         consignmentdetail_queryset = consignmentdetail_queryset.filter(co_consignmentdate__lte=date_to)
+    if branch == 'MAA':
+        consignmentdetail_queryset = consignmentdetail_queryset.filter(co_consignmentnumber__istartswith='MAA')
+    elif branch == 'BLR':
+        consignmentdetail_queryset = consignmentdetail_queryset.filter(co_consignmentnumber__istartswith='BLR')
 
     consignmentdetail_objects = consignmentdetail_queryset.all().order_by('-id')
     
@@ -263,6 +268,7 @@ def consignmentdetail_list(request):
         'selected_updated_by': int(updated_by_id) if updated_by_id else None,
         'date_from': date_from,
         'date_to': date_to,
+        'branch': branch,
     }
     return render(request, "asset_mgt_app/consignmentdetail_list.html", context)
 
