@@ -18,6 +18,8 @@ import json
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from ..models import TripdetailInfo
+from django.core.paginator import Paginator
+
 
 @login_required(login_url='login_page')
 def tripdetail_enquiry(request, enquiry_id, trip_num):
@@ -333,35 +335,56 @@ def tripdetail_add(request, tripdetail_id=0):
 @login_required(login_url='login_page')
 def tripdetail_list(request):
     first_name = request.session.get('first_name')
-    
-    # Get Filter values
+
+    # Filters
     branch = request.GET.get('branch', '')
     selected_status_id = request.GET.get('trip_status', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
-    
-    # Base Query
+
+    # Base queryset
     tripdetail_queryset = TripdetailInfo.objects.all()
-    
-    # Apply Filters
+
+    # Branch filter
     if branch == 'MAA':
-        tripdetail_queryset = tripdetail_queryset.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='MAA')
+        tripdetail_queryset = tripdetail_queryset.filter(
+            tr_consignmentnumber__co_consignmentnumber__istartswith='MAA'
+        )
     elif branch == 'BLR':
-        tripdetail_queryset = tripdetail_queryset.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='BLR')
-        
+        tripdetail_queryset = tripdetail_queryset.filter(
+            tr_consignmentnumber__co_consignmentnumber__istartswith='BLR'
+        )
+
+    # Status filter
     if selected_status_id:
-        tripdetail_queryset = tripdetail_queryset.filter(tc_financestatus_id=selected_status_id)
-        
+        tripdetail_queryset = tripdetail_queryset.filter(
+            tc_financestatus_id=selected_status_id
+        )
+
+    # Date filters
     if date_from:
-        tripdetail_queryset = tripdetail_queryset.filter(tr_created_at__date__gte=date_from)
+        tripdetail_queryset = tripdetail_queryset.filter(
+            tr_created_at__date__gte=date_from
+        )
     if date_to:
-        tripdetail_queryset = tripdetail_queryset.filter(tr_created_at__date__lte=date_to)
-        
-    # Get Status Options from Database (following tripdetail insert logic)
+        tripdetail_queryset = tripdetail_queryset.filter(
+            tr_created_at__date__lte=date_to
+        )
+
+    # Order
+    tripdetail_queryset = tripdetail_queryset.order_by('-id')
+
+    # ✅ PAGINATION
+    paginator = Paginator(tripdetail_queryset, 50)  # 50 rows per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Status dropdown
     status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8])
-        
+
     context = {
-        'tripdetail_list': tripdetail_queryset.order_by('-id'),
+        'tripdetail_list': page_obj,   # IMPORTANT
+        'page_obj': page_obj,          # IMPORTANT
         'first_name': first_name,
         'branch': branch,
         'status_list': status_list,
@@ -369,7 +392,9 @@ def tripdetail_list(request):
         'date_from': date_from,
         'date_to': date_to,
     }
+
     return render(request, "asset_mgt_app/tripdetail_list.html", context)
+
 
 #Delete tripdetail
 @login_required(login_url='login_page')

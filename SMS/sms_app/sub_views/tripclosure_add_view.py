@@ -17,6 +17,9 @@ from django.http import JsonResponse
 from ..sub_models.haltingcharges_mod import Haltingcharges
 from ..models import EnquirynoteInfo
 
+from django.core.paginator import Paginator
+
+
 @login_required(login_url='login_page')
 def tripclosure_enquiry(request,enquiry_id,trip_num):
     # Fetch the enquiry object (optional - only needed if you want to verify or log it)
@@ -174,47 +177,59 @@ def tripclosure_add(request,tripclosure_id=0):
             return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/enquirynote_list')
 
-# List tripclosure
 @login_required(login_url='login_page')
 def tripclosure_list(request):
     first_name = request.session.get('first_name')
-    
-    # Get Filter values
+
     branch = request.GET.get('branch', '')
-    selected_status_id = request.GET.get('trip_status', '')
+    selected_status = request.GET.get('trip_status', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
-    
-    # Base Query
-    tripdetail_queryset = TripdetailInfo.objects.all()
-    
-    # Apply Filters
-    if branch == 'MAA':
-        tripdetail_queryset = tripdetail_queryset.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='MAA')
-    elif branch == 'BLR':
-        tripdetail_queryset = tripdetail_queryset.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='BLR')
-        
-    if selected_status_id:
-        tripdetail_queryset = tripdetail_queryset.filter(tc_financestatus_id=selected_status_id)
-        
-    if date_from:
-        tripdetail_queryset = tripdetail_queryset.filter(tr_created_at__date__gte=date_from)
-    if date_to:
-        tripdetail_queryset = tripdetail_queryset.filter(tr_created_at__date__lte=date_to)
 
-    # Get Status Options for Trip Closure
+    queryset = TripdetailInfo.objects.all()
+
+    # Branch filter
+    if branch == 'MAA':
+        queryset = queryset.filter(
+            tr_consignmentnumber__co_consignmentnumber__istartswith='MAA'
+        )
+    elif branch == 'BLR':
+        queryset = queryset.filter(
+            tr_consignmentnumber__co_consignmentnumber__istartswith='BLR'
+        )
+
+    # Status filter
+    if selected_status:
+        queryset = queryset.filter(tc_financestatus_id=selected_status)
+
+    # Date filter
+    if date_from:
+        queryset = queryset.filter(tr_created_at__date__gte=date_from)
+    if date_to:
+        queryset = queryset.filter(tr_created_at__date__lte=date_to)
+
+    queryset = queryset.order_by('-id')
+
+    # ✅ PAGINATION (50 per page)
+    paginator = Paginator(queryset, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     status_list = Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7])
-        
+
     context = {
-        'tripclosure_list': tripdetail_queryset.order_by('-id'),
+        'tripclosure_list': page_obj,   # ✅ MUST be page_obj
+        'page_obj': page_obj,
         'first_name': first_name,
         'branch': branch,
         'status_list': status_list,
-        'selected_status': int(selected_status_id) if selected_status_id else None,
+        'selected_status': int(selected_status) if selected_status else None,
         'date_from': date_from,
         'date_to': date_to,
     }
+
     return render(request, "asset_mgt_app/tripclosure_list.html", context)
+
 
 #Delete tripclosure
 @login_required(login_url='login_page')
