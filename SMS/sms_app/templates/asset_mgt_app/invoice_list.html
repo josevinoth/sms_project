@@ -55,6 +55,7 @@
             <th>Updated By</th>
             <th>Updated On</th>
             <th>Status</th>
+            <th>Export</th>
             <th>Shipper Invoice List</th>
             <th>Edit</th>
             <th>Delete</th>
@@ -73,7 +74,11 @@
             <td> {{invoiceinfo.bill_updated_by}}</td>
             <td> {{invoiceinfo.bill_updated_at}}</td>
             <td> {{invoiceinfo.bill_status}}</td>
-
+            <td>
+                <a href="{% url 'shipper_invoice_export_excel' invoiceinfo.id %}" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel"></i> Export
+                </a>
+            </td>
             <td>
                 <a class="btn btn-warning" href="{% url 'shipperinvoice_list' invoiceinfo.id %}" >
                     <i class="fa fa-anchor" aria-hidden="true"></i>

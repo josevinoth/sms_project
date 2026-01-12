@@ -2,58 +2,64 @@
 {% block content %}
 <style>
     body {
-      font-family: Arial, sans-serif;
-      font-size: 12px;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
     }
+
     .report_title {
-      font-weight: bold;
-      font-size: 16px;
-      text-align: center;
-      margin-bottom: 20px;
+        font-weight: bold;
+        font-size: 16px;
+        text-align: center;
+        margin-bottom: 20px;
     }
+
     table.report_details {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 15px;
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
     }
-    table.report_details th, table.report_details td {
-      border: 1px solid #000;
-      padding: 5px 10px;
-      text-align: left;
+
+    table.report_details th,
+    table.report_details td {
+        border: 1px solid #000;
+        padding: 5px 10px;
+        text-align: left;
     }
+
     hr.report_hrItem {
-      border: 0;
-      border-top: 1px solid #000;
-      margin: 15px 0;
+        border: 0;
+        border-top: 1px solid #000;
+        margin: 15px 0;
     }
 
     /* Float layout for signatures and gate verification */
     .container-signatures {
-      margin-top: 40px;
-      overflow: hidden; /* clearfix */
+        margin-top: 40px;
+        overflow: hidden;
+        /* clearfix */
     }
 
     .left-group {
-      float: left;
-      width: 260px;
+        float: left;
+        width: 260px;
     }
 
 
     .center-group {
-      clear: both;
-      margin-top: 60px;
-      text-align: center;
-      font-weight: bold;
+        clear: both;
+        margin-top: 60px;
+        text-align: center;
+        font-weight: bold;
     }
 
     img {
-      max-height: 40px;
-      border: 1px solid #000;
+        max-height: 40px;
+        border: 1px solid #000;
     }
 
     /* Spacing between signature blocks */
     .left-group div {
-      margin-bottom: 20px;
+        margin-bottom: 20px;
     }
 </style>
 
@@ -69,7 +75,7 @@
     </tr>
     <tr>
         <th>Shipper</th>
-        <td>{{ truck.pregatein_consignee }}</td>
+        <td>{{ truck.pregatein_consigner }}</td>
     </tr>
     <tr>
         <th>Transporter</th>
@@ -168,7 +174,7 @@
     </tr>
 </table>
 
-<hr class="report_hrItem"/>
+<hr class="report_hrItem" />
 
 <div class="container-signatures">
     <div class="left-group">

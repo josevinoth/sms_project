@@ -40,7 +40,7 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Expense Type</span>
+                                        <span class="input-group-text">Advance/Expense Type</span>
                                     </div>
                                     {% render_field form.de_expense_type id="de_expense_type" class="form-control" %}
                                 </div>
@@ -50,9 +50,45 @@
                                     </div>
                                     {% render_field form.de_date type="Datetime-local" class="form-control" %}
                                 </div>
+                                <div id="trip-related-fields">
+<div class="input-group input-group-sm mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text">Trip Date</span>
+    </div>
+{% render_field form.trip_date id="trip_date" type="date" class="form-control" %}
+</div>
 
+                                <div class="input-group input-group-sm mb-3" >
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Trip Number</span>
+                                    </div>
+                                    {% render_field form.trip_number id="trip_number" class="form-control" %}
+                                </div>
+<div id="trip-details-block">
 
+    <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Vehicle Number</span>
+        </div>
+        <input type="text" id="vehicle_number" class="form-control" readonly>
+    </div>
 
+    <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">From</span>
+        </div>
+        <input type="text" id="from_location" class="form-control" readonly>
+    </div>
+
+    <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">To</span>
+        </div>
+        <input type="text" id="to_location" class="form-control" readonly>
+    </div>
+
+</div>
+                                    </div>
 
                             </div>
 
@@ -69,12 +105,7 @@
                                 </div>
 
                                 <div id="expense-cost-fields">
-<div class="input-group input-group-sm mb-3" >
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Trip Number</span>
-                                    </div>
-                                    {% render_field form.trip_number id="trip_number" class="form-control" %}
-                                </div>
+
                                     <div class="input-group input-group-sm mb-3">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Parking Cost</span>
@@ -143,115 +174,177 @@
     </div>
 </form>
 
-<!-- ================= JS ================= -->
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
 
+    /* =====================================================
+       ELEMENT REFERENCES
+       ===================================================== */
     const expenseType = document.getElementById("de_expense_type");
-    const costWrapper = document.getElementById("expense-cost-fields");
-    const costFields = document.querySelectorAll(".cost-field");
-    const totalCostField = document.getElementById("de_total_cost");
-    const tripNumberField = document.getElementById("trip_number");
 
-    function calculateTotal() {
-        let total = 0;
-        costFields.forEach(field => {
-            total += parseFloat(field.value) || 0;
-        });
-        totalCostField.value = total.toFixed(2);
-    }
+    const tripBlock   = document.getElementById("trip-related-fields");
+    const costBlock   = document.getElementById("expense-cost-fields");
 
-    function toggleFields() {
-        const selectedId = expenseType.value;
+    const tripDate    = document.getElementById("trip_date");
+    const tripSelect  = document.getElementById("trip_number");
 
-        if (selectedId === "1") {
-            // ✅ ADVANCE
-            costWrapper.style.display = "none";
-            totalCostField.readOnly = false;
-            tripNumberField.required = false;
+    const vehicle     = document.getElementById("vehicle_number");
+    const fromLoc     = document.getElementById("from_location");
+    const toLoc       = document.getElementById("to_location");
 
-            // ❗ DO NOTHING to totalCostField
-            // Let Django keep the saved value
+    const totalCost   = document.getElementById("de_total_cost");
+    const balanceBox  = document.getElementById("live_balance");
 
-        } else {
-            // ✅ EXPENSE
-            costWrapper.style.display = "block";
-            totalCostField.readOnly = true;
-            tripNumberField.required = true;
+    const baseBalance = parseFloat("{{ current_balance }}");
 
-            calculateTotal(); // only here
+    /* COST FIELDS (EXPLICIT — NO LOOPS) */
+    const parking     = document.getElementById("id_de_parkingcost");
+    const loading     = document.getElementById("id_de_loadingcost");
+    const unloading   = document.getElementById("id_de_unloadingcost");
+    const weighment   = document.getElementById("id_de_weighmentcost");
+    const supervisor  = document.getElementById("id_de_supervisorcost");
+
+    /* =====================================================
+       1️⃣ TOGGLE ADVANCE / EXPENSE
+       ===================================================== */
+    function toggleFields(isUserAction = false) {
+
+    const type = expenseType.value;
+
+    if (type === "1") {
+        // ADVANCE
+        tripBlock.style.display = "none";
+        costBlock.style.display = "none";
+
+        totalCost.readOnly = false;
+
+        // ⚠️ CLEAR ONLY WHEN USER CHANGES TYPE
+        if (isUserAction) {
+            tripDate.value = "";
+            tripSelect.value = "";
+
+            vehicleField.value = "";
+            fromField.value = "";
+            toField.value = "";
         }
+
+    } else {
+        // EXPENSE
+        tripBlock.style.display = "block";
+        costBlock.style.display = "block";
+
+        totalCost.readOnly = true;
     }
 
-    expenseType.addEventListener("change", toggleFields);
+    updateBalance();
+}
 
-    costFields.forEach(field => {
-        field.addEventListener("input", calculateTotal);
+
+    /* =====================================================
+       2️⃣ CALCULATE TOTAL COST
+       ===================================================== */
+    function calculateTotal() {
+        if (expenseType.value !== "2") return;
+
+        const total =
+            (parseFloat(parking.value)    || 0) +
+            (parseFloat(loading.value)    || 0) +
+            (parseFloat(unloading.value)  || 0) +
+            (parseFloat(weighment.value)  || 0) +
+            (parseFloat(supervisor.value) || 0);
+
+        totalCost.value = total.toFixed(2);
+    }
+
+    /* =====================================================
+       3️⃣ UPDATE LIVE BALANCE
+       ===================================================== */
+    function updateBalance() {
+        let balance = baseBalance;
+        const cost  = parseFloat(totalCost.value) || 0;
+
+        if (expenseType.value === "1") balance += cost;
+        if (expenseType.value === "2") balance -= cost;
+
+        balanceBox.innerText = balance.toFixed(2);
+    }
+
+    /* =====================================================
+       4️⃣ FILTER TRIPS BY DATE
+       ===================================================== */
+    tripDate.addEventListener("change", function () {
+        if (!this.value) return;
+
+        fetch(`/SMS/ajax/filter-trips-by-date/?trip_date=${this.value}&settlement_id={{ settlement.id }}`)
+            .then(res => res.json())
+            .then(data => {
+                tripSelect.innerHTML = '<option value="">--Select Trip--</option>';
+
+                if (!data.length) {
+                    tripSelect.innerHTML += '<option value="">No trips found</option>';
+                    return;
+                }
+
+                data.forEach(trip => {
+                    tripSelect.innerHTML += `<option value="${trip.id}">${trip.trip_number}</option>`;
+                });
+            });
     });
 
-    toggleFields(); // run once on page load
+    /* =====================================================
+       5️⃣ LOAD TRIP DETAILS + COSTS
+       ===================================================== */
+    tripSelect.addEventListener("change", function () {
+        if (!this.value) return;
+
+        fetch(`/SMS/ajax/get-trip-charges/?trip_id=${this.value}`)
+            .then(res => res.json())
+            .then(data => {
+
+                if (data.error) return;
+
+                // ROUTE
+                vehicle.value = data.vehicle_number || "";
+                fromLoc.value = data.from_location  || "";
+                toLoc.value   = data.to_location    || "";
+
+                // COSTS
+                parking.value    = data.parking    ?? 0;
+                loading.value    = data.loading    ?? 0;
+                unloading.value  = data.unloading  ?? 0;
+                weighment.value  = data.weighment  ?? 0;
+                supervisor.value = data.supervisor ?? 0;
+
+                calculateTotal();
+                updateBalance();
+            });
+    });
+
+    /* =====================================================
+       6️⃣ EVENTS
+       ===================================================== */
+expenseType.addEventListener("change", function () {
+    toggleFields(true); // user-triggered
 });
 
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
+toggleFields(false); // initial page load
 
-        const tripField = document.getElementById("trip_number");
-
-        const parking = document.getElementById("id_de_parkingcost");
-        const loading = document.getElementById("id_de_loadingcost");
-        const unloading = document.getElementById("id_de_unloadingcost");
-        const weighment = document.getElementById("id_de_weighmentcost");
-        const supervisor = document.getElementById("id_de_supervisorcost");
-        const total = document.getElementById("de_total_cost");
-
-        tripField.addEventListener("change", function () {
-            const tripId = this.value;
-            if (!tripId) return;
-
-            fetch(`/SMS/ajax/get-trip-charges/?trip_id=${tripId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) return;
-                    parking.value = data.parking;
-                    loading.value = data.loading;
-                    unloading.value = data.unloading;
-                    weighment.value = data.weighment;
-                    supervisor.value = data.supervisor;
-                    total.value = data.total.toFixed(2);
-                })
-                .catch(err => console.error(err));
+    [parking, loading, unloading, weighment, supervisor].forEach(input => {
+        input.addEventListener("input", function () {
+            calculateTotal();
+            updateBalance();
         });
     });
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
 
-        const totalCostInput = document.getElementById("de_total_cost");
-        const expenseType = document.getElementById("de_expense_type");
+    totalCost.addEventListener("input", updateBalance);
 
-        const balanceBox = document.getElementById("live_balance");
+    /* =====================================================
+       7️⃣ INITIAL LOAD (IMPORTANT)
+       ===================================================== */
+    calculateTotal();
+    updateBalance();
 
-        const baseBalance = parseFloat("{{ current_balance }}");
-
-        function updateLiveBalance() {
-            const cost = parseFloat(totalCostInput.value) || 0;
-            const type = expenseType.value;
-
-            let newBalance = baseBalance;
-
-            if (type === "1") {
-                newBalance += cost; // advance
-            } else if (type === "2") {
-                newBalance -= cost; // expense
-            }
-
-            balanceBox.innerText = newBalance.toFixed(2);
-        }
-
-        totalCostInput.addEventListener("input", updateLiveBalance);
-        expenseType.addEventListener("change", updateLiveBalance);
-    });
+});
 </script>
 
 {% endblock content %}
