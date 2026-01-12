@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .driver_settlement_view import recalc_driver_settlement
 from ..models import Driverexpense,TripdetailInfo,driver_settlement_info
 from ..sub_forms.driver_expense_form import DriverExpenseForm
-
+from datetime import datetime
 
 from django.db.models import Sum
 from django.contrib import messages
@@ -126,16 +126,67 @@ def get_trip_charges(request):
         trip = TripdetailInfo.objects.get(id=trip_id)
 
         data = {
+            # COSTS
             'parking': trip.tc_parkingcost or 0,
             'loading': trip.tc_loadingcost or 0,
             'unloading': trip.tc_unloadingcost or 0,
             'weighment': trip.tc_weighmentcost or 0,
             'supervisor': trip.tc_supervisorcost or 0,
+
+            # 🔥 NEW DETAILS
+            'vehicle_number': trip.tr_vehiclenumber or "",
+            'from_location': trip.tr_departedlocation.place_name if trip.tr_departedlocation else "",
+            'to_location': trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "",
         }
 
-        data['total'] = sum(data.values())
+        data['total'] = sum([
+            data['parking'],
+            data['loading'],
+            data['unloading'],
+            data['weighment'],
+            data['supervisor'],
+        ])
 
         return JsonResponse(data)
 
     except TripdetailInfo.DoesNotExist:
         return JsonResponse({'error': 'Trip not found'}, status=404)
+
+@login_required(login_url='login_page')
+def filter_trips_by_date(request):
+    trip_date = request.GET.get('trip_date')
+    settlement_id = request.GET.get('settlement_id')
+
+    if not trip_date or not settlement_id:
+        return JsonResponse([], safe=False)
+
+    # ✅ FIX FORMAT (strip time if present)
+    if 'T' in trip_date:
+        trip_date = trip_date.split('T')[0]
+
+    try:
+        trip_date = datetime.strptime(trip_date, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse([], safe=False)
+
+    settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
+
+    qs = TripdetailInfo.objects.filter(
+        tc_financestatus__id__in=[5, 7, 9]
+    )
+
+    # Filter by driver
+    if getattr(settlement, 'driver_master_id', None):
+        qs = qs.filter(tr_driver_master_id=settlement.driver_master_id)
+    else:
+        qs = qs.filter(tr_drivername=settlement.driver)
+
+    # ✅ FILTER BY DATE
+    qs = qs.filter(tr_departeddate__date=trip_date)
+
+    data = [
+        {'id': t.id, 'trip_number': t.tr_tripnumber}
+        for t in qs
+    ]
+
+    return JsonResponse(data, safe=False)

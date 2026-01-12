@@ -31,6 +31,7 @@ class Driverexpense(models.Model):
     de_supervisorcost = models.FloatField(default=0.0)
     de_total_cost=models.FloatField(default=0.0)
     de_date = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    trip_date = models.DateField(null=True, blank=True)
 
 
     class Meta:
