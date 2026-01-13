@@ -803,6 +803,8 @@ urlpatterns = [
     path('stock_maintenance_update/<int:pk>/', views.stock_maintenance_edit, name='stock_maintenance_edit'),
     path('get_part_details/', views.get_part_details, name='get_part_details'),
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
+    path('shipper_invoice_export_excel/<int:invoice_id>/',views.shipper_invoice_export_excel,name='shipper_invoice_export_excel'),
+    path('ajax/filter-trips-by-date/',views.filter_trips_by_date,name='filter_trips_by_date'),
 
 ]
 
