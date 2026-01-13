@@ -1,0 +1,445 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<script>
+    // Freeze the first jQuery instance to prevent overwrite
+    var $jq = jQuery.noConflict(true);
+</script>
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
+    rel="stylesheet">
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<form method="POST">
+    {% csrf_token %}
+    {% with t_count=totals.total_count|default:0 t_cft=totals.total_cft|default:0|floatformat:2 t_cost=totals.total_cost|default:0|floatformat:2 %}
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="alert alert-success">
+                <strong>Total Count:</strong>
+                <span id="dash_total_count" data-global="{{ t_count }}">
+                    {{ t_count }}
+                </span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-warning">
+                <strong>Total Stock CFT:</strong>
+                <span id="dash_total_cft" data-global="{{ t_cft }}">
+                    {{ t_cft }}
+                </span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-info">
+                <strong>Total Stock Cost:</strong> ₹
+                <span id="dash_total_cost" data-global="{{ t_cost }}">
+                    {{ t_cost }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+
+    <div class="container-fluid">
+        <!-- HEADER -->
+        <div class="card bg-info text-white mb-3">
+            <div class="card-header text-center">
+                <h4>Add / Update Stock Maintenance</h4>
+            </div>
+
+            <div class="card-body bg-light text-dark">
+
+                <div class="row">
+
+                    <!-- LEFT COLUMN -->
+                    <div class="col-6">
+
+                        <!-- Stock Type -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Stock Type</span>
+                            </div>
+                            {% render_field form.sm_stock_type class="form-control" %}
+                        </div>
+
+                        <!-- Invoice Date -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Invoice Date</span>
+                            </div>
+                            {% render_field form.sm_invoice_date class="form-control" %}
+                        </div>
+
+                        <!-- Invoice No -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Invoice No</span>
+                            </div>
+                            {% render_field form.sm_invoice_no class="form-control" %}
+                        </div>
+
+                        <!-- Partcode -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Partcode</span>
+                            </div>
+                            <!-- Assign ID for JS targeting -->
+                            {% render_field form.sm_partcode class="form-control select2" id="id_sm_partcode" style="width: 100%;" %}
+                        </div>
+
+                        <!-- Description (Auto-fill) -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Description</span>
+                            </div>
+                            {% render_field form.sm_description id="id_sm_description" class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+
+                        <!-- UOM (Auto-fill) -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">UOM</span>
+                            </div>
+
+                            <!-- Visible UOM -->
+                            <input type="text" id="sm_uom_display" class="form-control disable_a_href" readonly>
+
+                            <!-- Hidden real FK -->
+                            {{ form.sm_uom }}
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN -->
+                    <div class="col-6">
+
+                        <!-- Dimensions Row -->
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Thick</span>
+                                    </div>
+                                    {% render_field form.sm_thickness id="id_sm_thickness" class="form-control disable_a_href" readonly="readonly" %}
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Width</span>
+                                    </div>
+                                    {% render_field form.sm_width id="id_sm_width" class="form-control disable_a_href" readonly="readonly" %}
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Length</span>
+                                    </div>
+                                    {% render_field form.sm_length id="id_sm_length" class="form-control disable_a_href" readonly="readonly" %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Count -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Count</span>
+                            </div>
+                            {% render_field form.sm_count id="id_sm_count" class="form-control" %}
+                        </div>
+
+                        <!-- CFT (Calculated) -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">CFT</span>
+                            </div>
+                            {% render_field form.sm_cft id="id_sm_cft" class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+
+                        <!-- Total CFT -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Total CFT</span>
+                            </div>
+                            {% render_field form.sm_total_cft class="form-control" %}
+                        </div>
+
+                        <!-- Per Unit Cost -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Per Unit Cost</span>
+                            </div>
+                            {% render_field form.sm_per_unit_cost class="form-control" %}
+                        </div>
+
+                        <!-- Total Wood Price (Calculated) -->
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Total Wood Price</span>
+                            </div>
+                            {% render_field form.sm_total_wood_price id="id_sm_total_wood_price" class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BUTTONS -->
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i> Submit
+                </button>
+
+                <a href="{% url 'stock_maintenance_list' %}" class="btn btn-danger float-right">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+
+            </div>
+        </div>
+
+        <!-- MESSAGES -->
+        <div class="row mt-3">
+            <div class="col-12 text-center">
+                {% for message in messages %}
+                <span class="{{ message.tags }}">{{ message }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</form>
+
+<!-- STOCK MAINTENANCE LIST SECTION -->
+<div class="container-fluid mt-4">
+    <div class="card border-info">
+        <div class="card-header bg-info text-white d-flex align-items-center justify-content-between">
+            <h3 class="mb-0">Stock Maintenance List</h3>
+        </div>
+
+        <div class="card-body bg-light">
+            <!-- Optional: Filter form could go here matching driver_expense_list_woh style if needed -->
+
+            <table id="stock_maintenance_table" class="table table-striped table-bordered table-sm">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Invoice No</th>
+                        <th>Invoice Date</th>
+                        <th>Stock Type</th>
+                        <th>Partcode</th>
+                        <th>Description</th>
+                        <!-- <th>Thickness</th>
+                        <th>Width</th>
+                        <th>Length</th> -->
+                        <th>UOM</th>
+                        <th>Count</th>
+                        <th>CFT</th>
+                        <th>Total CFT</th>
+                        <!-- <th>Per Unit Cost</th> -->
+                        <th>Total Wood Price</th>
+                        <th>Created At</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.sm_invoice_no }}</td>
+                        <td>{{ item.sm_invoice_date }}</td>
+                        <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
+                        <td>{{ item.sm_partcode.pc_code }}</td>
+                        <td>{{ item.sm_description }}</td>
+                        <!-- <td>{{ item.sm_thickness }}</td>
+                        <td>{{ item.sm_width }}</td>
+                        <td>{{ item.sm_length }}</td> -->
+                        <td>{{ item.sm_uom.unit_of_measure }}</td>
+                        <td>{{ item.sm_count }}</td>
+                        <td>{{ item.sm_cft }}</td>
+                        <td>{{ item.sm_total_cft }}</td>
+                        <!-- <td>{{ item.sm_per_unit_cost }}</td> -->
+                        <td>{{ item.sm_total_wood_price }}</td>
+                        <td>{{ item.sm_created_at|date:"d-m-Y" }}</td>
+
+                        <!-- EDIT -->
+                        <td class="text-center">
+                            <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn btn-primary btn-sm">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+
+                        <!-- DELETE -->
+                        <td class="text-center">
+                            <a href="{% url 'stock_maintenance_delete' item.id %}" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Are you sure you want to delete this item?');">
+                                <i class="far fa-trash-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- JavaScript for Auto-fill and Calculations -->
+<script>
+
+    $jq(document).ready(function () {
+        // --- 1. DEFINE FUNCTIONS & BIND EVENTS FIRST (Critical Path) ---
+
+        // Partcode Change Event
+        $jq(document).on('change select2:select', '#id_sm_partcode', function () {
+            var partId = $jq(this).val();
+            // console.log("Part changed: " + partId);
+            fetchPartDetails(partId);
+        });
+
+        // Calculation Events
+        $jq('#id_sm_count, #id_sm_length, #id_sm_width, #id_sm_thickness')
+            .on('input change', calculate);
+
+        $jq('#id_sm_per_unit_cost')
+            .on('input change', calculate);
+
+
+        function fetchPartDetails(partId) {
+            // Reset dashboard if no part
+            if (!partId) {
+                $jq('#id_sm_description').val('');
+                $jq('#id_sm_thickness').val('0');
+                $jq('#id_sm_width').val('0');
+                $jq('#id_sm_length').val('0');
+                $jq('#id_sm_uom').val('').trigger('change');
+
+                // Restore global totals
+                $jq('#dash_total_count').text($jq('#dash_total_count').data('global'));
+                $jq('#dash_total_cft').text($jq('#dash_total_cft').data('global'));
+                $jq('#dash_total_cost').text($jq('#dash_total_cost').data('global'));
+
+                // Clear Table Filter
+                if (window.jQuery && window.jQuery.fn.DataTable && window.jQuery.fn.DataTable.isDataTable('#stock_maintenance_table')) {
+                    window.jQuery('#stock_maintenance_table').DataTable().column(4).search('').draw();
+                }
+
+                calculate();
+                return;
+            }
+
+            // alert("Sending AJAX to /SMS/get_part_details/ for " + partId);
+            $jq.ajax({
+                url: "/SMS/get_part_details/",
+                data: { 'part_id': partId },
+                success: function (data) {
+                    // console.log("AJAX Data:", data);
+                    if (!data.error) {
+                        $jq('#id_sm_description').val(data.description);
+                        $jq('#id_sm_thickness').val(data.thickness);
+                        $jq('#id_sm_width').val(data.width);
+                        $jq('#id_sm_length').val(data.length);
+
+                        // Populate hidden real FK
+                        $jq('#id_sm_uom').val(data.uom_id);
+
+                        // Populate visible display field
+                        $jq('#sm_uom_display').val(data.uom_name);
+
+                        // Update Dashboard
+                        if (data.part_totals) {
+                            $jq('#dash_total_count').text(data.part_totals.total_count);
+                            $jq('#dash_total_cft').text(data.part_totals.total_cft.toFixed(2));
+                            $jq('#dash_total_cost').text(data.part_totals.total_cost.toFixed(2));
+                        }
+
+                        // Filter Table (Partcode is in Column 4)
+                        if (window.jQuery && window.jQuery.fn.DataTable && window.jQuery.fn.DataTable.isDataTable('#stock_maintenance_table')) {
+                            var partCodeText = $jq('#id_sm_partcode option:selected').text().split('(')[0].trim();
+                            // console.log("Filtering table for: " + partCodeText);
+                            window.jQuery('#stock_maintenance_table').DataTable().column(4).search(partCodeText).draw();
+                        }
+
+                        calculate();
+                    } else {
+                        console.error("Part details error: " + data.error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX Error: " + error);
+                    // alert("AJAX Failed: " + error);
+                }
+            });
+        }
+
+        function calculate() {
+            var len = parseFloat($jq('#id_sm_length').val()) || 0;
+            var wid = parseFloat($jq('#id_sm_width').val()) || 0;
+            var thk = parseFloat($jq('#id_sm_thickness').val()) || 0;
+            var count = parseFloat($jq('#id_sm_count').val()) || 0;
+            var perUnit = parseFloat($jq('#id_sm_per_unit_cost').val()) || 0;
+
+            // 1️⃣ CFT per unit
+            var cft = (len * wid * thk) / 1728;
+            $jq('#id_sm_cft').val(cft.toFixed(4));
+
+            // 2️⃣ Total CFT
+            var totalCft = cft * count;
+            $jq('#id_sm_total_cft').val(totalCft.toFixed(4));
+
+
+
+            // 3️⃣ Total Wood Price
+            var totalWoodPrice = totalCft * perUnit;
+            $jq('#id_sm_total_wood_price').val(totalWoodPrice.toFixed(2));
+        }
+
+
+        // Initialize Select2
+        function initSelect2() {
+            if ($jq.fn.select2) {
+                $jq('#id_sm_partcode').select2({
+                    width: '100%',
+                    theme: 'bootstrap4',
+                    placeholder: '--Select Partcode--',
+                    allowClear: true,
+                    minimumResultsForSearch: 0,  // 🔥 Forces search box to be visible
+                    dropdownAutoWidth: true
+                });
+            } else {
+                console.warn("Select2 not loaded, retrying in 1s...");
+                setTimeout(initSelect2, 1000);
+            }
+        }
+        initSelect2();
+
+
+        // Initialize DataTable
+        try {
+            jQuery('#stock_maintenance_table').DataTable({
+                order: [[0, 'desc']],
+                pageLength: 10
+            });
+        } catch (e) {
+            console.error("DataTable Init Failed", e);
+            alert("Warning: DataTable Failed to load");
+        }
+
+        // Trigger initial load logic if partcode is pre-filled (sticky form)
+        var initialPartId = $jq('#id_sm_partcode').val();
+        if (initialPartId) {
+            fetchPartDetails(initialPartId);
+        } else {
+            calculate(); // Ensure 0s are shown if empty
+        }
+    });
+
+
+
+</script>
+
+{% endblock content %}

@@ -798,6 +798,11 @@ urlpatterns = [
     path('maintenance_edit/<int:id>/', views.maintenance_edit, name='maintenance_edit'),
     path('maintenance_delete/<int:id>/', views.maintenance_delete, name='maintenance_delete'),
     path('maintenance_list/', views.maintenance_list, name='maintenance_list'),
+    path('stock_maintenance_list/', views.stock_maintenance_list, name='stock_maintenance_list'),
+    path('stock_maintenance_insert/', views.stock_maintenance_add, name='stock_maintenance_add'),
+    path('stock_maintenance_update/<int:pk>/', views.stock_maintenance_edit, name='stock_maintenance_edit'),
+    path('get_part_details/', views.get_part_details, name='get_part_details'),
+    path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
 
 ]
 
