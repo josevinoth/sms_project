@@ -152,6 +152,27 @@
             {% endfor %}
         </tbody>
     </table>
+    <div class="pagination mt-3">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+            <a class="btn btn-warning"
+                href="?page=1{% if selected_customer %}&customer={{ selected_customer }}{% endif %}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_updated_by %}&updated_by={{ selected_updated_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">First</a>
+            <a class="btn btn-primary"
+                href="?page={{ page_obj.previous_page_number }}{% if selected_customer %}&customer={{ selected_customer }}{% endif %}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_updated_by %}&updated_by={{ selected_updated_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+            <a class="btn btn-primary"
+                href="?page={{ page_obj.next_page_number }}{% if selected_customer %}&customer={{ selected_customer }}{% endif %}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_updated_by %}&updated_by={{ selected_updated_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Next</a>
+            <a class="btn btn-warning"
+                href="?page={{ page_obj.paginator.num_pages }}{% if selected_customer %}&customer={{ selected_customer }}{% endif %}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_updated_by %}&updated_by={{ selected_updated_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Last</a>
+            {% endif %}
+        </span>
+    </div>
 </div>
 
 

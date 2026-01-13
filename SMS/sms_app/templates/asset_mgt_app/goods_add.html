@@ -124,13 +124,13 @@
 													<div class="input-group-prepend">
 														<span class="input-group-text">Subject</span>
 													</div>
-													{{ form_warehouse_email.subject|add_class:"form-control" }}
+{% render_field form_warehouse_email.subject id="subject" class="form-control" %}
 												</div>
 												<div class="input-group mb-3">
 													<div class="input-group-prepend">
 														<span class="input-group-text">Message</span>
 													</div>
-													{{ form_warehouse_email.message|add_class:"form-control" }}  <!-- Ensure this has an id="message" -->
+{% render_field form_warehouse_email.message id="message" class="form-control" rows="8" %}
 												</div>
 
 												<div class="form-group">
@@ -846,35 +846,78 @@
     });
 </script>
 <script>
-	function email_message_fn() {
-	 // Assign Django template variables to JavaScript variables
-        var shipper_invoice = '{{ shipper_invoice|escapejs }}';
-        var invoice_count = '{{ gatein_no_of_pkg_val|escapejs }}';
-        var invoice_weight = '{{ gatein_weight_val|escapejs }}';
-        var checkin_count = '{{ goods_checkin_count|escapejs }}';
-        var checkin_weight = '{{ goods_checkin_weight|escapejs }}';
-        var consigner = document.getElementById("wh_consigner").value;
-        var consignee = document.getElementById("wh_consignee").value;
+function email_message_fn() {
 
-       var message = 	"Dear Customer,\n\n" +
-        		"Please be advised that the following goods have arrived at our warehouse and have been stored.\n\n" +
-    			"Shipper Invoice: " + shipper_invoice + "\n" +
-              	"Consigner: " + consigner + "\n" +
-              	"Consignee: " + consignee + "\n" +
-              	"Invoice Qty: " + invoice_count + "\n" +
-              	"Invoice Weight: " + invoice_weight + "\n" +
-              	"Check-in Qty: " + checkin_count + "\n" +
-              	"Check-in Weight: " + checkin_weight + "\n\n" +
-              	"Regards,\n" +
-              	"BVM Warehouse Team";
+    var shipper_invoice = '{{ shipper_invoice|escapejs }}';
+    var invoice_count = '{{ gatein_no_of_pkg_val|escapejs }}';
+    var invoice_weight = '{{ gatein_weight_val|escapejs }}';
+    var checkin_count = '{{ goods_checkin_count|escapejs }}';
+    var checkin_weight = '{{ goods_checkin_weight|escapejs }}';
+    var consigner = document.getElementById("wh_consigner").value;
+    var consignee = document.getElementById("wh_consignee").value;
 
-        // Set the consolidated message as the value of the form field with id 'message'
-        document.getElementById("message").value = message;
+    var wh_damage_check = {{ wh_damage_check_val|yesno:"true,false" }};
+    var damage_report_exists = {{ damage_report_exists|yesno:"true,false" }};
+    var damage_list = {{ damage_list|safe }};
+    var deviation_list = {{ deviation_list|safe }};
 
-       	var subject = "Goods Received: " + shipper_invoice;
-		document.getElementById("subject").value = subject;
-		document.getElementById("subject").value = email_count;
-	}
+    let damage_section = "";
+
+    if (!wh_damage_check) {
+        damage_section = `
+            <div style="color:green;margin:0;padding:0;">
+                <b>Damages Observed:</b> NO<br>
+                <b>Deviations Observed:</b> NO
+            </div>
+        `;
+    }
+    else if (wh_damage_check && !damage_report_exists) {
+        damage_section = `
+            <div style="color:red;margin:0;padding:0;">
+                <b>Damages Observed:</b> YES<br>
+                Detailed inspection report will follow.
+            </div>
+        `;
+    }
+    else {
+        damage_section = `
+            <div style="color:red;margin:0;padding:0;">
+                <b>Damages Observed:</b><br>
+                ${damage_list.map(d => '• ' + d).join('<br>')}
+                <br>
+                <b>Deviations Observed:</b><br>
+                ${deviation_list.map(d => '• ' + d).join('<br>')}
+            </div>
+        `;
+    }
+
+    var message = `
+        <div style="margin:0;padding:0;">
+            Dear Customer,
+
+            Please be advised that the following goods have arrived at our warehouse
+            and have been stored.
+
+            <b>Shipper Invoice:</b> ${shipper_invoice}<br>
+            <b>Consigner:</b> ${consigner}<br>
+            <b>Consignee:</b> ${consignee}<br>
+            <b>Invoice Qty:</b> ${invoice_count}<br>
+            <b>Invoice Weight:</b> ${invoice_weight}<br>
+            <b>Check-in Qty:</b> ${checkin_count}<br>
+            <b>Check-in Weight:</b> ${checkin_weight}<br>
+            ${damage_section}
+            <br>
+
+            Regards,<br>
+            <b>BVM Warehouse Team</b>
+        </div>
+    `;
+
+    document.getElementById("message").value = message;
+    document.getElementById("subject").value = "Goods Received: " + shipper_invoice;
+}
 </script>
+
+
 {% endblock %}
 {% endblock content %}

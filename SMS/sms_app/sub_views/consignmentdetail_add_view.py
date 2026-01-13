@@ -221,10 +221,15 @@ def consignmentdetail_list(request):
     elif branch == 'BLR':
         consignment_qs = consignment_qs.filter(co_consignmentnumber__istartswith='BLR')
 
+    # Pagination
+    paginator = Paginator(consignment_qs.order_by('-id'), 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     consignments = []
 
     # Build presentation fields (replacing @property logic)
-    for obj in consignment_qs.order_by('-id'):
+    for obj in page_obj:
 
         goods = obj.cg_consignmentnumber.first()
 
@@ -260,6 +265,7 @@ def consignmentdetail_list(request):
 
     context = {
         'consignmentdetail_list': consignments,
+        'page_obj': page_obj,
         'first_name': first_name,
         'customers': customers,
         'employees': employees,

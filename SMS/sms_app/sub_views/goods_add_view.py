@@ -113,6 +113,38 @@ def goods_add(request, goods_id=0):
         goods_checkin_count_val = 0
         Gatein_info.objects.filter(gatein_job_no=ses_gatein_id_nam).update(gatein_actual_count=goods_checkin_count_val)
 
+    # ==============================
+    # DAMAGE / DEVIATION EMAIL DATA
+    # ==============================
+
+    # 1. Goods-level damage flag (YES / NO)
+    wh_damage_check_val = (
+        Warehouse_goods_info.objects
+        .filter(wh_job_no=wh_job_id, wh_damage_check=1)
+        .exists()
+    )
+
+    # 2. Damage report existence
+    damage_report = (
+        DamagereportInfo.objects
+        .filter(dam_wh_job_num=wh_job_id)
+        .first()
+    )
+
+    damage_report_exists = bool(damage_report)
+
+    # 3. Damage & deviation lists
+    damage_list = []
+    deviation_list = []
+
+    if damage_report:
+        damage_list = list(
+            damage_report.dam_damages1.values_list('damage_name', flat=True)
+        )
+        deviation_list = list(
+            damage_report.dam_deviation1.values_list('deviation_name', flat=True)
+        )
+
     if request.method == "GET":
         if goods_id == 0:
             print("I am inside Get add Goods")
@@ -175,11 +207,17 @@ def goods_add(request, goods_id=0):
                 'form_warehouse_email': form_warehouse_email,
                 'email_count': email_count,
                 'damage_status': damage_status,
+                'wh_damage_check_val': wh_damage_check_val,
+                'damage_report_exists': damage_report_exists,
+                'damage_list': damage_list,
+                'deviation_list': deviation_list,
+
             }
         else:
             print("I am inside get edit Goods")
             goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
             goods_form = GoodsaddForm(instance=goodsinfo)
+            form_warehouse_email = warehouse_EmailForm()
             email_count=Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_email_count
             try:
                 damage_status = (
@@ -214,6 +252,12 @@ def goods_add(request, goods_id=0):
                 'shipper_invoice': shipper_invoice,
                 'email_count': email_count,
                 'damage_status': damage_status,
+                'wh_damage_check_val': wh_damage_check_val,
+                'damage_report_exists': damage_report_exists,
+                'damage_list': damage_list,
+                'deviation_list': deviation_list,
+                'form_warehouse_email': form_warehouse_email,
+
             }
         return render(request, "asset_mgt_app/goods_add.html", context)
     else:

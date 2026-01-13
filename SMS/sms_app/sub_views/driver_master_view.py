@@ -67,6 +67,7 @@ def get_employee_driver_details(request):
     except User.DoesNotExist:
         return JsonResponse({'error': 'Invalid user'}, status=400)
 
+@login_required(login_url='login_page')
 def driver_autocomplete(request):
     term = request.GET.get('term', '').strip()
 

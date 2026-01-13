@@ -9,7 +9,7 @@ class Loadingbay_Info(models.Model):
     lb_job_no_id= models.ForeignKey(Gatein_info, on_delete=models.CASCADE, related_name='lb_job_no_id', db_column='lb_job_no_id',null=True,blank=True)
     lb_invoice = models.CharField(blank=False, null=False,max_length=200,default='')
     lb_packing_list = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE, related_name='lb_packing_list', db_column='lb_packing_list',default=1)
-    lb_eway_bill= models.CharField(blank=True, null=True, max_length=20,default='')
+    lb_eway_bill= models.CharField(blank=True, null=True, max_length=500,default='')
     lb_validity_date= models.DateTimeField(blank=True, null=True)
     lb_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6, null=True)
     lb_stock_unloading_start_time = models.DateTimeField(blank=True, null=True)

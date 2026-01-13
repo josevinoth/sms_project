@@ -112,11 +112,74 @@
     </table>
 
 </div>
+<div class="pagination mt-3">
+    <span class="step-links">
+
+        {% if page_obj.has_previous %}
+        <a class="btn btn-warning"
+           href="?page=1{% if veh_no %}&veh_no={{ veh_no }}{% endif %}
+           {% if date_from %}&date_from={{ date_from }}{% endif %}
+           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+            First
+        </a>
+
+        <a class="btn btn-primary"
+           href="?page={{ page_obj.previous_page_number }}
+           {% if veh_no %}&veh_no={{ veh_no }}{% endif %}
+           {% if date_from %}&date_from={{ date_from }}{% endif %}
+           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+            Previous
+        </a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+        <a class="btn btn-primary"
+           href="?page={{ page_obj.next_page_number }}
+           {% if veh_no %}&veh_no={{ veh_no }}{% endif %}
+           {% if date_from %}&date_from={{ date_from }}{% endif %}
+           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+            Next
+        </a>
+
+        <a class="btn btn-warning"
+           href="?page={{ page_obj.paginator.num_pages }}
+           {% if veh_no %}&veh_no={{ veh_no }}{% endif %}
+           {% if date_from %}&date_from={{ date_from }}{% endif %}
+           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+            Last
+        </a>
+        {% endif %}
+
+    </span>
+</div>
 
 <script>
     $(document).ready(function () {
-        $('#tripsettlement_list').DataTable();
+        $('#tripsettlement_list').DataTable({
+            scrollX: true,
+            order: [0, 'desc'],
+            dom: 'lBfrtip',
+            pageLength: 100,
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ]
+        });
     });
 </script>
+<script>
+    $('#tripsettlement_list').DataTable({
+    paging: false,     // 🔴 MUST
+    info: false,
+    searching: false,
+    scrollX: true,
+    order: [0, 'desc'],
+    dom: 'Bfrtip',
+    buttons: ['copy', 'csv', 'excel', 'print']
+});
 
+</script>
 {% endblock content %}
