@@ -6,34 +6,31 @@
 	<div class="col">
 		<div class="container-fluid">
 			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-				<div class="row">
-					<div class="col-8 d-flex align-items-center justify-content-right">
-						<div class="card-header text-right w-100">
-							<h3>Add/Update Consignment Details</h3>
+				<div class="card-header text-center">
+					<div class="row align-items-center justify-content-between">
+						<div class="col-md-8 d-flex flex-wrap align-items-center gap-2">
+							<h3 class="mb-0 mr-3">Add/Update Consignment Details</h3>
+							<a href="{% url 'consignmentdetail_insert' %}" class="btn btn-primary ml-2">
+								<i class="fas fa-plus"></i> Add
+							</a>
+						</div>
+
+						<div class="col-md-4 d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
+							{% if has_invoice_or_ewaybill %}
+							<button type="button" class="btn btn-warning"
+								onclick="window.open('{% url 'consignment_note_pdf' consignmentdetail_id %}', '_blank');">
+								Consignment note <i class="fa fa-download" aria-hidden="true"></i>
+							</button>
+
+							{% else %}
+							<button class="btn btn-secondary" disabled>
+								Consignment note <i class="fa fa-download" aria-hidden="true"></i>
+							</button>
+							{% endif %}
 						</div>
 					</div>
-<!--					<div class="col-2 d-flex align-items-center ">-->
-<!--						<a href="{% url 'consignment_pdf_download' %}" class="btn btn-warning">-->
-<!--							Lorry Hire Challan                    <i class="fa fa-download " aria-hidden="true"></i>-->
-
-<!--						</a>-->
-<!--					</div>-->
-					<div class="col-2 d-flex align-items-center ">
-						{% if has_invoice_or_ewaybill %}
-						<button type="button" class="btn btn-warning"
-								onclick="window.open('{% url 'consignment_note_pdf' consignmentdetail_id %}', '_blank');">
-							Consignment note <i class="fa fa-download" aria-hidden="true"></i>
-						</button>
-
-						{% else %}
-						<button class="btn btn-secondary" disabled>
-							Consignment note <i class="fa fa-download" aria-hidden="true"></i>
-						</button>
-						{% endif %}
-					</div>
-
 				</div>
-				<div class="card-body bg-light" >
+				<div class="card-body bg-light">
 					<form method="POST" action="">
 						{% csrf_token %}
 						<div class="row border border-5 rounded border-primary m-2 p-2" id="consignment_details_id">
@@ -54,7 +51,8 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number</span>
 									</div>
-									<select id="co_vehicelnumber" name="co_vehicelnumber" onfocus="vehicle_allotted()" class="form-control">
+									<select id="co_vehicelnumber" name="co_vehicelnumber" onfocus="vehicle_allotted()"
+										class="form-control">
 										<option value="">--Select--</option>
 									</select>
 								</div>
@@ -162,13 +160,14 @@
 							<div class="col-10">
 								<div class="message text-center">
 									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									<a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
 									{% endfor %}
 								</div>
 							</div>
 							<div class="col-1"></div>
 						</div>
-						<button type="submit" class="btn btn-success " id="consignment_details_submit"><i class="fas fa-check"></i> Submit</button>
+						<button type="submit" class="btn btn-success " id="consignment_details_submit"><i
+								class="fas fa-check"></i> Submit</button>
 						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
@@ -184,7 +183,8 @@
 		<div class="card-header bg-info" id="headingOne">
 			<div class="d-flex align-items-center">
 				<h2 class="mb-0">
-					<button class="btn btn-link text-left text-white" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+					<button class="btn btn-link text-left text-white" type="button" data-toggle="collapse"
+						data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
 						Add Consignment Goods <i class="fas fa-angle-down"></i>
 					</button>
 				</h2>
@@ -202,189 +202,174 @@
 </div>
 
 <script>
-	$(document).ready(function() {
-        document.getElementById("co_lastmodifiedby").value ='{{user_id}}';
-        document.getElementById("cg_lastmodifiedby").value ='{{user_id}}';
-        var enquiry_num_id=document.getElementById("co_enquirynumber").value
-        document.getElementById("cg_consignmentnumber").value ='{{consignmentdetail_id}}';
-        if (enquiry_num_id=="")
-            {
-                document.getElementById("co_enquirynumber").value ='{{enquiry_num_id}}';
-            }
-        else
-            {
-                document.getElementById("co_enquirynumber").value =enquiry_num_id;
-            }
-        var customer=document.getElementById("co_customer").value
-        if (customer=="")
-            {
-                document.getElementById("co_customer").value='{{customer_id}}';
-            }
-        var customer_code=document.getElementById("co_customercode").value
-        if (customer_code=="")
-            {
-                document.getElementById("co_customercode").value='{{ customer_code }}';
-            }
+	$(document).ready(function () {
+		document.getElementById("co_lastmodifiedby").value = '{{user_id}}';
+		document.getElementById("cg_lastmodifiedby").value = '{{user_id}}';
+		var enquiry_num_id = document.getElementById("co_enquirynumber").value
+		document.getElementById("cg_consignmentnumber").value = '{{consignmentdetail_id}}';
+		if (enquiry_num_id == "") {
+			document.getElementById("co_enquirynumber").value = '{{enquiry_num_id}}';
+		}
+		else {
+			document.getElementById("co_enquirynumber").value = enquiry_num_id;
+		}
+		var customer = document.getElementById("co_customer").value
+		if (customer == "") {
+			document.getElementById("co_customer").value = '{{customer_id}}';
+		}
+		var customer_code = document.getElementById("co_customercode").value
+		if (customer_code == "") {
+			document.getElementById("co_customercode").value = '{{ customer_code }}';
+		}
 
-        var consignmentnumber = document.getElementById("co_consignmentnumber").value;
-		if (consignmentnumber=="")
-		{
+		var consignmentnumber = document.getElementById("co_consignmentnumber").value;
+		if (consignmentnumber == "") {
 			$('#consignment_goods_id').addClass('disable_a_href');
 		}
 		var consignment_num = document.getElementById("cg_consignmentnumber").value;
-        if (consignment_num=="")
-        	{
-        	document.getElementById("cg_consignmentnumber").value ="{{consignment_detail_id}}";
-            }
-            else
-            {
-        	document.getElementById("cg_consignmentnumber").value =consignment_num;
-            }
-            vehicle_allotted();
-      });
+		if (consignment_num == "") {
+			document.getElementById("cg_consignmentnumber").value = "{{consignment_detail_id}}";
+		}
+		else {
+			document.getElementById("cg_consignmentnumber").value = consignment_num;
+		}
+		vehicle_allotted();
+	});
 </script>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
-        if (window.location.href.includes("consignmentgoods_insert")) {
-            // Enable fields
-            $('#consignment_goods_id')
-                .removeClass('disable_a_href')
-                .prop('disabled', false);
+		if (window.location.href.includes("consignmentgoods_insert")) {
+			// Enable fields
+			$('#consignment_goods_id')
+				.removeClass('disable_a_href')
+				.prop('disabled', false);
 
-                $('#consignment_details_id')
-                .addClass('disable_a_href')
-                .prop('disabled', false);
+			$('#consignment_details_id')
+				.addClass('disable_a_href')
+				.prop('disabled', false);
 
-                $('#consignment_details_submit')
-                .addClass('disable_a_href')
-                .prop('disabled', false);
-        }
-        else if (window.location.href.includes("consignmentgoods_update")) {
-            // Enable fields
-            $('#consignment_goods_id')
-                .removeClass('disable_a_href')
-                .prop('disabled', false);
-        }
-        else {
-            // Disable fields if on any other page
-            $('#consignment_goods_id')
-                .addClass('disable_a_href')
-                .prop('disabled', true);
-        }
-    });
+			$('#consignment_details_submit')
+				.addClass('disable_a_href')
+				.prop('disabled', false);
+		}
+		else if (window.location.href.includes("consignmentgoods_update")) {
+			// Enable fields
+			$('#consignment_goods_id')
+				.removeClass('disable_a_href')
+				.prop('disabled', false);
+		}
+		else {
+			// Disable fields if on any other page
+			$('#consignment_goods_id')
+				.addClass('disable_a_href')
+				.prop('disabled', true);
+		}
+	});
 </script>
 <script>
 	function vehicle_allotted() {
-        var enquiry_number = document.getElementById("co_enquirynumber").value.trim();
-        var consignmentdetail_id_val = '{{consignmentdetail_id}}';
+		var enquiry_number = document.getElementById("co_enquirynumber").value.trim();
+		var consignmentdetail_id_val = '{{consignmentdetail_id}}';
 
-        if (!enquiry_number) {
-            console.warn("Enquiry number is empty. Skipping request.");
-            return;
-        }
+		if (!enquiry_number) {
+			console.warn("Enquiry number is empty. Skipping request.");
+			return;
+		}
 
-        $.ajax({
-            url: '{% url "vehicle_allotted" %}',
-            type: 'GET',
-            data: {
-                'enquiry_number': enquiry_number,
-                'consignmentdetail_id_val': consignmentdetail_id_val
-            },
-            success: function (data) {
-                var final_vehicle_list = data.final_vehicle_list || [];
-                var selectedVehicle = data.selected_vehicles || "";
+		$.ajax({
+			url: '{% url "vehicle_allotted" %}',
+			type: 'GET',
+			data: {
+				'enquiry_number': enquiry_number,
+				'consignmentdetail_id_val': consignmentdetail_id_val
+			},
+			success: function (data) {
+				var final_vehicle_list = data.final_vehicle_list || [];
+				var selectedVehicle = data.selected_vehicles || "";
 
 				var vehicleDropdown = $("#co_vehicelnumber");
-                vehicleDropdown.empty();
-            vehicleDropdown.append("<option value=''>--Select--</option>");
+				vehicleDropdown.empty();
+				vehicleDropdown.append("<option value=''>--Select--</option>");
 
-                if (selectedVehicle !== "") {
-    				$("#co_vehicelnumber").append(
-        			"<option value='" + selectedVehicle + "' selected>" + selectedVehicle + "</option>"
-    			);
+				if (selectedVehicle !== "") {
+					$("#co_vehicelnumber").append(
+						"<option value='" + selectedVehicle + "' selected>" + selectedVehicle + "</option>"
+					);
 				}
-				else
-				{
-    				final_vehicle_list.forEach(function(vehicle) {
-        			$("#co_vehicelnumber").append(
-            		"<option value='" + vehicle + "'>" + vehicle + "</option>");
-    			});
+				else {
+					final_vehicle_list.forEach(function (vehicle) {
+						$("#co_vehicelnumber").append(
+							"<option value='" + vehicle + "'>" + vehicle + "</option>");
+					});
 				}
 
-                bind_vehicle_type_fetch();
-            	vehicleDropdown.trigger('change');
-            },
-            error: function (xhr, status, error) {
-                console.error("AJAX Error:", status, error);
-            }
-        });
-    }
+				bind_vehicle_type_fetch();
+				vehicleDropdown.trigger('change');
+			},
+			error: function (xhr, status, error) {
+				console.error("AJAX Error:", status, error);
+			}
+		});
+	}
 </script>
 <script>
 	const getVehicleTypeUrl = '{% url "get_vehicle_type" "VEHICLE_ID" %}';
 
-    function bind_vehicle_type_fetch() {
-    $('#co_vehicelnumber').off('change').on('change', function () {
-        const vehicleId = this.value;
-        if (vehicleId) {
-            const url = getVehicleTypeUrl.replace("VEHICLE_ID", vehicleId);
+	function bind_vehicle_type_fetch() {
+		$('#co_vehicelnumber').off('change').on('change', function () {
+			const vehicleId = this.value;
+			if (vehicleId) {
+				const url = getVehicleTypeUrl.replace("VEHICLE_ID", vehicleId);
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    const vehicleType = data.vehicle_type || 'Not Found';
-                    document.getElementById('co_vehicletype').value = vehicleType;
+				fetch(url)
+					.then(response => response.json())
+					.then(data => {
+						const vehicleType = data.vehicle_type || 'Not Found';
+						document.getElementById('co_vehicletype').value = vehicleType;
 
-                    updateFieldsBasedOnVehicleType(vehicleType);
-                })
-                .catch(error => console.error("Error fetching vehicle type:", error));
-        }
-    });
-}
+						updateFieldsBasedOnVehicleType(vehicleType);
+					})
+					.catch(error => console.error("Error fetching vehicle type:", error));
+			}
+		});
+	}
 </script>
 <script>
 	function updateFieldsBasedOnVehicleType(vehicleType) {
-<!--        const sealField = $('#co_seal_number');-->
-        const containerNumberField = $('#co_container_number');
-        const containerDescriptionField = $('#co_containerdescription');
+		// const sealField = $('#co_seal_number');
+		const containerNumberField = $('#co_container_number');
+		const containerDescriptionField = $('#co_containerdescription');
 
-        if (vehicleType.toLowerCase().includes('closed')) {
-
-<!--            sealField.prop('disabled', false).removeClass('disable_a_href');-->
-            containerNumberField.prop('disabled', true).addClass('disable_a_href');
-            containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
-
-        } else if (vehicleType.toLowerCase().includes('trailer')) {
-
-<!--            sealField.prop('disabled', false).removeClass('disable_a_href');-->
-            containerNumberField.prop('disabled', false).removeClass('disable_a_href');
-            containerDescriptionField.prop('disabled', false).removeClass('disable_a_href');
-
-        } else if (vehicleType.toLowerCase().includes('open')) {
-
-<!--            sealField.prop('disabled', true).addClass('disable_a_href');-->
-            containerNumberField.prop('disabled', true).addClass('disable_a_href');
-            containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
-
-        } else {
-
-<!--            sealField.prop('disabled', true).addClass('disable_a_href');-->
-            containerNumberField.prop('disabled', true).addClass('disable_a_href');
-            containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
-        }
-    }
+		if (vehicleType.toLowerCase().includes('closed')) {
+			// sealField.prop('disabled', false).removeClass('disable_a_href');
+			containerNumberField.prop('disabled', true).addClass('disable_a_href');
+			containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
+		} else if (vehicleType.toLowerCase().includes('trailer')) {
+			// sealField.prop('disabled', false).removeClass('disable_a_href');
+			containerNumberField.prop('disabled', false).removeClass('disable_a_href');
+			containerDescriptionField.prop('disabled', false).removeClass('disable_a_href');
+		} else if (vehicleType.toLowerCase().includes('open')) {
+			// sealField.prop('disabled', true).addClass('disable_a_href');
+			containerNumberField.prop('disabled', true).addClass('disable_a_href');
+			containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
+		} else {
+			// sealField.prop('disabled', true).addClass('disable_a_href');
+			containerNumberField.prop('disabled', true).addClass('disable_a_href');
+			containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
+		}
+	}
 </script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector("form");
-    const submitBtn = form.querySelector("button[type='submit']");
+	document.addEventListener("DOMContentLoaded", function () {
+		const form = document.querySelector("form");
+		const submitBtn = form.querySelector("button[type='submit']");
 
-    form.addEventListener("submit", function () {
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Please wait...";
-    });
-});
+		form.addEventListener("submit", function () {
+			submitBtn.disabled = true;
+			submitBtn.innerText = "Please wait...";
+		});
+	});
 </script>
 
 {% endblock content %}
