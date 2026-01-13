@@ -171,3 +171,4 @@ from .sub_views.driver_expense_view import driver_expense_add,driver_expense_lis
 from .sub_views.dmr_report_view import get_dmr_email_details
 from .sub_views.maintenance_view import maintenance_add,maintenance_delete,maintenance_edit,maintenance_list,fetch_vehicle_details
 from .sub_views.trans_invoice_view import (trans_invoice_add,trans_invoice_list,trans_invoice_delete,fetch_customer_details,trans_invoice_list_woh,trans_invoice_remove_woh,trans_invoice_add_woh)
+from .sub_views.stock_maintenance_view import stock_maintenance_list, stock_maintenance_add, stock_maintenance_edit, stock_maintenance_delete, get_part_details
