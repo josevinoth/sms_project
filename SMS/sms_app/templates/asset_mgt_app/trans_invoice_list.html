@@ -42,6 +42,7 @@
                     <th>State</th>
                     <th>Total Charges</th>
                     <th>Trans Invoice List</th>
+                    <th>Excel</th>
                     <th>Edit</th>
                     <th>Delete</th>
 
@@ -68,6 +69,13 @@
 </a>
 
                     </td>
+                    <td class="text-center">
+    <a href="{% url 'trans_invoice_excel' invoice.ti_inv_no %}"
+       class="btn btn-sm btn-success"
+       title="Download Excel">
+        <i class="fas fa-file-excel"></i>
+    </a>
+</td>
 
                     <!-- EDIT -->
                     <td class="text-center">

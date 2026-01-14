@@ -1,3 +1,4 @@
+
 {% block content %}
 <hr>
 
@@ -8,6 +9,41 @@
         </a>
     </div>
 </div>
+<div class="row align-items-end justify-content-center mb-2">
+
+  <!-- From Date -->
+  <div class="col-md-2 text-center">
+    <label class="fw-bold">From Date</label>
+    <input type="date" id="fromDate" class="form-control">
+  </div>
+
+  <!-- To Date -->
+  <div class="col-md-2 text-center">
+    <label class="fw-bold">To Date</label>
+    <input type="date" id="toDate" class="form-control">
+  </div>
+
+  <!-- Clear Button -->
+  <div class="col-md-1 text-center">
+    <label class="fw-bold invisible">Clear</label>
+    <button id="clearFilters" class="btn btn-secondary w-100">
+      Clear
+    </button>
+  </div>
+
+  <!-- Department -->
+  <div class="col-md-3 text-center">
+    <label class="fw-bold">Department</label>
+    <select id="departmentFilter" class="form-control">
+      <option value="">All Departments</option>
+      {% for dept in departments %}
+        <option value="{{ dept }}">{{ dept }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+</div>
+
 
 <div class="container-fluid">
 <table id="trans_invoice_master_list"
@@ -69,7 +105,10 @@
 
 <!-- ================= HEADER ROW ================= -->
 <tr>
-    <th>Select</th>
+    <th class="text-center">
+    <input type="checkbox" id="select-all">
+</th>
+
 
             <th>INV DATE</th>
             <th>Customer Name</th>
@@ -128,7 +167,8 @@
            value="{{ inv.id }}">
 </td>
 
-    <td>{{ inv.ti_inv_date }}</td>
+  <!-- Invoice basic -->
+  <td>{{ inv.ti_inv_date }}</td>
   <td>{{ inv.ti_customer }}</td>
   <td>{{ inv.ti_gst_in }}</td>
   <td>{{ inv.ti_state }}</td>
@@ -136,7 +176,7 @@
   <td>{{ inv.ti_inv_no }}</td>
 
   <!-- Customer / Trip -->
-  <td>{{ inv.ti_customer.cu_branch }}</td>
+  <td>{{ inv.ti_branch }}</td>
   <td>{{ inv.ti_trip.tr_vehiclesource }}</td>
   <td>{{ inv.ti_customer_short_name }}</td>
   <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
@@ -146,7 +186,7 @@
   <td>{{ inv.ti_consignment.co_consignmentnumber }}</td>
   <td>{{ inv.ti_trip.tr_departedlocation }}</td>
   <td>{{ inv.ti_trip.tr_reportedlocation }}</td>
-  <td>{{ inv.ti_customer.cu_department }}</td>
+  <td>{{ inv.ti_department }}</td>
 
   <!-- Vehicle -->
   <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
@@ -178,7 +218,7 @@
   <td>{{ inv.ti_handling_charges }}</td>
   <td>{{ inv.ti_cancellation_charges }}</td>
 
-    <td><strong>{{ inv.ti_total }}</strong></td>
+  <td><strong>{{ inv.ti_total }}</strong></td>
 </tr>
 {% endfor %}
 </tbody>
@@ -192,28 +232,55 @@ $(document).ready(function () {
     var table = $('#trans_invoice_master_list').DataTable({
         scrollX: true,
         dom: 'lBfrtip',
-        select: {
-            style: 'os',
-            selector: 'td:first-child'
-        },
         columnDefs: [
             { orderable: false, targets: 0 }
         ]
     });
 
-    $('.filter-input').on('keyup change', function () {
-        table
-            .column($(this).parent().index())
-            .search(this.value)
-            .draw();
+    /* ===============================
+       SELECT / UNSELECT ALL (CORRECT)
+       =============================== */
+
+    // Header checkbox → select / unselect ALL visible rows
+    $('#select-all').on('change', function () {
+        var isChecked = $(this).prop('checked');
+
+        // Use DataTables API (IMPORTANT)
+        table.rows({ search: 'applied' }).every(function () {
+            $(this.node()).find('input.row-select')
+                .prop('checked', isChecked);
+        });
     });
 
-    $('#trans_invoice_master_list thead input').on('click', function (e) {
-        e.stopPropagation();
+    // Row checkbox change → update header checkbox state
+    $('#trans_invoice_master_list tbody').on('change', 'input.row-select', function () {
+
+        var totalVisible = table.rows({ search: 'applied' }).nodes().length;
+        var checkedVisible = table.rows({ search: 'applied' }).nodes()
+            .to$()
+            .find('input.row-select:checked')
+            .length;
+
+        $('#select-all').prop('checked', totalVisible === checkedVisible);
+    });
+
+    // When table redraws (filter / paging), resync header checkbox
+    table.on('draw', function () {
+
+        var totalVisible = table.rows({ search: 'applied' }).nodes().length;
+        var checkedVisible = table.rows({ search: 'applied' }).nodes()
+            .to$()
+            .find('input.row-select:checked')
+            .length;
+
+        $('#select-all').prop('checked',
+            totalVisible > 0 && totalVisible === checkedVisible
+        );
     });
 
 });
 </script>
+
 <script>
 $('#add_btn').on('click', function () {
 
@@ -241,5 +308,92 @@ $('#add_btn').on('click', function () {
     });
 });
 </script>
+<script>
+$(document).ready(function () {
+
+    const INVOICE_DATE_COL = 1;   // INV DATE
+    const DEPT_COL = 15;          // Dept
+
+    var table = $('#trans_invoice_master_list').DataTable({
+        scrollX: true,
+        dom: 'lBfrtip',
+        columnDefs: [
+            { orderable: false, targets: 0 }
+        ]
+    });
+
+    /* ===============================
+       SELECT / UNSELECT ALL
+       =============================== */
+
+    $('#select-all').on('change', function () {
+        let checked = this.checked;
+        table.rows({ search: 'applied' }).nodes()
+            .to$()
+            .find('input.row-select')
+            .prop('checked', checked);
+    });
+
+    $('#trans_invoice_master_list tbody').on(
+        'change', 'input.row-select',
+        function () {
+            let total = table.rows({ search: 'applied' }).nodes().length;
+            let checked = table.rows({ search: 'applied' }).nodes()
+                .to$().find('input.row-select:checked').length;
+            $('#select-all').prop('checked', total === checked);
+        }
+    );
+
+    table.on('draw', function () {
+        let total = table.rows({ search: 'applied' }).nodes().length;
+        let checked = table.rows({ search: 'applied' }).nodes()
+            .to$().find('input.row-select:checked').length;
+        $('#select-all').prop('checked', total > 0 && total === checked);
+    });
+
+    /* ===============================
+       DATE + DEPARTMENT FILTER
+       =============================== */
+
+    $.fn.dataTable.ext.search.push(function (settings, data) {
+
+        if (settings.nTable.id !== 'trans_invoice_master_list') {
+            return true;
+        }
+
+        let from = $('#fromDate').val();
+        let to = $('#toDate').val();
+        let dept = $('#departmentFilter').val();
+
+        let rowDate = parseDate(data[INVOICE_DATE_COL]);
+        let rowDept = data[DEPT_COL];
+
+        if (from && rowDate < new Date(from)) return false;
+        if (to && rowDate > new Date(to)) return false;
+
+        if (dept && rowDept !== dept) return false;
+
+        return true;
+    });
+
+    $('#fromDate, #toDate, #departmentFilter').on('change', function () {
+        table.draw();
+    });
+
+    $('#clearFilters').on('click', function () {
+        $('#fromDate').val('');
+        $('#toDate').val('');
+        $('#departmentFilter').val('');
+        table.draw();
+    });
+
+    function parseDate(val) {
+        if (!val) return new Date(0);
+        return new Date(val);
+    }
+
+});
+</script>
+
 
 {% endblock content %}

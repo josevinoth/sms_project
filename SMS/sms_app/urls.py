@@ -786,7 +786,7 @@ urlpatterns = [
 
 
     path('trans_invoice_add/',views.trans_invoice_add,name='trans_invoice_add'),
-    path('trans_invoice_edit/<int:invoice_id>/',views.trans_invoice_add,name='trans_invoice_edit'),
+    path('trans_invoice_edit/<int:invoice_id>/',views.trans_invoice_edit,name='trans_invoice_edit'),
     path('trans_invoice_list/',views.trans_invoice_list,name='trans_invoice_list' ),
     path('trans_invoice_list_woh/<int:customer_id>/',views.trans_invoice_list_woh,name='trans_invoice_list_woh'),
     path('trans_invoice_delete/<int:invoice_id>/',views.trans_invoice_delete,name='trans_invoice_delete'),
@@ -798,6 +798,7 @@ urlpatterns = [
     path('maintenance_edit/<int:id>/', views.maintenance_edit, name='maintenance_edit'),
     path('maintenance_delete/<int:id>/', views.maintenance_delete, name='maintenance_delete'),
     path('maintenance_list/', views.maintenance_list, name='maintenance_list'),
+    path('trans-invoice/excel/<str:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
 
 ]
 

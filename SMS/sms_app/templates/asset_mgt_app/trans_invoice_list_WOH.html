@@ -22,11 +22,7 @@
         </h3>
     </div>
 
-    <div class="col-4 message text-center">
-        {% for message in messages %}
-            <span class="{{ message.tags }}">{{ message }}</span>
-        {% endfor %}
-    </div>
+
 
     <div class="col-4"></div>
 </div>
@@ -108,6 +104,8 @@
              class="row-select"
              value="{{ inv.id }}">
   </td>
+
+  <!-- Invoice basic -->
   <td>{{ inv.ti_inv_date }}</td>
   <td>{{ inv.ti_customer }}</td>
   <td>{{ inv.ti_gst_in }}</td>
@@ -116,7 +114,7 @@
   <td>{{ inv.ti_inv_no }}</td>
 
   <!-- Customer / Trip -->
-  <td>{{ inv.ti_customer.cu_branch }}</td>
+  <td>{{ inv.ti_branch }}</td>
   <td>{{ inv.ti_trip.tr_vehiclesource }}</td>
   <td>{{ inv.ti_customer_short_name }}</td>
   <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
@@ -126,7 +124,7 @@
   <td>{{ inv.ti_consignment.co_consignmentnumber }}</td>
   <td>{{ inv.ti_trip.tr_departedlocation }}</td>
   <td>{{ inv.ti_trip.tr_reportedlocation }}</td>
-  <td>{{ inv.ti_customer.cu_department }}</td>
+  <td>{{ inv.ti_department }}</td>
 
   <!-- Vehicle -->
   <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
