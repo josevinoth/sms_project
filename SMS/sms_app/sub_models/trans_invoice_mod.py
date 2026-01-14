@@ -12,7 +12,7 @@ class TransInvoiceInfo(models.Model):
     ti_goods = models.ForeignKey(ConsignmentgoodsInfo,on_delete=models.SET_NULL,null=True,blank=True)
     ti_consignment = models.ForeignKey(ConsignmentdetailInfo,on_delete=models.SET_NULL,null=True,blank=True)
     ti_inv_no = models.CharField(max_length=50,unique=True)
-    ti_gst_in = models.CharField(max_length=50,unique=True,null=True,blank=True)
+    ti_gst_in = models.CharField(max_length=50, null=True, blank=True)
     ti_customer_short_name = models.CharField(max_length=50)
     ti_state= models.CharField(max_length=10,null=True,blank=True )
     ti_pincode = models.CharField(max_length=10,null=True,blank=True )
@@ -27,7 +27,8 @@ class TransInvoiceInfo(models.Model):
     ti_handling_charges = models.FloatField(default=0, null=True, blank=True  ,)
     ti_cancellation_charges = models.FloatField(default=0, null=True, blank=True, )
     ti_total = models.FloatField(default=0)
-
+    ti_department = models.CharField(max_length=100,null=True,blank=True)
+    ti_branch = models.CharField(max_length=50,null=True,blank=True)
 
     def __str__(self):
         return self.ti_inv_no

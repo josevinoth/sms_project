@@ -64,7 +64,7 @@
             <div class="input-group-prepend">
               <span class="input-group-text">State</span>
             </div>
-            {% render_field form.ti_state class="form-control" %}
+            {% render_field form.ti_state class="form-control" readonly="readonly" %}
           </div>
 
           <div class="input-group input-group-sm mb-3">
@@ -158,7 +158,11 @@
             <div class="input-group-prepend">
               <span class="input-group-text fw-bold">Total Charges</span>
             </div>
-            {% render_field form.ti_total class="form-control disable_a_href" readonly="readonly" %}
+            <input type="text"
+       id="id_ti_total"
+       class="form-control"
+       readonly>
+
           </div>
 
         </div>
@@ -166,6 +170,8 @@
       </div>
 
       <!-- ================= ACTION BUTTONS ================= -->
+
+
      {% if not saved %}
 <button type="submit" class="btn btn-success">
   <i class="fas fa-check"></i> Save
@@ -175,12 +181,12 @@
   Invoice saved successfully
 </div>
 {% endif %}
+<a href="{% url 'trans_invoice_list' %}" class="btn btn-danger float-right">
+    <i class="fas fa-times"></i> Cancel
+</a>
 
 
 
-      <a href="{% url 'trans_invoice_list' %}" class="btn btn-danger float-right">
-        <i class="fas fa-times"></i> Cancel
-      </a>
 
     </div>
   </div>
@@ -252,10 +258,10 @@
           </tr>
         </thead>
 
-        <tbody>
-        {% for inv in invoice_list %}
-          <tr>
-  <!-- Invoice basic -->
+      <tbody>
+{% for inv in invoice_list %}
+<tr>
+  <!-- 1–6 Invoice -->
   <td>{{ inv.ti_inv_date }}</td>
   <td>{{ inv.ti_customer }}</td>
   <td>{{ inv.ti_gst_in }}</td>
@@ -263,38 +269,41 @@
   <td>{{ inv.ti_pincode }}</td>
   <td>{{ inv.ti_inv_no }}</td>
 
-  <!-- Customer / Trip -->
-  <td>{{ inv.ti_customer.cu_branch }}</td>
+  <!-- 7–11 Customer / Vehicle -->
+  <td>{{ inv.ti_branch }}</td>
   <td>{{ inv.ti_trip.tr_vehiclesource }}</td>
   <td>{{ inv.ti_customer_short_name }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
-  <td>{{ inv.ti_trip.tr_departeddate }}</td>
 
-  <!-- Consignment -->
+  <!-- Tally Veh No -->
+  <td>{{ inv.va_vehicle.vm_registrationnumber }}</td>
+
+  <!-- Planning Date -->
+  <td>{{ inv.ti_trip.tr_departeddate|date:"d-m-Y H:i" }}</td>
+
+  <!-- 12–15 Consignment -->
   <td>{{ inv.ti_consignment.co_consignmentnumber }}</td>
   <td>{{ inv.ti_trip.tr_departedlocation }}</td>
   <td>{{ inv.ti_trip.tr_reportedlocation }}</td>
-  <td>{{ inv.ti_customer.cu_department }}</td>
+  <td>{{ inv.ti_trip.tr_enquirynumber.en_customerdepartment }}</td>
 
-  <!-- Vehicle -->
+  <!-- 16–17 Vehicle -->
   <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
   <td>{{ inv.ti_trip.tr_vehicletype }}</td>
 
-  <!-- Trip timeline -->
+  <!-- 18–21 Timeline -->
   <td>{{ inv.ti_trip.tr_departeddate_pickup }}</td>
   <td>{{ inv.ti_trip.tr_dock_out_time }}</td>
   <td>{{ inv.ti_trip.tr_reporteddate }}</td>
   <td>{{ inv.ti_trip.tr_departeddate_delivery }}</td>
 
-  <!-- Goods -->
+  <!-- 22–26 Goods -->
   <td>{{ inv.ti_goods.cg_consignee }}</td>
   <td>{{ inv.ti_consignment.co_cusrefnum }}</td>
   <td>{{ inv.ti_goods.cg_hawbno }}</td>
-
   <td>{{ inv.ti_goods.cg_qty }}</td>
   <td>{{ inv.ti_goods.cg_weight }}</td>
 
-  <!-- Charges -->
+  <!-- 27–36 Charges -->
   <td>{{ inv.ti_transportation_charges }}</td>
   <td>{{ inv.ti_toll_charges }}</td>
   <td>{{ inv.ti_parking_charges }}</td>
@@ -306,11 +315,13 @@
   <td>{{ inv.ti_handling_charges }}</td>
   <td>{{ inv.ti_cancellation_charges }}</td>
 
+  <!-- 37 Total -->
   <td><strong>{{ inv.ti_total }}</strong></td>
 </tr>
+{% endfor %}
+</tbody>
 
-        {% endfor %}
-        </tbody>
+
 
       </table>
 
@@ -342,6 +353,8 @@ $(document).ready(function () {
     if (!customerId) {
       $('#id_ti_gst_in').val('');
       $('#id_ti_customer_short_name').val('');
+      $('#id_branch_display').val('');
+      $('#id_ti_state').val('');
       return;
     }
 
@@ -349,23 +362,22 @@ $(document).ready(function () {
       url: "{% url 'fetch_customer_details' %}",
       data: { customer_id: customerId },
       success: function (data) {
+
         $('#id_ti_gst_in').val(data.gstin);
         $('#id_ti_customer_short_name').val(data.customer_short_name);
+
+        // 🔥 AUTO SET BRANCH
+        $('#id_branch_display').val(data.branch);
+
+        // 🔥 AUTO SET STATE (READ-ONLY)
+        $('#id_ti_state').val(data.state);
       }
     });
   });
 
-  $('.charge-field').on('input', function () {
-    let total = 0;
-    $('.charge-field').each(function () {
-      const val = parseFloat($(this).val());
-      if (!isNaN(val)) total += val;
-    });
-    $('#id_ti_total').val(total.toFixed(2));
-  });
-
 });
 </script>
+
 <script>
   $(document).ready(function () {
       $('#trans_invoice_table').DataTable({
@@ -383,5 +395,6 @@ $(document).ready(function () {
       });
   });
 </script>
+
 
 {% endblock content %}

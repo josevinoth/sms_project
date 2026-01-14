@@ -784,7 +784,7 @@ urlpatterns = [
     path('driver-autocomplete/', views.driver_autocomplete, name='driver_autocomplete'),
     path("get_last_reported_km/", views.get_last_reported_km, name="get_last_reported_km"),
     path('trans_invoice_add/',views.trans_invoice_add,name='trans_invoice_add'),
-    path('trans_invoice_edit/<int:invoice_id>/',views.trans_invoice_add,name='trans_invoice_edit'),
+    path('trans_invoice_edit/<int:invoice_id>/',views.trans_invoice_edit,name='trans_invoice_edit'),
     path('trans_invoice_list/',views.trans_invoice_list,name='trans_invoice_list' ),
     path('trans_invoice_list_woh/<int:customer_id>/',views.trans_invoice_list_woh,name='trans_invoice_list_woh'),
     path('trans_invoice_delete/<int:invoice_id>/',views.trans_invoice_delete,name='trans_invoice_delete'),
@@ -803,6 +803,7 @@ urlpatterns = [
     path('stock_maintenance_update/<int:pk>/', views.stock_maintenance_edit, name='stock_maintenance_edit'),
     path('get_part_details/', views.get_part_details, name='get_part_details'),
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
+    path('trans-invoice/excel/<str:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
 
 ]
 
