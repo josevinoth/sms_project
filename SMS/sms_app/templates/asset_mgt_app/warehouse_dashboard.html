@@ -1,529 +1,739 @@
-
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
 {% load currency_format %}
+{% load static %}
+<!-- Use a modern UI font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- Shared modern theme CSS -->
+<link rel="stylesheet" href="{% static 'sms_app/css/modern_light.css' %}">
+<!-- flatpickr for nicer date inputs -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" integrity="sha512-Xq5Z6XB5gkR6g2g6b3u4q6Yy3l2QnQbY3qf8k9m5VvGQf9kXo1q6a9t6Vb8j3K9b1Z3YvK6q9t8X1Z3qf9kXg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<!-- html2pdf for client-side export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+
+<!-- flatpickr JS (loaded before dashboard_extras which initializes it) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+
+<!-- Chart.js and datalabels plugin (required for charts) -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> -->
+
+<!-- include extras (initializes flatpickr and export) -->
+<script src="{% static 'sms_app/js/dashboard_extras.js' %}"></script>
+
+<!-- Add lightweight CSS to allow horizontal scrolling when sidebar is present -->
 <style>
-  .metric-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: 0.3s ease-in-out;
-    height: 100%;
-  }
+  /* Default sidebar width used to offset the dashboard */
+  :root { --sidebar-width: 260px; --sidebar-offset: 260px; }
 
-  .metric-card:hover {
-    transform: translateY(-5px);
+  /* Dashboard root: ensure it can expand horizontally and show a horizontal scrollbar
+     and use the CSS variable for left offset so JS doesn't need to set inline margins. */
+  .dashboard-root {
+    margin-left: var(--sidebar-offset, var(--sidebar-width));
+    transition: margin-left 260ms ease;
+    min-width: 1100px; /* reasonable fallback width for dashboard content */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
   }
+  /* Make chart-wraps and cards stay readable when the viewport is narrow */
+  .chart-wrap { min-width: 360px; }
+  .metric-grid { min-width: 900px; }
 
-  .metric-icon {
-    font-size: 30px;
+  /* When the body has this class, reduce the CSS var to collapse the sidebar visually */
+  body.sidebar-collapsed { --sidebar-width: 72px; }
+
+  /* try a number of common sidebar selectors to collapse visually */
+  body.sidebar-collapsed .sidebar,
+  body.sidebar-collapsed nav.sidebar,
+  body.sidebar-collapsed #sidebar,
+  body.sidebar-collapsed .sidenav,
+  body.sidebar-collapsed .main-sidebar {
+    width: 72px !important;
+    min-width: 72px !important;
+    transition: width 260ms ease, min-width 260ms ease;
+    overflow: hidden !important;
   }
+  /* small visual hint for compact sidebar items if present */
+  body.sidebar-collapsed .sidebar .nav-label,
+  body.sidebar-collapsed .sidebar .nav-text { opacity: 0; pointer-events: none; }
 
-  .metric-label {
-    font-size: 16px;
-    font-weight: 500;
-    padding:5px;
-    font-weight: bold;
-  }
+  /* Toggle button appearance in header */
+  #toggle-sidebar { margin-right:8px; }
 
-  .metric-value {
-    font-size: 22px;
-    font-weight: bold;
-    margin-top: 8px;
+  /* Responsive rules for small screens (mobile) */
+  @media (max-width: 768px) {
+    /* Remove left offset on small screens so dashboard uses full width */
+    body.sidebar-collapsed { --sidebar-offset: 0; }
+    :root { --sidebar-offset: 0; }
+
+    /* Keep site sidebar visible on mobile (preserve old behaviour) - do not forcibly hide it here */
+
+    .dashboard-root {
+      margin-left: 0 !important;
+      min-width: auto !important;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    /* Stack metrics and make them full width */
+    .metric-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .metric-card {
+      flex: 1 1 100%;
+      max-width: 100%;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 10px;
+    }
+
+    /* Make chart containers responsive */
+    .chart-wrap {
+      min-width: auto !important;
+      width: 100% !important;
+      overflow: visible;
+    }
+    .chart-wrap canvas {
+      width: 100% !important;
+      height: auto !important;
+      max-width: 100%;
+      display: block;
+    }
+
+    /* Make card bodies and tables more compact */
+    .card-body { padding: 10px; }
+    .table { font-size: 13px; }
+
+    /* Header actions flow nicely */
+    .dashboard-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .actions-row { display:flex; gap:8px; width:100%; }
+    .actions-row .btn { flex-shrink: 0; }
+
+    /* Ensure toggle remains visible and usable */
+    #toggle-sidebar { display:inline-flex; }
   }
 </style>
-<!--<div class="container-fluid d-flex align-items-center justify-content-between py-3">-->
-<!--  <div>-->
-<!--    <a href="{% url 'finance_reports' %}" class="btn btn-primary">-->
-<!--      <i class="fas fa-arrow-left"></i> Back-->
-<!--    </a>-->
-<!--  </div>-->
-  <div class="flex-grow-1 d-flex justify-content-center">
-    <div class="rounded text-center bg-info shadow-box px-4 py-2">
-      <h3>Warehouse Dashboard</h3>
+
+<!-- small breadcrumb -->
+<div style="font-size:13px;color:var(--muted);margin-bottom:6px">Dashboard / Warehouse</div>
+
+<div class="container-fluid dashboard-root">
+  <div class="dashboard-header">
+    <div style="display:flex;align-items:center;">
+      <div class="page-badge">W</div>
+      <div style="margin-left:8px">
+        <div class="page-title">Warehouse Dashboard</div>
+        <div class="muted-small">At-a-glance KPIs and space utilisation</div>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button id="toggle-sidebar" class="btn btn-outline-secondary btn-small" title="Toggle sidebar">☰</button>
+      <a href="{% url 'finance_reports' %}" class="btn btn-outline-secondary btn-small">Back</a>
+      <button id="export-pdf" class="btn btn-primary btn-small">Export</button>
     </div>
   </div>
-<!--  <div style="width: 80px;"></div>-->
-<!--</div>-->
-<br>
-<div class="container-fluid">
-  <div class="row align-items-center">
-    <div class="col-md-2">
-      <label for="branch-filter"><b>Branch:</b></label>
-      <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+
+  <!-- Filters -->
+  <div class="row filters-row g-2 align-items-end">
+    <div class="col-xl-4 col-lg-5 col-md-6 col-sm-12">
+      <label class="text-muted-sm"><b>Branch</b></label>
+      <select id="branch-filter" name="branch" class="form-control">
         <option value="">All</option>
         {% for branch in branches %}
-        <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
-          {{ branch.loc_name }}
-        </option>
+          {% if branch.loc_name == selected_branch %}
+            <option value="{{ branch.loc_name }}" selected>{{ branch.loc_name }}</option>
+          {% else %}
+            <option value="{{ branch.loc_name }}">{{ branch.loc_name }}</option>
+          {% endif %}
         {% endfor %}
       </select>
     </div>
 
-    <!--        <div class="col-md-2">-->
-    <!--            <label for="company-filter"><b>Company:</b></label>-->
-    <!--            <select id="company-filter" name="company" class="form-control box-shadow rounded">-->
-    <!--                <option value="">All</option>-->
-    <!--                {% for company in companies %}-->
-    <!--                <option value="{{ company.bvm_business }}" {% if company.bvm_business == selected_company %} selected {% endif %}>-->
-    <!--                    {{ company.bvm_business }}-->
-    <!--                </option>-->
-    <!--                {% endfor %}-->
-    <!--            </select>-->
-    <!--        </div>-->
-
-    <!-- From Date -->
-    <div class="col-md-2">
-      <label for="from-date"><b>From:</b></label>
-      <input type="date" id="from-date" name="from_date" value="{{ from_date|default_if_none:'' }}" class="form-control box-shadow">
+    <div class="col-xl-2 col-lg-3 col-md-3 col-sm-6">
+      <label class="text-muted-sm"><b>From</b></label>
+      <input type="text" id="from-date" name="from_date" value="{{ from_date|default_if_none:'' }}" class="form-control">
     </div>
 
-    <!-- To Date -->
-    <div class="col-md-3">
-      <label for="to-date"><b>To:</b></label>
-      <input type="date" id="to-date" name="to_date" value="{{ to_date|default_if_none:'' }}" class="form-control box-shadow">
+    <div class="col-xl-2 col-lg-3 col-md-3 col-sm-6">
+      <label class="text-muted-sm"><b>To</b></label>
+      <input type="text" id="to-date" name="to_date" value="{{ to_date|default_if_none:'' }}" class="form-control">
     </div>
 
+    <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12 text-end">
+      <button id="apply-filters" class="btn btn-primary btn-small">Apply Filters</button>
+    </div>
   </div>
-</div>
 
-<br>
-<div class="container-fluid">
-  <!-- Top 4 cards -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-3 col-sm-6">
-      <div class="metric-card h-100 text-center">
-        <div class="d-flex align-items-center justify-content-center mb-2">
-          <div class="metric-icon text-primary me-2"><i class="fas fa-code-branch"></i></div>
-          <div class="metric-label">Branches</div>
-        </div>
+  <br>
+
+  <!-- Metrics -->
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-icon" style="background:linear-gradient(135deg,#60a5fa,#3b82f6)"><i class="fas fa-code-branch"></i></div>
+      <div>
+        <div class="metric-label">Branches</div>
         <div class="metric-value">{{ total_branches }}</div>
       </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
-      <div class="metric-card h-100 text-center">
-        <div class="d-flex align-items-center justify-content-center mb-2">
-          <div class="metric-icon text-success me-2"><i class="fas fa-cubes"></i></div>
-          <div class="metric-label">Units</div>
-        </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:linear-gradient(135deg,#34d399,#10b981)"><i class="fas fa-cubes"></i></div>
+      <div>
+        <div class="metric-label">Units</div>
         <div class="metric-value">{{ total_units }}</div>
       </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
-      <div class="metric-card h-100 text-center">
-        <div class="d-flex align-items-center justify-content-center mb-2">
-          <div class="metric-icon text-info me-2"><i class="fas fa-warehouse"></i></div>
-          <div class="metric-label">Bays</div>
-        </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:linear-gradient(135deg,#60a5fa,#2563eb)"><i class="fas fa-warehouse"></i></div>
+      <div>
+        <div class="metric-label">Bays</div>
         <div class="metric-value">{{ total_bays }}</div>
       </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
-      <div class="metric-card h-100 text-center">
-        <div class="d-flex align-items-center justify-content-center mb-2">
-          <div class="metric-icon text-warning me-2"><i class="fas fa-users"></i></div>
-          <div class="metric-label">Customers</div>
-        </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:linear-gradient(135deg,#f59e0b,#f97316)"><i class="fas fa-users"></i></div>
+      <div>
+        <div class="metric-label">Customers</div>
         <div class="metric-value">{{ total_customers }}</div>
       </div>
     </div>
-  </div>
 
-  <!-- Bottom 4 cards -->
-  <div class="row g-4">
-    <div class="col-md-3 col-sm-6">
-      <div class="metric-card h-100 text-center">
-        <div class="d-flex align-items-center justify-content-center mb-2">
-          <div class="metric-icon text-primary me-2"><i class="fas fa-truck"></i></div>
-          <div class="metric-label">Vehicle Count</div>
-        </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:linear-gradient(135deg,#60a5fa,#3b82f6)"><i class="fas fa-truck"></i></div>
+      <div>
+        <div class="metric-label">Vehicle Count</div>
         <div class="metric-value">{{ vehicle_count }}</div>
       </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
-      <div class="metric-card h-100 text-center">
-        <div class="d-flex align-items-center justify-content-center mb-2">
-          <div class="metric-icon text-danger me-2"><i class="fas fa-rupee-sign"></i></div>
-          <div class="metric-label">Revenue</div>
-        </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:linear-gradient(135deg,#ef4444,#f97316)"><i class="fas fa-rupee-sign"></i></div>
+      <div>
+        <div class="metric-label">Revenue</div>
         <div class="metric-value">₹{{ revenue_summary.total_revenue|default:0|floatformat:2|to_lakhs }}L</div>
       </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
-      <div class="metric-card h-100 text-center">
-        <div class="d-flex align-items-center justify-content-center mb-2">
-          <div class="metric-icon text-secondary me-2"><i class="fas fa-file-invoice"></i></div>
-          <div class="metric-label">Invoice Amount</div>
-        </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:linear-gradient(135deg,#9ca3af,#6b7280)"><i class="fas fa-file-invoice"></i></div>
+      <div>
+        <div class="metric-label">Invoice Amount</div>
         <div class="metric-value">₹{{ revenue_summary.total_invoice_amount|default:0|floatformat:2|to_crores }}</div>
       </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
-      <div class="metric-card h-100 text-center">
-        <div class="d-flex align-items-center justify-content-center mb-2">
-          <div class="metric-icon text-dark me-2"><i class="fas fa-weight-hanging"></i></div>
-          <div class="metric-label">Tonnage</div>
-        </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:linear-gradient(135deg,#60a5fa,#06b6d4)"><i class="fas fa-weight-hanging"></i></div>
+      <div>
+        <div class="metric-label">Tonnage</div>
         <div class="metric-value">{{ revenue_summary.total_tonnage|default:0|floatformat:2|to_tons }}</div>
       </div>
     </div>
   </div>
+
+  <br>
+
+  <div class="row g-3">
+    <div class="col-lg-5 col-md-6">
+      <div class="card-clean card">
+        <div class="card-body text-center">
+          <h6 class="card-title">Space Utilization</h6>
+          <div class="chart-wrap"><canvas id="spacePie" class="bg-white box-shadow rounded"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5 col-md-6">
+      <div class="card-clean card">
+        <div class="card-body text-center">
+          <h6 class="card-title">Area & Volume</h6>
+          <div class="chart-wrap"><canvas id="areaVolumeDonut" class="bg-white box-shadow rounded"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-2 col-md-12">
+      <div class="card-clean card">
+        <div class="card-body">
+          <h6 class="card-title">Area & Volume Summary</h6>
+          <ul class="list-group">
+            <li class="list-group-item">Total Area: <strong>{{ space_summary.total_area|default:0|floatformat:2 }} sq.ft</strong></li>
+            <li class="list-group-item">Occupied Area: <strong>{{ space_summary.occupied_area|default:0|floatformat:2 }} sq.ft</strong></li>
+            <li class="list-group-item">Available Area: <strong>{{ space_summary.available_area|default:0|floatformat:2 }} sq.ft</strong></li>
+            <li class="list-group-item">Total Volume: <strong>{{ space_summary.total_volume|default:0|floatformat:2 }} m³</strong></li>
+            <li class="list-group-item">Occupied Volume: <strong>{{ space_summary.occupied_volume|default:0|floatformat:2 }} m³</strong></li>
+            <li class="list-group-item">Utilization: <strong>{{ space_utilization_percent|floatformat:2 }}%</strong></li>
+          </ul>
+
+          <!-- Utilization progress bar -->
+          <div style="margin-top:12px">
+            <div class="text-muted-sm">Utilization</div>
+            <div class="progress-track" aria-hidden="true">
+              <div class="progress-fill" style="width: {{ space_utilization_percent|default:0 }}%"></div>
+            </div>
+            <div style="margin-top:6px;font-size:13px;color:var(--muted)"> {{ space_utilization_percent|floatformat:2 }}% occupied</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <br>
+
+  <div class="row g-3">
+    <div class="col-lg-4 col-md-6">
+      <div class="card-clean card">
+        <div class="card-body">
+          <h6 class="card-title">Top Customers by Revenue</h6>
+          <table class="table table-striped">
+            <thead>
+              <tr><th>Customer</th><th class="text-end">Total Revenue (₹)</th></tr>
+            </thead>
+            <tbody>
+              {% for customer in top_customers %}
+              <tr>
+                <td>{{ customer.wh_customer_name__cu_nameshort }}</td>
+                <td class="text-end">{{ customer.total_revenue|floatformat:2 }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+      <div class="card-clean card">
+        <div class="card-body">
+          <h6 class="card-title">Least Customers by Revenue</h6>
+          <table class="table table-striped">
+            <thead>
+              <tr><th>Customer</th><th class="text-end">Total Revenue (₹)</th></tr>
+            </thead>
+            <tbody>
+              {% for customer in least_customers %}
+              <tr>
+                <td>{{ customer.wh_customer_name__cu_nameshort }}</td>
+                <td class="text-end">{{ customer.total_revenue|floatformat:2 }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-12">
+      <div class="card-clean card">
+        <div class="card-body text-center">
+          <h6 class="card-title">Top Customers by Revenue (Chart)</h6>
+          <div class="chart-wrap"><canvas id="customerRevenueBar" class="bg-white box-shadow rounded"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <br>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card-clean card">
+        <div class="card-body text-center">
+          <h6 class="card-title">Branch/Unit wise space Utilization</h6>
+          <div class="chart-wrap"><canvas id="nestedDonut" class="bg-white box-shadow rounded"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card-clean card">
+        <div class="card-body">
+          <h6 class="card-title">Notes & Actions</h6>
+          <p class="muted-small">Quick actions, alerts or notes about the warehouse can appear here. Use this area to place links to detailed reports or operational checklists.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a href="#" class="btn btn-outline-primary btn-sm">Open Report</a>
+            <a href="#" class="btn btn-outline-secondary btn-sm">Run Audit</a>
+            <a href="#" class="btn btn-outline-success btn-sm">New Task</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-
-<div class="row g-4 mt-4">
-  <!-- Left: Space Utilization Pie -->
-  <div class="col-md-4">
-    <div class="card shadow-sm">
-      <div class="card-body d-flex flex-column align-items-center justify-content-center">
-        <h5 class="card-title mb-3">Space Utilization</h5>
-        <canvas id="spacePie" class="bg-white box-shadow rounded"></canvas>
-      </div>
-    </div>
-  </div>
-  <!-- Middle: Area & Volume Donut -->
-  <div class="col-md-4">
-    <div class="card shadow-sm">
-      <div class="card-body d-flex flex-column align-items-center justify-content-center">
-        <h5 class="card-title mb-3">Area & Volume</h5>
-        <canvas id="areaVolumeDonut" class="bg-white box-shadow rounded"></canvas>
-      </div>
-    </div>
-  </div>
-  <!-- Right: Area & Volume Summary -->
-  <div class="col-md-4">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title">Area & Volume Summary</h5>
-        <ul class="list-group shadow-sm">
-          <li class="list-group-item">Total Area: {{ space_summary.total_area|default:0|floatformat:2 }} sq.ft</li>
-          <li class="list-group-item">Occupied Area: {{ space_summary.occupied_area|default:0|floatformat:2 }} sq.ft</li>
-          <li class="list-group-item">Available Area: {{ space_summary.available_area|default:0|floatformat:2 }} sq.ft</li>
-          <li class="list-group-item">Total Volume: {{ space_summary.total_volume|default:0|floatformat:2 }} m³</li>
-          <li class="list-group-item">Occupied Volume: {{ space_summary.occupied_volume|default:0|floatformat:2 }} m³</li>
-          <li class="list-group-item">Utilization: {{ space_utilization_percent|floatformat:2 }}%</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- Top Customers -->
-<div class="row mt-4">
-  <div class="col-md-4">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Top Customers by Revenue</h5>
-        <table class="table table-striped shadow-sm">
-          <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Total Revenue (₹)</th>
-          </tr>
-          </thead>
-          <tbody>
-          {% for customer in top_customers %}
-          <tr>
-            <td>{{ customer.wh_customer_name__cu_nameshort }}</td>
-            <td>{{ customer.total_revenue|floatformat:2 }}</td>
-          </tr>
-
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Least Customers by Revenue</h5>
-        <table class="table table-striped shadow-sm">
-          <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Total Revenue (₹)</th>
-          </tr>
-          </thead>
-          <tbody>
-          {% for customer in least_customers %}
-          <tr>
-            <td>{{ customer.wh_customer_name__cu_nameshort }}</td>
-            <td>{{ customer.total_revenue|floatformat:2 }}</td>
-          </tr>
-
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Top Customers by Revenue</h5>
-        <canvas id="customerRevenueBar" width="300" height="200" class="bg-white box-shadow rounded"></canvas>
-      </div>
-    </div>
-  </div>
-</div>
-<br>
-<div class="col-md-4">
-  <div class="card shadow-sm">
-    <div class="card-body d-flex flex-column align-items-center justify-content-center">
-      <h5 class="card-title mb-3">Branch/Unit wise space Utilization</h5>
-      <canvas id="nestedDonut" class="bg-white box-shadow rounded"></canvas>
-    </div>
-  </div>
-</div>
-
+<!-- runtime script: detect sidebar width and set CSS var so dashboard doesn't get overlapped -->
 <script>
-  const spaceCtx = document.getElementById('spacePie').getContext('2d');
-new Chart(spaceCtx, {
-  type: 'pie',
-  data: {
-      labels: ['Occupied Space', 'Available Space'],
-      datasets: [{
-          data: [
-            {{ space_summary.occupied_area|default:0 }},
-            {{ space_summary.available_area|default:0 }}
-          ],
-          backgroundColor: ['#ff6384', '#36a2eb'],
-      }]
-  },
-  options: {
-      responsive: true,
-      plugins: {
-          legend: { position: 'bottom' },
-          datalabels: {
-              formatter: (value, ctx) => {
-                  let dataset = ctx.chart.data.datasets[0].data;
-                  let total = dataset.reduce((a, b) => a + b, 0);
-                  let percentage = (value / total * 100).toFixed(1) + "%";
-                  return percentage;
-              },
-              color: "#fff",
-              font: { weight: "bold", size: 14 }
-          }
-      }
-  },
-  plugins: [ChartDataLabels]
-});
-
-</script>
-<script>
-  const customerData = JSON.parse('{{ top_customers_json|escapejs }}');
-  const bubbleCtx = document.getElementById("customerRevenueBar").getContext("2d");
-
-  // Normalize bubble size based on revenue (so bubbles don’t get too huge)
-  function scaleRadius(value, maxRevenue) {
-    const minRadius = 5;
-    const maxRadius = 40; // adjust if bubbles are too small/large
-    return Math.max(minRadius, (value / maxRevenue) * maxRadius);
-  }
-
-  const maxRevenue = Math.max(...customerData.map(c => c.total_revenue));
-  const bubbleData = customerData.map((c, i) => ({
-    x: i + 1, // customer index
-    y: c.total_revenue,
-    r: scaleRadius(c.total_revenue, maxRevenue),
-    customer: c.wh_customer_name__cu_nameshort
-  }));
-
-  new Chart(bubbleCtx, {
-    type: 'bubble',
-    data: {
-      datasets: [{
-        label: "Customer Revenue",
-        data: bubbleData,
-        backgroundColor: "rgba(54, 162, 235, 0.5)",
-        borderColor: "#36a2eb",
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const data = ctx.raw;
-              return `${data.customer}: ₹${data.y}`;
-            }
-          }
-        },
-        legend: { display: false }
-      },
-      scales: {
-        x: {
-          title: { display: true, text: "Customers" },
-          ticks: {
-            callback: (val, index) => customerData[index]?.wh_customer_name__cu_nameshort || index + 1
-          }
-        },
-        y: {
-          beginAtZero: true,
-          title: { display: true, text: "Revenue (₹)" }
+  (function(){
+    try{
+      // try common sidebar selectors
+      const selectors = ['.sidebar','nav.sidebar','#sidebar','.sidenav','.main-sidebar'];
+      let sidebar = null;
+      for(const s of selectors){ const el = document.querySelector(s); if(el){ sidebar = el; break; } }
+      const defaultWidth = 260;
+      const width = sidebar ? sidebar.getBoundingClientRect().width : defaultWidth;
+      // compute precise offset so the dashboard sits flush to the sidebar
+      try{
+        const root = document.querySelector('.dashboard-root');
+        if(sidebar && root){
+          const sRect = sidebar.getBoundingClientRect();
+          const rRect = root.getBoundingClientRect();
+          // offset from root's left to sidebar's right
+          const offset = Math.max(0, Math.round(sRect.right - rRect.left));
+          document.documentElement.style.setProperty('--sidebar-offset', offset + 'px');
+        } else {
+          document.documentElement.style.setProperty('--sidebar-offset', width + 'px');
         }
+      }catch(e){ document.documentElement.style.setProperty('--sidebar-offset', width + 'px'); }
+      // keep the width var updated as well
+      document.documentElement.style.setProperty('--sidebar-width', width + 'px');
+
+      // helper to read bootstrap offset (pixels) if present (kept for potential use elsewhere)
+      function getBootstrapOffsetPx(){
+        const offsetEl = document.querySelector('.offset-md-2') || document.querySelector('#main-content.offset-md-2');
+        if(!offsetEl) return 0;
+        try{
+          const cs = getComputedStyle(offsetEl);
+          const ml = parseFloat(cs.marginLeft) || 0;
+          return ml;
+        }catch(e){ return 0; }
       }
+
+      // We no longer set root.style.marginLeft here; CSS var controls the offset.
+
+      // reflow on resize: update the CSS var so layout follows the actual sidebar width
+      window.addEventListener('resize', ()=>{
+        const sidebar = (function(){
+          const selectors = ['.sidebar','nav.sidebar','#sidebar','.sidenav','.main-sidebar'];
+          for(const s of selectors){ const el = document.querySelector(s); if(el) return el; }
+          return null;
+        })();
+        const width = sidebar ? sidebar.getBoundingClientRect().width : defaultWidth;
+        try{
+          const root = document.querySelector('.dashboard-root');
+          if(sidebar && root){
+            const sRect = sidebar.getBoundingClientRect();
+            const rRect = root.getBoundingClientRect();
+            const offset = Math.max(0, Math.round(sRect.right - rRect.left));
+            document.documentElement.style.setProperty('--sidebar-offset', offset + 'px');
+          } else {
+            document.documentElement.style.setProperty('--sidebar-offset', width + 'px');
+          }
+        }catch(e){ document.documentElement.style.setProperty('--sidebar-offset', width + 'px'); }
+        document.documentElement.style.setProperty('--sidebar-width', width + 'px');
+      });
+    }catch(e){ console.warn('sidebar-detect', e); }
+  })();
+</script>
+
+<!-- Chart improvements -->
+<script>
+  // centerText plugin for doughnut charts (unchanged)
+  const centerTextPlugin = {
+    id: 'centerText',
+    beforeDraw: function(chart){
+      const centerConfig = chart.config.options.plugins && chart.config.options.plugins.centerText;
+      if(!centerConfig) return;
+      const ctx = chart.ctx;
+      const width = chart.width;
+      const height = chart.height;
+      ctx.save();
+      const fontSize = centerConfig.fontSize || Math.round((height / 114) * (centerConfig.fontSize || 18));
+      ctx.font = `${centerConfig.fontWeight || '700'} ${fontSize}px Inter, Arial`;
+      ctx.fillStyle = centerConfig.color || '#111827';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const x = (chart.chartArea.left + chart.chartArea.right) / 2;
+      const y = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+      ctx.fillText(centerConfig.text || '', x, y);
+      ctx.restore();
     }
-  });
-</script>
+  };
+  try{ if(window.Chart && Chart.register){ Chart.register(centerTextPlugin); } }catch(e){ console.warn(e); }
 
+  // Create charts on demand - call window.createDashboardCharts() to (re)build charts
+  window._sms_charts = window._sms_charts || {};
+  window.createDashboardCharts = function(){
+    console.log('createDashboardCharts: start');
+    // helper to destroy previous charts safely
+    try{ Object.keys(window._sms_charts||{}).forEach(k=>{ const c = window._sms_charts[k]; if(c && typeof c.destroy === 'function') c.destroy(); }); }catch(e){console.warn('destroy previous charts failed', e);}
+    window._sms_charts = {};
 
-<script>
-  const donutCtx = document.getElementById('areaVolumeDonut').getContext('2d');
-  new Chart(donutCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Occupied Area', 'Available Area', 'Occupied Volume', 'Remaining Volume'],
-      datasets: [{
-        data: [
-          {{ space_summary.occupied_area|default:0 }},
-          {{ space_summary.available_area|default:0 }},
-          {{ space_summary.occupied_volume|default:0 }},
-          {{ space_summary.total_volume|default:0 }} - {{ space_summary.occupied_volume|default:0 }}
-        ],
-        backgroundColor: ['#ff6384', '#36a2eb', '#4bc0c0', '#ffcd56']
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-          legend: { position: 'bottom' },
-          datalabels: {
-              formatter: (value, ctx) => {
-                  let dataset = ctx.chart.data.datasets[0].data;
-                  let total = dataset.reduce((a, b) => a + b, 0);
-                  let percentage = (value / total * 100).toFixed(1) + "%";
-                  return percentage;
-              },
-              color: "#fff",
-              font: { weight: "bold", size: 14 }
-          }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
+    // parse space summary JSON (safe numeric values)
+    const _space = (function(){ try{ return JSON.parse('{{ space_summary_json|escapejs }}' || '{}'); }catch(e){ return {}; } })();
+    const occupied = Number(_space.occupied_area || 0);
+    const available = Number(_space.available_area || 0);
+    const occupied_volume = Number(_space.occupied_volume || 0);
+    const total_volume = Number(_space.total_volume || 0);
+    const total_area = Number(_space.total_area || 0);
 
-</script>
-<script>
-  const ctxNested = document.getElementById('nestedDonut').getContext('2d');
-
-  // Load space summary JSON
-  const spaceSummary = JSON.parse('{{ space_summary_json|escapejs }}');
-
-  // Inner Ring → Area
-  const areaData = [
-    spaceSummary.occupied_area || 0,
-    spaceSummary.available_area || 0
-  ];
-
-  // Outer Ring → Volume
-  const volumeData = [
-    spaceSummary.occupied_volume || 0,
-    spaceSummary.available_volume || 0
-  ];
-
-  new Chart(ctxNested, {
-    type: 'doughnut',
-    data: {
-      labels: [
-        'Occupied Area', 'Available Area',
-        'Occupied Volume', 'Available Volume'
-      ],
-      datasets: [
-        {
-          label: 'Area',
-          data: areaData,
-          backgroundColor: ['#ff6384', '#36a2eb'], // red + blue
-          cutout: '60%',
-          radius: '80%'
-        },
-        {
-          label: 'Volume',
-          data: volumeData,
-          backgroundColor: ['#ff9f40', '#4bc0c0'], // orange + teal
-          cutout: '80%',
-          radius: '100%'
+    // Space Utilization doughnut
+    (function(){
+      try{
+        const el = document.getElementById('spacePie'); if(!el) return;
+        const wrap = el.closest('.chart-wrap');
+        if(wrap){
+          // remove any stale overlays
+          const olds = wrap.querySelectorAll('.chart-glow-overlay'); olds.forEach(o=>o.remove());
+          // ensure canvas has an explicit pixel height so Chart.js can render
+          el.style.width = '100%';
+          // On small screens don't force large inline heights; use a compact fallback
+          if(window.innerWidth <= 768){ el.style.height = '220px'; }
+          else { el.style.height = (wrap.clientHeight || 240) + 'px'; }
         }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'bottom' },
-        datalabels: {
-          color: '#fff',
-          font: {
-            weight: 'bold'
+        const ctx = el.getContext('2d');
+        const total = (occupied + available) || 1;
+        const percent = ((occupied/total)*100).toFixed(1) + '%';
+        const cfg = {
+          type: 'doughnut',
+          data: { labels:['Occupied','Available'], datasets:[{ data:[occupied, available], backgroundColor:['#ef4444','#3b82f6'], hoverOffset:8 }] },
+          // animations disabled for mobile/consistency per user's request
+          options: { cutout:'72%', responsive:true, animation: false, plugins:{ legend:{ position:'bottom', labels:{boxWidth:12, padding:8, usePointStyle:true} }, centerText:{ text: percent, fontSize:18, color:'#0f172a' }, datalabels:{ color:'#fff', formatter:(val,ctx)=>{ const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0); return ((val/sum)*100).toFixed(1)+'%'; } } } },
+          plugins:[ChartDataLabels]
+        };
+        try{ window._sms_charts.spacePie = new Chart(ctx, cfg); console.log('spacePie created'); }catch(err){ console.error('spacePie creation failed', err); }
+      }catch(e){ console.error('spacePie block error', e); }
+    })();
+
+    // Area & Volume donut
+    (function(){
+      try{
+        const el = document.getElementById('areaVolumeDonut'); if(!el) return;
+        const wrap2 = el.closest('.chart-wrap');
+        if(wrap2){
+          const olds2 = wrap2.querySelectorAll('.chart-glow-overlay'); olds2.forEach(o=>o.remove());
+          el.style.width = '100%';
+          if(window.innerWidth <= 768){ el.style.height = '220px'; }
+          else { el.style.height = (wrap2.clientHeight || 240) + 'px'; }
+        }
+        const ctx = el.getContext('2d');
+        const cfg = {
+          type: 'doughnut',
+          data: {
+            labels:['Occupied Area','Available Area','Occupied Volume','Remaining Volume'],
+            datasets:[{
+              data: [occupied, available, occupied_volume, Math.max(0, total_volume - occupied_volume)],
+              backgroundColor:['#ff7a7a','#6fb3ff','#4bc0c0','#ffd36b'],
+              hoverOffset:6
+            }]
           },
-          formatter: (value, ctx) => {
-            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-            const percentage = ((value / total) * 100).toFixed(1);
-            return percentage + '%'; // show only percentage
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(ctx) {
-              let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-              let value = ctx.raw;
-              let percentage = ((value / total) * 100).toFixed(1);
-              return `${ctx.label} - ${ctx.label}: ${value} (${percentage}%)`;
-            }
-          }
+          // animations disabled for doughnut charts per user's request
+          options: { responsive:true, maintainAspectRatio:false, animation: false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10 } }, datalabels:{ color:'#fff', formatter:(val,ctx)=>{ const total = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0); return ((val/total)*100).toFixed(1)+'%'; } } } },
+          plugins:[ChartDataLabels]
+        };
+        try{ window._sms_charts.areaVolumeDonut = new Chart(ctx, cfg); console.log('areaVolumeDonut created'); }catch(err){ console.error('areaVolumeDonut creation failed', err); }
+      }catch(e){ console.error('areaVolumeDonut block error', e); }
+    })();
+
+    // Nested donut (branch/unit space)
+    (function(){
+      try{
+        const el = document.getElementById('nestedDonut'); if(!el) return;
+        const wrap3 = el.closest('.chart-wrap');
+        if(wrap3){
+          const olds3 = wrap3.querySelectorAll('.chart-glow-overlay'); olds3.forEach(o=>o.remove());
+          el.style.width = '100%';
+          if(window.innerWidth <= 768){ el.style.height = '220px'; }
+          else { el.style.height = (wrap3.clientHeight || 240) + 'px'; }
         }
-      }
-    },
-    plugins: [ChartDataLabels]  // enable the plugin
-  });
+        const ctx = el.getContext('2d');
+        const areaData = [occupied || 0, available || 0];
+        const volumeData = [occupied_volume || 0, Math.max(0, total_volume - occupied_volume) || 0];
+        const cfg = {
+          type:'doughnut',
+          data:{ labels:['Occupied Area','Available Area','Occupied Volume','Available Volume'], datasets:[{ label:'Area', data: areaData, backgroundColor:['#ff7a7a','#6fb3ff'], cutout:'60%', radius:'80%' }, { label:'Volume', data: volumeData, backgroundColor:['#ffb27a','#4bc0c0'], cutout:'80%', radius:'100%' }] },
+          // animations disabled for doughnut charts per user's request
+          options:{ responsive:true, animation: false, plugins:{ legend:{ position:'bottom' } } },
+          plugins:[ChartDataLabels]
+        };
+        try{ window._sms_charts.nestedDonut = new Chart(ctx, cfg); console.log('nestedDonut created'); }catch(err){ console.error('nestedDonut creation failed', err); }
+      }catch(e){ console.error('nestedDonut block error', e); }
+    })();
 
+    // Customer revenue horizontal bar
+    (function(){
+      try{
+        const el = document.getElementById('customerRevenueBar'); if(!el) return;
+        const wrap4 = el.closest('.chart-wrap');
+        if(wrap4){
+          const olds4 = wrap4.querySelectorAll('.chart-glow-overlay'); olds4.forEach(o=>o.remove());
+          el.style.width = '100%';
+          if(window.innerWidth <= 768){ el.style.height = '220px'; }
+          else { el.style.height = (wrap4.clientHeight || 240) + 'px'; }
+        }
+        const ctx = el.getContext('2d');
+        const data = (function(){ try{ return JSON.parse('{{ top_customers_json|escapejs }}') }catch(e){ return []; } })();
+        if(!data || !data.length) return;
+        const sorted = data.slice().sort((a,b)=> (b.total_revenue||0) - (a.total_revenue||0)).slice(0,10);
+        const labels = sorted.map(s => (s.wh_customer_name__cu_nameshort || 'Customer')).reverse();
+        const values = sorted.map(s => Number(s.total_revenue)||0).reverse();
+        const rect = el.getBoundingClientRect();
+        const g = ctx.createLinearGradient(0,0,rect.width,0);
+        g.addColorStop(0, '#3b82f6'); g.addColorStop(1, '#7c3aed');
+        // Disable animations for bar chart as well (user requested no animations)
+        const cfg = {
+          type:'bar',
+          data:{ labels: labels, datasets:[{ label:'Revenue (₹)', data: values, backgroundColor: g, borderRadius:8, barThickness:14 }] },
+          options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, animation: false, plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ₹${Number(ctx.raw).toLocaleString()}` } } }, scales:{ x:{ beginAtZero:true, grid:{color:'rgba(15,23,42,0.04)'} }, y:{ ticks:{ autoSkip:false, callback: function(val){ const label = this.getLabelForValue(val); return label.length>28 ? label.slice(0,25)+'…' : label } }, grid:{display:false} } } }
+        };
+        try{ window._sms_charts.customerRevenueBar = new Chart(ctx, cfg); console.log('customerRevenueBar created'); }catch(err){ console.error('customerRevenueBar creation failed', err); }
+      }catch(e){ console.error('customerRevenueBar block error', e); }
+    })();
+
+    // after building charts, run a quick glow sweep animation on each canvas
+    // Glow sweep animation removed per user's request to disable pie chart animation
+  };
+
+  // filters behavior
+  const branchSelect = document.getElementById('branch-filter');
+  const fromInput = document.getElementById('from-date');
+  const toInput = document.getElementById('to-date');
+  const applyBtn = document.getElementById('apply-filters');
+  function applyFilters(){
+    const branch = branchSelect && branchSelect.value;
+    const fromDate = fromInput && fromInput.value;
+    const toDate = toInput && toInput.value;
+    const url = new URL(window.location.href);
+    branch ? url.searchParams.set('branch', branch) : url.searchParams.delete('branch');
+    fromDate ? url.searchParams.set('from_date', fromDate) : url.searchParams.delete('from_date');
+    toDate ? url.searchParams.set('to_date', toDate) : url.searchParams.delete('to_date');
+    window.location.href = url.toString();
+  }
+  if (applyBtn) applyBtn.addEventListener('click', applyFilters);
+  if (branchSelect) branchSelect.addEventListener('change', applyFilters);
 </script>
-
 
 <script>
-  document.getElementById('branch-filter').addEventListener('change', updateFilters);
+  // Ensure dashboard gets more horizontal space: allow toggle-controlled sidebar collapse and remember choice.
+  (function(){
+    try{
+      const COLLAPSED_CLASS = 'sidebar-collapsed';
+      const STORAGE_KEY = 'sms_dashboard_sidebar_collapsed_v1';
+      const toggleBtn = document.getElementById('toggle-sidebar');
+      // apply collapsed state if stored
+      function applyCollapsed(collapsed){
+        try{
+          if(collapsed){
+            document.body.classList.add(COLLAPSED_CLASS);
+            // update CSS var for immediate layout effect
+            document.documentElement.style.setProperty('--sidebar-width', '72px');
+            document.documentElement.style.setProperty('--sidebar-offset', '72px');
+          }
+          else {
+            document.body.classList.remove(COLLAPSED_CLASS);
+            // restore CSS var to the current detected sidebar width (or default)
+            const selectors = ['.sidebar','nav.sidebar','#sidebar','.sidenav','.main-sidebar'];
+            let sidebar = null;
+            for(const s of selectors){ const el = document.querySelector(s); if(el){ sidebar = el; break; } }
+            const defaultWidth = 260;
+            const width = sidebar ? sidebar.getBoundingClientRect().width : defaultWidth;
+            // recompute precise offset when un-collapsing
+            try{
+              const root = document.querySelector('.dashboard-root');
+              if(sidebar && root){ const sRect = sidebar.getBoundingClientRect(); const rRect = root.getBoundingClientRect(); const offset = Math.max(0, Math.round(sRect.right - rRect.left)); document.documentElement.style.setProperty('--sidebar-offset', offset + 'px'); }
+              else { document.documentElement.style.setProperty('--sidebar-offset', width + 'px'); }
+            }catch(e){ document.documentElement.style.setProperty('--sidebar-offset', width + 'px'); }
+            document.documentElement.style.setProperty('--sidebar-width', width + 'px');
+          }
 
-    document.getElementById('from-date').addEventListener('change', updateFilters);
-    document.getElementById('to-date').addEventListener('change', updateFilters);
+          // attempt to also set inline widths on detected sidebar element for immediate effect
+          const selectors2 = ['.sidebar','nav.sidebar','#sidebar','.sidenav','.main-sidebar'];
+          for(const s of selectors2){ const el = document.querySelector(s); if(!el) continue; if(collapsed){ el.style.width = '72px'; el.style.minWidth = '72px'; el.style.overflow = 'hidden'; } else { el.style.width = ''; el.style.minWidth = ''; el.style.overflow = ''; } }
 
-    function updateFilters() {
-    const branch = document.getElementById('branch-filter').value;
+          // ensure dashboard root has a minimum width so horizontal scroll appears instead of overlap
+          const root = document.querySelector('.dashboard-root');
+          if(root){
+            // only set an inline minWidth for larger viewports; mobile uses CSS media queries
+            if(window.innerWidth > 768){ root.style.minWidth = '1200px'; }
+            else { root.style.minWidth = ''; }
+            root.style.overflowX = 'auto';
+          }
+        }catch(e){ console.warn('applyCollapsed', e); }
+      }
 
-    const fromDate = document.getElementById('from-date').value;
-    const toDate = document.getElementById('to-date').value;
-    const url = new URL(window.location.href);
+      // read stored value
+      let collapsed = false;
+      try{ collapsed = localStorage.getItem(STORAGE_KEY) === '1'; }catch(e){ collapsed = false; }
+      applyCollapsed(collapsed);
 
-    if (branch) {
-        url.searchParams.set('branch', branch);
-    } else {
-        url.searchParams.delete('branch');
-    }
+      // wire toggle button
+      if(toggleBtn){
+        toggleBtn.addEventListener('click', ()=>{
+          collapsed = !document.body.classList.contains(COLLAPSED_CLASS);
+          try{ localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0'); }catch(e){}
+          applyCollapsed(collapsed);
+        });
+      }
 
-    if (fromDate) {
-        url.searchParams.set('from_date', fromDate);
-    } else {
-        url.searchParams.delete('from_date');
-    }
+      // we no longer set root.style.marginLeft here; CSS var controls layout
 
-    if (toDate) {
-        url.searchParams.set('to_date', toDate);
-    } else {
-        url.searchParams.delete('to_date'); // Clear the parameter if no date is provided
-    }
+      // reflow on resize to keep the CSS var in sync
+      window.addEventListener('resize', ()=>{
+        const selectors3 = ['.sidebar','nav.sidebar','#sidebar','.sidenav','.main-sidebar'];
+        let sidebar = null;
+        for(const s of selectors3){ const el = document.querySelector(s); if(el){ sidebar = el; break; } }
+        const defaultWidth = 260;
+        const width = sidebar ? sidebar.getBoundingClientRect().width : defaultWidth;
+        try{
+          const root = document.querySelector('.dashboard-root');
+          if(sidebar && root){
+            const sRect = sidebar.getBoundingClientRect();
+            const rRect = root.getBoundingClientRect();
+            const offset = Math.max(0, Math.round(sRect.right - rRect.left));
+            document.documentElement.style.setProperty('--sidebar-offset', offset + 'px');
+          } else {
+            document.documentElement.style.setProperty('--sidebar-offset', width + 'px');
+          }
+        }catch(e){ document.documentElement.style.setProperty('--sidebar-offset', width + 'px'); }
+        document.documentElement.style.setProperty('--sidebar-width', width + 'px');
+      });
 
-    console.log(url.toString());
-    window.location.href = url.toString();
-}
+    }catch(e){ console.warn('collapse-sidebar failed', e); }
+  })();
 </script>
+
+<script>
+  // Rebuild charts on viewport changes so canvases get correct pixel sizes on mobile
+  (function(){
+    function debounce(fn, ms){ let t; return function(){ clearTimeout(t); t = setTimeout(fn, ms); }; }
+    const rebuild = debounce(function(){
+      try{
+        if(typeof window.createDashboardCharts === 'function'){
+          window.createDashboardCharts();
+          console.log('rebuild charts');
+        }
+      }catch(e){ console.warn('rebuild charts failed', e); }
+    }, 180);
+
+    window.addEventListener('resize', rebuild);
+    window.addEventListener('orientationchange', rebuild);
+    // matchMedia listener for breakpoint flips
+    try{
+      const mq = window.matchMedia('(max-width: 768px)');
+      if(mq){ if(typeof mq.addEventListener === 'function') mq.addEventListener('change', rebuild); else if(typeof mq.addListener === 'function') mq.addListener(rebuild); }
+    }catch(e){}
+
+    // also rebuild shortly after DOM load (covers late CSS and layout shifts)
+    if(document.readyState === 'complete' || document.readyState === 'interactive'){ setTimeout(rebuild, 120); }
+    else { document.addEventListener('DOMContentLoaded', ()=> setTimeout(rebuild,120)); }
+
+    // watch for body class changes (sidebar toggle) and rebuild charts when that happens
+    try{
+      const mo = new MutationObserver(function(muts){ for(const m of muts){ if(m.type==='attributes' && m.attributeName === 'class'){ rebuild(); break; } } });
+      mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    }catch(e){}
+  })();
+</script>
+
 {% endblock %}

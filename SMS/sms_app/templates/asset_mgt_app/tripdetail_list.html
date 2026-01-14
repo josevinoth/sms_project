@@ -8,16 +8,56 @@
     </div>
 </div>
 
-<div class="container-fluid">
-    <div class="row justify-content-start g-2">
-        <div class="col-12 col-sm-6 col-md-3 col-lg-2">
-            <a href="{% url 'home_page' %}" class="btn btn-warning btn-lg w-100">
+<div class="container-fluid mt-3">
+    <div class="row mb-3">
+        <div class="col-md-1">
+            <a href="{% url 'home_page' %}" class="btn btn-warning btn-block">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
         </div>
     </div>
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="GET" class="form-row align-items-end">
+                <div class="col-md-3">
+                    <label for="branch" class="font-weight-bold">Branch</label>
+                    <select name="branch" id="branch" class="form-control select2">
+                        <option value="">-- All Branches --</option>
+                        <option value="MAA" {% if branch == 'MAA' %}selected{% endif %}>MAA</option>
+                        <option value="BLR" {% if branch == 'BLR' %}selected{% endif %}>BLR</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="trip_status" class="font-weight-bold">Trip Status</label>
+                    <select name="trip_status" id="trip_status" class="form-control select2">
+                        <option value="">-- All Status --</option>
+                        {% for status in status_list %}
+                        <option value="{{ status.id }}" {% if selected_status == status.id %}selected{% endif %}>{{ status.status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="date_from" class="font-weight-bold">From Date</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="date_to" class="font-weight-bold">To Date</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div class="col-md-1">
+                    <a href="{% url 'tripdetail_list' %}" class="btn btn-secondary btn-block">
+                        <i class="fas fa-undo"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-
 <hr>
 <div class="container-fluid">
     <div class="table-responsive shadow-box-table p-3">
@@ -44,7 +84,7 @@
                 </tr>
             </thead>
             <tbody>
-            {% for tripdetailinfo in tripdetail_list %}
+                {% for tripdetailinfo in tripdetail_list %}
                 <tr>
                     <td>{{ tripdetailinfo.tr_created_at }}</td>
                     <td>{{ tripdetailinfo.tr_enquirynumber }}</td>
@@ -59,12 +99,13 @@
                     <td>{{ tripdetailinfo.tr_reporteddate }}</td>
                     <td id="track-cell-{{ tripdetailinfo.id }}">
                         {% if tripdetailinfo.tr_track_link %}
-                            <a href="{{ tripdetailinfo.tr_track_link }}" target="_blank" class="btn btn-info btn-sm">Track</a>
+                        <a href="{{ tripdetailinfo.tr_track_link }}" target="_blank"
+                            class="btn btn-info btn-sm">Track</a>
                         {% else %}
-                            <a href="{% url 'track_vehicle_position' %}?vehicle={{ tripdetailinfo.tr_vehiclenumber }}"
-                               class="btn btn-sm btn-info" target="_blank">
-                                Live Track
-                            </a>
+                        <a href="{% url 'track_vehicle_position' %}?vehicle={{ tripdetailinfo.tr_vehiclenumber }}"
+                            class="btn btn-sm btn-info" target="_blank">
+                            Live Track
+                        </a>
                         {% endif %}
                     </td>
                     <td>{{ tripdetailinfo.tc_financestatus }}</td>
@@ -76,7 +117,8 @@
                         </a>
                     </td>
                     <td>
-                        <form action="{% url 'tripdetail_delete' tripdetailinfo.id %}" method="post" onsubmit="return confirm('Are you sure?');">
+                        <form action="{% url 'tripdetail_delete' tripdetailinfo.id %}" method="post"
+                            onsubmit="return confirm('Are you sure?');">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-danger">
                                 <i class="fas fa-trash-alt"></i>
@@ -84,52 +126,116 @@
                         </form>
                     </td>
                 </tr>
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+<div class="pagination mt-3">
+    <span class="step-links">
+
+        {% if page_obj.has_previous %}
+        <a class="btn btn-warning"
+           href="?page=1{% if branch %}&branch={{ branch }}{% endif %}
+           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
+           {% if date_from %}&date_from={{ date_from }}{% endif %}
+           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+            First
+        </a>
+
+        <a class="btn btn-primary"
+           href="?page={{ page_obj.previous_page_number }}
+           {% if branch %}&branch={{ branch }}{% endif %}
+           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
+           {% if date_from %}&date_from={{ date_from }}{% endif %}
+           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+            Previous
+        </a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+        <a class="btn btn-primary"
+           href="?page={{ page_obj.next_page_number }}
+           {% if branch %}&branch={{ branch }}{% endif %}
+           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
+           {% if date_from %}&date_from={{ date_from }}{% endif %}
+           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+            Next
+        </a>
+
+        <a class="btn btn-warning"
+           href="?page={{ page_obj.paginator.num_pages }}
+           {% if branch %}&branch={{ branch }}{% endif %}
+           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
+           {% if date_from %}&date_from={{ date_from }}{% endif %}
+           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+            Last
+        </a>
+        {% endif %}
+
+    </span>
+</div>
+
 
 <script>
-$(document).ready(function () {
-    $('#tripdetail_list').DataTable({
-        responsive: true
-    });
+ $('#tripdetail_list').DataTable({
+    paging: false,
+    info: false,
+    searching: false,
+    responsive: true
 });
+
 </script>
 
 
 <script>
-function fetchLiveTracking(vehicleNumber, rowId) {
-    const target = document.getElementById("track-cell-" + rowId);
-    target.innerHTML = "Fetching...";
+    function fetchLiveTracking(vehicleNumber, rowId) {
+        const target = document.getElementById("track-cell-" + rowId);
+        target.innerHTML = "Fetching...";
 
-    fetch("{% url 'get_vehicle_data' %}")
-        .then(res => res.json())
-        .then(data => {
-            let found = false;
-            vehicleNumber = vehicleNumber.toUpperCase().replace(/[\s-]/g, '');
+        fetch("{% url 'get_vehicle_data' %}")
+            .then(res => res.json())
+            .then(data => {
+                let found = false;
+                vehicleNumber = vehicleNumber.toUpperCase().replace(/[\s-]/g, '');
 
-            for (const vehicle of data) {
-                const normalizedNumber = vehicle.number.toUpperCase().replace(/[\s-]/g, '');
-                if (vehicleNumber === normalizedNumber) {
-                    const lat = vehicle.lat;
-                    const lon = vehicle.lon;
-                    const link = `https://maps.google.com/?q=${lat},${lon}`;
-                    target.innerHTML = `<a href="${link}" class="btn btn-success btn-sm" target="_blank">Live Track</a>`;
-                    found = true;
-                    break;
+                for (const vehicle of data) {
+                    const normalizedNumber = vehicle.number.toUpperCase().replace(/[\s-]/g, '');
+                    if (vehicleNumber === normalizedNumber) {
+                        const lat = vehicle.lat;
+                        const lon = vehicle.lon;
+                        const link = `https://maps.google.com/?q=${lat},${lon}`;
+                        target.innerHTML = `<a href="${link}" class="btn btn-success btn-sm" target="_blank">Live Track</a>`;
+                        found = true;
+                        break;
+                    }
                 }
-            }
 
-            if (!found) {
-                target.innerHTML = '<span class="text-muted">No Tracking</span>';
-            }
-        })
-        .catch(err => {
-            console.error("Error fetching tracking:", err);
-            target.innerHTML = '<span class="text-danger">Error</span>';
+                if (!found) {
+                    target.innerHTML = '<span class="text-muted">No Tracking</span>';
+                }
+            })
+            .catch(err => {
+                console.error("Error fetching tracking:", err);
+                target.innerHTML = '<span class="text-danger">Error</span>';
+            });
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $('#tripdetail_list').DataTable({
+            scrollX: true,
+            order: [0, 'desc'],
+            dom: 'lBfrtip',
+            pageLength: 100,
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ]
         });
-}
+    });
 </script>
 {% endblock content %}

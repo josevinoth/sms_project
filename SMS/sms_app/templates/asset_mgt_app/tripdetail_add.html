@@ -497,7 +497,8 @@ function trip_type() {
     // ----------------------
     // 1️⃣ Finance Status Logic
     // ----------------------
-    if (categoryValue === "2") {
+    // Treat category 3 the same as category 2
+    if (categoryValue === "2" || categoryValue === "3") {
         tripStatus.disabled = false;
         tripStatus.classList.remove("select-disabled-style");
         tripStatus.value = "1";  // Set default status
@@ -545,7 +546,8 @@ function trip_type() {
     // ----------------------
     // 3️⃣ Loading & Unloading Time Visibility
     // ----------------------
-   if (categoryValue == "2") {
+   // Treat category 3 the same as category 2
+   if (categoryValue == "2" || categoryValue == "3") {
     loadingTimeDiv.style.display = "none";
     unloadingTimeDiv.style.display = "none";
 
@@ -592,9 +594,9 @@ $(document).ready(function () {
 
         console.log("Triggered fetch. Enquiry:", enquiry_number, "| Category:", trip_category);
 
-        // 🔸 Skip fetching if category = 2
-        if (trip_category == "2") {
-            console.log("Trip Category is 2 — Skipping location autofill.");
+        // 🔸 Skip fetching if category = 2 or 3
+        if (trip_category == "2" || trip_category == "3") {
+            console.log("Trip Category is 2 or 3 — Skipping location autofill.");
             return;
         }
 
@@ -669,3 +671,4 @@ $(document).ready(function() {
 {% endblock scripts %}
 
 {% endblock content %}
+

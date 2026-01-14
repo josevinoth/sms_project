@@ -5,10 +5,14 @@ from django.db.models.aggregates import Sum, Max
 from django.http import HttpResponse
 import json
 from django.contrib import messages
+from django.utils import timezone
+
 from ..forms import InvoiceaddForm
 from ..models import VehicletypeInfo,Loadingbay_Info,TrbusinesstypeInfo,CustomerInfo,Warehouse_goods_info,WhratemasterInfo,BilingInfo
 from django.shortcuts import render, redirect
 from datetime import date, datetime
+from openpyxl import Workbook
+from openpyxl.styles import Font
 
 
 # Invoicecity
@@ -688,3 +692,158 @@ def invoice_list_query(request):
         'first_name': first_name,
     }
     return render(request,"asset_mgt_app/invoice_list.html",context)
+
+import re
+
+def extract_pincode(address):
+    if not address:
+        return ""
+    match = re.search(r'\b\d{6}\b', address)
+    return match.group() if match else ""
+
+def excel_datetime(value):
+    """
+    Makes datetime safe for Excel.
+    - date -> returned as-is
+    - aware datetime -> converted to naive
+    - naive datetime -> returned as-is
+    """
+    if not value:
+        return ""
+
+    # If it's a DATE (not datetime), Excel accepts it directly
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+
+    # If it's a timezone-aware datetime
+    if isinstance(value, datetime) and timezone.is_aware(value):
+        return timezone.make_naive(value)
+
+    return value
+def extract_state(address):
+    if not address:
+        return ""
+    states = [
+        "Tamil Nadu", "Karnataka", "Kerala", "Andhra Pradesh",
+        "Telangana", "Maharashtra", "Gujarat", "Delhi",
+        "West Bengal", "Uttar Pradesh", "Madhya Pradesh"
+    ]
+    for state in states:
+        if state.lower() in address.lower():
+            return state
+    return ""
+
+
+# ---------- main export view ----------
+@login_required(login_url='login_page')
+def shipper_invoice_export_excel(request, invoice_id):
+
+    qs = Warehouse_goods_info.objects.select_related(
+        'wh_voucher_id',
+        'wh_customer_name',
+        'wh_branch',
+        'wh_dispatch_id',
+        'wh_check_in_out'
+    ).filter(
+        wh_voucher_id=invoice_id
+    )
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "TALLY_IMPORT"
+
+    headers = [
+        "SL. NO.", "DATE", "Vch No", "JOB NO.",
+        "SUNDRY DEBTORS", "GSTIN", "STATE", "PINCODE",
+        "Branch", "Product", "PRIMARY COST CATEGORY",
+        "CUSTOMER", "SHIPPER'S NAME",
+        "SHIPPER'S REF. INVOICE NO.",
+        "W/H CHRGS VEHICLE TYPE",
+        "SHPT. WT (Kgs)",
+        "SHIPMENT IN DATE", "SHIPMENT OUT DATE",
+        "NO. OF DAYS", "PER DAY W/H CHARGES",
+        "Warehouse Storage Charges",
+        "NO. PALLETS/ BOXES [PCS]",
+        "RATE PER PALLET/ BOXES",
+        "Warehouse Loading Charges",
+        "Warehouse Handling Charges",
+        "Crane Handling Charges",
+        "Forklift Handling Charges",
+        "TOTAL",
+        "CGST Output 9%",
+        "SGST Output 9%",
+    ]
+
+    ws.append(headers)
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+
+    sl = 1
+    for obj in qs:
+        invoice = obj.wh_voucher_id
+        customer = obj.wh_customer_name
+
+        address = customer.cu_address if customer else ""
+        state = extract_state(address)
+        pincode = extract_pincode(address)
+
+        storage_cost = obj.wh_storage_cost_total or 0
+        loading_cost = obj.wh_total_loading_cost or 0
+        crane_cost = obj.wh_crane_cost or 0
+        forklift_cost = obj.wh_forklift_cost or 0
+
+        total = storage_cost + loading_cost + crane_cost + forklift_cost
+        cgst = round(total * 0.09, 2)
+        sgst = round(total * 0.09, 2)
+
+        ws.append([
+            sl,
+            invoice.bill_invoice_date if invoice else "",
+            obj.wh_voucher_num,
+            obj.wh_job_no,
+
+            customer.cu_name if customer else "",
+            customer.cu_gst if customer else "",
+            state,
+            pincode,
+
+            obj.wh_branch.loc_name if obj.wh_branch else "",
+            "Warehouse Service",
+            "Warehouse Charges",
+
+            customer.cu_name if customer else "",
+            obj.wh_consigner,
+            obj.wh_goods_invoice,
+
+            str(obj.wh_dispatch_id.dispatch_billing_truck_type)
+            if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type else "",
+
+            obj.wh_goods_weight,
+            excel_datetime(obj.wh_checkin_time),
+            excel_datetime(obj.wh_checkout_time),
+            excel_datetime(invoice.bill_invoice_date),
+
+            obj.wh_storage_cost_per_day,
+
+            storage_cost,
+            obj.wh_goods_pieces,
+            obj.wh_loading_charge_unit,
+            loading_cost,
+            loading_cost,
+            crane_cost,
+            forklift_cost,
+            total,
+            cgst,
+            sgst,
+        ])
+        sl += 1
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = (
+        f"attachment; filename=Shipper_Invoice_{invoice_id}.xlsx"
+    )
+
+    wb.save(response)
+    return response

@@ -18,7 +18,7 @@
 
 							<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}&enquiry_num_id={{ enquiry_num_id }}"
 							   class="btn btn-warning ml-2 {% if va.va_status.status_title != "Completed" %}disable_a_href{% endif %}">
-							<i class="fas fa-truck-loading"></i> Empty Trip
+							<i class="fas fa-truck-loading"></i> Business Empty/ Empty Trip
 							</a>
 							<div class="col-md-4 d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
 								<!-- Email Alert Button -->
@@ -114,7 +114,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Number (Market)</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control market-input" maxlength="10" pattern="[A-Z0-9]{9,10}" title="Enter exactly 10 uppercase letters or digits" %}
+									{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control market-input" maxlength="10" pattern="[A-Z0-9]{7,10}" title="Enter exactly 10 uppercase letters or digits" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -443,17 +443,24 @@
 		var vehicle_source = document.getElementById("va_vehiclesource").value;
 		if (vehicle_source == 3)
 		{
-			$('#va_vehiclenumber_mkt').removeClass('disable_a_href');
-			$('#va_vendor').removeClass('disable_a_href');
+			 $('#va_vehiclenumber').closest('.input-group').hide();
+
+        // ✅ MARKET fields enable
+        $('#va_vehiclenumber_mkt').removeClass('disable_a_href').prop('disabled', false);
+        $('#va_vendor').removeClass('disable_a_href').prop('disabled', false);
+
 			$('#va_standardbuy').addClass('disable_a_href');
-			$('#va_sale').removeClass('disable_a_href');
+        $('#va_sale').removeClass('disable_a_href').prop('disabled', false);
 		}
 		else
 		{
-			$('#va_vehiclenumber_mkt').addClass('disable_a_href');
-			$('#va_vendor').addClass('disable_a_href');
+			 $('#va_vehiclenumber').closest('.input-group').show();
+
+        // ✅ disable market fields
+        $('#va_vehiclenumber_mkt').addClass('disable_a_href').prop('disabled', true);
+        $('#va_vendor').addClass('disable_a_href').prop('disabled', true);
 			$('#va_standardbuy').addClass('disable_a_href');
-			$('#va_sale').addClass('disable_a_href');
+        $('#va_sale').addClass('disable_a_href').prop('disabled', true);
 
 
 		}

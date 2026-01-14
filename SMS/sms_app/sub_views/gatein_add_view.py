@@ -219,7 +219,7 @@ def gatein_list(request):
     first_name = request.session.get('first_name')
     Gatein_list= (Gatein_info.objects.all()).order_by('-id')
     page_number = request.GET.get('page')
-    paginator = Paginator(Gatein_list, 10000)
+    paginator = Paginator(Gatein_list, 50)  # Standardized to 50
     page_obj = paginator.get_page(page_number)
     context = {
         # 'Gatein_list' : Gatein_list,

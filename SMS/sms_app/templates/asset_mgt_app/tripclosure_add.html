@@ -329,12 +329,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Status</span>
 									</div>
-									<select name="tc_financestatus" id="tc_financestatus" class="form-control">
+									<select name="tc_financestatus" id="tc_financestatus" class="form-control" disabled="disabled" aria-disabled="true" title="Fixed status">
 										<option value="2">--Select--</option>
 										{% for item in status_list  %}
-										<option value="{{item.id}}">{{item.status}}</option>
+										<option value="{{ item.id }}">{{ item.status }}</option>
 										{% endfor %}
 									</select>
+									<!-- Hidden input so the disabled select's value still gets submitted -->
+									<input type="hidden" name="tc_financestatus" id="tc_financestatus_hidden" value="4" />
 								</div>
 								{% render_field tripclosure_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
 								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
@@ -345,7 +347,7 @@
 							<div class="col-10">
 								<div class="message text-center">
 									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									<a class="{{ message.tags|default:'' }}">{{ message }}</a>
 									{% endfor %}
 								</div>
 							</div>
@@ -365,7 +367,19 @@
 <script>
 	$(document).ready(function() {
         document.getElementById("tr_updated_by").value ='{{user_id}}';
-        document.getElementById("tc_financestatus").value ='{{status_selected}}';
+        // Force trip status to id 9 and ensure hidden input matches so the value is submitted
+        if (document.getElementById("tc_financestatus")) {
+            var sel = document.getElementById("tc_financestatus");
+            // Try to select the option node explicitly so the disabled select shows the label
+            var opt = sel.querySelector('option[value="4"]');
+            if (opt) {
+                opt.selected = true;
+            }
+            sel.value = '4';
+        }
+        if (document.getElementById("tc_financestatus_hidden")) {
+            document.getElementById("tc_financestatus_hidden").value = '4';
+        }
         trip_status=document.getElementById("tc_financestatus").value
         var tr_enquirynumber_val=document.getElementById("tr_enquirynumber").value;
         if (tr_enquirynumber_val=="")
@@ -665,3 +679,6 @@ $(document).ready(function () {
 
 
 {% endblock content %}
+
+
+

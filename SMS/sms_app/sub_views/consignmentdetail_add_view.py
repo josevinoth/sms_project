@@ -9,12 +9,14 @@ from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
 
 from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
-from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo
+from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo, MyUser
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
 
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.auth.decorators import login_required
+
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 @login_required(login_url='login_page')
 def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
@@ -175,14 +177,107 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             return redirect(request.META['HTTP_REFERER'])
 
 # List consignmentdetail
+
+
 @login_required(login_url='login_page')
 def consignmentdetail_list(request):
     first_name = request.session.get('first_name')
+
+    # Filters
+    customer_id = request.GET.get('customer')
+    updated_by_id = request.GET.get('updated_by')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    branch = request.GET.get('branch', '')
+
+    customers = CustomerInfo.objects.all().order_by('cu_name')
+    employees = User_extInfo.objects.filter(
+        emp_organisation_id=2
+    ).select_related('user').order_by('user__first_name')
+
+    # Base Query
+    consignment_qs = ConsignmentdetailInfo.objects.select_related(
+        'co_enquirynumber',
+        'co_customer',
+        'co_status',
+        'co_lastmodifiedby'
+    ).prefetch_related('cg_consignmentnumber')
+
+    # Apply Filters
+    if customer_id:
+        consignment_qs = consignment_qs.filter(co_customer_id=customer_id)
+
+    if updated_by_id:
+        consignment_qs = consignment_qs.filter(co_lastmodifiedby_id=updated_by_id)
+
+    if date_from:
+        consignment_qs = consignment_qs.filter(co_consignmentdate__gte=date_from)
+
+    if date_to:
+        consignment_qs = consignment_qs.filter(co_consignmentdate__lte=date_to)
+
+    if branch == 'MAA':
+        consignment_qs = consignment_qs.filter(co_consignmentnumber__istartswith='MAA')
+    elif branch == 'BLR':
+        consignment_qs = consignment_qs.filter(co_consignmentnumber__istartswith='BLR')
+
+    # Pagination
+    paginator = Paginator(consignment_qs.order_by('-id'), 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    consignments = []
+
+    # Build presentation fields (replacing @property logic)
+    for obj in page_obj:
+
+        goods = obj.cg_consignmentnumber.first()
+
+        obj.co_consigner = goods.cg_consigner if goods else ''
+        obj.co_consignee = goods.cg_consignee if goods else ''
+        obj.co_consignerinvoice = goods.cg_consignerinvoice if goods else ''
+        obj.co_consignervalue = goods.cg_consignervalue if goods else ''
+        obj.co_valueininr = goods.cg_valueininr if goods else ''
+        obj.co_noofpieces = goods.cg_qty if goods else ''
+        obj.co_weight = goods.cg_weight if goods else ''
+        obj.co_ebillno = goods.cg_ebillno if goods else ''
+        obj.co_dateofissue = goods.cg_dateofissue if goods else ''
+        obj.co_dateofvalidity = goods.cg_dateofvalidity if goods else ''
+        obj.co_dimension = (
+            f"{goods.cg_length}x{goods.cg_width}x{goods.cg_height}" if goods else ''
+        )
+
+        obj.co_movement = (
+            obj.co_enquirynumber.en_movement_type if obj.co_enquirynumber else ''
+        )
+
+        obj.display_from_location = (
+            obj.co_fromlocaion or
+            (obj.co_enquirynumber.en_fromlocaion if obj.co_enquirynumber else '')
+        )
+
+        obj.display_to_location = (
+            obj.co_tolocation or
+            (obj.co_enquirynumber.en_tolocation if obj.co_enquirynumber else '')
+        )
+
+        consignments.append(obj)
+
     context = {
-                'consignmentdetail_list' : ConsignmentdetailInfo.objects.all(),
-                'first_name': first_name
-            }
-    return render(request,"asset_mgt_app/consignmentdetail_list.html",context)
+        'consignmentdetail_list': consignments,
+        'page_obj': page_obj,
+        'first_name': first_name,
+        'customers': customers,
+        'employees': employees,
+        'selected_customer': int(customer_id) if customer_id else None,
+        'selected_updated_by': int(updated_by_id) if updated_by_id else None,
+        'date_from': date_from,
+        'date_to': date_to,
+        'branch': branch,
+    }
+
+    return render(request, "asset_mgt_app/consignmentdetail_list.html", context)
+
 
 #Delete consignmentdetail
 @login_required(login_url='login_page')
