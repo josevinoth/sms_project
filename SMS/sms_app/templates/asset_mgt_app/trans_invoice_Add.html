@@ -155,15 +155,18 @@
           </div>
 
           <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text fw-bold">Total Charges</span>
-            </div>
-            <input type="text"
-       id="id_ti_total"
-       class="form-control"
-       readonly>
+    <div class="input-group-prepend">
+        <span class="input-group-text fw-bold">Total Charges</span>
+    </div>
 
-          </div>
+    <input type="text"
+           id="id_ti_total"
+           name="ti_total"
+           class="form-control"
+           value="{{ total_charges }}"
+           readonly>
+</div>
+
 
         </div>
 
@@ -210,17 +213,17 @@
 
         <thead class="thead-dark">
           <tr>
-            <th>INV DATE</th>
+            <!--<th>INV DATE</th>
             <th>Customer Name</th>
             <th>GST IN</th>
             <th>State</th>
-            <th>Pincode</th>
+            <th>Pincode</th>-->
             <th>INV NO</th>
 
             <th>Branch</th>
-            <th>Vehicle Source</th>
+           <!-- <th>Vehicle Source</th>-->
             <th>Customer Short Name</th>
-            <th>Tally Veh No</th>
+            <!--<th>Tally Veh No</th>-->
             <th>Planning Date</th>
 
             <th>Cnote No</th>
@@ -231,10 +234,10 @@
             <th>Veh No</th>
             <th>Veh Type</th>
 
-            <th>Veh Placed Date & Time</th>
+            <!--<th>Veh Placed Date & Time</th>
             <th>Veh Released Date & Time</th>
             <th>Veh Arrived Date & Time</th>
-            <th>Veh Dispatched Date & Time</th>
+            <th>Veh Dispatched Date & Time</th>-->
 
             <th>Consignee</th>
             <th>Reference No</th>
@@ -262,20 +265,20 @@
 {% for inv in invoice_list %}
 <tr>
   <!-- 1–6 Invoice -->
-  <td>{{ inv.ti_inv_date }}</td>
+  <!--<td>{{ inv.ti_inv_date }}</td>
   <td>{{ inv.ti_customer }}</td>
   <td>{{ inv.ti_gst_in }}</td>
   <td>{{ inv.ti_state }}</td>
-  <td>{{ inv.ti_pincode }}</td>
+  <td>{{ inv.ti_pincode }}</td>-->
   <td>{{ inv.ti_inv_no }}</td>
 
   <!-- 7–11 Customer / Vehicle -->
   <td>{{ inv.ti_branch }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclesource }}</td>
+  <!--<td>{{ inv.ti_trip.tr_vehiclesource }}</td>-->
   <td>{{ inv.ti_customer_short_name }}</td>
 
   <!-- Tally Veh No -->
-  <td>{{ inv.va_vehicle.vm_registrationnumber }}</td>
+  <!--<td>{{ inv.va_vehicle.vm_registrationnumber }}</td>-->
 
   <!-- Planning Date -->
   <td>{{ inv.ti_trip.tr_departeddate|date:"d-m-Y H:i" }}</td>
@@ -291,10 +294,10 @@
   <td>{{ inv.ti_trip.tr_vehicletype }}</td>
 
   <!-- 18–21 Timeline -->
-  <td>{{ inv.ti_trip.tr_departeddate_pickup }}</td>
+ <!-- <td>{{ inv.ti_trip.tr_departeddate_pickup }}</td>
   <td>{{ inv.ti_trip.tr_dock_out_time }}</td>
   <td>{{ inv.ti_trip.tr_reporteddate }}</td>
-  <td>{{ inv.ti_trip.tr_departeddate_delivery }}</td>
+  <td>{{ inv.ti_trip.tr_departeddate_delivery }}</td>-->
 
   <!-- 22–26 Goods -->
   <td>{{ inv.ti_goods.cg_consignee }}</td>
