@@ -117,7 +117,7 @@
   <td>{{ inv.ti_branch }}</td>
   <td>{{ inv.ti_trip.tr_vehiclesource }}</td>
   <td>{{ inv.ti_customer_short_name }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
+  <td>{{ inv.tally_vehicle_no }}</td>
   <td>{{ inv.ti_trip.tr_departeddate }}</td>
 
   <!-- Consignment -->
@@ -221,6 +221,36 @@ $('#remove_btn').on('click', function () {
         type: "GET",
         data: {
             'invoice_list[]': ids
+        },
+        success: function () {
+            location.reload();
+        }
+    });
+});
+</script>
+<script>
+$('#add_btn').on('click', function (e) {
+    e.preventDefault();
+
+    let ids = [];
+
+    $('#trans_invoice_master_list tbody input.row-select:checked')
+        .each(function () {
+            ids.push($(this).val());
+        });
+
+    if (ids.length === 0) {
+        alert("Please select at least one invoice");
+        return false;
+    }
+
+    $.ajax({
+        url: "{% url 'trans_invoice_list_woh' customer.id %}",
+        type: "POST",
+        data: {
+            'invoice_list[]': ids,
+            'action': 'add',
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
         },
         success: function () {
             location.reload();
