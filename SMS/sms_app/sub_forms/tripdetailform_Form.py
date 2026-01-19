@@ -4,7 +4,9 @@ from ..models import TripdetailInfo
 class TripdetailaddForm(forms.ModelForm):
     tr_vehicletype_selection_requested = forms.BooleanField(initial=True,required=False)
     tr_vehicletype_selection_placed = forms.BooleanField(required=False)
-
+    
+    tc_rtocost = forms.FloatField(required=False)
+    tc_betacost = forms.FloatField(required=False)
     tc_tripcost = forms.FloatField(required=False)
     tc_parkingcost = forms.FloatField(required=False)
     tc_tollcost = forms.FloatField(required=False)
