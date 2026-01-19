@@ -376,27 +376,51 @@
             });
         }
 
-        function calculate() {
-            var len = parseFloat($jq('#id_sm_length').val()) || 0;
-            var wid = parseFloat($jq('#id_sm_width').val()) || 0;
-            var thk = parseFloat($jq('#id_sm_thickness').val()) || 0;
-            var count = parseFloat($jq('#id_sm_count').val()) || 0;
-            var perUnit = parseFloat($jq('#id_sm_per_unit_cost').val()) || 0;
+      function calculate() {
+    var len   = parseFloat($jq('#id_sm_length').val()) || 0;
+    var wid   = parseFloat($jq('#id_sm_width').val()) || 0;
+    var thk   = parseFloat($jq('#id_sm_thickness').val()) || 0;
+    var count = parseFloat($jq('#id_sm_count').val()) || 0;
+    var rate  = parseFloat($jq('#id_sm_per_unit_cost').val()) || 0;
 
-            // 1️⃣ CFT per unit
-            var cft = (len * wid * thk) / 1728;
-            $jq('#id_sm_cft').val(cft.toFixed(4));
+    // Detect stock type text (used to differentiate Plywood)
+    var stockTypeText = $jq('#id_sm_stock_type option:selected').text().toLowerCase();
 
-            // 2️⃣ Total CFT
-            var totalCft = cft * count;
-            $jq('#id_sm_total_cft').val(totalCft.toFixed(4));
+    var cft_or_sqft = 0;
 
+    /* ===============================
+       🟦 PLYWOOD → SQFT FORMULA
+       Length × Width × Count
+       =============================== */
+    if (stockTypeText.includes('plywood')) {
 
+        cft_or_sqft = len * wid * count;
 
-            // 3️⃣ Total Wood Price
-            var totalWoodPrice = totalCft * perUnit;
-            $jq('#id_sm_total_wood_price').val(totalWoodPrice.toFixed(2));
-        }
+        $jq('#id_sm_cft').val((len * wid).toFixed(4));   // per unit sqft
+        $jq('#id_sm_total_cft').val(cft_or_sqft.toFixed(4));
+
+    }
+    /* ===============================
+       🟫 WOOD → CFT FORMULA
+       Thickness × Length × Width × Count / 144
+       =============================== */
+    else {
+
+        cft_or_sqft = (thk * len * wid * count) / 144;
+
+        var perUnitCft = (thk * len * wid) / 144;
+
+        $jq('#id_sm_cft').val(perUnitCft.toFixed(4));
+        $jq('#id_sm_total_cft').val(cft_or_sqft.toFixed(4));
+    }
+
+    /* ===============================
+       💰 TOTAL WOOD PRICE
+       =============================== */
+    var totalPrice = cft_or_sqft * rate;
+    $jq('#id_sm_total_wood_price').val(totalPrice.toFixed(2));
+}
+
 
 
         // Initialize Select2
@@ -438,8 +462,15 @@
         }
     });
 
-
-
 </script>
 
+<script>
+
+    if (stockTypeText.includes('plywood')) {
+    $('.input-group-text:contains("CFT")').text('SQFT');
+} else {
+    $('.input-group-text:contains("SQFT")').text('CFT');
+}
+
+</script>
 {% endblock content %}

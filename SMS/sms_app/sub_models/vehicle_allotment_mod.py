@@ -12,7 +12,7 @@ class Vehicle_allotmentInfo(models.Model):
     va_vehicletype_selection_placed= models.BooleanField(blank=True,null=True)
     va_vehiclenumber = models.ForeignKey(VehiclemasterInfo, on_delete=models.CASCADE, null=True,blank=True)
     va_vehiclenumber_mkt = models.CharField(max_length=30,null=True,blank=True)
-    va_drivername = models.CharField(max_length=30,null=True,blank=True)
+    va_drivername = models.CharField(max_length=100,null=True,blank=True)
     va_driver_lic = models.CharField(max_length=100,null=True,blank=True)
     va_driver_lic_expiry = models.CharField(max_length=100,null=True,blank=True)
     va_drivernumber = models.CharField(null=True,blank=True)

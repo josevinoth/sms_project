@@ -17,9 +17,10 @@
 							</a>
 
 							<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}&enquiry_num_id={{ enquiry_num_id }}"
-							   class="btn btn-warning ml-2 {% if va.va_status.status_title != "Completed" %}disable_a_href{% endif %}">
-							<i class="fas fa-truck-loading"></i> Business Empty/ Empty Trip
+							   class="btn btn-warning ml-2 {% if va.va_status.status_title != 'Completed' %}disable_a_href{% endif %}">
+								<i class="fas fa-truck-loading"></i> Business Empty / Empty Trip
 							</a>
+
 							<div class="col-md-4 d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
 								<!-- Email Alert Button -->
 								<button type="button" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#vehicleAllotmentEmailModal">
@@ -124,12 +125,11 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Driver Name</span>
+   										 <span class="input-group-text">Driver Name <span id="driver_required_star" style="color:red; display:none">*</span></span>
 									</div>
 									{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control " %}
 								</div>
-								<input type="hidden" id="va_driver_master_id"
-       name="va_driver_master_id">
+								<input type="hidden" id="va_driver_master_id" name="va_driver_master_id">
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -895,6 +895,47 @@ $(document).ready(function () {
     $("#va_sale").on("input", calculateProfit);
 });
 </script>
+<script>
+
+    const form = document.getElementById("vehicle_allotment");
+
+    form.addEventListener("submit", function (e) {
+
+        const vehicleSource = parseInt(document.getElementById("va_vehiclesource").value);
+        const driverName = document.getElementById("va_drivername").value.trim();
+        const driverId = document.getElementById("va_driver_master_id").value.trim();
+
+        // OWN (1) or ATTACHED (2)
+        if (vehicleSource === 1 || vehicleSource === 2) {
+            if (driverName === "" || driverId === "") {
+                e.preventDefault();
+
+                alert("Driver Name is mandatory for OWN and ATTACHED vehicles.");
+
+                document.getElementById("va_drivername").focus();
+                return false;
+            }
+        }
+
+    });
+
+});
+</script>
+
+<script>
+$("#va_vehiclesource").on("change", function () {
+    const source = parseInt($(this).val());
+
+    if (source === 1 || source === 2) {
+        $("#driver_required_star").show();
+        $("#va_drivername").prop("required", true);
+    } else {
+        $("#driver_required_star").hide();
+        $("#va_drivername").prop("required", false);
+    }
+});
+</script>
+
 {% endblock scripts %}
 
 {% endblock content %}

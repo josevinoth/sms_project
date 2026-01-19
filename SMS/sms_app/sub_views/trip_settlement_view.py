@@ -8,43 +8,44 @@ from django.core.paginator import Paginator
 
 @login_required
 def trip_settlement_view(request):
-    veh_no = request.GET.get('veh_no', '')
-    date_from = request.GET.get('date_from', '')
-    date_to = request.GET.get('date_to', '')
+    veh_no = request.GET.get('veh_no', '').strip()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
+    try:
+        per_page = int(request.GET.get('per_page', 10))
+    except ValueError:
+        per_page = 10
 
     trip_list = TripdetailInfo.objects.select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
         'tr_consignmentnumber',
         'tr_approval',
         'tr_approval__ta_approval_status'
-    ).filter(
-        tc_financestatus_id=4  # Awaiting trip settlement
-    )
+    ).filter(tc_financestatus_id=4)
 
     if veh_no:
         trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
-
     if date_from:
         trip_list = trip_list.filter(tr_departeddate__date__gte=date_from)
-
     if date_to:
         trip_list = trip_list.filter(tr_departeddate__date__lte=date_to)
 
     trip_list = trip_list.order_by('-tr_tripnumber')
 
-    # ✅ PAGINATION (50 per page – change if needed)
-    paginator = Paginator(trip_list, 10)
+    paginator = Paginator(trip_list, per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     return render(request, "asset_mgt_app/trip_settlement.html", {
-        'tripsettlement_list': page_obj,   # IMPORTANT
-        'page_obj': page_obj,              # IMPORTANT
+        'tripsettlement_list': page_obj,
+        'page_obj': page_obj,
+        'total_count': paginator.count,
         'veh_no': veh_no,
         'date_from': date_from,
         'date_to': date_to,
+        'per_page': per_page,
     })
-
-
 
 @login_required
 def trip_settlement_edit(request, trip_id):
@@ -60,7 +61,6 @@ def trip_settlement_edit(request, trip_id):
         files_instance = Trip_closure_files_Info(tcf_tripnumber=trip.tr_tripnumber)
 
     if request.method == "POST":
-
         print("---- POST RECEIVED ----")
         print(request.POST)
         print(request.FILES)
@@ -71,9 +71,17 @@ def trip_settlement_edit(request, trip_id):
         # restrict statuses
         form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])
 
+        # List of fields that SHOULD be editable during settlement
+        editable_fields = [
+            'tc_financestatus', 'tr_iou', 'tc_tripcost', 'tc_parkingcost', 
+            'tc_tollcost', 'tc_loadingcost', 'tc_unloadingcost', 
+            'tc_weighmentcost', 'tc_handlingcost', 'tc_supervisorcost', 
+            'tc_haltingcost', 'tc_no_of_days_halting'
+        ]
+
         # Disable and un-require all other fields
         for field in form.fields:
-            if field != "tc_financestatus":
+            if field not in editable_fields:
                 form.fields[field].disabled = True
                 form.fields[field].required = False
 
@@ -103,8 +111,16 @@ def trip_settlement_edit(request, trip_id):
 
         form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])
 
+        # List of fields that SHOULD be editable during settlement
+        editable_fields = [
+            'tc_financestatus', 'tr_iou', 'tc_tripcost', 'tc_parkingcost', 
+            'tc_tollcost', 'tc_loadingcost', 'tc_unloadingcost', 
+            'tc_weighmentcost', 'tc_handlingcost', 'tc_supervisorcost', 
+            'tc_haltingcost', 'tc_no_of_days_halting'
+        ]
+
         for field in form.fields:
-            if field != "tc_financestatus":
+            if field not in editable_fields:
                 form.fields[field].disabled = True
                 form.fields[field].required = False
 
@@ -114,5 +130,9 @@ def trip_settlement_edit(request, trip_id):
     return render(request, "asset_mgt_app/trip_settlement_edit.html", {
         'trip': trip,
         'tripclosure_form': form,
-        'tripclosurefiles_form': files_form
+        'tripclosurefiles_form': files_form,
+        'status_selected': trip.tc_financestatus.id if trip.tc_financestatus else None,
+        'user_id': request.user.id,
+        'enquiry_num': trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else '',
+        'is_edit': True
     })
