@@ -17,6 +17,8 @@ def trip_settlement_view(request):
         per_page = 10
 
     trip_list = TripdetailInfo.objects.select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
         'tr_consignmentnumber',
         'tr_approval',
         'tr_approval__ta_approval_status'
