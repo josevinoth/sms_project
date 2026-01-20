@@ -803,8 +803,6 @@ urlpatterns = [
     path('stock_maintenance_update/<int:pk>/', views.stock_maintenance_edit, name='stock_maintenance_edit'),
     path('get_part_details/', views.get_part_details, name='get_part_details'),
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
-    path('trans-invoice/excel/<str:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
+    path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
 
 ]
-
-

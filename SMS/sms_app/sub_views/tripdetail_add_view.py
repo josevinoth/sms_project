@@ -328,7 +328,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 print("Trip Details Main Form is not Valid")
                 messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
 
-    return redirect('tripdetail_add', tripdetail_id=tripdetail_id)  # ✅ stay on same record
+    return redirect('tripdetail_insert')
 
 
 # List tripdetail
