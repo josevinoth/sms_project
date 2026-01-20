@@ -5,7 +5,7 @@ from ..models import CustomerInfo,CustomerdepartmentInfo,Places
 
 class DmrForm(forms.Form):
     dmr_customer = forms.ModelChoiceField(
-        queryset=CustomerInfo.objects.all(),
+        queryset=CustomerInfo.objects.filter(cu_business_sol_id__in=[1, 2]),
         required=False,
         label="Customer"
     )
