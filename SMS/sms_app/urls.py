@@ -804,5 +804,12 @@ urlpatterns = [
     path('get_part_details/', views.get_part_details, name='get_part_details'),
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
     path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
+    path('vehicle_log_report/', views.vehicle_log_report_view, name='vehicle_log_report'),
+    path('trip_cancellation_report/', views.trip_cancellation_report_view, name='trip_cancellation_report'),
+    path('ref_no_pending_report/', views.ref_no_pending_report_view, name='ref_no_pending_report'),
+    path('vehicle_status_report/', views.vehicle_status_report_view, name='vehicle_status_report'),
+    path('drivers_advance_report/', views.drivers_advance_report_view, name='drivers_advance_report'),
 
 ]
+
+

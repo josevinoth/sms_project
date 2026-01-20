@@ -8,21 +8,61 @@
 <br>
 
 <div class="row">
-    <div class="col-2"></div>
+    <!--    <div class="col-2"></div>-->
     <div class="col-2">
         <div class="card  mb-3 text-center custom-card">
             <div class="card-header custom-card-header">DMR Report</div>
             <div class="card-body bg-light text-center">
-                <h1><a href="{% url 'trip_report' %}" class="badge custom-badge">
-                    <i class="fas fa-arrows-alt"></i></a></h1>
+                <h1><a href="{% url 'trip_report' %}" class="badge custom-badge"><i class="fas fa-arrows-alt"></i></a>
+                </h1>
             </div>
         </div>
     </div>
-
-
-    <div class="col-2"></div>
-
-    <div class="col-2"></div>
+    <div class="col-2">
+        <div class="card  mb-3 text-center custom-card">
+            <div class="card-header custom-card-header">Vehicle Log Report</div>
+            <div class="card-body bg-light text-center">
+                <h1><a href="{% url 'vehicle_log_report' %}" class="badge custom-badge"><i
+                            class="fas fa-file-alt"></i></a></h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card  mb-3 text-center custom-card">
+            <div class="card-header custom-card-header">Trip Cancellation Report</div>
+            <div class="card-body bg-light text-center">
+                <h1><a href="{% url 'trip_cancellation_report' %}" class="badge custom-badge"><i
+                            class="fas fa-ban"></i></a></h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card  mb-3 text-center custom-card">
+            <div class="card-header custom-card-header">Ref No Pending Report</div>
+            <div class="card-body bg-light text-center">
+                <h1><a href="{% url 'ref_no_pending_report' %}" class="badge custom-badge"><i
+                            class="fas fa-history"></i></a></h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card  mb-3 text-center custom-card">
+            <div class="card-header custom-card-header">Vehicle Status Report</div>
+            <div class="card-body bg-light text-center">
+                <h1><a href="{% url 'vehicle_status_report' %}" class="badge custom-badge"><i
+                            class="fas fa-truck-monster"></i></a></h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-2">
+        <div class="card  mb-3 text-center custom-card">
+            <div class="card-header custom-card-header">Drivers Advance Report</div>
+            <div class="card-body bg-light text-center">
+                <h1><a href="{% url 'drivers_advance_report' %}" class="badge custom-badge"><i
+                            class="fas fa-money-bill-wave"></i></a></h1>
+            </div>
+        </div>
+    </div>
     <div class="col-2"></div>
 </div>
 
