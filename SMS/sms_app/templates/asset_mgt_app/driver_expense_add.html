@@ -140,6 +140,18 @@
                                         </div>
                                         {% render_field form.de_supervisorcost class="form-control cost-field" %}
                                     </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">RTO Expense</span>
+                                        </div>
+                                        {% render_field form.de_rtocost class="form-control cost-field" %}
+                                    </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Batta Expense</span>
+                                        </div>
+                                        {% render_field form.de_battacost class="form-control cost-field" %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -203,6 +215,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const unloading   = document.getElementById("id_de_unloadingcost");
     const weighment   = document.getElementById("id_de_weighmentcost");
     const supervisor  = document.getElementById("id_de_supervisorcost");
+    const rto  = document.getElementById("id_de_rtocost");
+    const batta  = document.getElementById("id_de_battacost");
 
     /* =====================================================
        1️⃣ TOGGLE ADVANCE / EXPENSE
@@ -251,7 +265,9 @@ document.addEventListener("DOMContentLoaded", function () {
             (parseFloat(loading.value)    || 0) +
             (parseFloat(unloading.value)  || 0) +
             (parseFloat(weighment.value)  || 0) +
-            (parseFloat(supervisor.value) || 0);
+            (parseFloat(supervisor.value) || 0) +
+            (parseFloat(rto.value) || 0) +
+            (parseFloat(batta.value) || 0);
 
         totalCost.value = total.toFixed(2);
     }
@@ -314,6 +330,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 unloading.value  = data.unloading  ?? 0;
                 weighment.value  = data.weighment  ?? 0;
                 supervisor.value = data.supervisor ?? 0;
+                rto.value        = data.rto ?? 0;
+                batta.value      = data.batta ?? 0;
 
                 calculateTotal();
                 updateBalance();
@@ -329,7 +347,7 @@ expenseType.addEventListener("change", function () {
 
 toggleFields(false); // initial page load
 
-    [parking, loading, unloading, weighment, supervisor].forEach(input => {
+    [parking, loading, unloading, weighment, supervisor,rto,batta].forEach(input => {
         input.addEventListener("input", function () {
             calculateTotal();
             updateBalance();
