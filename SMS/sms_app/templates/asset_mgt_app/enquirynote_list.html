@@ -116,7 +116,8 @@
 <th style="min-width:260px; width:260px; white-space:normal; word-break:break-word;">
     Trip Number
 </th>
-            <th>Trip Settlement</th>
+           <th style="min-width:260px; width:260px; white-space:normal; word-break:break-word;">
+Trip Settlement</th>
             <th>View Consignment</th>
             <th>Updated On</th>
             <th>Updated By</th>
@@ -211,7 +212,7 @@
 </td>
 
             <!-- Trip Settlement -->
-            <td>
+<td style="min-width:300px; width:300px; white-space:normal; word-break:break-word;">
                 {% if data.trips %}
                 {% for trip_cons,trip_num,trip_status,trip_status_id in data.trips %}
                 {% if trip_status_id == 1 or trip_status_id == 5 or trip_status_id == 8%}

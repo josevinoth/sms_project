@@ -56,17 +56,17 @@
 <tr>
     <th></th>
 
-    <th><input class="form-control filter-input" placeholder="Search INV DATE"></th>
+  <!--  <th><input class="form-control filter-input" placeholder="Search INV DATE"></th>
     <th><input class="form-control filter-input" placeholder="Search Customer Name"></th>
     <th><input class="form-control filter-input" placeholder="Search GST IN"></th>
     <th><input class="form-control filter-input" placeholder="Search State"></th>
-    <th><input class="form-control filter-input" placeholder="Search Pincode"></th>
+    <th><input class="form-control filter-input" placeholder="Search Pincode"></th>-->
     <th><input class="form-control filter-input" placeholder="Search INV NO"></th>
-
+    <!--<th><input class="form-control filter-input" placeholder="Search TRIP NO"></th>-->
     <th><input class="form-control filter-input" placeholder="Search Branch"></th>
-    <th><input class="form-control filter-input" placeholder="Search Vehicle Source"></th>
+   <!-- <th><input class="form-control filter-input" placeholder="Search Vehicle Source"></th>-->
     <th><input class="form-control filter-input" placeholder="Search Customer Short Name"></th>
-    <th><input class="form-control filter-input" placeholder="Search Tally Veh No"></th>
+   <!-- <th><input class="form-control filter-input" placeholder="Search Tally Veh No"></th>-->
     <th><input class="form-control filter-input" placeholder="Search Planning Date"></th>
 
     <th><input class="form-control filter-input" placeholder="Search Cnote No"></th>
@@ -77,10 +77,10 @@
     <th><input class="form-control filter-input" placeholder="Search Veh No"></th>
     <th><input class="form-control filter-input" placeholder="Search Veh Type"></th>
 
-    <th><input class="form-control filter-input" placeholder="Search Veh Placed Date & Time"></th>
+   <!-- <th><input class="form-control filter-input" placeholder="Search Veh Placed Date & Time"></th>
     <th><input class="form-control filter-input" placeholder="Search Veh Released Date & Time"></th>
     <th><input class="form-control filter-input" placeholder="Search Veh Arrived Date & Time"></th>
-    <th><input class="form-control filter-input" placeholder="Search Veh Dispatched Date & Time"></th>
+    <th><input class="form-control filter-input" placeholder="Search Veh Dispatched Date & Time"></th>-->
 
     <th><input class="form-control filter-input" placeholder="Search Consignee"></th>
     <th><input class="form-control filter-input" placeholder="Search Reference No"></th>
@@ -110,17 +110,17 @@
 </th>
 
 
-            <th>INV DATE</th>
+            <!--<th>INV DATE</th>
             <th>Customer Name</th>
             <th>GST IN</th>
             <th>State</th>
-            <th>Pincode</th>
+            <th>Pincode</th>-->
             <th>INV NO</th>
-
+           <!-- <th>TRIP NO</th>-->
             <th>Branch</th>
-            <th>Vehicle Source</th>
+          <!--  <th>Vehicle Source</th>-->
             <th>Customer Short Name</th>
-            <th>Tally Veh No</th>
+          <!--  <th>Tally Veh No</th>-->
             <th>Planning Date</th>
 
             <th>Cnote No</th>
@@ -131,10 +131,10 @@
             <th>Veh No</th>
             <th>Veh Type</th>
 
-            <th>Veh Placed Date & Time</th>
+         <!--   <th>Veh Placed Date & Time</th>
             <th>Veh Released Date & Time</th>
             <th>Veh Arrived Date & Time</th>
-            <th>Veh Dispatched Date & Time</th>
+            <th>Veh Dispatched Date & Time</th>-->
 
             <th>Consignee</th>
             <th>Reference No</th>
@@ -168,18 +168,18 @@
 </td>
 
   <!-- Invoice basic -->
-  <td>{{ inv.ti_inv_date }}</td>
+<!--  <td>{{ inv.ti_inv_date }}</td>
   <td>{{ inv.ti_customer }}</td>
   <td>{{ inv.ti_gst_in }}</td>
   <td>{{ inv.ti_state }}</td>
-  <td>{{ inv.ti_pincode }}</td>
+  <td>{{ inv.ti_pincode }}</td>-->
   <td>{{ inv.ti_inv_no }}</td>
-
+   <!-- <td>{{ inv.ti_trip.tr_tripnumber }}</td>-->
   <!-- Customer / Trip -->
   <td>{{ inv.ti_branch }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclesource }}</td>
+ <!-- <td>{{ inv.ti_trip.tr_vehiclesource }}</td>-->
   <td>{{ inv.ti_customer_short_name }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
+  <!--<td>{{ inv.ti_trip.tr_vehiclenumber }}</td>-->
   <td>{{ inv.ti_trip.tr_departeddate }}</td>
 
   <!-- Consignment -->
@@ -193,10 +193,10 @@
   <td>{{ inv.ti_trip.tr_vehicletype }}</td>
 
   <!-- Trip timeline -->
-  <td>{{ inv.ti_trip.tr_departeddate_pickup }}</td>
+  <!--<td>{{ inv.ti_trip.tr_departeddate_pickup }}</td>
   <td>{{ inv.ti_trip.tr_dock_out_time }}</td>
   <td>{{ inv.ti_trip.tr_reporteddate }}</td>
-  <td>{{ inv.ti_trip.tr_departeddate_delivery }}</td>
+  <td>{{ inv.ti_trip.tr_departeddate_delivery }}</td>-->
 
   <!-- Goods -->
   <td>{{ inv.ti_goods.cg_consignee }}</td>
@@ -229,98 +229,29 @@
 <script>
 $(document).ready(function () {
 
-    var table = $('#trans_invoice_master_list').DataTable({
-        scrollX: true,
-        dom: 'lBfrtip',
-        columnDefs: [
-            { orderable: false, targets: 0 }
-        ]
-    });
+    const TABLE_ID = '#trans_invoice_master_list';
+    const PLANNING_DATE_COL = 4;
+        const DEPT_COL = 8;
 
-    /* ===============================
-       SELECT / UNSELECT ALL (CORRECT)
-       =============================== */
 
-    // Header checkbox → select / unselect ALL visible rows
-    $('#select-all').on('change', function () {
-        var isChecked = $(this).prop('checked');
-
-        // Use DataTables API (IMPORTANT)
-        table.rows({ search: 'applied' }).every(function () {
-            $(this.node()).find('input.row-select')
-                .prop('checked', isChecked);
-        });
-    });
-
-    // Row checkbox change → update header checkbox state
-    $('#trans_invoice_master_list tbody').on('change', 'input.row-select', function () {
-
-        var totalVisible = table.rows({ search: 'applied' }).nodes().length;
-        var checkedVisible = table.rows({ search: 'applied' }).nodes()
-            .to$()
-            .find('input.row-select:checked')
-            .length;
-
-        $('#select-all').prop('checked', totalVisible === checkedVisible);
-    });
-
-    // When table redraws (filter / paging), resync header checkbox
-    table.on('draw', function () {
-
-        var totalVisible = table.rows({ search: 'applied' }).nodes().length;
-        var checkedVisible = table.rows({ search: 'applied' }).nodes()
-            .to$()
-            .find('input.row-select:checked')
-            .length;
-
-        $('#select-all').prop('checked',
-            totalVisible > 0 && totalVisible === checkedVisible
-        );
-    });
-
-});
-</script>
-
-<script>
-$('#add_btn').on('click', function () {
-
-    let ids = [];
-
-    $('#trans_invoice_master_list tbody input.row-select:checked').each(function () {
-        ids.push($(this).val());
-    });
-
-    if (ids.length === 0) {
-        alert("Please select at least one record");
-        return;
-    }
-
-    $.ajax({
-        url: "{% url 'trans_invoice_add_woh' %}",
-        type: "POST",
-        data: {
-            'ids[]': ids,
-            'csrfmiddlewaretoken': '{{ csrf_token }}'
-        },
-        success: function () {
-            location.reload();
+    let table = new DataTable(TABLE_ID, {
+    columnDefs: [
+        {
+            orderable: false,
+            targets: 0
         }
-    });
+    ],
+
+    order: [[PLANNING_DATE_COL, 'desc']],
+    dom: 'lBfrtip',
+
+    scrollX: true,
+    scrollCollapse: true,
+    autoWidth: false,
+    responsive: false,
+
+    pageLength: 10
 });
-</script>
-<script>
-$(document).ready(function () {
-
-    const INVOICE_DATE_COL = 1;   // INV DATE
-    const DEPT_COL = 15;          // Dept
-
-    var table = $('#trans_invoice_master_list').DataTable({
-        scrollX: true,
-        dom: 'lBfrtip',
-        columnDefs: [
-            { orderable: false, targets: 0 }
-        ]
-    });
 
     /* ===============================
        SELECT / UNSELECT ALL
@@ -329,8 +260,7 @@ $(document).ready(function () {
     $('#select-all').on('change', function () {
         let checked = this.checked;
         table.rows({ search: 'applied' }).nodes()
-            .to$()
-            .find('input.row-select')
+            .to$().find('input.row-select')
             .prop('checked', checked);
     });
 
@@ -340,7 +270,8 @@ $(document).ready(function () {
             let total = table.rows({ search: 'applied' }).nodes().length;
             let checked = table.rows({ search: 'applied' }).nodes()
                 .to$().find('input.row-select:checked').length;
-            $('#select-all').prop('checked', total === checked);
+
+            $('#select-all').prop('checked', total > 0 && total === checked);
         }
     );
 
@@ -348,6 +279,7 @@ $(document).ready(function () {
         let total = table.rows({ search: 'applied' }).nodes().length;
         let checked = table.rows({ search: 'applied' }).nodes()
             .to$().find('input.row-select:checked').length;
+
         $('#select-all').prop('checked', total > 0 && total === checked);
     });
 
@@ -365,12 +297,11 @@ $(document).ready(function () {
         let to = $('#toDate').val();
         let dept = $('#departmentFilter').val();
 
-        let rowDate = parseDate(data[INVOICE_DATE_COL]);
+        let rowDate = parseDate(data[PLANNING_DATE_COL]);
         let rowDept = data[DEPT_COL];
 
         if (from && rowDate < new Date(from)) return false;
         if (to && rowDate > new Date(to)) return false;
-
         if (dept && rowDept !== dept) return false;
 
         return true;
@@ -392,6 +323,39 @@ $(document).ready(function () {
         return new Date(val);
     }
 
+});
+</script>
+<script>
+$('#add_btn').on('click', function (e) {
+    e.preventDefault();
+
+    let ids = [];
+
+    $('#trans_invoice_master_list tbody input.row-select:checked')
+        .each(function () {
+            ids.push($(this).val());
+        });
+
+    if (ids.length === 0) {
+        alert("Please select at least one invoice");
+        return;
+    }
+
+    $.ajax({
+        url: "{% url 'trans_invoice_list_woh' customer.id %}",
+        type: "POST",
+        data: {
+            'invoice_list[]': ids,
+            'action': 'add',
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function () {
+            location.reload();
+        },
+        error: function () {
+            alert("Failed to add invoice(s)");
+        }
+    });
 });
 </script>
 

@@ -20,7 +20,6 @@ from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 @login_required(login_url='login_page')
 def trans_invoice_add(request):
     first_name = request.session.get('first_name')
-
     invoice = None
     saved = False
 
@@ -44,12 +43,10 @@ def trans_invoice_add(request):
                 (invoice.ti_cancellation_charges or 0)
             )
 
-            # latest consignment
             # ==================================================
-            # ATTACH CONSIGNMENT / TRIP / GOODS (CORRECT LOGIC)
+            # ATTACH CONSIGNMENT / TRIP / GOODS
             # ==================================================
 
-            # 1️⃣ Fetch latest VALID consignment for the customer
             cons = (
                 ConsignmentdetailInfo.objects
                 .filter(co_customer=invoice.ti_customer)
@@ -59,14 +56,14 @@ def trans_invoice_add(request):
                 .first()
             )
 
-            # do NOT block saving if no consignment exists — save available data
             if cons:
                 invoice.ti_consignment = cons
             else:
-                # let invoice.ti_consignment remain None and inform user
-                messages.info(request, "No consignment found for selected customer — invoice will be saved without consignment")
+                messages.info(
+                    request,
+                    "No consignment found for selected customer — invoice will be saved without consignment"
+                )
 
-             # 2️⃣ Attach trip linked to this consignment
             trip = None
             if cons:
                 trip = (
@@ -75,11 +72,9 @@ def trans_invoice_add(request):
                     .order_by('-id')
                     .first()
                 )
-
                 if trip:
                     invoice.ti_trip = trip
 
-            # 3️⃣ Attach goods linked to this consignment
             goods = None
             if cons:
                 goods = (
@@ -88,24 +83,25 @@ def trans_invoice_add(request):
                     .order_by('-id')
                     .first()
                 )
+                if goods:
+                    invoice.ti_goods = goods
 
             department = ""
-
             if trip and getattr(trip, 'tr_enquirynumber', None):
-                department = getattr(trip.tr_enquirynumber, 'en_customerdepartment', "") or ""
-
+                department = (
+                    getattr(trip.tr_enquirynumber, 'en_customerdepartment', "") or ""
+                )
             invoice.ti_department = department
 
-            if goods:
-                invoice.ti_goods = goods
-
-            # Populate customer-related fields (GST, pincode, short name) and branch/state
             cust = invoice.ti_customer
             customer_name = str(cust).upper() if cust else ""
+
             if cust:
                 invoice.ti_gst_in = getattr(cust, 'cu_gst', '') or invoice.ti_gst_in
                 invoice.ti_pincode = getattr(cust, 'cu_pincode', '') or invoice.ti_pincode
-                invoice.ti_customer_short_name = getattr(cust, 'cu_nameshort', '') or invoice.ti_customer_short_name
+                invoice.ti_customer_short_name = (
+                    getattr(cust, 'cu_nameshort', '') or invoice.ti_customer_short_name
+                )
 
             if "MAA" in customer_name:
                 invoice.ti_branch = "Chennai"
@@ -118,164 +114,36 @@ def trans_invoice_add(request):
                 invoice.ti_state = invoice.ti_state or ""
 
             invoice.save()
-            saved_ids = request.session.get('saved_invoice_ids', [])
-            saved_ids.append(invoice.id)
-            request.session['saved_invoice_ids'] = saved_ids
-
             saved = True
 
         else:
-            # Attempt partial save: if user provided a customer we can persist available fields
-            cust_id = request.POST.get('ti_customer') or request.POST.get('customer')
-            if not cust_id:
-                messages.error(request, "Please check mandatory fields!")
-            else:
-                cust = CustomerInfo.objects.filter(id=cust_id).first()
-                if not cust:
-                    messages.error(request, "Selected customer not found. Please pick a valid customer.")
-                else:
-                    # Build a partial invoice using whatever was posted and safe defaults
-                    from django.utils import timezone
-                    import datetime, time
-                    invoice_partial = TransInvoiceInfo()
-                    invoice_partial.ti_customer = cust
-
-                    # ti_inv_date: use posted date if present, else today
-                    inv_date = request.POST.get('ti_inv_date')
-                    if inv_date:
-                        try:
-                            invoice_partial.ti_inv_date = datetime.datetime.strptime(inv_date, '%Y-%m-%d').date()
-                        except Exception:
-                            invoice_partial.ti_inv_date = timezone.now().date()
-                    else:
-                        invoice_partial.ti_inv_date = timezone.now().date()
-
-                    # ti_inv_no: posted or generate temporary unique id
-                    posted_inv_no = request.POST.get('ti_inv_no')
-                    if posted_inv_no:
-                        base_inv = posted_inv_no
-                    else:
-                        base_inv = f"TMP-{cust.id}-{int(time.time())}"
-                    inv_no = base_inv
-                    suffix = 0
-                    while TransInvoiceInfo.objects.filter(ti_inv_no=inv_no).exists():
-                        suffix += 1
-                        inv_no = f"{base_inv}-{suffix}"
-                    invoice_partial.ti_inv_no = inv_no
-
-                    # customer short name (required on model): prefer posted, else customer short name, else customer's string
-                    invoice_partial.ti_customer_short_name = (
-                        request.POST.get('ti_customer_short_name') or getattr(cust, 'cu_nameshort', '') or str(cust)
-                    )
-
-                    # optional fields: gst, pincode
-                    invoice_partial.ti_gst_in = request.POST.get('ti_gst_in') or getattr(cust, 'cu_gst', '')
-                    invoice_partial.ti_pincode = request.POST.get('ti_pincode') or getattr(cust, 'cu_pincode', '')
-
-                    # numeric charges - use posted values when present, else 0
-                    def to_float(field):
-                        v = request.POST.get(field)
-                        try:
-                            return float(v) if v not in (None, '') else 0.0
-                        except Exception:
-                            return 0.0
-
-                    invoice_partial.ti_transportation_charges = to_float('ti_transportation_charges')
-                    invoice_partial.ti_toll_charges = to_float('ti_toll_charges')
-                    invoice_partial.ti_parking_charges = to_float('ti_parking_charges')
-                    invoice_partial.ti_loading_charges = to_float('ti_loading_charges')
-                    invoice_partial.ti_unloading_charges = to_float('ti_unloading_charges')
-                    invoice_partial.ti_halting_charges = to_float('ti_halting_charges')
-                    invoice_partial.ti_docket_charges = to_float('ti_docket_charges')
-                    invoice_partial.ti_weighment_charges = to_float('ti_weighment_charges')
-                    invoice_partial.ti_handling_charges = to_float('ti_handling_charges')
-                    invoice_partial.ti_cancellation_charges = to_float('ti_cancellation_charges')
-
-                    # compute total
-                    invoice_partial.ti_total = (
-                        (invoice_partial.ti_transportation_charges or 0) +
-                        (invoice_partial.ti_toll_charges or 0) +
-                        (invoice_partial.ti_parking_charges or 0) +
-                        (invoice_partial.ti_loading_charges or 0) +
-                        (invoice_partial.ti_unloading_charges or 0) +
-                        (invoice_partial.ti_halting_charges or 0) +
-                        (invoice_partial.ti_docket_charges or 0) +
-                        (invoice_partial.ti_weighment_charges or 0) +
-                        (invoice_partial.ti_handling_charges or 0) +
-                        (invoice_partial.ti_cancellation_charges or 0)
-                    )
-
-                    # branch/state guess from customer
-                    cname = str(cust).upper() if cust else ''
-                    if 'MAA' in cname:
-                        invoice_partial.ti_branch = 'Chennai'
-                        invoice_partial.ti_state = 'Tamil Nadu'
-                    elif 'BLR' in cname:
-                        invoice_partial.ti_branch = 'Bangalore'
-                        invoice_partial.ti_state = 'Karnataka'
-                    else:
-                        invoice_partial.ti_branch = request.POST.get('ti_branch') or ''
-                        invoice_partial.ti_state = request.POST.get('ti_state') or ''
-
-                    # Attempt to attach latest consignment, trip and goods for this customer
-                    cons = (
-                        ConsignmentdetailInfo.objects
-                        .filter(co_customer=cust)
-                        .exclude(co_consignmentnumber__isnull=True)
-                        .exclude(co_consignmentnumber__exact='')
-                        .order_by('-id')
-                        .first()
-                    )
-                    if cons:
-                        invoice_partial.ti_consignment = cons
-
-                        trip = (
-                            TripdetailInfo.objects
-                            .filter(tr_consignmentnumber=cons)
-                            .order_by('-id')
-                            .first()
-                        )
-                        if trip:
-                            invoice_partial.ti_trip = trip
-
-                        goods = (
-                            ConsignmentgoodsInfo.objects
-                            .filter(cg_consignmentnumber=cons)
-                            .order_by('-id')
-                            .first()
-                        )
-                        if goods:
-                            invoice_partial.ti_goods = goods
-
-                        # department from trip.enquirynumber if present
-                        if trip and getattr(trip, 'tr_enquirynumber', None):
-                            invoice_partial.ti_department = getattr(trip.tr_enquirynumber, 'en_customerdepartment', '') or ''
-
-                    # save partial invoice
-                    try:
-                        invoice_partial.save()
-                        invoice = invoice_partial
-                        saved = True
-                        messages.success(request, 'Partial invoice saved with available data')
-                    except Exception as e:
-                        messages.error(request, f'Unable to save partial invoice: {e}')
+            messages.error(
+                request,
+                "Invoice not saved. Please correct the errors below."
+            )
 
     else:
         form = TransInvoiceForm()
 
-    # For the ADD page we want the invoice list below the form to be empty per request
     invoice_list = TransInvoiceInfo.objects.none()
 
     return render(
         request,
         "asset_mgt_app/trans_invoice_Add.html",
         {
-            'form': form,
-            'invoice_list': invoice_list,
-            'first_name': first_name,
-            'saved': saved,
+            "form": form,
+            "invoice_list": invoice_list,
+            "first_name": first_name,
+            "saved": saved,
         }
     )
+
+
+
+from django.db.models import Sum
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
 
 
 @login_required(login_url='login_page')
@@ -283,29 +151,63 @@ def trans_invoice_edit(request, invoice_id):
     first_name = request.session.get('first_name')
 
     invoice = get_object_or_404(TransInvoiceInfo, id=invoice_id)
-    customer = invoice.ti_customer   # 🔑 current customer
+    customer = invoice.ti_customer  # current customer
 
+    # ==================================================
+    # FETCH LIST SHOWN BELOW (USED FOR TOTAL CALCULATION)
+    # ==================================================
+    invoice_list = (
+        TransInvoiceInfo.objects
+        .filter(
+            ti_customer=customer,
+            is_woh=True
+        )
+    )
+
+    # ==================================================
+    # AGGREGATE CHARGES FROM LIST
+    # ==================================================
+    totals = invoice_list.aggregate(
+        transport=Sum('ti_transportation_charges'),
+        toll=Sum('ti_toll_charges'),
+        parking=Sum('ti_parking_charges'),
+        loading=Sum('ti_loading_charges'),
+        unloading=Sum('ti_unloading_charges'),
+        halting=Sum('ti_halting_charges'),
+        docket=Sum('ti_docket_charges'),
+        weighment=Sum('ti_weighment_charges'),
+        handling=Sum('ti_handling_charges'),
+        cancellation=Sum('ti_cancellation_charges'),
+    )
+
+    # Replace None with 0
+    for key in totals:
+        totals[key] = totals[key] or 0
+
+    # ==================================================
+    # POST REQUEST (SAVE)
+    # ==================================================
     if request.method == "POST":
         form = TransInvoiceForm(request.POST, instance=invoice)
 
         if form.is_valid():
             invoice = form.save(commit=False)
 
-            # 🔢 TOTAL CALCULATION
+            # TOTAL = SUM OF ALL CHARGES
             invoice.ti_total = (
-                (invoice.ti_transportation_charges or 0) +
-                (invoice.ti_toll_charges or 0) +
-                (invoice.ti_parking_charges or 0) +
-                (invoice.ti_loading_charges or 0) +
-                (invoice.ti_unloading_charges or 0) +
-                (invoice.ti_halting_charges or 0) +
-                (invoice.ti_docket_charges or 0) +
-                (invoice.ti_weighment_charges or 0) +
-                (invoice.ti_handling_charges or 0) +
-                (invoice.ti_cancellation_charges or 0)
+                invoice.ti_transportation_charges +
+                invoice.ti_toll_charges +
+                invoice.ti_parking_charges +
+                invoice.ti_loading_charges +
+                invoice.ti_unloading_charges +
+                invoice.ti_halting_charges +
+                invoice.ti_docket_charges +
+                invoice.ti_weighment_charges +
+                invoice.ti_handling_charges +
+                invoice.ti_cancellation_charges
             )
 
-            # 🏢 BRANCH / STATE LOGIC
+            # BRANCH / STATE LOGIC
             customer_name = str(invoice.ti_customer).upper()
 
             if "MAA" in customer_name:
@@ -325,36 +227,41 @@ def trans_invoice_edit(request, invoice_id):
         else:
             messages.error(request, "Please fix the errors below")
 
+    # ==================================================
+    # GET REQUEST (EDIT PAGE LOAD)
+    # 👉 PRE-FILL FORM WITH AGGREGATED TOTALS
+    # ==================================================
     else:
-        form = TransInvoiceForm(instance=invoice)
+        invoice.ti_transportation_charges = totals['transport']
+        invoice.ti_toll_charges = totals['toll']
+        invoice.ti_parking_charges = totals['parking']
+        invoice.ti_loading_charges = totals['loading']
+        invoice.ti_unloading_charges = totals['unloading']
+        invoice.ti_halting_charges = totals['halting']
+        invoice.ti_docket_charges = totals['docket']
+        invoice.ti_weighment_charges = totals['weighment']
+        invoice.ti_handling_charges = totals['handling']
+        invoice.ti_cancellation_charges = totals['cancellation']
 
-    # ==================================================
-    # ✅ FETCH ONLY MATCHING DATA FOR EDIT PAGE
-    # ==================================================
-    invoice_list = (
-        TransInvoiceInfo.objects
-        .filter(
-            ti_customer=customer,
-            is_woh=True
-        )
-        .select_related(
-            "ti_customer",
-            "ti_trip",
-            "ti_consignment",
-            "ti_goods"
-        )
-        .order_by("-id")
-    )
+        invoice.ti_total = sum(totals.values())
+
+        form = TransInvoiceForm(instance=invoice)
 
     return render(
         request,
-        "asset_mgt_app/trans_invoice_Add.html",  # SAME TEMPLATE
+        "asset_mgt_app/trans_invoice_Add.html",
         {
+            'total_charges': invoice.ti_total,
             'form': form,
             'first_name': first_name,
             'invoice': invoice,
             'is_edit': True,
-            'invoice_list': invoice_list,  # ✅ CLEAN QUERYSET
+            'invoice_list': invoice_list.select_related(
+                "ti_customer",
+                "ti_trip",
+                "ti_consignment",
+                "ti_goods"
+            ).order_by("-id"),
         }
     )
 
@@ -426,6 +333,25 @@ def fetch_customer_details(request):
 def trans_invoice_list_woh(request, customer_id):
     first_name = request.session.get('first_name')
 
+    # ==========================
+    # HANDLE ADD FROM MASTER
+    # ==========================
+    if request.method == "POST" and request.POST.get("action") == "add":
+
+        ids = request.POST.getlist('invoice_list[]')
+
+        if ids:
+            TransInvoiceInfo.objects.filter(
+                id__in=ids,
+                is_woh=False,
+                ti_customer_id=customer_id
+            ).update(is_woh=True)
+
+        return JsonResponse({'status': 'success'})
+
+    # ==========================
+    # NORMAL PAGE LOAD
+    # ==========================
     trans_invoice_list = (
         TransInvoiceInfo.objects
         .filter(is_woh=True, ti_customer_id=customer_id)
@@ -438,6 +364,11 @@ def trans_invoice_list_woh(request, customer_id):
         )
         .order_by('-id')
     )
+    # ==================================================
+    # ATTACH TALLY VEHICLE NO (STEP 1)
+    # ==================================================
+    for inv in trans_invoice_list:
+        inv.tally_vehicle_no = get_tally_vehicle_no(inv)
 
     invoice_list_master = (
         TransInvoiceInfo.objects
@@ -635,7 +566,7 @@ def trans_invoice_excel(request, invoice_no):
             safe(obj.ti_branch),
             safe(str(trip.tr_vehiclesource) if trip and getattr(trip, 'tr_vehiclesource', None) else ""),  # FK
             safe(str(obj.ti_customer_short_name) if getattr(obj, 'ti_customer_short_name', None) else ""),  # FK
-            safe(str(trip.tr_vehiclenumber) if trip and getattr(trip, 'tr_vehiclenumber', None) else ""),  # FK
+            safe(get_tally_vehicle_no(obj)),            # FK
             safe(str(trip.tr_departeddate) if trip and getattr(trip, 'tr_departeddate', None) else ""),  # FK
 
             safe(str(cons.co_consignmentnumber) if cons and getattr(cons, 'co_consignmentnumber', None) else ""),  # FK
@@ -690,3 +621,39 @@ def trans_invoice_excel(request, invoice_no):
     )
 
     return response
+
+
+def get_tally_vehicle_no(invoice):
+    trip = invoice.ti_trip
+    if not trip:
+        return ""
+
+    # 1️⃣ Resolve vehicle number robustly
+    vehicle_no = ""
+
+    if hasattr(trip, "tr_vehiclenumber") and trip.tr_vehiclenumber:
+        vehicle_no = trip.tr_vehiclenumber
+
+    elif hasattr(trip, "tr_vehicle") and trip.tr_vehicle:
+        vehicle_no = getattr(trip.tr_vehicle, "tr_vehiclenumber", "")
+
+    vehicle_no = (vehicle_no or "").strip()
+
+    # 2️⃣ Resolve vehicle source safely
+    vehicle_source_obj = trip.tr_vehiclesource
+    if not vehicle_source_obj:
+        return ""
+
+    vehicle_source = str(vehicle_source_obj).upper()
+
+    # 3️⃣ Apply Tally rules
+    if "OWN" in vehicle_source:
+        return vehicle_no
+
+    elif "ATTACHED" in vehicle_source:
+        return f"{vehicle_no}(A)" if vehicle_no else "(A)"
+
+    elif "MARKET" in vehicle_source:
+        return "MKT"
+
+    return ""
