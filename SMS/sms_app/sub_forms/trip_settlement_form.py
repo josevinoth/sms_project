@@ -9,7 +9,8 @@ class TripSettlementForm(forms.ModelForm):
                   'tr_vehiclesource', 'tr_vehiclenumber', 'tr_vehicletype_placed', 'tr_category', 'tr_departedlocation',
                   'tr_reportedlocation', 'tc_tripcost', 'tc_parkingcost', 'tc_tollcost', 'tc_loadingcost',
                   'tc_unloadingcost', 'tc_weighmentcost', 'tc_handlingcost', 'tr_iou', 'tc_financestatus',
-                  'tr_customerref', 'tc_no_of_days_halting', 'tc_supervisorcost', 'tc_haltingcost']
+                  'tr_customerref', 'tc_no_of_days_halting', 'tc_supervisorcost', 'tc_haltingcost','tc_rtocost', 'tc_betacost']
+
 
     def __init__(self, *args, **kwargs):
         super(TripSettlementForm, self).__init__(*args, **kwargs)

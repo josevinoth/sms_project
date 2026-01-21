@@ -261,6 +261,32 @@
                                         <input type="checkbox" id="tc_total_halting_cost_check">
                                     </div>
 							    </div>
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">RTO Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_rtocost id="tc_rtocost" class="form-control " %}
+										</div>
+									</div>
+									<div class="col-3 text-center">
+										<input type="checkbox" id="tc_rtocost_check">
+									</div>
+								</div>
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Batta Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_betacost id="tc_betacost" class="form-control " %}
+										</div>
+									</div>
+									<div class="col-3 text-center">
+										<input type="checkbox" id="tc_betacost_check">
+									</div>
+								</div>
                             </div>
 
 							<div class="col-3">
