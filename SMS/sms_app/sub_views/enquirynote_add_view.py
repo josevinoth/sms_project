@@ -198,6 +198,7 @@ def enquirynote_list(request):
         va_enquirynumber__in=enquiry_ids
     ).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt')
 
+
     trip_data = TripdetailInfo.objects.filter(
         tr_enquirynumber_id__in=enquiry_ids
     ).values_list(
@@ -205,7 +206,8 @@ def enquirynote_list(request):
         'tr_consignmentnumber__co_consignmentnumber',
         'tr_tripnumber',
         'tc_financestatus__status',
-        'tc_financestatus'
+        'tc_financestatus',
+        'tr_category__category'
     )
 
     # Vehicle dict
@@ -216,9 +218,19 @@ def enquirynote_list(request):
 
     # Trip dict
     trip_dict = {}
-    for enq_id, trip_cons, trip_num, trip_status, trip_status_id in trip_data:
+    for enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category in trip_data:
+        # Check category safely
+        cat_lower = trip_category.strip().lower() if trip_category else ""
+        
+        # If category is "Business", show consignment number; otherwise show category name
+        # Added "bussiness" to handle potential typos in the database
+        if cat_lower in ["business", "bussiness"]:
+            display_text = trip_cons if trip_cons else "No Consignment"
+        else:
+            display_text = trip_category if trip_category else "No Category"
+        
         trip_dict.setdefault(enq_id, []).append(
-            (trip_cons or "Empty trip", trip_num or "No Trip", trip_status or "", trip_status_id)
+            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id)
         )
 
     # Vehicle limits

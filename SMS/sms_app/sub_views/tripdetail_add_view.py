@@ -13,6 +13,7 @@ from ..forms import TripclosurefilesForm,TripdetailaddForm
 from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,VehiclemasterInfo,TripHighvalueInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
 import json
 
 from django.http import JsonResponse
@@ -183,7 +184,7 @@ def tripdetail_add(request, tripdetail_id=0):
             ).order_by('-id').first()
 
             trip_approvallist = (
-                trip_instance.tr_approval and trip_instance.tr_approval.ta_approval_status_id == 1
+                    trip_instance.tr_approval and trip_instance.tr_approval.ta_approval_status_id == 1
             )
 
             context = {
@@ -217,7 +218,7 @@ def tripdetail_add(request, tripdetail_id=0):
 
             # ✅ Prevent using same consignment again (backend check)
             if cosnignment_number and TripdetailInfo.objects.filter(
-                tr_consignmentnumber=cosnignment_number
+                    tr_consignmentnumber=cosnignment_number
             ).exists():
                 messages.error(request, 'This consignment number is already used in another trip.')
                 return redirect(request.META['HTTP_REFERER'])
@@ -282,6 +283,13 @@ def tripdetail_add(request, tripdetail_id=0):
                     en_enquirynumber=enquiry_num
                 ).update(en_tripdetails=list(tripdetail_list))
                 messages.success(request, "Record Updated Successfully")
+
+                submit_action = request.POST.get('submit_action', 'save')
+
+                if submit_action == 'save_and_email':
+                    # ✅ Redirect to update page and open email modal
+                    return redirect(f"/SMS/tripdetail_update/{trip.id}?open_email=1")
+
                 return redirect('tripdetail_update', tripdetail_id=trip.id)
 
             else:
@@ -317,6 +325,11 @@ def tripdetail_add(request, tripdetail_id=0):
                 ).values_list('tr_tripnumber', flat=True)
                 EnquirynoteInfo.objects.filter(pk=enquiry_num).update(en_tripdetails=list(tripdetail_list))
                 messages.success(request, 'Record Updated Successfully')
+
+                submit_action = request.POST.get('submit_action', 'save')
+                if submit_action == 'save_and_email':
+                    return redirect(f"/SMS/tripdetail_update/{tripdetail_id}?open_email=1")
+
                 return redirect('tripdetail_update', tripdetail_id=tripdetail_id)
 
 
@@ -475,12 +488,35 @@ def trip_email(request):
     def format_datetime(value):
         if not value:
             return ""
+
         try:
-            if isinstance(value, str):
-                value = datetime.fromisoformat(value.replace('Z', '').split('+')[0].strip())
-            return value.strftime("%Y-%m-%d %H:%M")  # 👈 no seconds
+            # If value is already datetime object
+            if isinstance(value, datetime):
+                dt = value
+
+            # If value is string
+            else:
+                dt = datetime.fromisoformat(str(value).replace("Z", "").split("+")[0].strip())
+
+            # ✅ DD-MM-YYYY HH:MM
+            return dt.strftime("%d-%m-%Y %H:%M")
+
         except Exception:
             return str(value)
+
+    try:
+        enquiry = EnquirynoteInfo.objects.select_related(
+            'en_customername',
+            'en_customerdepartment',
+            'en_fromlocaion',
+            'en_tolocation'
+        ).get(en_enquirynumber=trip.tr_enquirynumber)
+    except EnquirynoteInfo.DoesNotExist:
+        enquiry = None
+
+    customer_name = enquiry.en_customername.cu_name if enquiry else "N/A"
+    department_name = enquiry.en_customerdepartment.ct_customerdepartment if enquiry else "N/A"
+    customer_ref = trip.tr_consignmentnumber.co_cusrefnum if trip.tr_consignmentnumber else "N/A"
 
     # ---- Parse date fields ----
     departed_date = parse_dt(trip.tr_departeddate)
@@ -510,11 +546,11 @@ def trip_email(request):
 
     # ---- Build HTML Email ----
     email_body = f"""
-        <html>
+          <html>
             <head>
-               <style>
+                <style>
                     table {{
-                        width: 70%;
+                        width: 60%;
                         border-collapse: collapse;
                         font-family: Arial, sans-serif;
                         font-size: 14px;
@@ -522,45 +558,44 @@ def trip_email(request):
                     }}
                     th, td {{
                         border: 1px solid black;
-                        padding: 8px;
+                        padding: 10px;
                     }}
                     th {{
                         background-color: #f4f4f4;
+                        color: #333;
                         text-align: left;
                     }}
                     td {{
                         vertical-align: top;
                     }}
                     .remarks div {{
-                        margin-bottom: 5px;
+                        margin-bottom: 10px;
                     }}
-               </style>
+                </style>
             </head>
-            <body>
-                <p>Dear Team,</p>
-                <p>{trip_status_text}</p>
-                <p>Please find below the trip details:</p>
-                <table>
-                    <tr><th>Trip Number</th><td>{trip.tr_tripnumber}</td></tr>
-                    <tr><th>Enquiry Number</th><td>{trip.tr_enquirynumber}</td></tr>
+             <body>
+                <p>Dear Customer,</p>
+                <p>Thank you for your business, below booking details is for your reference:</p>
+                <table style="width: 100%; border-collapse: collapse;"><tr>
+        <th colspan="2" style="background-color: #007bff; color: white; padding: 10px; text-align: center; font-size: 18px;">
+            Booking
+        </th>
+    </tr>
+                   <tr><th>Customer Name</th><td>{customer_name}</td></tr>
+                    <tr><th>Department</th><td>{department_name}</td></tr>
                     <tr><th>Consignment Number</th><td>{trip.tr_consignmentnumber}</td></tr>
-                    <tr><th>Vehicle Type</th><td>{trip.tr_vehicletype}</td></tr>
-                    <tr><th>Vehicle Type Placed</th><td>{trip.tr_vehicletype_placed}</td></tr>
+                    <tr><th>Customer Reference No</th><td>{customer_ref}</td></tr>
                     <tr><th>Vehicle Number</th><td>{trip.tr_vehiclenumber}</td></tr>
+                    <tr><th>Vehicle Type</th><td>{trip.tr_vehicletype}</td></tr>
                     <tr><th>Driver Name</th><td>{trip.tr_drivername}</td></tr>
                     <tr><th>Driver Number</th><td>{trip.tr_drivernumber}</td></tr>
-                    <tr><th>Trip Category</th><td>{trip.tr_category}</td></tr>
-                    <tr><th>Departed Location</th><td>{trip.tr_departedlocation}</td></tr>
+                    <tr><th>Origin</th><td>{trip.tr_departedlocation}</td></tr>
                     <tr><th>Departed KM</th><td>{trip.tr_departedkm}</td></tr>
                     <tr><th>Departed Date</th><td>{format_datetime(trip.tr_departeddate)}</td></tr>
-                    <tr><th>Loading Time</th><td>{format_datetime(trip.tr_loading_time)}</td></tr>
-                    <tr><th>Un-Loading Time</th><td>{format_datetime(trip.tr_unloading_time)}</td></tr>
-                    <tr><th>Reported Location</th><td>{trip.tr_reportedlocation}</td></tr>
+                    <tr><th>Destination</th><td>{trip.tr_reportedlocation}</td></tr>
                     <tr><th>Reported KM</th><td>{trip.tr_reportedkm}</td></tr>
                     <tr><th>Reported Date</th><td>{format_datetime(trip.tr_reporteddate)}</td></tr>
-                    <tr><th>Trip Status</th><td>{trip.tc_financestatus}</td></tr>
-                    <tr><th>POD Number</th><td>{trip.tc_pod}</td></tr>
-                    <tr><th>Updated By</th><td>{trip.tr_updated_by}</td></tr>
+                
                     <tr>
                         <th>Remarks</th>
                         <td class="remarks">

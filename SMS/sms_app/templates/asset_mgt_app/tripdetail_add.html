@@ -106,14 +106,14 @@
 
 										{% for item in consignment_list %}
 										<option value="{{ item.id }}"
-											{% if trip_instance and trip_instance.tr_consignmentnumber_id == item.id %}
+												{% if trip_instance and trip_instance.tr_consignmentnumber_id == item.id %}
 												selected
-											{% elif request.POST.tr_consignmentnumber|default_if_none:'' == item.id|stringformat:'s' %}
-												selected
-											{% endif %}
+												{% elif request.POST.tr_consignmentnumber|default_if_none:'' == item.id|stringformat:'s' %}
+										selected
+										{% endif %}
 										>
-											{{ item.co_consignmentnumber }}
-											{% if item.co_vehicelnumber %} ({{ item.co_vehicelnumber }}){% endif %}
+										{{ item.co_consignmentnumber }}
+										{% if item.co_vehicelnumber %} ({{ item.co_vehicelnumber }}){% endif %}
 										</option>
 										{% endfor %}
 
@@ -169,8 +169,6 @@
 									</div>
 									{% render_field trip_det_form.tr_driver_lic id="tr_driver_lic" class="form-control disable_a_href" %}
 								</div>
-							</div>
-							<div class="  col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Category</span>
@@ -181,70 +179,132 @@
 									{% render_field trip_det_form.tr_category id="tr_category" class="form-control" onchange="trip_type()" %}
 									{% endif %}
 								</div>
+
+							</div>
+							<div class="  col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+								<!-- ✅ HEADING -->
+								<div class="text-center font-weight-bold text-white bg-info p-1 rounded mb-2">
+									Loading Details
+								</div>
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Departed Location</span>
+										<span class="input-group-text">From Location</span>
 									</div>
 									{% render_field trip_det_form.tr_departedlocation id="tr_departedlocation" class="form-control" %}
 								</div>
-								<div class="input-group input-group-sm m-1">
+								<div class="input-group input-group-sm m-1 empty-field">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Departed KM</span>
+										<span class="input-group-text">Vehicle Reported Date & Time </span>
+									</div>
+									{% render_field trip_det_form.tr_departeddate_pickup id="tr_departeddate_pickup" type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm m-1 empty-field">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Reported KM</span>
 									</div>
 									{% render_field trip_det_form.tr_departedkm id="tr_departedkm" class="form-control" %}
 								</div>
+
+								<div class="input-group input-group-sm m-1 empty-field">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dock in Time</span>
+									</div>
+									{% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm m-1 empty-field">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dock out Time</span>
+									</div>
+									{% render_field trip_det_form.tr_dock_in_time id="tr_dock_in_time" type="Datetime-local" class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Departed Date</span>
+										<span class="input-group-text">Vehicle started Date & Time</span>
 									</div>
 									{% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="Datetime-local" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Loading Time</span>
+										<span class="input-group-text">Vehicle Started KM</span>
 									</div>
-									{% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="Datetime-local" class="form-control" %}
+									{% render_field trip_det_form.tr_reportedkm_pickup id="tr_reportedkm_pickup" class="form-control" %}
 								</div>
+
 							</div>
 							<div class="col-12 col-md-6 col-lg-3  shadow bg-white rounded border p-2">
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Un-Loading Time</span>
-									</div>
-									{% render_field trip_det_form.tr_unloading_time id="tr_unloading_time" type="Datetime-local" class="form-control" %}
+								<!-- ✅ HEADING -->
+								<div class="text-center font-weight-bold text-white bg-info p-1 rounded mb-2">
+									Unloading Details
 								</div>
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Reported Location</span>
+										<span class="input-group-text">To Location</span>
 									</div>
 									{% render_field trip_det_form.tr_reportedlocation id="tr_reportedlocation" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Reported KM</span>
-									</div>
-									{% render_field trip_det_form.tr_reportedkm id="tr_reportedkm" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Reported Date</span>
+										<span class="input-group-text">Vehicle Reported Date & Time</span>
 									</div>
 									{% render_field trip_det_form.tr_reporteddate id="tr_reporteddate" type="Datetime-local" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Goods High Value Check </span>
+										<span class="input-group-text">Vehicle Reported KM</span>
+									</div>
+									{% render_field trip_det_form.tr_reportedkm id="tr_reportedkm" class="form-control" %}
+								</div>
+
+								<div class="input-group input-group-sm m-1 empty-field">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dock-In Time</span>
+									</div>
+									{% render_field trip_det_form.tr_departeddate_delivery id="tr_departeddate_delivery" type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm m-1 empty-field">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dock-Out Time</span>
+									</div>
+									{% render_field trip_det_form.tr_unloading_time id="tr_unloading_time" type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm m-1 empty-field">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Started Date & Time</span>
+									</div>
+									{% render_field trip_det_form.tr_reporteddate_pickup id="tr_reporteddate_pickup" type="Datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm m-1 empty-field">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Started KM</span>
+									</div>
+									{% render_field trip_det_form.tr_reportedkm_delivery id="tr_reportedkm_delivery" class="form-control" %}
+								</div>
+							</div>
+						</div>  <!-- ✅ CLOSE THE 4 COLUMN ROW HERE -->
+
+						<!-- ✅ NEW ROW FOR GOODS HIGH VALUE + TRIP STATUS -->
+						<div class="row mt-2">
+
+							<!-- Goods High Value -->
+							<div class="col-12 col-md-6">
+								<div class="input-group input-group-sm m-1">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Goods High Value Check</span>
 									</div>
 									{% render_field trip_det_form.tr_high_value id="tr_high_value" class="form-control" %}
 								</div>
+
 								{% render_field trip_det_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
 								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
+							</div>
+
+							<!-- Trip Status -->
+							<div class="col-12 col-md-6">
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Status</span>
 									</div>
 									<select name="tc_financestatus" id="tc_financestatus" class="form-control">
-
 										{% for item in status_list %}
 										<option value="{{ item.id }}"
 												{% if item.id == status_selected %}
@@ -258,63 +318,93 @@
 									</select>
 								</div>
 							</div>
-							<div class="input-group input-group-sm mb-3 container-fluid">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Remarks</span>
-								</div>
-								{% render_field trip_det_form.tr_remarks class="form-control" style="height: 60px;" %}
-							</div>
-							<div class="container-fluid col-12 col-lg-5 p-3 bg-dark mb-2 mt-2 rounded-sm text-white">
-								<div class="input-group input-group-sm mb-3 bg-dark block">
+
+						</div>
+
+						<!-- ✅ Remarks Full Width -->
+						<div class="row">
+							<div class="col-12">
+								<div class="input-group input-group-sm mb-2 container-fluid">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Attachment</span>
+										<span class="input-group-text">Remarks</span>
 									</div>
-									{% render_field trip_det_form.tc_pod_attachment id="tc_pod_attachment" class="form-control disable_a_href" %}
+									{% render_field trip_det_form.tr_remarks class="form-control" style="height: 60px;" %}
 								</div>
 							</div>
-							<div class="container-fluid col-12 col-lg-5 p-3 bg-dark mb-2 mt-2 rounded-sm text-white">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice Number</span>
+						</div>
+
+						<!-- ✅ NEW ROW FOR ATTACHMENT + INVOICE -->
+						<div class="row mt-2 justify-content-center">
+
+							<!-- Attachment -->
+							<div class="col-12 col-lg-5">
+								<div class="p-3 bg-dark rounded-sm text-white mb-2">
+									<div class="input-group input-group-sm">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Attachment</span>
+										</div>
+										{% render_field trip_det_form.tc_pod_attachment id="tc_pod_attachment" class="form-control disable_a_href" %}
 									</div>
-									{% render_field trip_det_form.tc_pod id="tc_pod" class="form-control disable_a_href" %}
 								</div>
 							</div>
-							<div class="container-fluid col-12 col-lg-5 p-3 bg-dark mb-2 mt-2 rounded-sm text-white">
+
+							<!-- Invoice -->
+							<div class="col-12 col-lg-5">
+								<div class="p-3 bg-dark rounded-sm text-white mb-2">
+									<div class="input-group input-group-sm">
+										<div class="input-group-prepend">
+											<span class="input-group-text">Invoice Number</span>
+										</div>
+										{% render_field trip_det_form.tc_pod id="tc_pod" class="form-control disable_a_href" %}
+									</div>
+								</div>
+							</div>
+
+						</div>
+
+						<!-- ✅ POD Signature Center -->
+						<div class="row mt-2 justify-content-center">
+							<div class="col-12 col-lg-6">
+								<div class="p-3 bg-dark rounded-sm text-white mb-2 text-center">
+
 									<button type="button" class="btn btn-primary btn-sm mb-2"
 											data-toggle="modal" data-target="#podSignatureModal"
 											id="pod-sign-btn" disabled>
 										POD Signature
 									</button>
 
-									<div id="pod-signature-preview" class="mt-2" style="background-color: white; padding: 5px; border-radius: 4px;">
+									<div id="pod-signature-preview" class="mt-2"
+										 style="background-color: white; padding: 5px; border-radius: 4px;">
 										{% if trip_det_form.instance.td_pod %}
-										<img src="{{ trip_det_form.instance.td_pod.url }}" alt="POD Signature" class="img-fluid" style="max-height: 100px;">
+										<img src="{{ trip_det_form.instance.td_pod.url }}"
+											 alt="POD Signature" class="img-fluid"
+											 style="max-height: 100px;">
 										{% endif %}
 									</div>
 
 									<input type="hidden" name="pod_signature_data" id="pod-signature-data">
 								</div>
-
-								<!-- POD Signature Modal -->
-<div class="modal fade" id="podSignatureModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered"> <!-- Centered vertically -->
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title text-dark">POD Signature</h5>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-            </div>
-            <div class="modal-body d-flex justify-content-center"> <!-- Center canvas horizontally -->
-                <canvas id="pod-pad" width="800" height="300" style="border:1px solid #ccc; max-width:100%;"></canvas>
-            </div>
-            <div class="modal-footer d-flex justify-content-between">
-                <button type="button" id="clear-pod" class="btn btn-warning btn-sm">Clear</button>
-                <button type="button" id="save-pod" class="btn btn-success btn-sm">Save</button>
-            </div>
-        </div>
-    </div>
-</div>
 							</div>
+
+							<!-- POD Signature Modal -->
+							<div class="modal fade" id="podSignatureModal" tabindex="-1">
+								<div class="modal-dialog modal-lg modal-dialog-centered"> <!-- Centered vertically -->
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title text-dark">POD Signature</h5>
+											<button type="button" class="close" data-dismiss="modal">&times;</button>
+										</div>
+										<div class="modal-body d-flex justify-content-center"> <!-- Center canvas horizontally -->
+											<canvas id="pod-pad" width="800" height="300" style="border:1px solid #ccc; max-width:100%;"></canvas>
+										</div>
+										<div class="modal-footer d-flex justify-content-between">
+											<button type="button" id="clear-pod" class="btn btn-warning btn-sm">Clear</button>
+											<button type="button" id="save-pod" class="btn btn-success btn-sm">Save</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
 
 						<div class="row">
 							<div class="col-1"></div>
@@ -327,10 +417,21 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
-						<button id="tripdetail_submit_id" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
+						<div class="d-flex justify-content-between align-items-center mt-3">
+							<div>
+								<button id="tripdetail_submit_id" type="submit" name="submit_action" value="save"
+										class="btn btn-success mr-2">
+									<i class="fas fa-check"></i> Submit
+								</button>
+								<button type="submit" name="submit_action" value="save_and_email" class="btn btn-info">
+									<i class="fas fa-envelope"></i> Submit & Email
+								</button>
+
+							</div>
+							<a href="{% url 'enquirynote_list' %}" class="btn btn-danger">
+								<i class="fas fa-times"></i> Cancel
+							</a>
+						</div>
 					</form>
 				</div>
 			</div>
@@ -569,6 +670,29 @@ document.addEventListener("DOMContentLoaded", function() {
     trip_type();
 });
 </script>
+<script>
+function hideEmptyFields() {
+    let categoryValue = document.getElementById("tr_category").value;
+
+    // ✅ EMPTY = category 2 or 3
+    if (categoryValue === "2" || categoryValue === "3") {
+        $(".empty-field").hide();   // ✅ Hide unwanted fields
+    } else {
+        $(".empty-field").show();   // ✅ Show all for normal trip
+    }
+}
+
+// ✅ Trigger when category changes
+$("#tr_category").on("change", function () {
+    hideEmptyFields();
+});
+
+// ✅ Trigger on page load
+$(document).ready(function () {
+    hideEmptyFields();
+});
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
 <script>
 	const podPad = new SignaturePad(document.getElementById('pod-pad'));
@@ -587,61 +711,76 @@ document.addEventListener("DOMContentLoaded", function() {
     };
 </script>
 <script>
-$(document).ready(function () {
-    function loadEnquiryLocations() {
-        var enquiry_number = $("#tr_enquirynumber").val();   // Enquiry number (ID)
-        var trip_category = $("#tr_category").val();          // Trip category (1 = Normal, 2 = Special)
+	$(document).ready(function () {
+        function loadEnquiryLocations() {
+            var enquiry_number = $("#tr_enquirynumber").val();   // Enquiry number (ID)
+            var trip_category = $("#tr_category").val();          // Trip category (1 = Normal, 2 = Special)
 
-        console.log("Triggered fetch. Enquiry:", enquiry_number, "| Category:", trip_category);
+            console.log("Triggered fetch. Enquiry:", enquiry_number, "| Category:", trip_category);
 
-        // 🔸 Skip fetching if category = 2 or 3
-        if (trip_category == "2" || trip_category == "3") {
-            console.log("Trip Category is 2 or 3 — Skipping location autofill.");
-            return;
-        }
+            // 🔸 Skip fetching if category = 2 or 3
+            if (trip_category == "2" || trip_category == "3") {
+                console.log("Trip Category is 2 or 3 — Skipping location autofill.");
+                return;
+            }
 
-        if (enquiry_number) {
-            $.ajax({
-                url: '/SMS/fetch_enquiry_locations/',   // Update path if needed
-                type: 'GET',
-                data: { 'enquiry_number': enquiry_number },
-                dataType: 'json',
-                success: function (data) {
-                    console.log("Response received:", data);
+            if (enquiry_number) {
+                $.ajax({
+                    url: '/SMS/fetch_enquiry_locations/',   // Update path if needed
+                    type: 'GET',
+                    data: { 'enquiry_number': enquiry_number },
+                    dataType: 'json',
+                    success: function (data) {
+                        console.log("Response received:", data);
 
-                    if (data.error) {
-                        alert(data.error);
-                    } else {
-                        // ✅ Fill only if category is normal
-                        $("#tr_departedlocation").val(data.from_location_id).trigger('change');
-                        $("#tr_reportedlocation").val(data.to_location_id).trigger('change');
-                        console.log("From Location:", data.from_location_id, "| To Location:", data.to_location_id);
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            // ✅ Fill only if category is normal
+                            $("#tr_departedlocation").val(data.from_location_id).trigger('change');
+                            $("#tr_reportedlocation").val(data.to_location_id).trigger('change');
+                            console.log("From Location:", data.from_location_id, "| To Location:", data.to_location_id);
+                        }
+                    },
+                    error: function () {
+                        alert("Failed to load enquiry locations.");
                     }
-                },
-                error: function () {
-                    alert("Failed to load enquiry locations.");
-                }
-            });
+                });
+            }
         }
-    }
 
-    // 🔹 Fetch when enquiry number changes
-    $("#tr_enquirynumber").change(loadEnquiryLocations);
+        // 🔹 Fetch when enquiry number changes
+        $("#tr_enquirynumber").change(loadEnquiryLocations);
 
-    // 🔹 Also fetch automatically when page loads
-    loadEnquiryLocations();
-});
+        // 🔹 Also fetch automatically when page loads
+        loadEnquiryLocations();
+    });
 </script>
+<script>
+	$(document).ready(function () {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.get("open_email") === "1") {
+            $("#sendEmailModal").modal("show");
+
+            // ✅ Remove open_email from URL after modal opens
+            urlParams.delete("open_email");
+            const newUrl = window.location.pathname + (urlParams.toString() ? "?" + urlParams.toString() : "");
+            window.history.replaceState({}, document.title, newUrl);
+        }
+    });
+</script>
+
 
 {% block scripts %}
 <script>
-$(document).ready(function() {
-    $("#tr_departedlocation, #tr_reportedlocation").select2({
-        width: 'resolve',
-        placeholder: "-- Select --",
-        allowClear: true
+	$(document).ready(function() {
+        $("#tr_departedlocation, #tr_reportedlocation").select2({
+            width: 'resolve',
+            placeholder: "-- Select --",
+            allowClear: true
+        });
     });
-});
 
 </script>
 
