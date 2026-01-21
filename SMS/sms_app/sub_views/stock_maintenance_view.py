@@ -10,7 +10,7 @@ def get_stock_totals():
     totals = StockMaintenance.objects.aggregate(
         total_count=Sum('sm_count'),
         total_cft=Sum('sm_total_cft'),
-        total_cost=Sum('sm_total_wood_price'),
+        total_cost=Sum('sm_total_price'),
     )
     return {
         'total_count': totals['total_count'] or 0,
@@ -131,7 +131,7 @@ def get_part_details(request):
             part_totals = StockMaintenance.objects.filter(sm_partcode=part).aggregate(
                 total_count=Sum('sm_count'),
                 total_cft=Sum('sm_total_cft'),
-                total_cost=Sum('sm_total_wood_price')
+                total_cost=Sum('sm_total_price')
             )
 
             data = {

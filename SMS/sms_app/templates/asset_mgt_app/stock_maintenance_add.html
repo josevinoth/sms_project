@@ -64,7 +64,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Stock Type</span>
                             </div>
-                            {% render_field form.sm_stock_type class="form-control" %}
+                            {% render_field form.sm_stock_type id="id_sm_stock_type" class="form-control" %}
                         </div>
 
                         <!-- Invoice Date -->
@@ -118,29 +118,31 @@
                     <div class="col-6">
 
                         <!-- Dimensions Row -->
-                        <div class="row">
-                            <div class="col-4">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Thick</span>
+                        <div id="dimensions_group">
+                            <div class="row">
+                                <div class="col-4">
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text" id="label_sm_thickness">Thick</span>
+                                        </div>
+                                        {% render_field form.sm_thickness id="id_sm_thickness" class="form-control disable_a_href" readonly="readonly" %}
                                     </div>
-                                    {% render_field form.sm_thickness id="id_sm_thickness" class="form-control disable_a_href" readonly="readonly" %}
                                 </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Width</span>
+                                <div class="col-4">
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text" id="label_sm_width">Width</span>
+                                        </div>
+                                        {% render_field form.sm_width id="id_sm_width" class="form-control disable_a_href" readonly="readonly" %}
                                     </div>
-                                    {% render_field form.sm_width id="id_sm_width" class="form-control disable_a_href" readonly="readonly" %}
                                 </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Length</span>
+                                <div class="col-4">
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text" id="label_sm_length">Length</span>
+                                        </div>
+                                        {% render_field form.sm_length id="id_sm_length" class="form-control disable_a_href" readonly="readonly" %}
                                     </div>
-                                    {% render_field form.sm_length id="id_sm_length" class="form-control disable_a_href" readonly="readonly" %}
                                 </div>
                             </div>
                         </div>
@@ -148,41 +150,43 @@
                         <!-- Count -->
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text">Count</span>
+                                <span class="input-group-text" id="label_sm_count">Count</span>
                             </div>
                             {% render_field form.sm_count id="id_sm_count" class="form-control" %}
                         </div>
 
-                        <!-- CFT (Calculated) -->
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">CFT</span>
+                        <div id="cft_sqft_group">
+                            <!-- CFT (Calculated) -->
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="label_sm_cft">CFT</span>
+                                </div>
+                                {% render_field form.sm_cft id="id_sm_cft" class="form-control disable_a_href" readonly="readonly" %}
                             </div>
-                            {% render_field form.sm_cft id="id_sm_cft" class="form-control disable_a_href" readonly="readonly" %}
-                        </div>
 
-                        <!-- Total CFT -->
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Total CFT</span>
+                            <!-- Total CFT -->
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="label_sm_total_cft">Total CFT</span>
+                                </div>
+                                {% render_field form.sm_total_cft id="id_sm_total_cft" class="form-control" %}
                             </div>
-                            {% render_field form.sm_total_cft class="form-control" %}
                         </div>
 
                         <!-- Per Unit Cost -->
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text">Per Unit Cost</span>
+                                <span class="input-group-text" id="label_sm_per_unit_cost">Per Unit Cost</span>
                             </div>
-                            {% render_field form.sm_per_unit_cost class="form-control" %}
+                            {% render_field form.sm_per_unit_cost id="id_sm_per_unit_cost" class="form-control" %}
                         </div>
 
                         <!-- Total Wood Price (Calculated) -->
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text">Total Wood Price</span>
+                                <span class="input-group-text" id="label_sm_total_price">Total Price</span>
                             </div>
-                            {% render_field form.sm_total_wood_price id="id_sm_total_wood_price" class="form-control disable_a_href" readonly="readonly" %}
+                            {% render_field form.sm_total_price id="id_sm_total_price" class="form-control disable_a_href" readonly="readonly" %}
                         </div>
                     </div>
                 </div>
@@ -238,7 +242,7 @@
                         <th>CFT</th>
                         <th>Total CFT</th>
                         <!-- <th>Per Unit Cost</th> -->
-                        <th>Total Wood Price</th>
+                        <th>Total Price</th>
                         <th>Created At</th>
                         <th>Edit</th>
                         <th>Delete</th>
@@ -261,7 +265,7 @@
                         <td>{{ item.sm_cft }}</td>
                         <td>{{ item.sm_total_cft }}</td>
                         <!-- <td>{{ item.sm_per_unit_cost }}</td> -->
-                        <td>{{ item.sm_total_wood_price }}</td>
+                        <td>{{ item.sm_total_price }}</td>
                         <td>{{ item.sm_created_at|date:"d-m-Y" }}</td>
 
                         <!-- EDIT -->
@@ -302,7 +306,7 @@
         });
 
         // Calculation Events
-        $jq('#id_sm_count, #id_sm_length, #id_sm_width, #id_sm_thickness')
+        $jq('#id_sm_count, #id_sm_length, #id_sm_width, #id_sm_thickness, #id_sm_stock_type')
             .on('input change', calculate);
 
         $jq('#id_sm_per_unit_cost')
@@ -376,50 +380,108 @@
             });
         }
 
-      function calculate() {
-    var len   = parseFloat($jq('#id_sm_length').val()) || 0;
-    var wid   = parseFloat($jq('#id_sm_width').val()) || 0;
-    var thk   = parseFloat($jq('#id_sm_thickness').val()) || 0;
-    var count = parseFloat($jq('#id_sm_count').val()) || 0;
-    var rate  = parseFloat($jq('#id_sm_per_unit_cost').val()) || 0;
+        function calculate() {
+            var len = parseFloat($jq('#id_sm_length').val()) || 0;
+            var wid = parseFloat($jq('#id_sm_width').val()) || 0;
+            var thk = parseFloat($jq('#id_sm_thickness').val()) || 0;
+            var count = parseFloat($jq('#id_sm_count').val()) || 0;
+            var rate = parseFloat($jq('#id_sm_per_unit_cost').val()) || 0;
 
-    // Detect stock type text (used to differentiate Plywood)
-    var stockTypeText = $jq('#id_sm_stock_type option:selected').text().toLowerCase();
+            // Detect stock type text and description
+            var stockTypeText = ($jq('#id_sm_stock_type option:selected').text() || "").toLowerCase();
+            var descriptionText = ($jq('#id_sm_description').val() || "").toLowerCase();
+            var stockTypeVal = $jq('#id_sm_stock_type').val();
 
-    var cft_or_sqft = 0;
+            /* ==========================================================
+               DRY-RUN DETECTION (Inspired by Reference Script)
+               Plywood and certain Consumables use SQFT logic.
+               ========================================================== */
+            var isPlywood = /plywood/i.test(stockTypeText) || /plywood/i.test(descriptionText);
+            var isConsumable = /consumable/i.test(stockTypeText);
 
-    /* ===============================
-       🟦 PLYWOOD → SQFT FORMULA
-       Length × Width × Count
-       =============================== */
-    if (stockTypeText.includes('plywood')) {
+            // Reference script checks for specific prefixes in consumables (Alu, VC, Air, Foam, etc.)
+            var descPrefixMatch = /^(alu|vc|air|foam|strech|desiccant|tar)/i.test(descriptionText);
 
-        cft_or_sqft = len * wid * count;
+            var isWood = (/wood/i.test(stockTypeText) || /wood/i.test(descriptionText)) && !isPlywood;
 
-        $jq('#id_sm_cft').val((len * wid).toFixed(4));   // per unit sqft
-        $jq('#id_sm_total_cft').val(cft_or_sqft.toFixed(4));
+            // Reference script uses IDs 4, 6 for SQFT logic, and 1, 5 for CFT
+            var useSqft = isPlywood || ((isConsumable || descPrefixMatch || stockTypeVal == '4' || stockTypeVal == '6') && !isWood);
 
-    }
-    /* ===============================
-       🟫 WOOD → CFT FORMULA
-       Thickness × Length × Width × Count / 144
-       =============================== */
-    else {
+            // IF OTHER THAN WOOD AND PLYWOOD
+            var isOther = !isWood && !isPlywood;
 
-        cft_or_sqft = (thk * len * wid * count) / 144;
+            // --- Dynamic Label Switching (Synced with Excel Tabs / User Feedback) ---
+            var $lblCount = $jq('#label_sm_count');
+            var $lblPrice = $jq('#label_sm_total_price');
+            var $lblCost = $jq('#label_sm_per_unit_cost');
+            var $lblThick = $jq('#label_sm_thickness');
+            var $lblWidth = $jq('#label_sm_width');
+            var $lblLength = $jq('#label_sm_length');
+            var $lblUnitCft = $jq('#label_sm_cft');
+            var $lblTotalCft = $jq('#label_sm_total_cft');
 
-        var perUnitCft = (thk * len * wid) / 144;
+            if (isOther) {
+                // Consumables (Other)
+                $lblCount.text('Qty');
+                $lblCost.text('Per Unit Cost'); // User screenshot showed "Per Unit Wood Cost", but "wood" doesn't belong here
+                $lblPrice.text('Total Price');  // User requested "Total Price" instead of "Total Wood Price"
+            } else if (isPlywood) {
+                // Plywood
+                $lblCount.text('Count');
+                $lblCost.text('Per Unit Cost');
+                $lblPrice.text('Total Plywood Price');
+                $lblUnitCft.text('SQFT');
+                $lblTotalCft.text('Total SQFT');
+            } else {
+                // Wood (Default)
+                $lblThick.text('Thickness (In)');
+                $lblWidth.text('Width (In)');
+                $lblLength.text('Length (Feet)');
+                $lblCount.text('Count');
+                $lblCost.text('Per Unit Wood Cost');
+                $lblPrice.text('Total Wood Price');
+                $lblUnitCft.text('CFT');
+                $lblTotalCft.text('Total CFT');
+            }
 
-        $jq('#id_sm_cft').val(perUnitCft.toFixed(4));
-        $jq('#id_sm_total_cft').val(cft_or_sqft.toFixed(4));
-    }
+            // --- Consumable/Other Visibility & Editability Logic ---
+            if (isOther) {
+                $jq('#dimensions_group').hide();
+                $jq('#cft_sqft_group').hide();
+                $jq('#id_sm_total_price').removeAttr('readonly').removeClass('disable_a_href');
+            } else {
+                $jq('#dimensions_group').show();
+                $jq('#cft_sqft_group').show();
+                $jq('#id_sm_total_price').attr('readonly', 'readonly').addClass('disable_a_href');
+            }
 
-    /* ===============================
-       💰 TOTAL WOOD PRICE
-       =============================== */
-    var totalPrice = cft_or_sqft * rate;
-    $jq('#id_sm_total_wood_price').val(totalPrice.toFixed(2));
-}
+            var result_val = 0;
+
+            if (isOther) {
+                // For Consumables: Amount = Qty * Rate
+                result_val = count;
+                var totalPrice = count * rate;
+                $jq('#id_sm_total_price').val(totalPrice.toFixed(2));
+                return;
+            }
+
+            if (useSqft) {
+                // 🟦 SQFT FORMULA (Plywood)
+                result_val = len * wid * count;
+                $jq('#id_sm_cft').val((len * wid).toFixed(4));
+                $jq('#id_sm_total_cft').val(result_val.toFixed(4));
+            } else {
+                // 🟫 CFT FORMULA (Wood)
+                result_val = (thk * len * wid * count) / 144;
+                var perUnitCft = (thk * len * wid) / 144;
+                $jq('#id_sm_cft').val(perUnitCft.toFixed(4));
+                $jq('#id_sm_total_cft').val(result_val.toFixed(4));
+            }
+
+            // Total Price calculation
+            var totalPrice = result_val * rate;
+            $jq('#id_sm_total_price').val(totalPrice.toFixed(2));
+        }
 
 
 
@@ -464,13 +526,4 @@
 
 </script>
 
-<script>
-
-    if (stockTypeText.includes('plywood')) {
-    $('.input-group-text:contains("CFT")').text('SQFT');
-} else {
-    $('.input-group-text:contains("SQFT")').text('CFT');
-}
-
-</script>
 {% endblock content %}
