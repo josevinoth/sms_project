@@ -40,11 +40,130 @@ def gatemeeting_add(request,gate_meet_id=0):
             gatemeet = Gatemeetinginfo.objects.get(pk=gate_meet_id)
             form = GatemeetingaddForm(request.POST, instance=gatemeet)
         if form.is_valid():
-            form.save()
+            saved_instance = form.save()
+            
+            # Check if "Submit and Email" button was clicked
+            submit_action = request.POST.get('submit_action', 'save')
+            
             if gate_meet_id == 0:
                 messages.success(request, 'Record Saved Successfully')
+                # For new records, store the ID for email sending
+                if submit_action == 'save_and_email':
+                    request.session['ses_gate_meet_id'] = saved_instance.pk
             else:
                 messages.success(request, 'Record Updated Successfully')
+            
+            # If "Submit and Email" was clicked, send the email
+            if submit_action == 'save_and_email':
+                # Send email logic
+                gate = saved_instance if gate_meet_id == 0 else Gatemeetinginfo.objects.get(pk=gate_meet_id)
+                gate_meet_email_count = gate.gm_email_count
+
+                recipient_list = [
+                    'd.udhayakumar16@gmail.com','prem@bvmtranssolutions.com','Deepa@thebvmgroup.com','niranjankumar@bvmstorage.com','vinoth@bvmstorage.com','vivek@bvmstorage.com','gulsan@bvmstorage.com'
+                ]
+
+                subject = f"Gate Meeting {gate.gm_branch} - Update"
+
+                email_body = f""" 
+                    <html>
+                        <head>
+                            <style>
+                                table {{
+                                    width: 80%;
+                                    border-collapse: collapse;
+                                    font-family: Arial, sans-serif;
+                                    font-size: 14px;
+                                    border: 1px solid black;
+                                    margin-top: 10px;
+                                }}
+                                th, td {{
+                                    border: 1px solid black;
+                                    padding: 8px;
+                                    text-align: left;
+                                }}
+                                th {{
+                                    background-color: #dff0d8;
+                                    color: #333;
+                                }}
+                                td {{
+                                    vertical-align: top;
+                                }}
+                                .remarks {{
+                                    color: #d9534f;
+                                    font-weight: bold;
+                                }}
+                            </style>
+                        </head>
+                        <body>
+                            <p>Dear Team,</p>
+                            <p>Please find below the Gate Meeting details:</p>
+
+                            <table>
+                                <tr><th>Location</th><td>{gate.gm_branch}</td></tr>
+                                <tr><th>Unit Reference</th><td>{gate.gm_unit}</td></tr>
+                                <tr><th>Date</th><td>{gate.gm_date}</td></tr>
+                            </table>
+
+                            <br>
+
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Points to Discuss</th>
+                                        <th>Yes / No</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><th>Previous night security monitoring</th><td>{gate.gm_Previous_night_security}</td><td>{gate.gm_Previous_night_security_remark}</td></tr>
+                                    <tr><th>Any incident of previous day reported to management</th><td>{gate.gm_Any_incident_of_previous_day}</td><td>{gate.gm_Any_incident_of_previous_day_remark}</td></tr>
+                                    <tr><th>Previous day WH closing checklist </th><td>{gate.gm_Previous_day_WH_closing_checklist}</td><td></td></tr>
+                                    <tr><th>Current day WH opening checklist</th><td>{gate.gm_Current_day_WH_opening_checklist}</td><td></td></tr>
+                                    <tr><th>WMS updation - 100% till yesterday </th><td>{gate.gm_WMS_updation_till_yesterday}</td><td></td></tr>
+                                    <tr><th>DSR sent to all customers - yesterday</th><td>{gate.gm_DSR_sent_to_all_customers_yesterday}</td><td></td></tr>
+                                    <tr><th>Stock more than 3 days and 5 days informed to Customer</th><td>{gate.gm_Stock_informed_to_Customer}</td><td></td></tr>
+                                    <tr><th>Pre-alerts shared with customers - 100% for all inbound and outbound</th><td>{gate.gm_Pre_alerts_customers_inbound_outbound}</td><td></td></tr>
+                                    <tr><th>Acknowledgement for Inbound provided and documents scanned </th><td>{gate.gm_Inbound_documents_scanned}</td><td></td></tr>
+                                    <tr><th>Acknowledgement for Outbound received and documents scanned</th><td>{gate.gm_Outbound_documents_scanned}</td><td></td></tr>
+                                    <tr><th>Cleanliness of warehouse </th><td>{gate.gm_Cleanliness_of_warehouse}</td><td></td></tr>
+                                    <tr><th>Facility walk around - as per checklist provided</th><td>{gate.gm_Facility_checklist_provided}</td><td></td></tr>
+                                    <tr><th>Space Issues - if any</th><td>{gate.gm_Space_issues}</td><td>{gate.gm_Space_issues_remark}</td></tr>
+                                    <tr><th>HPTE condition</th><td>{gate.gm_HPTE_condition}</td><td></td></tr>
+                                    <tr><th>Fork Lift check </th><td>{gate.gm_Fork_Lift_check}</td><td></td></tr>
+                                    <tr><th>Weightment scale condition</th><td>{gate.gm_Weight_scale_condition}</td><td></td></tr>
+                                    <tr><th>Fire Extinguisher</th><td>{gate.gm_Fire_Extinguisher}</td><td></td></tr>
+                                    <tr><th>CCTV condition</th><td>{gate.gm_CCTV_condition}</td><td></td></tr>
+                                    <tr><th>Lights condition</th><td>{gate.gm_Lights_condition}</td><td></td></tr>
+                                    <tr><th>UPS Invertor condition</th><td>{gate.gm_UPS_invertor_condition}</td><td></td></tr>
+                                    <tr><th>Genset condition</th><td>{gate.gm_Genset_condition}</td><td></td></tr>
+                                    <tr><th>Stock of Diesel for Genset as per Minimum order level </th><td>{gate.gm_Stock_of_Diesel_Genset}</td><td></td></tr>
+                                    <tr><th>Security Attendance</th><td>{gate.gm_Security_attendance}</td><td></td></tr>
+                                    <tr><th>Staff Attendance </th><td>{gate.gm_Staff_attendance}</td><td></td></tr>
+                                    <tr><th>Labour Attendance</th><td>{gate.gm_Labour_attendance}</td><td></td></tr>
+                                    <tr><th>Todays crucial shipment to be handled</th><td>{gate.gm_Todays_crucial_shipment_handled}</td><td>{gate.gm_Todays_crucial_shipment_handled_remark}</td></tr>
+                                    <tr><th>Yesterdays pending</th><td>{gate.gm_Yesterdays_pending}</td><td>{gate.gm_Yesterdays_pending_remark}</td></tr>
+                                    <tr><th>Customer complaints escalations received</th><td>{gate.gm_Customer_complaints_received}</td><td>{gate.gm_Customer_complaints_received_remark}</td></tr>
+                                    <tr><th>Action for today regarding Audit score improvement plan</th><td>{gate.gm_Audit_score_plan}</td><td>{gate.gm_Audit_score_plan_remark}</td></tr>
+                                    <tr><th>Floor pallets Stock Number of pallets</th><td>{gate.gm_Floor_pallets_Stock}</td><td></td></tr>
+                                    <tr><th>Any Approval from DGM pending </th><td>{gate.gm_Approval_DGM_pending}</td><td>{gate.gm_Approval_DGM_pending_remark}</td></tr>
+                                    <tr><th>Pending task to be completed today </th><td>{gate.gm_Pending_task_today}</td><td>{gate.gm_Pending_task_today_remark}</td></tr>
+                                </tbody>
+                            </table>
+
+                            <br>
+
+                            <p>Regards,<br><b>gate Meeting Admin</b></p>
+                        </body>
+                    </html>
+                """
+
+                send_department_email('itadmin', subject, email_body, recipient_list, email_type=1)
+
+                gate_meet_email_count = gate_meet_email_count + 1
+                Gatemeetinginfo.objects.filter(pk=gate.pk).update(gm_email_count=gate_meet_email_count)
+
+                messages.success(request, 'Gate Meeting email sent successfully.')
 
         else:
             messages.error(request, 'Error: Please correct the errors below.')

@@ -6,7 +6,8 @@
 <div class="d-flex justify-content-between ">
 	<form id="tripEmailForm" action="{% url 'gate_meeting_send_email' %}" method="POST">
 		{% csrf_token %}
-		<button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn"><i class="fas fa-envelope-square"></i> Send Gate Meeting Email <span class="badge badge-danger">{{gate_meet_email_count}}</span></button>
+		<button type="submit" class="btn btn-warning btn-lg" id="sendEmailBtn"><i class="fas fa-envelope-square"></i>
+			Send Gate Meeting Email <span class="badge badge-danger">{{gate_meet_email_count}}</span></button>
 	</form>
 
 </div>
@@ -23,254 +24,256 @@
 					<div class="col-6">
 						<table class="table table-bordered">
 							<thead class="thead-dark">
-							<tr>
-								<th>Points to Discuss</th>
-								<th>Yes / No</th>
-								<th>Remarks</th>
-							</tr>
+								<tr>
+									<th>Points to Discuss</th>
+									<th>Yes / No</th>
+									<th>Remarks</th>
+								</tr>
 							</thead>
 							<tbody>
-							<tr>
-								<th>Location</th>
-								<td>{% render_field form.gm_branch class="form-control" id="gm_branch" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Unit Reference</th>
-								<td>{% render_field form.gm_unit class="form-control" id="gm_unit" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Date</th>
-								<td>{% render_field form.gm_date type="date" class="form-control" id="gm_date" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Previous night security monitoring</th>
-								<td>{% render_field form.gm_Previous_night_security class="form-control" id="gm_Previous_night_security" %}</td>
-								<td>{% render_field form.gm_Previous_night_security_remark class="form-control" id="gm_Previous_night_security_remark" style="height: 30px;" %}</td>
-							</tr>
-							<!--						<tr>-->
-							<!--							<th>Previous Night Security Monitoring Remark</th>-->
-							<!--							<td>{% render_field form.gm_Previous_night_security_remark class="form-control" id="gm_Previous_night_security_remark" style="height: 30px;" %}</td>-->
-							<!--							<td></td>-->
-							<!--						</tr>-->
-							<tr>
-								<th>Any incident of previous day / reported to management</th>
-								<td>{% render_field form.gm_Any_incident_of_previous_day class="form-control" id="gm_Any_incident_of_previous_day"  %}</td>
-								<td>{% render_field form.gm_Any_incident_of_previous_day_remark class="form-control" id="gm_Any_incident_of_previous_day_remark" style="height: 30px;" %}</td>
+								<tr>
+									<th>Location</th>
+									<td>{% render_field form.gm_branch class="form-control" id="gm_branch" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Unit Reference</th>
+									<td>{% render_field form.gm_unit class="form-control" id="gm_unit" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Date</th>
+									<td>{% render_field form.gm_date type="date" class="form-control" id="gm_date" %}
+									</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Previous night security monitoring</th>
+									<td>{% render_field form.gm_Previous_night_security class="form-control" id="gm_Previous_night_security" %}</td>
+									<td>{% render_field form.gm_Previous_night_security_remark class="form-control" id="gm_Previous_night_security_remark" style="height: 30px;" %}</td>
+								</tr>
+								<!--						<tr>-->
+								<!--							<th>Previous Night Security Monitoring Remark</th>-->
+								<!--							<td>{% render_field form.gm_Previous_night_security_remark class="form-control" id="gm_Previous_night_security_remark" style="height: 30px;" %}</td>-->
+								<!--							<td></td>-->
+								<!--						</tr>-->
+								<tr>
+									<th>Any incident of previous day / reported to management</th>
+									<td>{% render_field form.gm_Any_incident_of_previous_day class="form-control" id="gm_Any_incident_of_previous_day" %}</td>
+									<td>{% render_field form.gm_Any_incident_of_previous_day_remark class="form-control" id="gm_Any_incident_of_previous_day_remark" style="height: 30px;" %}</td>
 
-							</tr>
-							<!--						<tr>-->
-							<!--							<th>Incident of Previous Day Reported Remark</th>-->
-							<!--							<td>{% render_field form.gm_Any_incident_of_previous_day_remark class="form-control" id="gm_Any_incident_of_previous_day_remark" style="height: 30px;" %}</td>-->
-							<!--							<td></td>-->
-							<!--						</tr>-->
-							<tr>
-								<th>Previous day WH closing checklist</th>
-								<td>{% render_field form.gm_Previous_day_WH_closing_checklist class="form-control" id="gm_Previous_day_WH_closing_checklist" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Current day WH opening checklist</th>
-								<td>{% render_field form.gm_Current_day_WH_opening_checklist class="form-control" id="gm_Current_day_WH_opening_checklist" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>WMS updation - 100% till yesterday</th>
-								<td>{% render_field form.gm_WMS_updation_till_yesterday class="form-control" id="gm_WMS_updation_till_yesterday" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>DSR sent to all customers - yesterday</th>
-								<td>{% render_field form.gm_DSR_sent_to_all_customers_yesterday class="form-control" id="gm_DSR_sent_to_all_customers_yesterday" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Stock more than 3 days and 5 days - informed to Customer</th>
-								<td>{% render_field form.gm_Stock_informed_to_Customer class="form-control" id="gm_Stock_informed_to_Customer" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Pre-alerts shared with customers - 100% for all inbound and outbound</th>
-								<td>{% render_field form.gm_Pre_alerts_customers_inbound_outbound class="form-control" id="gm_Pre_alerts_customers_inbound_outbound" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Acknowledgement for Inbound provided and documents scanned</th>
-								<td>{% render_field form.gm_Inbound_documents_scanned class="form-control" id="gm_Inbound_documents_scanned" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Acknowledgement for Outbound received and documents scanned</th>
-								<td>{% render_field form.gm_Outbound_documents_scanned class="form-control" id="gm_Outbound_documents_scanned" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Cleanliness of Warehouse</th>
-								<td>{% render_field form.gm_Cleanliness_of_warehouse class="form-control" id="gm_Cleanliness_of_warehouse" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Facility walk around as per checklist provided</th>
-								<td>{% render_field form.gm_Facility_checklist_provided  class="form-control" id="gm_Facility_checklist_provided"%}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Space Issues - if any</th>
-								<td>{% render_field form.gm_Space_issues class="form-control" id="gm_Space_issues"%}</td>
-								<td>{% render_field form.gm_Space_issues_remark class="form-control" id="gm_Space_issues_remark" style="height: 30px;"%}</td>
+								</tr>
+								<!--						<tr>-->
+								<!--							<th>Incident of Previous Day Reported Remark</th>-->
+								<!--							<td>{% render_field form.gm_Any_incident_of_previous_day_remark class="form-control" id="gm_Any_incident_of_previous_day_remark" style="height: 30px;" %}</td>-->
+								<!--							<td></td>-->
+								<!--						</tr>-->
+								<tr>
+									<th>Previous day WH closing checklist</th>
+									<td>{% render_field form.gm_Previous_day_WH_closing_checklist class="form-control" id="gm_Previous_day_WH_closing_checklist" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Current day WH opening checklist</th>
+									<td>{% render_field form.gm_Current_day_WH_opening_checklist class="form-control" id="gm_Current_day_WH_opening_checklist" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>WMS updation - 100% till yesterday</th>
+									<td>{% render_field form.gm_WMS_updation_till_yesterday class="form-control" id="gm_WMS_updation_till_yesterday" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>DSR sent to all customers - yesterday</th>
+									<td>{% render_field form.gm_DSR_sent_to_all_customers_yesterday class="form-control" id="gm_DSR_sent_to_all_customers_yesterday" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Stock more than 3 days and 5 days - informed to Customer</th>
+									<td>{% render_field form.gm_Stock_informed_to_Customer class="form-control" id="gm_Stock_informed_to_Customer" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Pre-alerts shared with customers - 100% for all inbound and outbound</th>
+									<td>{% render_field form.gm_Pre_alerts_customers_inbound_outbound class="form-control" id="gm_Pre_alerts_customers_inbound_outbound" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Acknowledgement for Inbound provided and documents scanned</th>
+									<td>{% render_field form.gm_Inbound_documents_scanned class="form-control" id="gm_Inbound_documents_scanned" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Acknowledgement for Outbound received and documents scanned</th>
+									<td>{% render_field form.gm_Outbound_documents_scanned class="form-control" id="gm_Outbound_documents_scanned" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Cleanliness of Warehouse</th>
+									<td>{% render_field form.gm_Cleanliness_of_warehouse class="form-control" id="gm_Cleanliness_of_warehouse" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Facility walk around as per checklist provided</th>
+									<td>{% render_field form.gm_Facility_checklist_provided class="form-control" id="gm_Facility_checklist_provided"%}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Space Issues - if any</th>
+									<td>{% render_field form.gm_Space_issues class="form-control" id="gm_Space_issues"%}
+									</td>
+									<td>{% render_field form.gm_Space_issues_remark class="form-control" id="gm_Space_issues_remark" style="height: 30px;"%}</td>
 
-							</tr>
-							<!--						<tr>-->
-							<!--							<th>Space Issues if any remark</th>-->
-							<!--							<td>{% render_field form.gm_Space_issues_remark class="form-control" id="gm_Space_issues_remark" style="height: 30px;"%}</td>-->
-							<!--							<td></td>-->
-							<!--						</tr>-->
-							<tr>
-								<th>HPTE condition</th>
-								<td>{% render_field form.gm_HPTE_condition class="form-control" id="gm_HPTE_condition"%}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Fork Lift check</th>
-								<td>{% render_field form.gm_Fork_Lift_check class="form-control" id="gm_Fork_Lift_check"%}</td>
-								<td></td>
-							</tr>
+								</tr>
+								<!--						<tr>-->
+								<!--							<th>Space Issues if any remark</th>-->
+								<!--							<td>{% render_field form.gm_Space_issues_remark class="form-control" id="gm_Space_issues_remark" style="height: 30px;"%}</td>-->
+								<!--							<td></td>-->
+								<!--						</tr>-->
+								<tr>
+									<th>HPTE condition</th>
+									<td>{% render_field form.gm_HPTE_condition class="form-control" id="gm_HPTE_condition"%}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Fork Lift check</th>
+									<td>{% render_field form.gm_Fork_Lift_check class="form-control" id="gm_Fork_Lift_check"%}</td>
+									<td></td>
+								</tr>
 							</tbody>
 						</table>
 					</div>
 					<div class="col-6">
 						<table class="table table-bordered">
 							<thead class="thead-dark">
-							<tr>
-								<th>Points to Discuss</th>
-								<th>Yes / No</th>
-								<th>Remarks</th>
-							</tr>
+								<tr>
+									<th>Points to Discuss</th>
+									<th>Yes / No</th>
+									<th>Remarks</th>
+								</tr>
 							</thead>
 							<tbody>
-							<tr>
-								<th>Weightment scale condition</th>
-								<td>{% render_field form.gm_Weight_scale_condition class="form-control" id="gm_Weight_scale_condition"%}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Fire Extinguisher</th>
-								<td>{% render_field form.gm_Fire_Extinguisher class="form-control" id="gm_Fire_Extinguisher"%}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>CCTV condition</th>
-								<td>{% render_field form.gm_CCTV_condition class="form-control" id="gm_CCTV_condition"%}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Lights condition</th>
-								<td>{% render_field form.gm_Lights_condition class="form-control" id="gm_Lights_condition" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>UPS / Invertor condition</th>
-								<td>{% render_field form.gm_UPS_invertor_condition class="form-control" id="gm_UPS_invertor_condition"%}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Genset condition</th>
-								<td>{% render_field form.gm_Genset_condition id="gm_Genset_condition" class="form-control"%}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Stock of Diesel for Genset - as per Minimum order level</th>
-								<td>{% render_field form.gm_Stock_of_Diesel_Genset id="gm_Stock_of_Diesel_Genset" class="form-control"%}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Security Attendance</th>
-								<td>{% render_field form.gm_Security_attendance class="form-control" id="gm_Security_attendance"%}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Staff Attendance</th>
-								<td>{% render_field form.gm_Staff_attendance class="form-control" id="gm_Staff_attendance" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Labour Attendance</th>
-								<td>{% render_field form.gm_Labour_attendance class="form-control" id="gm_Labour_attendance" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Today’s Crucial Shipment to be Handled</th>
-								<td>{% render_field form.gm_Todays_crucial_shipment_handled class="form-control" id="gm_Todays_crucial_shipment_handled" %}</td>
-								<td>{% render_field form.gm_Todays_crucial_shipment_handled_remark class="form-control"  id="gm_Todays_crucial_shipment_handled_remark" style="height: 30px;" %}</td>
+								<tr>
+									<th>Weightment scale condition</th>
+									<td>{% render_field form.gm_Weight_scale_condition class="form-control" id="gm_Weight_scale_condition"%}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Fire Extinguisher</th>
+									<td>{% render_field form.gm_Fire_Extinguisher class="form-control" id="gm_Fire_Extinguisher"%}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>CCTV condition</th>
+									<td>{% render_field form.gm_CCTV_condition class="form-control" id="gm_CCTV_condition"%}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Lights condition</th>
+									<td>{% render_field form.gm_Lights_condition class="form-control" id="gm_Lights_condition" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>UPS / Invertor condition</th>
+									<td>{% render_field form.gm_UPS_invertor_condition class="form-control" id="gm_UPS_invertor_condition"%}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Genset condition</th>
+									<td>{% render_field form.gm_Genset_condition id="gm_Genset_condition" class="form-control"%}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Stock of Diesel for Genset - as per Minimum order level</th>
+									<td>{% render_field form.gm_Stock_of_Diesel_Genset id="gm_Stock_of_Diesel_Genset" class="form-control"%}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Security Attendance</th>
+									<td>{% render_field form.gm_Security_attendance class="form-control" id="gm_Security_attendance"%}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Staff Attendance</th>
+									<td>{% render_field form.gm_Staff_attendance class="form-control" id="gm_Staff_attendance" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Labour Attendance</th>
+									<td>{% render_field form.gm_Labour_attendance class="form-control" id="gm_Labour_attendance" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Today’s Crucial Shipment to be Handled</th>
+									<td>{% render_field form.gm_Todays_crucial_shipment_handled class="form-control" id="gm_Todays_crucial_shipment_handled" %}</td>
+									<td>{% render_field form.gm_Todays_crucial_shipment_handled_remark class="form-control" id="gm_Todays_crucial_shipment_handled_remark" style="height: 30px;" %}</td>
 
-							</tr>
-							<!--						<tr>-->
-							<!--							<th>Today's crucial shipment to be handled remark</th>-->
-							<!--							<td>{% render_field form.gm_Todays_crucial_shipment_handled_remark class="form-control"  id="gm_Todays_crucial_shipment_handled_remark" style="height: 30px;" %}</td>-->
-							<!--							<td></td>-->
-							<!--						</tr>-->
-							<tr>
-								<th>Yesterdays pending</th>
-								<td>{% render_field form.gm_Yesterdays_pending class="form-control"id="gm_Yesterdays_pending" %}</td>
-								<td>{% render_field form.gm_Yesterdays_pending_remark class="form-control"  id="gm_Yesterdays_pending_remark" style="height: 30px;"%}</td>
+								</tr>
+								<!--						<tr>-->
+								<!--							<th>Today's crucial shipment to be handled remark</th>-->
+								<!--							<td>{% render_field form.gm_Todays_crucial_shipment_handled_remark class="form-control"  id="gm_Todays_crucial_shipment_handled_remark" style="height: 30px;" %}</td>-->
+								<!--							<td></td>-->
+								<!--						</tr>-->
+								<tr>
+									<th>Yesterdays pending</th>
+									<td>{% render_field form.gm_Yesterdays_pending class="form-control"id="gm_Yesterdays_pending" %}</td>
+									<td>{% render_field form.gm_Yesterdays_pending_remark class="form-control" id="gm_Yesterdays_pending_remark" style="height: 30px;"%}</td>
 
-							</tr>
-							<!--						<tr>-->
-							<!--							<th>Yesterdays pending remark</th>-->
-							<!--							<td>{% render_field form.gm_Yesterdays_pending_remark class="form-control"  id="gm_Yesterdays_pending_remark" style="height: 30px;"%}</td>-->
-							<!--							<td></td>-->
-							<!--						</tr>-->
-							<tr>
-								<th>Customer complaints / escalations received</th>
-								<td>{% render_field form.gm_Customer_complaints_received class="form-control" id="gm_Customer_complaints_received" %}</td>
-								<td>{% render_field form.gm_Customer_complaints_received_remark class="form-control"id="gm_Customer_complaints_received_remark" style="height: 30px;" %}</td>
+								</tr>
+								<!--						<tr>-->
+								<!--							<th>Yesterdays pending remark</th>-->
+								<!--							<td>{% render_field form.gm_Yesterdays_pending_remark class="form-control"  id="gm_Yesterdays_pending_remark" style="height: 30px;"%}</td>-->
+								<!--							<td></td>-->
+								<!--						</tr>-->
+								<tr>
+									<th>Customer complaints / escalations received</th>
+									<td>{% render_field form.gm_Customer_complaints_received class="form-control" id="gm_Customer_complaints_received" %}</td>
+									<td>{% render_field form.gm_Customer_complaints_received_remark class="form-control"id="gm_Customer_complaints_received_remark" style="height: 30px;" %}</td>
 
-							</tr>
-							<!--						<tr>-->
-							<!--							<th>Customer complaints escalations received remark</th>-->
-							<!--							<td>{% render_field form.gm_Customer_complaints_received_remark class="form-control"id="gm_Customer_complaints_received_remark" style="height: 30px;" %}</td>-->
-							<!--							<td></td>-->
-							<!--						</tr>-->
-							<tr>
-								<th>Action for today regarding Audit score improvement plan</th>
-								<td>{% render_field form.gm_Audit_score_plan class="form-control" id="gm_Audit_score_plan"%}</td>
-								<td>{% render_field form.gm_Audit_score_plan_remark class="form-control" id="gm_Audit_score_plan_remark" style="height: 30px;"%}</td>
+								</tr>
+								<!--						<tr>-->
+								<!--							<th>Customer complaints escalations received remark</th>-->
+								<!--							<td>{% render_field form.gm_Customer_complaints_received_remark class="form-control"id="gm_Customer_complaints_received_remark" style="height: 30px;" %}</td>-->
+								<!--							<td></td>-->
+								<!--						</tr>-->
+								<tr>
+									<th>Action for today regarding Audit score improvement plan</th>
+									<td>{% render_field form.gm_Audit_score_plan class="form-control" id="gm_Audit_score_plan"%}</td>
+									<td>{% render_field form.gm_Audit_score_plan_remark class="form-control" id="gm_Audit_score_plan_remark" style="height: 30px;"%}</td>
 
-							</tr>
-							<!--						<tr>-->
-							<!--							<th>Audit score improvement plan remark</th>-->
-							<!--							<td>{% render_field form.gm_Audit_score_plan_remark class="form-control" id="gm_Audit_score_plan_remark" style="height: 30px;"%}</td>-->
-							<!--							<td></td>-->
-							<!--						</tr>-->
-							<tr>
-								<th>Floor pallets Stock  - Number of pallets</th>
-								<td>{% render_field form.gm_Floor_pallets_Stock class="form-control" id="gm_Floor_pallets_Stock" %}</td>
-								<td></td>
-							</tr>
-							<tr>
-								<th>Any Approval from DGM pending</th>
-								<td>{% render_field form.gm_Approval_DGM_pending class="form-control" id="gm_Approval_DGM_pending" %}</td>
-								<td>{% render_field form.gm_Approval_DGM_pending_remark class="form-control" id="gm_Approval_DGM_pending_remark" style="height: 30px;" %}</td>
+								</tr>
+								<!--						<tr>-->
+								<!--							<th>Audit score improvement plan remark</th>-->
+								<!--							<td>{% render_field form.gm_Audit_score_plan_remark class="form-control" id="gm_Audit_score_plan_remark" style="height: 30px;"%}</td>-->
+								<!--							<td></td>-->
+								<!--						</tr>-->
+								<tr>
+									<th>Floor pallets Stock - Number of pallets</th>
+									<td>{% render_field form.gm_Floor_pallets_Stock class="form-control" id="gm_Floor_pallets_Stock" %}</td>
+									<td></td>
+								</tr>
+								<tr>
+									<th>Any Approval from DGM pending</th>
+									<td>{% render_field form.gm_Approval_DGM_pending class="form-control" id="gm_Approval_DGM_pending" %}</td>
+									<td>{% render_field form.gm_Approval_DGM_pending_remark class="form-control" id="gm_Approval_DGM_pending_remark" style="height: 30px;" %}</td>
 
-							</tr>
-							<!--						<tr>-->
-							<!--							<th>Any Approval from DGM pending remark</th>-->
-							<!--							<td>{% render_field form.gm_Approval_DGM_pending_remark class="form-control" id="gm_Approval_DGM_pending_remark" style="height: 30px;" %}</td>-->
-							<!--							<td></td>-->
-							<!--						</tr>-->
-							<tr>
-								<th>Pending task to be completed today</th>
-								<td>{% render_field form.gm_Pending_task_today class="form-control" id="gm_Pending_task_today" %}</td>
-								<td>{% render_field form.gm_Pending_task_today_remark class="form-control" id="gm_Pending_task_today_remark" style="height: 30px;"%}</td>
+								</tr>
+								<!--						<tr>-->
+								<!--							<th>Any Approval from DGM pending remark</th>-->
+								<!--							<td>{% render_field form.gm_Approval_DGM_pending_remark class="form-control" id="gm_Approval_DGM_pending_remark" style="height: 30px;" %}</td>-->
+								<!--							<td></td>-->
+								<!--						</tr>-->
+								<tr>
+									<th>Pending task to be completed today</th>
+									<td>{% render_field form.gm_Pending_task_today class="form-control" id="gm_Pending_task_today" %}</td>
+									<td>{% render_field form.gm_Pending_task_today_remark class="form-control" id="gm_Pending_task_today_remark" style="height: 30px;"%}</td>
 
-							</tr>
-							<!--						<tr>-->
-							<!--							<th>Pending task to be completed today remark</th>-->
-							<!--							<td>{% render_field form.gm_Pending_task_today_remark class="form-control" id="gm_Pending_task_today_remark" style="height: 30px;"%}</td>-->
-							<!--							<td></td>-->
-							<!--						</tr>-->
+								</tr>
+								<!--						<tr>-->
+								<!--							<th>Pending task to be completed today remark</th>-->
+								<!--							<td>{% render_field form.gm_Pending_task_today_remark class="form-control" id="gm_Pending_task_today_remark" style="height: 30px;"%}</td>-->
+								<!--							<td></td>-->
+								<!--						</tr>-->
 							</tbody>
 						</table>
 					</div>
@@ -281,7 +284,7 @@
 					<div class="col-10">
 						<div class="message text-center">
 							{% for message in messages %}
-							<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+							<a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
 							{% endfor %}
 						</div>
 					</div>
@@ -290,9 +293,16 @@
 				<!-- Submit and Cancel Buttons -->
 				<div class="text-center mt-3">
 					<div class="d-flex justify-content-between">
-						<button onclick="random()" type="submit" class="btn btn-success">
-							<i class="fas fa-check"></i> Submit
-						</button>
+						<div>
+							<button onclick="random()" type="submit" name="submit_action" value="save"
+								class="btn btn-success">
+								<i class="fas fa-check"></i> Submit
+							</button>
+							<button onclick="random()" type="submit" name="submit_action" value="save_and_email"
+								class="btn btn-primary ml-2">
+								<i class="fas fa-check"></i><i class="fas fa-envelope ml-1"></i> Submit & Email
+							</button>
+						</div>
 						<a href="{% url 'gate_meeting_list' %}" class="btn btn-danger">
 							<i class="fas fa-times"></i> Cancel
 						</a>
@@ -305,26 +315,26 @@
 
 <script>
 	$("#gm_branch").change(function () {
-       var branchId = $(this).val();
-       $.ajax({
-         url: '{% url 'load_units' %}',
-         data: {
-           'branchId': branchId,
-         },
-         success: function (data) {
-             console.log(data);
-             $('#gm_unit').removeClass('disable_a_href');
-             $("#gm_unit").empty();
-             var unit_name=JSON.parse(data)["unit_name_list"];
-             var unit_id=JSON.parse(data)["unit_id"];
-             var len = (unit_name).length;
-             $('#gm_unit').empty().append("<option value='0'>--Select--</option>");
-             for( var i = 0; i<len; i++){
-                 $("#gm_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-             }
-         }
-       });
-     });
+		var branchId = $(this).val();
+		$.ajax({
+			url: '{% url 'load_units' %}',
+			data: {
+				'branchId': branchId,
+			},
+			success: function (data) {
+				console.log(data);
+				$('#gm_unit').removeClass('disable_a_href');
+				$("#gm_unit").empty();
+				var unit_name = JSON.parse(data)["unit_name_list"];
+				var unit_id = JSON.parse(data)["unit_id"];
+				var len = (unit_name).length;
+				$('#gm_unit').empty().append("<option value='0'>--Select--</option>");
+				for (var i = 0; i < len; i++) {
+					$("#gm_unit").append("<option value='" + unit_id[i] + "'>" + unit_name[i] + "</option>");
+				}
+			}
+		});
+	});
 </script>
 
 {% endblock content %}
