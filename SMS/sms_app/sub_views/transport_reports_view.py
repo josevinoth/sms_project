@@ -38,6 +38,12 @@ DRIVERS_ADVANCE_HEADERS = [
     "SNo", "Branch", "Date", "Emp Id", "DriverName", "AdvanceDate", "Advance amount", "No of Days Due"
 ]
 
+INVOICE_PENDING_HEADERS = [
+    "SNo", "Date", "Branch", "Customer Name", "C-Note No", "C-Note Date", "Department",
+    "Trip Code", "Vehicle No", "Vehicle Type", "Vehicle Source", "Trip Start Date",
+    "Settlement Date", "Reference No", "Billing Amount", "Invoice Status", "Remarks"
+]
+
 # -------------------------
 # HELPERS
 # -------------------------
@@ -61,14 +67,18 @@ def vehicle_log_report_view(request):
     
     if request.method == "POST":
         form = DmrForm(request.POST)
+        vehicle_number = request.POST.get('vehicle_number')
+        selected_month = request.POST.get('month')
+        selected_year = request.POST.get('year')
+        from_loc_id = request.POST.get('from_location')
+        to_loc_id = request.POST.get('to_location')
     else:
         form = DmrForm()
-
-    customer_id = request.POST.get('dmr_customer')
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
-    from_loc_id = request.POST.get('from_location')
-    to_loc_id = request.POST.get('to_location')
+        vehicle_number = form.fields['vehicle_number'].initial or ""
+        selected_month = form.fields['month'].initial or '0'
+        selected_year = form.fields['year'].initial or '0'
+        from_loc_id = ""
+        to_loc_id = ""
 
     # Base Query
     trips = TripdetailInfo.objects.all().select_related(
@@ -82,8 +92,8 @@ def vehicle_log_report_view(request):
     )
 
     # Filters
-    if customer_id:
-        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if vehicle_number:
+        trips = trips.filter(tr_vehiclenumber__icontains=vehicle_number)
     if selected_month and selected_month != '0':
         trips = trips.filter(tr_loading_time__month=selected_month)
     if selected_year and selected_year != '0':
@@ -131,7 +141,7 @@ def vehicle_log_report_view(request):
         'headers': VEHICLE_LOG_HEADERS,
         'data_rows': data_rows,
         'page_obj': page_obj,
-        'customer_id': customer_id,
+        'vehicle_number': vehicle_number,
         'selected_month': selected_month,
         'selected_year': selected_year,
         'from_location': from_loc_id,
@@ -474,3 +484,106 @@ def drivers_advance_report_view(request):
         'to_date': to_date or '',
     }
     return render(request, "asset_mgt_app/drivers_advance_report.html", context)
+
+
+@login_required(login_url='login_page')
+def invoice_pending_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import TransInvoiceInfo
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+
+    customer_id = request.POST.get('dmr_customer')
+    selected_month = request.POST.get('month')
+    selected_year = request.POST.get('year')
+    from_loc_id = request.POST.get('from_location')
+    to_loc_id = request.POST.get('to_location')
+
+    # Get invoiced trip IDs to exclude
+    invoiced_trip_ids = TransInvoiceInfo.objects.filter(
+        ti_trip__isnull=False
+    ).values_list('ti_trip_id', flat=True)
+
+    # Filter trips with status "Trip Settled" (7) NOT in invoiced_trip_ids
+    trips = TripdetailInfo.objects.filter(
+        tc_financestatus_id=7
+    ).exclude(
+        id__in=invoiced_trip_ids
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_consignmentnumber',
+        'tr_vehicletype',
+        'tr_vehiclesource',
+        'tr_departedlocation',
+        'tr_reportedlocation'
+    )
+
+    if customer_id:
+        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if selected_month and selected_month != '0':
+        trips = trips.filter(Q(tr_loading_time__month=selected_month) | Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month))
+    if selected_year and selected_year != '0':
+        trips = trips.filter(Q(tr_loading_time__year=selected_year) | Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year))
+    if from_loc_id:
+        trips = trips.filter(tr_departedlocation_id=from_loc_id)
+    if to_loc_id:
+        trips = trips.filter(tr_reportedlocation_id=to_loc_id)
+
+    trips = trips.order_by('-tr_created_at')
+
+    paginator = Paginator(trips, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    data_rows = []
+    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        branch = "Chennai" if "MAA" in cons_no else ("Bangalore" if "BLR" in cons_no else "")
+        display_date = trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else \
+                       (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else "")
+
+        # Calculate Billing Amount (sum of charges)
+        billing_amount = safe_num(trip.tc_tripcost) + safe_num(trip.tc_tollcost) + safe_num(trip.tc_supervisorcost) + \
+                         safe_num(trip.tc_loadingcost) + safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_weighmentcost) + \
+                         safe_num(trip.tc_haltingcost) + safe_num(trip.tc_handlingcost)
+
+        row = [
+            idx,
+            display_date,
+            branch,
+            safe_str(trip.tr_enquirynumber.en_customername),
+            cons_no,
+            trip.tr_consignmentnumber.co_consignmentdate.strftime("%d-%m-%Y") if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentdate else "",
+            safe_str(trip.tr_enquirynumber.en_customerdepartment),
+            safe_str(trip.tr_tripnumber),
+            safe_str(trip.tr_vehiclenumber),
+            safe_str(trip.tr_vehicletype),
+            safe_str(trip.tr_vehiclesource),
+            trip.tr_departeddate.strftime("%d-%m-%Y %H:%M") if trip.tr_departeddate else "",
+            trip.tr_updated_at.strftime("%d-%m-%Y") if trip.tr_updated_at else "", # Using tr_updated_at as proxy for settlement date if status is 7
+            safe_str(trip.tr_customerref),
+            billing_amount,
+            "Invoice Pending",
+            safe_str(trip.tr_remarks)
+        ]
+        data_rows.append(row)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': INVOICE_PENDING_HEADERS,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'customer_id': customer_id,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'from_location': from_loc_id,
+        'to_location': to_loc_id,
+    }
+    return render(request, "asset_mgt_app/invoice_pending_report.html", context)
+

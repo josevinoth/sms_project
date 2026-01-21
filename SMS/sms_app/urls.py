@@ -809,7 +809,7 @@ urlpatterns = [
     path('ref_no_pending_report/', views.ref_no_pending_report_view, name='ref_no_pending_report'),
     path('vehicle_status_report/', views.vehicle_status_report_view, name='vehicle_status_report'),
     path('drivers_advance_report/', views.drivers_advance_report_view, name='drivers_advance_report'),
-
+    path('invoice_pending_report/', views.invoice_pending_report_view, name='invoice_pending_report'),
 ]
 
 
