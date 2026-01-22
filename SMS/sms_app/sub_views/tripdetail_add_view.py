@@ -518,24 +518,37 @@ def trip_email(request):
     department_name = enquiry.en_customerdepartment.ct_customerdepartment if enquiry else "N/A"
     customer_ref = trip.tr_consignmentnumber.co_cusrefnum if trip.tr_consignmentnumber else "N/A"
 
-    # ---- Parse date fields ----
-    departed_date = parse_dt(trip.tr_departeddate)
-    loading_time = parse_dt(trip.tr_loading_time)
-    unloading_time = parse_dt(trip.tr_unloading_time)
-    reported_date = parse_dt(trip.tr_reporteddate)
+    # ✅ Parse correct fields based on your template
+    vehicle_reported_dt = parse_dt(trip.tr_departeddate_pickup)  # Vehicle Reported Date & Time (Loading section)
+    dock_in_time = parse_dt(trip.tr_loading_time)  # Dock in Time
+    dock_out_time = parse_dt(trip.tr_dock_in_time)  # Dock out Time
+    vehicle_started_dt = parse_dt(trip.tr_departeddate)  # Vehicle Started Date & Time
+    reported_date = parse_dt(trip.tr_reporteddate)  # Vehicle Reported Date & Time (Unloading section)
 
-    # ---- Date validation ----
+    # ✅ Date validation
     invalid_dates = []
-    if departed_date and loading_time and departed_date > loading_time:
-        invalid_dates.append("Loading Time cannot be before Departed Date.")
-    if loading_time and unloading_time and loading_time > unloading_time:
-        invalid_dates.append("Unloading Time cannot be before Loading Time.")
-    if departed_date and reported_date and departed_date > reported_date:
-        invalid_dates.append("Reported Date cannot be before Departed Date.")
+
+    # 1️⃣ Dock-In must be after Vehicle Reported Date & Time
+    if vehicle_reported_dt and dock_in_time and dock_in_time < vehicle_reported_dt:
+        invalid_dates.append("Dock-In Time cannot be before Vehicle Reported Date & Time.")
+
+    # 2️⃣ Dock-Out must be after Dock-In
+    if dock_in_time and dock_out_time and dock_out_time < dock_in_time:
+        invalid_dates.append("Dock-Out Time cannot be before Dock-In Time.")
+
+    # 3️⃣ Vehicle Started must be after Vehicle Reported Date & Time
+    if vehicle_reported_dt and vehicle_started_dt and vehicle_started_dt < vehicle_reported_dt:
+        invalid_dates.append("Vehicle Started Date & Time cannot be before Vehicle Reported Date & Time.")
+
+    # 4️⃣ Reported Date must be after Vehicle Started
+    if vehicle_started_dt and reported_date and reported_date < vehicle_started_dt:
+        invalid_dates.append("Reported Date cannot be before Vehicle Started Date & Time.")
 
     if invalid_dates:
         messages.error(request, "⚠️ Date format or order issue:\n" + "\n".join(invalid_dates))
-        return redirect(request.META.get('HTTP_REFERER', '/'))
+        return
+
+
 
     # ---- Email text ----
     status_map = {'trip started': 'started', 'trip closed': 'closed'}
@@ -576,7 +589,8 @@ def trip_email(request):
              <body>
                 <p>Dear Customer,</p>
                 <p>Thank you for your business, below booking details is for your reference:</p>
-                <table style="width: 100%; border-collapse: collapse;"><tr>
+                <table style="width: 45%; border-collapse: collapse; margin: auto;">
+<tr>
         <th colspan="2" style="background-color: #007bff; color: white; padding: 10px; text-align: center; font-size: 18px;">
             Booking
         </th>
