@@ -798,6 +798,7 @@ urlpatterns = [
     path('maintenance_list/', views.maintenance_list, name='maintenance_list'),
     path('shipper_invoice_export_excel/<int:invoice_id>/',views.shipper_invoice_export_excel,name='shipper_invoice_export_excel'),
     path('ajax/filter-trips-by-date/',views.filter_trips_by_date,name='filter_trips_by_date'),
+    path('maintenance_report/', views.maintenance_report_view, name='maintenance_report'),
     path('stock_maintenance_list/', views.stock_maintenance_list, name='stock_maintenance_list'),
     path('stock_maintenance_insert/', views.stock_maintenance_add, name='stock_maintenance_add'),
     path('stock_maintenance_update/<int:pk>/', views.stock_maintenance_edit, name='stock_maintenance_edit'),
