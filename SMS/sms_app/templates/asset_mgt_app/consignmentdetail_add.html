@@ -361,15 +361,24 @@
 </script>
 
 <script>
-	document.addEventListener("DOMContentLoaded", function () {
-		const form = document.querySelector("form");
-		const submitBtn = form.querySelector("button[type='submit']");
+document.addEventListener("DOMContentLoaded", function () {
 
-		form.addEventListener("submit", function () {
-			submitBtn.disabled = true;
-			submitBtn.innerText = "Please wait...";
-		});
-	});
+    const form = document.querySelector("form");
+    const vehicleSelect = document.getElementById("co_vehicelnumber");
+
+    form.addEventListener("submit", function (e) {
+
+        if (!vehicleSelect.value || vehicleSelect.value.trim() === "") {
+            e.preventDefault();   // stop submit
+
+            alert("Please select Vehicle Number before submitting.");
+
+            vehicleSelect.focus();
+            return false;
+        }
+    });
+
+});
 </script>
 
 {% endblock content %}

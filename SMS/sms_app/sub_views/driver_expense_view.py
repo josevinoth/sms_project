@@ -132,6 +132,8 @@ def get_trip_charges(request):
             'unloading': trip.tc_unloadingcost or 0,
             'weighment': trip.tc_weighmentcost or 0,
             'supervisor': trip.tc_supervisorcost or 0,
+            'rto': trip.tc_rtocost or 0,
+            'batta': trip.tc_betacost or 0,
 
             # 🔥 NEW DETAILS
             'vehicle_number': trip.tr_vehiclenumber or "",
@@ -145,6 +147,8 @@ def get_trip_charges(request):
             data['unloading'],
             data['weighment'],
             data['supervisor'],
+            data['rto'],
+            data['batta'],
         ])
 
         return JsonResponse(data)

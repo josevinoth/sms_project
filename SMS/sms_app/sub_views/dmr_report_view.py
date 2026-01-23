@@ -566,9 +566,9 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(trip.tr_reporteddate.strftime("%H:%M") if trip.tr_reporteddate else ""); continue
 
             # 5. Unloading Point (Departure from Destination - OUT)
-            if hh in ("unloading point out date", "dlv out date", "delivery date", "released date"):
+            if hh in ("unloading point out date", "dlv out date", "delivery date", "released date", "vehicle released date"):
                 row.append(trip.tr_unloading_time.strftime("%d-%m-%Y") if trip.tr_unloading_time else ""); continue
-            if hh in ("dlv out time", "unloading time", "unloading point out time", "released time"):
+            if hh in ("dlv out time", "unloading time", "unloading point out time", "released time", "vehicle released time"):
                 row.append(trip.tr_unloading_time.strftime("%H:%M") if trip.tr_unloading_time else ""); continue
 
             if hh == "bvm in":
@@ -586,7 +586,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(safe_str(trip.tr_enquirynumber.en_customername)); continue
             if hh == "customer dept":
                 row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment)); continue
-            if hh == "tripcost":
+            if hh in ("tripcost", "trip cost"):
                 row.append(safe_num(trip.tc_tripcost)); continue
             if hh in ("job no", "bvm job no", "bvm job number", "ceva job no", "bvm job"):
                 row.append(safe_str(trip.tr_tripnumber)); continue
@@ -597,7 +597,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(safe_str(trip.tr_departedkm)); continue
             if hh in ("veh reported km @ unloading point", "closing km"):
                 row.append(safe_str(trip.tr_reportedkm)); continue
-            if hh == "used km":
+            if hh in ("used km", "used kms"):
                 diff = (trip.tr_reportedkm or 0) - (trip.tr_departedkm or 0)
                 row.append(safe_num(max(0, diff))); continue
 
@@ -620,6 +620,13 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 en_date = getattr(trip.tr_enquirynumber, "en_created_at", None)
                 row.append(en_date.strftime("%H:%M") if en_date else ""); continue
 
+            if hh == "month":
+                dt = trip.tr_loading_time or trip.tr_departeddate or trip.tr_created_at
+                row.append(dt.strftime("%B") if dt else ""); continue
+
+            if hh == "requestor":
+                row.append(safe_str(trip.tr_enquirynumber.en_assignedto)); continue
+
             # --- SHIPPER / CONSIGNEE ---
             if "shipper seal #" in hh or hh == "seel no" or hh == "seal no":
                 val = (cons_detail.co_seal_number or cons_detail.co_smart_lock_number) if cons_detail else ""
@@ -632,9 +639,10 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(safe_str(cons_goods.cg_consignee) if cons_goods else ""); continue
             if "cs name" in hh or hh == "cutomer service":
                 row.append(safe_str(trip.tr_enquirynumber.en_assignedto)); continue
-            if hh in ("vehicle placed time", "placement & vehicle placed date"):
+            if hh in ("vehicle placed time", "placement & vehicle placed date", "vehicle placed date"):
                  fmt = "%d-%m-%Y" if "date" in hh else "%H:%M"
-                 row.append(va.va_created_at.strftime(fmt) if va and va.va_created_at else ""); continue
+                 v = trip.tr_loading_time or (va.va_created_at if va else None)
+                 row.append(v.strftime(fmt) if v else ""); continue
             if "hawb" in hh or "hbl" in hh:
                 row.append(safe_str(cons_goods.cg_hawbno) if cons_goods else ""); continue
             if "boe" in hh or "ewaybill" in hh or hh == "e-way bill":
@@ -677,6 +685,9 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if "date" in hh else trip.tr_reporteddate.strftime("%H:%M") if "time" in hh else trip.tr_reporteddate.strftime("%d-%m-%Y %H:%M") if trip.tr_reporteddate else ""); continue
             if hh == "update status":
                 row.append(safe_str(trip.tc_financestatus)); continue
+
+            if hh == "detention days":
+                row.append(safe_num(trip.tc_no_of_days_halting)); continue
 
             # --- GENERIC FIELDS ---
             if "vendor" in hh or "transporter" in hh:
@@ -734,7 +745,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(safe_num(trip.tc_parkingcost) + safe_num(trip.tc_unloadingcost)); continue
             if "unloading charges & lashing charges" in hh:
                 row.append(safe_num(trip.tc_unloadingcost)); continue
-            if "total charges" in hh:
+            if "total charges" in hh or hh == "total cost":
                 row.append(safe_num(trip.tc_tripcost) + safe_num(trip.tc_parkingcost) + safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_loadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost) + safe_num(trip.tc_supervisorcost) + safe_num(trip.tc_haltingcost) + safe_num(trip.tc_tollcost)); continue
 
             # --- REMARKS & STATUS ---

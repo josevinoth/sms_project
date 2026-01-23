@@ -217,7 +217,7 @@
 									</div>
 								</div>
 
-									<div class="row mb-2 align-items-center">
+								<div class="row mb-2 align-items-center">
 									<div class="col-9">
 										<div class="input-group input-group-sm">
 											<div class="input-group-prepend">
@@ -231,47 +231,72 @@
 									</div>
 								</div>
 
-						<div class="row mb-2 align-items-center">
-							<div class="col-9">
-								<div class="input-group input-group-sm">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Halting Charges</span>
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Halting Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_haltingcost id="tc_haltingcost" class="form-control disable_a_href" %}
+										</div>
 									</div>
-									{% render_field tripclosure_form.tc_haltingcost id="tc_haltingcost" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3 text-center">
-								<input type="checkbox" id="tc_haltingcost_check">
-							</div>
-						</div>
-
-						<div class="row mb-2 align-items-center">
-							<div class="col-12">
-								<div class="input-group input-group-sm">
-									<div class="input-group-prepend">
-										<span class="input-group-text">No of Halting Days</span>
+									<div class="col-3 text-center">
+										<input type="checkbox" id="tc_haltingcost_check">
 									</div>
-									{% render_field tripclosure_form.tc_no_of_days_halting id="tc_no_of_days_halting" class="form-control" %}
 								</div>
-							</div>
-						</div>
 
-						<div class="row mb-2 align-items-center">
-						<div class="col-9">
-							<div class="input-group input-group-sm">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Total Halting Charges</span>
+								<div class="row mb-2 align-items-center">
+									<div class="col-12">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">No of Halting Days</span>
+											</div>
+											{% render_field tripclosure_form.tc_no_of_days_halting id="tc_no_of_days_halting" class="form-control" %}
+										</div>
+									</div>
 								</div>
-								<input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control disable_a_href"  readonly>
 
-							</div>
-						</div>
-						<div class="col-3 text-center">
-							<input type="checkbox" id="tc_total_halting_cost_check">
-						</div>
-					</div>
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Total Halting Charges</span>
+											</div>
+											<input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control disable_a_href"  readonly>
 
+										</div>
+									</div>
+									<div class="col-3 text-center">
+										<input type="checkbox" id="tc_total_halting_cost_check">
+									</div>
+								</div>
 
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">RTO Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_rtocost id="tc_rtocost" class="form-control " %}
+										</div>
+									</div>
+									<div class="col-3 text-center">
+										<input type="checkbox" id="tc_rtocost_check">
+									</div>
+								</div>
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Batta Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_betacost id="tc_betacost" class="form-control " %}
+										</div>
+									</div>
+									<div class="col-3 text-center">
+										<input type="checkbox" id="tc_betacost_check">
+									</div>
+								</div>
 
 
 
@@ -580,99 +605,99 @@
 </script>
 
 <script>
-$(document).ready(function() {
-    function fetchCustomerRef() {
-        var consignmentId = $('#tr_consignmentnumber').val();
+	$(document).ready(function() {
+        function fetchCustomerRef() {
+            var consignmentId = $('#tr_consignmentnumber').val();
 
-        if (consignmentId) {
-            $.ajax({
-                url: "{% url 'get_customer_ref' %}",
-                data: {
-                    'consignment_id': consignmentId
-                },
-                dataType: 'json',
-                success: function(data) {
-                    console.log("Fetched Customer Ref:", data);
-                    if (data.customer_ref) {
-                        $('#tr_customerref').val(data.customer_ref);
-                    } else {
-                        $('#tr_customerref').val('');
+            if (consignmentId) {
+                $.ajax({
+                    url: "{% url 'get_customer_ref' %}",
+                    data: {
+                        'consignment_id': consignmentId
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log("Fetched Customer Ref:", data);
+                        if (data.customer_ref) {
+                            $('#tr_customerref').val(data.customer_ref);
+                        } else {
+                            $('#tr_customerref').val('');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error:", error);
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX Error:", error);
-                }
-            });
-        } else {
-            $('#tr_customerref').val('');
+                });
+            } else {
+                $('#tr_customerref').val('');
+            }
         }
-    }
 
-    // Run automatically if field already has a value
-    fetchCustomerRef();
+        // Run automatically if field already has a value
+        fetchCustomerRef();
 
-    // Also run if user changes consignment manually later
-    $(document).on('change', '#tr_consignmentnumber', fetchCustomerRef);
-});
-</script>
-
-<script>
-function fetchHaltingCharge() {
-    var enquiryNo = $("#tr_enquirynumber").val();
-    var tripType  = $("#tr_category").val();
-
-    if (!enquiryNo || !tripType) {
-        return;
-    }
-
-    $.ajax({
-        url: "{% url 'get_halting_charge' %}",
-        method: "GET",
-        data: {
-            enquiry_id: enquiryNo,
-            trip_type: tripType
-        },
-		   success: function (data) {
-			if (data.status === true) {
-				$("#tc_haltingcost").val(data.halting_charge);
-			} else {
-				$("#tc_haltingcost").val(0);
-			}
-
-			// Recalculate after AJAX updates value
-			calcTotalHalting();
-		},
-        error: function (xhr, status, error) {
-            console.error("Halting AJAX ERROR:", error);
-        }
+        // Also run if user changes consignment manually later
+        $(document).on('change', '#tr_consignmentnumber', fetchCustomerRef);
     });
-}
+</script>
 
-$(document).ready(function () {
-    fetchHaltingCharge();
-    $("#tr_category").change(fetchHaltingCharge);
-    $("#tr_enquirynumber").change(fetchHaltingCharge);
-});
+<script>
+	function fetchHaltingCharge() {
+        var enquiryNo = $("#tr_enquirynumber").val();
+        var tripType  = $("#tr_category").val();
+
+        if (!enquiryNo || !tripType) {
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_halting_charge' %}",
+            method: "GET",
+            data: {
+                enquiry_id: enquiryNo,
+                trip_type: tripType
+            },
+               success: function (data) {
+                if (data.status === true) {
+                    $("#tc_haltingcost").val(data.halting_charge);
+                } else {
+                    $("#tc_haltingcost").val(0);
+                }
+
+                // Recalculate after AJAX updates value
+                calcTotalHalting();
+            },
+            error: function (xhr, status, error) {
+                console.error("Halting AJAX ERROR:", error);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        fetchHaltingCharge();
+        $("#tr_category").change(fetchHaltingCharge);
+        $("#tr_enquirynumber").change(fetchHaltingCharge);
+    });
 </script>
 <script>
-function calcTotalHalting() {
-    let halting = parseFloat($("#tc_haltingcost").val()) || 0;
-    let days = parseFloat($("#tc_no_of_days_halting").val()) || 0;
+	function calcTotalHalting() {
+        let halting = parseFloat($("#tc_haltingcost").val()) || 0;
+        let days = parseFloat($("#tc_no_of_days_halting").val()) || 0;
 
-    let total = halting * days;
+        let total = halting * days;
 
-    $("#tc_total_halting_cost").val(total.toFixed(2));
-}
+        $("#tc_total_halting_cost").val(total.toFixed(2));
+    }
 
-$(document).ready(function () {
+    $(document).ready(function () {
 
-    // Calculate when user types in days OR when halting cost changes
-    $("#tc_no_of_days_halting").on("input", calcTotalHalting);
-    $("#tc_haltingcost").on("input", calcTotalHalting);
+        // Calculate when user types in days OR when halting cost changes
+        $("#tc_no_of_days_halting").on("input", calcTotalHalting);
+        $("#tc_haltingcost").on("input", calcTotalHalting);
 
-    // Also calculate once on load
-    calcTotalHalting();
-});
+        // Also calculate once on load
+        calcTotalHalting();
+    });
 
 </script>
 

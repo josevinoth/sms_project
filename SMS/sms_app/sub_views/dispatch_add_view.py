@@ -499,8 +499,12 @@ def dispatch_search(request):
 def get_base64_image(image_field):
     if not image_field:
         return None
-    with image_field.open('rb') as img_file:
-        return 'data:image/png;base64,' + base64.b64encode(img_file.read()).decode('utf-8')
+    try:
+        with image_field.open('rb') as img_file:
+            return 'data:image/png;base64,' + base64.b64encode(img_file.read()).decode('utf-8')
+    except (FileNotFoundError, OSError):
+        # File referenced in database but doesn't exist on disk
+        return None
 @login_required(login_url='login_page')
 def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
     dispatch_num = Dispatch_info.objects.get(id=dispatch_id).dispatch_num
