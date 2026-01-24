@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from ..models import TripdetailInfo, ConsignmentgoodsInfo, approval_status_info, Trip_approval_info
+from ..models import TripdetailInfo, ConsignmentgoodsInfo, approval_status_info, Trip_approval_info, Emailmaster, EnquirynoteInfo
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
+from .send_department_email import send_department_email
 
 @login_required(login_url='login_page')
 def trip_approval_view(request):
@@ -41,6 +42,71 @@ def update_trip_approval(request, trip_id):
 
         if status_obj.approval_name == "Approved":
             trip.tc_financestatus_id = 1
+            
+            # ✅ AUTOMATED EMAIL: Trip Started
+            if not trip.tr_trip_started_mail_sent:
+                try:
+                    # 1. Get Recipients from Emailmaster (Type 2)
+                    enquiry = trip.tr_enquirynumber
+                    customer = enquiry.en_customername
+                    department = enquiry.en_customerdepartment
+                    
+                    email_qs = Emailmaster.objects.filter(em_Customer_name=customer, em_emailtype_id=2)
+                    if department:
+                        email_qs = email_qs.filter(em_customerdepartment=department)
+                    
+                    email_obj = email_qs.first()
+                    recipients = []
+                    if email_obj:
+                        to = email_obj.em_to_names or ""
+                        cc = email_obj.em_cc_names or ""
+                        recipients = [x.strip() for x in to.split(",") if x.strip()]
+                        if cc:
+                            recipients.extend([x.strip() for x in cc.split(",") if x.strip()])
+                    
+                    if not recipients:
+                        recipients = ["itadmin@bvm.com"]
+
+                    # 2. Construct Email
+                    customer_name = customer.cu_name if customer else "N/A"
+                    from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
+                    reported_dt = trip.tr_departeddate_pickup or ""
+                    consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
+                    started_dt = trip.tr_departeddate or ""
+
+                    subject = f"Trip Started Alert - {trip.tr_tripnumber}"
+                    email_body = f"""
+                    <html>
+                    <body>
+                        <p>Dear Customer,</p>
+                        <p>Status Update: Trip Started Alert (Automated).</p>
+                        <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd; font-family: Arial, sans-serif;">
+                            <thead style="background-color: #007bff; color: white;">
+                                <tr><th colspan="2" style="padding: 10px; text-align: center;">Trip Started Details</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td></tr>
+                                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>From Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{from_location}</td></tr>
+                                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment Number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td></tr>
+                                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Started Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td></tr>
+                            </tbody>
+                        </table>
+                        <p>Regards,<br>BVM Warehouse Team</p>
+                    </body>
+                    </html>
+                    """
+                    
+                    send_department_email(
+                        department="itadmin",
+                        subject=subject,
+                        message=email_body,
+                        recipient_list=recipients,
+                        email_type=1
+                    )
+                    trip.tr_trip_started_mail_sent = True
+                    messages.info(request, "Automated 'Trip Started' email sent.")
+                except Exception as e:
+                    messages.error(request, f"Error sending automated email: {str(e)}")
 
         trip.save()
 
