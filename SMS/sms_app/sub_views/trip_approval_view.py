@@ -73,25 +73,27 @@ def update_trip_approval(request, trip_id):
                     reported_dt = trip.tr_departeddate_pickup or ""
                     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
                     started_dt = trip.tr_departeddate or ""
+                    vehicle_number = trip.tr_vehiclenumber or "N/A"
 
-                    subject = f"Trip Started Alert - {trip.tr_tripnumber}"
+                    subject = f"Trip Started Alert - {vehicle_number}"
                     email_body = f"""
                     <html>
                     <body>
                         <p>Dear Customer,</p>
                         <p>Status Update: Trip Started Alert (Automated).</p>
-                        <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd; font-family: Arial, sans-serif;">
-                            <thead style="background-color: #007bff; color: white;">
+                        <table style="border-collapse: collapse; width: 70%; border: 1px solid #ddd; font-family: Arial, sans-serif; margin-left: auto; margin-right: auto;">
+                            <thead style="background-color: #003366; color: white;">
                                 <tr><th colspan="2" style="padding: 10px; text-align: center;">Trip Started Details</th></tr>
                             </thead>
                             <tbody>
                                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td></tr>
+                                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{vehicle_number}</td></tr>
                                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>From Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{from_location}</td></tr>
                                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment Number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td></tr>
                                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Started Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td></tr>
                             </tbody>
                         </table>
-                        <p>Regards,<br>BVM Warehouse Team</p>
+                        <p>Regards,<br>BVM Transport Team</p>
                     </body>
                     </html>
                     """
