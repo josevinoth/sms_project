@@ -22,8 +22,8 @@ class StockMaintenance(models.Model):
     sm_total_cft = models.FloatField(default=0.0, null=True, blank=True)
     sm_per_unit_cost = models.FloatField(default=0.0, null=True, blank=True)
     
-    # "total wood price(cal by total cft * 100" (or similar, per user prompt)
-    sm_total_wood_price = models.FloatField(default=0.0, null=True, blank=True)
+    # Total price (Calculated for Wood/Plywood, editable for others)
+    sm_total_price = models.FloatField(default=0.0, null=True, blank=True)
     
     sm_created_at = models.DateTimeField(auto_now_add=True, null=True)
     sm_updated_at = models.DateTimeField(auto_now=True, null=True)

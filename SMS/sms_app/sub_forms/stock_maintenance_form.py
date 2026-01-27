@@ -51,7 +51,7 @@ class StockMaintenanceForm(forms.ModelForm):
             'sm_length',
             'sm_uom',
             'sm_cft',
-            'sm_total_wood_price',
+            'sm_total_price',
             "sm_total_cft",
         ]
 

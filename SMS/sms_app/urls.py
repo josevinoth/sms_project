@@ -811,11 +811,17 @@ urlpatterns = [
     path('vehicle_status_report/', views.vehicle_status_report_view, name='vehicle_status_report'),
     path('drivers_advance_report/', views.drivers_advance_report_view, name='drivers_advance_report'),
     path('invoice_pending_report/', views.invoice_pending_report_view, name='invoice_pending_report'),
+    path('vendor_p_l_mkt_report/', views.vendor_p_l_mkt_report_view, name='vendor_p_l_mkt_report'),
+    path('vendor_p_l_attached_report/', views.vendor_p_l_attached_report_view, name='vendor_p_l_attached_report'),
+    path('whatsapp_delivery_status_report/', views.whatsapp_delivery_status_report_view,name='whatsapp_delivery_status_report'),
+    path('daily_trip_count_report/', views.daily_trip_count_report_view, name='daily_trip_count_report'),
+    path('own_vehicle_pl_report/', views.own_vehicle_pl_report_view, name='own_vehicle_pl_report'),
+    path('claim_pending_report/', views.claim_pending_report_view, name='claim_pending_report'),
+    path('halting_report/', views.halting_report_view, name='halting_report'),
     path("trip_send_loading_report_mail/", views.trip_send_loading_report_mail, name="trip_send_loading_report_mail"),
     path("trip_send_trip_started_mail/", views.trip_send_trip_started_mail, name="trip_send_trip_started_mail"),
     path("trip_send_unloading_report_mail/", views.trip_send_unloading_report_mail, name="trip_send_unloading_report_mail"),
     path("trip_send_trip_closed_mail/", views.trip_send_trip_closed_mail, name="trip_send_trip_closed_mail"),
 
 ]
-
 
