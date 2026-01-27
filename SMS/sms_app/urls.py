@@ -191,6 +191,7 @@ urlpatterns = [
     path('tripdetail_nav/<int:tripdetail_id>/', views.tripdetail_nav, name='tripdetail_nav'),  # Navigate tripdetail
     path('tripdetail_delete/<int:tripdetail_id>/', views.tripdetail_delete, name='tripdetail_delete'),  # Delete tripdetail
     path('trip_email/', views.trip_email, name='trip_email'),
+    path('get_trip_email_recipients/', views.get_trip_email_recipients, name='get_trip_email_recipients'),
     path('movementtype_list/', views.movementtype_list, name='movementtype_list'),  # List movementtype,
     path('movementtype_insert', views.movementtype_add, name='movementtype_insert'),  # Add movementtype
     path('movementtype_update/<int:movementtype_id>/', views.movementtype_add, name='movementtype_update'),  # Update movementtype
@@ -810,6 +811,11 @@ urlpatterns = [
     path('vehicle_status_report/', views.vehicle_status_report_view, name='vehicle_status_report'),
     path('drivers_advance_report/', views.drivers_advance_report_view, name='drivers_advance_report'),
     path('invoice_pending_report/', views.invoice_pending_report_view, name='invoice_pending_report'),
+    path("trip_send_loading_report_mail/", views.trip_send_loading_report_mail, name="trip_send_loading_report_mail"),
+    path("trip_send_trip_started_mail/", views.trip_send_trip_started_mail, name="trip_send_trip_started_mail"),
+    path("trip_send_unloading_report_mail/", views.trip_send_unloading_report_mail, name="trip_send_unloading_report_mail"),
+    path("trip_send_trip_closed_mail/", views.trip_send_trip_closed_mail, name="trip_send_trip_closed_mail"),
+
 ]
 
 

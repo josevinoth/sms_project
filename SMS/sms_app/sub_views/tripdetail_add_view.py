@@ -1223,8 +1223,8 @@ def trip_send_trip_closed_mail(request):
     started_dt = trip.tr_departeddate or "N/A"
     reported_dt = trip.tr_reporteddate or "N/A"
     
-    # POD Status Logic
-    pod_status = "POD Received" if trip.td_pod else "POD Not Received"
+    # POD Status Logic - Check both file attachment and signature
+    pod_status = "POD Received" if (trip.tc_pod_attachment or trip.td_pod) else "POD Not Received"
 
     subject = f"Trip Closed - {vehicle_number}"
 

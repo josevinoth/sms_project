@@ -13,7 +13,123 @@ from django.http import HttpResponse, JsonResponse
 from .send_department_email import send_department_email
 
 from ..sub_models.vendor_info_mod import Vendor_info
+from ..sub_models.emailmaster_mod import Emailmaster
+from ..sub_models.emailtype_mod import Email_type
 
+
+# ===== HELPER: Get recipients from Emailmaster =====
+def get_va_auto_recipients(customer_id, department_id):
+    """
+    Fetch email recipients from Emailmaster for vehicle allotment alerts.
+    Uses Email Type 2 (For alert), matching by Customer + Department.
+    Falls back to Customer-only match if no department-specific entry exists.
+    """
+    if not customer_id:
+        return None
+
+    try:
+        # Try matching Customer + Department first
+        email_entry = Emailmaster.objects.filter(
+            Q(em_emailtype_id=2) | Q(em_emailtype__email_type__iexact='For alert'),
+            em_Customer_name_id=customer_id,
+            em_customerdepartment_id=department_id
+        ).first()
+
+        # Fallback to Customer-only match
+        if not email_entry:
+            email_entry = Emailmaster.objects.filter(
+                Q(em_emailtype_id=2) | Q(em_emailtype__email_type__iexact='For alert'),
+                em_Customer_name_id=customer_id,
+                em_customerdepartment__isnull=True
+            ).first()
+
+        if email_entry:
+            to_emails = [e.strip() for e in (email_entry.em_to_names or '').split(',') if e.strip()]
+            cc_emails = [e.strip() for e in (email_entry.em_cc_names or '').split(',') if e.strip()]
+            return to_emails + cc_emails
+
+        return None
+    except Exception:
+        return None
+
+
+# ===== HELPER: Send Vehicle Allotment Email =====
+def va_send_allotment_email(va, enquiry, recipients):
+    """
+    Send automated Vehicle Allotment email with dark blue styling.
+    """
+    customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
+    department_name = enquiry.en_customerdepartment.ct_customerdepartment if enquiry.en_customerdepartment else "N/A"
+    from_location = enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "N/A"
+    to_location = enquiry.en_tolocation.place_name if enquiry.en_tolocation else "N/A"
+
+    # Get vehicle number (own/attached or market)
+    vehicle_number = str(va.va_vehiclenumber) if va.va_vehiclenumber else (va.va_vehiclenumber_mkt or "N/A")
+
+    subject = f"Vehicle Allotment - {vehicle_number}"
+
+    email_body = f"""
+        <html>
+            <head>
+                <style>
+                    table {{
+                        width: 70%;
+                        border-collapse: collapse;
+                        font-family: Arial, sans-serif;
+                        font-size: 14px;
+                        border: 1px solid black;
+                        margin-left: auto;
+                        margin-right: auto;
+                    }}
+                    th, td {{
+                        border: 1px solid black;
+                        padding: 10px;
+                    }}
+                    th {{
+                        background-color: #f4f4f4;
+                        color: #333;
+                        text-align: left;
+                        width: 40%;
+                    }}
+                    td {{
+                        vertical-align: top;
+                    }}
+                </style>
+            </head>
+            <body>
+                <p>Dear Customer,</p>
+                <p>Thank you for your business. Below are the vehicle allotment details for your reference:</p>
+                <table>
+                    <tr>
+                        <th colspan="2" style="background-color: #003366; color: white; padding: 10px; text-align: center; font-size: 18px;">
+                            Vehicle Allotment
+                        </th>
+                    </tr>
+                    <tr><th>Customer Name</th><td>{customer_name}</td></tr>
+                    <tr><th>Department</th><td>{department_name}</td></tr>
+                    <tr><th>From Location</th><td>{from_location}</td></tr>
+                    <tr><th>To Location</th><td>{to_location}</td></tr>
+                    <tr><th>Vehicle Type</th><td>{va.va_vehicletype}</td></tr>
+                    <tr><th>Vehicle Number</th><td>{vehicle_number}</td></tr>
+                    <tr><th>Driver Name</th><td>{va.va_drivername or 'N/A'}</td></tr>
+                    <tr><th>Driver Mobile</th><td>{va.va_drivernumber or 'N/A'}</td></tr>
+                </table>
+                <p>Regards,<br>BVM Transport Team</p>
+            </body>
+        </html>
+    """
+
+    try:
+        send_department_email(
+            department='itadmin',
+            subject=subject,
+            message=email_body,
+            recipient_list=recipients,
+            email_type=1
+        )
+        return True, recipients
+    except Exception as e:
+        return False, str(e)
 
 
 @login_required(login_url='login_page')
@@ -172,7 +288,35 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
             # ✅ SAVE
             obj.save()
-            messages.success(request, "Vehicle Allotment Saved Successfully")
+
+            # ===== AUTO EMAIL TRIGGER (only if Submit & Email clicked) =====
+            submit_and_email = request.POST.get('submit_and_email')
+            if submit_and_email:
+                try:
+                    enquiry = EnquirynoteInfo.objects.select_related(
+                        'en_customername', 'en_customerdepartment', 'en_fromlocaion', 'en_tolocation'
+                    ).get(id=enquiry_id)
+
+                    customer_id = enquiry.en_customername_id if enquiry.en_customername else None
+                    department_id = enquiry.en_customerdepartment_id if enquiry.en_customerdepartment else None
+
+                    recipients = get_va_auto_recipients(customer_id, department_id)
+
+                    if recipients:
+                        success, result = va_send_allotment_email(obj, enquiry, recipients)
+                        if success:
+                            obj.va_email_sent = True
+                            obj.save(update_fields=['va_email_sent'])
+                            messages.success(request, f"Vehicle Allotment Saved. Alert sent to: {', '.join(recipients)}")
+                        else:
+                            messages.success(request, "Vehicle Allotment Saved. Email failed to send.")
+                    else:
+                        messages.warning(request, "Vehicle Allotment Saved. No email ID found for this customer in the email master.")
+                except Exception as e:
+                    messages.success(request, "Vehicle Allotment Saved Successfully")
+            else:
+                messages.success(request, "Vehicle Allotment Saved Successfully")
+
             return redirect('vehicle_allotment_update', vehicle_allotment_id=obj.id)
 
         # ------------------
@@ -183,14 +327,43 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             form = VehicleallotmentForm(request.POST, instance=va)
 
             if not form.is_valid():
-                messages.error(request, "Invalid form data")
+                # Show actual form errors for debugging
+                error_msgs = "; ".join([f"{field}: {', '.join(errors)}" for field, errors in form.errors.items()])
+                messages.error(request, f"Invalid form data: {error_msgs}")
                 return redirect(request.META.get('HTTP_REFERER'))
 
             obj = form.save(commit=False)
             obj.va_enquirynumber = va.va_enquirynumber
             obj.save()
 
-            messages.success(request, "Vehicle Allotment Updated Successfully")
+            # ===== AUTO EMAIL TRIGGER (only if Submit & Email clicked) =====
+            submit_and_email = request.POST.get('submit_and_email')
+            if submit_and_email:
+                try:
+                    enquiry = EnquirynoteInfo.objects.select_related(
+                        'en_customername', 'en_customerdepartment', 'en_fromlocaion', 'en_tolocation'
+                    ).get(id=obj.va_enquirynumber_id)
+
+                    customer_id = enquiry.en_customername_id if enquiry.en_customername else None
+                    department_id = enquiry.en_customerdepartment_id if enquiry.en_customerdepartment else None
+
+                    recipients = get_va_auto_recipients(customer_id, department_id)
+
+                    if recipients:
+                        success, result = va_send_allotment_email(obj, enquiry, recipients)
+                        if success:
+                            obj.va_email_sent = True
+                            obj.save(update_fields=['va_email_sent'])
+                            messages.success(request, f"Vehicle Allotment Updated. Alert sent to: {', '.join(recipients)}")
+                        else:
+                            messages.success(request, "Vehicle Allotment Updated. Email failed to send.")
+                    else:
+                        messages.warning(request, "Vehicle Allotment Updated. No email ID found for this customer in the email master.")
+                except Exception as e:
+                    messages.success(request, "Vehicle Allotment Updated Successfully")
+            else:
+                messages.success(request, "Vehicle Allotment Updated Successfully")
+
             return redirect('vehicle_allotment_update', vehicle_allotment_id=obj.id)
 
     # fallback return
@@ -723,11 +896,13 @@ def vehicle_allotment_email(request):
             <head>
                 <style>
                     table {{
-                        width: 60%;
+                        width: 70%;
                         border-collapse: collapse;
                         font-family: Arial, sans-serif;
                         font-size: 14px;
                         border: 1px solid black;
+                        margin-left: auto;
+                        margin-right: auto;
                     }}
                     th, td {{
                         border: 1px solid black;
@@ -737,6 +912,7 @@ def vehicle_allotment_email(request):
                         background-color: #f4f4f4;
                         color: #333;
                         text-align: left;
+                        width: 40%;
                     }}
                     td {{
                         vertical-align: top;
@@ -748,33 +924,29 @@ def vehicle_allotment_email(request):
             </head>
             <body>
                 <p>Dear Customer,</p>
-                <p>Thank you for your business, below booking details is for your reference:</p>
-                <table style="width: 100%; border-collapse: collapse;">
-    <tr>
-        <th colspan="2" style="background-color: #007bff; color: white; padding: 10px; text-align: center; font-size: 18px;">
-            Booking
-        </th>
-    </tr>
+                <p>Thank you for your business. Below are the booking details for your reference:</p>
+                <table>
+                    <tr>
+                        <th colspan="2" style="background-color: #003366; color: white; padding: 10px; text-align: center; font-size: 18px;">
+                            Vehicle Allotment
+                        </th>
+                    </tr>
                     <tr><th>Customer Name</th><td>{customer_name}</td></tr>
                     <tr><th>Department</th><td>{department_name}</td></tr>
                     <tr><th>From Location</th><td>{from_location}</td></tr>
                     <tr><th>To Location</th><td>{to_location}</td></tr>
-                    <tr><th>Driver Name</th><td>{va.va_drivername}</td></tr>
-                    <tr><th>Driver Mobile</th><td>{va.va_drivernumber}</td></tr>
-                    <tr><th>Truck Type</th><td>{va.va_vehicletype}</td></tr>
-                    <tr><th>Truck Number</th><td>{va.va_vehiclenumber}</td></tr>
-                    <!--# <tr><th>Driver License</th><td>{va.va_driver_lic}</td></tr>
-                    # <tr><th>License Expiry</th><td>{va.va_driver_lic_expiry}</td></tr>
-                    # <tr><th>Vendor</th><td>{va.va_vendor}</td></tr>
-                    #<tr><th>Updated By</th><td>{va.va_updated_by}</td></tr>-->
+                    <tr><th>Vehicle Type</th><td>{va.va_vehicletype}</td></tr>
+                    <tr><th>Vehicle Number</th><td>{va.va_vehiclenumber}</td></tr>
+                    <tr><th>Driver Name</th><td>{va.va_drivername or 'N/A'}</td></tr>
+                    <tr><th>Driver Mobile</th><td>{va.va_drivernumber or 'N/A'}</td></tr>
                     <tr>
                         <th>Remarks</th>
                         <td class="remarks">
-                            {''.join(f'<div>{remark}</div>' for remark in (va.va_remarks or '').splitlines())}
+                            {''.join(f'<div>{remark}</div>' for remark in (va.va_remarks or '').splitlines()) or 'N/A'}
                         </td>
                     </tr>
                 </table>
-                <p>Regards,<br>Transport Admin</p>
+                <p>Regards,<br>BVM Transport Team</p>
             </body>
         </html>
     """
