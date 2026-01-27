@@ -115,6 +115,24 @@ MAINTENANCE_REPORT_HEADERS = [
     "Bill Amount", "Bill Date"
 ]
 
+INSURANCE_RENEWAL_HEADERS = [
+    "S No", "Vendor Name", "Company Name", "Vehicle No", "Vehicle Type",
+    "Insurance", "Renewal Date", "IDV Value", "Elapsed (Days)", "DS Status"
+]
+
+DIESEL_VS_REVENUE_HEADERS = [
+    "Sno", "Branch", "Date", "VehicleNo", "VehicleType", "Mileage Fixed",
+    "Leased To Customer", "Km Run", "Diesel Expenses", "Revenue",
+    "Diesel vs Revenue %", "Actual Mileage"
+]
+
+OWN_VS_MARKET_SALES_HEADERS = [
+    "SNo", "Date", "Branch", "Customer Name", "Department",
+    "Own Vehicle Sales", "No of Vehicle Used - Own", "No of Jobs - Own", "No of Drivers - Own", "Trip Index - Own",
+    "Market Vehicle Sales", "No of Vehicle Used - Market", "No of Jobs - Market", "No of Drivers - Market", "Trip Index - Market",
+    "Market Buy Rate", "No of Trips - Local", "No of Trips - OutStation"
+]
+
 # -------------------------
 # HELPERS
 # -------------------------
@@ -1931,3 +1949,350 @@ def maintenance_report_view(request):
         'selected_year': selected_year,
     }
     return render(request, "asset_mgt_app/maintenance_report.html", context)
+
+
+@login_required(login_url='login_page')
+def insurance_renewal_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import Insurance_Info, VehiclemasterInfo
+    from datetime import datetime
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+        vehicle_search = request.POST.get('vehicle_search', '')
+    else:
+        form = DmrForm()
+        vehicle_search = ""
+
+    # Fetch insurance records
+    insurance_records = Insurance_Info.objects.all().select_related(
+        'ins_vendor', 'ins_type'
+    ).order_by('ins_expiry_date')
+
+    # Get Vehicle Type information
+    vehicles = VehiclemasterInfo.objects.all().select_related('vm_vehicletype')
+    vehicle_map = {v.vm_registrationnumber: v for v in vehicles}
+
+    if vehicle_search:
+        insurance_records = insurance_records.filter(ins_vehicle_no__icontains=vehicle_search)
+
+    processed_rows = []
+    counter = 1
+    today = datetime.now().date()
+
+    for rec in insurance_records:
+        vehicle = vehicle_map.get(rec.ins_vehicle_no)
+        vehicle_type = safe_str(vehicle.vm_vehicletype) if vehicle and vehicle.vm_vehicletype else ""
+        
+        # Calculate Elapsed and DS Status
+        expiry_date = rec.ins_expiry_date
+        elapsed_days = (expiry_date - today).days if expiry_date else 0
+        
+        if elapsed_days < 0:
+            ds_status = "Expired"
+        elif elapsed_days <= 30:
+            ds_status = "Renewal Due"
+        else:
+            ds_status = "Active"
+
+        row = [
+            counter,
+            safe_str(rec.ins_vendor),
+            safe_str(rec.ins_name), # Company Name
+            safe_str(rec.ins_vehicle_no),
+            vehicle_type,
+            safe_str(rec.ins_type),
+            rec.ins_expiry_date.strftime("%d-%m-%Y") if rec.ins_expiry_date else "",
+            safe_num(rec.ins_sum_assured), # IDV Value
+            elapsed_days,
+            ds_status
+        ]
+        processed_rows.append(row)
+        counter += 1
+
+    paginator = Paginator(processed_rows, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': INSURANCE_RENEWAL_HEADERS,
+        'data_rows': page_obj.object_list,
+        'page_obj': page_obj,
+        'vehicle_search': vehicle_search,
+    }
+    return render(request, "asset_mgt_app/insurance_renewal_report.html", context)
+
+
+@login_required(login_url='login_page')
+def diesel_vs_revenue_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import TripdetailInfo, Fuelfillinginfo, VehiclemasterInfo, ConsignmentdetailInfo
+    from datetime import datetime
+    from django.db.models import Sum
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+        vehicle_search = request.POST.get('vehicle_search', '')
+        selected_month = request.POST.get('month', '0')
+        selected_year = request.POST.get('year', '0')
+    else:
+        form = DmrForm()
+        vehicle_search = ""
+        selected_month = '0'
+        selected_year = '0'
+
+    # Base Query for Trips
+    trips = TripdetailInfo.objects.all().select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_consignmentnumber',
+        'tr_vehicletype'
+    )
+
+    if vehicle_search:
+        trips = trips.filter(tr_vehiclenumber__icontains=vehicle_search)
+    if selected_month and selected_month != '0':
+        trips = trips.filter(tr_loading_time__month=selected_month)
+    if selected_year and selected_year != '0':
+        trips = trips.filter(tr_loading_time__year=selected_year)
+
+    trips = trips.order_by('-tr_loading_time')
+
+    # Get Vehicle Master Data for Mileage Fixed
+    vehicles = VehiclemasterInfo.objects.all()
+    vehicle_map = {v.vm_registrationnumber: v for v in vehicles}
+
+    processed_rows = []
+    counter = 1
+
+    for trip in trips:
+        # Branch Logic (similar to trip_cancellation_report_view)
+        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        branch = "Chennai" if "MAA" in cons_no else ("Bangalore" if "BLR" in cons_no else "")
+        
+        trip_date = trip.tr_loading_time.date() if trip.tr_loading_time else (trip.tr_departeddate.date() if trip.tr_departeddate else None)
+        
+        # Revenue calculation (Sum of selling components)
+        revenue = safe_num(trip.tc_tripcost) + safe_num(trip.tc_rtocost) + safe_num(trip.tc_betacost) + \
+                  safe_num(trip.tc_parkingcost) + safe_num(trip.tc_tollcost) + safe_num(trip.tc_loadingcost) + \
+                  safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost) + \
+                  safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost) + safe_num(trip.tc_supervisorcost)
+
+        # KM Run
+        km_run = max(0, safe_num(trip.tr_reportedkm) - safe_num(trip.tr_departedkm))
+
+        # Fuel Expenses for this vehicle on this date
+        fuel_data = Fuelfillinginfo.objects.filter(
+            ff_vehicle_num__vm_registrationnumber=trip.tr_vehiclenumber,
+            ff_date=trip_date
+        ).aggregate(total_cost=Sum('ff_fuel_price'), total_ltr=Sum('ff_filled_ltr'))
+
+        diesel_expenses = safe_num(fuel_data['total_cost'])
+        filled_ltr = safe_num(fuel_data['total_ltr'])
+
+        # Calculations
+        diesel_vs_revenue_pct = (diesel_expenses / revenue * 100) if revenue > 0 else 0
+        actual_mileage = (km_run / filled_ltr) if filled_ltr > 0 else 0
+
+        # Vehicle master details
+        vm = vehicle_map.get(trip.tr_vehiclenumber)
+        mileage_fixed = safe_str(vm.vm_millage) if vm else ""
+        leased_to = safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else ""
+
+        row = [
+            counter,
+            branch,
+            trip_date.strftime("%d-%m-%Y") if trip_date else "",
+            safe_str(trip.tr_vehiclenumber),
+            safe_str(trip.tr_vehicletype),
+            mileage_fixed,
+            leased_to,
+            km_run,
+            diesel_expenses,
+            revenue,
+            f"{diesel_vs_revenue_pct:.2f}%",
+            f"{actual_mileage:.2f}"
+        ]
+        processed_rows.append(row)
+        counter += 1
+
+    paginator = Paginator(processed_rows, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': DIESEL_VS_REVENUE_HEADERS,
+        'data_rows': page_obj.object_list,
+        'page_obj': page_obj,
+        'vehicle_search': vehicle_search,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+    }
+    return render(request, "asset_mgt_app/diesel_vs_revenue_report.html", context)
+
+
+@login_required(login_url='login_page')
+def own_vs_market_sales_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import TripdetailInfo, Vehicle_allotmentInfo
+    from datetime import datetime
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+        selected_month = request.POST.get('month', '0')
+        selected_year = request.POST.get('year', '0')
+        customer_id = request.POST.get('dmr_customer')
+    else:
+        form = DmrForm()
+        selected_month = '0'
+        selected_year = '0'
+        customer_id = None
+
+    # Base Query
+    trips = TripdetailInfo.objects.all().select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_enquirynumber__en_trip_type',
+        'tr_consignmentnumber'
+    )
+
+    if customer_id:
+        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if selected_month and selected_month != '0':
+        trips = trips.filter(tr_loading_time__month=selected_month)
+    if selected_year and selected_year != '0':
+        trips = trips.filter(tr_loading_time__year=selected_year)
+
+    # Prefetch Vehicle Allotment for Market Buy Rate
+    enquiry_ids = [t.tr_enquirynumber_id for t in trips]
+    va_data = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids)
+    va_map = {v.va_enquirynumber_id: v for v in va_data}
+
+    aggregated_data = {}
+
+    for trip in trips:
+        # Determine Date
+        trip_date = trip.tr_loading_time.date() if trip.tr_loading_time else (trip.tr_departeddate.date() if trip.tr_departeddate else None)
+        if not trip_date:
+            continue
+        
+        date_str = trip_date.strftime("%d-%m-%Y")
+        
+        # Branch mapping
+        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        branch = "Chennai" if "MAA" in cons_no else ("Bangalore" if "BLR" in cons_no else "Global")
+        
+        customer = safe_str(trip.tr_enquirynumber.en_customername)
+        dept = safe_str(trip.tr_enquirynumber.en_customerdepartment)
+        
+        key = (date_str, branch, customer, dept)
+        
+        if key not in aggregated_data:
+            aggregated_data[key] = {
+                'date': date_str,
+                'branch': branch,
+                'customer': customer,
+                'dept': dept,
+                'own_sales': 0.0,
+                'own_vehs': set(),
+                'own_jobs': 0,
+                'own_drivers': set(),
+                'mkt_sales': 0.0,
+                'mkt_vehs': set(),
+                'mkt_jobs': 0,
+                'mkt_drivers': set(),
+                'mkt_buy_rate': 0.0,
+                'local_trips': 0,
+                'outstation_trips': 0
+            }
+        
+        data = aggregated_data[key]
+        
+        # Revenue Calculation
+        revenue = safe_num(trip.tc_tripcost) + safe_num(trip.tc_rtocost) + safe_num(trip.tc_betacost) + \
+                  safe_num(trip.tc_parkingcost) + safe_num(trip.tc_tollcost) + safe_num(trip.tc_loadingcost) + \
+                  safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost) + \
+                  safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost) + safe_num(trip.tc_supervisorcost)
+        
+        is_own = trip.tr_vehiclesource_id in [1, 2] # 1=OWN, 2=ATTACHED/OWN
+        
+        if is_own:
+            data['own_sales'] += revenue
+            data['own_jobs'] += 1
+            if trip.tr_vehiclenumber:
+                data['own_vehs'].add(trip.tr_vehiclenumber)
+            if trip.tr_drivername:
+                data['own_drivers'].add(trip.tr_drivername)
+        else:
+            data['mkt_sales'] += revenue
+            data['mkt_jobs'] += 1
+            if trip.tr_vehiclenumber:
+                data['mkt_vehs'].add(trip.tr_vehiclenumber)
+            if trip.tr_drivername:
+                data['mkt_drivers'].add(trip.tr_drivername)
+            
+            # Market Buy Rate from Allotment
+            va = va_map.get(trip.tr_enquirynumber_id)
+            if va:
+                data['mkt_buy_rate'] += safe_num(va.va_standardbuy) + safe_num(va.va_specialbuy)
+
+        # Local vs Outstation
+        trip_type = safe_str(trip.tr_enquirynumber.en_trip_type).lower()
+        if "local" in trip_type:
+            data['local_trips'] += 1
+        elif "outstation" in trip_type:
+            data['outstation_trips'] += 1
+
+    # Convert to rows
+    processed_rows = []
+    # Sort by date desc
+    sorted_keys = sorted(aggregated_data.keys(), key=lambda x: datetime.strptime(x[0], "%d-%m-%Y"), reverse=True)
+    
+    for idx, key in enumerate(sorted_keys, start=1):
+        d = aggregated_data[key]
+        
+        own_index = (d['own_sales'] / d['own_jobs']) if d['own_jobs'] > 0 else 0
+        mkt_index = (d['mkt_sales'] / d['mkt_jobs']) if d['mkt_jobs'] > 0 else 0
+        
+        row = [
+            idx,
+            d['date'],
+            d['branch'],
+            d['customer'],
+            d['dept'],
+            d['own_sales'],
+            len(d['own_vehs']),
+            d['own_jobs'],
+            len(d['own_drivers']),
+            round(own_index, 2),
+            d['mkt_sales'],
+            len(d['mkt_vehs']),
+            d['mkt_jobs'],
+            len(d['mkt_drivers']),
+            round(mkt_index, 2),
+            d['mkt_buy_rate'],
+            d['local_trips'],
+            d['outstation_trips']
+        ]
+        processed_rows.append(row)
+
+    paginator = Paginator(processed_rows, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': OWN_VS_MARKET_SALES_HEADERS,
+        'data_rows': page_obj.object_list,
+        'page_obj': page_obj,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'customer_id': customer_id,
+    }
+    return render(request, "asset_mgt_app/own_vs_market_sales_report.html", context)
