@@ -76,6 +76,10 @@ class TripdetailInfo(models.Model):
     tr_track_link = models.URLField(max_length=500,null=True,blank=True,verbose_name="Tracking Link")
     td_pod = models.ImageField(upload_to=pod_digi_sign_path, null=True, blank=True)
 
+    tr_loading_report_mail_sent = models.BooleanField(default=False)
+    tr_trip_started_mail_sent = models.BooleanField(default=False)
+    tr_unloading_report_mail_sent = models.BooleanField(default=False)
+    tr_trip_closed_mail_sent = models.BooleanField(default=False)
     class Meta:
         ordering = ["tr_tripnumber"]
     def __str__(self):

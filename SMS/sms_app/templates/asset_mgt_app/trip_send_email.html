@@ -1,20 +1,28 @@
 {% load widget_tweaks %}
 {% block content %}
 <!-- Email Form -->
-<form method="post" action="{% url 'trip_email' %}">
+<form id="tripEmailForm" method="post" action="{% url 'trip_email' %}">
     {% csrf_token %}
-       <div class="input-group mb-2 mr-sm-2">
+    <input type="hidden" id="alert_type" name="alert_type" value="">
+    <div class="input-group mb-2 mr-sm-2">
         <div class="input-group-prepend">
             <div class="input-group-text">To</div>
         </div>
-        <input type="text" id="recipient" name="recipient" class="form-control" value="{{ form_dsr_email.recipient.value }}" placeholder="Recipient emails">
+        <input type="text" id="recipient" name="recipient" class="form-control"
+            value="{{ form_dsr_email.recipient.value }}" placeholder="Recipient emails">
+    </div>
+    <div class="input-group mb-2 mr-sm-2">
+        <div class="input-group-prepend">
+            <div class="input-group-text">Message</div>
+        </div>
+        <textarea id="message" name="message" class="form-control" rows="4"></textarea>
     </div>
     <div class="row">
         <div class="col-1"></div>
         <div class="col-10">
-            <div class="message text-center">
+            <div id="email-msg-div" class="message text-center">
                 {% for message in messages %}
-                <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
                 {% endfor %}
             </div>
         </div>
@@ -27,15 +35,77 @@
 </form>
 
 <script>
-    function email_message_fn() {
-     // Assign Django template variables to JavaScript variables
-       var message = 	"Dear Customer,\n\n" +
-                "Please find below the trip details:.\n\n" +
-                  "Regards,\n" +
-                  "BVM Warehouse Team";
+    function email_message_fn(alertType) {
+        // Set Alert Type
+        $("#alert_type").val(alertType || "");
 
-        // Set the consolidated message as the value of the form field with id 'message'
-        document.getElementById("message").value = message;
+        // 1. Fetch Recipients from Model via AJAX
+        let enquiryId = $("#tr_enquirynumber").val();
+        if (enquiryId) {
+            $.get("{% url 'get_trip_email_recipients' %}", { enquiry_id: enquiryId }, function (data) {
+                if (data.success) {
+                    $("#recipient").val(data.recipients);
+                } else {
+                    console.log("Recipient fetch failed: " + data.msg);
+                    // Do not auto-populate if not found, let user enter
+                }
+            });
+        }
+
+        // 2. Prepare Message
+        var message = "Dear Customer,\n\n";
+        if (alertType) {
+            message += "Status Update: " + alertType + ".\n\n";
+        } else {
+            message += "Please find below the trip details.\n\n";
+        }
+        message += "Regards,\n" +
+            "BVM Transport Team";
+
+        // 3. Set message value if the field exists
+        var msgField = document.getElementById("message");
+        if (msgField) {
+            msgField.value = message;
+        }
     }
+
+    // AJAX Form Submission
+    $("#tripEmailForm").submit(function (e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        var url = $(this).attr('action');
+        var btn = $(this).find('button[type="submit"]');
+
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: formData,
+            success: function (data) {
+                if (data.success) {
+                    $("#email-msg-div").html('<div class="alert alert-success">Email sent successfully!</div>');
+
+                    // Update parent page state if function exists
+                    if (typeof updateEmailSentStatus === "function") {
+                        updateEmailSentStatus($("#alert_type").val());
+                    }
+
+                    setTimeout(function () {
+                        $('#sendEmailModal').modal('hide');
+                        $("#email-msg-div").empty();
+                    }, 2000);
+                } else {
+                    $("#email-msg-div").html('<div class="alert alert-danger">' + data.msg + '</div>');
+                }
+            },
+            error: function (xhr) {
+                $("#email-msg-div").html('<div class="alert alert-danger">An error occurred. Please try again.</div>');
+            },
+            complete: function () {
+                btn.prop('disabled', false).html('<i class="fas fa-envelope-square"></i> Send Email');
+            }
+        });
+    });
 </script>
 {% endblock content %}
