@@ -459,10 +459,10 @@ def tripdetail_list(request):
     first_name = request.session.get('first_name')
 
     # Filters
-    branch = request.GET.get('branch', '')
-    selected_status_id = request.GET.get('trip_status', '')
-    date_from = request.GET.get('date_from', '')
-    date_to = request.GET.get('date_to', '')
+    branch = request.GET.get('branch', '').strip()
+    selected_status_id = request.GET.get('trip_status', '').strip()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
 
     # Base queryset
     tripdetail_queryset = TripdetailInfo.objects.all()
@@ -494,10 +494,20 @@ def tripdetail_list(request):
         )
 
     # Order
-    tripdetail_queryset = tripdetail_queryset.order_by('-id')
+    tripdetail_queryset = tripdetail_queryset.order_by('-tr_created_at')
 
-    # ✅ PAGINATION
-    paginator = Paginator(tripdetail_queryset, 50)  # 50 rows per page
+    # ✅ DYNAMIC PAGINATION
+    per_page = request.GET.get('per_page', '50').strip()
+    
+    if per_page == 'all':
+        items_per_page = tripdetail_queryset.count() if tripdetail_queryset.count() > 0 else 50
+    else:
+        try:
+            items_per_page = int(per_page)
+        except ValueError:
+            items_per_page = 50
+
+    paginator = Paginator(tripdetail_queryset, items_per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -513,6 +523,7 @@ def tripdetail_list(request):
         'selected_status': int(selected_status_id) if selected_status_id else None,
         'date_from': date_from,
         'date_to': date_to,
+        'per_page': per_page,
     }
 
     return render(request, "asset_mgt_app/tripdetail_list.html", context)

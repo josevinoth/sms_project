@@ -3,6 +3,16 @@
 {% load static %}
 {% block content %}
 
+
+<!-- Standardized Select2 pattern -->
+<script>
+    var $jq = jQuery.noConflict(true);
+</script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
+    rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <div class="container-fluid d-flex justify-content-center py-3">
     <div class="rounded text-center bg-info shadow-box px-4 py-2">
         <h3>Vehicle Log Report</h3>
@@ -22,10 +32,16 @@
 <form method="POST" action="{% url 'vehicle_log_report' %}" class="row g-3 align-items-end">
     {% csrf_token %}
 
-    <!-- Vehicle Number -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Vehicle Number</label>
-        {% render_field form.vehicle_number class="form-control" value=vehicle_number %}
+        <select name="vehicle_number" id="vehicle_number" class="form-control select2">
+            <option value="">Search Vehicle...</option>
+            {% for vehicle in all_vehicles %}
+            <option value="{{ vehicle.vm_registrationnumber }}" {% if vehicle_number == vehicle.vm_registrationnumber %}selected{% endif %}>
+                {{ vehicle.vm_registrationnumber }}
+            </option>
+            {% endfor %}
+        </select>
     </div>
 
 
@@ -109,14 +125,26 @@
 </div>
 
 <script>
-    $(document).ready(function () {
-        $('#vehicle_log_report_table').DataTable({
-            scrollX: true,
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print'],
-            order: [[0, 'asc']]
+    $jq(document).ready(function () {
+        $jq('#vehicle_number').select2({
+            width: '100%',
+            theme: 'bootstrap4',
+            placeholder: 'Search Vehicle...',
+            allowClear: true
         });
     });
 </script>
+
+<script>
+    $('#vehicle_log_report_table').DataTable({
+        scrollX: true,
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print'],
+        order: [[0, 'asc']]
+    });
+    });
+</script>
+
+
 
 {% endblock content %}

@@ -106,31 +106,30 @@
             <tbody>
                 {% for tripdetailinfo in tripdetail_list %}
                 <tr>
-                    <td>{{ tripdetailinfo.tr_created_at }}</td>
+                    <td data-order="{{ tripdetailinfo.tr_created_at|date:'YmdHis' }}">{{ tripdetailinfo.tr_created_at }}</td>
                     <td>{{ tripdetailinfo.tr_enquirynumber }}</td>
                     <td>{{ tripdetailinfo.tr_consignmentnumber }}</td>
                     <td>{{ tripdetailinfo.tr_tripnumber }}</td>
                     <td>{{ tripdetailinfo.tr_vehiclenumber }}</td>
                     <td>{{ tripdetailinfo.tr_departedlocation }}</td>
                     <td>{{ tripdetailinfo.tr_departedkm }}</td>
-                    <td>{{ tripdetailinfo.tr_departeddate }}</td>
+                    <td data-order="{{ tripdetailinfo.tr_departeddate|date:'YmdHis' }}">{{ tripdetailinfo.tr_departeddate }}</td>
                     <td>{{ tripdetailinfo.tr_reportedlocation }}</td>
                     <td>{{ tripdetailinfo.tr_reportedkm }}</td>
-                    <td>{{ tripdetailinfo.tr_reporteddate }}</td>
+                    <td data-order="{{ tripdetailinfo.tr_reporteddate|date:'YmdHis' }}">{{ tripdetailinfo.tr_reporteddate }}</td>
                     <td id="track-cell-{{ tripdetailinfo.id }}">
                         {% if tripdetailinfo.tr_track_link %}
                         <a href="{{ tripdetailinfo.tr_track_link }}" target="_blank"
-                            class="btn btn-info btn-sm">Track</a>
+                           class="btn btn-info btn-sm">Track</a>
                         {% else %}
-                        <a href="{% url 'track_vehicle_position' %}?vehicle={{ tripdetailinfo.tr_vehiclenumber }}"
-                            class="btn btn-sm btn-info" target="_blank">
+                        <a href="{% url 'track_vehicle_position' %}?vehicle={{ tripdetailinfo.tr_vehiclenumber }}" class="btn btn-sm btn-info" target="_blank">
                             Live Track
                         </a>
                         {% endif %}
                     </td>
                     <td>{{ tripdetailinfo.tc_financestatus }}</td>
                     <td>{{ tripdetailinfo.tr_updated_by }}</td>
-                    <td>{{ tripdetailinfo.tr_updated_at }}</td>
+                    <td data-order="{{ tripdetailinfo.tr_updated_at|date:'YmdHis' }}">{{ tripdetailinfo.tr_updated_at }}</td>
                     <td>
                         <a class="btn btn-sm btn-primary" href="{% url 'tripdetail_update' tripdetailinfo.id %}">
                             <i class="far fa-edit"></i>
@@ -150,23 +149,23 @@
             </tbody>
         </table>
     </div>
+    <div class="mt-2 ml-3">
+        <p class="font-weight-bold" style="color: #0D2F3F;">
+            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
+        </p>
+    </div>
 </div>
 <div class="pagination mt-3">
     <span class="step-links">
 
         {% if page_obj.has_previous %}
-        <a class="btn btn-warning" href="?page=1{% if branch %}&branch={{ branch }}{% endif %}
-           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
-           {% if date_from %}&date_from={{ date_from }}{% endif %}
-           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+        <a class="btn btn-warning"
+            href="?page=1{% if branch %}&branch={{ branch }}{% endif %}{% if selected_status %}&trip_status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
             First
         </a>
 
-        <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}
-           {% if branch %}&branch={{ branch }}{% endif %}
-           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
-           {% if date_from %}&date_from={{ date_from }}{% endif %}
-           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+        <a class="btn btn-primary"
+            href="?page={{ page_obj.previous_page_number }}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_status %}&trip_status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
             Previous
         </a>
         {% endif %}
@@ -176,19 +175,13 @@
         </span>
 
         {% if page_obj.has_next %}
-        <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}
-           {% if branch %}&branch={{ branch }}{% endif %}
-           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
-           {% if date_from %}&date_from={{ date_from }}{% endif %}
-           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+        <a class="btn btn-primary"
+            href="?page={{ page_obj.next_page_number }}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_status %}&trip_status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
             Next
         </a>
 
-        <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}
-           {% if branch %}&branch={{ branch }}{% endif %}
-           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
-           {% if date_from %}&date_from={{ date_from }}{% endif %}
-           {% if date_to %}&date_to={{ date_to }}{% endif %}">
+        <a class="btn btn-warning"
+            href="?page={{ page_obj.paginator.num_pages }}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_status %}&trip_status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
             Last
         </a>
         {% endif %}
@@ -234,23 +227,35 @@
     $(document).ready(function () {
         var table = $('#tripdetail_list').DataTable({
             scrollX: true,
-            order: [0, 'desc'],
+            order: [[0, 'desc']],
             dom: 'lBfrtip',
-            pageLength: 100,
-            buttons: [
-                'copy', 'csv', 'excel', 'print'
-            ]
+            lengthChange: true,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            pageLength: {% if per_page == 'all' %} - 1{% elif per_page %}{{ per_page }}{% else %}50{% endif %},
+        info: false,
+        buttons: [
+        'copy', 'csv', 'excel', 'print'
+    ]
         });
 
-        // Apply column search
-        $('.filter-input').on('keyup change', function () {
-            var columnIndex = $(this).parent().index();
-            table.column(columnIndex).search(this.value).draw();
-        });
+    // Trigger server-side reload when DataTables length is changed
+    $('#tripdetail_list').on('length.dt', function (e, settings, len) {
+        var perPage = (len === -1) ? 'all' : len;
+        var url = new URL(window.location.href);
+        url.searchParams.set('per_page', perPage);
+        url.searchParams.set('page', 1); // Reset to page 1
+        window.location.href = url.toString();
+    });
 
-        $('#tripdetail_list thead input').on('click', function (e) {
-            e.stopPropagation();
-        });
+    // Apply column search
+    $('.filter-input').on('keyup change', function () {
+        var columnIndex = $(this).parent().index();
+        table.column(columnIndex).search(this.value).draw();
+    });
+
+    $('#tripdetail_list thead input').on('click', function (e) {
+        e.stopPropagation();
+    });
     });
 </script>
 {% endblock content %}
