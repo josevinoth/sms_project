@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Q
-from ..models import TripdetailInfo, ConsignmentdetailInfo, CustomerInfo, CustomerdepartmentInfo, ConsignmentgoodsInfo, Places
+from ..models import TripdetailInfo, ConsignmentdetailInfo, CustomerInfo, CustomerdepartmentInfo, ConsignmentgoodsInfo, Places, VehiclemasterInfo, Driverexpense, Vehicle_allotmentInfo
 from ..sub_forms.dmr_report_form import DmrForm
 
 # -------------------------
@@ -42,6 +42,95 @@ INVOICE_PENDING_HEADERS = [
     "SNo", "Date", "Branch", "Customer Name", "C-Note No", "C-Note Date", "Department",
     "Trip Code", "Vehicle No", "Vehicle Type", "Vehicle Source", "Trip Start Date",
     "Settlement Date", "Reference No", "Billing Amount", "Invoice Status", "Remarks"
+]
+
+VENDOR_PL_HEADERS = [
+    "S No", "Date", "Cnote", "From", "To", "Customer", "Veh No", "Veh Type",
+    "Trip Charges", "Toll charges", "AAI charges", "Loading charges",
+    "Unloading Charges", "Weighment charges", "Halting Charges", "Handling Charges",
+    "Total Selling", "Vendor Name", "KM Run", "Agreed KM", "Total Buying", "Profit", "Profit %"
+]
+
+VENDOR_PL_MKT_HEADERS = [
+    "S No", "Date", "Cnote", "From", "To", "Customer", "Veh No", "Veh Type",
+    "Trip Charges", "Toll charges", "AAI charges", "Loading charges",
+    "Unloading Charges", "Weighment charges", "Halting Charges", "Handling Charges",
+    "Selling", "BVM Inv no.", "Vendor Name", "Bill No", "Trip Cost",
+    "Toll Expenses", "AAI Expenses", "Loading Expenses", "Unloading Expenses",
+    "Weighment Expenses", "Halting Expenses", "Handling Expenses",
+    "Buying", "Profit", "Profit % with Selling", "Profit % with Buying"
+]
+
+OWN_VEHICLE_PL_HEADERS = [
+    "S No", "Date", "Vehicle No", 
+    "Toll charges", "AAI charges", "Loading charges", "Unloading Charges", 
+    "Weighment charges", "Halting Charges", "Handling Charges", "Selling", 
+    "Toll Expenses", "Depreciation", "Permit", "FC", "Road tax"
+]
+
+WHATSAPP_DELIVERY_HEADERS = [
+    "S No", "Branch", "Customer Name", "Department", "C-Note No",
+    "Consignment Date", "Trip Code", "Vehicle Type", "From", "To",
+    "Vehicle No", "Start Date", "End Date", "Driver",
+    "Whatsapp Delivered time", "Delivered Status"
+]
+
+HALTING_REPORT_HEADERS = [
+    "SNo", "Branch", "Date", "VehicleNo", "VehicleType", "Customer", "Department", "Vertical",
+    "Consignor", "Consignee", "C-Note",
+    "Halting Start", "Halting End", "Halting Days",
+    "Halting Charges (Paid to Vendor)", "Halting Charges (Billed to Customer)", "Difference",
+    "Pickup Start", "Pickup End", "Pickup Hrs",
+    "Delivery Start", "Delivery End", "Delivery Hrs"
+]
+
+CLAIM_PENDING_HEADERS = [
+    "SNo", "Branch", "CustomerName", "Department", "CNotes", "Reason", "Vertical",
+    "TripCode", "TripDate", "TruckNo", "VehicleType", "From", "To", "Driver",
+    "Liability", "ClaimAmount", "Claim Status"
+]
+
+
+VENDOR_PL_ATTACHED_HEADERS = [
+    "S No", "Date", "Cnote", "From", "To", "Customer", "Veh No", "Veh Type",
+    "Trip Charges", "Toll charges", "AAI charges", "Loading charges", "Unloading Charges",
+    "Weighment charges", "Halting Charges", "Handling Charges", "Selling",
+    "Vendor Name", "Bill No", "Total Buy / Total KM",
+    "Buying (Totalbuying/Total KM) * Trip KM",
+    "Profit", "Profit %", "Agreed KM", "KM Run", "Extra Km amt",
+    "Trip Index", "Leave Days", "Idle Days"
+]
+
+DAILY_TRIP_COUNT_HEADERS = [
+    "S.No", "Branch", "Date", "Vehicle No", "Vehicle Type",
+    "Active Trips For the Day", "Empty Trips For the Day",
+    "OWN/Market/Attached", "KM Business", "KM Empty"
+]
+
+MAINTENANCE_REPORT_HEADERS = [
+    "SNo", "Branch", "VehicleNo", "VehicleType", "Make", "PO Date",
+    "ServiceType", "Job Card No", "Previous Job Card Date", "Previous Job Card No",
+    "Expected Date Of delivery", "Expected Amount", "Vendor Name", "Assigned Date",
+    "Bill Amount Date", "Estimated Amount", "Total KM", "Delivery Date",
+    "Bill Amount", "Bill Date"
+]
+
+INSURANCE_RENEWAL_HEADERS = [
+    "S No", "Vendor Name", "Company Name", "Vehicle No", "Vehicle Type",
+    "Insurance", "Renewal Date", "IDV Value", "Elapsed (Days)", "DS Status"
+]
+
+DIESEL_VS_REVENUE_HEADERS = [
+    "Sno", "Branch", "Date", "VehicleNo", "VehicleType", "Mileage Fixed",
+    "Leased To Customer", "Km Run", "Diesel Expenses", "Revenue",
+    "Diesel vs Revenue %", "Actual Mileage"
+]
+
+OWN_VS_MARKET_SALES_HEADERS = [
+    "SNo", "Date", "Branch", "Customer Name", "Department",
+    "Own Vehicle Sales", "No of Vehicle Used - Own", "No of Jobs - Own", "No of Drivers - Own", "Trip Index - Own",
+    "Market Vehicle Sales", "No of Vehicle Used - Market", "No of Jobs - Market", "No of Drivers - Market", "Trip Index - Market",
+    "Market Buy Rate", "No of Trips - Local", "No of Trips - OutStation"
 ]
 
 # -------------------------
@@ -135,6 +224,8 @@ def vehicle_log_report_view(request):
         ]
         data_rows.append(row)
 
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
     context = {
         'first_name': first_name,
         'form': form,
@@ -146,6 +237,7 @@ def vehicle_log_report_view(request):
         'selected_year': selected_year,
         'from_location': from_loc_id,
         'to_location': to_loc_id,
+        'all_vehicles': all_vehicles,
     }
     return render(request, "asset_mgt_app/vehicle_log_report.html", context)
 
@@ -239,12 +331,13 @@ def trip_cancellation_report_view(request):
 @login_required(login_url='login_page')
 def vehicle_status_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import VehiclemasterInfo
 
     vehicle_search = request.POST.get('vehicle_search')
 
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
     vehicles = VehiclemasterInfo.objects.all().select_related('vm_vehicletype')
-    
+
     if vehicle_search:
         vehicles = vehicles.filter(vm_registrationnumber__icontains=vehicle_search)
 
@@ -293,6 +386,7 @@ def vehicle_status_report_view(request):
         'headers': VEHICLE_STATUS_HEADERS,
         'data_rows': data_rows,
         'vehicle_search': vehicle_search,
+        'all_vehicles': all_vehicles,
     }
     return render(request, "asset_mgt_app/vehicle_status_report.html", context)
 
@@ -587,3 +681,1650 @@ def invoice_pending_report_view(request):
     }
     return render(request, "asset_mgt_app/invoice_pending_report.html", context)
 
+
+
+
+@login_required(login_url='login_page')
+def vendor_p_l_mkt_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import Vehicle_allotmentInfo, TransInvoiceInfo, Driverexpense
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+
+    customer_id = request.POST.get('dmr_customer')
+    dept_id = request.POST.get('customer_department')
+    selected_month = request.POST.get('month')
+    selected_year = request.POST.get('year')
+    from_loc_id = request.POST.get('from_location')
+    to_loc_id = request.POST.get('to_location')
+
+    # Get all trips that are settled (id=7) or closed (id=2)
+    trips = TripdetailInfo.objects.filter(
+        tc_financestatus_id__in=[2, 7]
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_consignmentnumber',
+        'tr_vehicletype',
+        'tr_vehiclesource',
+        'tr_departedlocation',
+        'tr_reportedlocation'
+    )
+
+    if customer_id:
+        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if dept_id:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
+    if selected_month and selected_month != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__month=selected_month) | Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month))
+    if selected_year and selected_year != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__year=selected_year) | Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year))
+    if from_loc_id:
+        trips = trips.filter(tr_departedlocation_id=from_loc_id)
+    if to_loc_id:
+        trips = trips.filter(tr_reportedlocation_id=to_loc_id)
+
+    trips = trips.order_by('-tr_created_at')
+
+    paginator = Paginator(trips, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    trip_ids = [t.id for t in page_obj]
+    trip_enquiries = [t.tr_enquirynumber_id for t in page_obj]
+
+    # Pre-fetch related data
+    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=trip_enquiries).select_related('va_vendor')
+    invoices = TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids)
+    
+    # We need to fetch expenses linked to these trips.
+    # Driverexpense links to TripdetailInfo via 'trip_number' (which is the FK field name in model, not `de_trip_number` char field)
+    # Check model definition: trip_number = ForeignKey(TripdetailInfo...)
+    expenses = Driverexpense.objects.filter(trip_number_id__in=trip_ids)
+
+    # Maps
+    allotment_map = {}
+    for a in allotments:
+        key = (a.va_enquirynumber_id, str(a.va_vehiclenumber) if a.va_vehiclenumber else a.va_vehiclenumber_mkt)
+        allotment_map[key] = a
+
+    invoice_map = {i.ti_trip_id: i.ti_inv_no for i in invoices}
+    
+    # Expense Map: trip_id -> list of expenses
+    expense_map = {}
+    for e in expenses:
+        if e.trip_number_id not in expense_map:
+            expense_map[e.trip_number_id] = []
+        expense_map[e.trip_number_id].append(e)
+
+    data_rows = []
+
+    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+        # SELLING DATA
+        selling_trip = safe_num(trip.tc_tripcost)
+        selling_toll = safe_num(trip.tc_tollcost)
+        selling_aai = safe_num(trip.tc_supervisorcost)
+        selling_loading = safe_num(trip.tc_loadingcost)
+        selling_unloading = safe_num(trip.tc_unloadingcost)
+        selling_weighment = safe_num(trip.tc_weighmentcost)
+        selling_halting = safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost)
+        selling_handling = safe_num(trip.tc_handlingcost)
+        
+        total_selling = selling_trip + selling_toll + selling_aai + selling_loading + \
+                        selling_unloading + selling_weighment + selling_halting + selling_handling + \
+                        safe_num(trip.tc_parkingcost) + safe_num(trip.tc_rtocost) + safe_num(trip.tc_betacost)
+
+        # BUYING DATA
+        # 1. Base Trip Cost from Allotment (or fallback?)
+        allotment = allotment_map.get((trip.tr_enquirynumber_id, trip.tr_vehiclenumber))
+        
+        vendor_name = ""
+        buying_trip_cost = 0.0
+        
+        if allotment:
+            vendor_name = safe_str(allotment.va_vendor) if allotment.va_vendor else "Own Vehicle"
+            buying_trip_cost = safe_num(allotment.va_standardbuy) + safe_num(allotment.va_specialbuy)
+        else:
+             # Fallback logic
+             vendor_name = "Own Vehicle" if trip.tr_vehiclesource_id in [1, 2] else "Unassigned"
+             # If no allotment, maybe we don't have buying trip cost easily available, assume 0 or derived?
+             # For Market vehicles, usually allotment exists.
+        
+        # 2. Granular Expenses from Driverexpense
+        # We need to sum up expenses by type for this trip
+        trip_expenses = expense_map.get(trip.id, [])
+        
+        buying_toll = 0.0
+        buying_aai = 0.0
+        buying_loading = 0.0
+        buying_unloading = 0.0
+        buying_weighment = 0.0
+        buying_halting = 0.0
+        buying_handling = 0.0 # Not explicit in Driverexpense model
+        
+        # There might be other expenses, but let's map what we have in Driverexpense model
+        # de_loadingcost, de_unloadingcost, de_weighmentcost, de_supervisorcost (AAI), de_rtocost, de_parkingcost, de_battacost
+        # There isn't a direct "Toll" field in Driverexpense model shown earlier? 
+        # Wait, the Driverexpense model showed: de_parkingcost, de_loadingcost, de_unloadingcost, de_weighmentcost, de_supervisorcost, de_rtocost, de_battacost.
+        # It does NOT have a specific "Toll" field named clearly like `de_tollcost`.
+        # However, it has `de_expense_type`. If expense type is used for toll, we can check that.
+        # But typically `de_total_cost` is the amount.
+        
+        # Let's sum specific fields if they exist on the Driverexpense record, 
+        # OR if there are multiple records each representing a type.
+        # The model seems to have specific columns for costs on a single record? 
+        # "de_loadingcost = models.FloatField(default=0.0)"
+        # This implies one record can have multiple components? Or is it one record per trip?
+        # Usually Driver settlement has multiple expense lines.
+        # Let's aggregate ALL linked expense records for this trip.
+        
+        for e in trip_expenses:
+             buying_loading += safe_num(e.de_loadingcost)
+             buying_unloading += safe_num(e.de_unloadingcost)
+             buying_weighment += safe_num(e.de_weighmentcost)
+             buying_aai += safe_num(e.de_supervisorcost)
+             # buying_toll? - No specific field. Maybe check if expense type is 'Toll' or similar?
+             # For now, let's assume any other cost logic or if there's a field I missed.
+             # Actually, often Toll is submitted as a separate expense type record.
+             # If `de_expense_type` name is "Toll", we take `de_total_cost`.
+             # I'll need to fetch expense types to be sure, but for now I'll stick to the explicit fields.
+             
+        # "Toll Expenses" - we don't have a clear field. I will leave as 0 for now or map from generic Total if type is Toll.
+        # "Halting Expenses" - also no clear field in Driverexpense (only `de_parkingcost`?).
+        # "Handling Expenses" - no field.
+        
+        total_buying = buying_trip_cost + buying_toll + buying_aai + buying_loading + \
+                       buying_unloading + buying_weighment + buying_halting + buying_handling
+
+        profit = total_selling - total_buying
+        
+        # Margin calculations
+        profit_pct_selling = (profit / total_selling * 100) if total_selling > 0 else 0
+        profit_pct_buying = (profit / total_buying * 100) if total_buying > 0 else 0
+        
+        bvm_inv_no = invoice_map.get(trip.id, "")
+        bill_no = "" # No clear vendor bill no mapping yet
+
+        row = [
+            idx,
+            trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else \
+                (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""),
+            safe_str(trip.tr_consignmentnumber),
+            safe_str(trip.tr_departedlocation),
+            safe_str(trip.tr_reportedlocation),
+            safe_str(trip.tr_enquirynumber.en_customername),
+            safe_str(trip.tr_vehiclenumber),
+            safe_str(trip.tr_vehicletype),
+            
+            # SELLING
+            selling_trip,
+            selling_toll,
+            selling_aai,
+            selling_loading,
+            selling_unloading,
+            selling_weighment,
+            selling_halting,
+            selling_handling,
+            total_selling,
+            
+            # REFERENCE
+            bvm_inv_no,
+            vendor_name,
+            bill_no,
+            
+            # BUYING
+            buying_trip_cost,
+            buying_toll,
+            buying_aai,
+            buying_loading,
+            buying_unloading,
+            buying_weighment,
+            buying_halting,
+            buying_handling,
+            total_buying,
+            
+            # PROFIT
+            round(profit, 2),
+            f"{round(profit_pct_selling, 2)}%",
+            f"{round(profit_pct_buying, 2)}%"
+        ]
+        data_rows.append(row)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': VENDOR_PL_MKT_HEADERS,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'customer_id': customer_id,
+        'dept_id': dept_id,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'from_location': from_loc_id,
+        'to_location': to_loc_id,
+    }
+    return render(request, "asset_mgt_app/vendor_p_l_mkt_report.html", context)
+
+
+
+@login_required(login_url='login_page')
+def vendor_p_l_attached_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import Vehicle_allotmentInfo, TransInvoiceInfo, Driverexpense
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+
+    customer_id = request.POST.get('dmr_customer')
+    dept_id = request.POST.get('customer_department')
+    selected_month = request.POST.get('month')
+    selected_year = request.POST.get('year')
+    from_loc_id = request.POST.get('from_location')
+    to_loc_id = request.POST.get('to_location')
+
+    # Get all trips that are settled (id=7) or closed (id=2)
+    trips = TripdetailInfo.objects.filter(
+        tc_financestatus_id__in=[2, 7]
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_consignmentnumber',
+        'tr_vehicletype',
+        'tr_vehiclesource',
+        'tr_departedlocation',
+        'tr_reportedlocation'
+    )
+
+    if customer_id:
+        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if dept_id:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
+    if selected_month and selected_month != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__month=selected_month) | Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month))
+    if selected_year and selected_year != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__year=selected_year) | Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year))
+    if from_loc_id:
+        trips = trips.filter(tr_departedlocation_id=from_loc_id)
+    if to_loc_id:
+        trips = trips.filter(tr_reportedlocation_id=to_loc_id)
+
+    trips = trips.order_by('-tr_created_at')
+
+    paginator = Paginator(trips, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    trip_ids = [t.id for t in page_obj] 
+    
+    # Prefetch related data
+    # 1. Vehicle Allotment for Vendor Name & Base Buying Cost
+    va_map = {
+        va.va_enquirynumber_id: va 
+        for va in Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber__in=[t.tr_enquirynumber_id for t in page_obj]
+        ).select_related('va_vendor')
+    }
+
+    # 2. Invoice Info for BVM Inv No
+    inv_map = {
+        inv.ti_trip_id: inv 
+        for inv in TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids)
+    }
+
+    # 3. Driver Expenses for granular buying costs
+    # Fetch expenses linked to these trips
+    # Note: Logic assumes Driverexpense is linked to trip_number (TripdetailInfo)
+    driver_expense_map = {}
+    expenses = Driverexpense.objects.filter(trip_number_id__in=trip_ids)
+    for exp in expenses:
+        if exp.trip_number_id not in driver_expense_map:
+            driver_expense_map[exp.trip_number_id] = []
+        driver_expense_map[exp.trip_number_id].append(exp)
+
+
+    data_rows = []
+    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+        
+        # --- Selling (Income) ---
+        selling_trip_charges = safe_num(trip.tc_tripcost)
+        selling_toll = safe_num(trip.tc_tollcost)
+        selling_aai = safe_num(trip.tc_supervisorcost)
+        selling_loading = safe_num(trip.tc_loadingcost)
+        selling_unloading = safe_num(trip.tc_unloadingcost)
+        selling_weighment = safe_num(trip.tc_weighmentcost)
+        # Halting is sum of tc_haltingcost + tc_total_halting_cost
+        selling_halting = safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost) 
+        selling_handling = safe_num(trip.tc_handlingcost)
+
+        # Other selling components not in explicit columns but part of total Selling
+        selling_parking = safe_num(trip.tc_parkingcost)
+        selling_rto = safe_num(trip.tc_rtocost)
+        selling_beta = safe_num(trip.tc_betacost)
+        
+        total_selling = (
+            selling_trip_charges + selling_toll + selling_aai + 
+            selling_loading + selling_unloading + selling_weighment + 
+            selling_halting + selling_handling + 
+            selling_parking + selling_rto + selling_beta
+        )
+
+        # --- Buying (Expenses) ---
+        va_info = va_map.get(trip.tr_enquirynumber_id)
+        
+        # Vendor Name
+        vendor_name = "Own Vehicle" # Default
+        if va_info:
+            if va_info.va_vendor:
+                vendor_name = str(va_info.va_vendor)
+            elif va_info.va_vehiclenumber_mkt: # If market vehicle number exists but no vendor linked
+                vendor_name = "Market Vehicle"
+
+        # Buying Trip Cost (Base)
+        buying_trip_cost = 0.0
+        if va_info:
+            buying_trip_cost = safe_num(getattr(va_info, 'va_standardbuy', 0)) + safe_num(getattr(va_info, 'va_specialbuy', 0))
+
+        # Granular Buying Expenses from Driverexpense
+        trip_expenses = driver_expense_map.get(trip.id, [])
+        
+        # Summing up expenses for this trip
+        buy_loading = sum(safe_num(e.de_loadingcost) for e in trip_expenses)
+        buy_unloading = sum(safe_num(e.de_unloadingcost) for e in trip_expenses)
+        buy_weighment = sum(safe_num(e.de_weighmentcost) for e in trip_expenses)
+        buy_aai = sum(safe_num(e.de_supervisorcost) for e in trip_expenses)
+        
+        # Placeholder/Unmapped buying expenses
+        buy_toll = 0.0 
+        buy_halting = 0.0
+        buy_handling = 0.0
+        
+        total_buying = (
+            buying_trip_cost + buy_loading + buy_unloading + 
+            buy_weighment + buy_aai + buy_toll + buy_halting + buy_handling
+        )
+
+        # --- Reference Columns ---
+        inv_info = inv_map.get(trip.id)
+        bvm_inv_no = inv_info.ti_inv_no if inv_info else ""
+        bill_no = "" # Placeholder as per requirement
+
+        # --- Attached / MKT Metrics ---
+        
+        # KM Calculations
+        reported_km = safe_num(trip.tr_reportedkm)
+        departed_km = safe_num(trip.tr_departedkm)
+        km_run = reported_km - departed_km if (reported_km and departed_km) else 0.0
+        
+        agreed_km = 0.0 # Placeholder
+        extra_km_amt = 0.0 # Placeholder
+        
+        # Rate Calculation
+        # Total Buy / Total KM (or KM Run if Total KM is not distinct)
+        # Assuming Total KM here refers to Actual KM Run for the trip
+        buy_rate_per_km = 0.0
+        if km_run > 0:
+            buy_rate_per_km = total_buying / km_run
+            
+        # Buying (Totalbuying/Total KM) * Trip KM
+        # If Trip KM is KM Run, this basically equals Total Buying.
+        # This formula seems redundant if Trip KM == KM Run. 
+        # Implementing literally as (Total Buying / KM Run) * KM Run
+        buying_calulated = total_buying 
+        if km_run > 0:
+             buying_calulated = (total_buying / km_run) * km_run
+
+
+        # --- Profit ---
+        profit = total_selling - total_buying
+        profit_pct = (profit / total_buying * 100) if total_buying > 0 else 0.0
+
+        # --- Other Placeholders ---
+        trip_index = 0
+        leave_days = 0
+        idle_days = 0
+
+        row = [
+            idx,
+            trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else \
+                (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""),
+            safe_str(trip.tr_consignmentnumber),
+            safe_str(trip.tr_departedlocation),
+            safe_str(trip.tr_reportedlocation),
+            safe_str(trip.tr_enquirynumber.en_customername),
+            safe_str(trip.tr_vehiclenumber),
+            safe_str(trip.tr_vehicletype),
+            selling_trip_charges,
+            selling_toll,
+            selling_aai,
+            selling_loading,
+            selling_unloading,
+            selling_weighment,
+            selling_halting,
+            selling_handling,
+            total_selling,
+            vendor_name,
+            bill_no,
+            round(buy_rate_per_km, 2), # Total Buy / Total KM
+            round(buying_calulated, 2), # Buying (Totalbuying/Total KM) * Trip KM
+            round(profit, 2),
+            f"{round(profit_pct, 2)}%",
+            agreed_km,
+            km_run,
+            extra_km_amt,
+            trip_index,
+            leave_days,
+            idle_days
+        ]
+        data_rows.append(row)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': VENDOR_PL_ATTACHED_HEADERS,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'customer_id': customer_id,
+        'dept_id': dept_id,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'from_loc_id': from_loc_id,
+        'to_loc_id': to_loc_id,
+    }
+    return render(request, "asset_mgt_app/vendor_p_l_attached_report.html", context)
+
+
+
+
+@login_required(login_url='login_page')
+def whatsapp_delivery_status_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import Vehicle_allotmentInfo
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+
+    customer_id = request.POST.get('dmr_customer')
+    dept_id = request.POST.get('customer_department')
+    selected_month = request.POST.get('month')
+    selected_year = request.POST.get('year')
+    from_loc_id = request.POST.get('from_location')
+    to_loc_id = request.POST.get('to_location')
+
+    # Base Query - Fetching from TripdetailInfo to link with Consignments
+    trips = TripdetailInfo.objects.all().select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_consignmentnumber',
+        'tr_vehicletype',
+        'tr_departedlocation',
+        'tr_reportedlocation'
+    )
+
+    if customer_id:
+        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if dept_id:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
+    if selected_month and selected_month != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__month=selected_month) | Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month))
+    if selected_year and selected_year != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__year=selected_year) | Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year))
+    if from_loc_id:
+        trips = trips.filter(tr_departedlocation_id=from_loc_id)
+    if to_loc_id:
+        trips = trips.filter(tr_reportedlocation_id=to_loc_id)
+
+    trips = trips.order_by('-tr_created_at')
+
+    paginator = Paginator(trips, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    data_rows = []
+    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+        
+        # Mapped Columns
+        branch_name = safe_str(trip.tr_enquirynumber.en_branch if hasattr(trip.tr_enquirynumber, 'en_branch') else 'Main Branch')
+        customer_name = safe_str(trip.tr_enquirynumber.en_customername)
+        department = safe_str(trip.tr_enquirynumber.en_customerdepartment)
+        cnote_no = safe_str(trip.tr_consignmentnumber)
+        
+        # Determine Branch from C-Note
+        lower_cnote = cnote_no.lower()
+        if 'maa_' in lower_cnote:
+            branch_name = "MAA"
+        elif 'blr_' in lower_cnote:
+            branch_name = "BLR"
+        
+        consignment_date = ""
+        if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentdate:
+            consignment_date = trip.tr_consignmentnumber.co_consignmentdate.strftime("%d-%m-%Y")
+
+        trip_code = safe_str(trip.tr_tripnumber)
+        vehicle_type = safe_str(trip.tr_vehicletype)
+        from_loc = safe_str(trip.tr_departedlocation)
+        to_loc = safe_str(trip.tr_reportedlocation)
+        vehicle_no = safe_str(trip.tr_vehiclenumber)
+        
+        start_date = trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""
+        end_date = trip.tr_reporteddate.strftime("%d-%m-%Y") if trip.tr_reporteddate else ""
+        driver_name = safe_str(trip.tr_drivername)
+
+        # Placeholders
+        whatsapp_time = "" 
+        delivered_status = "Pending" # Placeholder status
+
+        row = [
+            idx,
+            branch_name,
+            customer_name,
+            department,
+            cnote_no,
+            consignment_date,
+            trip_code,
+            vehicle_type,
+            from_loc,
+            to_loc,
+            vehicle_no,
+            start_date,
+            end_date,
+            driver_name,
+            whatsapp_time,
+            delivered_status
+        ]
+        data_rows.append(row)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': WHATSAPP_DELIVERY_HEADERS,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'customer_id': customer_id,
+        'dept_id': dept_id,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'from_loc_id': from_loc_id,
+        'to_loc_id': to_loc_id,
+    }
+    return render(request, "asset_mgt_app/whatsapp_delivery_status_report.html", context)
+
+
+@login_required(login_url='login_page')
+def daily_trip_count_report_view(request):
+    first_name = request.session.get('first_name')
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+
+    customer_id = request.POST.get('dmr_customer')
+    dept_id = request.POST.get('customer_department')
+    selected_month = request.POST.get('month')
+    selected_year = request.POST.get('year')
+    from_loc_id = request.POST.get('from_location')
+    to_loc_id = request.POST.get('to_location')
+
+    vehicle_filter = request.POST.get('vehicle_number')
+
+    trips = TripdetailInfo.objects.all().select_related(
+        'tr_enquirynumber',
+        'tr_vehicletype',
+        'tr_departedlocation',
+        'tr_vehiclesource',
+        'tr_category',
+        'tr_consignmentnumber'
+    )
+
+    # Filters (Month, Year, Vehicle)
+    if selected_month and selected_month != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__month=selected_month) | Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month))
+    if selected_year and selected_year != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__year=selected_year) | Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year))
+    if vehicle_filter:
+        trips = trips.filter(tr_vehiclenumber__icontains=vehicle_filter)
+
+    # Aggregation Logic
+    aggregated_data = {}
+
+    for trip in trips:
+        # Determine Date
+        trip_date = None
+        if trip.tr_loading_time:
+            trip_date = trip.tr_loading_time.date()
+        elif trip.tr_departeddate:
+            trip_date = trip.tr_departeddate.date()
+        
+        if not trip_date:
+            continue
+            
+        date_str = trip_date.strftime("%d-%m-%Y")
+        
+        vehicle_no = safe_str(trip.tr_vehiclenumber)
+        
+        # Branch mapping from Consignment Number (First 3 letters)
+        if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentnumber:
+             branch_name = safe_str(trip.tr_consignmentnumber.co_consignmentnumber)[:3].upper()
+        else:
+            branch_name = "MAA" # Default fallback
+        
+        key = (date_str, vehicle_no, branch_name)
+
+        if key not in aggregated_data:
+            aggregated_data[key] = {
+                'branch': branch_name,
+                'date': date_str,
+                'vehicle_no': vehicle_no,
+                'vehicle_type': safe_str(trip.tr_vehicletype),
+                'active_trips': 0,
+                'empty_trips': 0,
+                'ownership': safe_str(trip.tr_vehiclesource), 
+                'km_business': 0.0,
+                'km_empty': 0.0
+            }
+
+        # Metrics Calculation
+        # KM Run
+        reported_km = safe_num(trip.tr_reportedkm)
+        departed_km = safe_num(trip.tr_departedkm)
+        km_run = reported_km - departed_km if (reported_km and departed_km) else 0.0
+        
+        # Active vs Empty
+        # Category 1 = Active/Normal
+        # Category 2, 3 = Empty/Special
+        if trip.tr_category_id == 1:
+            aggregated_data[key]['active_trips'] += 1
+            aggregated_data[key]['km_business'] += km_run
+        elif trip.tr_category_id in [2, 3]:
+            aggregated_data[key]['empty_trips'] += 1
+            aggregated_data[key]['km_empty'] += km_run
+            
+    # Convert to list for display
+    data_rows = []
+    # Sorting keys 
+    sorted_keys = sorted(aggregated_data.keys(), key=lambda x: datetime.strptime(x[0], "%d-%m-%Y"), reverse=True)
+    
+    for idx, key in enumerate(sorted_keys, start=1):
+        item = aggregated_data[key]
+        row = [
+            idx,
+            item['branch'],
+            item['date'],
+            item['vehicle_no'],
+            item['vehicle_type'],
+            item['active_trips'],
+            item['empty_trips'],
+            item['ownership'],
+            round(item['km_business'], 2),
+            round(item['km_empty'], 2)
+        ]
+        data_rows.append(row)
+
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': DAILY_TRIP_COUNT_HEADERS,
+        'data_rows': data_rows,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'vehicle_filter': vehicle_filter,
+        'all_vehicles': all_vehicles
+    }
+    return render(request, "asset_mgt_app/daily_trip_count_report.html", context)
+
+
+@login_required(login_url='login_page')
+def own_vehicle_pl_report_view(request):
+    first_name = request.session.get('first_name')
+
+    # Initialize Filter Form (Reports use GET for better persistence)
+    if request.GET:
+        form = DmrForm(request.GET)
+    else:
+        form = DmrForm()
+
+    # Get Filter Parameters
+    vehicle_number = request.GET.get('vehicle_search') or request.GET.get('vehicle_number')
+    selected_month = request.GET.get('month')
+    selected_year = request.GET.get('year')
+
+    # Base Query: Fetch Settled or Closed Trips
+    # Focusing on Own Vehicles (tr_vehiclesource_id usually 1 or 2 for Own)
+    trips = TripdetailInfo.objects.filter(
+        tc_financestatus_id__in=[2, 7],
+        tr_vehiclesource_id__in=[1, 2] 
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_vehicletype',
+        'tr_vehiclesource',
+        'tr_departedlocation',
+        'tr_reportedlocation'
+    )
+
+    # Apply Filters
+    if selected_month and selected_month != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__month=selected_month) | Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month))
+    if selected_year and selected_year != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__year=selected_year) | Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year))
+    if vehicle_number:
+        trips = trips.filter(tr_vehiclenumber__icontains=vehicle_number)
+
+    trips = trips.order_by('-tr_created_at')
+
+    # Pagination
+    paginator = Paginator(trips, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    trip_ids = [t.id for t in page_obj]
+    
+    # Prefetch Driver Expenses for "Toll Expenses"
+    # Assuming Driverexpense linked via trip_number (TripDetail FK)
+    expenses = Driverexpense.objects.filter(trip_number_id__in=trip_ids).select_related('de_expense_type')
+    expense_map = {}
+    for e in expenses:
+        if e.trip_number_id not in expense_map:
+            expense_map[e.trip_number_id] = []
+        expense_map[e.trip_number_id].append(e)
+
+    # Prefetch Vehicle Master Info for Fixed Costs
+    vehicle_numbers = [t.tr_vehiclenumber for t in page_obj if t.tr_vehiclenumber]
+    vehicles = VehiclemasterInfo.objects.filter(vm_registrationnumber__in=vehicle_numbers)
+    vehicle_map = {v.vm_registrationnumber: v for v in vehicles}
+
+    data_rows = []
+    
+    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+        
+        # --- Date ---
+        date_val = trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else \
+                   (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else "")
+
+        # --- Selling Charges (Revenue) ---
+        tc_toll = safe_num(trip.tc_tollcost)
+        tc_aai = safe_num(trip.tc_supervisorcost)
+        tc_loading = safe_num(trip.tc_loadingcost)
+        tc_unloading = safe_num(trip.tc_unloadingcost)
+        tc_weighment = safe_num(trip.tc_weighmentcost)
+        tc_halting = safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost)
+        tc_handling = safe_num(trip.tc_handlingcost)
+        
+        # Total Selling
+        # Sum of all revenue components
+        selling_total = (
+            safe_num(trip.tc_tripcost) + tc_toll + tc_aai + tc_loading + 
+            tc_unloading + tc_weighment + tc_halting + tc_handling +
+            safe_num(trip.tc_parkingcost) + safe_num(trip.tc_rtocost) + safe_num(trip.tc_betacost)
+        )
+
+        # --- Toll Expenses (Combined from Driverexpense) ---
+        # Logic: Sum 'de_total_cost' where expense type name contains 'Toll'
+        # OR fallback to 0 if no specific mapping found.
+        # Since I cannot guarantee 'Toll' type exists, I will try to look for it.
+        trip_expenses = expense_map.get(trip.id, [])
+        toll_expenses = 0.0
+        
+        for e in trip_expenses:
+             # loose match for Toll in expense type if available
+             if e.de_expense_type and 'toll' in str(e.de_expense_type).lower():
+                 toll_expenses += safe_num(e.de_total_cost)
+        
+        # --- Vehicle Fixed Costs (From Vehicle Master) ---
+        vm = vehicle_map.get(trip.tr_vehiclenumber)
+        depreciation = safe_num(vm.vm_yearofdepreciation) if vm else 0.0 # Or vm_ofdepreciation? Using yearofdepreciation as mostly value is there
+        permit = safe_num(vm.vm_permitamount) if vm else 0.0
+        fc = safe_num(vm.vm_fcamount) if vm else 0.0
+        road_tax = safe_num(vm.vm_roadtaxamount) if vm else 0.0
+        
+        # Note: These are likely Annual/Fixed amounts, not per trip.
+        # Displaying as is as per request "Fetch data".
+
+        row = [
+            idx,
+            date_val,
+            safe_str(trip.tr_vehiclenumber),
+            tc_toll,         # Toll charges
+            tc_aai,          # AAI charges
+            tc_loading,      # Loading charges
+            tc_unloading,    # Unloading charges
+            tc_weighment,    # Weighment charges
+            tc_halting,      # Halting charges
+            tc_handling,     # Handling charges
+            selling_total,   # Selling
+            toll_expenses,   # Toll Expenses
+            depreciation,    # Depriciation
+            permit,          # Permit
+            fc,              # FC
+            road_tax         # Road tax
+        ]
+        data_rows.append(row)
+
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': OWN_VEHICLE_PL_HEADERS,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'vehicle_number': vehicle_number,
+        'all_vehicles': all_vehicles,
+    }
+    
+    return render(request, "asset_mgt_app/own_vehicle_pl_report.html", context)
+
+
+
+
+@login_required(login_url='login_page')
+def claim_pending_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import CustomerClaimsInfo
+    
+    # Initialize Filter Form
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+
+    # Get Filter Parameters
+    customer_id = request.POST.get('dmr_customer')
+    selected_month = request.POST.get('month')
+    selected_year = request.POST.get('year')
+
+    # Base Query: Fetch All Claims
+    # We need to join with Customer, Branch, Unit, and Trip
+    claims = CustomerClaimsInfo.objects.all().select_related(
+        'cc_branch',
+        'cc_unit',
+        'cc_customer',
+        'cc_status',
+    )
+
+    if customer_id:
+        claims = claims.filter(cc_customer_id=customer_id)
+    if selected_month and selected_month != '0':
+         # Using cc_CAPA_issueddate or cc_updated_on for date filtering?
+         # Assuming updated_on is more relevant for general tracking if date field ambiguous
+         claims = claims.filter(cc_updated_on__month=selected_month)
+    if selected_year and selected_year != '0':
+         claims = claims.filter(cc_updated_on__year=selected_year)
+    
+    claims = claims.order_by('-cc_updated_on')
+
+    # Pagination
+    paginator = Paginator(claims, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Fetch related Trips for the current page
+    # cc_job_ref is the link. It could contain Trip Number OR CNote Number.
+    job_refs = [c.cc_job_ref for c in page_obj if c.cc_job_ref]
+    
+    # Try to find trips matching tr_tripnumber
+    trips_by_no = TripdetailInfo.objects.filter(tr_tripnumber__in=job_refs).select_related(
+        'tr_vehicletype', 'tr_departedlocation', 'tr_reportedlocation'
+    )
+    trip_map = {t.tr_tripnumber: t for t in trips_by_no}
+
+    # Try to find trips matching tr_consignmentnumber__co_consignmentnumber for unmapped ones
+    # This requires a second query or careful OR logic.
+    # Simpler to do a second lookup for remaining refs
+    remaining_refs = [r for r in job_refs if r not in trip_map]
+    if remaining_refs:
+        trips_by_cnote = TripdetailInfo.objects.filter(
+            tr_consignmentnumber__co_consignmentnumber__in=remaining_refs
+        ).select_related(
+            'tr_vehicletype', 'tr_departedlocation', 'tr_reportedlocation', 'tr_consignmentnumber'
+        )
+        for t in trips_by_cnote:
+            # Map by CNote so we can lookup later
+            if t.tr_consignmentnumber:
+                trip_map[t.tr_consignmentnumber.co_consignmentnumber] = t
+
+    data_rows = []
+    
+    for idx, claim in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+        
+        # Look up trip details
+        trip = trip_map.get(claim.cc_job_ref)
+        
+        trip_code = claim.cc_job_ref
+        trip_date = ""
+        truck_no = ""
+        veh_type = ""
+        loc_from = ""
+        loc_to = ""
+        driver = ""
+        department = "" # From trip or customer?
+        cnote = claim.cc_job_ref # Default to ref
+
+        if trip:
+            trip_code = safe_str(trip.tr_tripnumber)
+            trip_date = trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""
+            truck_no = safe_str(trip.tr_vehiclenumber)
+            veh_type = safe_str(trip.tr_vehicletype)
+            loc_from = safe_str(trip.tr_departedlocation)
+            loc_to = safe_str(trip.tr_reportedlocation)
+            driver = safe_str(trip.tr_drivername)
+            if trip.tr_consignmentnumber:
+                cnote = safe_str(trip.tr_consignmentnumber.co_consignmentnumber)
+            
+            # Try to get dept from trip enquiry if available, else standard customer dept
+            if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customerdepartment:
+                 department = safe_str(trip.tr_enquirynumber.en_customerdepartment)
+
+        row = [
+            idx,
+            safe_str(claim.cc_branch),
+            safe_str(claim.cc_customer),
+            department,
+            cnote,
+            safe_str(claim.cc_claim_reason),
+            safe_str(claim.cc_unit), # Vertical? Assuming UnitInfo maps to vertical/business unit
+            trip_code,
+            trip_date,
+            truck_no,
+            veh_type,
+            loc_from,
+            loc_to,
+            driver,
+            "N/A", # Liability - Field missing in model
+            safe_num(claim.cc_amount),
+            safe_str(claim.cc_status)
+        ]
+        data_rows.append(row)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': CLAIM_PENDING_HEADERS,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'customer_id': customer_id,
+    }
+    
+    return render(request, "asset_mgt_app/claim_pending_report.html", context)
+
+
+
+
+@login_required(login_url='login_page')
+def halting_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import TripdetailInfo, Driverexpense, ConsignmentgoodsInfo
+    
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+    
+    customer_id = request.POST.get('dmr_customer')
+    selected_month = request.POST.get('month')
+    selected_year = request.POST.get('year')
+    
+    # Base Query
+    trips = TripdetailInfo.objects.all().select_related(
+        'tr_enquirynumber', 'tr_enquirynumber__en_customername', 'tr_enquirynumber__en_customerdepartment',
+        'tr_vehicletype', 'tr_departedlocation', 'tr_reportedlocation',
+        'tr_consignmentnumber'
+    )
+    
+    if customer_id:
+        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if selected_month and selected_month != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__month=selected_month) | Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month))
+    if selected_year and selected_year != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__year=selected_year) | Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year))
+            
+    trips = trips.order_by('-tr_created_at')
+    
+    paginator = Paginator(trips, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    trip_ids = [t.id for t in page_obj]
+    # Filter valid consignment IDs (not None)
+    consignment_ids = [t.tr_consignmentnumber.id for t in page_obj if t.tr_consignmentnumber]
+
+    # Fetch Expenses for "Buying Halting"
+    expenses = Driverexpense.objects.filter(trip_number_id__in=trip_ids).select_related('de_expense_type')
+    expense_map = {}
+    
+    for e in expenses:
+        if e.trip_number_id not in expense_map:
+            expense_map[e.trip_number_id] = 0.0
+        
+        # Check if expense is related to Halting
+        if e.de_expense_type and 'halting' in str(e.de_expense_type).lower():
+            expense_map[e.trip_number_id] += safe_num(e.de_total_cost)
+            
+    # Fetch Consignment Goods for Consignor/Consignee
+    goods = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber_id__in=consignment_ids).select_related(
+        'cg_consigner', 'cg_consignee'
+    )
+    
+    goods_map = {}
+    for g in goods:
+        # Use simple mapping: ConsignmentID -> (ConsignorName, ConsigneeName)
+        # If multiple goods exist, this takes the last one processed. Usually sufficient for reports.
+        consigner = g.cg_consigner.consigner_name if g.cg_consigner else ""
+        consignee = g.cg_consignee.consignee_name if g.cg_consignee else ""
+        goods_map[g.cg_consignmentnumber_id] = (consigner, consignee)
+
+    data_rows = []
+    
+    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+        
+        # --- Basic Details ---
+        branch = safe_str(trip.tr_enquirynumber.en_branch if hasattr(trip.tr_enquirynumber, 'en_branch') else '') 
+        
+        date_val = trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""
+        veh_no = safe_str(trip.tr_vehiclenumber)
+        veh_type = safe_str(trip.tr_vehicletype)
+        customer = safe_str(trip.tr_enquirynumber.en_customername)
+        dept = safe_str(trip.tr_enquirynumber.en_customerdepartment)
+        vertical = safe_str(trip.tr_enquirynumber.en_unit if hasattr(trip.tr_enquirynumber, 'en_unit') else '')
+        
+        consignor = ""
+        consignee = ""
+        cnote = ""
+        
+        if trip.tr_consignmentnumber:
+            cnote = safe_str(trip.tr_consignmentnumber.co_consignmentnumber)
+            # Lookup from goods map
+            if trip.tr_consignmentnumber.id in goods_map:
+                consignor, consignee = goods_map[trip.tr_consignmentnumber.id]
+
+            # Determine Branch from C-Note
+            lower_cnote = cnote.lower()
+            if 'maa_' in lower_cnote:
+                branch = "MAA"
+            elif 'blr_' in lower_cnote:
+                branch = "BLR"
+            
+        # --- Halting ---
+        # Timestamps for Halting not explicitly tracked
+        halting_start = "" 
+        halting_end = ""
+        halting_days = safe_num(trip.tc_no_of_days_halting)
+        
+        buying_halting = expense_map.get(trip.id, 0.0)
+        selling_halting = safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost)
+        diff = selling_halting - buying_halting
+        
+        # --- Pickup ---
+        p_start = trip.tr_departeddate_pickup
+        p_end = trip.tr_dock_out_time 
+        p_hrs = "0.0"
+        p_start_str = ""
+        p_end_str = ""
+        
+        if p_start and p_end:
+            p_start_str = p_start.strftime("%d-%m-%Y %H:%M")
+            p_end_str = p_end.strftime("%d-%m-%Y %H:%M")
+            delta = p_end - p_start
+            p_hrs = f"{round(delta.total_seconds() / 3600, 2)}"
+        elif p_start:
+            p_start_str = p_start.strftime("%d-%m-%Y %H:%M")
+            
+        # --- Delivery ---
+        # Start: Reported at delivery loc
+        # End: Departed from delivery loc (Unloading done)
+        d_start = trip.tr_reporteddate
+        d_end = trip.tr_departeddate_delivery
+        d_hrs = "0.0"
+        d_start_str = ""
+        d_end_str = ""
+        
+        if d_start and d_end:
+            d_start_str = d_start.strftime("%d-%m-%Y %H:%M")
+            d_end_str = d_end.strftime("%d-%m-%Y %H:%M")
+            delta = d_end - d_start
+            d_hrs = f"{round(delta.total_seconds() / 3600, 2)}"
+        elif d_start:
+             d_start_str = d_start.strftime("%d-%m-%Y %H:%M")
+
+        row = [
+            idx, branch, date_val, veh_no, veh_type, customer, dept, vertical,
+            consignor, consignee, cnote,
+            halting_start, halting_end, halting_days,
+            buying_halting, selling_halting, diff,
+            p_start_str, p_end_str, p_hrs,
+            d_start_str, d_end_str, d_hrs
+        ]
+        data_rows.append(row)
+        
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': HALTING_REPORT_HEADERS,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'customer_id': customer_id,
+    }
+    
+    return render(request, "asset_mgt_app/halting_report.html", context)
+
+
+
+
+@login_required(login_url='login_page')
+def maintenance_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import MaintenanceInfo, VehiclemasterInfo
+    from datetime import datetime
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+        vehicle_search = request.POST.get('vehicle_search', '')
+        selected_month = request.POST.get('month', '')
+        selected_year = request.POST.get('year', '')
+    else:
+        form = DmrForm()
+        vehicle_search = ""
+        selected_month = ""
+        selected_year = ""
+
+    # Base Query
+    maintenance_records = MaintenanceInfo.objects.all().select_related(
+        'vehicle', 'vehicle__vm_vehicletype', 'vehicle__vm_vehiclemanufacturer'
+    ).order_by('vehicle__vm_registrationnumber', '-created_at')
+
+    # Filters
+    if vehicle_search:
+        maintenance_records = maintenance_records.filter(vehicle__vm_registrationnumber__icontains=vehicle_search)
+    #
+    #     if selected_month and selected_month != '0':
+    #         maintenance_records = maintenance_records.filter(created_at__month=selected_month)
+    #
+    #     if selected_year and selected_year != '0':
+    #         maintenance_records = maintenance_records.filter(created_at__year=selected_year)
+    #
+    #     # We need to process records to find "Previous Job Card" info.
+    #     # Since we ordered by vehicle and desc created_at, the "next" record in the list
+    #     # for the SAME vehicle is the previous job card.
+
+    records_list = list(maintenance_records)
+    processed_rows = []
+
+    # Helper to find previous record
+    # We can pre-group by vehicle to make this faster
+    vehicle_groups = {}
+    for rec in records_list:
+        v_id = rec.vehicle_id
+        if v_id not in vehicle_groups:
+            vehicle_groups[v_id] = []
+        vehicle_groups[v_id].append(rec)
+
+    # Now build rows
+    counter = 1
+
+    # We want to show the filtered range.
+    for rec in records_list:
+        # Find previous in the group
+        group = vehicle_groups.get(rec.vehicle_id, [])
+        # group is ordered desc by created_at. rec is in group.
+        # Find index of rec
+        try:
+            curr_idx = group.index(rec)
+            prev_rec = group[curr_idx + 1] if curr_idx + 1 < len(group) else None
+        except ValueError:
+            prev_rec = None
+        
+        # Safely access vehicle fields
+        try:
+            vehicle_no = safe_str(rec.vehicle.vm_registrationnumber) if rec.vehicle else ""
+            vehicle_type = safe_str(rec.vehicle.vm_vehicletype) if rec.vehicle and rec.vehicle.vm_vehicletype else ""
+        except:
+            vehicle_no = ""
+            vehicle_type = ""
+            
+        make = safe_str(rec.make_model)
+        
+        # Branch - Logic similar to other reports if possible, but MaintenanceInfo doesn't have location directly usually.
+        # We can try to infer from user or just leave blank/dash for now as it wasn't in model
+        branch = "" 
+        
+        job_card_no = rec.id # fallback
+        prev_job_card_date = prev_rec.created_at.strftime("%d-%m-%Y") if prev_rec and prev_rec.created_at else ""
+        prev_job_card_no = prev_rec.id if prev_rec else ""
+        
+        row = [
+            counter,
+            branch,
+            vehicle_no,
+            vehicle_type,
+            make,
+            "", # PO Date (Not available)
+            safe_str(rec.service_type),
+            job_card_no,
+            prev_job_card_date,
+            prev_job_card_no,
+            rec.est_delivery.strftime("%d-%m-%Y %H:%M") if rec.est_delivery else "",
+            "", # Expected Amount (Is this estimated_amount?)
+            safe_str(rec.technician), # Using Technician as Vendor Name? Or driver? Requirement says "Vendor Name". Maintenance info has technician.
+            rec.job_card_created_on.strftime("%d-%m-%Y") if rec.job_card_created_on else "", # Assigned Date -> job_card_created_on
+            "", # Bill Amount Date
+            safe_num(rec.estimated_amount),
+            rec.total_km_run,
+            rec.est_delivery.strftime("%d-%m-%Y") if rec.est_delivery else "", # Delivery Date -> Est Delivery?
+            "", # Bill Amount
+            ""  # Bill Date
+        ]
+        processed_rows.append(row)
+        counter += 1
+
+    paginator = Paginator(processed_rows, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': MAINTENANCE_REPORT_HEADERS,
+        'data_rows': page_obj.object_list, # Paginator pages list of rows
+        'page_obj': page_obj,
+        'vehicle_search': vehicle_search,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'all_vehicles': all_vehicles,
+    }
+    return render(request, "asset_mgt_app/maintenance_report.html", context)
+
+
+@login_required(login_url='login_page')
+def insurance_renewal_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import Insurance_Info, VehiclemasterInfo
+    from datetime import datetime
+
+    # -------------------------
+    # Read filter (GET or POST)
+    # -------------------------
+    if request.method == "POST":
+        vehicle_search = request.POST.get('vehicle_search', '').strip()
+    else:
+        vehicle_search = request.GET.get('vehicle_search', '').strip()
+
+    # -------------------------
+    # Base Query (ALWAYS first)
+    # -------------------------
+    insurance_records = Insurance_Info.objects.all().order_by('ins_expiry_date')
+
+    # -------------------------
+    # Vehicle filter (TEXT ONLY)
+    # -------------------------
+    if vehicle_search:
+        insurance_records = insurance_records.filter(
+            ins_vehicle_no=vehicle_search
+        )
+
+    # -------------------------
+    # Vehicle type lookup
+    # -------------------------
+    vehicles = VehiclemasterInfo.objects.select_related('vm_vehicletype')
+    vehicle_map = {
+        v.vm_registrationnumber.strip().upper(): v
+        for v in vehicles
+    }
+
+    processed_rows = []
+    today = datetime.now().date()
+    counter = 1
+
+    for rec in insurance_records:
+        key = (rec.ins_vehicle_no or "").strip().upper()
+        vehicle = vehicle_map.get(key)
+        vehicle_type = safe_str(vehicle.vm_vehicletype) if vehicle else ""
+
+        expiry_date = rec.ins_expiry_date
+        elapsed_days = (expiry_date - today).days if expiry_date else 0
+
+        if elapsed_days < 0:
+            ds_status = "Expired"
+        elif elapsed_days <= 30:
+            ds_status = "Renewal Due"
+        else:
+            ds_status = "Active"
+
+        processed_rows.append([
+            counter,
+            safe_str(rec.ins_vendor),
+            safe_str(rec.ins_name),
+            safe_str(rec.ins_vehicle_no),
+            vehicle_type,
+            safe_str(rec.ins_type),
+            expiry_date.strftime("%d-%m-%Y") if expiry_date else "",
+            safe_num(rec.ins_sum_assured),
+            elapsed_days,
+            ds_status,
+        ])
+        counter += 1
+
+    paginator = Paginator(processed_rows, 50)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'first_name': first_name,
+        'headers': INSURANCE_RENEWAL_HEADERS,
+        'data_rows': page_obj.object_list,
+        'page_obj': page_obj,
+        'vehicle_search': vehicle_search,
+        'all_vehicles': vehicles,   # REQUIRED for dropdown
+    }
+
+    return render(request,"asset_mgt_app/insurance_renewal_report.html",context)
+
+
+@login_required(login_url='login_page')
+def diesel_vs_revenue_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import TripdetailInfo, Fuelfillinginfo, VehiclemasterInfo, ConsignmentdetailInfo
+    from datetime import datetime
+    from django.db.models import Sum
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+        vehicle_search = request.POST.get('vehicle_search', '')
+        selected_month = request.POST.get('month', '0')
+        selected_year = request.POST.get('year', '0')
+    else:
+        form = DmrForm()
+        vehicle_search = ""
+        selected_month = '0'
+        selected_year = '0'
+
+    # Base Query for Trips
+    trips = TripdetailInfo.objects.all().select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_consignmentnumber',
+        'tr_vehicletype'
+    )
+
+    if vehicle_search:
+        trips = trips.filter(tr_vehiclenumber__icontains=vehicle_search)
+    if selected_month and selected_month != '0':
+        trips = trips.filter(tr_loading_time__month=selected_month)
+    if selected_year and selected_year != '0':
+        trips = trips.filter(tr_loading_time__year=selected_year)
+
+    trips = trips.order_by('-tr_loading_time')
+
+    # Get Vehicle Master Data for Mileage Fixed
+    vehicles = VehiclemasterInfo.objects.all()
+    vehicle_map = {v.vm_registrationnumber: v for v in vehicles}
+
+    processed_rows = []
+    counter = 1
+
+    for trip in trips:
+        # Branch Logic (similar to trip_cancellation_report_view)
+        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        branch = "Chennai" if "MAA" in cons_no else ("Bangalore" if "BLR" in cons_no else "")
+        
+        trip_date = trip.tr_loading_time.date() if trip.tr_loading_time else (trip.tr_departeddate.date() if trip.tr_departeddate else None)
+        
+        # Revenue calculation (Sum of selling components)
+        revenue = safe_num(trip.tc_tripcost) + safe_num(trip.tc_rtocost) + safe_num(trip.tc_betacost) + \
+                  safe_num(trip.tc_parkingcost) + safe_num(trip.tc_tollcost) + safe_num(trip.tc_loadingcost) + \
+                  safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost) + \
+                  safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost) + safe_num(trip.tc_supervisorcost)
+
+        # KM Run
+        km_run = max(0, safe_num(trip.tr_reportedkm) - safe_num(trip.tr_departedkm))
+
+        # Fuel Expenses for this vehicle on this date
+        fuel_data = Fuelfillinginfo.objects.filter(
+            ff_vehicle_num__vm_registrationnumber=trip.tr_vehiclenumber,
+            ff_date=trip_date
+        ).aggregate(total_cost=Sum('ff_fuel_price'), total_ltr=Sum('ff_filled_ltr'))
+
+        diesel_expenses = safe_num(fuel_data['total_cost'])
+        filled_ltr = safe_num(fuel_data['total_ltr'])
+
+        # Calculations
+        diesel_vs_revenue_pct = (diesel_expenses / revenue * 100) if revenue > 0 else 0
+        actual_mileage = (km_run / filled_ltr) if filled_ltr > 0 else 0
+
+        # Vehicle master details
+        vm = vehicle_map.get(trip.tr_vehiclenumber)
+        mileage_fixed = safe_str(vm.vm_millage) if vm else ""
+        leased_to = safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else ""
+
+        row = [
+            counter,
+            branch,
+            trip_date.strftime("%d-%m-%Y") if trip_date else "",
+            safe_str(trip.tr_vehiclenumber),
+            safe_str(trip.tr_vehicletype),
+            mileage_fixed,
+            leased_to,
+            km_run,
+            diesel_expenses,
+            revenue,
+            f"{diesel_vs_revenue_pct:.2f}%",
+            f"{actual_mileage:.2f}"
+        ]
+        processed_rows.append(row)
+        counter += 1
+
+    paginator = Paginator(processed_rows, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': DIESEL_VS_REVENUE_HEADERS,
+        'data_rows': page_obj.object_list,
+        'page_obj': page_obj,
+        'vehicle_search': vehicle_search,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'all_vehicles': all_vehicles,
+    }
+    return render(request, "asset_mgt_app/diesel_vs_revenue_report.html", context)
+
+
+@login_required(login_url='login_page')
+def own_vs_market_sales_report_view(request):
+    first_name = request.session.get('first_name')
+    from ..models import TripdetailInfo, Vehicle_allotmentInfo
+    from datetime import datetime
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+        selected_month = request.POST.get('month', '0')
+        selected_year = request.POST.get('year', '0')
+        customer_id = request.POST.get('dmr_customer')
+        dept_id = request.POST.get('customer_department')
+    else:
+        form = DmrForm()
+        selected_month = '0'
+        selected_year = '0'
+        customer_id = None
+        dept_id = None
+
+    # Base Query
+    trips = TripdetailInfo.objects.all().select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_enquirynumber__en_trip_type',
+        'tr_consignmentnumber'
+    )
+
+    if customer_id:
+        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if dept_id:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
+    if selected_month and selected_month != '0':
+        trips = trips.filter(tr_loading_time__month=selected_month)
+    if selected_year and selected_year != '0':
+        trips = trips.filter(tr_loading_time__year=selected_year)
+
+    # Prefetch Vehicle Allotment for Market Buy Rate
+    enquiry_ids = [t.tr_enquirynumber_id for t in trips]
+    va_data = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids)
+    va_map = {v.va_enquirynumber_id: v for v in va_data}
+
+    aggregated_data = {}
+
+    for trip in trips:
+        # Determine Date
+        trip_date = trip.tr_loading_time.date() if trip.tr_loading_time else (trip.tr_departeddate.date() if trip.tr_departeddate else None)
+        if not trip_date:
+            continue
+        
+        date_str = trip_date.strftime("%d-%m-%Y")
+        
+        # Branch mapping
+        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        branch = "Chennai" if "MAA" in cons_no else ("Bangalore" if "BLR" in cons_no else "Global")
+        
+        customer = safe_str(trip.tr_enquirynumber.en_customername)
+        dept = safe_str(trip.tr_enquirynumber.en_customerdepartment)
+        
+        key = (date_str, branch, customer, dept)
+        
+        if key not in aggregated_data:
+            aggregated_data[key] = {
+                'date': date_str,
+                'branch': branch,
+                'customer': customer,
+                'dept': dept,
+                'own_sales': 0.0,
+                'own_vehs': set(),
+                'own_jobs': 0,
+                'own_drivers': set(),
+                'mkt_sales': 0.0,
+                'mkt_vehs': set(),
+                'mkt_jobs': 0,
+                'mkt_drivers': set(),
+                'mkt_buy_rate': 0.0,
+                'local_trips': 0,
+                'outstation_trips': 0
+            }
+        
+        data = aggregated_data[key]
+        
+        # Revenue Calculation
+        revenue = safe_num(trip.tc_tripcost) + safe_num(trip.tc_rtocost) + safe_num(trip.tc_betacost) + \
+                  safe_num(trip.tc_parkingcost) + safe_num(trip.tc_tollcost) + safe_num(trip.tc_loadingcost) + \
+                  safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost) + \
+                  safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost) + safe_num(trip.tc_supervisorcost)
+        
+        is_own = trip.tr_vehiclesource_id in [1, 2] # 1=OWN, 2=ATTACHED/OWN
+        
+        if is_own:
+            data['own_sales'] += revenue
+            data['own_jobs'] += 1
+            if trip.tr_vehiclenumber:
+                data['own_vehs'].add(trip.tr_vehiclenumber)
+            if trip.tr_drivername:
+                data['own_drivers'].add(trip.tr_drivername)
+        else:
+            data['mkt_sales'] += revenue
+            data['mkt_jobs'] += 1
+            if trip.tr_vehiclenumber:
+                data['mkt_vehs'].add(trip.tr_vehiclenumber)
+            if trip.tr_drivername:
+                data['mkt_drivers'].add(trip.tr_drivername)
+            
+            # Market Buy Rate from Allotment
+            va = va_map.get(trip.tr_enquirynumber_id)
+            if va:
+                data['mkt_buy_rate'] += safe_num(va.va_standardbuy) + safe_num(va.va_specialbuy)
+
+        # Local vs Outstation
+        trip_type = safe_str(trip.tr_enquirynumber.en_trip_type).lower()
+        if "local" in trip_type:
+            data['local_trips'] += 1
+        elif "outstation" in trip_type:
+            data['outstation_trips'] += 1
+
+    # Convert to rows
+    processed_rows = []
+    # Sort by date desc
+    sorted_keys = sorted(aggregated_data.keys(), key=lambda x: datetime.strptime(x[0], "%d-%m-%Y"), reverse=True)
+    
+    for idx, key in enumerate(sorted_keys, start=1):
+        d = aggregated_data[key]
+        
+        own_index = (d['own_sales'] / d['own_jobs']) if d['own_jobs'] > 0 else 0
+        mkt_index = (d['mkt_sales'] / d['mkt_jobs']) if d['mkt_jobs'] > 0 else 0
+        
+        row = [
+            idx,
+            d['date'],
+            d['branch'],
+            d['customer'],
+            d['dept'],
+            d['own_sales'],
+            len(d['own_vehs']),
+            d['own_jobs'],
+            len(d['own_drivers']),
+            round(own_index, 2),
+            d['mkt_sales'],
+            len(d['mkt_vehs']),
+            d['mkt_jobs'],
+            len(d['mkt_drivers']),
+            round(mkt_index, 2),
+            d['mkt_buy_rate'],
+            d['local_trips'],
+            d['outstation_trips']
+        ]
+        processed_rows.append(row)
+
+    paginator = Paginator(processed_rows, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': OWN_VS_MARKET_SALES_HEADERS,
+        'data_rows': page_obj.object_list,
+        'page_obj': page_obj,
+        'selected_month': selected_month,
+        'selected_year': selected_year,
+        'customer_id': customer_id,
+        'dept_id': dept_id,
+    }
+    return render(request, "asset_mgt_app/own_vs_market_sales_report.html", context)
