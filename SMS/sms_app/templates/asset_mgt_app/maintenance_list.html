@@ -51,6 +51,7 @@
                     <th>Remarks</th>
                     <th>Job Card Creator</th>
                     <th>Created On</th>
+                    <th>Status</th>
                     <th>Edit</th>
                     <th>Delete</th>
                 </tr>
@@ -77,7 +78,9 @@
                     <td>{{ m.remarks }}</td>
                     <td>{{ m.job_card_creator }}</td>
                     <td>{{ m.job_card_created_on|date:"d-m-Y H:i" }}</td>
-
+                    <td><!-- approval status label -->
+                        {{ m.get_approval_status_display }}
+                    </td>
                     <!-- EDIT -->
                     <td class="text-center">
                         <a href="{% url 'maintenance_edit' m.id %}"

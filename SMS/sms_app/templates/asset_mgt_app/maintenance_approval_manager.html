@@ -1,0 +1,79 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-4"></div>
+        <div class="col-4 rounded text-center bg-info text-white">
+            <h3>Maintenance Manager Approval</h3>
+        </div>
+        <div class="col-4"></div>
+    </div>
+</div>
+
+<div class="container-fluid row mb-2">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<hr>
+
+<table id="manager_approval_table" class="table table-bordered table-sm">
+    <thead class="thead-dark">
+        <tr>
+            <th>Job Card No</th>
+            <th>Vehicle No</th>
+            <th>Complaint</th>
+            <th>Service Type</th>
+            <th>Estimated Amount</th>
+            <th>Created On</th>
+            <th>Approve</th>
+            <th>Edit</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for m in records %}
+        <tr>
+            <td>{{ m.job_card_no }}</td>
+            <td>{{ m.vehicle.vm_registrationnumber }}</td>
+            <td>{{ m.get_complaint_display }}</td>
+            <td>{{ m.service_type }}</td>
+            <td>₹{{ m.estimated_amount|default:"0.00" }}</td>
+            <td>{{ m.job_card_created_on|date:"d-m-Y H:i" }}</td>
+
+            <!-- APPROVE BUTTON -->
+            <td class="text-center">
+                <form method="post" action="{% url 'manager_approve' m.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-success btn-sm">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                </form>
+            </td>
+            <td class="text-center">
+                <a href="{% url 'maintenance_edit' m.id %}" class="btn btn-sm btn-primary" title="Edit Job Card">
+                    <i class="fas fa-edit"></i>
+                </a>
+            </td>
+
+        </tr>
+
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    $(document).ready(function () {
+        $('#manager_approval_table').DataTable({
+            order: [0, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+</script>
+
+{% endblock %}

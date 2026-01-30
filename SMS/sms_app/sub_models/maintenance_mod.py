@@ -73,14 +73,14 @@ class MaintenanceInfo(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     budget = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     budget_balance = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    job_card_no = models.CharField(
-        max_length=20,
-        null=True,
-        blank=True,
-        unique=True,
-    )
-
+    job_card_no = models.CharField(max_length=20,null=True,blank=True,unique=True,)
     bay_no = models.CharField(max_length=10, null=True, blank=True)
+    APPROVAL_STATUS_CHOICES = [
+        (1, "Awaiting Manager Approval"),
+        (2, "Awaiting Finance Approval"),
+        (3, "Finance Approved"),
+    ]
+    approval_status = models.PositiveSmallIntegerField(choices=APPROVAL_STATUS_CHOICES,default=1)
     def __str__(self):
         # Ensure __str__ always returns a string even if job_card_no is None
         if self.job_card_no:

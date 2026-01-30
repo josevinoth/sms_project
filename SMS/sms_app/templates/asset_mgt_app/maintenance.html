@@ -5,6 +5,8 @@
 <form id="maintenanceForm" method="POST">
 {% csrf_token %}
 
+<!-- messages removed per request; approval_status will be shown in the form field -->
+
 <div class="container-fluid">
   <div class="card text-white bg-info mb-3" style="max-width:100%;">
 
@@ -79,6 +81,13 @@
             </div>
             {% render_field form.engine_no class="form-control" id="engine_no" readonly="readonly" %}
           </div>
+      <div class="input-group input-group-sm mb-3">
+  <div class="input-group-prepend">
+    <span class="input-group-text">Approval Status</span>
+  </div>
+  {% render_field form.approval_status class="form-control" %}
+</div>
+
 
         </div>
 
@@ -255,6 +264,9 @@ document.getElementById("registration_no").addEventListener("change", function (
         document.getElementById("registration_date").value = data.registration_date || "";
         document.getElementById("chassis_no").value = data.chassis_no || "";
         document.getElementById("engine_no").value = data.engine_no || "";
+    })
+    .catch(() => {
+        // ignore fetch errors for now
     });
 });
 
