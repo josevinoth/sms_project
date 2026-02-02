@@ -9,6 +9,7 @@ from django.db.models import Sum, Q
 from datetime import timedelta
 
 from ..sub_models.DG_cargo_checklist_mod import DGcargovalueInfo
+from ..sub_models.maintenance_mod import MaintenanceInfo
 from ..sub_models.wh_highvaluecheck_info_mod import HighvalueInfo
 
 
@@ -49,7 +50,8 @@ def home_page(request):
         Q(hc_value__gt=2500000) ) & Q(hc_approval_status__id=3)
     ).count()
     checklist_count = TripHighvalueInfo.objects.filter(thc_approval_status=2).count()
-
+    manager_listcount =MaintenanceInfo.objects.filter(approval_status=1).count()
+    finance_listcount =MaintenanceInfo.objects.filter(approval_status=2).count()
 
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
@@ -75,6 +77,8 @@ def home_page(request):
                'open_requirements': open_requirements,
                'count_return': count_return,
                'excess_count': excess_count,
+               'manager_listcount': manager_listcount,
+               'finance_listcount': finance_listcount,
                'count_retrival': count_retrival,
                'count_acceptance': count_acceptance,
                'customer_rate_due_count': customer_rate_due_count,

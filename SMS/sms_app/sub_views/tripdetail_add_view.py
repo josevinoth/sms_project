@@ -20,20 +20,19 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from ..models import TripdetailInfo
 from django.core.paginator import Paginator
+from django.utils import timezone
 
 
 def format_email_date(dt):
-    """Format datetime for email display as DD-MM-YYYY HH:MM"""
     if not dt:
         return ""
+
     try:
-        if isinstance(dt, datetime):
-            return dt.strftime("%d-%m-%Y %H:%M")
-        # If it's a string, try to parse and reformat
-        dt_obj = datetime.strptime(str(dt).split('+')[0].strip(), "%Y-%m-%d %H:%M:%S")
-        return dt_obj.strftime("%d-%m-%Y %H:%M")
+        # Convert to local timezone (IST)
+        local_dt = timezone.localtime(dt)
+        return local_dt.strftime("%d-%m-%Y %H:%M")
     except Exception:
-        return str(dt) if dt else ""
+        return str(dt)
 
 
 @login_required(login_url='login_page')
@@ -640,7 +639,7 @@ def trip_email(request):
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
     reported_dt = format_email_date(trip.tr_departeddate_pickup)
     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
-    started_dt = format_email_date(trip.tr_departeddate)
+    started_dt = {format_email_date(trip.tr_departeddate)}
     to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "N/A"
     unloading_reported_dt = format_email_date(trip.tr_reporteddate)
 

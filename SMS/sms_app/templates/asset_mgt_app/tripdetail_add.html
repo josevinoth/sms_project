@@ -47,7 +47,8 @@
 							<a href="{% url 'tripdetail_insert' %}" class="btn btn-primary ml-2">
 								<i class="fas fa-plus"></i> Add
 							</a>
-							<a href="{% url 'trip_highvalue_add' %}" id="checklist-btn" class="btn btn-primary ml-2 disable_a_href">
+							<a href="{% url 'trip_highvalue_add' %}" id="checklist-btn"
+								class="btn btn-primary ml-2 disable_a_href">
 								Goods High Value Checklist
 							</a>
 						</div>
@@ -260,7 +261,7 @@
 									{% render_field trip_det_form.tr_reportedkm_delivery id="tr_reportedkm_delivery" class="form-control" %}
 								</div>
 							</div>
-						</div>  <!-- ✅ CLOSE THE 4 COLUMN ROW HERE -->
+						</div> <!-- ✅ CLOSE THE 4 COLUMN ROW HERE -->
 
 						<!-- ✅ NEW ROW FOR GOODS HIGH VALUE + TRIP STATUS -->
 						<div class="row mt-2">
@@ -321,7 +322,7 @@
 								<div class="p-3 bg-dark rounded-sm text-white mb-2">
 									<div class="input-group input-group-sm">
 										<div class="input-group-prepend">
-											<span class="input-group-text">Attachment</span>
+											<span class="input-group-text">POD Attachment</span>
 										</div>
 										{% render_field trip_det_form.tc_pod_attachment id="tc_pod_attachment" class="form-control disable_a_href" %}
 									</div>
@@ -347,18 +348,16 @@
 							<div class="col-12 col-lg-6">
 								<div class="p-3 bg-dark rounded-sm text-white mb-2 text-center">
 
-									<button type="button" class="btn btn-primary btn-sm mb-2"
-											data-toggle="modal" data-target="#podSignatureModal"
-											id="pod-sign-btn" disabled>
+									<button type="button" class="btn btn-primary btn-sm mb-2" data-toggle="modal"
+										data-target="#podSignatureModal" id="pod-sign-btn" disabled>
 										POD Signature
 									</button>
 
 									<div id="pod-signature-preview" class="mt-2"
-										 style="background-color: white; padding: 5px; border-radius: 4px;">
+										style="background-color: white; padding: 5px; border-radius: 4px;">
 										{% if trip_det_form.instance.td_pod %}
-										<img src="{{ trip_det_form.instance.td_pod.url }}"
-											 alt="POD Signature" class="img-fluid"
-											 style="max-height: 100px;">
+										<img src="{{ trip_det_form.instance.td_pod.url }}" alt="POD Signature"
+											class="img-fluid" style="max-height: 100px;">
 										{% endif %}
 									</div>
 
@@ -374,12 +373,16 @@
 											<h5 class="modal-title text-dark">POD Signature</h5>
 											<button type="button" class="close" data-dismiss="modal">&times;</button>
 										</div>
-										<div class="modal-body d-flex justify-content-center"> <!-- Center canvas horizontally -->
-											<canvas id="pod-pad" width="800" height="300" style="border:1px solid #ccc; max-width:100%;"></canvas>
+										<div class="modal-body d-flex justify-content-center">
+											<!-- Center canvas horizontally -->
+											<canvas id="pod-pad" width="800" height="300"
+												style="border:1px solid #ccc; max-width:100%;"></canvas>
 										</div>
 										<div class="modal-footer d-flex justify-content-between">
-											<button type="button" id="clear-pod" class="btn btn-warning btn-sm">Clear</button>
-											<button type="button" id="save-pod" class="btn btn-success btn-sm">Save</button>
+											<button type="button" id="clear-pod"
+												class="btn btn-warning btn-sm">Clear</button>
+											<button type="button" id="save-pod"
+												class="btn btn-success btn-sm">Save</button>
 										</div>
 									</div>
 								</div>
@@ -425,6 +428,7 @@
 
 		trip_type();
 		trip_status_update();
+
 	});
 </script>
 
@@ -623,6 +627,17 @@
 		// ✅ EMPTY = category 2 or 3
 		if (categoryValue === "2" || categoryValue === "3") {
 			$(".empty-field").hide();   // ✅ Hide unwanted fields
+
+			// ✅ Enable the visible fields for category 2 & 3
+			// Loading section fields
+			$("#tr_departedlocation").prop("disabled", false).removeClass('disable_a_href');
+			$("#tr_departeddate").prop("disabled", false).removeClass('disable_a_href');
+			$("#tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
+
+			// Unloading section fields
+			$("#tr_reportedlocation").prop("disabled", false).removeClass('disable_a_href');
+			$("#tr_reporteddate").prop("disabled", false).removeClass('disable_a_href');
+			$("#tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
 		} else {
 			$(".empty-field").show();   // ✅ Show all for normal trip
 		}
