@@ -3,188 +3,193 @@
 {% block content %}
 
 <form method="POST">
-{% csrf_token %}
+  {% csrf_token %}
 
-<div class="container-fluid">
-  <div class="card text-white bg-info mb-3" style="max-width:100%;">
+  <div class="container-fluid">
+    <div class="card text-white bg-info mb-3" style="max-width:100%;">
 
-    <!-- ================= HEADER ================= -->
-    <div class="card-header text-center">
-      <h3 class="mb-0">Add / Update Transport Invoice</h3>
-    </div>
-
-    <!-- ================= BODY ================= -->
-    <div class="card-body bg-light">
-      <div class="row">
-
-        <!-- ================= COLUMN 1 ================= -->
-        <div class="col-12 col-md-3">
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Invoice Date</span>
-            </div>
-            {% render_field form.ti_inv_date type="date" class="form-control" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Invoice No</span>
-            </div>
-            {% render_field form.ti_inv_no class="form-control" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Customer</span>
-            </div>
-            {% render_field form.ti_customer class="form-control" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Customer Short Name</span>
-            </div>
-            {% render_field form.ti_customer_short_name class="form-control" readonly="readonly" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">GSTIN</span>
-            </div>
-            {% render_field form.ti_gst_in class="form-control" readonly="readonly" %}
-          </div>
-
-        </div>
-
-        <!-- ================= COLUMN 2 ================= -->
-        <div class="col-12 col-md-3">
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">State</span>
-            </div>
-            {% render_field form.ti_state class="form-control" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Pincode</span>
-            </div>
-            {% render_field form.ti_pincode class="form-control" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Transportation Charges</span>
-            </div>
-            {% render_field form.ti_transportation_charges class="form-control charge" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Toll Charges</span>
-            </div>
-            {% render_field form.ti_toll_charges class="form-control charge" %}
-          </div>
-
-        </div>
-
-        <!-- ================= COLUMN 3 ================= -->
-        <div class="col-12 col-md-3">
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Parking Charges</span>
-            </div>
-            {% render_field form.ti_parking_charges class="form-control charge" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Loading Charges</span>
-            </div>
-            {% render_field form.ti_loading_charges class="form-control charge" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Unloading Charges</span>
-            </div>
-            {% render_field form.ti_unloading_charges class="form-control charge" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Halting Charges</span>
-            </div>
-            {% render_field form.ti_halting_charges class="form-control charge" %}
-          </div>
-
-        </div>
-
-        <!-- ================= COLUMN 4 ================= -->
-        <div class="col-12 col-md-3">
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Docket Charges</span>
-            </div>
-            {% render_field form.ti_docket_charges class="form-control charge" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Weighment Charges</span>
-            </div>
-            {% render_field form.ti_weighment_charges class="form-control charge" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Handling Charges</span>
-            </div>
-            {% render_field form.ti_handling_charges class="form-control charge" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Cancellation Charges</span>
-            </div>
-            {% render_field form.ti_cancellation_charges class="form-control charge" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text fw-bold">Total Charges</span>
-            </div>
-            {% render_field form.ti_total class="form-control disable_a_href" readonly="readonly" %}
-          </div>
-
-        </div>
-
+      <!-- ================= HEADER ================= -->
+      <div class="card-header text-center">
+        <h3 class="mb-0">Add / Update Transport Invoice</h3>
       </div>
 
-      <!-- ================= ACTION BUTTONS ================= -->
-     {% if not saved %}
-<button type="submit" class="btn btn-success">
-  <i class="fas fa-check"></i> Save
-</button>
-{% else %}
-<div class="alert alert-success mt-2">
-  Invoice saved successfully
-</div>
-{% endif %}
+      <!-- ================= BODY ================= -->
+      <div class="card-body bg-light">
+        <div class="row">
+
+          <!-- ================= COLUMN 1 ================= -->
+          <div class="col-12 col-md-3">
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Invoice Date</span>
+              </div>
+              {% render_field form.ti_inv_date type="date" class="form-control" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Invoice No</span>
+              </div>
+              {% render_field form.ti_inv_no class="form-control" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Customer</span>
+              </div>
+              {% render_field form.ti_customer class="form-control" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Customer Short Name</span>
+              </div>
+              {% render_field form.ti_customer_short_name class="form-control" readonly="readonly" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">GSTIN</span>
+              </div>
+              {% render_field form.ti_gst_in class="form-control" readonly="readonly" %}
+            </div>
+
+          </div>
+
+          <!-- ================= COLUMN 2 ================= -->
+          <div class="col-12 col-md-3">
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">State</span>
+              </div>
+              {% render_field form.ti_state class="form-control" readonly="readonly" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Pincode</span>
+              </div>
+              {% render_field form.ti_pincode class="form-control" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Transportation Charges</span>
+              </div>
+              {% render_field form.ti_transportation_charges class="form-control charge" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Toll Charges</span>
+              </div>
+              {% render_field form.ti_toll_charges class="form-control charge" %}
+            </div>
+
+          </div>
+
+          <!-- ================= COLUMN 3 ================= -->
+          <div class="col-12 col-md-3">
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Parking Charges</span>
+              </div>
+              {% render_field form.ti_parking_charges class="form-control charge" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Loading Charges</span>
+              </div>
+              {% render_field form.ti_loading_charges class="form-control charge" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Unloading Charges</span>
+              </div>
+              {% render_field form.ti_unloading_charges class="form-control charge" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Halting Charges</span>
+              </div>
+              {% render_field form.ti_halting_charges class="form-control charge" %}
+            </div>
+
+          </div>
+
+          <!-- ================= COLUMN 4 ================= -->
+          <div class="col-12 col-md-3">
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Docket Charges</span>
+              </div>
+              {% render_field form.ti_docket_charges class="form-control charge" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Weighment Charges</span>
+              </div>
+              {% render_field form.ti_weighment_charges class="form-control charge" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Handling Charges</span>
+              </div>
+              {% render_field form.ti_handling_charges class="form-control charge" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Cancellation Charges</span>
+              </div>
+              {% render_field form.ti_cancellation_charges class="form-control charge" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text fw-bold">Total Charges</span>
+              </div>
+
+              <input type="text" id="id_ti_total" name="ti_total" class="form-control" value="{{ total_charges }}"
+                readonly>
+            </div>
+
+
+          </div>
+
+        </div>
+
+        <!-- ================= ACTION BUTTONS ================= -->
+
+
+        {% if not saved %}
+        <button type="submit" class="btn btn-success">
+          <i class="fas fa-check"></i> Save
+        </button>
+        {% else %}
+        <div class="alert alert-success mt-2">
+          Invoice saved successfully
+        </div>
+        {% endif %}
+        <a href="{% url 'trans_invoice_list' %}" class="btn btn-danger float-right">
+          <i class="fas fa-times"></i> Cancel
+        </a>
 
 
 
-      <a href="{% url 'trans_invoice_list' %}" class="btn btn-danger float-right">
-        <i class="fas fa-times"></i> Cancel
-      </a>
 
+      </div>
     </div>
   </div>
-</div>
 </form>
 
 
@@ -193,28 +198,27 @@
 {% include "asset_mgt_app/trans_invoice_list_WOH.html" %}
 {% endif %}-->
 
- <!--================ AFTER SAVE LIST =================-->
+<!--================ AFTER SAVE LIST =================-->
 <hr>
 <div class="container-fluid">
   <div class="card">
     <div class="card-body table-responsive">
 
-      <table id="trans_invoice_table"
-             class="table table-bordered table-striped table-sm">
+      <table id="trans_invoice_table" class="table table-bordered table-striped table-sm">
 
         <thead class="thead-dark">
           <tr>
-            <th>INV DATE</th>
+            <!--<th>INV DATE</th>
             <th>Customer Name</th>
             <th>GST IN</th>
             <th>State</th>
-            <th>Pincode</th>
-            <th>INV NO</th>
+            <th>Pincode</th>-->
+            <!--<th>INV NO</th>-->
 
             <th>Branch</th>
-            <th>Vehicle Source</th>
+            <!-- <th>Vehicle Source</th>-->
             <th>Customer Short Name</th>
-            <th>Tally Veh No</th>
+            <!--<th>Tally Veh No</th>-->
             <th>Planning Date</th>
 
             <th>Cnote No</th>
@@ -225,10 +229,10 @@
             <th>Veh No</th>
             <th>Veh Type</th>
 
-            <th>Veh Placed Date & Time</th>
+            <!--<th>Veh Placed Date & Time</th>
             <th>Veh Released Date & Time</th>
             <th>Veh Arrived Date & Time</th>
-            <th>Veh Dispatched Date & Time</th>
+            <th>Veh Dispatched Date & Time</th>-->
 
             <th>Consignee</th>
             <th>Reference No</th>
@@ -253,64 +257,125 @@
         </thead>
 
         <tbody>
-        {% for inv in invoice_list %}
+          {% for inv in invoice_list %}
           <tr>
-  <!-- Invoice basic -->
-  <td>{{ inv.ti_inv_date }}</td>
-  <td>{{ inv.ti_customer }}</td>
-  <td>{{ inv.ti_gst_in }}</td>
-  <td>{{ inv.ti_state }}</td>
-  <td>{{ inv.ti_pincode }}</td>
-  <td>{{ inv.ti_inv_no }}</td>
 
-  <!-- Customer / Trip -->
-  <td>{{ inv.ti_customer.cu_branch }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclesource }}</td>
-  <td>{{ inv.ti_customer_short_name }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
-  <td>{{ inv.ti_trip.tr_departeddate }}</td>
+            <!-- Branch -->
+            <td>
+              {{ inv.ti_trip.tr_enquirynumber.en_customerdepartment|default:"-" }}
+            </td>
 
-  <!-- Consignment -->
-  <td>{{ inv.ti_consignment.co_consignmentnumber }}</td>
-  <td>{{ inv.ti_trip.tr_departedlocation }}</td>
-  <td>{{ inv.ti_trip.tr_reportedlocation }}</td>
-  <td>{{ inv.ti_customer.cu_department }}</td>
+            <!-- Customer Short Name -->
+            <td>
+              {{ inv.ti_customer_short_name|default:"-" }}
+            </td>
 
-  <!-- Vehicle -->
-  <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
-  <td>{{ inv.ti_trip.tr_vehicletype }}</td>
+            <!-- Planning Date -->
+            <td>
+              {{ inv.ti_trip.tr_created_at|date:"Y-m-d" }}
+            </td>
 
-  <!-- Trip timeline -->
-  <td>{{ inv.ti_trip.tr_departeddate_pickup }}</td>
-  <td>{{ inv.ti_trip.tr_dock_out_time }}</td>
-  <td>{{ inv.ti_trip.tr_reporteddate }}</td>
-  <td>{{ inv.ti_trip.tr_departeddate_delivery }}</td>
+            <!-- Cnote No -->
+            <td>
+              {% if inv.ti_consignment %}
+              {{ inv.ti_consignment.co_consignmentnumber }}
+              {% else %}
+              <span class="text-muted">—</span>
+              {% endif %}
+            </td>
 
-  <!-- Goods -->
-  <td>{{ inv.ti_goods.cg_consignee }}</td>
-  <td>{{ inv.ti_consignment.co_cusrefnum }}</td>
-  <td>{{ inv.ti_goods.cg_hawbno }}</td>
+            <!-- From -->
+            <td>{{ inv.ti_trip.tr_departedlocation|default:"-" }}</td>
 
-  <td>{{ inv.ti_goods.cg_qty }}</td>
-  <td>{{ inv.ti_goods.cg_weight }}</td>
+            <!-- To -->
+            <td>{{ inv.ti_trip.tr_reportedlocation|default:"-" }}</td>
 
-  <!-- Charges -->
-  <td>{{ inv.ti_transportation_charges }}</td>
-  <td>{{ inv.ti_toll_charges }}</td>
-  <td>{{ inv.ti_parking_charges }}</td>
-  <td>{{ inv.ti_loading_charges }}</td>
-  <td>{{ inv.ti_unloading_charges }}</td>
-  <td>{{ inv.ti_halting_charges }}</td>
-  <td>{{ inv.ti_docket_charges }}</td>
-  <td>{{ inv.ti_weighment_charges }}</td>
-  <td>{{ inv.ti_handling_charges }}</td>
-  <td>{{ inv.ti_cancellation_charges }}</td>
+            <!-- Dept -->
+            <td>
+              {{ inv.ti_department|default:"-" }}
+            </td>
 
-  <td><strong>{{ inv.ti_total }}</strong></td>
-</tr>
+            <!-- Vehicle No -->
+            <td>{{ inv.ti_trip.tr_vehiclenumber|default:"-" }}</td>
 
-        {% endfor %}
+            <!-- Vehicle Type -->
+            <td>{{ inv.ti_trip.tr_vehicletype|default:"-" }}</td>
+
+            {% with goods=inv.ti_goods %}
+
+            <!-- Consignee -->
+            <td>
+              {% if goods %}
+              {{ goods.cg_consignee }}
+              {% else %}
+              <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Reference No -->
+            <td>
+              {% if inv.ti_consignment %}
+              {{ inv.ti_consignment.co_cusrefnum }}
+              {% else %}
+              <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <!-- HAWB No -->
+            <td>
+              {% if goods %}
+              {{ goods.cg_hawbno }}
+              {% else %}
+              <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <!-- No of Pcs -->
+            <td>
+              {% if goods %}
+              {{ goods.cg_qty }}
+              {% else %}
+              <span class="text-muted">0</span>
+              {% endif %}
+            </td>
+
+            <!-- Weight -->
+            <td>
+              {% if goods %}
+              {{ goods.cg_weight }}
+              {% else %}
+              <span class="text-muted">0.0</span>
+              {% endif %}
+            </td>
+
+            {% endwith %}
+
+            <!-- Charges (FROM TRIP AS REQUESTED) -->
+            <td>{{ inv.ti_trip.tc_tripcost }}</td>
+            <td>{{ inv.ti_trip.tc_tollcost }}</td>
+            <td>{{ inv.ti_trip.tc_parkingcost }}</td>
+            <td>{{ inv.ti_trip.tc_loadingcost }}</td>
+            <td>{{ inv.ti_trip.tc_unloadingcost }}</td>
+            <td>{{ inv.ti_trip.tc_haltingcost }}</td>
+            <td>{{ inv.ti_trip.tc_rtocost }}</td>
+            <td>{{ inv.ti_trip.tc_weighmentcost }}</td>
+            <td>{{ inv.ti_trip.tc_handlingcost }}</td>
+            <td>{{ inv.ti_trip.tc_cancellation }}</td>
+
+            <!-- TOTAL -->
+            <td>
+              <strong>
+                {{ inv.trip_total|floatformat:2 }}
+              </strong>
+            </td>
+
+
+          </tr>
+          {% endfor %}
         </tbody>
+
+
+
 
       </table>
 
@@ -318,70 +383,72 @@
   </div>
 </div>
 <script>
-$(document).ready(function () {
-  $('.charge').on('input', function () {
-    let total = 0;
-    $('.charge').each(function () {
-      let v = parseFloat($(this).val());
-      if (!isNaN(v)) total += v;
+  $(document).ready(function () {
+    $('.charge').on('input', function () {
+      let total = 0;
+      $('.charge').each(function () {
+        let v = parseFloat($(this).val());
+        if (!isNaN(v)) total += v;
+      });
+      $('#id_ti_total').val(total.toFixed(2));
     });
-    $('#id_ti_total').val(total.toFixed(2));
   });
-});
 </script>
 
 
 
 <!-- ================= JS ================= -->
 <script>
-$(document).ready(function () {
+  $(document).ready(function () {
 
-  $('#id_ti_customer').change(function () {
-    const customerId = $(this).val();
+    $('#id_ti_customer').change(function () {
+      const customerId = $(this).val();
 
-    if (!customerId) {
-      $('#id_ti_gst_in').val('');
-      $('#id_ti_customer_short_name').val('');
-      return;
-    }
-
-    $.ajax({
-      url: "{% url 'fetch_customer_details' %}",
-      data: { customer_id: customerId },
-      success: function (data) {
-        $('#id_ti_gst_in').val(data.gstin);
-        $('#id_ti_customer_short_name').val(data.customer_short_name);
+      if (!customerId) {
+        $('#id_ti_gst_in').val('');
+        $('#id_ti_customer_short_name').val('');
+        $('#id_branch_display').val('');
+        $('#id_ti_state').val('');
+        return;
       }
-    });
-  });
 
-  $('.charge-field').on('input', function () {
-    let total = 0;
-    $('.charge-field').each(function () {
-      const val = parseFloat($(this).val());
-      if (!isNaN(val)) total += val;
-    });
-    $('#id_ti_total').val(total.toFixed(2));
-  });
+      $.ajax({
+        url: "{% url 'fetch_customer_details' %}",
+        data: { customer_id: customerId },
+        success: function (data) {
 
-});
+          $('#id_ti_gst_in').val(data.gstin);
+          $('#id_ti_customer_short_name').val(data.customer_short_name);
+
+          // 🔥 AUTO SET BRANCH
+          $('#id_branch_display').val(data.branch);
+
+          // 🔥 AUTO SET STATE (READ-ONLY)
+          $('#id_ti_state').val(data.state);
+        }
+      });
+    });
+
+  });
 </script>
+
 <script>
   $(document).ready(function () {
-      $('#trans_invoice_table').DataTable({
-          scrollX: true,
-          responsive: true,
-          dom: 'lBfrtip',
-          buttons: [
-              'copy',
-              'csv',
-              'excel',
-              'print'
-          ],
-          pageLength: 10,
-          lengthMenu: [5, 10, 25, 50]
-      });
+    $('#trans_invoice_table').DataTable({
+      scrollX: true,
+      responsive: true,
+      dom: 'lBfrtip',
+      buttons: [
+        'copy',
+        'csv',
+        'excel',
+        'print'
+      ],
+      pageLength: 10,
+      lengthMenu: [5, 10, 25, 50]
+    });
   });
 </script>
+
 
 {% endblock content %}

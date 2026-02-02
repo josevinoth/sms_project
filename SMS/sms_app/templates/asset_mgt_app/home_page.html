@@ -1,9 +1,15 @@
 {% extends "asset_mgt_app/base_1.html" %}
 {% block content %}
 {% load crispy_forms_tags %}
-<style>
+{% load static %}
+<!-- Shared modern theme CSS -->
+<link rel="stylesheet" href="{% static 'sms_app/css/modern_light.css' %}">
+<!-- flatpickr for nicer date inputs (only if needed) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<!-- extras JS (flatpickr + export) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+<script src="{% static 'sms_app/js/dashboard_extras.js' %}"></script>
 
-</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12 col-md-2 text-white p-3">
@@ -122,6 +128,7 @@
                         <!--        <a href="{% url 'openingstock_list' %}"><i class="fa fa-arrow-right " aria-hidden="true"></i> Opening Stock</a>-->
                         <a href="{% url 'stockpurchases_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock List</a>
                         <a href="{% url 'part_code_add' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Part Code</a>
+                        <a href="{% url 'stock_maintenance_list' %}"><i class="fa fa-arrow-right"aria-hidden="true"></i> Stock Maintenance</a>
                         <a href="{% url 'pk_stock_vendor_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Purchase</a>
                         <a href="{% url 'pk_retrival_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Retrival <span class="badge bg-danger p-2 blink">{{ count_retrival }}</span></a>
                         <a href="{% url 'pk_acceptance_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Acceptance <span class="badge bg-danger p-2 blink">{{ count_acceptance }}</span></a>
@@ -159,6 +166,8 @@
                         <a href="{% url 'trip_finance_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Finance Approval </a>
                         <a href="{% url 'trans_invoice_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice List </a>
                         <a href="{% url 'maintenance_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Maintenance </a>
+                        <a href="{% url 'manager_approval_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Manager Approval <span class="badge bg-danger p-2 blink">{{manager_listcount}}</span></a>
+                        <a href="{% url 'finance_approval_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>  Finance Aprroval<span class="badge bg-danger p-2 blink">{{finance_listcount }}</span></a>
                         <a href="{% url 'transport_reports' %}"><i class="fa fa-book" aria-hidden="true"></i> Reports </a>
                         <a href="{% url 'driver_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Driver Master </a>
                         <a href="{% url 'driver_settlement_list' %}"><i class="far fa-user-circle"></i> Driver settlement </a>
@@ -166,11 +175,11 @@
                         <a href="{% url 'vehicle_availability' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Vehicle Availability </a>
                         <a id="tripapproval" href="{% url 'trip_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Trip Approval <span class="badge bg-danger p-2 blink">{{ approval_count }}</span></a>
                         <a id="checklistapproval" href="{% url 'trip_highvalue_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Check List Approval <span class="badge bg-danger p-2 blink">{{ checklist_count }}</span></a>
-                        <a id="track_vehicle" href="{% url 'track_vehicle_position' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Track Vehicle</span></a>
+                        <a id="track_vehicle" href="{% url 'track_vehicle_position' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Track Vehicle</a>
                         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> TMS Misc</button>
                         <div class="content">
                             <a href="{% url 'location_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Location Master </a>
-                            <a id="fastag" href="{% url 'trans_fastag' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Fastag</span></a>
+                            <a id="fastag" href="{% url 'trans_fastag' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Fastag</a>
                             <a href="{% url 'bunkname_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Bunk Master </a>
                             <a href="{% url 'vehiclemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Master </a>
                             <a href="{% url 'halting_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Halting Charges Master </a>

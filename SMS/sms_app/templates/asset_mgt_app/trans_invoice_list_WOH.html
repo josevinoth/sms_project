@@ -22,11 +22,7 @@
         </h3>
     </div>
 
-    <div class="col-4 message text-center">
-        {% for message in messages %}
-            <span class="{{ message.tags }}">{{ message }}</span>
-        {% endfor %}
-    </div>
+
 
     <div class="col-4"></div>
 </div>
@@ -35,134 +31,135 @@
 
 <!-- ================= REMOVE BUTTON ================= -->
 <div class="col-md-2 mb-3">
-    <a href="#"
-       id="remove_btn"
-       class="btn btn-danger"
-       onclick="return confirm('Are you sure to remove selected invoice(s)?');">
+    <a href="#" id="remove_btn" class="btn btn-danger"
+        onclick="return confirm('Are you sure to remove selected invoice(s)?');">
         <i class="fas fa-minus"></i> Remove
     </a>
 </div>
 
 <!-- ================= TABLE ================= -->
 <div class="container-fluid">
-    <table id="trans_invoice_woh_list"
-           class="table table-striped table-bordered">
+    <table id="trans_invoice_woh_list" class="table table-striped table-bordered">
 
         <thead class="thead-dark">
-        <tr>
-            <th>Select</th>
-            <th>INV DATE</th>
-            <th>Customer Name</th>
-            <th>GST IN</th>
-            <th>State</th>
-            <th>Pincode</th>
-            <th>INV NO</th>
+            <tr>
+                <th>Select</th>
+                <!--<th>INV DATE</th>-->
+                <th>Customer Name</th>
+                <th>GST IN</th>
+                <th>State</th>
+                <th>Pincode</th>
+                <!--<th>INV NO</th>-->
 
-            <th>Branch</th>
-            <th>Vehicle Source</th>
-            <th>Customer Short Name</th>
-            <th>Tally Veh No</th>
-            <th>Planning Date</th>
+                <th>Branch</th>
+                <th>Vehicle Source</th>
+                <th>Customer Short Name</th>
+                <th>Tally Veh No</th>
+                <th>Planning Date</th>
 
-            <th>Cnote No</th>
-            <th>From</th>
-            <th>To</th>
-            <th>Dept</th>
+                <th>Cnote No</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Dept</th>
 
-            <th>Veh No</th>
-            <th>Veh Type</th>
+                <th>Veh No</th>
+                <th>Veh Type</th>
 
-            <th>Veh Placed Date & Time</th>
-            <th>Veh Released Date & Time</th>
-            <th>Veh Arrived Date & Time</th>
-            <th>Veh Dispatched Date & Time</th>
+                <th>Veh Placed Date & Time</th>
+                <th>Veh Released Date & Time</th>
+                <th>Veh Arrived Date & Time</th>
+                <th>Veh Dispatched Date & Time</th>
 
-            <th>Consignee</th>
-            <th>Reference No</th>
-            <th>HAWB No</th>
+                <th>Consignee</th>
+                <th>Reference No</th>
+                <th>HAWB No</th>
 
-            <th>No. of Pcs</th>
-            <th>Weight</th>
+                <th>No. of Pcs</th>
+                <th>Weight</th>
 
-            <th>Transportation Charges</th>
-            <th>Toll Charges</th>
-            <th>Parking Charges</th>
-            <th>Loading Charges</th>
-            <th>Unloading Charges</th>
-            <th>Halting Charges</th>
-            <th>Docket Charges</th>
-            <th>Weighment Charges</th>
-            <th>Handling Charges</th>
-            <th>Cancellation Charges</th>
+                <th>Transportation Charges</th>
+                <th>Toll Charges</th>
+                <th>Parking Charges</th>
+                <th>Loading Charges</th>
+                <th>Unloading Charges</th>
+                <th>Halting Charges</th>
+                <th>Docket Charges</th>
+                <th>Weighment Charges</th>
+                <th>Handling Charges</th>
+                <th>Cancellation Charges</th>
 
-            <th>TOTAL</th>
-          </tr>
+                <th>TOTAL</th>
+            </tr>
         </thead>
 
         <tbody>
-        {% for inv in trans_invoice_list %}
-         <tr>
-  <!-- Invoice basic -->
-             <td class="text-center">
-      <input type="checkbox"
-             class="row-select"
-             value="{{ inv.id }}">
-  </td>
-  <td>{{ inv.ti_inv_date }}</td>
-  <td>{{ inv.ti_customer }}</td>
-  <td>{{ inv.ti_gst_in }}</td>
-  <td>{{ inv.ti_state }}</td>
-  <td>{{ inv.ti_pincode }}</td>
-  <td>{{ inv.ti_inv_no }}</td>
+            {% for trip in trans_invoice_list %}
+            <tr>
 
-  <!-- Customer / Trip -->
-  <td>{{ inv.ti_customer.cu_branch }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclesource }}</td>
-  <td>{{ inv.ti_customer_short_name }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
-  <td>{{ inv.ti_trip.tr_departeddate }}</td>
+                <!-- Select -->
+                <td class="text-center">
+                    <input type="checkbox" class="row-select" value="{{ trip.id }}">
+                </td>
 
-  <!-- Consignment -->
-  <td>{{ inv.ti_consignment.co_consignmentnumber }}</td>
-  <td>{{ inv.ti_trip.tr_departedlocation }}</td>
-  <td>{{ inv.ti_trip.tr_reportedlocation }}</td>
-  <td>{{ inv.ti_customer.cu_department }}</td>
+                <!-- ================= CUSTOMER ================= -->
+                <td>{{ trip.tr_enquirynumber.en_customername|default:"-" }}</td>
+                <td>{{ trip.ti_gst_in|default:"-" }}</td>
+                <td>{{ trip.ti_state|default:"-" }}</td>
+                <td>{{ trip.ti_pincode|default:"-" }}</td>
+                <td>{{ trip.ti_branch|default:"-" }}</td>
 
-  <!-- Vehicle -->
-  <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
-  <td>{{ inv.ti_trip.tr_vehicletype }}</td>
 
-  <!-- Trip timeline -->
-  <td>{{ inv.ti_trip.tr_departeddate_pickup }}</td>
-  <td>{{ inv.ti_trip.tr_dock_out_time }}</td>
-  <td>{{ inv.ti_trip.tr_reporteddate }}</td>
-  <td>{{ inv.ti_trip.tr_departeddate_delivery }}</td>
 
-  <!-- Goods -->
-  <td>{{ inv.ti_goods.cg_consignee }}</td>
-  <td>{{ inv.ti_consignment.co_cusrefnum }}</td>
-  <td>{{ inv.ti_goods.cg_hawbno }}</td>
+                <!-- ================= TRIP ================= -->
+                <td>{{ trip.tr_vehiclesource|default:"-" }}</td>
+                <td>{{ trip.tr_enquirynumber.en_customername|default:"-" }}</td>
+                <td>{{ trip.tally_vehicle_no|default:"-" }}</td>
+                <td>{{ trip.tr_departeddate|default:"-" }}</td>
 
-  <td>{{ inv.ti_goods.cg_qty }}</td>
-  <td>{{ inv.ti_goods.cg_weight }}</td>
+                <!-- ================= CONSIGNMENT ================= -->
+                <td>{{ trip.tr_consignmentnumber.co_consignmentnumber|default:"-" }}</td>
+                <td>{{ trip.tr_departedlocation|default:"-" }}</td>
+                <td>{{ trip.tr_reportedlocation|default:"-" }}</td>
+                <td>{{ trip.tr_enquirynumber.en_customerdepartment|default:"-" }}</td>
 
-  <!-- Charges -->
-  <td>{{ inv.ti_transportation_charges }}</td>
-  <td>{{ inv.ti_toll_charges }}</td>
-  <td>{{ inv.ti_parking_charges }}</td>
-  <td>{{ inv.ti_loading_charges }}</td>
-  <td>{{ inv.ti_unloading_charges }}</td>
-  <td>{{ inv.ti_halting_charges }}</td>
-  <td>{{ inv.ti_docket_charges }}</td>
-  <td>{{ inv.ti_weighment_charges }}</td>
-  <td>{{ inv.ti_handling_charges }}</td>
-  <td>{{ inv.ti_cancellation_charges }}</td>
+                <!-- ================= VEHICLE ================= -->
+                <td>{{ trip.tr_vehiclenumber|default:"-" }}</td>
+                <td>{{ trip.tr_vehicletype|default:"-" }}</td>
 
-  <td><strong>{{ inv.ti_total }}</strong></td>
-</tr>
+                <!-- ================= TIMELINE ================= -->
+                <td>{{ trip.tr_departeddate_pickup|default:"-" }}</td>
+                <td>{{ trip.tr_dock_out_time|default:"-" }}</td>
+                <td>{{ trip.tr_reporteddate|default:"-" }}</td>
+                <td>{{ trip.tr_departeddate_delivery|default:"-" }}</td>
 
-        {% endfor %}
+                <!-- ================= GOODS ================= -->
+                {% with goods=trip.tr_consignmentnumber.cg_consignmentnumber.first %}
+                <td>{{ goods.cg_consignee|default:"-" }}</td>
+                <td>{{ trip.tr_consignmentnumber.co_cusrefnum|default:"-" }}</td>
+                <td>{{ goods.cg_hawbno|default:"-" }}</td>
+                <td>{{ goods.cg_qty|default:"-" }}</td>
+                <td>{{ goods.cg_weight|default:"-" }}</td>
+                {% endwith %}
+
+                <!-- ================= CHARGES ================= -->
+                <td>{{ trip.tc_tripcost }}</td>
+                <td>{{ trip.tc_tollcost }}</td>
+                <td>{{ trip.tc_parkingcost }}</td>
+                <td>{{ trip.tc_loadingcost }}</td>
+                <td>{{ trip.tc_unloadingcost }}</td>
+                <td>{{ trip.tc_haltingcost }}</td>
+                <td>{{ trip.tc_rtocost }}</td>
+                <td>{{ trip.tc_weighmentcost }}</td>
+                <td>{{ trip.tc_handlingcost }}</td>
+                <td>{{ trip.tc_cancellation }}</td>
+
+                <!-- ================= TOTAL ================= -->
+                <td><strong>{{ trip.trip_total|floatformat:2 }}</strong></td>
+
+            </tr>
+            {% endfor %}
         </tbody>
+
 
     </table>
 </div>
@@ -182,53 +179,83 @@
 
 <!-- ================= DATATABLE SCRIPT ================= -->
 <script>
-$(document).ready(function () {
+    $(document).ready(function () {
 
-    var table = new DataTable('#trans_invoice_woh_list', {
+        var table = new DataTable('#trans_invoice_woh_list', {
 
-        columnDefs: [
-            {
-                orderable: false,
-                className: 'select-checkbox',
-                targets: 0
-            }
-        ],
+            columnDefs: [
+                {
+                    orderable: false,
+                    className: 'select-checkbox',
+                    targets: 0
+                }
+            ],
 
-        select: {
-            style: 'os',
-            selector: 'td:first-child'
-        },
+            select: {
+                style: 'os',
+                selector: 'td:first-child'
+            },
 
-        order: [[1, 'desc']],
-        dom: 'lBfrtip',
-        scrollX: true
-    });
+            order: [[1, 'desc']],
+            dom: 'lBfrtip',
+            scrollX: true
+        });
 </script>
-    <script>
-$('#remove_btn').on('click', function () {
+<script>
+        $('#remove_btn').on('click', function () {
 
-    let ids = [];
+            let ids = [];
 
-    $('#trans_invoice_woh_list tbody input.row-select:checked').each(function () {
-        ids.push($(this).val());
-    });
+            $('#trans_invoice_woh_list tbody input.row-select:checked').each(function () {
+                ids.push($(this).val());
+            });
 
-    if (ids.length === 0) {
-        alert("Please select at least one record");
-        return false;
-    }
+            if (ids.length === 0) {
+                alert("Please select at least one record");
+                return false;
+            }
 
-    $.ajax({
-        url: "{% url 'trans_invoice_remove_woh' %}",
-        type: "GET",
-        data: {
-            'invoice_list[]': ids
-        },
-        success: function () {
-            location.reload();
-        }
-    });
-});
+            $.ajax({
+                url: "{% url 'trans_invoice_remove_woh' %}",
+                type: "GET",
+                data: {
+                    'invoice_list[]': ids
+                },
+                success: function () {
+                    location.reload();
+                }
+            });
+        });
+</script>
+<script>
+        $('#add_btn').on('click', function (e) {
+            e.preventDefault();
+
+            let ids = [];
+
+            $('#trans_invoice_master_list tbody input.row-select:checked')
+                .each(function () {
+                    ids.push($(this).val());
+                });
+
+            if (ids.length === 0) {
+                alert("Please select at least one invoice");
+                return false;
+            }
+
+            $.ajax({
+                url: "{% url 'trans_invoice_list_woh' customer.id %}",
+                type: "POST",
+                data: {
+                    'invoice_list[]': ids,
+                    'action': 'add',
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function () {
+                    location.reload();
+                }
+            });
+        });
 </script>
 
 

@@ -10,15 +10,29 @@ from django.utils.timezone import make_aware
 
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm,TripdetailaddForm
-from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,VehiclemasterInfo,TripHighvalueInfo
+from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,VehiclemasterInfo,TripHighvalueInfo, Emailmaster, Email_type
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
 import json
 
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from ..models import TripdetailInfo
 from django.core.paginator import Paginator
+from django.utils import timezone
+
+
+def format_email_date(dt):
+    if not dt:
+        return ""
+
+    try:
+        # Convert to local timezone (IST)
+        local_dt = timezone.localtime(dt)
+        return local_dt.strftime("%d-%m-%Y %H:%M")
+    except Exception:
+        return str(dt)
 
 
 @login_required(login_url='login_page')
@@ -183,7 +197,7 @@ def tripdetail_add(request, tripdetail_id=0):
             ).order_by('-id').first()
 
             trip_approvallist = (
-                trip_instance.tr_approval and trip_instance.tr_approval.ta_approval_status_id == 1
+                    trip_instance.tr_approval and trip_instance.tr_approval.ta_approval_status_id == 1
             )
 
             context = {
@@ -217,7 +231,7 @@ def tripdetail_add(request, tripdetail_id=0):
 
             # ✅ Prevent using same consignment again (backend check)
             if cosnignment_number and TripdetailInfo.objects.filter(
-                tr_consignmentnumber=cosnignment_number
+                    tr_consignmentnumber=cosnignment_number
             ).exists():
                 messages.error(request, 'This consignment number is already used in another trip.')
                 return redirect(request.META['HTTP_REFERER'])
@@ -254,11 +268,25 @@ def tripdetail_add(request, tripdetail_id=0):
                         pass
 
                 trip = trip_det_form.save(commit=False)
-                trip.tc_financestatus_id = 8
+                
+                # ✅ Robust Status Matching
+                status_open = Tripstatusinfo.objects.filter(Q(status__iexact='Open') | Q(status__iexact='Started')).first()
+                status_closed = Tripstatusinfo.objects.filter(Q(status__iexact='Closed') | Q(status__iexact='Trip Closed')).first()
+                status_pending = Tripstatusinfo.objects.filter(status__iexact='Pending Approval').first()
+
+                # Manual capture of status from POST
+                manual_status_id = request.POST.get('tc_financestatus')
+                if manual_status_id:
+                    trip.tc_financestatus_id = int(manual_status_id)
+                else:
+                    if trip.tr_category_id in [2, 3]:
+                        if status_open: trip.tc_financestatus_id = status_open.id
+                    else:
+                        if status_pending: trip.tc_financestatus_id = status_pending.id
+
                 if vehicle_allotment_id:
                     trip.tr_driver_master_id = va.va_driver_master_id
 
-                # ✅ Process POD signature
                 pod_data = request.POST.get('pod_signature_data')
                 if pod_data:
                     format, imgstr = pod_data.split(';base64,')
@@ -268,6 +296,55 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 trip.save()
                 tripclosurefiles_form.save()
+
+                # ✅ AUTOMATED EMAIL TRIGGERS
+                def trigger_alert(alert_func, label):
+                    try:
+                        import json
+                        request.session['ses_tripdetail_id'] = trip.id
+                        
+                        # Fetch recipients
+                        recipients = get_auto_recipients(trip)
+                        
+                        if not recipients:
+                            messages.warning(request, f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
+                            return
+
+                        response = alert_func(request)
+                        rec_str = ", ".join(recipients)
+                        
+                        # Inspect JsonResponse
+                        try:
+                            data = json.loads(response.content.decode('utf-8'))
+                            if data.get('success'):
+                                messages.info(request, f"Automated Alert Sent: {label} (To: {rec_str})")
+                            else:
+                                messages.warning(request, f"Alert skipped: {label} ({data.get('msg')})")
+                        except:
+                            messages.info(request, f"Automated Alert Sent: {label} (To: {rec_str})")
+                    except Exception as e:
+                        print(f"Alert trigger error ({label}): {e}")
+
+                is_open = status_open and trip.tc_financestatus_id == status_open.id
+                is_closed = status_closed and trip.tc_financestatus_id == status_closed.id
+
+                # ✅ Only send email alerts for trip category 1
+                if trip.tr_category_id == 1:
+                    # 1. Loading Reported
+                    if trip.tr_departedlocation and trip.tr_departeddate_pickup and not trip.tr_loading_report_mail_sent:
+                        trigger_alert(trip_send_loading_report_mail, "Loading Reported")
+
+                    # 2. Trip Started
+                    if is_open and not trip.tr_trip_started_mail_sent:
+                        trigger_alert(trip_send_trip_started_mail, "Trip Started")
+
+                    # 3. Unloading Reported
+                    if trip.tr_reportedlocation and trip.tr_reporteddate and not trip.tr_unloading_report_mail_sent:
+                        trigger_alert(trip_send_unloading_report_mail, "Unloading Reported")
+
+                    # 4. Trip Closed
+                    if is_closed and not trip.tr_trip_closed_mail_sent:
+                        trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
 
                 print("Main Form is Valid")
                 last_id = TripdetailInfo.objects.latest('id').id
@@ -282,6 +359,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     en_enquirynumber=enquiry_num
                 ).update(en_tripdetails=list(tripdetail_list))
                 messages.success(request, "Record Updated Successfully")
+
                 return redirect('tripdetail_update', tripdetail_id=trip.id)
 
             else:
@@ -300,7 +378,15 @@ def tripdetail_add(request, tripdetail_id=0):
             if trip_det_form.is_valid():
                 trip = trip_det_form.save(commit=False)
 
-                # ✅ Save POD Signature if available
+                # ✅ Robust Status Matching Lookups
+                status_open = Tripstatusinfo.objects.filter(Q(status__iexact='Open') | Q(status__iexact='Started')).first()
+                status_closed = Tripstatusinfo.objects.filter(Q(status__iexact='Closed') | Q(status__iexact='Trip Closed')).first()
+
+                # Manual capture since it's a raw select tag in HTML
+                manual_status_id = request.POST.get('tc_financestatus')
+                if manual_status_id:
+                    trip.tc_financestatus_id = int(manual_status_id)
+
                 pod_data = request.POST.get("pod_signature_data", None)
                 if pod_data:
                     format, imgstr = pod_data.split(';base64,')
@@ -311,12 +397,64 @@ def tripdetail_add(request, tripdetail_id=0):
                 trip.save()
                 tripclosurefiles_form.save()
 
+                # ✅ AUTOMATED EMAIL TRIGGERS
+                def trigger_alert(alert_func, label):
+                    try:
+                        import json
+                        request.session['ses_tripdetail_id'] = trip.id
+                        
+                        # Fetch recipients
+                        recipients = get_auto_recipients(trip)
+                        
+                        if not recipients:
+                            messages.warning(request, f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
+                            return
+
+                        response = alert_func(request)
+                        rec_str = ", ".join(recipients)
+                        
+                        # Inspect JsonResponse
+                        try:
+                            data = json.loads(response.content.decode('utf-8'))
+                            if data.get('success'):
+                                messages.info(request, f"Automated Alert Sent: {label} (To: {rec_str})")
+                            else:
+                                messages.warning(request, f"Alert skipped: {label} ({data.get('msg')})")
+                        except:
+                            messages.info(request, f"Automated Alert Sent: {label} (To: {rec_str})")
+                    except Exception as e:
+                        print(f"Alert trigger error ({label}): {e}")
+
+                # Boolean checks for status
+                # Fallback to IDs 1/2 if name lookup fails, but prioritize names
+                is_open = (status_open and trip.tc_financestatus_id == status_open.id) or (not status_open and trip.tc_financestatus_id == 1)
+                is_closed = (status_closed and trip.tc_financestatus_id == status_closed.id) or (not status_closed and trip.tc_financestatus_id == 2)
+
+                # ✅ Only send email alerts for trip category 1
+                if trip.tr_category_id == 1:
+                    # 1. Loading Reported
+                    if trip.tr_departedlocation and trip.tr_departeddate_pickup and not trip.tr_loading_report_mail_sent:
+                        trigger_alert(trip_send_loading_report_mail, "Loading Reported")
+
+                    # 2. Trip Started
+                    if is_open and not trip.tr_trip_started_mail_sent:
+                        trigger_alert(trip_send_trip_started_mail, "Trip Started")
+
+                    # 3. Unloading Reported
+                    if trip.tr_reportedlocation and trip.tr_reporteddate and not trip.tr_unloading_report_mail_sent:
+                        trigger_alert(trip_send_unloading_report_mail, "Unloading Reported")
+
+                    # 4. Trip Closed
+                    if is_closed and not trip.tr_trip_closed_mail_sent:
+                        trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
+
                 print("Main Form is Valid")
                 tripdetail_list = TripdetailInfo.objects.filter(
                     tr_enquirynumber=enquiry_num
                 ).values_list('tr_tripnumber', flat=True)
                 EnquirynoteInfo.objects.filter(pk=enquiry_num).update(en_tripdetails=list(tripdetail_list))
                 messages.success(request, 'Record Updated Successfully')
+
                 return redirect('tripdetail_update', tripdetail_id=tripdetail_id)
 
 
@@ -328,7 +466,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 print("Trip Details Main Form is not Valid")
                 messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
 
-    return redirect('tripdetail_add', tripdetail_id=tripdetail_id)  # ✅ stay on same record
+    return redirect('tripdetail_insert')
 
 
 # List tripdetail
@@ -337,10 +475,10 @@ def tripdetail_list(request):
     first_name = request.session.get('first_name')
 
     # Filters
-    branch = request.GET.get('branch', '')
-    selected_status_id = request.GET.get('trip_status', '')
-    date_from = request.GET.get('date_from', '')
-    date_to = request.GET.get('date_to', '')
+    branch = request.GET.get('branch', '').strip()
+    selected_status_id = request.GET.get('trip_status', '').strip()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
 
     # Base queryset
     tripdetail_queryset = TripdetailInfo.objects.all()
@@ -372,10 +510,20 @@ def tripdetail_list(request):
         )
 
     # Order
-    tripdetail_queryset = tripdetail_queryset.order_by('-id')
+    tripdetail_queryset = tripdetail_queryset.order_by('-tr_created_at')
 
-    # ✅ PAGINATION
-    paginator = Paginator(tripdetail_queryset, 50)  # 50 rows per page
+    # ✅ DYNAMIC PAGINATION
+    per_page = request.GET.get('per_page', '50').strip()
+    
+    if per_page == 'all':
+        items_per_page = tripdetail_queryset.count() if tripdetail_queryset.count() > 0 else 50
+    else:
+        try:
+            items_per_page = int(per_page)
+        except ValueError:
+            items_per_page = 50
+
+    paginator = Paginator(tripdetail_queryset, items_per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -391,6 +539,7 @@ def tripdetail_list(request):
         'selected_status': int(selected_status_id) if selected_status_id else None,
         'date_from': date_from,
         'date_to': date_to,
+        'per_page': per_page,
     }
 
     return render(request, "asset_mgt_app/tripdetail_list.html", context)
@@ -452,12 +601,19 @@ def load_vehicle_details(request):
 
 @login_required(login_url='login_page')
 def trip_email(request):
+    if request.method != "POST":
+         return JsonResponse({"success": False, "msg": "Invalid request method"})
+
     recipient = request.POST.get('recipient')
+    message_from_user = request.POST.get('message', '') 
+    alert_type = request.POST.get('alert_type', '') 
     tripdetail_id = request.session.get('ses_tripdetail_id')
+    
+    # Save manual recipient to session
+    request.session["trip_manual_recipient"] = recipient
 
     if not tripdetail_id:
-        messages.error(request, "Trip detail ID is missing. Please try again.")
-        return redirect(request.META.get('HTTP_REFERER', '/'))
+        return JsonResponse({"success": False, "msg": "Trip detail ID is missing."})
 
     trip = TripdetailInfo.objects.get(pk=tripdetail_id)
 
@@ -472,106 +628,160 @@ def trip_email(request):
         except Exception:
             return None
 
-    def format_datetime(value):
-        if not value:
-            return ""
-        try:
-            if isinstance(value, str):
-                value = datetime.fromisoformat(value.replace('Z', '').split('+')[0].strip())
-            return value.strftime("%Y-%m-%d %H:%M")  # 👈 no seconds
-        except Exception:
-            return str(value)
+    try:
+        enquiry = EnquirynoteInfo.objects.select_related('en_customername','en_customerdepartment').get(en_enquirynumber=trip.tr_enquirynumber)
+    except EnquirynoteInfo.DoesNotExist:
+        enquiry = None
 
-    # ---- Parse date fields ----
-    departed_date = parse_dt(trip.tr_departeddate)
-    loading_time = parse_dt(trip.tr_loading_time)
-    unloading_time = parse_dt(trip.tr_unloading_time)
-    reported_date = parse_dt(trip.tr_reporteddate)
+    customer_name = enquiry.en_customername.cu_name if enquiry and enquiry.en_customername else "N/A"
+    
+    # Common Data Points
+    from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
+    reported_dt = format_email_date(trip.tr_departeddate_pickup)
+    consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
+    started_dt = {format_email_date(trip.tr_departeddate)}
+    to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "N/A"
+    unloading_reported_dt = format_email_date(trip.tr_reporteddate)
 
-    # ---- Date validation ----
-    invalid_dates = []
-    if departed_date and loading_time and departed_date > loading_time:
-        invalid_dates.append("Loading Time cannot be before Departed Date.")
-    if loading_time and unloading_time and loading_time > unloading_time:
-        invalid_dates.append("Unloading Time cannot be before Loading Time.")
-    if departed_date and reported_date and departed_date > reported_date:
-        invalid_dates.append("Reported Date cannot be before Departed Date.")
+    # New Fields Requested
+    vehicle_number = trip.tr_vehiclenumber or "N/A"
+    driver_name = trip.tr_drivername or "N/A"
+    driver_number = trip.tr_drivernumber or "N/A"
 
-    if invalid_dates:
-        messages.error(request, "⚠️ Date format or order issue:\n" + "\n".join(invalid_dates))
-        return redirect(request.META.get('HTTP_REFERER', '/'))
+    subject = f"{alert_type if alert_type else 'Trip Update'} - {trip.tr_tripnumber}"
+    recipient_list = [email.strip() for email in recipient.split(',') if email.strip()]
 
-    # ---- Email text ----
-    status_map = {'trip started': 'started', 'trip closed': 'closed'}
-    trip_status_text = f"Trip has been {status_map.get(trip.tc_financestatus, trip.tc_financestatus)}"
+    # ---- Construct Email Body based on Alert Type ----
+    email_content = ""
+    
+    # Mail 1: Loading Reported
+    if "Loading Reported" in alert_type:
+        email_content = f"""
+        <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd; font-family: Arial, sans-serif;">
+            <thead>
+                <tr style="background-color: #007bff; color: white;">
+                    <th colspan="2" style="padding: 10px; text-align: center;">Loading Reported Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>vehicle number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{vehicle_number}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>driver name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{driver_name}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>mobile number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{driver_number}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>From Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{from_location}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Reported Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td></tr>
+            </tbody>
+        </table>
+        """
 
-    recipient_list = [email.strip() for email in recipient.split(',')]
-    subject = f"Trip {trip.tr_tripnumber} - Update"
+    # Mail 2: Trip Started
+    elif "Trip Started" in alert_type:
+        email_content = f"""
+        <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd; font-family: Arial, sans-serif;">
+            <thead>
+                <tr style="background-color: #007bff; color: white;">
+                    <th colspan="2" style="padding: 10px; text-align: center;">Trip Started Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>vehicle number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{vehicle_number}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>driver name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{driver_name}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>mobile number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{driver_number}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>From Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{from_location}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Reported Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment Number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Started Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td></tr>
+            </tbody>
+        </table>
+        """
 
-    # ---- Build HTML Email ----
-    email_body = f"""
-        <html>
-            <head>
-               <style>
-                    table {{
-                        width: 70%;
-                        border-collapse: collapse;
-                        font-family: Arial, sans-serif;
-                        font-size: 14px;
-                        border: 1px solid black;
-                    }}
-                    th, td {{
-                        border: 1px solid black;
-                        padding: 8px;
-                    }}
-                    th {{
-                        background-color: #f4f4f4;
-                        text-align: left;
-                    }}
-                    td {{
-                        vertical-align: top;
-                    }}
-                    .remarks div {{
-                        margin-bottom: 5px;
-                    }}
-               </style>
-            </head>
-            <body>
-                <p>Dear Team,</p>
-                <p>{trip_status_text}</p>
-                <p>Please find below the trip details:</p>
-                <table>
-                    <tr><th>Trip Number</th><td>{trip.tr_tripnumber}</td></tr>
-                    <tr><th>Enquiry Number</th><td>{trip.tr_enquirynumber}</td></tr>
-                    <tr><th>Consignment Number</th><td>{trip.tr_consignmentnumber}</td></tr>
-                    <tr><th>Vehicle Type</th><td>{trip.tr_vehicletype}</td></tr>
-                    <tr><th>Vehicle Type Placed</th><td>{trip.tr_vehicletype_placed}</td></tr>
-                    <tr><th>Vehicle Number</th><td>{trip.tr_vehiclenumber}</td></tr>
-                    <tr><th>Driver Name</th><td>{trip.tr_drivername}</td></tr>
-                    <tr><th>Driver Number</th><td>{trip.tr_drivernumber}</td></tr>
-                    <tr><th>Trip Category</th><td>{trip.tr_category}</td></tr>
-                    <tr><th>Departed Location</th><td>{trip.tr_departedlocation}</td></tr>
-                    <tr><th>Departed KM</th><td>{trip.tr_departedkm}</td></tr>
-                    <tr><th>Departed Date</th><td>{format_datetime(trip.tr_departeddate)}</td></tr>
-                    <tr><th>Loading Time</th><td>{format_datetime(trip.tr_loading_time)}</td></tr>
-                    <tr><th>Un-Loading Time</th><td>{format_datetime(trip.tr_unloading_time)}</td></tr>
-                    <tr><th>Reported Location</th><td>{trip.tr_reportedlocation}</td></tr>
-                    <tr><th>Reported KM</th><td>{trip.tr_reportedkm}</td></tr>
-                    <tr><th>Reported Date</th><td>{format_datetime(trip.tr_reporteddate)}</td></tr>
-                    <tr><th>Trip Status</th><td>{trip.tc_financestatus}</td></tr>
-                    <tr><th>POD Number</th><td>{trip.tc_pod}</td></tr>
-                    <tr><th>Updated By</th><td>{trip.tr_updated_by}</td></tr>
-                    <tr>
-                        <th>Remarks</th>
-                        <td class="remarks">
-                            {''.join(f'<div>{remark}</div>' for remark in (trip.tr_remarks or '').splitlines())}
-                        </td>
-                    </tr>
-                </table>
-                <p>Regards,<br>Transport Admin</p>
-            </body>
-        </html>
+    # Mail 3: Unloading Reported
+    elif "Unloading Reported" in alert_type:
+        email_content = f"""
+         <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd; font-family: Arial, sans-serif;">
+            <thead>
+                <tr style="background-color: #007bff; color: white;">
+                    <th colspan="2" style="padding: 10px; text-align: center;">Unloading Reported Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>vehicle number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{vehicle_number}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>driver name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{driver_name}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>mobile number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{driver_number}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>From Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{from_location}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Reported Date (Loading)</b></td><td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment #</b></td><td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Started Date</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>To Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{to_location}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Reported Date (Unloading)</b></td><td style="padding: 8px; border: 1px solid #ddd;">{unloading_reported_dt}</td></tr>
+            </tbody>
+        </table>
+        """
+
+    # Mail 4: Trip Closed
+    elif "Trip Closed" in alert_type:
+        email_content = f"""
+        <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd; font-family: Arial, sans-serif;">
+            <thead>
+                <tr style="background-color: #007bff; color: white;">
+                    <th colspan="2" style="padding: 10px; text-align: center;">Trip Closed Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Trip Number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{trip.tr_tripnumber}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>vehicle number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{vehicle_number}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>driver name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{driver_name}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>mobile number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{driver_number}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Reported Date (Loading)</b></td><td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment #</b></td><td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Started Date</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>To Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{to_location}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Reported Date (Unloading)</b></td><td style="padding: 8px; border: 1px solid #ddd;">{unloading_reported_dt}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Status</b></td><td style="padding: 8px; border: 1px solid #ddd;">Trip Closed</td></tr>
+            </tbody>
+        </table>
+        """
+    
+    # Fallback / Default Format
+    else:
+        email_content = f"""
+        <p>Please find below the trip details.</p>
+        <p><b>Customer:</b> {customer_name}</p>
+        <p><b>Vehicle Number:</b> {vehicle_number}</p>
+        <p><b>Driver Name:</b> {driver_name}</p>
+        <p><b>Driver Mobile Number:</b> {driver_number}</p>
+        <p><b>Trip:</b> {trip.tr_tripnumber}</p>
+        """
+
+    full_email_body = f"""
+    <html>
+    <body>
+        <p>Dear Customer,</p>
+        <p>Status Update: {alert_type if alert_type else 'General Update'}.</p>
+        {email_content}
+        <br>
+        {"<p><b>Message:</b> " + message_from_user + "</p>" if message_from_user else ""}
+        <p>Regards,<br>BVM Warehouse Team</p>
+    </body>
+    </html>
     """
+
+    # ---- Handle Flags ----
+    if "Loading Reported" in alert_type:
+        trip.tr_loading_report_mail_sent = True
+        trip.save(update_fields=["tr_loading_report_mail_sent"])
+    elif "Trip Started" in alert_type:
+        trip.tr_trip_started_mail_sent = True
+        trip.save(update_fields=["tr_trip_started_mail_sent"])
+    elif "Unloading Reported" in alert_type:
+        trip.tr_unloading_report_mail_sent = True
+        trip.save(update_fields=["tr_unloading_report_mail_sent"])
+    elif "Trip Closed" in alert_type:
+        trip.tr_trip_closed_mail_sent = True
+        trip.save(update_fields=["tr_trip_closed_mail_sent"])
 
     # ---- Attachment Handling ----
     attachment_path = trip.tc_pod_attachment.path if trip.tc_pod_attachment else None
@@ -579,19 +789,20 @@ def trip_email(request):
     file_name = trip.tc_pod_attachment.name.split("/")[-1] if trip.tc_pod_attachment else None
 
     # ---- Send Email ----
-    send_department_email(
-        department='itadmin',
-        subject=subject,
-        message=email_body,
-        recipient_list=recipient_list,
-        attachment=attachment_file,
-        attachment_type="application/octet-stream" if attachment_file else None,
-        file_name=file_name,
-        email_type=1
-    )
-
-    messages.success(request, "Trip email sent successfully with attachment.")
-    return redirect(request.META.get('HTTP_REFERER', '/'))
+    try:
+        send_department_email(
+            department='itadmin',
+            subject=subject,
+            message=full_email_body,
+            recipient_list=recipient_list,
+            attachment=attachment_file,
+            attachment_type="application/octet-stream" if attachment_file else None,
+            file_name=file_name,
+            email_type=1
+        )
+        return JsonResponse({"success": True, "msg": "Email sent successfully."})
+    except Exception as e:
+        return JsonResponse({"success": False, "msg": f"Error sending email: {str(e)}"})
 
 @login_required(login_url='login_page')
 def load_truck_details(request):
@@ -728,3 +939,425 @@ def get_last_reported_km(request):
     return JsonResponse({
         "reported_km": last_trip.tr_reportedkm if last_trip else None
     })
+
+def get_auto_recipients(trip):
+    """
+    Automatically fetches recipients from Emailmaster.
+    Prioritizes Email Type 2 or 'For alert'.
+    """
+    try:
+        # Refresh trip to ensure relationships are up to date
+        trip.refresh_from_db()
+        enquiry = EnquirynoteInfo.objects.select_related('en_customername', 'en_customerdepartment').get(id=trip.tr_enquirynumber_id)
+        
+        customer = enquiry.en_customername
+        department = enquiry.en_customerdepartment
+        
+        # 1. Filtered Search: Type 2 (Alerts) or 'For alert' by name
+        type_obj = Email_type.objects.filter(Q(id=2) | Q(email_type__iexact='For alert')).first()
+        tid = type_obj.id if type_obj else 2
+        
+        email_qs = Emailmaster.objects.filter(
+            Q(em_Customer_name_id=customer.id) & 
+            (Q(em_emailtype_id=tid) | Q(em_emailtype__email_type__iexact='For alert'))
+        )
+        
+        if department:
+            dept_qs = email_qs.filter(em_customerdepartment_id=department.id)
+            if dept_qs.exists():
+                email_obj = dept_qs.first()
+            else:
+                email_obj = email_qs.first()
+        else:
+            email_obj = email_qs.first()
+
+        if email_obj:
+            to = email_obj.em_to_names or ""
+            cc = email_obj.em_cc_names or ""
+            recipients = [x.strip() for x in to.split(",") if x.strip()]
+            if cc:
+                recipients.extend([x.strip() for x in cc.split(",") if x.strip()])
+                
+            return recipients
+                
+    except Exception as e:
+        print(f"Error fetching auto recipients: {e}")
+        
+    return None
+
+def get_trip_recipients(request, trip):
+    recipients = get_auto_recipients(trip)
+    return recipients or []
+
+def get_manual_recipients_backup(request):
+    recipient = request.session.get("trip_manual_recipient")
+    if not recipient:
+        return ["itadmin@bvm.com"]
+    return [x.strip() for x in recipient.split(",") if x.strip()]
+
+@login_required(login_url='login_page')
+def trip_send_loading_report_mail(request):
+    trip_id = request.session.get("ses_tripdetail_id")
+
+    if not trip_id:
+        return JsonResponse({"success": False, "msg": "Trip ID missing"})
+
+    trip = TripdetailInfo.objects.select_related("tr_enquirynumber").get(id=trip_id)
+
+    if trip.tr_loading_report_mail_sent:
+        return JsonResponse({"success": False, "msg": "Loading report mail already sent"})
+
+    recipients = get_trip_recipients(request, trip)
+
+    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(en_enquirynumber=trip.tr_enquirynumber)
+
+    customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
+    from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
+    reported_dt = format_email_date(trip.tr_departeddate_pickup)
+    vehicle_number = trip.tr_vehiclenumber or "N/A"
+
+    subject = f"Trip Loading Reported - {vehicle_number}"
+
+    email_body = f"""
+    <html>
+    <body>
+        <p>Dear Customer,</p>
+        <p>Status Update: Loading Reported Alert.</p>
+        <table style="border-collapse: collapse; width: 70%; border: 1px solid #ddd; font-family: Arial, sans-serif; margin-left: auto; margin-right: auto;">
+            <thead>
+                <tr style="background-color: #003366; color: white;">
+                    <th colspan="2" style="padding: 10px; text-align: center;">Loading Reported Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Number</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{vehicle_number}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>From Location</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{from_location}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Reported Date & Time</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>Regards,<br>BVM Transport Team</p>
+    </body>
+    </html>
+    """
+
+    send_department_email(
+        department="itadmin",
+        subject=subject,
+        message=email_body,
+        recipient_list=recipients,
+        email_type=1
+    )
+
+    trip.tr_loading_report_mail_sent = True
+    trip.save(update_fields=["tr_loading_report_mail_sent"])
+
+    return JsonResponse({"success": True})
+
+@login_required(login_url='login_page')
+def trip_send_trip_started_mail(request):
+    trip_id = request.session.get("ses_tripdetail_id")
+
+    if not trip_id:
+        return JsonResponse({"success": False, "msg": "Trip ID missing"})
+
+    trip = TripdetailInfo.objects.select_related("tr_enquirynumber").get(id=trip_id)
+
+    if trip.tr_trip_started_mail_sent:
+        return JsonResponse({"success": False, "msg": "Trip started mail already sent"})
+
+    recipients = get_trip_recipients(request, trip)
+
+    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(en_enquirynumber=trip.tr_enquirynumber)
+
+    customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
+    from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
+    reported_dt = format_email_date(trip.tr_departeddate_pickup)
+    consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
+    started_dt = format_email_date(trip.tr_departeddate)
+    vehicle_number = trip.tr_vehiclenumber or "N/A"
+
+    subject = f"Trip Started - {vehicle_number}"
+
+    email_body = f"""
+    <html>
+    <body>
+        <p>Dear Customer,</p>
+        <p>Status Update: Trip Started Alert.</p>
+        <table style="border-collapse: collapse; width: 70%; border: 1px solid #ddd; font-family: Arial, sans-serif; margin-left: auto; margin-right: auto;">
+            <thead>
+                <tr style="background-color: #003366; color: white;">
+                    <th colspan="2" style="padding: 10px; text-align: center;">Trip Started Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Number</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{vehicle_number}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>From Location</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{from_location}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Reported Date & Time</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment Number</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Started Date & Time</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>Regards,<br>BVM Transport Team</p>
+    </body>
+    </html>
+    """
+
+    send_department_email(
+        department="itadmin",
+        subject=subject,
+        message=email_body,
+        recipient_list=recipients,
+        email_type=1
+    )
+
+    trip.tr_trip_started_mail_sent = True
+    trip.save(update_fields=["tr_trip_started_mail_sent"])
+
+    return JsonResponse({"success": True})
+
+@login_required(login_url='login_page')
+def trip_send_unloading_report_mail(request):
+    trip_id = request.session.get("ses_tripdetail_id")
+
+    if not trip_id:
+        return JsonResponse({"success": False, "msg": "Trip ID missing"})
+
+    trip = TripdetailInfo.objects.select_related("tr_enquirynumber").get(id=trip_id)
+
+    if trip.tr_unloading_report_mail_sent:
+        return JsonResponse({"success": False, "msg": "Unloading report mail already sent"})
+
+    recipients = get_trip_recipients(request, trip)
+
+    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(en_enquirynumber=trip.tr_enquirynumber)
+
+    customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
+    from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
+    loading_reported_dt = format_email_date(trip.tr_departeddate_pickup)
+    consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
+    started_dt = format_email_date(trip.tr_departeddate)
+    to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "N/A"
+    unloading_reported_dt = format_email_date(trip.tr_reporteddate)
+    vehicle_number = trip.tr_vehiclenumber or "N/A"
+
+    subject = f"Trip Unloading Reported - {vehicle_number}"
+
+    email_body = f"""
+    <html>
+    <body>
+        <p>Dear Customer,</p>
+        <p>Status Update: Unloading Reported Alert.</p>
+        <table style="border-collapse: collapse; width: 70%; border: 1px solid #ddd; font-family: Arial, sans-serif; margin-left: auto; margin-right: auto;">
+            <thead>
+                <tr style="background-color: #003366; color: white;">
+                    <th colspan="2" style="padding: 10px; text-align: center;">Unloading Reported Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Number</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{vehicle_number}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment Number</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>To Location</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{to_location}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Reported Date & Time (Unloading)</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{unloading_reported_dt}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>Regards,<br>BVM Transport Team</p>
+    </body>
+    </html>
+    """
+
+    send_department_email(
+        department="itadmin",
+        subject=subject,
+        message=email_body,
+        recipient_list=recipients,
+        email_type=1
+    )
+
+    trip.tr_unloading_report_mail_sent = True
+    trip.save(update_fields=["tr_unloading_report_mail_sent"])
+
+    return JsonResponse({"success": True})
+
+@login_required(login_url='login_page')
+def trip_send_trip_closed_mail(request):
+    trip_id = request.session.get("ses_tripdetail_id")
+
+    if not trip_id:
+        return JsonResponse({"success": False, "msg": "Trip ID missing"})
+
+    trip = TripdetailInfo.objects.select_related("tr_enquirynumber").get(id=trip_id)
+
+    if trip.tr_trip_closed_mail_sent:
+        return JsonResponse({"success": False, "msg": "Trip closed mail already sent"})
+
+    recipients = get_trip_recipients(request, trip)
+
+    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(en_enquirynumber=trip.tr_enquirynumber)
+
+    customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
+    vehicle_number = trip.tr_vehiclenumber or "N/A"
+    from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
+    to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "N/A"
+    consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
+    started_dt = format_email_date(trip.tr_departeddate) or "N/A"
+    reported_dt = format_email_date(trip.tr_reporteddate) or "N/A"
+    
+    # POD Status Logic - Check both file attachment and signature
+    pod_status = "POD Received" if (trip.tc_pod_attachment or trip.td_pod) else "POD Not Received"
+
+    subject = f"Trip Closed - {vehicle_number}"
+
+    email_body = f"""
+    <html>
+    <body>
+        <p>Dear Customer,</p>
+        <p>Status Update: Trip Closed Alert.</p>
+        <table style="border-collapse: collapse; width: 70%; border: 1px solid #ddd; font-family: Arial, sans-serif; margin-left: auto; margin-right: auto;">
+            <thead>
+                <tr style="background-color: #003366; color: white;">
+                    <th colspan="2" style="padding: 10px; text-align: center;">Trip Closed Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Number</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{vehicle_number}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>From Location</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{from_location}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment Number</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Started Date & Time</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>To Location</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{to_location}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Reported Date & Time</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>POD Status</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>{pod_status}</b></td>
+                </tr>
+            </tbody>
+        </table>
+        <p>Regards,<br>BVM Transport Team</p>
+    </body>
+    </html>
+    """
+
+    send_department_email(
+        department="itadmin",
+        subject=subject,
+        message=email_body,
+        recipient_list=recipients,
+        email_type=1
+    )
+
+    trip.tr_trip_closed_mail_sent = True
+    trip.save(update_fields=["tr_trip_closed_mail_sent"])
+
+    return JsonResponse({"success": True})
+
+@login_required(login_url='login_page')
+def get_trip_email_recipients(request):
+    enquiry_id = request.GET.get("enquiry_id")
+    if not enquiry_id:
+        return JsonResponse({"success": False, "msg": "Enquiry ID missing"})
+
+    try:
+        enquiry = EnquirynoteInfo.objects.select_related("en_customername", "en_customerdepartment").get(id=enquiry_id)
+        customer = enquiry.en_customername
+        department = enquiry.en_customerdepartment
+
+        # ✅ Optimized lookup using the same logic as automated triggers
+        email_type_obj = Email_type.objects.filter(Q(id=2) | Q(email_type__iexact='For alert')).first()
+        tid = email_type_obj.id if email_type_obj else 2
+
+        email_qs = Emailmaster.objects.filter(em_Customer_name=customer, em_emailtype_id=tid)
+        
+        if department:
+            dept_qs = email_qs.filter(em_customerdepartment=department)
+            if dept_qs.exists():
+                email_obj = dept_qs.first()
+            else:
+                email_obj = email_qs.first()
+        else:
+            email_obj = email_qs.first()
+
+        if email_obj:
+            to = email_obj.em_to_names or ""
+            cc = email_obj.em_cc_names or ""
+            recipients = to
+            if cc:
+                if recipients:
+                    recipients += ", " + cc
+                else:
+                    recipients = cc
+            return JsonResponse({"success": True, "recipients": recipients})
+        else:
+            # Fallback for UI consistency
+            return JsonResponse({"success": True, "recipients": "itadmin@bvm.com", "msg": f"No alert contact found for {customer}"})
+
+    except Exception as e:
+        return JsonResponse({"success": False, "msg": str(e)})

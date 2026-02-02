@@ -15,3 +15,19 @@ class VehicleallotmentForm(forms.ModelForm):
         self.fields['va_vehiclenumber'].empty_label = "--Select--"
         self.fields['va_vendor'].empty_label = "--Select--"
         self.fields['va_status'].empty_label = "--Select--"
+
+    # 🔥 BUSINESS RULE VALIDATION
+    def clean(self):
+        cleaned_data = super().clean()
+
+        vehicle_source = cleaned_data.get("va_vehiclesource")
+        driver_name = cleaned_data.get("va_drivername")
+
+        # OWN (1) or ATTACHED (2) - only check driver_name since driver_id is not a form field
+        if vehicle_source and vehicle_source.id in [1, 2]:
+            if not driver_name:
+                raise forms.ValidationError(
+                    "Driver Name is required for OWN and ATTACHED vehicles."
+                )
+
+        return cleaned_data

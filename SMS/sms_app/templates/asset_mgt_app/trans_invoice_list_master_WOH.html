@@ -8,238 +8,406 @@
         </a>
     </div>
 </div>
+<div class="row align-items-end justify-content-center mb-2">
+
+    <!-- From Date -->
+    <div class="col-md-2 text-center">
+        <label class="fw-bold">From Date</label>
+        <input type="date" id="fromDate" class="form-control">
+    </div>
+
+    <!-- To Date -->
+    <div class="col-md-2 text-center">
+        <label class="fw-bold">To Date</label>
+        <input type="date" id="toDate" class="form-control">
+    </div>
+
+    <!-- Clear Button -->
+    <div class="col-md-1 text-center">
+        <label class="fw-bold invisible">Clear</label>
+        <button id="clearFilters" class="btn btn-secondary w-100">
+            Clear
+        </button>
+    </div>
+
+    <!-- Department -->
+    <div class="col-md-3 text-center">
+        <label class="fw-bold">Department</label>
+        <select id="departmentFilter" class="form-control">
+            <option value="">All Departments</option>
+            {% for dept in departments %}
+            <option value="{{ dept }}">{{ dept }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+</div>
+
 
 <div class="container-fluid">
-<table id="trans_invoice_master_list"
-       class="table table-striped table-bordered nowrap"
-       style="width:100%">
+    <table id="trans_invoice_master_list" class="table table-striped table-bordered nowrap" style="width:100%">
 
-<thead class="thead-dark">
+        <thead class="thead-dark">
 
-<!-- ================= FILTER ROW ================= -->
-<tr>
-    <th></th>
+            <!-- ================= FILTER ROW ================= -->
+            <tr>
+                <th></th>
 
-    <th><input class="form-control filter-input" placeholder="Search INV DATE"></th>
+                <!--  <th><input class="form-control filter-input" placeholder="Search INV DATE"></th>
     <th><input class="form-control filter-input" placeholder="Search Customer Name"></th>
     <th><input class="form-control filter-input" placeholder="Search GST IN"></th>
     <th><input class="form-control filter-input" placeholder="Search State"></th>
-    <th><input class="form-control filter-input" placeholder="Search Pincode"></th>
-    <th><input class="form-control filter-input" placeholder="Search INV NO"></th>
+    <th><input class="form-control filter-input" placeholder="Search Pincode"></th>-->
+                <!--<th><input class="form-control filter-input" placeholder="Search INV NO"></th>-->
+                <!--<th><input class="form-control filter-input" placeholder="Search TRIP NO"></th>-->
+                <th><input class="form-control filter-input" placeholder="Search Branch"></th>
+                <!-- <th><input class="form-control filter-input" placeholder="Search Vehicle Source"></th>-->
+                <th><input class="form-control filter-input" placeholder="Search Customer Short Name"></th>
+                <!-- <th><input class="form-control filter-input" placeholder="Search Tally Veh No"></th>-->
+                <th><input class="form-control filter-input" placeholder="Search Planning Date"></th>
 
-    <th><input class="form-control filter-input" placeholder="Search Branch"></th>
-    <th><input class="form-control filter-input" placeholder="Search Vehicle Source"></th>
-    <th><input class="form-control filter-input" placeholder="Search Customer Short Name"></th>
-    <th><input class="form-control filter-input" placeholder="Search Tally Veh No"></th>
-    <th><input class="form-control filter-input" placeholder="Search Planning Date"></th>
+                <th><input class="form-control filter-input" placeholder="Search Cnote No"></th>
+                <th><input class="form-control filter-input" placeholder="Search From"></th>
+                <th><input class="form-control filter-input" placeholder="Search To"></th>
+                <th><input class="form-control filter-input" placeholder="Search Dept"></th>
 
-    <th><input class="form-control filter-input" placeholder="Search Cnote No"></th>
-    <th><input class="form-control filter-input" placeholder="Search From"></th>
-    <th><input class="form-control filter-input" placeholder="Search To"></th>
-    <th><input class="form-control filter-input" placeholder="Search Dept"></th>
+                <th><input class="form-control filter-input" placeholder="Search Veh No"></th>
+                <th><input class="form-control filter-input" placeholder="Search Veh Type"></th>
 
-    <th><input class="form-control filter-input" placeholder="Search Veh No"></th>
-    <th><input class="form-control filter-input" placeholder="Search Veh Type"></th>
-
-    <th><input class="form-control filter-input" placeholder="Search Veh Placed Date & Time"></th>
+                <!-- <th><input class="form-control filter-input" placeholder="Search Veh Placed Date & Time"></th>
     <th><input class="form-control filter-input" placeholder="Search Veh Released Date & Time"></th>
     <th><input class="form-control filter-input" placeholder="Search Veh Arrived Date & Time"></th>
-    <th><input class="form-control filter-input" placeholder="Search Veh Dispatched Date & Time"></th>
+    <th><input class="form-control filter-input" placeholder="Search Veh Dispatched Date & Time"></th>-->
 
-    <th><input class="form-control filter-input" placeholder="Search Consignee"></th>
-    <th><input class="form-control filter-input" placeholder="Search Reference No"></th>
-    <th><input class="form-control filter-input" placeholder="Search HAWB No"></th>
+                <th><input class="form-control filter-input" placeholder="Search Consignee"></th>
+                <th><input class="form-control filter-input" placeholder="Search Reference No"></th>
+                <th><input class="form-control filter-input" placeholder="Search HAWB No"></th>
 
-    <th><input class="form-control filter-input" placeholder="Search No. of Pcs"></th>
-    <th><input class="form-control filter-input" placeholder="Search Weight"></th>
+                <th><input class="form-control filter-input" placeholder="Search No. of Pcs"></th>
+                <th><input class="form-control filter-input" placeholder="Search Weight"></th>
 
-    <th><input class="form-control filter-input" placeholder="Search Transportation Charges"></th>
-    <th><input class="form-control filter-input" placeholder="Search Toll Charges"></th>
-    <th><input class="form-control filter-input" placeholder="Search Parking Charges"></th>
-    <th><input class="form-control filter-input" placeholder="Search Loading Charges"></th>
-    <th><input class="form-control filter-input" placeholder="Search Unloading Charges"></th>
-    <th><input class="form-control filter-input" placeholder="Search Halting Charges"></th>
-    <th><input class="form-control filter-input" placeholder="Search Docket Charges"></th>
-    <th><input class="form-control filter-input" placeholder="Search Weighment Charges"></th>
-    <th><input class="form-control filter-input" placeholder="Search Handling Charges"></th>
-    <th><input class="form-control filter-input" placeholder="Search Cancellation Charges"></th>
+                <th><input class="form-control filter-input" placeholder="Search Transportation Charges"></th>
+                <th><input class="form-control filter-input" placeholder="Search Toll Charges"></th>
+                <th><input class="form-control filter-input" placeholder="Search Parking Charges"></th>
+                <th><input class="form-control filter-input" placeholder="Search Loading Charges"></th>
+                <th><input class="form-control filter-input" placeholder="Search Unloading Charges"></th>
+                <th><input class="form-control filter-input" placeholder="Search Halting Charges"></th>
+                <th><input class="form-control filter-input" placeholder="Search Docket Charges"></th>
+                <th><input class="form-control filter-input" placeholder="Search Weighment Charges"></th>
+                <th><input class="form-control filter-input" placeholder="Search Handling Charges"></th>
+                <th><input class="form-control filter-input" placeholder="Search Cancellation Charges"></th>
 
-    <th><input class="form-control filter-input" placeholder="Search TOTAL"></th>
-</tr>
+                <th><input class="form-control filter-input" placeholder="Search TOTAL"></th>
+            </tr>
 
-<!-- ================= HEADER ROW ================= -->
-<tr>
-    <th>Select</th>
+            <!-- ================= HEADER ROW ================= -->
+            <tr>
+                <th class="text-center">
+                    <input type="checkbox" id="select-all">
+                </th>
 
-            <th>INV DATE</th>
+
+                <!--<th>INV DATE</th>
             <th>Customer Name</th>
             <th>GST IN</th>
             <th>State</th>
-            <th>Pincode</th>
-            <th>INV NO</th>
+            <th>Pincode</th>-->
+                <!-- <th>INV NO</th>-->
+                <!-- <th>TRIP NO</th>-->
+                <th>Branch</th>
+                <!--  <th>Vehicle Source</th>-->
+                <th>Customer Short Name</th>
+                <!--  <th>Tally Veh No</th>-->
+                <th>Planning Date</th>
 
-            <th>Branch</th>
-            <th>Vehicle Source</th>
-            <th>Customer Short Name</th>
-            <th>Tally Veh No</th>
-            <th>Planning Date</th>
+                <th>Cnote No</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Dept</th>
 
-            <th>Cnote No</th>
-            <th>From</th>
-            <th>To</th>
-            <th>Dept</th>
+                <th>Veh No</th>
+                <th>Veh Type</th>
 
-            <th>Veh No</th>
-            <th>Veh Type</th>
-
-            <th>Veh Placed Date & Time</th>
+                <!--   <th>Veh Placed Date & Time</th>
             <th>Veh Released Date & Time</th>
             <th>Veh Arrived Date & Time</th>
-            <th>Veh Dispatched Date & Time</th>
+            <th>Veh Dispatched Date & Time</th>-->
 
-            <th>Consignee</th>
-            <th>Reference No</th>
-            <th>HAWB No</th>
+                <th>Consignee</th>
+                <th>Reference No</th>
+                <th>HAWB No</th>
 
-            <th>No. of Pcs</th>
-            <th>Weight</th>
+                <th>No. of Pcs</th>
+                <th>Weight</th>
 
-            <th>Transportation Charges</th>
-            <th>Toll Charges</th>
-            <th>Parking Charges</th>
-            <th>Loading Charges</th>
-            <th>Unloading Charges</th>
-            <th>Halting Charges</th>
-            <th>Docket Charges</th>
-            <th>Weighment Charges</th>
-            <th>Handling Charges</th>
-            <th>Cancellation Charges</th>
+                <th>Transportation Charges</th>
+                <th>Toll Charges</th>
+                <th>Parking Charges</th>
+                <th>Loading Charges</th>
+                <th>Unloading Charges</th>
+                <th>Halting Charges</th>
+                <th>Docket Charges</th>
+                <th>Weighment Charges</th>
+                <th>Handling Charges</th>
+                <th>Cancellation Charges</th>
 
-            <th>TOTAL</th>
-</tr>
-</thead>
+                <th>TOTAL</th>
+            </tr>
+        </thead>
 
-<tbody>
-{% for inv in invoice_list_master %}
-<tr>
-    <td class="text-center">
-    <input type="checkbox"
-           class="row-select"
-           value="{{ inv.id }}">
-</td>
+        <tbody>
+            {% for inv in invoice_list_master %}
+            <tr>
 
-    <td>{{ inv.ti_inv_date }}</td>
-  <td>{{ inv.ti_customer }}</td>
-  <td>{{ inv.ti_gst_in }}</td>
-  <td>{{ inv.ti_state }}</td>
-  <td>{{ inv.ti_pincode }}</td>
-  <td>{{ inv.ti_inv_no }}</td>
+                <!-- Select -->
+                <td class="text-center">
+                    <input type="checkbox" class="row-select" value="{{ inv.id }}">
+                </td>
 
-  <!-- Customer / Trip -->
-  <td>{{ inv.ti_customer.cu_branch }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclesource }}</td>
-  <td>{{ inv.ti_customer_short_name }}</td>
-  <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
-  <td>{{ inv.ti_trip.tr_departeddate }}</td>
+                <!-- INV NO (not generated yet, show placeholder) -->
+                <!--<td>-</td>-->
 
-  <!-- Consignment -->
-  <td>{{ inv.ti_consignment.co_consignmentnumber }}</td>
-  <td>{{ inv.ti_trip.tr_departedlocation }}</td>
-  <td>{{ inv.ti_trip.tr_reportedlocation }}</td>
-  <td>{{ inv.ti_customer.cu_department }}</td>
+                <!-- Branch (from enquiry / department if needed) -->
+                <td>{{ inv.tr_enquirynumber.en_customerdepartment }}</td>
 
-  <!-- Vehicle -->
-  <td>{{ inv.ti_trip.tr_vehiclenumber }}</td>
-  <td>{{ inv.ti_trip.tr_vehicletype }}</td>
+                <!-- Customer Short Name -->
+                <td>{{ inv.tr_enquirynumber.en_customername }}</td>
 
-  <!-- Trip timeline -->
-  <td>{{ inv.ti_trip.tr_departeddate_pickup }}</td>
-  <td>{{ inv.ti_trip.tr_dock_out_time }}</td>
-  <td>{{ inv.ti_trip.tr_reporteddate }}</td>
-  <td>{{ inv.ti_trip.tr_departeddate_delivery }}</td>
+                <!-- Planning Date -->
+                <td>{{ inv.tr_created_at|date:"Y-m-d" }}</td>
 
-  <!-- Goods -->
-  <td>{{ inv.ti_goods.cg_consignee }}</td>
-  <td>{{ inv.ti_consignment.co_cusrefnum }}</td>
-  <td>{{ inv.ti_goods.cg_hawbno }}</td>
+                <!-- Cnote No -->
+                <td>
+                    {% if inv.tr_consignmentnumber %}
+                    {{ inv.tr_consignmentnumber.co_consignmentnumber }}
+                    {% endif %}
+                </td>
 
-  <td>{{ inv.ti_goods.cg_qty }}</td>
-  <td>{{ inv.ti_goods.cg_weight }}</td>
+                <!-- From -->
+                <td>{{ inv.tr_departedlocation }}</td>
 
-  <!-- Charges -->
-  <td>{{ inv.ti_transportation_charges }}</td>
-  <td>{{ inv.ti_toll_charges }}</td>
-  <td>{{ inv.ti_parking_charges }}</td>
-  <td>{{ inv.ti_loading_charges }}</td>
-  <td>{{ inv.ti_unloading_charges }}</td>
-  <td>{{ inv.ti_halting_charges }}</td>
-  <td>{{ inv.ti_docket_charges }}</td>
-  <td>{{ inv.ti_weighment_charges }}</td>
-  <td>{{ inv.ti_handling_charges }}</td>
-  <td>{{ inv.ti_cancellation_charges }}</td>
+                <!-- To -->
+                <td>{{ inv.tr_reportedlocation }}</td>
 
-    <td><strong>{{ inv.ti_total }}</strong></td>
-</tr>
-{% endfor %}
-</tbody>
+                <!-- Dept -->
+                <td>{{ inv.tr_enquirynumber.en_customerdepartment }}</td>
 
-</table>
+                <!-- Vehicle No -->
+                <td>{{ inv.tr_vehiclenumber }}</td>
+
+                <!-- Vehicle Type -->
+                <td>{{ inv.tr_vehicletype }}</td>
+
+                {% with goods=inv.tr_consignmentnumber.cg_consignmentnumber.first %}
+                <!-- Consignee -->
+                <td>
+                    {% if goods %}
+                    {{ goods.cg_consignee }}
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+
+                <!-- Reference No -->
+                <td>
+                    {% if inv.tr_consignmentnumber %}
+                    {{ inv.tr_consignmentnumber.co_cusrefnum }}
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+
+                <!-- HAWB No -->
+                <td>
+                    {% if goods %}
+                    {{ goods.cg_hawbno }}
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+
+                <!-- No of Pcs -->
+                <td>
+                    {% if goods %}
+                    {{ goods.cg_qty }}
+                    {% else %}
+                    <span class="text-muted">0</span>
+                    {% endif %}
+                </td>
+
+                <!-- Weight -->
+                <td>
+                    {% if goods %}
+                    {{ goods.cg_weight }}
+                    {% else %}
+                    <span class="text-muted">0.0</span>
+                    {% endif %}
+                </td>
+                {% endwith %}
+
+
+                <!-- Charges (trip costs) -->
+                <td>{{ inv.tc_tripcost }}</td>
+                <td>{{ inv.tc_tollcost }}</td>
+                <td>{{ inv.tc_parkingcost }}</td>
+                <td>{{ inv.tc_loadingcost }}</td>
+                <td>{{ inv.tc_unloadingcost }}</td>
+                <td>{{ inv.tc_haltingcost }}</td>
+                <td>{{ inv.tc_rtocost }}</td>
+                <td>{{ inv.tc_weighmentcost }}</td>
+                <td>{{ inv.tc_handlingcost }}</td>
+                <td>{{ inv.tc_cancellation }}</td>
+
+                <!-- TOTAL -->
+                <td>
+                    <strong>
+                        {{ inv.trip_total|floatformat:2 }}
+                    </strong>
+                </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
 </div>
 
 <script>
-$(document).ready(function () {
+    $(document).ready(function () {
 
-    var table = $('#trans_invoice_master_list').DataTable({
-        scrollX: true,
-        dom: 'lBfrtip',
-        select: {
-            style: 'os',
-            selector: 'td:first-child'
-        },
-        columnDefs: [
-            { orderable: false, targets: 0 }
-        ]
+        const TABLE_ID = '#trans_invoice_master_list';
+        const PLANNING_DATE_COL = 3;
+        const DEPT_COL = 7;
+
+
+        let table = new DataTable(TABLE_ID, {
+            columnDefs: [
+                {
+                    orderable: false,
+                    targets: 0
+                }
+            ],
+
+            order: [[PLANNING_DATE_COL, 'desc']],
+            dom: 'lBfrtip',
+
+            scrollX: true,
+            scrollCollapse: true,
+            autoWidth: false,
+            responsive: false,
+
+            pageLength: 10
+        });
+
+        /* ===============================
+           SELECT / UNSELECT ALL
+           =============================== */
+
+        $('#select-all').on('change', function () {
+            let checked = this.checked;
+            table.rows({ search: 'applied' }).nodes()
+                .to$().find('input.row-select')
+                .prop('checked', checked);
+        });
+
+        $('#trans_invoice_master_list tbody').on(
+            'change', 'input.row-select',
+            function () {
+                let total = table.rows({ search: 'applied' }).nodes().length;
+                let checked = table.rows({ search: 'applied' }).nodes()
+                    .to$().find('input.row-select:checked').length;
+
+                $('#select-all').prop('checked', total > 0 && total === checked);
+            }
+        );
+
+        table.on('draw', function () {
+            let total = table.rows({ search: 'applied' }).nodes().length;
+            let checked = table.rows({ search: 'applied' }).nodes()
+                .to$().find('input.row-select:checked').length;
+
+            $('#select-all').prop('checked', total > 0 && total === checked);
+        });
+
+        /* ===============================
+           DATE + DEPARTMENT FILTER
+           =============================== */
+
+        $.fn.dataTable.ext.search.push(function (settings, data) {
+
+            if (settings.nTable.id !== 'trans_invoice_master_list') {
+                return true;
+            }
+
+            let from = $('#fromDate').val();
+            let to = $('#toDate').val();
+            let dept = $('#departmentFilter').val();
+
+            let rowDate = parseDate(data[PLANNING_DATE_COL]);
+            let rowDept = data[DEPT_COL];
+
+            if (from && rowDate < new Date(from)) return false;
+            if (to && rowDate > new Date(to)) return false;
+            if (dept && rowDept !== dept) return false;
+
+            return true;
+        });
+
+        $('#fromDate, #toDate, #departmentFilter').on('change', function () {
+            table.draw();
+        });
+
+        $('#clearFilters').on('click', function () {
+            $('#fromDate').val('');
+            $('#toDate').val('');
+            $('#departmentFilter').val('');
+            table.draw();
+        });
+
+        function parseDate(val) {
+            if (!val) return new Date(0);
+            return new Date(val);
+        }
+
     });
-
-    $('.filter-input').on('keyup change', function () {
-        table
-            .column($(this).parent().index())
-            .search(this.value)
-            .draw();
-    });
-
-    $('#trans_invoice_master_list thead input').on('click', function (e) {
-        e.stopPropagation();
-    });
-
-});
 </script>
 <script>
-$('#add_btn').on('click', function () {
+    $('#add_btn').on('click', function (e) {
+        e.preventDefault();
 
-    let ids = [];
+        let ids = [];
 
-    $('#trans_invoice_master_list tbody input.row-select:checked').each(function () {
-        ids.push($(this).val());
-    });
+        $('#trans_invoice_master_list tbody input.row-select:checked')
+            .each(function () {
+                ids.push($(this).val());
+            });
 
-    if (ids.length === 0) {
-        alert("Please select at least one record");
-        return;
-    }
-
-    $.ajax({
-        url: "{% url 'trans_invoice_add_woh' %}",
-        type: "POST",
-        data: {
-            'ids[]': ids,
-            'csrfmiddlewaretoken': '{{ csrf_token }}'
-        },
-        success: function () {
-            location.reload();
+        if (ids.length === 0) {
+            alert("Please select at least one invoice");
+            return;
         }
+
+        $.ajax({
+            url: "{% url 'trans_invoice_list_woh' customer.id %}",
+            type: "POST",
+            data: {
+                'invoice_list[]': ids,
+                'action': 'add',
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function () {
+                location.reload();
+            },
+            error: function (xhr) {
+                let msg = "Failed to add invoice(s)";
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg += "\nError: " + xhr.responseJSON.message;
+                }
+                alert(msg);
+            }
+        });
     });
-});
 </script>
+
 
 {% endblock content %}

@@ -135,7 +135,8 @@
 									</div>
 									<div class="col-3 text-center">
 										<div class="input-group-append ms-2">
-											<button type="button" class="btn btn-outline-info btn-sm" onclick="showTollTxnDialog()">
+											<button type="button" class="btn btn-outline-info btn-sm" onclick="showTollTxnDialog(true)">
+
 												View
 											</button>
 										</div>
@@ -218,19 +219,6 @@
 									<div class="col-9">
 										<div class="input-group input-group-sm">
 											<div class="input-group-prepend">
-												<span class="input-group-text">Halting Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_haltingcost class="form-control" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_haltingcost">
-									</div>
-								</div>
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
 												<span class="input-group-text">Handling Charges</span>
 											</div>
 											{% render_field tripclosure_form.tc_handlingcost class="form-control" %}
@@ -240,14 +228,67 @@
 										<input type="checkbox" id="tc_handlingcost">
 									</div>
 								</div>
+                                <div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Halting Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_haltingcost class="form-control" %}
+										</div>
+									</div>
+									<div class="col-3 text-center">
+										<input type="checkbox" id="tc_haltingcost">
+									</div>
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">No of Halting Days</span>
 									</div>
 									{% render_field tripclosure_form.tc_no_of_days_halting class="form-control" %}
 								</div>
+                                <div class="row mb-2 align-items-center">
+                                    <div class="col-9">
+                                        <div class="input-group input-group-sm mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Total Halting Charges</span>
+                                            </div>
+                                            <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost"
+                                                   class="form-control disable_a_href" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-3 text-center">
+                                        <input type="checkbox" id="tc_total_halting_cost_check">
+                                    </div>
+							    </div>
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">RTO Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_rtocost id="tc_rtocost" class="form-control " %}
+										</div>
+									</div>
+									<div class="col-3 text-center">
+										<input type="checkbox" id="tc_rtocost_check">
+									</div>
+								</div>
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Batta Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_betacost id="tc_betacost" class="form-control " %}
+										</div>
+									</div>
+									<div class="col-3 text-center">
+										<input type="checkbox" id="tc_betacost_check">
+									</div>
+								</div>
+                            </div>
 
-							</div>
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -331,6 +372,10 @@
 	{% include "asset_mgt_app/tripclosure_list_woh.html" %}
 </form>
 <script>
+    const IS_EDIT = true;
+</script>
+
+<script>
 	$(document).ready(function() {
         document.getElementById("tr_updated_by").value ='{{user_id}}';
         document.getElementById("tc_financestatus").value ='{{status_selected}}';
@@ -349,55 +394,47 @@
      });
 </script>
 <script>
-	function getRoRate() {
-        var selectedFromLocation = $("#tr_departedlocation").val();
-        var selectedToLocation = $("#tr_reportedlocation").val();
-        var selectedVehicleType = $("#tr_vehicletype_placed").val();
-        var selectedTripCategory = $("#tr_category").val();
-        var selectedEnquiryNumber= $("#tr_enquirynumber").val();
+function getRoRate(force=false) {
 
-        $.ajax({
-            url: '{% url 'transport_calculate_trip_charges' %}',
-            method: "GET",
-            data: {
-                'from_location': selectedFromLocation,
-                'to_location': selectedToLocation,
-                'vehicle_type': selectedVehicleType,
-                'trip_category': selectedTripCategory,
-                'enquirynumber': selectedEnquiryNumber,
-            },
-            success: function(data) {
-                if (data.ro_rate === 0) {
-                    $("#tc_tripcost").val('0');
-                    alert("Trip Charges not available in master. In this case it is set to '0'");
-                }
-                else if (data.ro_rate === 100)
-                {
-                    $("#tc_tripcost").val('0');
-                    alert("Trip Charges calculated only for business trips. In this case it is set to '0'");
-                }
-                else
-                {
-                    // Update the ro_rate field with the retrieved value
-                    $("#tc_tripcost").val(data.ro_rate);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX error:', error);
+    if (IS_EDIT && force === false) {
+        console.log("⛔ RO rate blocked (edit mode)");
+        return;
+    }
+
+    var selectedFromLocation = $("#tr_departedlocation").val();
+    var selectedToLocation = $("#tr_reportedlocation").val();
+    var selectedVehicleType = $("#tr_vehicletype_placed").val();
+    var selectedTripCategory = $("#tr_category").val();
+    var selectedEnquiryNumber = $("#tr_enquirynumber").val();
+
+    $.ajax({
+        url: "{% url 'transport_calculate_trip_charges' %}",
+        method: "GET",
+        data: {
+            from_location: selectedFromLocation,
+            to_location: selectedToLocation,
+            vehicle_type: selectedVehicleType,
+            trip_category: selectedTripCategory,
+            enquirynumber: selectedEnquiryNumber
+        },
+        success: function(data) {
+            if (data.ro_rate === 0 || data.ro_rate === 100) {
+                $("#tc_tripcost").val(0);
+            } else {
+                $("#tc_tripcost").val(data.ro_rate);
             }
-        });
-    }
-
-    function attachEventListeners() {
-        $("#tr_departedlocation, #tr_reportedlocation, #tr_vehicletype_placed, #tr_category","#tr_enquirynumber").change(function() {
-            getRoRate();
-        });
-    }
-
-    $(document).ready(function() {
-        attachEventListeners();
+        }
     });
+}
+
+$(document).ready(function () {
+    $("#tr_departedlocation, #tr_reportedlocation, #tr_vehicletype_placed, #tr_category, #tr_enquirynumber")
+    .change(function () {
+        getRoRate(true);   // only recalc when user changes
+    });
+});
 </script>
+
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
       // Add "data-bs-toggle" and "title" attributes to each checkbox dynamically
@@ -418,51 +455,30 @@
     });
 </script>
 <script>
-	document.addEventListener("DOMContentLoaded", function() {
-        // Run dummy toll data fetch once the page is ready
-        fetchTollCost();
+    function fetchTollCost(force = false) {
 
-        // Ensure "View" button works even if fetch hasn't been called yet
-        window.showTollTxnDialog = function() {
-            const modal = new bootstrap.Modal(document.getElementById('tollTxnModal'));
-            modal.show();
-        };
-    });
-
-    function fetchTollCost() {
-    const trip_num = document.getElementById("tr_tripnumber").value;
-    if (!trip_num) {
-        alert("Trip number missing.");
-        return;
+    if (IS_EDIT && force === false) {
+        console.log("⛔ Toll API blocked (edit mode)");
+        return;   // do NOT overwrite DB value
     }
 
-    console.log("🚀 Fetching toll cost for Trip:", trip_num);
+    const trip_num = $("#tr_tripnumber").val();
+    if (!trip_num) return;
 
     $.ajax({
         url: "{% url 'get_fastag_toll_cost_ajax' %}",
-        method: "GET",
-        data: { 'trip_num': trip_num },
+        data: { trip_num: trip_num },
         success: function(data) {
             if (data.success) {
-                console.log("✅ Toll data fetched successfully:", data);
                 buildTxnTable(data.txn_list);
 
-                // Update toll cost total field
-                const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-                if (tollField) {
-                    tollField.value = data.total_amount.toFixed(2);
-                }
-            } else {
-                alert("⚠️ " + (data.error || "No toll transactions found."));
-                document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
+                const tollField = $("#tc_tollcost");
+                tollField.val(data.total_amount.toFixed(2));
             }
-        },
-        error: function(xhr, status, error) {
-            console.error("❌ AJAX Error:", error);
-            alert("Failed to fetch toll data. Please try again.");
         }
     });
 }
+
 
     function buildTxnTable(txn_list) {
         if (!txn_list || txn_list.length === 0) {
@@ -569,5 +585,43 @@
         $(document).on('change', '#tr_consignmentnumber', fetchCustomerRef);
     });
 </script>
+<script>
+function fetchHaltingCharge() {
+    var enquiryId = $("#tr_enquirynumber").val();
+    var tripType = $("#tr_category").val();
+
+    if (!enquiryId || !tripType) return;
+
+    $.ajax({
+        url: "{% url 'get_halting_charge' %}",
+        data: { enquiry_id: enquiryId, trip_type: tripType },
+        success: function(data) {
+            if (data.status === true) {
+                $("#id_tc_haltingcost").val(data.halting_charge);
+            } else {
+                $("#id_tc_haltingcost").val(0);
+            }
+            calcTotalHalting();
+        }
+    });
+}
+
+function calcTotalHalting() {
+    let rate = parseFloat($("#id_tc_haltingcost").val()) || 0;
+    let days = parseFloat($("#id_tc_no_of_days_halting").val()) || 0;
+    $("#tc_total_halting_cost").val((rate * days).toFixed(2));
+}
+
+$(document).ready(function () {
+
+    // DO NOT auto fetch on edit
+    calcTotalHalting();
+
+    $("#tr_enquirynumber, #tr_category").change(fetchHaltingCharge);
+
+    $("#id_tc_no_of_days_halting, #id_tc_haltingcost").on("input", calcTotalHalting);
+});
+</script>
+
 
 {% endblock content %}

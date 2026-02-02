@@ -25,7 +25,7 @@ class TripdetailInfo(models.Model):
     tr_vehicletype_selection_requested= models.BooleanField(blank=True,null=True)
     tr_vehicletype_selection_placed= models.BooleanField(blank=True,null=True)
     tr_vehiclenumber = models.CharField(max_length=10,blank=True,null=True)
-    tr_drivername = models.CharField(max_length=30,null=True,blank=True)
+    tr_drivername = models.CharField(max_length=100,null=True,blank=True)
     tr_driver_lic = models.CharField(max_length=100,null=True,blank=True)
     tr_drivernumber = models.CharField(max_length=30,null=True,blank=True)
     tr_departedlocation = models.ForeignKey(Places,on_delete=models.CASCADE,related_name='tr_departedlocation', db_column='tr_departedlocation',null=True, blank=True)
@@ -54,6 +54,8 @@ class TripdetailInfo(models.Model):
     tr_reporteddate_delivery = models.DateTimeField(null=True, blank=True)
     tr_driver_master_id = models.IntegerField(null=True, blank=True)
 
+    tc_rtocost = models.FloatField(default=0.0)
+    tc_betacost = models.FloatField(default=0.0)
     tc_tripcost = models.FloatField(default=0.0)
     tc_parkingcost = models.FloatField(default=0.0)
     tc_tollcost = models.FloatField(default=0.0)
@@ -74,6 +76,10 @@ class TripdetailInfo(models.Model):
     tr_track_link = models.URLField(max_length=500,null=True,blank=True,verbose_name="Tracking Link")
     td_pod = models.ImageField(upload_to=pod_digi_sign_path, null=True, blank=True)
 
+    tr_loading_report_mail_sent = models.BooleanField(default=False)
+    tr_trip_started_mail_sent = models.BooleanField(default=False)
+    tr_unloading_report_mail_sent = models.BooleanField(default=False)
+    tr_trip_closed_mail_sent = models.BooleanField(default=False)
     class Meta:
         ordering = ["tr_tripnumber"]
     def __str__(self):

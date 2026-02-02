@@ -191,6 +191,7 @@ urlpatterns = [
     path('tripdetail_nav/<int:tripdetail_id>/', views.tripdetail_nav, name='tripdetail_nav'),  # Navigate tripdetail
     path('tripdetail_delete/<int:tripdetail_id>/', views.tripdetail_delete, name='tripdetail_delete'),  # Delete tripdetail
     path('trip_email/', views.trip_email, name='trip_email'),
+    path('get_trip_email_recipients/', views.get_trip_email_recipients, name='get_trip_email_recipients'),
     path('movementtype_list/', views.movementtype_list, name='movementtype_list'),  # List movementtype,
     path('movementtype_insert', views.movementtype_add, name='movementtype_insert'),  # Add movementtype
     path('movementtype_update/<int:movementtype_id>/', views.movementtype_add, name='movementtype_update'),  # Update movementtype
@@ -783,10 +784,8 @@ urlpatterns = [
     path('ajax/get-trip-charges/',views.get_trip_charges,name='get_trip_charges'),
     path('driver-autocomplete/', views.driver_autocomplete, name='driver_autocomplete'),
     path("get_last_reported_km/", views.get_last_reported_km, name="get_last_reported_km"),
-
-
     path('trans_invoice_add/',views.trans_invoice_add,name='trans_invoice_add'),
-    path('trans_invoice_edit/<int:invoice_id>/',views.trans_invoice_add,name='trans_invoice_edit'),
+    path('trans_invoice_edit/<int:invoice_id>/',views.trans_invoice_edit,name='trans_invoice_edit'),
     path('trans_invoice_list/',views.trans_invoice_list,name='trans_invoice_list' ),
     path('trans_invoice_list_woh/<int:customer_id>/',views.trans_invoice_list_woh,name='trans_invoice_list_woh'),
     path('trans_invoice_delete/<int:invoice_id>/',views.trans_invoice_delete,name='trans_invoice_delete'),
@@ -800,7 +799,40 @@ urlpatterns = [
     path('maintenance_list/', views.maintenance_list, name='maintenance_list'),
     path('shipper_invoice_export_excel/<int:invoice_id>/',views.shipper_invoice_export_excel,name='shipper_invoice_export_excel'),
     path('ajax/filter-trips-by-date/',views.filter_trips_by_date,name='filter_trips_by_date'),
-
+    path('insurance_renewal_report/', views.insurance_renewal_report_view, name='insurance_renewal_report'),
+    path('diesel_vs_revenue_report/', views.diesel_vs_revenue_report_view, name='diesel_vs_revenue_report'),
+    path('own_v_mkt_sales/', views.own_vs_market_sales_report_view, name='own_v_mkt_sales'),
+    path('maintenance_report/', views.maintenance_report_view, name='maintenance_report'),
+    path('stock_maintenance_list/', views.stock_maintenance_list, name='stock_maintenance_list'),
+    path('stock_maintenance_insert/', views.stock_maintenance_add, name='stock_maintenance_add'),
+    path('stock_maintenance_update/<int:pk>/', views.stock_maintenance_edit, name='stock_maintenance_edit'),
+    path('get_part_details/', views.get_part_details, name='get_part_details'),
+    path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
+    path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
+    path("maintenance/pdf/<int:id>/",views.maintenance_pdf,name="maintenance_pdf"),
+    path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
+    path('vehicle_log_report/', views.vehicle_log_report_view, name='vehicle_log_report'),
+    path('trip_cancellation_report/', views.trip_cancellation_report_view, name='trip_cancellation_report'),
+    path('ref_no_pending_report/', views.ref_no_pending_report_view, name='ref_no_pending_report'),
+    path('vehicle_status_report/', views.vehicle_status_report_view, name='vehicle_status_report'),
+    path('drivers_advance_report/', views.drivers_advance_report_view, name='drivers_advance_report'),
+    path('invoice_pending_report/', views.invoice_pending_report_view, name='invoice_pending_report'),
+    path('vendor_p_l_mkt_report/', views.vendor_p_l_mkt_report_view, name='vendor_p_l_mkt_report'),
+    path('vendor_p_l_attached_report/', views.vendor_p_l_attached_report_view, name='vendor_p_l_attached_report'),
+    path('whatsapp_delivery_status_report/', views.whatsapp_delivery_status_report_view,name='whatsapp_delivery_status_report'),
+    path('daily_trip_count_report/', views.daily_trip_count_report_view, name='daily_trip_count_report'),
+    path('own_vehicle_pl_report/', views.own_vehicle_pl_report_view, name='own_vehicle_pl_report'),
+    path('claim_pending_report/', views.claim_pending_report_view, name='claim_pending_report'),
+    path('halting_report/', views.halting_report_view, name='halting_report'),
+    path("trip_send_loading_report_mail/", views.trip_send_loading_report_mail, name="trip_send_loading_report_mail"),
+    path("trip_send_trip_started_mail/", views.trip_send_trip_started_mail, name="trip_send_trip_started_mail"),
+    path("trip_send_unloading_report_mail/", views.trip_send_unloading_report_mail, name="trip_send_unloading_report_mail"),
+    path("trip_send_trip_closed_mail/", views.trip_send_trip_closed_mail, name="trip_send_trip_closed_mail"),
+    path("maintenance/manager-approval/", views.manager_approval_list, name="manager_approval_list"),
+    path("maintenance/manager-approve/<int:id>/", views.manager_approve, name="manager_approve"),
+    path("maintenance/finance-approval/", views.finance_approval_list, name="finance_approval_list"),
+    path("maintenance/finance-approve/<int:id>/", views.finance_approve, name="finance_approve"),
 ]
+
 
 

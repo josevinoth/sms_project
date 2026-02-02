@@ -7,51 +7,220 @@
 </div>
 <br>
 
-<div class="row">
-    <div class="col-2"></div>
-    <div class="col-2">
-        <div class="card  mb-3 text-center custom-card">
-            <div class="card-header custom-card-header">DMR Report</div>
-            <div class="card-body bg-light text-center">
-                <h1><a href="{% url 'trip_report' %}" class="badge custom-badge">
-                    <i class="fas fa-arrows-alt"></i></a></h1>
+<style>
+    .custom-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .custom-card-header {
+        min-height: 65px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        background-color: #345da7 !important;
+        /* Standardized blue from screenshot */
+        color: white !important;
+    }
+
+    .custom-badge {
+        font-size: 2.5rem;
+        color: #345da7 !important;
+        background: transparent !important;
+    }
+</style>
+
+<div class="container-fluid px-5">
+    <div class="row report-row">
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">DMR Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'trip_report' %}" class="badge custom-badge"><i
+                                class="fas fa-arrows-alt"></i></a>
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Vehicle Log Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'vehicle_log_report' %}" class="badge custom-badge"><i
+                                class="fas fa-file-alt"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Trip Cancellation Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'trip_cancellation_report' %}" class="badge custom-badge"><i
+                                class="fas fa-ban"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Ref No Pending Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'ref_no_pending_report' %}" class="badge custom-badge"><i
+                                class="fas fa-history"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Vehicle Status Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'vehicle_status_report' %}" class="badge custom-badge"><i
+                                class="fas fa-truck-monster"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Drivers Advance Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'drivers_advance_report' %}" class="badge custom-badge"><i
+                                class="fas fa-money-bill-wave"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Invoice Pending Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'invoice_pending_report' %}" class="badge custom-badge"><i
+                                class="fas fa-file-invoice-dollar"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Vendor P & L (MKT) Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'vendor_p_l_mkt_report' %}" class="badge custom-badge"><i
+                                class="fas fa-hand-holding-usd"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Vendor P & L (ATTACHED) Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'vendor_p_l_attached_report' %}" class="badge custom-badge"><i
+                                class="fas fa-hand-holding-usd"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">WhatsApp Delivery Status Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'whatsapp_delivery_status_report' %}" class="badge custom-badge"><i
+                                class="fas fa-comments"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Daily Trip Count Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'daily_trip_count_report' %}" class="badge custom-badge"><i
+                                class="fas fa-calculator"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Own Vehicle P & L Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'own_vehicle_pl_report' %}" class="badge custom-badge"><i
+                                class="fas fa-hand-holding-usd"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Halting Time Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'halting_report' %}" class="badge custom-badge"><i
+                                class="fas fa-file-invoice-dollar"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Claim Pending Status Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'claim_pending_report' %}" class="badge custom-badge"><i
+                                class="fas fa-file-invoice-dollar"></i></a></h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Renewal due - insurance Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'insurance_renewal_report' %}" class="badge custom-badge"><i
+                                class="fas fa-shield-alt"></i></a>
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Maintenance Report - VH</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'maintenance_report' %}" class="badge custom-badge"><i
+                                class="fas fa-tools"></i></a>
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Diesel Vs Revenue Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'diesel_vs_revenue_report' %}" class="badge custom-badge"><i
+                                class="fas fa-gas-pump"></i></a>
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Own Vs Market Sales Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'own_v_mkt_sales' %}" class="badge custom-badge"><i
+                                class="fas fa-chart-line"></i></a>
+                    </h1>
+                </div>
             </div>
         </div>
     </div>
-
-
-    <div class="col-2"></div>
-
-    <div class="col-2"></div>
-    <div class="col-2"></div>
 </div>
 
-<!--    <div class="col-2">-->
-<!--        <div class="card text-white bg-success mb-3 text-center" >-->
-<!--            <div class="card-header">Revenue Report</div>-->
-<!--            <div class="card-body text-center">-->
-<!--                <h2><a href="{% url 'revenue_report' %}" class="badge badge-success">-->
-<!--                    <i class="fas fa-rupee-sign"></i></a></h2>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--    <div class="col-2">-->
-<!--        <div class="card text-white bg-info mb-3 text-center" >-->
-<!--            <div class="card-header">Expense Report</div>-->
-<!--            <div class="card-body text-center">-->
-<!--                <h2><a href="{% url 'expense_report' %}" class="badge badge-info">-->
-<!--                    <i class="fas fa-wallet"></i></a></h2>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--    <div class="col-2">-->
-<!--        <div class="card text-white bg-primary mb-3 text-center" >-->
-<!--            <div class="card-header">P & L Report</div>-->
-<!--            <div class="card-body text-center">-->
-<!--                <h2><a href="{% url 'profit_loss_report' %}" class="badge badge-primary">-->
-<!--                    <i class="fas fa-hand-holding-usd"></i></a></h2>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
+<style>
+    /* increase gap between dashboard cards */
+.report-row {
+    margin-left: -20px;
+    margin-right: -20px;
+}
 
+.report-row > div {
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-bottom: 25px;
+}
+
+</style>
 {% endblock content %}
