@@ -96,33 +96,119 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <div class="pagination">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-            <a class="btn btn-warning" href="?page=1">First</a>
-            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-            {% endif %}
-
-            <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.</span>
-
-            {% if page_obj.has_next %}
-            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
-            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-            {% endif %}
-        </span>
-    </div>
 </div>
 
 <script>
-    $(document).ready(function () {
-        $('#vendor_p_l_report_table').DataTable({
-            scrollX: true,
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print'],
-            order: [[0, 'asc']]
-        });
+$(document).ready(function () {
+
+    const table = $('#vendor_p_l_report_table').DataTable({
+
+        scrollX: true,
+        dom: 'lBfrtip',
+
+        lengthMenu: [
+            [10, 25, 50, 100, -1],
+            [10, 25, 50, 100, "All"]
+        ],
+
+        pageLength: 10,
+
+        buttons: [
+
+            'copy',
+            'csv',
+
+            // ======================
+            // EXCEL EXPORT
+            // ======================
+            {
+                extend: 'excelHtml5',
+                text: 'Excel',
+                title: 'Vendor P & L (MKT) Report',
+
+                customize: function (xlsx) {
+
+                    let sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    let styles = xlsx.xl['styles.xml'];
+
+                    // ---------- FONT ----------
+                    let fonts = $('fonts', styles);
+                    fonts.append(`
+                        <font>
+                            <sz val="11"/>
+                            <color rgb="FFFFFFFF"/>
+                            <name val="Calibri"/>
+                            <b/>
+                        </font>
+                    `);
+                    let fontId = fonts.children().length - 1;
+
+                    // ---------- BLUE FILL ----------
+                    let fills = $('fills', styles);
+                    fills.append(`
+                        <fill>
+                            <patternFill patternType="solid">
+                                <fgColor rgb="FF0A3278"/>
+                                <bgColor indexed="64"/>
+                            </patternFill>
+                        </fill>
+                    `);
+                    let fillId = fills.children().length - 1;
+
+                    // ---------- STYLE ----------
+                    let cellXfs = $('cellXfs', styles);
+                    cellXfs.append(`
+                        <xf xfId="0"
+                            fontId="${fontId}"
+                            fillId="${fillId}"
+                            borderId="0"
+                            applyFont="1"
+                            applyFill="1"/>
+                    `);
+
+                    let styleId = cellXfs.children().length - 1;
+
+                    // APPLY STYLE TO HEADER ROW
+                    $('row:eq(1) c', sheet).attr('s', styleId);
+                }
+            },
+
+            // ======================
+            // PDF EXPORT
+            // ======================
+            {
+                extend: 'pdfHtml5',
+                orientation: 'landscape',
+                pageSize: 'A4',
+                title: 'Vendor P & L (MKT) Report',
+
+                customize: function (doc) {
+                    doc.styles.tableHeader.fillColor = '#0A3278';
+                    doc.styles.tableHeader.color = 'white';
+                    doc.styles.tableHeader.bold = true;
+                }
+            },
+
+            // ======================
+            // PRINT
+            // ======================
+            {
+                extend: 'print',
+                title: 'Vendor P & L (MKT) Report',
+
+                customize: function (win) {
+                    $(win.document.body).find('thead th')
+                        .css('background-color', '#0A3278')
+                        .css('color', 'white')
+                        .css('font-weight', 'bold');
+                }
+            }
+        ],
+
+        order: [[0, 'asc']]
     });
+
+});
 </script>
 
 {% endblock content %}
