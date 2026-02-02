@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<table width="100%" border="1" cellspacing="0" cellpadding="5">
+    <tr>
+        <td rowspan="3" width="15%" align="center" valign="middle">
+            <img src="{{ company_logo }}" width="80"/>
+        </td>
+        <td align="center"><b>BVM TRANS SOLUTIONS PVT LTD</b></td>
+    </tr>
+    <tr>
+        <td align="center">
+            Address 70, Adam Nagar Road, Nagalkeni, Chrompet, Chennai 600 044
+        </td>
+    </tr>
+    <tr>
+        <td align="center">
+            www.thebvmgroup.com | transport@bvmtranssolutions.com |
+            <b>GST No:</b> 33AAKCB7123L1ZL
+        </td>
+    </tr>
+</table>
+
+<!--<table width="100%" border="1" cellspacing="0" cellpadding="5">
+    <tr>
+        <td align="center">
+            <b>
+                TRUCK JOB CARD : {{ maintenance.job_card_no|default:"-" }}
+                &nbsp;&nbsp;&nbsp;
+                VEHICLE : {{ maintenance.vehicle.vm_registrationnumber }}
+            </b>
+        </td>
+    </tr>
+</table>-->
+
+<br/>
+
+<!-- ================= JOB CARD STRIP ================= -->
+<table width="100%" border="1" cellspacing="0" cellpadding="5">
+    <tr>
+       <!-- <td><b>Bay No</b><br/>{{ maintenance.bay_no|default:"-" }}</td>-->
+        <td><b>Truck Job Card No</b><br/>{{ maintenance.job_card_no }}</td>
+        <td><b>Vehicle No</b><br/>{{  maintenance.vehicle.vm_registrationnumber  }}</td>
+        <td><b>Vehicle Type</b><br/>{{vehicle_type}}</td>
+        <td><b>Branch</b><br/>BVM - MAA</td>
+       <!-- <td><b>Service</b><br/>{{ maintenance.service_type }}</td>-->
+    </tr>
+</table>
+
+<br/>
+
+<!-- ================= TRUCK + JOB CARD DETAILS ================= -->
+<table width="100%" border="1" cellspacing="0" cellpadding="5">
+    <tr>
+      <td width="50%" style="font-size:14pt; font-weight:bold;">
+    Truck Details
+</td>
+<td width="50%" style="font-size:14pt; font-weight:bold;">
+    Job Card Details
+</td>
+
+    </tr>
+
+    <tr>
+        <td>Make / Model: {{ maintenance.make_model }}</td>
+        <td>Current KM: {{ maintenance.current_km }} KM</td>
+    </tr>
+    <tr>
+        <td>Reg No: {{ maintenance.vehicle.vm_registrationnumber }}</td>
+        <td>Total KM Run: {{ maintenance.total_km_run }} KM</td>
+    </tr>
+    <tr>
+        <td>Reg Date: {{ maintenance.registration_date }}</td>
+        <td>Service Type: {{ maintenance.service_type }}</td>
+    </tr>
+    <tr>
+        <td>Chassis No: {{ maintenance.chassis_no }}</td>
+        <td>
+    Driver:
+    {% if maintenance.driver_name %}
+        {{ maintenance.driver_name.dm_name }}
+    {% else %}
+        -
+    {% endif %}
+</td>
+
+    </tr>
+    <tr>
+        <td>Engine No: {{ maintenance.engine_no }}</td>
+        <td>EST Delivery: {{ maintenance.est_delivery }}</td>
+    </tr>
+    <tr>
+        <td>Job Card Creator: {{ maintenance.job_card_creator }}</td>
+        <td>Work Area: {{ maintenance.work_area }}</td>
+    </tr>
+</table>
+
+<br/>
+
+<!-- ================= COMPLAINTS ================= -->
+<table width="100%" border="1" cellspacing="0" cellpadding="5">
+    <tr>
+        <td width="6%"><b>S.No</b></td>
+        <td width="25%"><b>Complaint</b></td>
+        <td><b>Description</b></td>
+        <td width="20%"><b>Last Serviced Date</b></td>
+        <td width="20%"><b>Technician</b></td>
+    </tr>
+    <tr>
+        <td align="center">1</td>
+        <td>{{ maintenance.get_complaint_display }}</td>
+        <td>{{ maintenance.description }}</td>
+         <td>
+        {% if last_serviced_date %}
+            {{ last_serviced_date|date:"d-m-Y" }}
+        {% else %}
+            -
+        {% endif %}
+    </td>
+        <td>{{ maintenance.technician|default:"-" }}</td>
+    </tr>
+    <tr>
+        <td colspan="4">
+            <b>Remarks:</b><br/>
+            {{ maintenance.remarks|default:"-" }}<br/><br/>
+            <b>Estimated Amount:</b> ₹ {{ maintenance.estimated_amount|default:"0.00" }}
+        </td>
+    </tr>
+</table>
+
+<br/>
+
+<!-- ================= SIGNATURE ================= -->
+<table width="100%" border="1" cellspacing="0" cellpadding="20">
+    <tr>
+        <td align="center">Prepared By</td>
+        <td align="center">Approved By</td>
+        <td align="center">Receiver Signature</td>
+    </tr>
+</table>
+
+<br/>
+
+<b>Budget:</b> ₹ {{ maintenance.budget|default:"0.00" }}
+&nbsp;&nbsp;&nbsp;
+<b>Balance:</b> ₹ {{ maintenance.budget_balance|default:"0.00" }}
+
+</body>
+</html>

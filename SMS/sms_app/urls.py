@@ -809,6 +809,8 @@ urlpatterns = [
     path('get_part_details/', views.get_part_details, name='get_part_details'),
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
     path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
+    path("maintenance/pdf/<int:id>/",views.maintenance_pdf,name="maintenance_pdf"),
+    path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
     path('vehicle_log_report/', views.vehicle_log_report_view, name='vehicle_log_report'),
     path('trip_cancellation_report/', views.trip_cancellation_report_view, name='trip_cancellation_report'),
     path('ref_no_pending_report/', views.ref_no_pending_report_view, name='ref_no_pending_report'),
@@ -826,6 +828,11 @@ urlpatterns = [
     path("trip_send_trip_started_mail/", views.trip_send_trip_started_mail, name="trip_send_trip_started_mail"),
     path("trip_send_unloading_report_mail/", views.trip_send_unloading_report_mail, name="trip_send_unloading_report_mail"),
     path("trip_send_trip_closed_mail/", views.trip_send_trip_closed_mail, name="trip_send_trip_closed_mail"),
-
+    path("maintenance/manager-approval/", views.manager_approval_list, name="manager_approval_list"),
+    path("maintenance/manager-approve/<int:id>/", views.manager_approve, name="manager_approve"),
+    path("maintenance/finance-approval/", views.finance_approval_list, name="finance_approval_list"),
+    path("maintenance/finance-approve/<int:id>/", views.finance_approve, name="finance_approve"),
 ]
+
+
 
