@@ -10,8 +10,8 @@
 </div>
 
 <div class="row mb-3">
-    <div class="col-2">
-        <a href="{% url 'transport_reports' %}" class="btn btn-primary">
+    <div class="col-12">
+        <a href="{% url 'transport_reports' %}" class="btn btn-primary shadow-sm">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
@@ -26,6 +26,12 @@
         {% render_field form.dmr_customer class="form-control" %}
     </div>
 
+    <!-- Department -->
+    <div class="col-md-3">
+        <label class="form-label fw-bold">Department</label>
+        {% render_field form.customer_department class="form-control" %}
+    </div>
+
     <!-- Month & Year -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Month</label>
@@ -35,6 +41,7 @@
         <label class="form-label fw-bold">Year</label>
         {% render_field form.year class="form-control" %}
     </div>
+
 
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary">Filter</button>
@@ -65,18 +72,18 @@
         <span class="step-links">
             {% if page_obj.has_previous %}
             <a class="btn btn-sm btn-warning"
-                href="?page=1{% if customer_id %}&dmr_customer={{ customer_id }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">First</a>
+                href="?page=1{% if customer_id %}&dmr_customer={{ customer_id }}{% endif %}{% if dept_id %}&customer_department={{ dept_id }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">First</a>
             <a class="btn btn-sm btn-primary"
-                href="?page={{ page_obj.previous_page_number }}{% if customer_id %}&dmr_customer={{ customer_id }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">Previous</a>
+                href="?page={{ page_obj.previous_page_number }}{% if customer_id %}&dmr_customer={{ customer_id }}{% endif %}{% if dept_id %}&customer_department={{ dept_id }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">Previous</a>
             {% endif %}
 
             <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.</span>
 
             {% if page_obj.has_next %}
             <a class="btn btn-sm btn-primary"
-                href="?page={{ page_obj.next_page_number }}{% if customer_id %}&dmr_customer={{ customer_id }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">Next</a>
+                href="?page={{ page_obj.next_page_number }}{% if customer_id %}&dmr_customer={{ customer_id }}{% endif %}{% if dept_id %}&customer_department={{ dept_id }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">Next</a>
             <a class="btn btn-sm btn-warning"
-                href="?page={{ page_obj.paginator.num_pages }}{% if customer_id %}&dmr_customer={{ customer_id }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">Last</a>
+                href="?page={{ page_obj.paginator.num_pages }}{% if customer_id %}&dmr_customer={{ customer_id }}{% endif %}{% if dept_id %}&customer_department={{ dept_id }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}">Last</a>
             {% endif %}
         </span>
     </div>

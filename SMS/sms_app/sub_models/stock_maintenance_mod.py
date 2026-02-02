@@ -17,7 +17,7 @@ class StockMaintenance(models.Model):
     sm_length = models.FloatField(default=0.0, null=True, blank=True)
     sm_uom = models.ForeignKey(Unitofmeasure, on_delete=models.SET_NULL, null=True, blank=True)
     
-    sm_count = models.IntegerField(default=0, null=True, blank=True)
+    sm_count = models.FloatField(default=0.0, null=True, blank=True)
     sm_cft = models.FloatField(default=0.0, null=True, blank=True)
     sm_total_cft = models.FloatField(default=0.0, null=True, blank=True)
     sm_per_unit_cost = models.FloatField(default=0.0, null=True, blank=True)

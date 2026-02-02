@@ -1,7 +1,15 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_1.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
+
+
+<!-- Standardized Select2 pattern -->
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
+    rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <div class="container-fluid d-flex justify-content-center py-3">
     <div class="rounded text-center bg-info shadow-box px-4 py-2">
@@ -34,10 +42,16 @@
         {% render_field form.year class="form-control" value=selected_year %}
     </div>
 
-    <!-- Vehicle Number -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Vehicle Number</label>
-        {% render_field form.vehicle_number class="form-control" value=vehicle_filter %}
+        <select name="vehicle_number" id="vehicle_number" class="form-control select2">
+            <option value="">Search Vehicle...</option>
+            {% for vehicle in all_vehicles %}
+            <option value="{{ vehicle.vm_registrationnumber }}" {% if vehicle_filter == vehicle.vm_registrationnumber %}selected{% endif %}>
+                {{ vehicle.vm_registrationnumber }}
+            </option>
+            {% endfor %}
+        </select>
     </div>
 
     <div class="col-md-2">
@@ -96,15 +110,24 @@
     </div>
 </div>
 
+
 <script>
     $(document).ready(function () {
         $('#vendor_p_l_report_table').DataTable({
-            scrollX: true,
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print'],
-            order: [[0, 'asc']]
+            dom: 'Bfrtip',
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+            pageLength: 50
         });
     });
 </script>
-
+<script>
+    $(document).ready(function () {
+        $('#vehicle_number').select2({
+            width: '100%',
+            theme: 'bootstrap4',
+            placeholder: 'Search Vehicle No',
+            allowClear: true
+        });
+    });
+</script>
 {% endblock content %}

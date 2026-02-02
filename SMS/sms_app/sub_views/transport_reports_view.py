@@ -224,6 +224,8 @@ def vehicle_log_report_view(request):
         ]
         data_rows.append(row)
 
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
     context = {
         'first_name': first_name,
         'form': form,
@@ -235,6 +237,7 @@ def vehicle_log_report_view(request):
         'selected_year': selected_year,
         'from_location': from_loc_id,
         'to_location': to_loc_id,
+        'all_vehicles': all_vehicles,
     }
     return render(request, "asset_mgt_app/vehicle_log_report.html", context)
 
@@ -328,12 +331,13 @@ def trip_cancellation_report_view(request):
 @login_required(login_url='login_page')
 def vehicle_status_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import VehiclemasterInfo
 
     vehicle_search = request.POST.get('vehicle_search')
 
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
     vehicles = VehiclemasterInfo.objects.all().select_related('vm_vehicletype')
-    
+
     if vehicle_search:
         vehicles = vehicles.filter(vm_registrationnumber__icontains=vehicle_search)
 
@@ -382,6 +386,7 @@ def vehicle_status_report_view(request):
         'headers': VEHICLE_STATUS_HEADERS,
         'data_rows': data_rows,
         'vehicle_search': vehicle_search,
+        'all_vehicles': all_vehicles,
     }
     return render(request, "asset_mgt_app/vehicle_status_report.html", context)
 
@@ -1373,6 +1378,8 @@ def daily_trip_count_report_view(request):
         ]
         data_rows.append(row)
 
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
     context = {
         'first_name': first_name,
         'form': form,
@@ -1380,7 +1387,8 @@ def daily_trip_count_report_view(request):
         'data_rows': data_rows,
         'selected_month': selected_month,
         'selected_year': selected_year,
-        'vehicle_filter': vehicle_filter
+        'vehicle_filter': vehicle_filter,
+        'all_vehicles': all_vehicles
     }
     return render(request, "asset_mgt_app/daily_trip_count_report.html", context)
 
@@ -1388,18 +1396,18 @@ def daily_trip_count_report_view(request):
 @login_required(login_url='login_page')
 def own_vehicle_pl_report_view(request):
     first_name = request.session.get('first_name')
-    
-    # Initialize Filter Form
-    if request.method == "POST":
-        form = DmrForm(request.POST)
+
+    # Initialize Filter Form (Reports use GET for better persistence)
+    if request.GET:
+        form = DmrForm(request.GET)
     else:
         form = DmrForm()
 
     # Get Filter Parameters
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
-    vehicle_number = request.POST.get('vehicle_number')
-    
+    vehicle_number = request.GET.get('vehicle_search') or request.GET.get('vehicle_number')
+    selected_month = request.GET.get('month')
+    selected_year = request.GET.get('year')
+
     # Base Query: Fetch Settled or Closed Trips
     # Focusing on Own Vehicles (tr_vehiclesource_id usually 1 or 2 for Own)
     trips = TripdetailInfo.objects.filter(
@@ -1513,6 +1521,8 @@ def own_vehicle_pl_report_view(request):
         ]
         data_rows.append(row)
 
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
     context = {
         'first_name': first_name,
         'form': form,
@@ -1522,6 +1532,7 @@ def own_vehicle_pl_report_view(request):
         'selected_month': selected_month,
         'selected_year': selected_year,
         'vehicle_number': vehicle_number,
+        'all_vehicles': all_vehicles,
     }
     
     return render(request, "asset_mgt_app/own_vehicle_pl_report.html", context)
@@ -1853,20 +1864,20 @@ def maintenance_report_view(request):
     # Filters
     if vehicle_search:
         maintenance_records = maintenance_records.filter(vehicle__vm_registrationnumber__icontains=vehicle_search)
-    
-    if selected_month and selected_month != '0':
-        maintenance_records = maintenance_records.filter(created_at__month=selected_month)
-    
-    if selected_year and selected_year != '0':
-        maintenance_records = maintenance_records.filter(created_at__year=selected_year)
+    #
+    #     if selected_month and selected_month != '0':
+    #         maintenance_records = maintenance_records.filter(created_at__month=selected_month)
+    #
+    #     if selected_year and selected_year != '0':
+    #         maintenance_records = maintenance_records.filter(created_at__year=selected_year)
+    #
+    #     # We need to process records to find "Previous Job Card" info.
+    #     # Since we ordered by vehicle and desc created_at, the "next" record in the list
+    #     # for the SAME vehicle is the previous job card.
 
-    # We need to process records to find "Previous Job Card" info.
-    # Since we ordered by vehicle and desc created_at, the "next" record in the list 
-    # for the SAME vehicle is the previous job card.
-    
     records_list = list(maintenance_records)
     processed_rows = []
-    
+
     # Helper to find previous record
     # We can pre-group by vehicle to make this faster
     vehicle_groups = {}
@@ -1875,10 +1886,10 @@ def maintenance_report_view(request):
         if v_id not in vehicle_groups:
             vehicle_groups[v_id] = []
         vehicle_groups[v_id].append(rec)
-        
+
     # Now build rows
     counter = 1
-    
+
     # We want to show the filtered range.
     for rec in records_list:
         # Find previous in the group
@@ -1938,6 +1949,8 @@ def maintenance_report_view(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
     context = {
         'first_name': first_name,
         'form': form,
@@ -1947,6 +1960,7 @@ def maintenance_report_view(request):
         'vehicle_search': vehicle_search,
         'selected_month': selected_month,
         'selected_year': selected_year,
+        'all_vehicles': all_vehicles,
     }
     return render(request, "asset_mgt_app/maintenance_report.html", context)
 
@@ -1957,37 +1971,48 @@ def insurance_renewal_report_view(request):
     from ..models import Insurance_Info, VehiclemasterInfo
     from datetime import datetime
 
+    # -------------------------
+    # Read filter (GET or POST)
+    # -------------------------
     if request.method == "POST":
-        form = DmrForm(request.POST)
-        vehicle_search = request.POST.get('vehicle_search', '')
+        vehicle_search = request.POST.get('vehicle_search', '').strip()
     else:
-        form = DmrForm()
-        vehicle_search = ""
+        vehicle_search = request.GET.get('vehicle_search', '').strip()
 
-    # Fetch insurance records
-    insurance_records = Insurance_Info.objects.all().select_related(
-        'ins_vendor', 'ins_type'
-    ).order_by('ins_expiry_date')
+    # -------------------------
+    # Base Query (ALWAYS first)
+    # -------------------------
+    insurance_records = Insurance_Info.objects.all().order_by('ins_expiry_date')
 
-    # Get Vehicle Type information
-    vehicles = VehiclemasterInfo.objects.all().select_related('vm_vehicletype')
-    vehicle_map = {v.vm_registrationnumber: v for v in vehicles}
-
+    # -------------------------
+    # Vehicle filter (TEXT ONLY)
+    # -------------------------
     if vehicle_search:
-        insurance_records = insurance_records.filter(ins_vehicle_no__icontains=vehicle_search)
+        insurance_records = insurance_records.filter(
+            ins_vehicle_no=vehicle_search
+        )
+
+    # -------------------------
+    # Vehicle type lookup
+    # -------------------------
+    vehicles = VehiclemasterInfo.objects.select_related('vm_vehicletype')
+    vehicle_map = {
+        v.vm_registrationnumber.strip().upper(): v
+        for v in vehicles
+    }
 
     processed_rows = []
-    counter = 1
     today = datetime.now().date()
+    counter = 1
 
     for rec in insurance_records:
-        vehicle = vehicle_map.get(rec.ins_vehicle_no)
-        vehicle_type = safe_str(vehicle.vm_vehicletype) if vehicle and vehicle.vm_vehicletype else ""
-        
-        # Calculate Elapsed and DS Status
+        key = (rec.ins_vehicle_no or "").strip().upper()
+        vehicle = vehicle_map.get(key)
+        vehicle_type = safe_str(vehicle.vm_vehicletype) if vehicle else ""
+
         expiry_date = rec.ins_expiry_date
         elapsed_days = (expiry_date - today).days if expiry_date else 0
-        
+
         if elapsed_days < 0:
             ds_status = "Expired"
         elif elapsed_days <= 30:
@@ -1995,34 +2020,33 @@ def insurance_renewal_report_view(request):
         else:
             ds_status = "Active"
 
-        row = [
+        processed_rows.append([
             counter,
             safe_str(rec.ins_vendor),
-            safe_str(rec.ins_name), # Company Name
+            safe_str(rec.ins_name),
             safe_str(rec.ins_vehicle_no),
             vehicle_type,
             safe_str(rec.ins_type),
-            rec.ins_expiry_date.strftime("%d-%m-%Y") if rec.ins_expiry_date else "",
-            safe_num(rec.ins_sum_assured), # IDV Value
+            expiry_date.strftime("%d-%m-%Y") if expiry_date else "",
+            safe_num(rec.ins_sum_assured),
             elapsed_days,
-            ds_status
-        ]
-        processed_rows.append(row)
+            ds_status,
+        ])
         counter += 1
 
     paginator = Paginator(processed_rows, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginator.get_page(request.GET.get('page'))
 
     context = {
         'first_name': first_name,
-        'form': form,
         'headers': INSURANCE_RENEWAL_HEADERS,
         'data_rows': page_obj.object_list,
         'page_obj': page_obj,
         'vehicle_search': vehicle_search,
+        'all_vehicles': vehicles,   # REQUIRED for dropdown
     }
-    return render(request, "asset_mgt_app/insurance_renewal_report.html", context)
+
+    return render(request,"asset_mgt_app/insurance_renewal_report.html",context)
 
 
 @login_required(login_url='login_page')
@@ -2122,6 +2146,8 @@ def diesel_vs_revenue_report_view(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
     context = {
         'first_name': first_name,
         'form': form,
@@ -2131,6 +2157,7 @@ def diesel_vs_revenue_report_view(request):
         'vehicle_search': vehicle_search,
         'selected_month': selected_month,
         'selected_year': selected_year,
+        'all_vehicles': all_vehicles,
     }
     return render(request, "asset_mgt_app/diesel_vs_revenue_report.html", context)
 
@@ -2146,11 +2173,13 @@ def own_vs_market_sales_report_view(request):
         selected_month = request.POST.get('month', '0')
         selected_year = request.POST.get('year', '0')
         customer_id = request.POST.get('dmr_customer')
+        dept_id = request.POST.get('customer_department')
     else:
         form = DmrForm()
         selected_month = '0'
         selected_year = '0'
         customer_id = None
+        dept_id = None
 
     # Base Query
     trips = TripdetailInfo.objects.all().select_related(
@@ -2163,6 +2192,8 @@ def own_vs_market_sales_report_view(request):
 
     if customer_id:
         trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if dept_id:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
     if selected_month and selected_month != '0':
         trips = trips.filter(tr_loading_time__month=selected_month)
     if selected_year and selected_year != '0':
@@ -2294,5 +2325,6 @@ def own_vs_market_sales_report_view(request):
         'selected_month': selected_month,
         'selected_year': selected_year,
         'customer_id': customer_id,
+        'dept_id': dept_id,
     }
     return render(request, "asset_mgt_app/own_vs_market_sales_report.html", context)
