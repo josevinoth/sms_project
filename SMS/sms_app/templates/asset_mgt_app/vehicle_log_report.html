@@ -12,6 +12,22 @@
 <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
     rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- PAGE LEVEL DATATABLE (NO BASE CHANGE) -->
+<link rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+
+<link rel="stylesheet"
+      href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
 
 <div class="container-fluid d-flex justify-content-center py-3">
     <div class="rounded text-center bg-info shadow-box px-4 py-2">
@@ -106,22 +122,6 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <div class="pagination">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-            <a class="btn btn-warning" href="?page=1">First</a>
-            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-            {% endif %}
-
-            <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.</span>
-
-            {% if page_obj.has_next %}
-            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
-            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-            {% endif %}
-        </span>
-    </div>
 </div>
 
 <script>
@@ -134,16 +134,140 @@
         });
     });
 </script>
-
 <script>
+$(document).ready(function () {
+
     $('#vehicle_log_report_table').DataTable({
+
         scrollX: true,
+
         dom: 'lBfrtip',
-        buttons: ['copy', 'csv', 'excel', 'print'],
-        order: [[0, 'asc']]
+
+        lengthMenu: [
+            [10, 25, 50, 100, -1],
+            [10, 25, 50, 100, "All"]
+        ],
+
+        pageLength: 10,
+
+        buttons: [
+
+            'copy',
+            'csv',
+
+            {
+                extend: 'excelHtml5',
+                text: 'Excel',
+
+                filename: function () {
+                    let vehicle = "{{ vehicle_number|default:'' }}";
+                    return vehicle
+                        ? "Vehicle_Log_Report_" + vehicle
+                        : "Vehicle_Log_Report";
+                },
+
+                title: function () {
+                    let vehicle = "{{ vehicle_number|default:'' }}";
+                    return vehicle
+                        ? "Vehicle Log Report - " + vehicle
+                        : "Vehicle Log Report";
+                },
+
+                customize: function (xlsx) {
+
+                    let sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    let styles = xlsx.xl['styles.xml'];
+
+                    let fills = $('fills', styles);
+                    let fonts = $('fonts', styles);
+                    let cellXfs = $('cellXfs', styles);
+
+                    // ======================
+                    // FONT (white + bold)
+                    // ======================
+                    fonts.append(`
+                        <font>
+                            <sz val="11"/>
+                            <color rgb="FFFFFFFF"/>
+                            <name val="Calibri"/>
+                            <b/>
+                        </font>
+                    `);
+
+                    let fontId = fonts.children().length - 1;
+
+                    // ======================
+                    // FILL (RGB 10,50,120)
+                    // ======================
+                    fills.append(`
+                        <fill>
+                            <patternFill patternType="solid">
+                                <fgColor rgb="FF0A3278"/>
+                                <bgColor indexed="64"/>
+                            </patternFill>
+                        </fill>
+                    `);
+
+                    let fillId = fills.children().length - 1;
+
+                    // ======================
+                    // STYLE
+                    // ======================
+                    cellXfs.append(`
+                        <xf xfId="0" fontId="${fontId}" fillId="${fillId}" borderId="0"
+                            applyFont="1" applyFill="1"/>
+                    `);
+
+                    let styleId = cellXfs.children().length - 1;
+
+                    // ======================
+                    // APPLY TO HEADER ROW
+                    // ======================
+                    $('row:eq(1) c', sheet).attr('s', styleId);
+                }
+            },
+
+            {
+                extend: 'pdfHtml5',
+                orientation: 'landscape',
+                pageSize: 'A4',
+                title: function () {
+                    let vehicle = "{{ vehicle_number|default:'' }}";
+                    return vehicle
+                        ? "Vehicle Log Report - " + vehicle
+                        : "Vehicle Log Report";
+                },
+
+                customize: function (doc) {
+                    doc.styles.tableHeader.fillColor = '#0A3278';
+                    doc.styles.tableHeader.color = 'white';
+                    doc.styles.tableHeader.bold = true;
+                }
+            },
+
+            {
+                extend: 'print',
+                title: function () {
+                    let vehicle = "{{ vehicle_number|default:'' }}";
+                    return vehicle
+                        ? "Vehicle Log Report - " + vehicle
+                        : "Vehicle Log Report";
+                },
+
+                customize: function (win) {
+                    $(win.document.body).find('thead th')
+                        .css('background-color', '#0A3278')
+                        .css('color', 'white')
+                        .css('font-weight', 'bold');
+                }
+            }
+        ]
     });
-    });
+
+});
 </script>
+
+
 
 
 
