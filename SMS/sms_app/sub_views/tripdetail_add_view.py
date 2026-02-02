@@ -20,7 +20,19 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from ..models import TripdetailInfo
 from django.core.paginator import Paginator
+from django.utils import timezone
 
+
+def format_email_date(dt):
+    if not dt:
+        return ""
+
+    try:
+        # Convert to local timezone (IST)
+        local_dt = timezone.localtime(dt)
+        return local_dt.strftime("%d-%m-%Y %H:%M")
+    except Exception:
+        return str(dt)
 
 
 @login_required(login_url='login_page')
@@ -316,21 +328,23 @@ def tripdetail_add(request, tripdetail_id=0):
                 is_open = status_open and trip.tc_financestatus_id == status_open.id
                 is_closed = status_closed and trip.tc_financestatus_id == status_closed.id
 
-                # 1. Loading Reported
-                if trip.tr_departedlocation and trip.tr_departeddate_pickup and not trip.tr_loading_report_mail_sent:
-                    trigger_alert(trip_send_loading_report_mail, "Loading Reported")
+                # ✅ Only send email alerts for trip category 1
+                if trip.tr_category_id == 1:
+                    # 1. Loading Reported
+                    if trip.tr_departedlocation and trip.tr_departeddate_pickup and not trip.tr_loading_report_mail_sent:
+                        trigger_alert(trip_send_loading_report_mail, "Loading Reported")
 
-                # 2. Trip Started
-                if is_open and not trip.tr_trip_started_mail_sent:
-                    trigger_alert(trip_send_trip_started_mail, "Trip Started")
+                    # 2. Trip Started
+                    if is_open and not trip.tr_trip_started_mail_sent:
+                        trigger_alert(trip_send_trip_started_mail, "Trip Started")
 
-                # 3. Unloading Reported
-                if trip.tr_reportedlocation and trip.tr_reporteddate and not trip.tr_unloading_report_mail_sent:
-                    trigger_alert(trip_send_unloading_report_mail, "Unloading Reported")
+                    # 3. Unloading Reported
+                    if trip.tr_reportedlocation and trip.tr_reporteddate and not trip.tr_unloading_report_mail_sent:
+                        trigger_alert(trip_send_unloading_report_mail, "Unloading Reported")
 
-                # 4. Trip Closed
-                if is_closed and not trip.tr_trip_closed_mail_sent:
-                    trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
+                    # 4. Trip Closed
+                    if is_closed and not trip.tr_trip_closed_mail_sent:
+                        trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
 
                 print("Main Form is Valid")
                 last_id = TripdetailInfo.objects.latest('id').id
@@ -416,21 +430,23 @@ def tripdetail_add(request, tripdetail_id=0):
                 is_open = (status_open and trip.tc_financestatus_id == status_open.id) or (not status_open and trip.tc_financestatus_id == 1)
                 is_closed = (status_closed and trip.tc_financestatus_id == status_closed.id) or (not status_closed and trip.tc_financestatus_id == 2)
 
-                # 1. Loading Reported
-                if trip.tr_departedlocation and trip.tr_departeddate_pickup and not trip.tr_loading_report_mail_sent:
-                    trigger_alert(trip_send_loading_report_mail, "Loading Reported")
+                # ✅ Only send email alerts for trip category 1
+                if trip.tr_category_id == 1:
+                    # 1. Loading Reported
+                    if trip.tr_departedlocation and trip.tr_departeddate_pickup and not trip.tr_loading_report_mail_sent:
+                        trigger_alert(trip_send_loading_report_mail, "Loading Reported")
 
-                # 2. Trip Started
-                if is_open and not trip.tr_trip_started_mail_sent:
-                    trigger_alert(trip_send_trip_started_mail, "Trip Started")
+                    # 2. Trip Started
+                    if is_open and not trip.tr_trip_started_mail_sent:
+                        trigger_alert(trip_send_trip_started_mail, "Trip Started")
 
-                # 3. Unloading Reported
-                if trip.tr_reportedlocation and trip.tr_reporteddate and not trip.tr_unloading_report_mail_sent:
-                    trigger_alert(trip_send_unloading_report_mail, "Unloading Reported")
+                    # 3. Unloading Reported
+                    if trip.tr_reportedlocation and trip.tr_reporteddate and not trip.tr_unloading_report_mail_sent:
+                        trigger_alert(trip_send_unloading_report_mail, "Unloading Reported")
 
-                # 4. Trip Closed
-                if is_closed and not trip.tr_trip_closed_mail_sent:
-                    trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
+                    # 4. Trip Closed
+                    if is_closed and not trip.tr_trip_closed_mail_sent:
+                        trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
 
                 print("Main Form is Valid")
                 tripdetail_list = TripdetailInfo.objects.filter(
@@ -621,11 +637,11 @@ def trip_email(request):
     
     # Common Data Points
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
-    reported_dt = trip.tr_departeddate_pickup or ""
+    reported_dt = format_email_date(trip.tr_departeddate_pickup)
     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
-    started_dt = trip.tr_departeddate or ""
+    started_dt = {format_email_date(trip.tr_departeddate)}
     to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "N/A"
-    unloading_reported_dt = trip.tr_reporteddate or ""
+    unloading_reported_dt = format_email_date(trip.tr_reporteddate)
 
     # New Fields Requested
     vehicle_number = trip.tr_vehiclenumber or "N/A"
@@ -997,7 +1013,7 @@ def trip_send_loading_report_mail(request):
 
     customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
-    reported_dt = trip.tr_departeddate_pickup or ""
+    reported_dt = format_email_date(trip.tr_departeddate_pickup)
     vehicle_number = trip.tr_vehiclenumber or "N/A"
 
     subject = f"Trip Loading Reported - {vehicle_number}"
@@ -1068,9 +1084,9 @@ def trip_send_trip_started_mail(request):
 
     customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
-    reported_dt = trip.tr_departeddate_pickup or ""
+    reported_dt = format_email_date(trip.tr_departeddate_pickup)
     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
-    started_dt = trip.tr_departeddate or ""
+    started_dt = format_email_date(trip.tr_departeddate)
     vehicle_number = trip.tr_vehiclenumber or "N/A"
 
     subject = f"Trip Started - {vehicle_number}"
@@ -1149,11 +1165,11 @@ def trip_send_unloading_report_mail(request):
 
     customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
-    loading_reported_dt = trip.tr_departeddate_pickup or ""
+    loading_reported_dt = format_email_date(trip.tr_departeddate_pickup)
     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
-    started_dt = trip.tr_departeddate or ""
+    started_dt = format_email_date(trip.tr_departeddate)
     to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "N/A"
-    unloading_reported_dt = trip.tr_reporteddate or ""
+    unloading_reported_dt = format_email_date(trip.tr_reporteddate)
     vehicle_number = trip.tr_vehiclenumber or "N/A"
 
     subject = f"Trip Unloading Reported - {vehicle_number}"
@@ -1231,8 +1247,8 @@ def trip_send_trip_closed_mail(request):
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
     to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "N/A"
     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
-    started_dt = trip.tr_departeddate or "N/A"
-    reported_dt = trip.tr_reporteddate or "N/A"
+    started_dt = format_email_date(trip.tr_departeddate) or "N/A"
+    reported_dt = format_email_date(trip.tr_reporteddate) or "N/A"
     
     # POD Status Logic - Check both file attachment and signature
     pod_status = "POD Received" if (trip.tc_pod_attachment or trip.td_pod) else "POD Not Received"

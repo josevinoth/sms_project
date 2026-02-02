@@ -143,7 +143,10 @@ def enquirynote_list(request):
     date_to = request.GET.get('date_to', '')
     select_all = request.GET.get('select_all', '')
 
-    enquirynote_queryset = EnquirynoteInfo.objects.all()
+    # Use select_related for foreign keys to reduce queries
+    enquirynote_queryset = EnquirynoteInfo.objects.select_related(
+        'en_customername', 'en_fromlocaion', 'en_tolocation', 'en_assignedto', 'en_status'
+    )
 
     # Filter by enquiry no.
     if enquiry_number:
@@ -182,15 +185,16 @@ def enquirynote_list(request):
     select_all = request.GET.get('select_all', '')
 
     if select_all == "true":
-        # Load ALL records (no pagination)
-        page_obj = enquirynote_queryset
+        # Load records with a sensible limit (500 max for performance)
+        page_obj = list(enquirynote_queryset[:500])
     else:
         # Normal pagination
         paginator = Paginator(enquirynote_queryset, 75)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number if page_number and page_number.isdigit() else 1)
 
-    enquiry_ids = [enq.id for enq in page_obj if isinstance(enq.id, int)]
+    # Efficiently get enquiry IDs
+    enquiry_ids = [enq.id for enq in page_obj]
 
     # Fetch related data
     consignment_data = ConsignmentdetailInfo.objects.filter(co_enquirynumber_id__in=enquiry_ids)
@@ -209,6 +213,14 @@ def enquirynote_list(request):
         'tc_financestatus',
         'tr_category__category'
     )
+
+    # Pre-build consignment dict to avoid N+1 queries
+    consignment_dict = {}
+    for consignment in consignment_data:
+        consignment_dict.setdefault(consignment.co_enquirynumber_id, []).append(consignment)
+    
+    # Pre-build consignment count dict for limit checking
+    consignment_count_dict = {enq_id: len(cons_list) for enq_id, cons_list in consignment_dict.items()}
 
     # Vehicle dict
     vehicle_dict = {}
@@ -252,16 +264,16 @@ def enquirynote_list(request):
     enquiry_data = []
     for enquiry in page_obj:
         vehicles = vehicle_dict.get(enquiry.id, [])
-        consignments = consignment_data.filter(co_enquirynumber_id=enquiry.id)
+        consignments = consignment_dict.get(enquiry.id, [])
 
         total_allowed = vehicle_limit_dict.get(enquiry.id, 0)
         total_allotted = vehicle_allotted_dict.get(enquiry.id, 0)
         limit_reached = total_allotted >= total_allowed if total_allowed > 0 else False
 
-        # 🔥 FIX HERE
-        # Consignment limit logic
+        # Consignment limit logic - use pre-computed count
+        consignment_count = consignment_count_dict.get(enquiry.id, 0)
         if vehicles and total_allowed > 0:
-            consignment_limit_reached = consignments.count() >= total_allowed
+            consignment_limit_reached = consignment_count >= total_allowed
         else:
             consignment_limit_reached = True
 
