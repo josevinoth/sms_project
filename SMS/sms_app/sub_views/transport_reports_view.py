@@ -2,11 +2,10 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, F, Sum, Value, FloatField
+from django.db.models.functions import Coalesce, Trim, Upper
 from ..models import TripdetailInfo, ConsignmentdetailInfo, CustomerInfo, CustomerdepartmentInfo, ConsignmentgoodsInfo, Places, VehiclemasterInfo, Driverexpense, Vehicle_allotmentInfo
 from ..sub_forms.dmr_report_form import DmrForm
-from django.db.models.functions import Trim
-from django.db.models.functions import Upper, Trim
 
 # -------------------------
 # HEADERS
@@ -41,9 +40,11 @@ DRIVERS_ADVANCE_HEADERS = [
 ]
 
 INVOICE_PENDING_HEADERS = [
-    "SNo", "Date", "Branch", "Customer Name", "C-Note No", "C-Note Date", "Department",
-    "Trip Code", "Vehicle No", "Vehicle Type", "Vehicle Source", "Trip Start Date",
-    "Settlement Date", "Reference No", "Billing Amount", "Invoice Status", "Remarks"
+    "Branch", "Customer Short Name", "Planning Date", "Cnote No", "From", "To", "Dept",
+    "Veh No", "Veh Type", "Consignee", "Reference No", "HAWB No", "No. of Pcs", "Weight",
+    "Transportation Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
+    "Halting Charges", "Docket Charges", "Weighment Charges", "Handling Charges", "Cancellation Charges",
+    "TOTAL"
 ]
 
 VENDOR_PL_HEADERS = [
@@ -649,6 +650,7 @@ def invoice_pending_report_view(request):
         form = DmrForm()
 
     customer_id = request.POST.get('dmr_customer')
+    dept_id = request.POST.get('customer_department')
     selected_month = request.POST.get('month')
     selected_year = request.POST.get('year')
     from_loc_id = request.POST.get('from_location')
@@ -692,9 +694,7 @@ def invoice_pending_report_view(request):
     # -----------------------------
     # Base queryset
     # -----------------------------
-    trips = TripdetailInfo.objects.filter(
-        tc_financestatus_id=7   # Trip Settled
-    ).exclude(
+    trips = TripdetailInfo.objects.all().exclude(
         id__in=all_invoiced_ids
     ).select_related(
         'tr_enquirynumber',
@@ -705,6 +705,19 @@ def invoice_pending_report_view(request):
         'tr_vehiclesource',
         'tr_departedlocation',
         'tr_reportedlocation'
+    ).prefetch_related(
+        'tr_consignmentnumber__cg_consignmentnumber'
+    ).annotate(
+        trip_total=Coalesce(F('tc_tripcost'), 0.0, output_field=FloatField()) +
+                   Coalesce(F('tc_tollcost'), 0.0, output_field=FloatField()) +
+                   Coalesce(F('tc_parkingcost'), 0.0, output_field=FloatField()) +
+                   Coalesce(F('tc_loadingcost'), 0.0, output_field=FloatField()) +
+                   Coalesce(F('tc_unloadingcost'), 0.0, output_field=FloatField()) +
+                   Coalesce(F('tc_haltingcost'), 0.0, output_field=FloatField()) +
+                   Coalesce(F('tc_rtocost'), 0.0, output_field=FloatField()) +
+                   Coalesce(F('tc_weighmentcost'), 0.0, output_field=FloatField()) +
+                   Coalesce(F('tc_handlingcost'), 0.0, output_field=FloatField()) +
+                   Coalesce(F('tc_cancellation'), 0.0, output_field=FloatField())
     )
 
     # -----------------------------
@@ -712,6 +725,9 @@ def invoice_pending_report_view(request):
     # -----------------------------
     if customer_id:
         trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+
+    if dept_id:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
 
     if selected_month and selected_month != '0':
         trips = trips.filter(
@@ -739,53 +755,60 @@ def invoice_pending_report_view(request):
     data_rows = []
 
     for idx, trip in enumerate(trips, start=1):
-
-        cons_no = (
-            safe_str(trip.tr_consignmentnumber.co_consignmentnumber)
-            if trip.tr_consignmentnumber else ""
-        )
-
-        cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
-        branch = "Chennai" if cust_name.endswith("MAA") else (
-            "Bangalore" if cust_name.endswith("BLR") else ""
-        )
-
-        display_date = (
-            trip.tr_loading_time.strftime("%d-%m-%Y")
-            if trip.tr_loading_time else
-            (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else "")
-        )
-
-        billing_amount = (
-            safe_num(trip.tc_tripcost) +
-            safe_num(trip.tc_tollcost) +
-            safe_num(trip.tc_supervisorcost) +
-            safe_num(trip.tc_loadingcost) +
-            safe_num(trip.tc_unloadingcost) +
-            safe_num(trip.tc_weighmentcost) +
-            safe_num(trip.tc_haltingcost) +
-            safe_num(trip.tc_handlingcost)
-        )
+        cons = trip.tr_consignmentnumber
+        goods = cons.cg_consignmentnumber.first() if cons else None
 
         row = [
-            idx,
-            display_date,
-            branch,
-            safe_str(trip.tr_enquirynumber.en_customername),
-            cons_no,
-            trip.tr_consignmentnumber.co_consignmentdate.strftime("%d-%m-%Y")
-            if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentdate else "",
+            # 1. Branch (maps to Dept in Master List)
             safe_str(trip.tr_enquirynumber.en_customerdepartment),
-            safe_str(trip.tr_tripnumber),
+            # 2. Customer Short Name
+            safe_str(trip.tr_enquirynumber.en_customername),
+            # 3. Planning Date
+            trip.tr_created_at.strftime("%Y-%m-%d") if trip.tr_created_at else "",
+            # 4. Cnote No
+            safe_str(cons.co_consignmentnumber) if cons else "",
+            # 5. From
+            safe_str(trip.tr_departedlocation),
+            # 6. To
+            safe_str(trip.tr_reportedlocation),
+            # 7. Dept
+            safe_str(trip.tr_enquirynumber.en_customerdepartment),
+            # 8. Veh No
             safe_str(trip.tr_vehiclenumber),
+            # 9. Veh Type
             safe_str(trip.tr_vehicletype),
-            safe_str(trip.tr_vehiclesource),
-            trip.tr_departeddate.strftime("%d-%m-%Y %H:%M") if trip.tr_departeddate else "",
-            trip.tr_updated_at.strftime("%d-%m-%Y") if trip.tr_updated_at else "",
-            safe_str(trip.tr_customerref),
-            billing_amount,
-            "Invoice Pending",
-            safe_str(trip.tr_remarks),
+            # 10. Consignee
+            safe_str(goods.cg_consignee) if goods else "",
+            # 11. Reference No
+            safe_str(cons.co_cusrefnum) if cons else "",
+            # 12. HAWB No
+            safe_str(goods.cg_hawbno) if goods else "",
+            # 13. No. of Pcs
+            safe_num(goods.cg_qty) if goods else 0,
+            # 14. Weight
+            safe_num(goods.cg_weight) if goods else 0.0,
+            # 15. Transportation Charges
+            safe_num(trip.tc_tripcost),
+            # 16. Toll Charges
+            safe_num(trip.tc_tollcost),
+            # 17. Parking Charges
+            safe_num(trip.tc_parkingcost),
+            # 18. Loading Charges
+            safe_num(trip.tc_loadingcost),
+            # 19. Unloading Charges
+            safe_num(trip.tc_unloadingcost),
+            # 20. Halting Charges
+            safe_num(trip.tc_haltingcost),
+            # 21. Docket Charges (Mapped to tc_rtocost in WOH list)
+            safe_num(trip.tc_rtocost),
+            # 22. Weighment Charges
+            safe_num(trip.tc_weighmentcost),
+            # 23. Handling Charges
+            safe_num(trip.tc_handlingcost),
+            # 24. Cancellation Charges
+            safe_num(trip.tc_cancellation),
+            # 25. TOTAL
+            round(safe_num(trip.trip_total), 2)
         ]
 
         data_rows.append(row)
@@ -799,6 +822,7 @@ def invoice_pending_report_view(request):
         'headers': INVOICE_PENDING_HEADERS,
         'data_rows': data_rows,
         'customer_id': customer_id,
+        'dept_id': dept_id,
         'selected_month': selected_month,
         'selected_year': selected_year,
         'from_location': from_loc_id,
@@ -2098,89 +2122,114 @@ def maintenance_report_view(request):
     }
     return render(request, "asset_mgt_app/maintenance_report.html", context)
 
+from datetime import datetime
+from django.contrib.auth.decorators import login_required
+from django.db.models.functions import Upper, Trim
+
+from ..models import Insurance_Info, VehiclemasterInfo
+
 
 @login_required(login_url='login_page')
 def insurance_renewal_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import Insurance_Info, VehiclemasterInfo
-    from datetime import datetime
 
     # -------------------------
-    # Read filter (GET or POST)
+    # READ FILTER (POST only – matches HTML)
     # -------------------------
-    if request.method == "POST":
-        vehicle_search = request.POST.get('vehicle_search', '').strip()
-    else:
-        vehicle_search = request.GET.get('vehicle_search', '').strip()
+    vehicle_search = request.POST.get('vehicle_search', '').strip()
 
     # -------------------------
-    # Base Query (ALWAYS first)
+    # BASE QUERY (normalize vehicle no)
     # -------------------------
-    insurance_records = Insurance_Info.objects.all().order_by('ins_expiry_date')
+    insurance_records = (
+        Insurance_Info.objects
+        .annotate(
+            veh_no_clean=Upper(Trim('ins_vehicle_no'))
+        )
+        .order_by('ins_expiry_date')
+    )
 
     # -------------------------
-    # Vehicle filter (TEXT ONLY)
+    # VEHICLE FILTER
     # -------------------------
     if vehicle_search:
         insurance_records = insurance_records.filter(
-            ins_vehicle_no=vehicle_search
+            veh_no_clean=vehicle_search.strip().upper()
         )
 
     # -------------------------
-    # Vehicle type lookup
+    # VEHICLE MASTER (for dropdown + type lookup)
     # -------------------------
-    vehicles = VehiclemasterInfo.objects.select_related('vm_vehicletype')
+    vehicles = (
+        VehiclemasterInfo.objects
+        .annotate(
+            veh_no_clean=Upper(Trim('vm_registrationnumber'))
+        )
+        .select_related('vm_vehicletype')
+        .order_by('vm_registrationnumber')
+    )
+
     vehicle_map = {
-        v.vm_registrationnumber.strip().upper(): v
+        v.veh_no_clean: v
         for v in vehicles
     }
 
-    processed_rows = []
+    # -------------------------
+    # PROCESS ROWS
+    # -------------------------
     today = datetime.now().date()
+    processed_rows = []
     counter = 1
 
     for rec in insurance_records:
-        key = (rec.ins_vehicle_no or "").strip().upper()
-        vehicle = vehicle_map.get(key)
+        vehicle = vehicle_map.get(rec.veh_no_clean)
         vehicle_type = safe_str(vehicle.vm_vehicletype) if vehicle else ""
 
         expiry_date = rec.ins_expiry_date
         elapsed_days = (expiry_date - today).days if expiry_date else 0
 
-        if elapsed_days < 0:
-            ds_status = "Expired"
-        elif elapsed_days <= 30:
-            ds_status = "Renewal Due"
+        if expiry_date:
+            if elapsed_days < 0:
+                ds_status = "Expired"
+            elif elapsed_days <= 30:
+                ds_status = "Renewal Due"
+            else:
+                ds_status = "Active"
         else:
-            ds_status = "Active"
+            ds_status = ""
 
         processed_rows.append([
-            counter,
-            safe_str(rec.ins_vendor),
-            safe_str(rec.ins_name),
-            safe_str(rec.ins_vehicle_no),
-            vehicle_type,
-            safe_str(rec.ins_type),
-            expiry_date.strftime("%d-%m-%Y") if expiry_date else "",
-            safe_num(rec.ins_sum_assured),
-            elapsed_days,
-            ds_status,
+            counter,                                # 1 S.No
+            safe_str(rec.ins_vendor),               # 2 Vendor
+            safe_str(rec.ins_name),                 # 3 Policy Name
+            safe_str(rec.ins_vehicle_no),           # 4 Vehicle No
+            vehicle_type,                           # 5 Vehicle Type
+            safe_str(rec.ins_type),                 # 6 Insurance Type
+            expiry_date.strftime("%d-%m-%Y") if expiry_date else "",  # 7 Expiry Date
+            safe_num(rec.ins_sum_assured),           # 8 Sum Assured
+            elapsed_days,                           # 9 Elapsed Days
+            ds_status                               # 10 Status (badge column)
         ])
+
         counter += 1
 
-    paginator = Paginator(processed_rows, 50)
-    page_obj = paginator.get_page(request.GET.get('page'))
-
+    # -------------------------
+    # CONTEXT (NO paginator – DataTables handles it)
+    # -------------------------
     context = {
         'first_name': first_name,
         'headers': INSURANCE_RENEWAL_HEADERS,
-        'data_rows': page_obj.object_list,
-        'page_obj': page_obj,
+        'data_rows': processed_rows,
         'vehicle_search': vehicle_search,
-        'all_vehicles': vehicles,   # REQUIRED for dropdown
+        'all_vehicles': vehicles,   # dropdown
     }
 
-    return render(request,"asset_mgt_app/insurance_renewal_report.html",context)
+    return render(
+        request,
+        "asset_mgt_app/insurance_renewal_report.html",
+        context
+    )
+
 
 
 @login_required(login_url='login_page')
