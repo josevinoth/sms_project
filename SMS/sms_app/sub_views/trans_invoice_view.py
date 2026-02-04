@@ -474,6 +474,7 @@ def trans_invoice_list_woh(request, customer_id):
             ti_customer_id=customer_id,
             is_woh=True
         )
+        .exclude(ti_trip_id__isnull=True)
         .values_list('ti_trip_id', flat=True)
     )
     trans_invoice_list = (
@@ -504,6 +505,12 @@ def trans_invoice_list_woh(request, customer_id):
         TripdetailInfo.objects
         .filter(
             tr_enquirynumber__en_customername_id=customer_id
+        )
+        .exclude(
+            tr_consignmentnumber__co_consignmentnumber__isnull=True
+        )
+        .exclude(
+            tr_consignmentnumber__co_consignmentnumber=''
         )
         .exclude(
             id__in=selected_trip_ids
