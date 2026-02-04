@@ -23,13 +23,10 @@
     <select name="driver_name" id="driver_name" class="form-control select2">
         <option value="">-- Select Driver --</option>
         {% for driver in drivers %}
-            <option value="{{ driver.id }}"
-                {% if driver.id|stringformat:"s" == selected_driver_name %}
-                    selected
-                {% endif %}
-            >
-                {{ driver.dm_name }}
-            </option>
+        <option value="{{ driver.id }}"
+                {% if driver.id == selected_driver_id %}selected{% endif %}>
+            {{ driver.dm_name }}
+        </option>
         {% endfor %}
     </select>
 </div>

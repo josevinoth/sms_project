@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Q, F, Sum, Value, FloatField
 from django.db.models.functions import Coalesce, Trim, Upper
-from ..models import TripdetailInfo, ConsignmentdetailInfo, CustomerInfo, CustomerdepartmentInfo, ConsignmentgoodsInfo, Places, VehiclemasterInfo, Driverexpense, Vehicle_allotmentInfo
+from ..models import TripdetailInfo, ConsignmentdetailInfo, CustomerInfo, CustomerdepartmentInfo, ConsignmentgoodsInfo, Places, VehiclemasterInfo, Driverexpense, Vehicle_allotmentInfo, VendorratemasterInfo1, Vendor_info
 from ..sub_forms.dmr_report_form import DmrForm
 
 # -------------------------
@@ -36,7 +36,7 @@ VEHICLE_STATUS_HEADERS = [
 ]
 
 DRIVERS_ADVANCE_HEADERS = [
-    "SNo", "Branch", "Date", "Type", "Emp Id", "DriverName", "AdvanceDate", "Advance amount", "No of Days Due"
+    "SNo", "Branch", "Date", "Type", "Emp Id", "DriverName", "AdvanceDate", "Advance amount", "Balance amount", "No of Days Due"
 ]
 
 INVOICE_PENDING_HEADERS = [
@@ -362,6 +362,8 @@ def vehicle_status_report_view(request):
     # -----------------------------
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
+    vehicle_search = request.GET.get('vehicle_search') or ""
+    branch = request.GET.get('branch') or ""
 
     if from_date:
         from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
@@ -398,8 +400,18 @@ def vehicle_status_report_view(request):
         )
         .select_related('vm_vehicletype')
         .exclude(veh_no_clean__in=started_vehicle_numbers)
-        .order_by('vm_registrationnumber')
     )
+
+    if vehicle_search:
+        vehicles = vehicles.filter(vm_registrationnumber__icontains=vehicle_search)
+    
+    # Heuristic for branch filter (KA=Bengaluru, TN=Chennai) if branch is selected
+    if branch == "Bengaluru":
+        vehicles = vehicles.filter(vm_registrationnumber__istartswith="KA")
+    elif branch == "Chennai":
+        vehicles = vehicles.filter(vm_registrationnumber__istartswith="TN")
+
+    vehicles = vehicles.order_by('vm_registrationnumber')
 
     # -----------------------------
     # BUILD TABLE
@@ -420,6 +432,13 @@ def vehicle_status_report_view(request):
     # -----------------------------
     # CONTEXT
     # -----------------------------
+    all_vehicles = VehiclemasterInfo.objects.filter(
+        vm_ownership_id__in=[1, 2] # Usually own vehicles
+    ).order_by('vm_registrationnumber')
+    
+    if not all_vehicles.exists():
+        all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
     context = {
         'first_name': first_name,
         'headers': [
@@ -432,6 +451,9 @@ def vehicle_status_report_view(request):
         'data_rows': data_rows,
         'from_date': from_date.strftime("%Y-%m-%d"),
         'to_date': to_date.strftime("%Y-%m-%d"),
+        'all_vehicles': all_vehicles,
+        'vehicle_search': vehicle_search,
+        'branch': branch,
     }
 
     return render(
@@ -567,17 +589,15 @@ def drivers_advance_report_view(request):
     )
 
     # If driver_id is provided, try to find the name for display
-    selected_driver_name = ""
+    selected_driver_id = None
+
     if driver_id:
-        # The input might be the ID directly if selected from list
-        # We need to filter by ID
         advances = advances.filter(driver_name_id=driver_id)
         try:
-            selected_driver_name = DrivermasterInfo.objects.get(id=driver_id).dm_name
-            # If checking directly against name text input
-        except:
-            pass
-    
+            selected_driver_id = int(driver_id)
+        except (ValueError, TypeError):
+            selected_driver_id = None
+
     if from_date:
         try:
             from_date_obj = datetime.strptime(from_date, "%Y-%m-%d")
@@ -620,6 +640,7 @@ def drivers_advance_report_view(request):
             safe_str(advance.driver_name.dm_name if advance.driver_name else ""),  # Driver name
             advance.de_date.strftime("%d-%m-%Y") if advance.de_date else "",  # Advance date
             safe_num(advance.de_total_cost),  # Advance amount
+            safe_num(advance.de_driver_id.ds_balance if advance.de_driver_id else 0), # Balance amount
             days_due
         ]
         data_rows.append(row)
@@ -632,7 +653,7 @@ def drivers_advance_report_view(request):
         'headers': DRIVERS_ADVANCE_HEADERS,
         'data_rows': data_rows,
         'drivers': drivers,
-        'selected_driver_name': selected_driver_name, # Pass name back for input value
+        'selected_driver_id': selected_driver_id,
         'from_date': from_date or '',
         'to_date': to_date or '',
     }
@@ -849,12 +870,14 @@ def vendor_p_l_mkt_report_view(request):
     selected_year = request.POST.get('year')
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
+    branch = request.POST.get('branch', '').strip()
+    vendor_id = request.POST.get('vendor_id', '').strip()
 
-    # ------------------------------------------------
     # BASE TRIPS
     # ------------------------------------------------
     trips = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 7]
+        tc_financestatus_id__in=[2, 7],
+        tr_vehiclesource_id=3  # 3 = MARKET
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -892,6 +915,19 @@ def vendor_p_l_mkt_report_view(request):
 
     if to_loc_id:
         trips = trips.filter(tr_reportedlocation_id=to_loc_id)
+
+    if branch == 'MAA':
+        trips = trips.filter(
+            tr_consignmentnumber__co_consignmentnumber__istartswith='MAA'
+        )
+    elif branch == 'BLR':
+        trips = trips.filter(
+            tr_consignmentnumber__co_consignmentnumber__istartswith='BLR'
+        )
+
+    if vendor_id:
+        valid_enquiries = Vehicle_allotmentInfo.objects.filter(va_vendor_id=vendor_id).values_list('va_enquirynumber_id', flat=True)
+        trips = trips.filter(tr_enquirynumber_id__in=valid_enquiries)
 
     trips = trips.order_by('-tr_created_at')
 
@@ -966,10 +1002,24 @@ def vendor_p_l_mkt_report_view(request):
         buying_trip_cost = 0.0
 
         if allotment:
-            vendor_name = safe_str(allotment.va_vendor) if allotment.va_vendor else "Own Vehicle"
-            buying_trip_cost = safe_num(allotment.va_standardbuy) + safe_num(allotment.va_specialbuy)
+            vendor_name = safe_str(allotment.va_vendor) if allotment.va_vendor else "Market"
+            
+            # Fetch from Vendor Rate Master if vendor is present
+            if allotment.va_vendor:
+                rate_lookup = VendorratemasterInfo1.objects.filter(
+                    vr1_fromlocation=trip.tr_departedlocation,
+                    vr1_tolocation=trip.tr_reportedlocation,
+                    vr1_vehicletype=trip.tr_vehicletype,
+                    vr1_vendor=allotment.va_vendor
+                ).first()
+                if rate_lookup:
+                    buying_trip_cost = safe_num(rate_lookup.vr1_rate)
+                else:
+                    buying_trip_cost = safe_num(allotment.va_standardbuy) + safe_num(allotment.va_specialbuy)
+            else:
+                buying_trip_cost = safe_num(allotment.va_standardbuy) + safe_num(allotment.va_specialbuy)
         else:
-            vendor_name = "Own Vehicle" if trip.tr_vehiclesource_id in [1, 2] else "Unassigned"
+            vendor_name = "Market"
 
         trip_expenses = expense_map.get(trip.id, [])
 
@@ -1052,6 +1102,9 @@ def vendor_p_l_mkt_report_view(request):
         'selected_year': selected_year,
         'from_location': from_loc_id,
         'to_location': to_loc_id,
+        'branch': branch,
+        'vendor_id': int(vendor_id) if vendor_id else None,
+        'all_vendors': Vendor_info.objects.all().order_by('vend_name'),
     })
 
 
@@ -1074,11 +1127,11 @@ def vendor_p_l_attached_report_view(request):
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
 
-    # ------------------------------------------------
     # BASE TRIPS
     # ------------------------------------------------
     trips = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 7]
+        tc_financestatus_id__in=[2, 7],
+        tr_vehiclesource_id=2  # 2 = ATTACHED
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -1176,7 +1229,7 @@ def vendor_p_l_attached_report_view(request):
         # ---------------- BUYING ----------------
         va_info = va_map.get(trip.tr_enquirynumber_id)
 
-        vendor_name = "Own Vehicle"
+        vendor_name = "Attached"
         if va_info:
             if va_info.va_vendor:
                 vendor_name = str(va_info.va_vendor)
@@ -2431,7 +2484,7 @@ def own_vs_market_sales_report_view(request):
                   safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost) + \
                   safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost) + safe_num(trip.tc_supervisorcost)
         
-        is_own = trip.tr_vehiclesource_id in [1, 2] # 1=OWN, 2=ATTACHED/OWN
+        is_own = trip.tr_vehiclesource_id in [2] # 1=OWN, 2=ATTACHED/OWN
         
         if is_own:
             data['own_sales'] += revenue

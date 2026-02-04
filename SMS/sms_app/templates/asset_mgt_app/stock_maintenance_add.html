@@ -238,46 +238,46 @@
 
             <table id="stock_maintenance_table" class="table table-striped table-bordered table-sm">
                 <thead class="thead-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Invoice No</th>
-                        <th>Invoice Date</th>
-                        <th>Stock Type</th>
-                        <th>Partcode</th>
-                        <th>Description</th>
-                        <!-- <th>Thickness</th>
-                        <th>Width</th>
-                        <th>Length</th> -->
-                        <th>UOM</th>
-                        <th>Count</th>
-                        <th>CFT</th>
-                        <th>Total CFT</th>
-                        <!-- <th>Per Unit Cost</th> -->
-                        <th>Total Price</th>
-                        <th>Created At</th>
-                        <th>Edit</th>
-                        <th>Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in items %}
-                    <tr>
-                        <td>{{ item.id }}</td>
-                        <td>{{ item.sm_invoice_no }}</td>
-                        <td>{{ item.sm_invoice_date }}</td>
-                        <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
-                        <td>{{ item.sm_partcode.pc_code }}</td>
-                        <td>{{ item.sm_description }}</td>
-                        <!-- <td>{{ item.sm_thickness }}</td>
-                        <td>{{ item.sm_width }}</td>
-                        <td>{{ item.sm_length }}</td> -->
-                        <td>{{ item.sm_uom.unit_of_measure }}</td>
-                        <td>{{ item.sm_count }}</td>
-                        <td>{{ item.sm_cft }}</td>
-                        <td>{{ item.sm_total_cft }}</td>
-                        <!-- <td>{{ item.sm_per_unit_cost }}</td> -->
-                        <td>{{ item.sm_total_price }}</td>
-                        <td>{{ item.sm_created_at|date:"d-m-Y" }}</td>
+                      <tr>
+                    <th>ID</th>
+                    <th>Invoice No</th>
+                    <th>Invoice Date</th>
+                    <th>Stock Type</th>
+                    <th>Partcode</th>
+                    <th>Description</th>
+                    <th>Thickness</th>
+                    <th>Width</th>
+                    <th>Length</th>
+                    <th>UOM</th>
+                    <th>Count</th>
+                    <th>CFT</th>
+                    <th>Total CFT</th>
+                    <th>Per Unit Cost</th>
+                    <th>Total Price</th>
+                    <th>Updated By</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.sm_invoice_no }}</td>
+                    <td>{{ item.sm_invoice_date }}</td>
+                    <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
+                    <td>{{ item.sm_partcode.pc_code }}</td>
+                    <td>{{ item.sm_description }}</td>
+                    <td>{{ item.sm_thickness }}</td>
+                    <td>{{ item.sm_width }}</td>
+                    <td>{{ item.sm_length }}</td>
+                    <td>{{ item.sm_uom.unit_of_measure }}</td>
+                    <td>{{ item.sm_count }}</td>
+                    <td>{{ item.sm_cft }}</td>
+                    <td>{{ item.sm_total_cft }}</td>
+                    <td>{{ item.sm_per_unit_cost }}</td>
+                    <td>{{ item.sm_total_price }}</td>
+                    <td>{{ item.sm_updated_by }}</td>
 
                         <!-- EDIT -->
                         <td class="text-center">
