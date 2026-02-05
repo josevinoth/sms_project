@@ -33,7 +33,9 @@ def halting_charges_add(request, halting_id=0):
             form = HaltingchargesForm(request.POST, instance=record)
 
         if form.is_valid():
-            form.save()
+            record = form.save(commit=False)
+            record.hc_updated_by = request.user
+            record.save()
             messages.success(request, "Halting Charges saved successfully.")
         else:
             messages.error(request, "Form invalid! Please check inputs.")

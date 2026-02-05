@@ -58,6 +58,27 @@
         {% render_field form.to_location class="form-control" value=to_loc_id %}
     </div>
 
+    <!-- Branch -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Branch</label>
+        <select name="branch" class="form-control select2">
+            <option value="">-- All --</option>
+            <option value="MAA" {% if branch == 'MAA' %}selected{% endif %}>MAA</option>
+            <option value="BLR" {% if branch == 'BLR' %}selected{% endif %}>BLR</option>
+        </select>
+    </div>
+
+    <!-- Vendor -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Vendor Name</label>
+        <select name="vendor_id" class="form-control select2">
+            <option value="">-- All --</option>
+            {% for v in all_vendors %}
+            <option value="{{ v.id }}" {% if v.id == vendor_id %}selected{% endif %}>{{ v.vend_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary mt-3">Filter</button>
     </div>
@@ -98,11 +119,11 @@
     </table>
 </div>
 
+
 <script>
 $(document).ready(function () {
 
-    const table = $('#vendor_p_l_report_table').DataTable({
-
+    $('#vendor_p_l_report_table').DataTable({
         scrollX: true,
         dom: 'lBfrtip',
 
@@ -114,13 +135,12 @@ $(document).ready(function () {
         pageLength: 10,
 
         buttons: [
-
             'copy',
             'csv',
 
-            // ======================
+            // =========================
             // EXCEL EXPORT
-            // ======================
+            // =========================
             {
                 extend: 'excelHtml5',
                 text: 'Excel',
@@ -131,7 +151,7 @@ $(document).ready(function () {
                     let sheet = xlsx.xl.worksheets['sheet1.xml'];
                     let styles = xlsx.xl['styles.xml'];
 
-                    // ---------- FONT ----------
+                    // FONT
                     let fonts = $('fonts', styles);
                     fonts.append(`
                         <font>
@@ -143,7 +163,7 @@ $(document).ready(function () {
                     `);
                     let fontId = fonts.children().length - 1;
 
-                    // ---------- BLUE FILL ----------
+                    // FILL (BLUE)
                     let fills = $('fills', styles);
                     fills.append(`
                         <fill>
@@ -155,17 +175,12 @@ $(document).ready(function () {
                     `);
                     let fillId = fills.children().length - 1;
 
-                    // ---------- STYLE ----------
+                    // STYLE
                     let cellXfs = $('cellXfs', styles);
                     cellXfs.append(`
-                        <xf xfId="0"
-                            fontId="${fontId}"
-                            fillId="${fillId}"
-                            borderId="0"
-                            applyFont="1"
-                            applyFill="1"/>
+                        <xf xfId="0" fontId="${fontId}" fillId="${fillId}"
+                            borderId="0" applyFont="1" applyFill="1"/>
                     `);
-
                     let styleId = cellXfs.children().length - 1;
 
                     // APPLY STYLE TO HEADER ROW
@@ -173,9 +188,9 @@ $(document).ready(function () {
                 }
             },
 
-            // ======================
+            // =========================
             // PDF EXPORT
-            // ======================
+            // =========================
             {
                 extend: 'pdfHtml5',
                 orientation: 'landscape',
@@ -189,9 +204,9 @@ $(document).ready(function () {
                 }
             },
 
-            // ======================
+            // =========================
             // PRINT
-            // ======================
+            // =========================
             {
                 extend: 'print',
                 title: 'Vendor P & L (MKT) Report',
@@ -210,5 +225,4 @@ $(document).ready(function () {
 
 });
 </script>
-
 {% endblock content %}

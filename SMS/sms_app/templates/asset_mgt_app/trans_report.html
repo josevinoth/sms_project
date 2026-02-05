@@ -78,9 +78,9 @@
         </div>
         <div class="col-2">
             <div class="card h-100 text-center custom-card">
-                <div class="card-header custom-card-header">Vehicle Status Report</div>
+                <div class="card-header custom-card-header">Vehicle Utilization Report</div>
                 <div class="card-body bg-light text-center">
-                    <h1><a href="{% url 'vehicle_status_report' %}" class="badge custom-badge"><i
+                    <h1><a href="{% url 'vehicle_utilization_report' %}" class="badge custom-badge"><i
                                 class="fas fa-truck-monster"></i></a></h1>
                 </div>
             </div>
@@ -206,21 +206,30 @@
                 </div>
             </div>
         </div>
+        <div class="col-2">
+            <div class="card h-100 text-center custom-card">
+                <div class="card-header custom-card-header">Enquiry Pending Report</div>
+                <div class="card-body bg-light text-center">
+                    <h1><a href="{% url 'enquiry_pending_report' %}" class="badge custom-badge"><i
+                                class="fas fa-hourglass-half"></i></a>
+                    </h1>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
     /* increase gap between dashboard cards */
-.report-row {
-    margin-left: -20px;
-    margin-right: -20px;
-}
+    .report-row {
+        margin-left: -20px;
+        margin-right: -20px;
+    }
 
-.report-row > div {
-    padding-left: 20px;
-    padding-right: 20px;
-    margin-bottom: 25px;
-}
-
+    .report-row>div {
+        padding-left: 20px;
+        padding-right: 20px;
+        margin-bottom: 25px;
+    }
 </style>
 {% endblock content %}

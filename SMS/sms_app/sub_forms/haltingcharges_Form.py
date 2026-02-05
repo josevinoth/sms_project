@@ -7,7 +7,7 @@ class HaltingchargesForm(forms.ModelForm):
 
     class Meta:
         model = Haltingcharges
-        fields = '__all__'
+        exclude = ('hc_updated_at', 'hc_updated_by')
 
     def __init__(self, *args, **kwargs):
         super(HaltingchargesForm,self).__init__(*args, **kwargs)
