@@ -37,37 +37,39 @@
 
 <!-- Table -->
 <div class="container-fluid">
-    <table id="halting_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
+    <table id="halting_list" class="table table-striped table-bordered" style="width:100%">
+        <thead class="thead-dark text-nowrap">
             <tr>
+                <th>#</th>
                 <th>Customer</th>
                 <th>Trip Type</th>
                 <th>Charges (₹)</th>
-                <th>Edit</th>
-                <th>Delete</th>
+                <th>Updated By</th>
+                <th class="text-center">Edit</th>
+                <th class="text-center">Delete</th>
             </tr>
         </thead>
 
         <tbody>
             {% for item in halting_list %}
             <tr>
+                <td>{{ forloop.counter }}</td>
                 <td>{{ item.hc_Customer_name }}</td>
                 <td>{{ item.hc_trip_type }}</td>
                 <td>{{ item.hc_charges }}</td>
+                <td>{{ item.hc_updated_by|default:"" }}</td>
 
-                <td>
-                    <a class="btn btn-primary"
-                       href="{% url 'halting_charges_edit' item.id %}">
+                <td class="text-center">
+                    <a class="btn btn-primary btn-sm" href="{% url 'halting_charges_edit' item.id %}">
                         <i class="far fa-edit"></i>
                     </a>
                 </td>
 
-                <td>
-                    <form action="{% url 'halting_delete' item.id %}"
-                          method="post"
-                          onclick="return confirm('Are you sure?');">
+                <td class="text-center">
+                    <form action="{% url 'halting_delete' item.id %}" method="post" class="d-inline"
+                        onclick="return confirm('Are you sure?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
+                        <button type="submit" class="btn btn-danger btn-sm">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </form>
@@ -80,8 +82,14 @@
 
 <!-- DataTable Script -->
 <script>
-    $(document).ready(function() {
-        $('#halting_list').DataTable();
+    $(document).ready(function () {
+        $('#halting_list').DataTable({
+            scrollX: true,
+            dom: 'lBfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ]
+        });
     });
 </script>
 

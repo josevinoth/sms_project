@@ -30,36 +30,37 @@
 <form method="POST" action="{% url 'daily_trip_count_report' %}" class="row g-3 align-items-end">
     {% csrf_token %}
 
-    <!-- Month -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Month</label>
-        {% render_field form.month class="form-control" value=selected_month %}
-    </div>
-
-    <!-- Year -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Year</label>
-        {% render_field form.year class="form-control" value=selected_year %}
-    </div>
-
-    <div class="col-md-2">
+<div class="col-md-3 offset-md-1">
         <label class="form-label fw-bold">Vehicle Number</label>
         <select name="vehicle_number" id="vehicle_number" class="form-control select2">
-            <option value="">Search Vehicle...</option>
+            <option value="">Search Vehicle No</option>
             {% for vehicle in all_vehicles %}
-            <option value="{{ vehicle.vm_registrationnumber }}" {% if vehicle_filter == vehicle.vm_registrationnumber %}selected{% endif %}>
+            <option value="{{ vehicle.vm_registrationnumber }}"
+                {% if vehicle_filter == vehicle.vm_registrationnumber %}selected{% endif %}>
                 {{ vehicle.vm_registrationnumber }}
             </option>
             {% endfor %}
         </select>
     </div>
 
+    <!-- From Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">From Date</label>
+        <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+    </div>
+
+    <!-- To Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">To Date</label>
+        <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+    </div>
+
+    <!-- Filter -->
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary mt-3">Filter</button>
     </div>
 </form>
-<br>
-<br>
+
 
 <div class="row">
     <div class="col-auto">
