@@ -9,8 +9,14 @@
     <div class="card text-white bg-info mb-3" style="max-width:100%;">
 
       <!-- ================= HEADER ================= -->
-      <div class="card-header text-center">
+      <div class="card-header text-center position-relative">
         <h3 class="mb-0">Add / Update Transport Invoice</h3>
+        {% if saved %}
+        <a href="{% url 'trans_invoice_list_woh' invoice.ti_customer.id %}"
+          class="btn btn-light btn-sm position-absolute" style="right: 20px; top: 50%; transform: translateY(-50%);">
+          <i class="fas fa-list"></i> Trans Invoice List
+        </a>
+        {% endif %}
       </div>
 
       <!-- ================= BODY ================= -->

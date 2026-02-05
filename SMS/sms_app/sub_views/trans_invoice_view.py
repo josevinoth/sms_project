@@ -135,6 +135,7 @@ def trans_invoice_add(request):
             "invoice_list": invoice_list,
             "first_name": first_name,
             "saved": saved,
+            "invoice": invoice,
         }
     )
 

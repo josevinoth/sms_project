@@ -15,13 +15,13 @@ class MaintenanceInfo(models.Model):
         DrivermasterInfo,
         on_delete=models.PROTECT,
         null=True,
-        blank=True,
-        db_column='driver_name'
+        blank=True
     )
     est_delivery = models.DateTimeField()
     work_area = models.CharField(max_length=100)
     job_card_creator = models.CharField(max_length=100)
     job_card_created_on = models.DateTimeField()
+    updated_by = models.CharField(max_length=100, null=True, blank=True)
     COMPLAINT_CHOICES = [
             ("", "-- Select --"),
 

@@ -19,6 +19,15 @@ class MaintenanceForm(forms.ModelForm):
         label='Driver'
     )
 
+    est_delivery = forms.DateTimeField(
+        widget=forms.DateTimeInput(
+            attrs={"type": "datetime-local", "class": "form-control"},
+            format="%Y-%m-%dT%H:%M"
+        ),
+        input_formats=["%Y-%m-%dT%H:%M"],
+        required=True
+    )
+
     class Meta:
         model = MaintenanceInfo
         exclude = (
@@ -27,6 +36,7 @@ class MaintenanceForm(forms.ModelForm):
             "job_card_created_on",
             "created_at",
             "updated_at",
+            "updated_by",
             "bay_no",
             "job_card_no",
         )
@@ -36,6 +46,16 @@ class MaintenanceForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Format est_delivery for datetime-local input
+        if self.instance and self.instance.pk and self.instance.est_delivery:
+            self.initial['est_delivery'] = self.instance.est_delivery.strftime("%Y-%m-%dT%H:%M")
+
+        # Make readonly fields not required (they are populated via JS and may not submit)
+        readonly_fields = ['make_model', 'registration_date', 'chassis_no', 'engine_no']
+        for field_name in readonly_fields:
+            if field_name in self.fields:
+                self.fields[field_name].required = False
 
         # ✅ Disable approval_status field (read-only in UI)
         if "approval_status" in self.fields:
@@ -56,3 +76,4 @@ class MaintenanceForm(forms.ModelForm):
            # keep it disabled (read-only) but ensure the bootstrap class is applied
            self.fields["approval_status"].disabled = True
            self.fields["approval_status"].widget.attrs.update({"class": "form-control"})
+

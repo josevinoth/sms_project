@@ -135,10 +135,8 @@ def maintenance_edit(request, id):
 
     if request.method == "POST":
         form = MaintenanceForm(
+            request.POST,
             instance=record,
-            initial={
-                "registration_no": record.vehicle
-            }
         )
 
         if form.is_valid():
@@ -146,13 +144,24 @@ def maintenance_edit(request, id):
 
             # 🔥 CRITICAL: update vehicle from registration_no
             obj.vehicle = form.cleaned_data["registration_no"]
+            
+            # Update updated_by field
+            obj.updated_by = request.user.get_full_name() or request.user.username
 
             obj.save()
             messages.success(request, "Maintenance record updated.")
             return redirect('maintenance_list')
+        else:
+            # Show form errors for debugging
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
 
     else:
-        form = MaintenanceForm(instance=record)
+        form = MaintenanceForm(
+            instance=record,
+            initial={"registration_no": record.vehicle}
+        )
 
     # approval label from instance
     approval_status_label = (getattr(record, 'get_approval_status_display', lambda: '')() if record else '')
@@ -165,6 +174,7 @@ def maintenance_edit(request, id):
             "job_creator": record.job_card_creator,
             "created_on": record.job_card_created_on,
             "approval_status_label": approval_status_label,
+            "updated_by": record.updated_by,
         }
     )
 
