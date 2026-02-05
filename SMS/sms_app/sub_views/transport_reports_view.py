@@ -1,4 +1,6 @@
 from datetime import datetime
+from datetime import date
+import calendar
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.paginator import Paginator
@@ -31,8 +33,8 @@ REF_NO_PENDING_HEADERS = [
     "Selling (total)"
 ]
 
-VEHICLE_STATUS_HEADERS = [
-    "SNo", "Branch", "Vehicle Number", "Vehicle Type", "Date of Idle"
+VEHICLE_UTILIZATION_HEADERS = [
+    "SNo", "Vehicle Number", "Vehicle Type", "Utilized Days"
 ]
 
 DRIVERS_ADVANCE_HEADERS = [
@@ -134,6 +136,10 @@ OWN_VS_MARKET_SALES_HEADERS = [
     "Own Vehicle Sales", "No of Vehicle Used - Own", "No of Jobs - Own", "No of Drivers - Own", "Trip Index - Own",
     "Market Vehicle Sales", "No of Vehicle Used - Market", "No of Jobs - Market", "No of Drivers - Market", "Trip Index - Market",
     "Market Buy Rate", "No of Trips - Local", "No of Trips - OutStation"
+]
+
+ENQUIRY_PENDING_HEADERS = [
+    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Vehicle Placed", "Vehicle Type", "Customer Name", "Reason"
 ]
 
 # -------------------------
@@ -354,44 +360,47 @@ from django.contrib.auth.decorators import login_required
 
 
 @login_required(login_url='login_page')
-def vehicle_status_report_view(request):
+def vehicle_utilization_report_view(request):
     first_name = request.session.get('first_name')
+    from django.utils import timezone
+    import calendar
 
     # -----------------------------
     # GET FILTERS
     # -----------------------------
-    from_date = request.GET.get('from_date')
-    to_date = request.GET.get('to_date')
-    vehicle_search = request.GET.get('vehicle_search') or ""
-    branch = request.GET.get('branch') or ""
-
-    if from_date:
-        from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+        vehicle_search = request.POST.get('vehicle_search') or ""
+        selected_month = request.POST.get('month') or "0"
+        selected_year = request.POST.get('year') or "0"
     else:
-        from_date = date.today()
+        form = DmrForm(request.GET or None)
 
-    if to_date:
-        to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
-    else:
-        to_date = from_date
+        vehicle_search = request.GET.get('vehicle_search', '').strip()
+        selected_month = request.GET.get('month', str(date.today().month))
+        selected_year = request.GET.get('year', str(date.today().year))
+
+    # Convert month/year to integers for calculation
+    try:
+        month_int = int(selected_month)
+        year_int = int(selected_year)
+    except (ValueError, TypeError):
+        month_int = date.today().month
+        year_int = date.today().year
+
+    if month_int == 0:
+        month_int = date.today().month
+    if year_int == 0:
+        year_int = date.today().year
+
+    # Calculate month boundaries
+    month_start = date(year_int, month_int, 1)
+    last_day = calendar.monthrange(year_int, month_int)[1]
+    month_end = date(year_int, month_int, last_day)
+    total_days_in_month = last_day
 
     # -----------------------------
-    # VEHICLES THAT STARTED A TRIP IN DATE RANGE
-    # (NORMALIZED)
-    # -----------------------------
-    started_vehicle_numbers = (
-        TripdetailInfo.objects
-        .annotate(
-            veh_no_clean=Upper(Trim('tr_vehiclenumber'))
-        )
-        .filter(tr_departeddate__date__range=(from_date, to_date))
-        .values_list('veh_no_clean', flat=True)
-        .distinct()
-    )
-
-    # -----------------------------
-    # VEHICLES THAT DID NOT START IN RANGE
-    # (NORMALIZED)
+    # FETCH VEHICLES
     # -----------------------------
     vehicles = (
         VehiclemasterInfo.objects
@@ -399,66 +408,87 @@ def vehicle_status_report_view(request):
             veh_no_clean=Upper(Trim('vm_registrationnumber'))
         )
         .select_related('vm_vehicletype')
-        .exclude(veh_no_clean__in=started_vehicle_numbers)
+        .filter(vm_ownership_id__in=[1, 2, 3]) # OWN, MARKET, ATTACHED as per logic elsewhere
     )
 
     if vehicle_search:
         vehicles = vehicles.filter(vm_registrationnumber__icontains=vehicle_search)
     
-    # Heuristic for branch filter (KA=Bengaluru, TN=Chennai) if branch is selected
-    if branch == "Bengaluru":
-        vehicles = vehicles.filter(vm_registrationnumber__istartswith="KA")
-    elif branch == "Chennai":
-        vehicles = vehicles.filter(vm_registrationnumber__istartswith="TN")
-
     vehicles = vehicles.order_by('vm_registrationnumber')
+
+    # -----------------------------
+    # FETCH TRIPS OVERLAPPING THE MONTH
+    # -----------------------------
+    # Overlap criteria: trip_start <= month_end AND (trip_end >= month_start OR trip_end IS NULL)
+    overlapping_trips = TripdetailInfo.objects.filter(
+        tr_departeddate__date__lte=month_end
+    ).filter(
+        Q(tr_reporteddate__date__gte=month_start) | Q(tr_reporteddate__isnull=True)
+    ).values('tr_vehiclenumber', 'tr_departeddate', 'tr_reporteddate')
+
+    # Group trips by vehicle (normalized registration number)
+    trip_map = {}
+    for trip in overlapping_trips:
+        veh_no = trip['tr_vehiclenumber'].strip().upper() if trip['tr_vehiclenumber'] else ""
+        if veh_no:
+            trip_map.setdefault(veh_no, []).append(trip)
 
     # -----------------------------
     # BUILD TABLE
     # -----------------------------
     data_rows = []
     counter = 1
+    today_dt = date.today()
 
     for vehicle in vehicles:
+        veh_no_clean = vehicle.vm_registrationnumber.strip().upper()
+        veh_trips = trip_map.get(veh_no_clean, [])
+        
+        utilized_days_set = set() # Using a set of dates to avoid double counting overlapping trips
+
+        for trip in veh_trips:
+            t_start = trip['tr_departeddate'].date() if trip['tr_departeddate'] else month_start
+            t_end = trip['tr_reporteddate'].date() if trip['tr_reporteddate'] else today_dt
+            
+            # Effective overlap within the selected month
+            eff_start = max(t_start, month_start)
+            eff_end = min(t_end, month_end)
+            
+            if eff_start <= eff_end:
+                # Add all dates in this range to the set
+                curr = eff_start
+                while curr <= eff_end:
+                    utilized_days_set.add(curr)
+                    curr += timezone.timedelta(days=1)
+
+        utilized_days_count = len(utilized_days_set)
+
         data_rows.append([
             counter,
             vehicle.vm_registrationnumber,
             safe_str(vehicle.vm_vehicletype),
-            f"{from_date.strftime('%d-%m-%Y')} to {to_date.strftime('%d-%m-%Y')}",
-            "Available"
+            utilized_days_count
         ])
         counter += 1
 
-    # -----------------------------
-    # CONTEXT
-    # -----------------------------
     all_vehicles = VehiclemasterInfo.objects.filter(
-        vm_ownership_id__in=[1, 2] # Usually own vehicles
+        vm_ownership_id__in=[1, 2]
     ).order_by('vm_registrationnumber')
-    
-    if not all_vehicles.exists():
-        all_vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
 
     context = {
         'first_name': first_name,
-        'headers': [
-            "S.No",
-            "Vehicle Number",
-            "Vehicle Type",
-            "Date Range",
-            "Status"
-        ],
+        'form': form,
+        'headers': VEH_UTILIZATION_HEADERS if 'VEH_UTILIZATION_HEADERS' in locals() else VEHICLE_UTILIZATION_HEADERS,
         'data_rows': data_rows,
-        'from_date': from_date.strftime("%Y-%m-%d"),
-        'to_date': to_date.strftime("%Y-%m-%d"),
+        'selected_month': str(month_int),
+        'selected_year': str(year_int),
         'all_vehicles': all_vehicles,
         'vehicle_search': vehicle_search,
-        'branch': branch,
     }
 
     return render(
         request,
-        "asset_mgt_app/vehicle_status_report.html",
+        "asset_mgt_app/vehicle_utilization_report.html",
         context
     )
 
@@ -2562,3 +2592,103 @@ def own_vs_market_sales_report_view(request):
         'dept_id': dept_id,
     }
     return render(request, "asset_mgt_app/own_vs_market_sales_report.html", context)
+
+
+@login_required(login_url='login_page')
+def enquiry_pending_report_view(request):
+    from ..models import EnquirynoteInfo, Enquirynotevehicle, Vehicle_allotmentInfo, StatusList
+    first_name = request.session.get('first_name')
+
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+
+    customer_id = request.POST.get('dmr_customer')
+    from_loc_id = request.POST.get('from_location')
+    to_loc_id = request.POST.get('to_location')
+    from_date = request.POST.get('date_from')
+    to_date = request.POST.get('date_to')
+    branch = request.POST.get('branch')
+
+    # Status 6 = Pending
+    enquiries = EnquirynoteInfo.objects.filter(en_status_id=6).select_related(
+        'en_customername', 'en_customerdepartment', 'en_fromlocaion', 'en_tolocation'
+    )
+
+    if branch == "Bengaluru":
+        enquiries = enquiries.filter(en_enquirynumber__istartswith="BLR")
+    elif branch == "Chennai":
+        enquiries = enquiries.filter(en_enquirynumber__istartswith="MAA")
+
+    if customer_id:
+        enquiries = enquiries.filter(en_customername_id=customer_id)
+    if from_loc_id:
+        enquiries = enquiries.filter(en_fromlocaion_id=from_loc_id)
+    if to_loc_id:
+        enquiries = enquiries.filter(en_tolocation_id=to_loc_id)
+    if from_date:
+        enquiries = enquiries.filter(en_created_at__date__gte=from_date)
+    if to_date:
+        enquiries = enquiries.filter(en_created_at__date__lte=to_date)
+
+    enquiries = enquiries.order_by('-en_created_at')
+
+    # Prefetch data for efficiency
+    enquiry_ids = [enq.id for enq in enquiries]
+    
+    # Vehicle Requests mapping
+    vehicle_requests = Enquirynotevehicle.objects.filter(env_enquirynumber_id__in=enquiry_ids).select_related('env_vehicletype')
+    req_map = {}
+    for vr in vehicle_requests:
+        req_map.setdefault(vr.env_enquirynumber_id, []).append(f"{vr.env_quantity} x {vr.env_vehicletype}")
+    
+    # Vehicle Allotments mapping
+    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids).select_related('va_vehiclenumber')
+    allot_map = {}
+    for va in allotments:
+        reg_no = va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else va.va_vehiclenumber_mkt
+        if reg_no:
+            allot_map.setdefault(va.va_enquirynumber_id, []).append(str(reg_no))
+
+    data_rows = []
+    for idx, enq in enumerate(enquiries, start=1):
+        # Vehicle Requested
+        req_list = req_map.get(enq.id, [])
+        veh_req_str = ", ".join(req_list)
+        
+        # Vehicle Type
+        # Extract unique types from req_list
+        veh_types = ", ".join(list(set([r.split(" x ")[-1] for r in req_list])))
+
+        # Vehicle Placed
+        places_list = allot_map.get(enq.id, [])
+        places_str = ", ".join(places_list) if places_list else "0"
+
+        row = [
+            idx,
+            safe_str(enq.en_created_at.strftime('%d-%m-%Y')) if enq.en_created_at else "",
+            safe_str(enq.en_enquirynumber),
+            safe_str(enq.en_fromlocaion),
+            safe_str(enq.en_tolocation),
+            veh_req_str,
+            places_str,
+            veh_types,
+            safe_str(enq.en_customername),
+            safe_str(" ")  # Reason field as requested by user
+        ]
+        data_rows.append(row)
+
+    context = {
+        'first_name': first_name,
+        'form': form,
+        'headers': ENQUIRY_PENDING_HEADERS,
+        'data_rows': data_rows,
+        'customer_id': customer_id,
+        'from_location': from_loc_id,
+        'to_location': to_loc_id,
+        'date_from': from_date,
+        'date_to': to_date,
+        'selected_branch': branch,
+    }
+    return render(request, "asset_mgt_app/enquiry_pending_report.html", context)
