@@ -841,7 +841,7 @@ def vendor_filter(request):
             vr1_tolocation=to_location
         ).select_related('vr1_vendor').values(
             'vr1_vendor__id',
-            'vr1_vendor__vend_name'  # ✅ Use actual field name
+            'vr1_vendor__vend_name'
         ).distinct()
 
         vendor_list = [
