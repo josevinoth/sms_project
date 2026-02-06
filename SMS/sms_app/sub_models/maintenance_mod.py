@@ -16,7 +16,7 @@ class MaintenanceInfo(models.Model):
         on_delete=models.PROTECT,
         null=True,
         blank=True,
-        db_column='driver_name'
+        db_column='driver_name_id'
     )
     est_delivery = models.DateTimeField()
     work_area = models.CharField(max_length=100)
