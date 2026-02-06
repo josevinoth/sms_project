@@ -232,3 +232,4 @@ from .sub_models.driver_master_mod import DrivermasterInfo
 from .sub_models.trans_invoice_mod import TransInvoiceInfo
 from .sub_models.maintenance_mod import MaintenanceInfo
 from .sub_models.stock_maintenance_mod import StockMaintenance
+from .sub_models.market_bill_mod import MarketBillInfo
