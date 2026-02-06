@@ -61,27 +61,27 @@
             <tbody>
                 {% for m in maintenance_list %}
                 <tr>
-                    <td>{{ m.job_card_no }}</td>
-                    <td>{{ m.make_model }}</td>
-                    <td>{{ m.vehicle }}</td>
-                    <td>{{ m.registration_date }}</td>
-                    <td>{{ m.chassis_no }}</td>
-                    <td>{{ m.engine_no }}</td>
-                    <td>{{ m.current_km }}</td>
-                    <td>{{ m.total_km_run }}</td>
-                    <td>{{ m.service_type }}</td>
-                    <td>{{ m.driver_name }}</td>
-                    <td>{{ m.technician }}</td>
-                    <td>{{ m.est_delivery|date:"d-m-Y H:i" }}</td>
-                    <td>{{ m.work_area }}</td>
-                    <td>{{ m.complaint }}</td>
-                    <td>{{ m.description }}</td>
-                    <td>{{ m.remarks }}</td>
-                    <td>{{ m.job_card_creator }}</td>
-                    <td>{{ m.job_card_created_on|date:"d-m-Y H:i" }}</td>
-                    <td>{{ m.updated_by }}</td>
+                    <td>{{ m.mi_job_card_no }}</td>
+                    <td>{{ m.mi_make_model }}</td>
+                    <td>{{ m.mi_vehicle }}</td>
+                    <td>{{ m.mi_registration_date }}</td>
+                    <td>{{ m.mi_chassis_no }}</td>
+                    <td>{{ m.mi_engine_no }}</td>
+                    <td>{{ m.mi_current_km }}</td>
+                    <td>{{ m.mi_total_km_run }}</td>
+                    <td>{{ m.mi_service_type }}</td>
+                    <td>{{ m.mi_driver_name }}</td>
+                    <td>{{ m.mi_technician }}</td>
+                    <td>{{ m.mi_est_delivery|date:"d-m-Y H:i" }}</td>
+                    <td>{{ m.mi_work_area }}</td>
+                    <td>{{ m.mi_complaint }}</td>
+                    <td>{{ m.mi_description }}</td>
+                    <td>{{ m.mi_remarks }}</td>
+                    <td>{{ m.mi_job_card_creator }}</td>
+                    <td>{{ m.mi_job_card_created_on|date:"d-m-Y H:i" }}</td>
+                    <td>{{ m.mi_updated_by }}</td>
                     <td><!-- approval status label -->
-                        {{ m.get_approval_status_display }}
+                        {{ m.get_mi_approval_status_display }}
                     </td>
                     <!-- EDIT -->
                     <td class="text-center">

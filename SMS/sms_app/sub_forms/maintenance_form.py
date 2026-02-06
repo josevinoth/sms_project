@@ -11,7 +11,7 @@ class MaintenanceForm(forms.ModelForm):
         empty_label="Select Registration No"
     )
 
-    driver_name = forms.ModelChoiceField(
+    mi_driver_name = forms.ModelChoiceField(
         queryset=DrivermasterInfo.objects.all().order_by('dm_name'),
         empty_label='-- Select Driver --',
         required=False,
@@ -19,7 +19,7 @@ class MaintenanceForm(forms.ModelForm):
         label='Driver'
     )
 
-    est_delivery = forms.DateTimeField(
+    mi_est_delivery = forms.DateTimeField(
         widget=forms.DateTimeInput(
             attrs={"type": "datetime-local", "class": "form-control"},
             format="%Y-%m-%dT%H:%M"
@@ -31,49 +31,48 @@ class MaintenanceForm(forms.ModelForm):
     class Meta:
         model = MaintenanceInfo
         exclude = (
-            "vehicle",
-            "job_card_creator",
-            "job_card_created_on",
-            "created_at",
-            "updated_at",
-            "updated_by",
-            "bay_no",
-            "job_card_no",
+            "mi_vehicle",
+            "mi_job_card_creator",
+            "mi_job_card_created_on",
+            "mi_created_at",
+            "mi_updated_at",
+            "mi_updated_by",
+            "mi_job_card_no",
         )
         widgets = {
-            "complaint": forms.Select(attrs={"class": "form-control"}),
+            "mi_complaint": forms.Select(attrs={"class": "form-control"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Format est_delivery for datetime-local input
-        if self.instance and self.instance.pk and self.instance.est_delivery:
-            self.initial['est_delivery'] = self.instance.est_delivery.strftime("%Y-%m-%dT%H:%M")
+        if self.instance and self.instance.pk and self.instance.mi_est_delivery:
+            self.initial['mi_est_delivery'] = self.instance.mi_est_delivery.strftime("%Y-%m-%dT%H:%M")
 
         # Make readonly fields not required (they are populated via JS and may not submit)
-        readonly_fields = ['make_model', 'registration_date', 'chassis_no', 'engine_no']
+        readonly_fields = ['mi_make_model', 'mi_registration_date', 'mi_chassis_no', 'mi_engine_no']
         for field_name in readonly_fields:
             if field_name in self.fields:
                 self.fields[field_name].required = False
 
         # ✅ Disable approval_status field (read-only in UI)
-        if "approval_status" in self.fields:
+        if "mi_approval_status" in self.fields:
            # show the current value when editing, or the model default when creating
            try:
                if getattr(self.instance, 'pk', None):
                    # editing existing instance: use its value
-                   self.fields["approval_status"].initial = self.instance.approval_status
+                   self.fields["mi_approval_status"].initial = self.instance.mi_approval_status
                else:
                    # new form: use the model field default
-                   self.fields["approval_status"].initial = (
-                       self._meta.model._meta.get_field('approval_status').default
+                   self.fields["mi_approval_status"].initial = (
+                       self._meta.model._meta.get_field('mi_approval_status').default
                    )
            except Exception:
                # fallback to 1 if anything goes wrong
-               self.fields["approval_status"].initial = 1
+               self.fields["mi_approval_status"].initial = 1
 
            # keep it disabled (read-only) but ensure the bootstrap class is applied
-           self.fields["approval_status"].disabled = True
-           self.fields["approval_status"].widget.attrs.update({"class": "form-control"})
+           self.fields["mi_approval_status"].disabled = True
+           self.fields["mi_approval_status"].widget.attrs.update({"class": "form-control"})
 

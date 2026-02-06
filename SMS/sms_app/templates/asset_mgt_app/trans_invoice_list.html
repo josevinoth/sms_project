@@ -33,71 +33,68 @@
     <div class="table-responsive shadow-box-table p-3">
         <table class="table table-striped table-bordered" id="trans_invoice_list">
             <thead class="thead-dark">
-<tr>
-    <th>Invoice Date</th>
-    <th>Invoice No</th>
-    <th>Customer</th>
-    <th>Customer Short Name</th>
-    <th>GST IN</th>
-    <th>State</th>
-    <th>Total Charges</th>
-    <th>Trans Invoice List</th>
-    <th>Excel</th>
-    <th>Edit</th>
-    <th>Delete</th>
-</tr>
-</thead>
+                <tr>
+                    <th>Invoice Date</th>
+                    <th>Invoice No</th>
+                    <th>Customer</th>
+                    <th>Customer Short Name</th>
+                    <th>GST IN</th>
+                    <th>State</th>
+                    <th>Total Charges</th>
+                    <th>Tally to Excel</th>
+                    <th>Excel</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
 
 
-           <tbody>
-{% for invoice in trans_invoice_list %}
-<tr>
-    <td>{{ invoice.ti_inv_date }}</td>
-    <td>{{ invoice.ti_inv_no }}</td>
-    <td>{{ invoice.ti_customer }}</td>
-    <td>{{ invoice.ti_customer_short_name }}</td>
-    <td>{{ invoice.ti_gst_in }}</td>
-    <td>{{ invoice.ti_state }}</td>
-    <td><strong>{{ invoice.ti_total }}</strong></td>
+            <tbody>
+                {% for invoice in trans_invoice_list %}
+                <tr>
+                    <td>{{ invoice.ti_inv_date }}</td>
+                    <td>{{ invoice.ti_inv_no }}</td>
+                    <td>{{ invoice.ti_customer_short_name }}</td>
+                    <td>{{ invoice.ti_customer }}</td>
+                    <td>{{ invoice.ti_gst_in }}</td>
+                    <td>{{ invoice.ti_state }}</td>
+                    <td><strong>{{ invoice.ti_total }}</strong></td>
 
-    <!-- Trans Invoice List -->
-    <td class="text-center">
-        <a href="{% url 'trans_invoice_list_woh' invoice.ti_customer.id %}"
-           class="btn btn-sm btn-warning">
-            <i class="fas fa-list"></i>
-        </a>
-    </td>
+                    <!-- Tally to Excel -->
+                    <td class="text-center">
+                        <a href="{% url 'trans_invoice_tally_excel' invoice.ti_customer.id %}"
+                            class="btn btn-sm btn-info" title="Tally to Excel">
+                            <i class="fas fa-file-invoice"></i>
+                        </a>
+                    </td>
 
-    <!-- Excel -->
-    <td class="text-center">
-        <a href="{% url 'trans_invoice_excel' invoice.ti_inv_no %}"
-           class="btn btn-sm btn-success">
-            <i class="fas fa-file-excel"></i>
-        </a>
-    </td>
+                    <!-- Excel -->
+                    <td class="text-center">
+                        <a href="{% url 'trans_invoice_excel' invoice.ti_inv_no %}" class="btn btn-sm btn-success">
+                            <i class="fas fa-file-excel"></i>
+                        </a>
+                    </td>
 
-    <!-- Edit -->
-    <td class="text-center">
-        <a href="{% url 'trans_invoice_edit' invoice.id %}"
-           class="btn btn-sm btn-primary">
-            <i class="far fa-edit"></i>
-        </a>
-    </td>
+                    <!-- Edit -->
+                    <td class="text-center">
+                        <a href="{% url 'trans_invoice_edit' invoice.id %}" class="btn btn-sm btn-primary">
+                            <i class="far fa-edit"></i>
+                        </a>
+                    </td>
 
-    <!-- Delete -->
-    <td class="text-center">
-        <form action="{% url 'trans_invoice_delete' invoice.id %}"
-              method="post"
-              onsubmit="return confirm('Are you sure you want to delete this invoice?');">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-danger">
-                <i class="fas fa-trash-alt"></i>
-            </button>
-        </form>
-    </td>
-</tr>
-{% endfor %}
-</tbody>
+                    <!-- Delete -->
+                    <td class="text-center">
+                        <form action="{% url 'trans_invoice_delete' invoice.id %}" method="post"
+                            onsubmit="return confirm('Are you sure you want to delete this invoice?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
 
         </table>
     </div>
@@ -105,27 +102,27 @@
 
 <!-- ================= DATATABLE ================= -->
 <script>
-$(document).ready(function () {
-    $('#trans_invoice_list').DataTable({
-        scrollX: true,
-        autoWidth: false,
-        responsive: false,
-        order: [],
-        pageLength: 10,
-        lengthMenu: [5, 10, 25, 50],
-        dom:
-            "<'row mb-2'<'col-md-6'l><'col-md-6 text-end'f>>" +
-            "<'row mb-2'<'col-md-12'B>>" +
-            "<'row'<'col-md-12'tr>>" +
-            "<'row mt-2'<'col-md-5'i><'col-md-7'p>>",
-        buttons: [
-            { extend: 'copy', className: 'btn btn-secondary btn-sm' },
-            { extend: 'csv', className: 'btn btn-secondary btn-sm' },
-            { extend: 'excel', className: 'btn btn-secondary btn-sm' },
-            { extend: 'print', className: 'btn btn-secondary btn-sm' }
-        ]
+    $(document).ready(function () {
+        $('#trans_invoice_list').DataTable({
+            scrollX: true,
+            autoWidth: false,
+            responsive: false,
+            order: [],
+            pageLength: 10,
+            lengthMenu: [5, 10, 25, 50],
+            dom:
+                "<'row mb-2'<'col-md-6'l><'col-md-6 text-end'f>>" +
+                "<'row mb-2'<'col-md-12'B>>" +
+                "<'row'<'col-md-12'tr>>" +
+                "<'row mt-2'<'col-md-5'i><'col-md-7'p>>",
+            buttons: [
+                { extend: 'copy', className: 'btn btn-secondary btn-sm' },
+                { extend: 'csv', className: 'btn btn-secondary btn-sm' },
+                { extend: 'excel', className: 'btn btn-secondary btn-sm' },
+                { extend: 'print', className: 'btn btn-secondary btn-sm' }
+            ]
+        });
     });
-});
 </script>
 
 

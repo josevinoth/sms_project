@@ -97,10 +97,10 @@ def trans_invoice_add(request):
             customer_name = str(cust).upper() if cust else ""
 
             if cust:
-                invoice.ti_gst_in = getattr(cust, 'cu_gst', '') or invoice.ti_gst_in
-                invoice.ti_pincode = getattr(cust, 'cu_pincode', '') or invoice.ti_pincode
+                invoice.ti_gst_in = getattr(cust, 'CustomerInfo.cu_gst', '') or invoice.ti_gst_in
+                invoice.ti_pincode = getattr(cust, 'CustomerInfo.cu_pincode', '') or invoice.ti_pincode
                 invoice.ti_customer_short_name = (
-                    getattr(cust, 'cu_nameshort', '') or invoice.ti_customer_short_name
+                    getattr(cust, 'CustomerInfo.cu_nameshort', '') or invoice.ti_customer_short_name
                 )
 
             if "MAA" in customer_name:
@@ -628,15 +628,12 @@ def trans_invoice_add_woh(request):
 
     return JsonResponse({'status': 'success'})
 
-def trans_invoice_excel(request, invoice_no):
 
-    # 🔹 FETCH DATA (USE FK PROPERLY)
+def trans_invoice_excel(request, invoice_no):
     # 🔹 FETCH DATA (MATCHING WOH LIST LOGIC - BY CUSTOMER)
-    # First, identify the customer from the passed invoice_no
     first_record = TransInvoiceInfo.objects.filter(ti_inv_no=invoice_no).first()
     
     if not first_record:
-        # Graceful fallback if invoice not found, though unlikely via UI
         qs = TransInvoiceInfo.objects.none()
     else:
         customer = first_record.ti_customer
@@ -657,111 +654,51 @@ def trans_invoice_excel(request, invoice_no):
 
     # 🔹 HEADERS
     headers = [
-        "INV DATE",
-        "Customer Name",
-        "GST IN",
-        "State",
-        "Pincode",
-
-        "INV NO",
-        "Branch",
-        "Vehicle Source",
-        "Customer Short Name",
-
-        "Tally Veh No",
         "Planning Date",
         "Cnote No",
-
         "From",
         "To",
-        "Department",
-
-        "Vehicle No",
-        "Vehicle Type",
-
-        "Vehicle Placed Date & Time",
-        "Vehicle Released Date & Time",
-        "Vehicle Arrived Date & Time",
-        "Vehicle Dispatched Date & Time",
-
+        "Dept",
+        "Veh No",
+        "Veh Type",
+        "Veh reported Date & Time at Loading Point",
+        "Veh started Date & Time at Loading Point",
+        "Veh Reported Date & Time at unloading Point",
+        "Trip Closed Date & Time at Unloading Point",
         "Consignee",
         "Reference No",
         "HAWB No",
-
-        "No. of Pcs",
+        "No.of Pcs",
         "Weight",
-
         "Transportation Charges",
-        "Toll Charges",
+        "TOLL CHARGES",
         "Parking Charges",
         "Loading Charges",
         "Unloading Charges",
-        "Halting Charges",
-        "Docket Charges",
-        "Weighment Charges",
-        "Handling Charges",
+        "HALTING CHARGES",
+        "DOCKET CHARGES",
+        "WEIGHMENT CHARGES",
+        "Transportation Handling Charges",
         "Cancellation Charges",
-
         "TOTAL"
     ]
     ws.append(headers)
 
-    # 🔹 COLUMN WIDTH (FIX ##### ISSUE)
-    ws.column_dimensions["A"].width = 15
-    ws.column_dimensions["K"].width = 18
-    ws.column_dimensions["R"].width = 22
-    ws.column_dimensions["S"].width = 22
-    ws.column_dimensions["T"].width = 22
-    ws.column_dimensions["U"].width = 22
+    # 🔹 COLUMN WIDTH
+    ws.column_dimensions["A"].width = 18
+    ws.column_dimensions["H"].width = 25
+    ws.column_dimensions["I"].width = 25
+    ws.column_dimensions["J"].width = 25
+    ws.column_dimensions["K"].width = 25
 
-    # safe attribute helper
-    def sget(o, attr):
-        try:
-            if o is None:
-                return ""
-            val = getattr(o, attr)
-            return "" if val is None else val
-        except Exception:
-            return ""
-    # alias backwards-compatible name used in previous edits
-    safe = sget
-
-    # 🔹 DATA ROWS
     def safe(val):
         return val if val is not None else ""
 
     for obj in qs:
-
-        # 🔹 1️⃣ GET CONSIGNMENT (fallback if FK missing)
-        cons = obj.ti_consignment
-
-        if not cons:
-            cons = (
-                ConsignmentdetailInfo.objects
-                .filter(co_customer=obj.ti_customer)
-                .order_by('-id')
-                .first()
-            )
-
-        # 🔹 2️⃣ GET TRIP
+        # Resolve related objects safely
         trip = obj.ti_trip
-        if not trip and cons:
-            trip = (
-                TripdetailInfo.objects
-                .filter(tr_consignmentnumber=cons)
-                .order_by('-id')
-                .first()
-            )
-
-        # 🔹 3️⃣ GET GOODS
+        cons = obj.ti_consignment
         goods = obj.ti_goods
-        if not goods and cons:
-            goods = (
-                ConsignmentgoodsInfo.objects
-                .filter(cg_consignmentnumber=cons)
-                .order_by('-id')
-                .first()
-            )
 
         # Calculate Trip Total dynamically
         trip_total = 0.0
@@ -780,61 +717,36 @@ def trans_invoice_excel(request, invoice_no):
             )
 
         ws.append([
-            safe(obj.ti_inv_date),
-            safe(str(trip.tr_enquirynumber.en_customername) if trip and getattr(trip, 'tr_enquirynumber', None) else ""),  # from Trip
-            safe(obj.ti_gst_in),
-            safe(obj.ti_state),
-            safe(obj.ti_pincode),
-            # safe(obj.ti_inv_no), # User requested removal of INV NO in list, maybe in excel too? Keeping it as per header but list logic removed it.
-            # Wait, headers still have INV NO. Let's keep it but formatted correctly or empty if requested?
-            # User said "data in trans_invoice_list_WOH must be downloaded". WOH list DOES NOT show INV NO.
-            # But header list has "INV NO". I will keep it for now as per existing header.
-            safe(obj.ti_inv_no),
-
-            safe(obj.ti_branch),
-            safe(str(trip.tr_vehiclesource) if trip and getattr(trip, 'tr_vehiclesource', None) else ""),
-            safe(str(trip.tr_enquirynumber.en_customername) if trip and getattr(trip, 'tr_enquirynumber', None) else ""),  # from Trip (Short Name)
-            safe(get_tally_vehicle_no(obj)),
-            safe(str(trip.tr_departeddate) if trip and getattr(trip, 'tr_departeddate', None) else ""),
-
-            safe(str(cons.co_consignmentnumber) if cons and getattr(cons, 'co_consignmentnumber', None) else ""),
-            safe(str(trip.tr_departedlocation) if trip and getattr(trip, 'tr_departedlocation', None) else ""),
-            safe(str(trip.tr_reportedlocation) if trip and getattr(trip, 'tr_reportedlocation', None) else ""),
+            safe(str(trip.tr_departeddate) if trip else ""),
+            safe(str(cons.co_consignmentnumber) if cons else ""),
+            safe(str(trip.tr_departedlocation) if trip else ""),
+            safe(str(trip.tr_reportedlocation) if trip else ""),
             safe(obj.ti_department),
-
-            safe(str(trip.tr_vehiclenumber) if trip and getattr(trip, 'tr_vehiclenumber', None) else ""),
-            safe(str(trip.tr_vehicletype) if trip and getattr(trip, 'tr_vehicletype', None) else ""),
-
-            safe(str(trip.tr_departeddate_pickup) if trip and getattr(trip, 'tr_departeddate_pickup', None) else ""),
-            safe(str(trip.tr_dock_out_time) if trip and getattr(trip, 'tr_dock_out_time', None) else ""),
-            safe(str(trip.tr_reporteddate) if trip and getattr(trip, 'tr_reporteddate', None) else ""),
-            safe(str(trip.tr_departeddate_delivery) if trip and getattr(trip, 'tr_departeddate_delivery', None) else ""),
-
-            safe(str(goods.cg_consignee) if goods and getattr(goods, 'cg_consignee', None) else ""),
-            safe(str(cons.co_cusrefnum) if cons and getattr(cons, 'co_cusrefnum', None) else ""),
-            safe(str(goods.cg_hawbno) if goods and getattr(goods, 'cg_hawbno', None) else ""),
-
-            safe(str(goods.cg_qty) if goods and getattr(goods, 'cg_qty', None) else ""),
-            safe(str(goods.cg_weight) if goods and getattr(goods, 'cg_weight', None) else ""),
-
+            safe(str(trip.tr_vehiclenumber) if trip else ""),
+            safe(str(trip.tr_vehicletype) if trip else ""),
+            safe(str(trip.tr_departeddate_pickup) if trip else ""),
+            safe(str(trip.tr_dock_out_time) if trip else ""),
+            safe(str(trip.tr_reporteddate) if trip else ""),
+            safe(str(trip.tr_departeddate_delivery) if trip else ""),
+            safe(str(goods.cg_consignee) if goods else ""),
+            safe(str(cons.co_cusrefnum) if cons else ""),
+            safe(str(goods.cg_hawbno) if goods else ""),
+            safe(str(goods.cg_qty) if goods else ""),
+            safe(str(goods.cg_weight) if goods else ""),
             safe(trip.tc_tripcost if trip else 0),
             safe(trip.tc_tollcost if trip else 0),
             safe(trip.tc_parkingcost if trip else 0),
             safe(trip.tc_loadingcost if trip else 0),
             safe(trip.tc_unloadingcost if trip else 0),
             safe(trip.tc_haltingcost if trip else 0),
-            # safe(obj.ti_docket_charges), # Trip doesn't have docket charges, using obj or 0? List uses trip. Let's use 0 or check if trip has it. Trip model check previously showed no docket.
-            safe(0), # Docket
+            safe(0), # DOCKET CHARGES (Placeholder as not in trip)
             safe(trip.tc_weighmentcost if trip else 0),
             safe(trip.tc_handlingcost if trip else 0),
             safe(trip.tc_cancellation if trip else 0),
-
             safe(trip_total)
         ])
 
-    # 🔹 RESPONSE — write workbook to a BytesIO buffer then return bytes
     from io import BytesIO
-
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
@@ -843,9 +755,7 @@ def trans_invoice_excel(request, invoice_no):
         buffer.getvalue(),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    response["Content-Disposition"] = (
-        f'attachment; filename="WOH_invoice_{invoice_no}.xlsx"'
-    )
+    response["Content-Disposition"] = f'attachment; filename="WOH_invoice_{invoice_no}.xlsx"'
 
     return response
 
@@ -884,3 +794,117 @@ def get_tally_vehicle_no(invoice):
         return "MKT"
 
     return ""
+
+
+@login_required(login_url='login_page')
+def trans_invoice_tally_excel(request, customer_id):
+    customer = get_object_or_404(CustomerInfo, id=customer_id)
+    
+    # Fetch trips where is_woh=True for this customer
+    qs = (
+        TransInvoiceInfo.objects
+        .filter(ti_customer=customer, is_woh=True)
+        .select_related(
+            "ti_customer",
+            "ti_trip",
+            "ti_consignment",
+            "ti_goods"
+        )
+    )
+
+    if not qs.exists():
+        messages.warning(request, "No invoices found in WOH list for this customer.")
+        return redirect('trans_invoice_list')
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Tally Export"
+
+    # 🔹 HEADERS (Specialized for Tally)
+    headers = [
+        "DATE",
+        "SUNDRY DEBTORS",
+        "STATE",
+        "PINCODE",
+        "VOUCHER NO.",
+        "PRIMARY COST CATEGORY",
+        "CUSTOMER",
+        "JOB NO.",
+        "VEHICLE NUMBER",
+        "Transportation Charges",
+        "Toll Charges",
+        "Parking Charges",
+        "Loading Charges",
+        "Unloading Charges",
+        "Halting Charges",
+        "Docket Charges",
+        "Weighment Charges",
+        "EXTRA KM CHARGES",
+        "EXTRA HOUR CHARGES",
+        "TRANSPORTATION HANDLING CHARGES",
+        "TOTAL"
+    ]
+    ws.append(headers)
+
+    # 🔹 COLUMN WIDTH
+    ws.column_dimensions["A"].width = 15
+    ws.column_dimensions["B"].width = 25
+    ws.column_dimensions["C"].width = 10
+    ws.column_dimensions["D"].width = 10
+    ws.column_dimensions["E"].width = 15
+
+    def safe(val):
+        return val if val is not None else ""
+
+    for obj in qs:
+        trip = obj.ti_trip
+        cons = obj.ti_consignment
+        
+        # Calculate Total based on the specific fields being displayed
+        total_val = (
+            (obj.ti_transportation_charges or 0) +
+            (obj.ti_toll_charges or 0) +
+            (obj.ti_parking_charges or 0) +
+            (obj.ti_loading_charges or 0) +
+            (obj.ti_unloading_charges or 0) +
+            (obj.ti_halting_charges or 0) +
+            (obj.ti_docket_charges or 0) +
+            (obj.ti_weighment_charges or 0) +
+            (obj.ti_handling_charges or 0)
+        )
+
+        ws.append([
+            safe(obj.ti_inv_date),
+            safe(obj.ti_customer_short_name),
+            safe(obj.ti_state),
+            safe(obj.ti_pincode),
+            safe(obj.ti_inv_no),
+            safe(str(trip.tr_vehiclesource) if trip and trip.tr_vehiclesource else ""),
+            safe(str(customer.cu_name).strip().upper()),
+            safe(str(cons.co_consignmentnumber) if cons else ""),
+            safe(get_tally_vehicle_no(obj)),
+            safe(obj.ti_transportation_charges or 0),
+            safe(obj.ti_toll_charges or 0),
+            safe(obj.ti_parking_charges or 0),
+            safe(obj.ti_loading_charges or 0),
+            safe(obj.ti_unloading_charges or 0),
+            safe(obj.ti_halting_charges or 0),
+            safe(obj.ti_docket_charges or 0),
+            safe(obj.ti_weighment_charges or 0),
+            safe(0), # EXTRA KM CHARGES
+            safe(0), # EXTRA HOUR CHARGES
+            safe(obj.ti_handling_charges or 0), # TRANSPORTATION HANDLING CHARGES
+            safe(total_val)
+        ])
+
+    from io import BytesIO
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="Tally_Export_{customer.cu_nameshort or customer.id}.xlsx"'
+    return response

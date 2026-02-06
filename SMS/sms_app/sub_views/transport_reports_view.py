@@ -2099,12 +2099,12 @@ def maintenance_report_view(request):
 
     # Base Query
     maintenance_records = MaintenanceInfo.objects.all().select_related(
-        'vehicle', 'vehicle__vm_vehicletype', 'vehicle__vm_vehiclemanufacturer'
-    ).order_by('vehicle__vm_registrationnumber', '-created_at')
+        'mi_vehicle', 'mi_vehicle__vm_vehicletype', 'mi_vehicle__vm_vehiclemanufacturer'
+    ).order_by('mi_vehicle__vm_registrationnumber', '-mi_created_at')
 
     # Filters
     if vehicle_search:
-        maintenance_records = maintenance_records.filter(vehicle__vm_registrationnumber__icontains=vehicle_search)
+        maintenance_records = maintenance_records.filter(mi_vehicle__vm_registrationnumber__icontains=vehicle_search)
     #
     #     if selected_month and selected_month != '0':
     #         maintenance_records = maintenance_records.filter(created_at__month=selected_month)
@@ -2123,7 +2123,7 @@ def maintenance_report_view(request):
     # We can pre-group by vehicle to make this faster
     vehicle_groups = {}
     for rec in records_list:
-        v_id = rec.vehicle_id
+        v_id = rec.mi_vehicle_id
         if v_id not in vehicle_groups:
             vehicle_groups[v_id] = []
         vehicle_groups[v_id].append(rec)
@@ -2134,7 +2134,7 @@ def maintenance_report_view(request):
     # We want to show the filtered range.
     for rec in records_list:
         # Find previous in the group
-        group = vehicle_groups.get(rec.vehicle_id, [])
+        group = vehicle_groups.get(rec.mi_vehicle_id, [])
         # group is ordered desc by created_at. rec is in group.
         # Find index of rec
         try:
@@ -2145,20 +2145,20 @@ def maintenance_report_view(request):
         
         # Safely access vehicle fields
         try:
-            vehicle_no = safe_str(rec.vehicle.vm_registrationnumber) if rec.vehicle else ""
-            vehicle_type = safe_str(rec.vehicle.vm_vehicletype) if rec.vehicle and rec.vehicle.vm_vehicletype else ""
+            vehicle_no = safe_str(rec.mi_vehicle.vm_registrationnumber) if rec.mi_vehicle else ""
+            vehicle_type = safe_str(rec.mi_vehicle.vm_vehicletype) if rec.mi_vehicle and rec.mi_vehicle.vm_vehicletype else ""
         except:
             vehicle_no = ""
             vehicle_type = ""
             
-        make = safe_str(rec.make_model)
+        make = safe_str(rec.mi_make_model)
         
         # Branch - Logic similar to other reports if possible, but MaintenanceInfo doesn't have location directly usually.
         # We can try to infer from user or just leave blank/dash for now as it wasn't in model
         branch = "" 
         
         job_card_no = rec.id # fallback
-        prev_job_card_date = prev_rec.created_at.strftime("%d-%m-%Y") if prev_rec and prev_rec.created_at else ""
+        prev_job_card_date = prev_rec.mi_created_at.strftime("%d-%m-%Y") if prev_rec and prev_rec.mi_created_at else ""
         prev_job_card_no = prev_rec.id if prev_rec else ""
         
         row = [
@@ -2168,18 +2168,18 @@ def maintenance_report_view(request):
             vehicle_type,
             make,
             "", # PO Date (Not available)
-            safe_str(rec.service_type),
+            safe_str(rec.mi_service_type),
             job_card_no,
             prev_job_card_date,
             prev_job_card_no,
-            rec.est_delivery.strftime("%d-%m-%Y %H:%M") if rec.est_delivery else "",
+            rec.mi_est_delivery.strftime("%d-%m-%Y %H:%M") if rec.mi_est_delivery else "",
             "", # Expected Amount (Is this estimated_amount?)
-            safe_str(rec.technician), # Using Technician as Vendor Name? Or driver? Requirement says "Vendor Name". Maintenance info has technician.
-            rec.job_card_created_on.strftime("%d-%m-%Y") if rec.job_card_created_on else "", # Assigned Date -> job_card_created_on
+            safe_str(rec.mi_technician), # Using Technician as Vendor Name? Or driver? Requirement says "Vendor Name". Maintenance info has technician.
+            rec.mi_job_card_created_on.strftime("%d-%m-%Y") if rec.mi_job_card_created_on else "", # Assigned Date -> job_card_created_on
             "", # Bill Amount Date
-            safe_num(rec.estimated_amount),
-            rec.total_km_run,
-            rec.est_delivery.strftime("%d-%m-%Y") if rec.est_delivery else "", # Delivery Date -> Est Delivery?
+            safe_num(rec.mi_estimated_amount),
+            rec.mi_total_km_run,
+            rec.mi_est_delivery.strftime("%d-%m-%Y") if rec.mi_est_delivery else "", # Delivery Date -> Est Delivery?
             "", # Bill Amount
             ""  # Bill Date
         ]
