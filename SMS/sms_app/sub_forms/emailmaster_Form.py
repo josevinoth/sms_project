@@ -7,7 +7,7 @@ class EmailmasterForm(forms.ModelForm):
 
     class Meta:
         model = Emailmaster
-        fields = '__all__'
+        exclude = ('em_updated_at', 'em_updated_by')
 
     def __init__(self, *args, **kwargs):
         super(EmailmasterForm,self).__init__(*args, **kwargs)

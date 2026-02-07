@@ -1,0 +1,464 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<form id="marketBillForm" method="POST">
+    {% csrf_token %}
+
+    <div class="container-fluid">
+        <div class="card text-white bg-info mb-3" style="max-width:100%;">
+
+            <!-- ================= HEADER ================= -->
+            <div class="card-header d-flex justify-content-center align-items-center">
+                <h3 class="mb-0">Market Bill</h3>
+            </div>
+
+            <!-- ================= BODY ================= -->
+            <div class="card-body bg-light pt-2 pb-2">
+
+                <!-- ================= ROW 1 : FORM FIELDS ================= -->
+                <div class="row mb-1">
+
+                    <!-- ========== COLUMN 1 ========== -->
+                    <div class="col-12 col-md-6">
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Vendor</span>
+                            </div>
+                            {% render_field form.mb_vendor class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Vehicle Number</span>
+                            </div>
+                            {% render_field form.mb_vehicle_number class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Vehicle Type</span>
+                            </div>
+                            {% render_field form.mb_vehicle_type class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Bill No</span>
+                            </div>
+                            {% render_field form.mb_bill_no class="form-control" %}
+                        </div>
+
+                        <!-- ================= SAVE BUTTON ================= -->
+                        <button type="submit" class="btn btn-success mb-3">
+                            <i class="fas fa-check"></i> Save
+                        </button>
+
+                    </div>
+
+                    <!-- ========== COLUMN 2 ========== -->
+                    <div class="col-12 col-md-6">
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Trip Cost</span>
+                            </div>
+                            {% render_field form.mb_trip_cost class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Parking Cost</span>
+                            </div>
+                            {% render_field form.mb_parking_cost class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Halting Cost</span>
+                            </div>
+                            {% render_field form.mb_halting_cost class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend" style="display:none;">
+                                <span class="input-group-text">Halting Days</span>
+                            </div>
+                            {% render_field form.mb_halting_days class="form-control" style="display:none;" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Total Cost</span>
+                            </div>
+                            {% render_field form.mb_total_cost class="form-control" %}
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Hidden field for selected trips -->
+                {% render_field form.mb_selected_trips %}
+
+                <!-- ================= MESSAGES ================= -->
+                <div class="row">
+                    <div class="col-1"></div>
+                    <div class="col-10">
+                        <div class="message text-center">
+                            {% for message in messages %}
+                            <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-1"></div>
+                </div>
+
+
+                <!-- Actions: Both Add and Remove are useful in both modes -->
+                <div class="row mb-2 align-items-center">
+                    <div class="col-4 d-flex gap-2">
+                        <button type="button" id="addSelectedBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                        <button type="button" id="removeSelectedBtn" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Remove
+                        </button>
+                    </div>
+                    <div class="col-4 d-flex justify-content-center align-items-center gap-2">
+                        {% if not record.id %}
+                        <label class="mb-0 fw-bold">Trip Date :</label>
+                        <input type="date" id="tripFromDate" class="form-control" style="max-width: 150px;">
+                        <span class="fw-bold">to</span>
+                        <input type="date" id="tripToDate" class="form-control" style="max-width: 150px;">
+                        <button type="button" id="clearTripDateRange" class="btn btn-secondary">
+                            Clear
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="col-4"></div>
+                </div>
+                <!-- ================= TRIPS TABLE ================= -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-sm" id="tripsTable">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th><input type="checkbox" id="selectAllTrips"></th>
+                                <th>Cnote</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Veh Type</th>
+                                <th>Trip Date</th>
+                                <th>Trip Cost</th>
+                                <th>Parking Cost</th>
+                                <th>Halting Days</th>
+                                <th>Halting Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tripsTableBody">
+                            {% if record.id %}
+                            <!-- EDIT Mode: Pre-populate with saved trips -->
+                            {% if selected_trips_data %}
+                            {% for trip in selected_trips_data %}
+                            <tr data-id="{{ trip.id }}" class="added-row">
+                                <td><input type="checkbox" class="trip-checkbox" data-id="{{ trip.id }}"
+                                        data-trip="{{ trip.trip_cost }}" data-parking="{{ trip.parking_cost }}"
+                                        data-halting-days="{{ trip.halting_days }}"
+                                        data-halting-cost="{{ trip.halting_cost }}">
+                                </td>
+                                <td>{{ trip.trip_number }}</td>
+                                <td>{{ trip.from_location }}</td>
+                                <td>{{ trip.to_location }}</td>
+                                <td>{{ trip.vehicle_type }}</td>
+                                <td>{{ trip.trip_date|default:"" }}</td>
+                                <td class="trip-cost-cell">{{ trip.trip_cost|floatformat:2 }}</td>
+                                <td class="parking-cost-cell">{{ trip.parking_cost|floatformat:2 }}</td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm halting-days-input"
+                                        value="{{ trip.halting_days }}" min="0" style="width: 70px;">
+                                </td>
+                                <td class="halting-cost-cell">{{ trip.halting_cost|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="10" class="text-center text-muted">No trips found in this bill</td>
+                            </tr>
+                            {% endif %}
+                            {% else %}
+                            <!-- ADD Mode: Initial empty state -->
+                            <tr>
+                                <td colspan="10" class="text-center text-muted">Select a vehicle to view trips</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+    // Store selected trip IDs
+    let selectedTripIds = new Set();
+
+    // Check if we are in EDIT mode
+    const isEditMode = {% if record.id %}true{% else %} false{% endif %};
+
+    // Pre-populate selectedTripIds if record exists
+    {% if record and record.mb_selected_trips %}
+    "{{ record.mb_selected_trips }}".split(',').forEach(id => {
+        if (id.trim()) selectedTripIds.add(id.trim());
+    });
+    document.getElementById("mb_selected_trips").value = Array.from(selectedTripIds).join(",");
+    {% endif %}
+
+    // Auto-fetch vehicle type on load if editing and empty
+    document.addEventListener("DOMContentLoaded", function () {
+        const vNum = document.getElementById("mb_vehicle_number").value;
+        const vType = document.getElementById("mb_vehicle_type").value;
+        if (vNum && !vType) {
+            fetch(`/SMS/ajax/get_vehicle_details/?vehicle_number=${vNum}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.vehicle_type) {
+                        document.getElementById("mb_vehicle_type").value = data.vehicle_type;
+                    }
+                });
+        }
+    });
+
+    // Function to recalculate totals
+    function updateTotals() {
+        let totalTrip = 0;
+        let totalParking = 0;
+        let totalHalting = 0;
+        let totalHaltingDays = 0;
+
+        document.querySelectorAll("#tripsTableBody tr.added-row").forEach(row => {
+            const cb = row.querySelector("input[data-id]");
+            const daysInput = row.querySelector(".halting-days-input");
+
+            // Re-calculate row-wise halting cost if input changed
+            const initialDays = parseInt(cb.dataset.haltingDays) || 0;
+            const initialCost = parseFloat(cb.dataset.haltingCost) || 0;
+            const rate = initialDays > 0 ? (initialCost / initialDays) : (initialCost);
+
+            const days = parseInt(daysInput.value) || 0;
+            const haltingCost = rate * days;
+
+            row.querySelector(".halting-cost-cell").textContent = haltingCost.toFixed(2);
+
+            totalTrip += parseFloat(cb.dataset.trip) || 0;
+            totalParking += parseFloat(cb.dataset.parking) || 0;
+            totalHalting += haltingCost;
+            totalHaltingDays += days;
+        });
+
+        document.getElementById("mb_trip_cost").value = totalTrip.toFixed(2);
+        document.getElementById("mb_parking_cost").value = totalParking.toFixed(2);
+        document.getElementById("mb_halting_cost").value = totalHalting.toFixed(2);
+        document.getElementById("mb_halting_days").value = totalHaltingDays;
+        document.getElementById("mb_total_cost").value = (totalTrip + totalParking + totalHalting).toFixed(2);
+
+        document.getElementById("mb_selected_trips").value = Array.from(selectedTripIds).join(",");
+    }
+
+    // Handle Halting Days change
+    document.addEventListener("change", function (e) {
+        if (e.target.classList.contains("halting-days-input")) {
+            updateTotals();
+        }
+    });
+
+    // ========== VENDOR CHANGE: LOAD VEHICLES ==========
+    document.getElementById("mb_vendor").addEventListener("change", function () {
+
+        const vendorId = this.value;
+        const vehicleSelect = document.getElementById("mb_vehicle_number");
+
+        vehicleSelect.innerHTML = '<option value="">-- Select Vehicle --</option>';
+        document.getElementById("tripsTableBody").innerHTML =
+            '<tr><td colspan="10" class="text-center text-muted">Select a vehicle to view trips</td></tr>';
+
+        if (!vendorId) return;
+
+        fetch(`/SMS/ajax/get_vehicles_by_vendor/?vendor_id=${vendorId}`)
+            .then(res => res.json())
+            .then(data => {
+                data.vehicles.forEach(vehicle => {
+                    const option = document.createElement("option");
+                    option.value = vehicle.id;
+                    option.textContent = vehicle.text;
+                    vehicleSelect.appendChild(option);
+                });
+            })
+            .catch(err => console.error("Error loading vehicles:", err));
+    });
+
+    // ========== VEHICLE CHANGE: LOAD DETAILS & TRIPS ==========
+    document.getElementById("mb_vehicle_number").addEventListener("change", function () {
+
+        const vehicleNumber = this.value;
+        const tbody = document.getElementById("tripsTableBody");
+        const vehicleTypeInput = document.getElementById("mb_vehicle_type");
+
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center">Loading...</td></tr>';
+        vehicleTypeInput.value = '';
+
+        if (!vehicleNumber) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Select a vehicle to view trips</td></tr>';
+            return;
+        }
+
+        // Load Vehicle Type
+        fetch(`/SMS/ajax/get_vehicle_details/?vehicle_number=${vehicleNumber}`)
+            .then(res => res.json())
+            .then(data => {
+                vehicleTypeInput.value = data.vehicle_type;
+            });
+
+        fetch(`/SMS/ajax/get_trips_by_vehicle/?vehicle_number=${vehicleNumber}`)
+            .then(res => res.json())
+            .then(data => {
+                const availableTrips = data.trips.filter(t => !selectedTripIds.has(t.id.toString()));
+
+                if (availableTrips.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No available trips found for this vehicle</td></tr>';
+                    return;
+                }
+
+                console.log("Trips loaded:", availableTrips.length);
+
+                tbody.innerHTML = '';
+                availableTrips.forEach(trip => {
+                    // Fallback: If main form vehicle type is still empty, grab it from the trips
+                    if (!vehicleTypeInput.value && trip.vehicle_type) {
+                        vehicleTypeInput.value = trip.vehicle_type;
+                    }
+
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                    <td><input type="checkbox" class="trip-checkbox" 
+                        data-id="${trip.id}" 
+                        data-trip="${trip.trip_cost}" 
+                        data-parking="${trip.parking_cost}"
+                        data-halting-days="${trip.halting_days}"
+                        data-halting-cost="${trip.halting_cost}"></td>
+                    <td>${trip.trip_number}</td>
+                    <td>${trip.from_location}</td>
+                    <td>${trip.to_location}</td>
+                    <td>${trip.vehicle_type}</td>
+                    <td>${trip.trip_date}</td>
+                    <td>${trip.trip_cost.toFixed(2)}</td>
+                    <td>${trip.parking_cost.toFixed(2)}</td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm halting-days-input" 
+                            value="${trip.halting_days}" min="0" style="width: 70px;">
+                    </td>
+                    <td class="halting-cost-cell">${trip.halting_cost.toFixed(2)}</td>
+                `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(err => {
+                console.error("Error loading trips:", err);
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error loading trips</td></tr>';
+            });
+    });
+
+    // ========== SELECT ALL CHECKBOX ==========
+    document.getElementById("selectAllTrips").addEventListener("change", function () {
+        const checkboxes = document.querySelectorAll(".trip-checkbox");
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+
+    // ========== ADD SELECTED TRIPS BUTTON (ADD MODE) ==========
+    const addBtn = document.getElementById("addSelectedBtn");
+    if (addBtn) {
+        addBtn.addEventListener("click", function () {
+            const checkboxes = document.querySelectorAll(".trip-checkbox:checked");
+            if (checkboxes.length === 0) return;
+
+            checkboxes.forEach(cb => {
+                const tripId = cb.dataset.id;
+                if (!selectedTripIds.has(tripId)) {
+                    selectedTripIds.add(tripId);
+                    const row = cb.closest("tr");
+                    row.classList.add("added-row");
+                    cb.style.display = 'none';
+                    cb.checked = false;
+                }
+            });
+
+            updateTotals();
+            document.getElementById("selectAllTrips").checked = false;
+        });
+    }
+
+    // ========== REMOVE SELECTED TRIPS BUTTON (EDIT MODE) ==========
+    const removeBtn = document.getElementById("removeSelectedBtn");
+    if (removeBtn) {
+        removeBtn.addEventListener("click", function () {
+            const checkboxes = document.querySelectorAll(".trip-checkbox:checked");
+            if (checkboxes.length === 0) return;
+
+            checkboxes.forEach(cb => {
+                selectedTripIds.delete(cb.dataset.id);
+                cb.closest("tr").remove();
+            });
+
+            updateTotals();
+            document.getElementById("selectAllTrips").checked = false;
+        });
+    }
+</script>
+<script>
+    function parseDDMMYYYY(dateStr) {
+        const [dd, mm, yyyy] = dateStr.split("-");
+        return new Date(yyyy, mm - 1, dd);
+    }
+
+    function filterTripsByDateRange() {
+        const fromVal = document.getElementById("tripFromDate").value;
+        const toVal = document.getElementById("tripToDate").value;
+
+        const fromDate = fromVal ? new Date(fromVal) : null;
+        const toDate = toVal ? new Date(toVal) : null;
+
+        document.querySelectorAll("#tripsTableBody tr").forEach(row => {
+            const dateCell = row.children[5]; // Trip Date column
+            if (!dateCell) return;
+
+            const tripDateText = dateCell.textContent.trim();
+            if (!tripDateText) return;
+
+            const tripDate = parseDDMMYYYY(tripDateText);
+
+            let showRow = true;
+
+            if (fromDate && tripDate < fromDate) showRow = false;
+            if (toDate && tripDate > toDate) showRow = false;
+
+            row.style.display = showRow ? "" : "none";
+        });
+    }
+
+    /* Event bindings */
+    document.getElementById("tripFromDate")?.addEventListener("change", filterTripsByDateRange);
+    document.getElementById("tripToDate")?.addEventListener("change", filterTripsByDateRange);
+
+    document.getElementById("clearTripDateRange")?.addEventListener("click", function () {
+        document.getElementById("tripFromDate").value = "";
+        document.getElementById("tripToDate").value = "";
+
+        document.querySelectorAll("#tripsTableBody tr").forEach(row => {
+            row.style.display = "";
+        });
+    });
+</script>
+
+{% endblock %}

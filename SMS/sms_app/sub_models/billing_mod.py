@@ -1,5 +1,6 @@
 from django.db import models
 from ..models import Business_Sol_info,StatusList,CustomerInfo,MyUser,TrbusinesstypeInfo
+from .Whratemaster_mod import WhratemasterInfo
 
 
 class BilingInfo(models.Model):
@@ -49,3 +50,43 @@ class BilingInfo(models.Model):
 
     def __str__(self):
         return self.bill_invoice_ref
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to auto-populate bill_wh_storage_charges from WhratemasterInfo.
+        Matching priority:
+          1) Match on customer, business model and whrm_charge_type id==1
+          2) If not found, match on customer and whrm_charge_type id==1
+        If found, set bill_wh_storage_charges to the found whrm_rate. Otherwise leave existing value.
+        """
+        try:
+            # Try exact match: customer + business model + charge type 1
+            qs = WhratemasterInfo.objects.filter(
+                whrm_customer_name=self.bill_customer_name,
+                whrm_businessmodel=self.bill_customer_type,
+                whrm_charge_type__id=1,
+            ).order_by('-id')
+            rate_entry = qs.first()
+            if not rate_entry:
+                # Fallback: customer + charge type 1
+                qs = WhratemasterInfo.objects.filter(
+                    whrm_customer_name=self.bill_customer_name,
+                    whrm_charge_type__id=1,
+                ).order_by('-id')
+                rate_entry = qs.first()
+
+            if rate_entry:
+                # set the storage charges from the whrm_rate
+                # Only update if the value is meaningfully different to avoid unnecessary writes
+                try:
+                    new_rate = float(rate_entry.whrm_rate)
+                    # assign to bill_wh_storage_charges
+                    self.bill_wh_storage_charges = new_rate
+                except Exception:
+                    # if casting fails, ignore and keep existing value
+                    pass
+        except Exception:
+            # Any DB lookup error shouldn't block saving the billing record
+            pass
+
+        super(BilingInfo, self).save(*args, **kwargs)

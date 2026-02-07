@@ -140,6 +140,22 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 "WH WEIGHT","L CMS",
                 "B CMS", "H CMS", "Cartons","Volume weight","LOCATION","Documents received with goods","E-Way Bill", "E-Way Bill Validity",
                 "Job Number", "Stock Number", "REMARKS"]
+        elif "GEODIS" in customer_name_str or "H&M" in customer_name_str:
+            headers = [
+                "Ageing", "SL NO", "Origin", "No of ctns", "No of Pcs", "Supplier",
+                "cargo rcvd date", "WMS JOB NUMBER", "Invoice #", "invoice date", "Po numbers",
+                "HSN CODE", "GST", "GST%", "Invoice value INR", "Invoice Wt", "Wh Wt",
+                "Vol Wt /CFT", "Char. Wt", "CBM",
+                "Dimensions 1", "Dimensions 2", "Dimensions 3", "Dimensions 4", "Dimensions 5",
+                "REMARK", "E-Way Bill", "Date", "Vehicle No.", "Description",
+                "Qty Received (as per Shipper docs)"
+            ]
+        elif "DAMCO" in customer_name_str:
+            headers = [
+                "S.No","STORAGE > 7 Days in BVM","DATE","Truck reporting at Warehouse (Time)","Truck into unloading bay","Dock outtime from unloading bay","TRUCK NO","Shipper","Invoice Number",
+                "PO NO","SO NUMBER","DESTINATION","Total No of Cartons","QTY AS PER INV","CBM","INVOICE WEIGHT","WH WEIGHT","L cms","W cms","H cms","Cartons","Volume weight","Location","Carton No.","DOCS RECEIVED WITH GOODS","Cargo Condition","OTL NO","REMARKS"
+            ]
+
         else:
             headers = [
                 "Job Number", "Stock Number", "Customer", "Date Of Arrival", "Unloading Start Time",
@@ -369,6 +385,113 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         stock_value.wh_qr_rand_num,
                         stock_value.wh_comments,
                     ]
+                elif "GEODIS" in customer_name_str or "H&M" in customer_name_str:
+
+                    gate = stock_value.wh_gate_injob_no_id
+                    lb = stock_value.wh_lb_job_no_id
+
+                    row = [
+                        stock_value.wh_storage_time,  # Ageing
+                        i + 1,  # SL NO
+                        getattr(gate, "gatein_destination", ""),  # Origin (mapped)
+                        stock_value.wh_goods_pieces,  # No of ctns
+                        stock_value.wh_total_qty,  # No of pcs
+                        stock_value.wh_consigner,  # Supplier
+                        format_dt_excel(gate.gatein_arrival_date),  # cargo rcvd date
+                        stock_value.wh_job_no,  # WMS job number
+                        getattr(gate, "gatein_invoice", ""),  # Invoice #
+                        format_dt_excel(gate.gatein_arrival_date),  # invoice date (reuse)
+                        stock_value.wh_po_num,  # PO
+
+                        "", "", "",  # HSN / GST / GST% (not in model)
+
+                        stock_value.wh_invoice_amount_inr,
+                        stock_value.wh_invoice_weight_unit,
+                        stock_value.wh_gross_weight,
+                        stock_value.wh_chargeable_weight,
+                        stock_value.wh_chargeable_weight,
+                        stock_value.wh_cbm,
+
+                        stock_value.wh_goods_length,
+                        stock_value.wh_goods_width,
+                        stock_value.wh_goods_height,
+                        "", "",
+                        stock_value.wh_comments,
+
+                        getattr(lb, "lb_eway_bill", ""),
+                        format_dt_excel(getattr(lb, "lb_validity_date", None)),
+                        getattr(gate, "gatein_truck_number", ""),
+                        str(getattr(stock_value, "wh_goods_package_type", "")),
+                        stock_value.wh_total_qty,
+                    ]
+
+
+                elif "DAMCO" in customer_name_str:
+
+                    gate = stock_value.wh_gate_injob_no_id
+
+                    lb = stock_value.wh_lb_job_no_id
+
+                    row = [
+
+                        i + 1,
+
+                        "YES" if stock_value.wh_storage_time and stock_value.wh_storage_time > 7 else "",
+
+                        format_dt_excel(gate.gatein_arrival_date),
+
+                        format_dt_excel(gate.gatein_arrival_date),  # truck reporting time (reuse safe)
+
+                        format_dt_excel(lb.lb_stock_unloading_start_time),
+
+                        format_dt_excel(lb.lb_stock_unloading_end_time),
+
+                        getattr(gate, "gatein_truck_number", ""),
+
+                        stock_value.wh_consigner,
+
+                        getattr(gate, "gatein_invoice", ""),
+
+                        stock_value.wh_po_num,
+
+                        "",  # SO number not available
+
+                        getattr(gate, "gatein_destination", ""),
+
+                        stock_value.wh_goods_pieces,
+
+                        stock_value.wh_total_qty,
+
+                        stock_value.wh_cbm,
+
+                        stock_value.wh_invoice_weight_unit,
+
+                        stock_value.wh_gross_weight,
+
+                        stock_value.wh_goods_length,
+
+                        stock_value.wh_goods_width,
+
+                        stock_value.wh_goods_height,
+
+                        stock_value.wh_goods_pieces,
+
+                        stock_value.wh_chargeable_weight,
+
+                        f"{stock_value.wh_branch}-{stock_value.wh_unit}-{stock_value.wh_bay}",
+
+                        "",  # carton no not available
+
+                        getattr(lb, "lb_packing_list", ""),
+
+                        "",  # cargo condition not in model
+
+                        getattr(gate, "gatein_otl", ""),
+
+                        stock_value.wh_comments,
+
+                    ]
+
                 else:
                     damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
                     damage_names = ", ".join(
@@ -424,7 +547,16 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         remarks,
                     ]
 
-                ws.append(row)
+                safe_row = []
+                for val in row:
+                    if val is None:
+                        safe_row.append("")
+                    elif isinstance(val, (int, float, datetime)):
+                        safe_row.append(val)
+                    else:
+                        safe_row.append(str(val))
+
+                ws.append(safe_row)
 
         for cell in ws[1]:
             cell.font = header_font

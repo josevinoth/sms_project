@@ -3,272 +3,252 @@
 {% block content %}
 
 <form id="maintenanceForm" method="POST">
-{% csrf_token %}
+  {% csrf_token %}
 
-<!-- messages removed per request; approval_status will be shown in the form field -->
+  <!-- messages removed per request; approval_status will be shown in the form field -->
 
-<div class="container-fluid">
-  <div class="card text-white bg-info mb-3" style="max-width:100%;">
+  <div class="container-fluid">
+    <div class="card text-white bg-info mb-3" style="max-width:100%;">
 
-    <!-- ================= HEADER ================= -->
-    <div class="card-header d-flex justify-content-between align-items-center">
-  <h3 class="mb-0">Vehicle Maintenance</h3>
+      <!-- ================= HEADER ================= -->
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="mb-0">Vehicle Maintenance</h3>
 
-  {% if form.instance.pk %}
-    <a
-      href="{% url 'maintenance_pdf' form.instance.pk %}"
-      class="btn btn-sm btn-light"
-      target="_blank"
-    >
-      <i class="fas fa-download"></i> Maintenance PDF
-    </a>
-  {% endif %}
-</div>
+        {% if form.instance.pk %}
+        <a href="{% url 'maintenance_pdf' form.instance.pk %}" class="btn btn-sm btn-light" target="_blank">
+          <i class="fas fa-download"></i> Maintenance PDF
+        </a>
+        {% endif %}
+      </div>
 
 
-    <!-- ================= BODY ================= -->
-    <div class="card-body bg-light">
+      <!-- ================= BODY ================= -->
+      <div class="card-body bg-light">
 
-      <!-- ================= ROW 1 : TWO COLUMNS ================= -->
-      <div class="row">
+        <!-- ================= ROW 1 : TWO COLUMNS ================= -->
+        <div class="row">
 
-        <!-- ========== COLUMN 1 : TRUCK DETAILS ========== -->
-        <div class="col-12 col-md-6">
+          <!-- ========== COLUMN 1 : TRUCK DETAILS ========== -->
+          <div class="col-12 col-md-6">
 
-          <div class="input-group input-group-sm mb-3">
-  <div class="input-group-prepend">
-    <span class="input-group-text">Truck Job Card</span>
-  </div>
-  <input
-    type="text"
-    class="form-control"
-    value="{{ form.instance.job_card_no }}"
-    readonly
-  >
-</div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Registration No</span>
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Truck Job Card</span>
+              </div>
+              <input type="text" class="form-control" value="{{ form.instance.mi_job_card_no }}" readonly>
             </div>
-            {% render_field form.registration_no class="form-control" id="registration_no" %}
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Registration No</span>
+              </div>
+              {% render_field form.registration_no class="form-control" id="registration_no" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Model</span>
+              </div>
+              {% render_field form.mi_make_model class="form-control" id="make_model" readonly="readonly" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Registration Date</span>
+              </div>
+              {% render_field form.mi_registration_date class="form-control" id="registration_date" readonly="readonly" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Chassis No</span>
+              </div>
+              {% render_field form.mi_chassis_no class="form-control" id="chassis_no" readonly="readonly" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Engine No</span>
+              </div>
+              {% render_field form.mi_engine_no class="form-control" id="engine_no" readonly="readonly" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Approval Status</span>
+              </div>
+              {% render_field form.mi_approval_status class="form-control" %}
+            </div>
+
+
           </div>
 
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Model</span>
+          <!-- ========== COLUMN 2 : JOB CARD DETAILS ========== -->
+          <div class="col-12 col-md-6">
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Current KM</span>
+              </div>
+              {% render_field form.mi_current_km class="form-control" %}
             </div>
-            {% render_field form.make_model class="form-control" id="make_model" readonly="readonly" %}
-          </div>
 
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Registration Date</span>
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Total KM Run</span>
+              </div>
+              {% render_field form.mi_total_km_run class="form-control" %}
             </div>
-            {% render_field form.registration_date class="form-control" id="registration_date" readonly="readonly" %}
-          </div>
 
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Chassis No</span>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Service Type</span>
+              </div>
+              {% render_field form.mi_service_type class="form-control" %}
             </div>
-            {% render_field form.chassis_no class="form-control" id="chassis_no" readonly="readonly" %}
-          </div>
 
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Engine No</span>
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Driver</span>
+              </div>
+              {% render_field form.mi_driver_name class="form-control" %}
             </div>
-            {% render_field form.engine_no class="form-control" id="engine_no" readonly="readonly" %}
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Technician</span>
+              </div>
+              {% render_field form.mi_technician class="form-control" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Est.Amount</span>
+              </div>
+              {% render_field form.mi_estimated_amount class="form-control" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Est. Delivery</span>
+              </div>
+              {% render_field form.mi_est_delivery %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Budget</span>
+              </div>
+              {% render_field form.mi_budget class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Budget Balance</span>
+              </div>
+              {% render_field form.mi_budget_balance class="form-control" %}
+            </div>
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Work Area</span>
+              </div>
+              {% render_field form.mi_work_area class="form-control" %}
+            </div>
+
           </div>
-      <div class="input-group input-group-sm mb-3">
-  <div class="input-group-prepend">
-    <span class="input-group-text">Approval Status</span>
-  </div>
-  {% render_field form.approval_status class="form-control" %}
-</div>
-
-
         </div>
 
-        <!-- ========== COLUMN 2 : JOB CARD DETAILS ========== -->
-        <div class="col-12 col-md-6">
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Current KM</span>
-            </div>
-            {% render_field form.current_km class="form-control" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Total KM Run</span>
-            </div>
-            {% render_field form.total_km_run class="form-control" %}
-          </div>
 
 
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Service Type</span>
+        <!-- ================= JOB CARD META ================= -->
+
+
+        <!-- ================= COMPLAINT SECTION ================= -->
+        <div class="row">
+          <!-- LEFT COLUMN (Complaint) -->
+          <div class="col-12 col-md-6">
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Complaint</span>
+              </div>
+              {% render_field form.mi_complaint class="form-control form-control-sm" %}
             </div>
-            {% render_field form.service_type class="form-control" %}
           </div>
 
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Driver</span>
-            </div>
-            {% render_field form.driver_name class="form-control" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Technician</span>
-            </div>
-            {% render_field form.technician class="form-control" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Est.Amount</span>
-            </div>
-            {% render_field form.estimated_amount class="form-control" %}
-          </div>
-
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Est. Delivery</span>
-            </div>
-            {% render_field form.est_delivery type="datetime-local" class="form-control" placeholder="DD-MM-YYYY HH:MM" %}
-          </div>
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Budget</span>
-            </div>
-            {% render_field form.budget class="form-control" %}
-          </div>
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Budget Balance</span>
-            </div>
-            {% render_field form.budget_balance class="form-control" %}
-          </div>
-          <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Work Area</span>
-            </div>
-            {% render_field form.work_area class="form-control" %}
-          </div>
-
+          <!-- RIGHT COLUMN (EMPTY – for alignment) -->
+          <div class="col-12 col-md-6"></div>
         </div>
-      </div>
 
 
 
-      <!-- ================= JOB CARD META ================= -->
-
-
-      <!-- ================= COMPLAINT SECTION ================= -->
-     <div class="row">
-  <!-- LEFT COLUMN (Complaint) -->
-  <div class="col-12 col-md-6">
-    <div class="input-group input-group-sm mb-3">
-      <div class="input-group-prepend">
-        <span class="input-group-text">Complaint</span>
-      </div>
-      {% render_field form.complaint class="form-control form-control-sm" %}
-    </div>
-  </div>
-
-  <!-- RIGHT COLUMN (EMPTY – for alignment) -->
-  <div class="col-12 col-md-6"></div>
-</div>
-
-
-
-      <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-          <span class="input-group-text">Description</span>
+        <div class="input-group input-group-sm mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Description</span>
+          </div>
+          {% render_field form.mi_description class="form-control" %}
         </div>
-        {% render_field form.description class="form-control" %}
-      </div>
 
-      <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-          <span class="input-group-text">Remarks</span>
+        <div class="input-group input-group-sm mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Remarks</span>
+          </div>
+          {% render_field form.mi_remarks class="form-control" %}
         </div>
-        {% render_field form.remarks class="form-control" %}
-      </div>
 
-      <!-- ================= ACTION ================= -->
+        <!-- ================= ACTION ================= -->
 
-     <div class="row mb-3">
-  <div class="col-md-6">
-    <div class="input-group input-group-sm">
-      <div class="input-group-prepend">
-        <span class="input-group-text">Job Card Creator</span>
-      </div>
-      <input
-        type="text"
-        id="job_creator"
-        class="form-control"
-        readonly
-        value="{{ job_creator }}"
-      >
-    </div>
-  </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Job Card Creator</span>
+              </div>
+              <input type="text" id="job_creator" class="form-control" readonly value="{{ job_creator }}">
+            </div>
+          </div>
 
-  <div class="col-md-6">
-    <div class="input-group input-group-sm">
-      <div class="input-group-prepend">
-        <span class="input-group-text">Created On</span>
-      </div>
-      <input
-        type="text"
-        id="created_on"
-        class="form-control"
-        readonly
-        value="{{ created_on|date:'d-m-Y H:i' }}"
-      >
-    </div>
-  </div>
-</div>
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Created On</span>
+              </div>
+              <input type="text" id="created_on" class="form-control" readonly
+                value="{{ created_on|date:'d-m-Y H:i' }}">
+            </div>
+          </div>
+        </div>
 
 
-      <div id="msgBox" class="mb-2"></div>
+        <div id="msgBox" class="mb-2"></div>
 
-      <button type="submit" class="btn btn-success">
-        <i class="fas fa-check"></i> Save
-      </button>
+        <button type="submit" class="btn btn-success">
+          <i class="fas fa-check"></i> Save
+        </button>
 
-      <!--<a href="{% url 'home_page' %}" class="btn btn-danger float-right">
+        <!--<a href="{% url 'home_page' %}" class="btn btn-danger float-right">
         <i class="fas fa-times"></i> Cancel
       </a>-->
 
+      </div>
     </div>
   </div>
-</div>
 </form>
 
 <!-- ================= FETCH VEHICLE DETAILS ================= -->
 <script>
-document.getElementById("registration_no").addEventListener("change", function () {
+  document.getElementById("registration_no").addEventListener("change", function () {
     const regNo = this.value;
 
     fetch(`/SMS/fetch_vehicle_details/?reg_no=${regNo}`)
-    .then(res => res.json())
-    .then(data => {
+      .then(res => res.json())
+      .then(data => {
         document.getElementById("make_model").value = data.make_model || "";
         document.getElementById("registration_date").value = data.registration_date || "";
         document.getElementById("chassis_no").value = data.chassis_no || "";
         document.getElementById("engine_no").value = data.engine_no || "";
-    })
-    .catch(() => {
+      })
+      .catch(() => {
         // ignore fetch errors for now
-    });
-});
+      });
+  });
 
 
 </script>

@@ -33,7 +33,9 @@ def email_master_add(request, record_id=0):
             form = EmailmasterForm(request.POST, instance=record)
 
         if form.is_valid():
-            form.save()
+            record = form.save(commit=False)
+            record.em_updated_by = request.user
+            record.save()
             messages.success(request, "Email Master saved successfully.")
         else:
             messages.error(request, "Form invalid! Please check inputs.")

@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count
 from ..sub_models.stock_maintenance_mod import StockMaintenance
 from ..sub_models.part_code_mod import PkpartcodeInfo
 from ..sub_forms.stock_maintenance_form import StockMaintenanceForm
+from ..sub_models.my_user_mod import MyUser
 
 def get_stock_totals():
     totals = StockMaintenance.objects.aggregate(
@@ -20,8 +22,22 @@ def get_stock_totals():
 
 @login_required
 def stock_maintenance_list(request):
-    items = StockMaintenance.objects.all().order_by('-sm_created_at')
-    return render(request, 'asset_mgt_app/stock_maintenance_list.html', {'items': items})
+    partcode_id = request.GET.get('partcode')
+    items = StockMaintenance.objects.all()
+    
+    if partcode_id:
+        items = items.filter(sm_partcode_id=partcode_id)
+    
+    items = items.order_by('-sm_created_at')
+    
+    partcodes = PkpartcodeInfo.objects.all().order_by('pc_code')
+    
+    context = {
+        'items': items,
+        'partcodes': partcodes,
+        'selected_partcode': partcode_id,
+    }
+    return render(request, 'asset_mgt_app/stock_maintenance_list.html', context)
 
 @login_required
 def stock_maintenance_add(request):
@@ -39,6 +55,13 @@ def stock_maintenance_add(request):
             uom_id = request.POST.get("sm_uom")
             if uom_id:
                 obj.sm_uom_id = uom_id
+
+            if hasattr(request.user, 'myuser'):
+                obj.sm_updated_by = MyUser.objects.get(pk=request.user.pk)
+            elif isinstance(request.user, MyUser):
+                obj.sm_updated_by = request.user
+            else:
+                 obj.sm_updated_by = MyUser.objects.get(pk=request.user.pk)
 
             obj.save()
 
@@ -78,6 +101,13 @@ def stock_maintenance_edit(request, pk):
             uom_id = request.POST.get("sm_uom")
             if uom_id:
                 obj.sm_uom_id = uom_id
+
+            if hasattr(request.user, 'myuser'):
+                obj.sm_updated_by = MyUser.objects.get(pk=request.user.pk)
+            elif isinstance(request.user, MyUser):
+                obj.sm_updated_by = request.user
+            else:
+                obj.sm_updated_by = MyUser.objects.get(pk=request.user.pk)
 
             obj.save()
             return redirect('stock_maintenance_list')
@@ -164,4 +194,3 @@ def stock_maintenance_delete(request, pk):
     item = get_object_or_404(StockMaintenance, pk=pk)
     item.delete()
     return redirect('stock_maintenance_list')
-

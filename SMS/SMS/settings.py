@@ -171,14 +171,14 @@ DEPARTMENT_EMAILS = {
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'wms@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'M@094316254438uh',
+        'EMAIL_HOST_PASSWORD' : 'F!220749109956aq',
     },
     'itadmin': {
         'EMAIL_HOST' : 'smtp.office365.com',
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'itadmin@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'V@731126462642oc',
+        'EMAIL_HOST_PASSWORD' : 'N/403017869523up',
     }
 }
 

@@ -57,7 +57,9 @@ def invoice_add(request,invoice_id=0):
                     total_weight=total_weight_val
                 else:
                     total_weight=0
-                    messages.error(request, 'Unable to Calculate Total Weight!')
+                    # Only show error for non-Dedicated customers
+                    if customer_type_id != 3:
+                        messages.error(request, 'Unable to Calculate Total Weight!')
 
                 # check total area limits
                 total_area_val = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).aggregate(Sum('wh_goods_area'))['wh_goods_area__sum']
@@ -65,7 +67,9 @@ def invoice_add(request,invoice_id=0):
                     total_area=total_area_val
                 else:
                     total_area=0
-                    messages.error(request, 'Unable to Calculate Total Area!')
+                    # Only show error for non-Dedicated customers
+                    if customer_type_id != 3:
+                        messages.error(request, 'Unable to Calculate Total Area!')
 
                 # check warehouse charges based on customer type
                 if customer_type_id == 2:
@@ -638,6 +642,43 @@ def load_whrate_model(request):
     customer_contact_val = customer_contact[0]['cu_contactno']  # Get value from Queryset
     customer_address_val = customer_address[0]['cu_address']  # Get value from Queryset
 
+    # Fetch whrm_rate from WhratemasterInfo ONLY for Dedicated customers (id=3)
+    whrm_rate_val = 0.0
+    print(f'DEBUG: customer_businessmodel_val = {customer_businessmodel_val}, type = {type(customer_businessmodel_val)}')
+    print(f'DEBUG: customer_id = {customer_id}')
+    try:
+        # Only fetch whrm_rate for Dedicated customers (customer_businessmodel_val == 3)
+        if customer_businessmodel_val == 3:
+            print('DEBUG: Inside Dedicated customer block (businessmodel == 3)')
+            # First try exact match: customer + business model (Dedicated) + charge type 1
+            rate_entry = WhratemasterInfo.objects.filter(
+                whrm_customer_name_id=customer_id,
+                whrm_businessmodel_id=customer_businessmodel_val,
+                whrm_charge_type_id=1,
+            ).order_by('-id').first()
+
+            print(f'DEBUG: Exact match query result: {rate_entry}')
+            if rate_entry:
+                print(f'DEBUG: Found rate entry with rate: {rate_entry.whrm_rate}')
+
+            if not rate_entry:
+                print('DEBUG: Exact match not found, trying fallback query')
+                # Fallback: customer + charge type 1 (without business model)
+                rate_entry = WhratemasterInfo.objects.filter(
+                    whrm_customer_name_id=customer_id,
+                    whrm_charge_type_id=1,
+                ).order_by('-id').first()
+                print(f'DEBUG: Fallback query result: {rate_entry}')
+
+            if rate_entry:
+                whrm_rate_val = float(rate_entry.whrm_rate)
+                print(f'DEBUG: Final whrm_rate_val set to: {whrm_rate_val}')
+        else:
+            print(f'DEBUG: NOT a Dedicated customer. businessmodel_val={customer_businessmodel_val}')
+    except Exception as e:
+        print(f'DEBUG: Exception occurred: {e}')
+        whrm_rate_val = 0.0
+    print('whrm_rate_val',whrm_rate_val)
     data = {
         'customer_businessmodel_val':customer_businessmodel_val,
         'customer_short_name_val':customer_short_name_val,
@@ -646,6 +687,7 @@ def load_whrate_model(request):
         'customer_person_val':customer_person_val,
         'customer_contact_val':customer_contact_val,
         'customer_address_val':customer_address_val,
+        'whrm_rate_val':whrm_rate_val,
         # 'min_check_in_time': min_check_in_time,
         # 'max_check_out_time': max_check_out_time,
         # 'max_storage_days': max_storage_days,

@@ -3,6 +3,7 @@ from .part_code_mod import PkpartcodeInfo
 from .stock_type_mod import Stock_type
 from .stocktype_maintenance_mod import Stock_type_maintenance
 from .unit_of_measure_mod import Unitofmeasure
+from .my_user_mod import MyUser
 
 class StockMaintenance(models.Model):
     sm_stock_type = models.ForeignKey(Stock_type_maintenance, on_delete=models.CASCADE, null=True, blank=True)
@@ -27,6 +28,7 @@ class StockMaintenance(models.Model):
     
     sm_created_at = models.DateTimeField(auto_now_add=True, null=True)
     sm_updated_at = models.DateTimeField(auto_now=True, null=True)
+    sm_updated_by = models.ForeignKey(MyUser, related_name='sm_updated_by_rel', db_column='sm_updated_by', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f"{self.sm_invoice_no} - {self.sm_partcode}"
