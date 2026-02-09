@@ -216,14 +216,3 @@ def customer_contract_rate_dues_list(request):
     }
     return render(request, "asset_mgt_app/customer_contract_rate_due_days_list.html", context)
 
-
-
-def dashboard_view(request):
-    need_assessment_count = PkneedassessmentInfo.objects.filter(na_status_id=5).count()
-
-    context = {
-        'need_assessment_count': need_assessment_count
-    }
-
-    return render(request, 'your_template.html', context)
-
