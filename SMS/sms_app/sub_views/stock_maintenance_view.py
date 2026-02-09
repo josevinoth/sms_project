@@ -9,15 +9,61 @@ from ..sub_forms.stock_maintenance_form import StockMaintenanceForm
 from ..sub_models.my_user_mod import MyUser
 
 def get_stock_totals():
+    from django.db.models import Case, When, F, Value
+    
+    # ID 2 is "Retrival" and it should be subtracted
     totals = StockMaintenance.objects.aggregate(
-        total_count=Sum('sm_count'),
-        total_cft=Sum('sm_total_cft'),
-        total_cost=Sum('sm_total_price'),
+        total_count=Sum(
+            Case(
+                When(sm_stock_type_id=2, then=-F('sm_count')),
+                default=F('sm_count')
+            )
+        ),
+        total_cft=Sum(
+            Case(
+                When(sm_stock_type_id=2, then=-F('sm_total_cft')),
+                default=F('sm_total_cft')
+            )
+        ),
+        total_cost=Sum(
+            Case(
+                When(sm_stock_type_id=2, then=-F('sm_total_price')),
+                default=F('sm_total_price')
+            )
+        ),
     )
     return {
         'total_count': totals['total_count'] or 0,
         'total_cft': totals['total_cft'] or 0,
         'total_cost': totals['total_cost'] or 0,
+    }
+
+def get_part_totals(part_id):
+    from django.db.models import Case, When, F
+    part_totals = StockMaintenance.objects.filter(sm_partcode_id=part_id).aggregate(
+        total_count=Sum(
+            Case(
+                When(sm_stock_type_id=2, then=-F('sm_count')),
+                default=F('sm_count')
+            )
+        ),
+        total_cft=Sum(
+            Case(
+                When(sm_stock_type_id=2, then=-F('sm_total_cft')),
+                default=F('sm_total_cft')
+            )
+        ),
+        total_cost=Sum(
+            Case(
+                When(sm_stock_type_id=2, then=-F('sm_total_price')),
+                default=F('sm_total_price')
+            )
+        )
+    )
+    return {
+        'total_count': part_totals['total_count'] or 0,
+        'total_cft': float(part_totals['total_cft'] or 0),
+        'total_cost': float(part_totals['total_cost'] or 0),
     }
 
 @login_required
@@ -80,7 +126,14 @@ def stock_maintenance_add(request):
         form = StockMaintenanceForm(initial=initial_data)
 
     items = StockMaintenance.objects.all().order_by('-sm_created_at')
-    totals = get_stock_totals()
+    
+    # If sticky part exists, show its totals initially to avoid jump
+    sticky_part_id = request.session.get('sticky_stock_data', {}).get('sm_partcode')
+    if sticky_part_id:
+        totals = get_part_totals(sticky_part_id)
+    else:
+        totals = get_stock_totals()
+
     return render(request, 'asset_mgt_app/stock_maintenance_add.html', {
         'form': form, 
         'items': items,
@@ -115,7 +168,13 @@ def stock_maintenance_edit(request, pk):
         form = StockMaintenanceForm(instance=item)
 
     items = StockMaintenance.objects.all().order_by('-sm_created_at')
-    totals = get_stock_totals()
+    
+    # If editing, show part-specific totals initially to avoid jump
+    if item.sm_partcode:
+        totals = get_part_totals(item.sm_partcode.id)
+    else:
+        totals = get_stock_totals()
+
     return render(request, 'asset_mgt_app/stock_maintenance_add.html', {
         'form': form, 
         'items': items,
@@ -158,11 +217,7 @@ def get_part_details(request):
             uname = str(part.pc_uom.unit_of_measure) if part.pc_uom else ""
 
             # Aggregated totals for this part
-            part_totals = StockMaintenance.objects.filter(sm_partcode=part).aggregate(
-                total_count=Sum('sm_count'),
-                total_cft=Sum('sm_total_cft'),
-                total_cost=Sum('sm_total_price')
-            )
+            part_totals = get_part_totals(part.id)
 
             data = {
                 'description': desc,
@@ -171,11 +226,7 @@ def get_part_details(request):
                 'length': part.pc_length or 0,
                 'uom_id': part.pc_uom.id if part.pc_uom else "",
                 'uom_name': part.pc_uom.unit_of_measure if part.pc_uom else "",
-                'part_totals': {
-                    'total_count': part_totals['total_count'] or 0,
-                    'total_cft': float(part_totals['total_cft'] or 0),
-                    'total_cost': float(part_totals['total_cost'] or 0),
-                }
+                'part_totals': part_totals
             }
             log_debug(f"DEBUG: Returning data: {data}")
         except PkpartcodeInfo.DoesNotExist:

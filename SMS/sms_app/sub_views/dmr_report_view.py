@@ -258,6 +258,7 @@ CUSTOMER_DMR_TEMPLATES = {
         "TCS Outstation": DMR_TEMPLATES["TCS Outstation"],
         "TCS Reefer": DMR_TEMPLATES["TCS Reefer"],
         "Hub Movement": DMR_TEMPLATES["Hub Movement"],  # Added for EIPL
+        "Transcon": DMR_TEMPLATES["TCS Local"],  # Added Transcon using TCS Local template
     },
     "TVS": {
         "Hub Movement": DMR_TEMPLATES["Hub Movement"],
@@ -822,14 +823,20 @@ def trip_report(request):
     if dept_id:
         trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
     if selected_month and selected_year:
-        selected_month = int(selected_month)
-        selected_year = int(selected_year)
-        first_day = date(selected_year, selected_month, 1)
-        last_day = date(selected_year, selected_month, calendar.monthrange(selected_year, selected_month)[1])
-        trips = trips.filter(
-            tr_departeddate__date__gte=first_day,
-            tr_departeddate__date__lte=last_day
-        )
+        try:
+            selected_month = int(selected_month)
+            selected_year = int(selected_year)
+            # Validate month is in valid range
+            if 1 <= selected_month <= 12:
+                first_day = date(selected_year, selected_month, 1)
+                last_day = date(selected_year, selected_month, calendar.monthrange(selected_year, selected_month)[1])
+                trips = trips.filter(
+                    tr_departeddate__date__gte=first_day,
+                    tr_departeddate__date__lte=last_day
+                )
+        except (ValueError, TypeError):
+            # Invalid month/year values, skip date filtering
+            pass
     if from_loc:
         trips = trips.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
     if to_loc:
@@ -935,10 +942,13 @@ def trip_send_email(request):
     if month and year:
         try:
             m, y = int(month), int(year)
-            first_day = date(y, m, 1)
-            last_day = date(y, m, calendar.monthrange(y, m)[1])
-            qs = qs.filter(tr_departeddate__date__gte=first_day, tr_departeddate__date__lte=last_day)
-        except: pass
+            # Validate month is in valid range
+            if 1 <= m <= 12:
+                first_day = date(y, m, 1)
+                last_day = date(y, m, calendar.monthrange(y, m)[1])
+                qs = qs.filter(tr_departeddate__date__gte=first_day, tr_departeddate__date__lte=last_day)
+        except (ValueError, TypeError):
+            pass
 
     if from_loc: qs = qs.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
     if to_loc: qs = qs.filter(tr_enquirynumber__en_tolocation_id=to_loc)

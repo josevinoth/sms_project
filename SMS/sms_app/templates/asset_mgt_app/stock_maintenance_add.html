@@ -334,9 +334,13 @@
                 $jq('#id_sm_uom').val('').trigger('change');
 
                 // Restore global totals
-                $jq('#dash_total_count').text($jq('#dash_total_count').data('global'));
-                $jq('#dash_total_cft').text($jq('#dash_total_cft').data('global'));
-                $jq('#dash_total_cost').text($jq('#dash_total_cost').data('global'));
+                var gCount = $jq('#dash_total_count').data('global');
+                var gCft = $jq('#dash_total_cft').data('global');
+                var gCost = $jq('#dash_total_cost').data('global');
+
+                $jq('#dash_total_count').text(gCount).data('baseline', gCount);
+                $jq('#dash_total_cft').text(gCft).data('baseline', gCft);
+                $jq('#dash_total_cost').text(gCost).data('baseline', gCost);
 
                 // Clear Table Filter
                 if (window.jQuery && window.jQuery.fn.DataTable && window.jQuery.fn.DataTable.isDataTable('#stock_maintenance_table')) {
@@ -367,9 +371,9 @@
 
                         // Update Dashboard
                         if (data.part_totals) {
-                            $jq('#dash_total_count').text(data.part_totals.total_count);
-                            $jq('#dash_total_cft').text(data.part_totals.total_cft.toFixed(2));
-                            $jq('#dash_total_cost').text(data.part_totals.total_cost.toFixed(2));
+                            $jq('#dash_total_count').text(data.part_totals.total_count).data('baseline', data.part_totals.total_count);
+                            $jq('#dash_total_cft').text(data.part_totals.total_cft.toFixed(2)).data('baseline', data.part_totals.total_cft);
+                            $jq('#dash_total_cost').text(data.part_totals.total_cost.toFixed(2)).data('baseline', data.part_totals.total_cost);
                         }
 
                         // Filter Table (Partcode is in Column 4)
@@ -492,6 +496,29 @@
             // Total Price calculation
             var totalPrice = result_val * rate;
             $jq('#id_sm_total_price').val(totalPrice.toFixed(2));
+
+            // --- 🚨 LIVE DASHBOARD UPDATE 🚨 ---
+            // Update the dashboard to reflect pending changes
+            var baselineCount = parseFloat($jq('#dash_total_count').data('baseline')) || 0;
+            var baselineCft = parseFloat($jq('#dash_total_cft').data('baseline')) || 0;
+            var baselineCost = parseFloat($jq('#dash_total_cost').data('baseline')) || 0;
+
+            var isRetrival = (stockTypeVal == '2');
+
+            var newCount, newCft, newCost;
+            if (isRetrival) {
+                newCount = baselineCount - count;
+                newCft = baselineCft - result_val;
+                newCost = baselineCost - totalPrice;
+            } else {
+                newCount = baselineCount + count;
+                newCft = baselineCft + result_val;
+                newCost = baselineCost + totalPrice;
+            }
+
+            $jq('#dash_total_count').text(newCount);
+            $jq('#dash_total_cft').text(newCft.toFixed(2));
+            $jq('#dash_total_cost').text(newCost.toFixed(2));
         }
 
 
