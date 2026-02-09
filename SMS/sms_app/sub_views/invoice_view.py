@@ -285,8 +285,13 @@ def invoice_add(request,invoice_id=0):
                 # check Crane and forklift charges
                 for k in wh_job_num:
                     print('k',k)
+                    lb = Loadingbay_Info.objects.filter(lb_job_no=k).order_by('-id').first()
+
                     # Calculate Loading & Unloading Charge
-                    manual_handling_status=Loadingbay_Info.objects.get(lb_job_no=k).lb_mh_manual.id
+                    if lb and lb.lb_mh_manual:
+                        manual_handling_status = lb.lb_mh_manual.id
+                    else:
+                        manual_handling_status = 0
                     if manual_handling_status==1:
                         total_weight = Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
                         no_of_pieces = Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
@@ -314,14 +319,25 @@ def invoice_add(request,invoice_id=0):
                         total_loading_cost =0
                     # Calculate Crane and Forklift cost
                     try:
-                        crane_hours = Loadingbay_Info.objects.get(lb_job_no=k).lb_crane_time
-                        forklift_hours = Loadingbay_Info.objects.get(lb_job_no=k).lb_forklift_time
-                        forklift_charge_l2h = Loadingbay_Info.objects.get(lb_job_no=k).lb_forklift_charges_mod_l2h
-                        forklift_charge_g2h = Loadingbay_Info.objects.get(lb_job_no=k).lb_forklift_charges_mod_g2hr
-                        crane_charge_l2h = Loadingbay_Info.objects.get(lb_job_no=k).lb_crane_charges_mod_l2h
-                        crane_charge_g2h = Loadingbay_Info.objects.get(lb_job_no=k).lb_crane_charges_mod_g2hr
-                        no_of_cranes = Loadingbay_Info.objects.get(lb_job_no=k).lb_no_of_crane
-                        no_of_forklifts = Loadingbay_Info.objects.get(lb_job_no=k).lb_no_of_forklift
+                        if lb:
+                            crane_hours = lb.lb_crane_time or 0
+                            forklift_hours = lb.lb_forklift_time or 0
+                            forklift_charge_l2h = lb.lb_forklift_charges_mod_l2h or 0
+                            forklift_charge_g2h = lb.lb_forklift_charges_mod_g2hr or 0
+                            crane_charge_l2h = lb.lb_crane_charges_mod_l2h or 0
+                            crane_charge_g2h = lb.lb_crane_charges_mod_g2hr or 0
+                            no_of_cranes = lb.lb_no_of_crane or 0
+                            no_of_forklifts = lb.lb_no_of_forklift or 0
+                        else:
+                            crane_hours = 0
+                            forklift_hours = 0
+                            forklift_charge_l2h = 0
+                            forklift_charge_g2h = 0
+                            crane_charge_l2h = 0
+                            crane_charge_g2h = 0
+                            no_of_cranes = 0
+                            no_of_forklifts = 0
+
                     except ObjectDoesNotExist:
                         crane_hours = 0
                         forklift_hours = 0
@@ -416,8 +432,10 @@ def invoice_add(request,invoice_id=0):
                 crane_time=0
                 forklift_time=0
                 for i in job_num:
-                    crane_time=crane_time+Loadingbay_Info.objects.get(lb_job_no=i).lb_crane_time
-                    forklift_time=forklift_time+Loadingbay_Info.objects.get(lb_job_no=i).lb_forklift_time
+                    lb = Loadingbay_Info.objects.filter(lb_job_no=i).order_by('-id').first()
+                    if lb:
+                        crane_time += lb.lb_crane_time or 0
+                        forklift_time += lb.lb_forklift_time or 0
 
                 # calculate checkin_times & checkout_times, max_storage_days for Invoice voucher
                 try:
