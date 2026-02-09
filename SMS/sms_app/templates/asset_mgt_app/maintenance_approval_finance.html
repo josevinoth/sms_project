@@ -38,12 +38,12 @@
     <tbody>
         {% for r in records %}
         <tr>
-            <td>{{ r.job_card_no }}</td>
-            <td>{{ r.vehicle.vm_registrationnumber }}</td>
-            <td>{{ r.complaint }}</td>
-            <td>{{ r.estimated_amount }}</td>
-            <td>{{ r.budget }}</td>
-            <td>{{ r.budget_balance }}</td>
+            <td>{{ r.mi_job_card_no }}</td>
+            <td>{{ r.mi_vehicle.vm_registrationnumber }}</td>
+            <td>{{ r.mi_complaint }}</td>
+            <td>{{ r.mi_estimated_amount }}</td>
+            <td>{{ r.mi_budget }}</td>
+            <td>{{ r.mi_budget_balance }}</td>
             <td>
                 <form method="post" action="{% url 'finance_approve' r.id %}">
                     {% csrf_token %}

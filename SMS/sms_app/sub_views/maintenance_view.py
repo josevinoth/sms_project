@@ -39,23 +39,23 @@ def maintenance_add(request):
                 messages.error(request, "Selected vehicle not found.")
                 return redirect('maintenance_add')
 
-            obj.vehicle = vehicle
+            obj.mi_vehicle = vehicle
 
             # ===============================
             # JOB CARD CREATOR & TIME
             # ===============================
-            obj.job_card_creator = (
+            obj.mi_job_card_creator = (
                 request.user.get_full_name() or request.user.username
             )
-            obj.job_card_created_on = timezone.now()
+            obj.mi_job_card_created_on = timezone.now()
 
             # ensure approval_status has the model default (defensive)
             try:
-                obj.approval_status = (
-                    MaintenanceInfo._meta.get_field('approval_status').default
+                obj.mi_approval_status = (
+                    MaintenanceInfo._meta.get_field('mi_approval_status').default
                 )
             except Exception:
-                obj.approval_status = 1
+                obj.mi_approval_status = 1
 
             # ===============================
             # AUTO GENERATE JOB CARD NUMBER
@@ -66,9 +66,9 @@ def maintenance_add(request):
 
             last_job_card = (
                 MaintenanceInfo.objects
-                .filter(job_card_no__startswith=year_prefix)
-                .aggregate(Max("job_card_no"))
-                .get("job_card_no__max")
+                .filter(mi_job_card_no__startswith=year_prefix)
+                .aggregate(Max("mi_job_card_no"))
+                .get("mi_job_card_no__max")
             )
 
             if last_job_card:
@@ -77,7 +77,7 @@ def maintenance_add(request):
             else:
                 new_number = 1
 
-            obj.job_card_no = f"{year_prefix}/{new_number:04d}"
+            obj.mi_job_card_no = f"{year_prefix}/{new_number:04d}"
 
             # ===============================
             # SAVE RECORD
@@ -92,7 +92,7 @@ def maintenance_add(request):
 
     # compute approval status label for a new form (model default)
     try:
-        field = MaintenanceInfo._meta.get_field('approval_status')
+        field = MaintenanceInfo._meta.get_field('mi_approval_status')
         default_val = field.default
         approval_status_label = next((label for val, label in field.choices if val == default_val), str(default_val))
     except Exception:
@@ -115,7 +115,7 @@ def maintenance_add(request):
 # ==================================================
 @login_required(login_url='login_page')
 def maintenance_list(request):
-    maintenance_list = MaintenanceInfo.objects.all().order_by('-job_card_created_on')
+    maintenance_list = MaintenanceInfo.objects.all().order_by('-mi_job_card_created_on')
 
     return render(
         request,
@@ -135,36 +135,46 @@ def maintenance_edit(request, id):
 
     if request.method == "POST":
         form = MaintenanceForm(
+            request.POST,
             instance=record,
-            initial={
-                "registration_no": record.vehicle
-            }
         )
 
         if form.is_valid():
             obj = form.save(commit=False)
 
             # 🔥 CRITICAL: update vehicle from registration_no
-            obj.vehicle = form.cleaned_data["registration_no"]
+            obj.mi_vehicle = form.cleaned_data["registration_no"]
+            
+            # Update updated_by field
+            obj.mi_updated_by = request.user.get_full_name() or request.user.username
 
             obj.save()
             messages.success(request, "Maintenance record updated.")
             return redirect('maintenance_list')
+        else:
+            # Show form errors for debugging
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
 
     else:
-        form = MaintenanceForm(instance=record)
+        form = MaintenanceForm(
+            instance=record,
+            initial={"registration_no": record.mi_vehicle}
+        )
 
     # approval label from instance
-    approval_status_label = (getattr(record, 'get_approval_status_display', lambda: '')() if record else '')
+    approval_status_label = (getattr(record, 'get_mi_approval_status_display', lambda: '')() if record else '')
 
     return render(
         request,
         "asset_mgt_app/maintenance.html",
         {
             "form": form,
-            "job_creator": record.job_card_creator,
-            "created_on": record.job_card_created_on,
+            "job_creator": record.mi_job_card_creator,
+            "created_on": record.mi_job_card_created_on,
             "approval_status_label": approval_status_label,
+            "updated_by": record.mi_updated_by,
         }
     )
 
@@ -221,20 +231,20 @@ def maintenance_pdf(request, id):
     last_service = (
         MaintenanceInfo.objects
         .filter(
-            vehicle=maintenance.vehicle,
-            complaint=maintenance.complaint,
-            job_card_created_on__lt=maintenance.job_card_created_on
+            mi_vehicle=maintenance.mi_vehicle,
+            mi_complaint=maintenance.mi_complaint,
+            mi_job_card_created_on__lt=maintenance.mi_job_card_created_on
         )
-        .order_by('-job_card_created_on')
+        .order_by('-mi_job_card_created_on')
         .first()
     )
 
     last_serviced_date = (
-        last_service.job_card_created_on if last_service else None
+        last_service.mi_job_card_created_on if last_service else None
     )
     vehicle_type = (
-        maintenance.vehicle.vm_vehicletype.vt_vehicletype
-        if maintenance.vehicle and maintenance.vehicle.vm_vehicletype
+        maintenance.mi_vehicle.vm_vehicletype.vt_vehicletype
+        if maintenance.mi_vehicle and maintenance.mi_vehicle.vm_vehicletype
         else None
     )
 
@@ -253,7 +263,7 @@ def maintenance_pdf(request, id):
 
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = (
-        f'attachment; filename="JOB_CARD_{maintenance.job_card_no}.pdf"'
+        f'attachment; filename="JOB_CARD_{maintenance.mi_job_card_no}.pdf"'
     )
 
     pisa_status = pisa.CreatePDF(
@@ -268,8 +278,8 @@ def maintenance_pdf(request, id):
     return response
 @login_required(login_url='login_page')
 def manager_approval_list(request):
-    # Show only records awaiting manager approval (approval_status == 1)
-    records = MaintenanceInfo.objects.filter(approval_status=1).order_by('-job_card_created_on')
+    # Show only records awaiting manager approval (mi_approval_status == 1)
+    records = MaintenanceInfo.objects.filter(mi_approval_status=1).order_by('-mi_job_card_created_on')
 
     return render(
         request,
@@ -284,13 +294,13 @@ def manager_approval_list(request):
 def manager_approve(request, id):
     record = get_object_or_404(MaintenanceInfo, id=id)
 
-    if record.approval_status == 1:
-        record.approval_status = 2
+    if record.mi_approval_status == 1:
+        record.mi_approval_status = 2
         record.save()
 
         messages.success(
             request,
-            f"Job card {record.job_card_no} approved by manager and moved to finance."
+            f"Job card {record.mi_job_card_no} approved by manager and moved to finance."
         )
     else:
         messages.warning(request, "Record is not pending manager approval.")
@@ -300,8 +310,8 @@ def manager_approve(request, id):
 @login_required(login_url='login_page')
 def finance_approval_list(request):
     records = MaintenanceInfo.objects.filter(
-        approval_status=2
-    ).order_by('-job_card_created_on')
+        mi_approval_status=2
+    ).order_by('-mi_job_card_created_on')
 
     return render(
         request,
@@ -316,10 +326,10 @@ def finance_approval_list(request):
 def finance_approve(request, id):
     record = get_object_or_404(MaintenanceInfo, id=id)
 
-    if record.approval_status == 2:
-        record.approval_status = 3  # Finance Approved
+    if record.mi_approval_status == 2:
+        record.mi_approval_status = 3  # Finance Approved
         record.save()
-        messages.success(request, f"Job card {record.job_card_no} finance approved.")
+        messages.success(request, f"Job card {record.mi_job_card_no} finance approved.")
     else:
         messages.warning(request, "Record is not pending finance approval.")
 

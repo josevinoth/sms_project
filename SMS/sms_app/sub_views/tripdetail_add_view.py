@@ -651,7 +651,6 @@ def trip_email(request):
     subject = f"{alert_type if alert_type else 'Trip Update'} - {trip.tr_tripnumber}"
     recipient_list = [email.strip() for email in recipient.split(',') if email.strip()]
 
-    # ---- Construct Email Body based on Alert Type ----
     email_content = ""
     
     # Mail 1: Loading Reported

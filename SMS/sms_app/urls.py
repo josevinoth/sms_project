@@ -809,8 +809,8 @@ urlpatterns = [
     path('get_part_details/', views.get_part_details, name='get_part_details'),
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
     path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
+    path('trans-invoice/tally-excel/<int:customer_id>/', views.trans_invoice_tally_excel, name='trans_invoice_tally_excel'),
     path("maintenance/pdf/<int:id>/",views.maintenance_pdf,name="maintenance_pdf"),
-    path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
     path('vehicle_log_report/', views.vehicle_log_report_view, name='vehicle_log_report'),
     path('trip_cancellation_report/', views.trip_cancellation_report_view, name='trip_cancellation_report'),
     path('ref_no_pending_report/', views.ref_no_pending_report_view, name='ref_no_pending_report'),
@@ -833,6 +833,13 @@ urlpatterns = [
     path("maintenance/manager-approve/<int:id>/", views.manager_approve, name="manager_approve"),
     path("maintenance/finance-approval/", views.finance_approval_list, name="finance_approval_list"),
     path("maintenance/finance-approve/<int:id>/", views.finance_approve, name="finance_approve"),
+    # Market Bill
+    path('market_bill/', views.market_bill_add, name='market_bill_add'),
+    path('market_bill/list/', views.market_bill_list, name='market_bill_list'),
+    path('market_bill/<int:id>/edit/', views.market_bill_edit, name='market_bill_edit'),
+    path('market_bill/<int:id>/delete/', views.market_bill_delete, name='market_bill_delete'),
+    path('ajax/get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
+    path('ajax/get_trips_by_vehicle/', views.get_trips_by_vehicle, name='get_trips_by_vehicle'),
 ]
 
 
