@@ -33,6 +33,7 @@ class PkpurchaseorderInfo(models.Model):
         return self.po_num
 
     def save(self, *args, **kwargs):
-        # Calculate total value: Value + (Value x Tax)
-        self.po_total_value = self.po_value + (self.po_value * self.po_tax)
+        # Calculate total value: Value + (Value x Tax%)
+        # Tax is stored as percentage (e.g., 12 for 12%), so divide by 100
+        self.po_total_value = self.po_value + (self.po_value * self.po_tax / 100)
         super(PkpurchaseorderInfo, self).save(*args, **kwargs)
