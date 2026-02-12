@@ -1,7 +1,7 @@
 from django.db import models
 from ..models import CustomerInfo, TripdetailInfo, ConsignmentdetailInfo, ConsignmentgoodsInfo
-from ..models import Dbs_rate
-from ..models import Sow_choice
+from .dbs_rate_mod import Dbs_rate
+from .sow_choice_mod import Sow_choice
 
 
 class TransInvoiceInfo(models.Model):
