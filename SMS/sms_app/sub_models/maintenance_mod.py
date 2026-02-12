@@ -1,6 +1,8 @@
 from django.db import models
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
-from ..sub_models.driver_master_mod import  DrivermasterInfo
+from ..sub_models.driver_master_mod import DrivermasterInfo
+from ..sub_models.maintenance_status_mod import Maintenance_status
+from ..sub_models.complaint_type_mod import Complaint_type
 
 class MaintenanceInfo(models.Model):
     mi_vehicle = models.ForeignKey(VehiclemasterInfo,on_delete=models.PROTECT,related_name="maintenance_records")
@@ -22,50 +24,7 @@ class MaintenanceInfo(models.Model):
     mi_job_card_creator = models.CharField(max_length=100)
     mi_job_card_created_on = models.DateTimeField()
     mi_updated_by = models.CharField(max_length=100, null=True, blank=True)
-    COMPLAINT_CHOICES = [
-            ("", "-- Select --"),
-
-            ("ac_engine", "AC ENGINE"),
-            ("air_brake_system", "AIR BRAKE SYSTEM"),
-            ("air_door", "AIR DOOR"),
-            ("air_system", "AIR SYSTEM"),
-            ("audio_video", "AUDIO & VIDEO"),
-            ("body_work", "BODY WORK"),
-            ("brake_system", "BRAKE SYSTEM"),
-            ("clutch", "CLUTCH"),
-            ("contractor", "CONTRACTOR"),
-            ("cooling_systems", "COOLING SYSTEMS"),
-            ("driver_left", "DRIVER LEFT"),
-            ("electrical", "ELECTRICAL"),
-            ("engine", "ENGINE"),
-            ("engine_electrical_parts", "ENGINE ELECTRICAL PARTS"),
-            ("front_axle", "FRONT AXLE"),
-            ("fuel_feed_system", "FUEL FEED SYSTEM"),
-            ("gear_box", "GEAR BOX"),
-            ("general_maintenance", "GENERAL MAINTENANCE"),
-            ("hydraulic_brake_system", "HYDRAULIC BRAKE SYSTEM"),
-            ("intake_exhaust_system", "INTAKE & EXHAUST SYSTEM"),
-            ("joint", "JOINT"),
-            ("lubricating_system", "LUBRICATING SYSTEM"),
-            ("non_r_m", "NON R & M"),
-            ("painting", "PAINTING"),
-            ("painting_works", "PAINTING WORKS"),
-            ("periodic_service", "PERIODIC SERVICE"),
-            ("rear_axle", "REAR AXLE"),
-            ("retarder_electrical", "RETARDER BRAKE (ELECTRICAL)"),
-            ("retarder_hydraulic", "RETARDER BRAKE (HYDRAULIC)"),
-            ("steering", "STEERING"),
-            ("suspension_system", "SUSPENSION SYSTEM"),
-            ("tag_axle", "TAG AXLE (DEAD REAR AXLE)"),
-            ("tank_work", "TANK WORK"),
-            ("trailer", "TRAILER"),
-            ("unscheduled_activities", "UNSCHEDULED ACTIVITIES"),
-            ("vehicle_passing", "VEHICLE PASSING"),
-            ("wheel", "WHEEL"),
-            ("wheel_alignment", "WHEEL ALIGNMENT"),
-        ]
-
-    mi_complaint = models.CharField(max_length=50,choices=COMPLAINT_CHOICES)
+    mi_complaint = models.ForeignKey(Complaint_type, on_delete=models.PROTECT, null=True, blank=True)
     mi_description = models.TextField()
     mi_technician = models.CharField(max_length=100, blank=True)
     mi_estimated_amount = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
@@ -76,12 +35,7 @@ class MaintenanceInfo(models.Model):
     mi_budget_balance = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     mi_job_card_no = models.CharField(max_length=20,null=True,blank=True,unique=True,)
     mi_bay_no = models.CharField(max_length=10, null=True, blank=True)
-    APPROVAL_STATUS_CHOICES = [
-        (1, "Awaiting Manager Approval"),
-        (2, "Awaiting Finance Approval"),
-        (3, "Finance Approved"),
-    ]
-    mi_approval_status = models.PositiveSmallIntegerField(choices=APPROVAL_STATUS_CHOICES,default=1)
+    mi_approval_status = models.ForeignKey(Maintenance_status, default=1, on_delete=models.PROTECT)
     def __str__(self):
         # Ensure __str__ always returns a string even if job_card_no is None
         if self.mi_job_card_no:

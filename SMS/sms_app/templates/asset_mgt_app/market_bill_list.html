@@ -48,13 +48,14 @@
                     <th>S.No</th>
                     <th>Bill No</th>
                     <th>Vendor</th>
-                    <th>Vehicle Number</th>
-                    <th>Vehicle Type</th>
+                    <th>Branch</th>
+                    <!--<th>Vehicle Number</th>
+                    <th>Vehicle Type</th>-->
                     <th>Trip Cost</th>
                     <th>Parking Cost</th>
                     <th>Halting Days</th>
                     <th>Halting Cost</th>
-                    <th>Total Cost</th>
+                    <th>Buy Cost</th>
                     <th>Created On</th>
                     <th>Created By</th>
                     <th>Updated By</th>
@@ -69,8 +70,9 @@
                     <td>{{ forloop.counter }}</td>
                     <td>{{ bill.mb_bill_no }}</td>
                     <td>{{ bill.mb_vendor }}</td>
-                    <td>{{ bill.mb_vehicle_number }}</td>
-                    <td>{{ bill.mb_vehicle_type|default:"" }}</td>
+                    <td></td> <!-- Placeholder for Branch -->
+                    <!--<td>{{ bill.mb_vehicle_number }}</td>
+                    <td>{{ bill.mb_vehicle_type|default:"" }}</td>-->
                     <td>{{ bill.mb_trip_cost|floatformat:2 }}</td>
                     <td>{{ bill.mb_parking_cost|floatformat:2 }}</td>
                     <td>{{ bill.mb_halting_days|default:0 }}</td>
