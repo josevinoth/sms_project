@@ -233,3 +233,4 @@ from .sub_models.trans_invoice_mod import TransInvoiceInfo
 from .sub_models.maintenance_mod import MaintenanceInfo
 from .sub_models.stock_maintenance_mod import StockMaintenance
 from .sub_models.market_bill_mod import MarketBillInfo
+# from .sub_models.customer_registration_mod import CustomerRegistrationInfo
