@@ -238,46 +238,46 @@
 
             <table id="stock_maintenance_table" class="table table-striped table-bordered table-sm">
                 <thead class="thead-dark">
-                      <tr>
-                    <th>ID</th>
-                    <th>Invoice No</th>
-                    <th>Invoice Date</th>
-                    <th>Stock Type</th>
-                    <th>Partcode</th>
-                    <th>Description</th>
-                    <th>Thickness</th>
-                    <th>Width</th>
-                    <th>Length</th>
-                    <th>UOM</th>
-                    <th>Count</th>
-                    <th>CFT</th>
-                    <th>Total CFT</th>
-                    <th>Per Unit Cost</th>
-                    <th>Total Price</th>
-                    <th>Updated By</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
-                <tr>
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.sm_invoice_no }}</td>
-                    <td>{{ item.sm_invoice_date }}</td>
-                    <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
-                    <td>{{ item.sm_partcode.pc_code }}</td>
-                    <td>{{ item.sm_description }}</td>
-                    <td>{{ item.sm_thickness }}</td>
-                    <td>{{ item.sm_width }}</td>
-                    <td>{{ item.sm_length }}</td>
-                    <td>{{ item.sm_uom.unit_of_measure }}</td>
-                    <td>{{ item.sm_count }}</td>
-                    <td>{{ item.sm_cft }}</td>
-                    <td>{{ item.sm_total_cft }}</td>
-                    <td>{{ item.sm_per_unit_cost }}</td>
-                    <td>{{ item.sm_total_price }}</td>
-                    <td>{{ item.sm_updated_by }}</td>
+                    <tr>
+                        <th>ID</th>
+                        <th>Invoice No</th>
+                        <th>Invoice Date</th>
+                        <th>Stock Type</th>
+                        <th>Partcode</th>
+                        <th>Description</th>
+                        <th>Thickness</th>
+                        <th>Width</th>
+                        <th>Length</th>
+                        <th>UOM</th>
+                        <th>Count</th>
+                        <th>CFT</th>
+                        <th>Total CFT</th>
+                        <th>Per Unit Cost</th>
+                        <th>Total Price</th>
+                        <th>Updated By</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.sm_invoice_no }}</td>
+                        <td>{{ item.sm_invoice_date }}</td>
+                        <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
+                        <td>{{ item.sm_partcode.pc_code }}</td>
+                        <td>{{ item.sm_description }}</td>
+                        <td>{{ item.sm_thickness }}</td>
+                        <td>{{ item.sm_width }}</td>
+                        <td>{{ item.sm_length }}</td>
+                        <td>{{ item.sm_uom.unit_of_measure }}</td>
+                        <td>{{ item.sm_count }}</td>
+                        <td>{{ item.sm_cft }}</td>
+                        <td>{{ item.sm_total_cft }}</td>
+                        <td>{{ item.sm_per_unit_cost }}</td>
+                        <td>{{ item.sm_total_price }}</td>
+                        <td>{{ item.sm_updated_by }}</td>
 
                         <!-- EDIT -->
                         <td class="text-center">
@@ -333,19 +333,27 @@
                 $jq('#id_sm_length').val('0');
                 $jq('#id_sm_uom').val('').trigger('change');
 
-                // Restore global totals
-                var gCount = $jq('#dash_total_count').data('global');
-                var gCft = $jq('#dash_total_cft').data('global');
-                var gCost = $jq('#dash_total_cost').data('global');
-
-                $jq('#dash_total_count').text(gCount).data('baseline', gCount);
-                $jq('#dash_total_cft').text(gCft).data('baseline', gCft);
-                $jq('#dash_total_cost').text(gCost).data('baseline', gCost);
-
-                // Clear Table Filter
-                if (window.jQuery && window.jQuery.fn.DataTable && window.jQuery.fn.DataTable.isDataTable('#stock_maintenance_table')) {
-                    window.jQuery('#stock_maintenance_table').DataTable().column(4).search('').draw();
-                }
+                // Restore global items and totals via AJAX
+                $jq.ajax({
+                    url: "/SMS/get_part_details/",
+                    data: { 'part_id': '' },
+                    success: function (data) {
+                        if (data.part_totals) {
+                            $jq('#dash_total_count').text(data.part_totals.total_count);
+                            $jq('#dash_total_cft').text(data.part_totals.total_cft.toFixed(2));
+                            $jq('#dash_total_cost').text(data.part_totals.total_cost.toFixed(2));
+                        }
+                        if (typeof data.items_html !== 'undefined' && window.jQuery && window.jQuery.fn.DataTable) {
+                            var table = window.jQuery('#stock_maintenance_table').DataTable();
+                            table.destroy();
+                            $jq('#stock_maintenance_table tbody').html(data.items_html);
+                            window.jQuery('#stock_maintenance_table').DataTable({
+                                order: [[0, 'desc']],
+                                pageLength: 10
+                            });
+                        }
+                    }
+                });
 
                 calculate();
                 return;
@@ -376,11 +384,17 @@
                             $jq('#dash_total_cost').text(data.part_totals.total_cost.toFixed(2)).data('baseline', data.part_totals.total_cost);
                         }
 
-                        // Filter Table (Partcode is in Column 4)
-                        if (window.jQuery && window.jQuery.fn.DataTable && window.jQuery.fn.DataTable.isDataTable('#stock_maintenance_table')) {
-                            var partCodeText = $jq('#id_sm_partcode option:selected').text().split('(')[0].trim();
-                            // console.log("Filtering table for: " + partCodeText);
-                            window.jQuery('#stock_maintenance_table').DataTable().column(4).search(partCodeText).draw();
+                        // Update Table with contextual records
+                        if (typeof data.items_html !== 'undefined' && window.jQuery && window.jQuery.fn.DataTable) {
+                            var table = window.jQuery('#stock_maintenance_table').DataTable();
+                            table.destroy(); // Clear current instance
+                            $jq('#stock_maintenance_table tbody').html(data.items_html); // Inject new rows (can be empty)
+
+                            // Re-initialize DataTable
+                            window.jQuery('#stock_maintenance_table').DataTable({
+                                order: [[0, 'desc']],
+                                pageLength: 10
+                            });
                         }
 
                         calculate();
