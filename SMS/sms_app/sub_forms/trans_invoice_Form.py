@@ -5,7 +5,7 @@ class TransInvoiceForm(forms.ModelForm):
     class Meta:
         model = TransInvoiceInfo
 
-        # ✅ ONLY fields user fills
+        # ✅ FIELDS USER FILLS
         exclude = (
             'ti_branch',
             'ti_total',
@@ -22,28 +22,35 @@ class TransInvoiceForm(forms.ModelForm):
                     "type": "date",
                     "class": "form-control"
                 }
-            )
+            ),
+            "ti_type_of_rate": forms.Select(attrs={"class": "form-control"}),
+            "ti_sow": forms.Select(attrs={"class": "form-control"}),
+            "ti_aai_sno": forms.TextInput(attrs={"class": "form-control"}),
+            # Readonly charges
+            "ti_transportation_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
+            "ti_toll_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
+            "ti_parking_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
+            "ti_loading_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
+            "ti_unloading_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
+            "ti_halting_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
+            "ti_docket_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
+            "ti_weighment_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
+            "ti_handling_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
+            "ti_cancellation_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
         }
 
-    # ==================================================
-    # 🔒 STEP-2: UNIQUE INVOICE NUMBER VALIDATION
-    # ==================================================
     def clean_ti_inv_no(self):
         inv_no = self.cleaned_data.get("ti_inv_no")
-
-        # Allow empty handling if field is optional
         if not inv_no:
             return inv_no
 
-        qs = TransInvoiceInfo.objects.filter(ti_inv_no=inv_no)
-
-        # ✅ Important: allow same invoice number while editing
+        # Validate uniqueness only among Master invoices (is_woh=False)
+        qs = TransInvoiceInfo.objects.filter(ti_inv_no=inv_no, is_woh=False)
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
 
         if qs.exists():
             raise forms.ValidationError(
-                "Invoice number already exists. Please enter a unique invoice number."
+                "This Master Invoice number already exists. Please enter a unique invoice number."
             )
-
         return inv_no

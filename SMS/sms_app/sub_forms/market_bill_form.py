@@ -11,16 +11,7 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.Select(attrs={"class": "form-control", "id": "mb_vendor"})
     )
 
-    mb_vehicle_number = forms.ChoiceField(
-        choices=[('', '-- Select Vehicle --')],
-        required=True,
-        widget=forms.Select(attrs={"class": "form-control", "id": "mb_vehicle_number"})
-    )
 
-    mb_vehicle_type = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={"class": "form-control", "id": "mb_vehicle_type", "readonly": "readonly"})
-    )
 
     mb_bill_no = forms.CharField(
         max_length=50,
@@ -62,8 +53,6 @@ class MarketBillForm(forms.ModelForm):
         model = MarketBillInfo
         fields = [
             'mb_vendor',
-            'mb_vehicle_number',
-            'mb_vehicle_type',
             'mb_bill_no',
             'mb_trip_cost',
             'mb_parking_cost',
@@ -75,24 +64,6 @@ class MarketBillForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Handle AJAX-populated vehicle selection for validation
-        if 'mb_vehicle_number' in self.data:
-            vehicle_no = self.data.get('mb_vehicle_number')
-            if vehicle_no:
-                self.fields['mb_vehicle_number'].choices = [('', '-- Select Vehicle --'), (vehicle_no, vehicle_no)]
-
-        # If editing, populate vehicle choices
-        elif self.instance and self.instance.pk:
-            if self.instance.mb_vehicle_number:
-                self.fields['mb_vehicle_number'].choices = [
-                    ('', '-- Select Vehicle --'),
-                    (self.instance.mb_vehicle_number, self.instance.mb_vehicle_number)
-                ]
-                self.initial['mb_vehicle_number'] = self.instance.mb_vehicle_number
-
-    def clean_mb_vehicle_number(self):
-        return self.cleaned_data.get('mb_vehicle_number')
 
     def clean_mb_trip_cost(self):
         val = self.cleaned_data.get('mb_trip_cost')

@@ -6,15 +6,18 @@
     {% csrf_token %}
 
     <div class="container-fluid">
-        <div class="card text-white bg-info mb-3" style="max-width:100%;">
+
+        <!-- ================= FIRST BOX: FORM FIELDS ================= -->
+        <div class="card text-white bg-info mb-3">
 
             <!-- ================= HEADER ================= -->
-            <div class="card-header d-flex justify-content-center align-items-center">
-                <h3 class="mb-0">Market Bill</h3>
+            <div class="card-header d-flex justify-content-center align-items-center"
+                style="background-color: #17a2b8;">
+                <h5 class="mb-0">Market Bill</h5>
             </div>
 
             <!-- ================= BODY ================= -->
-            <div class="card-body bg-light pt-2 pb-2">
+            <div class="card-body bg-light text-dark pt-3 pb-3">
 
                 <!-- ================= ROW 1 : FORM FIELDS ================= -->
                 <div class="row mb-1">
@@ -31,29 +34,10 @@
 
                         <div class="input-group input-group-sm mb-2">
                             <div class="input-group-prepend">
-                                <span class="input-group-text">Vehicle Number</span>
-                            </div>
-                            {% render_field form.mb_vehicle_number class="form-control" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Vehicle Type</span>
-                            </div>
-                            {% render_field form.mb_vehicle_type class="form-control" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
                                 <span class="input-group-text">Bill No</span>
                             </div>
                             {% render_field form.mb_bill_no class="form-control" %}
                         </div>
-
-                        <!-- ================= SAVE BUTTON ================= -->
-                        <button type="submit" class="btn btn-success mb-3">
-                            <i class="fas fa-check"></i> Save
-                        </button>
 
                     </div>
 
@@ -101,53 +85,81 @@
                 <!-- Hidden field for selected trips -->
                 {% render_field form.mb_selected_trips %}
 
-                <!-- ================= MESSAGES ================= -->
+                <!-- ================= SAVE BUTTON ================= -->
                 <div class="row">
-                    <div class="col-1"></div>
-                    <div class="col-10">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Submit
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ================= MESSAGES ================= -->
+                <div class="row mt-2">
+                    <div class="col-12">
                         <div class="message text-center">
                             {% for message in messages %}
                             <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
                             {% endfor %}
                         </div>
                     </div>
-                    <div class="col-1"></div>
                 </div>
 
+            </div>
+        </div>
 
-                <!-- Actions: Both Add and Remove are useful in both modes -->
-                <div class="row mb-2 align-items-center">
-                    <div class="col-4 d-flex gap-2">
-                        <button type="button" id="addSelectedBtn" class="btn btn-primary">
+        <!-- ================= SECOND BOX: TRIPS LIST ================= -->
+        <div class="card text-white bg-info mb-3">
+
+            <!-- ================= HEADER ================= -->
+            <div class="card-header d-flex justify-content-between align-items-center"
+                style="background-color: #17a2b8;">
+                <h5 class="mb-0">Market Bill Trips</h5>
+            </div>
+
+            <!-- ================= BODY ================= -->
+            <div class="card-body bg-light text-dark pt-3 pb-3">
+
+                <!-- ================= FILTERS AND ACTIONS ================= -->
+                <div class="row mb-3 align-items-center">
+
+                    <!-- Add/Remove Buttons -->
+                    <div class="col-12 col-md-4 mb-2 mb-md-0">
+                        <button type="button" id="addSelectedBtn" class="btn btn-primary mr-3">
                             <i class="fas fa-plus"></i> Add
                         </button>
                         <button type="button" id="removeSelectedBtn" class="btn btn-danger">
                             <i class="fas fa-trash"></i> Remove
                         </button>
                     </div>
-                    <div class="col-4 d-flex justify-content-center align-items-center gap-2">
-                        {% if not record.id %}
-                        <label class="mb-0 fw-bold">Trip Date :</label>
-                        <input type="date" id="tripFromDate" class="form-control" style="max-width: 150px;">
-                        <span class="fw-bold">to</span>
-                        <input type="date" id="tripToDate" class="form-control" style="max-width: 150px;">
-                        <button type="button" id="clearTripDateRange" class="btn btn-secondary">
-                            Clear
-                        </button>
-                        {% endif %}
+
+                    <!-- Date Filter -->
+                    {% if not record.id %}
+                    <div class="col-12 col-md-8">
+                        <div class="d-flex align-items-center justify-content-end flex-wrap">
+                            <label class="mb-0 fw-bold mr-2">From</label>
+                            <input type="date" id="tripFromDate" class="form-control mr-3" style="max-width: 150px;">
+                            <label class="mb-0 fw-bold mr-2">to</label>
+                            <input type="date" id="tripToDate" class="form-control mr-3" style="max-width: 150px;">
+                            <button type="button" id="clearTripDateRange" class="btn btn-secondary ml-2">
+                                Clear
+                            </button>
+                        </div>
                     </div>
-                    <div class="col-4"></div>
+                    {% endif %}
                 </div>
+
                 <!-- ================= TRIPS TABLE ================= -->
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped table-sm" id="tripsTable">
+                <div class="table-responsive shadow-box-table p-3">
+                    <table class="table table-striped table-bordered" id="tripsTable">
                         <thead class="thead-dark">
                             <tr>
                                 <th><input type="checkbox" id="selectAllTrips"></th>
                                 <th>Cnote</th>
+                                <th>Vehicle No</th>
+                                <th>Veh Type</th>
                                 <th>From</th>
                                 <th>To</th>
-                                <th>Veh Type</th>
                                 <th>Trip Date</th>
                                 <th>Trip Cost</th>
                                 <th>Parking Cost</th>
@@ -160,16 +172,17 @@
                             <!-- EDIT Mode: Pre-populate with saved trips -->
                             {% if selected_trips_data %}
                             {% for trip in selected_trips_data %}
-                            <tr data-id="{{ trip.id }}" class="added-row">
+                            <tr class="added-row">
                                 <td><input type="checkbox" class="trip-checkbox" data-id="{{ trip.id }}"
                                         data-trip="{{ trip.trip_cost }}" data-parking="{{ trip.parking_cost }}"
                                         data-halting-days="{{ trip.halting_days }}"
                                         data-halting-cost="{{ trip.halting_cost }}">
                                 </td>
                                 <td>{{ trip.trip_number }}</td>
+                                <td>{{ trip.vehicle_number }}</td>
+                                <td>{{ trip.vehicle_type }}</td>
                                 <td>{{ trip.from_location }}</td>
                                 <td>{{ trip.to_location }}</td>
-                                <td>{{ trip.vehicle_type }}</td>
                                 <td>{{ trip.trip_date|default:"" }}</td>
                                 <td class="trip-cost-cell">{{ trip.trip_cost|floatformat:2 }}</td>
                                 <td class="parking-cost-cell">{{ trip.parking_cost|floatformat:2 }}</td>
@@ -182,13 +195,13 @@
                             {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="10" class="text-center text-muted">No trips found in this bill</td>
+                                <td colspan="11" class="text-center text-muted">No trips found in this bill</td>
                             </tr>
                             {% endif %}
                             {% else %}
                             <!-- ADD Mode: Initial empty state -->
                             <tr>
-                                <td colspan="10" class="text-center text-muted">Select a vehicle to view trips</td>
+                                <td colspan="11" class="text-center text-muted">Select a vendor to view trips</td>
                             </tr>
                             {% endif %}
                         </tbody>
@@ -197,6 +210,7 @@
 
             </div>
         </div>
+
     </div>
 </form>
 
@@ -215,21 +229,6 @@
     });
     document.getElementById("mb_selected_trips").value = Array.from(selectedTripIds).join(",");
     {% endif %}
-
-    // Auto-fetch vehicle type on load if editing and empty
-    document.addEventListener("DOMContentLoaded", function () {
-        const vNum = document.getElementById("mb_vehicle_number").value;
-        const vType = document.getElementById("mb_vehicle_type").value;
-        if (vNum && !vType) {
-            fetch(`/SMS/ajax/get_vehicle_details/?vehicle_number=${vNum}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.vehicle_type) {
-                        document.getElementById("mb_vehicle_type").value = data.vehicle_type;
-                    }
-                });
-        }
-    });
 
     // Function to recalculate totals
     function updateTotals() {
@@ -274,60 +273,71 @@
         }
     });
 
-    // ========== VENDOR CHANGE: LOAD VEHICLES ==========
+    // DataTable instance variable
+    let tripsDataTable = null;
+
+    // Function to initialize DataTable
+    function initializeTripsDataTable() {
+        // Destroy existing DataTable if it exists
+        if (tripsDataTable) {
+            tripsDataTable.destroy();
+            tripsDataTable = null;
+        }
+
+        // Check if table has actual data rows (not just colspan messages)
+        const tbody = document.getElementById("tripsTableBody");
+        const rows = tbody.querySelectorAll('tr');
+
+        // Check if any row has a td with colspan (indicates empty/message row)
+        let hasColspan = false;
+        rows.forEach(row => {
+            const colspanCell = row.querySelector('td[colspan]');
+            if (colspanCell) {
+                hasColspan = true;
+            }
+        });
+
+        // Only initialize if we have rows and none of them have colspan
+        const hasData = rows.length > 0 && !hasColspan;
+
+        if (hasData) {
+            tripsDataTable = $('#tripsTable').DataTable({
+                order: [[1, 'desc']], // Sort by Cnote column by default
+                destroy: true,
+                paging: true,
+                searching: true,
+                info: true,
+                pageLength: 10
+            });
+        }
+    }
+
+    // ========== VENDOR CHANGE: LOAD TRIPS ==========
     document.getElementById("mb_vendor").addEventListener("change", function () {
 
         const vendorId = this.value;
-        const vehicleSelect = document.getElementById("mb_vehicle_number");
-
-        vehicleSelect.innerHTML = '<option value="">-- Select Vehicle --</option>';
-        document.getElementById("tripsTableBody").innerHTML =
-            '<tr><td colspan="10" class="text-center text-muted">Select a vehicle to view trips</td></tr>';
-
-        if (!vendorId) return;
-
-        fetch(`/SMS/ajax/get_vehicles_by_vendor/?vendor_id=${vendorId}`)
-            .then(res => res.json())
-            .then(data => {
-                data.vehicles.forEach(vehicle => {
-                    const option = document.createElement("option");
-                    option.value = vehicle.id;
-                    option.textContent = vehicle.text;
-                    vehicleSelect.appendChild(option);
-                });
-            })
-            .catch(err => console.error("Error loading vehicles:", err));
-    });
-
-    // ========== VEHICLE CHANGE: LOAD DETAILS & TRIPS ==========
-    document.getElementById("mb_vehicle_number").addEventListener("change", function () {
-
-        const vehicleNumber = this.value;
         const tbody = document.getElementById("tripsTableBody");
-        const vehicleTypeInput = document.getElementById("mb_vehicle_type");
 
-        tbody.innerHTML = '<tr><td colspan="10" class="text-center">Loading...</td></tr>';
-        vehicleTypeInput.value = '';
+        // Destroy DataTable before modifying table
+        if (tripsDataTable) {
+            tripsDataTable.destroy();
+            tripsDataTable = null;
+        }
 
-        if (!vehicleNumber) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Select a vehicle to view trips</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center">Loading...</td></tr>';
+
+        if (!vendorId) {
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">Select a vendor to view trips</td></tr>';
             return;
         }
 
-        // Load Vehicle Type
-        fetch(`/SMS/ajax/get_vehicle_details/?vehicle_number=${vehicleNumber}`)
-            .then(res => res.json())
-            .then(data => {
-                vehicleTypeInput.value = data.vehicle_type;
-            });
-
-        fetch(`/SMS/ajax/get_trips_by_vehicle/?vehicle_number=${vehicleNumber}`)
+        fetch(`/SMS/ajax/get_trips_by_vendor/?vendor_id=${vendorId}`)
             .then(res => res.json())
             .then(data => {
                 const availableTrips = data.trips.filter(t => !selectedTripIds.has(t.id.toString()));
 
                 if (availableTrips.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No available trips found for this vehicle</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No available trips found for this vendor</td></tr>';
                     return;
                 }
 
@@ -335,11 +345,6 @@
 
                 tbody.innerHTML = '';
                 availableTrips.forEach(trip => {
-                    // Fallback: If main form vehicle type is still empty, grab it from the trips
-                    if (!vehicleTypeInput.value && trip.vehicle_type) {
-                        vehicleTypeInput.value = trip.vehicle_type;
-                    }
-
                     const row = document.createElement("tr");
                     row.innerHTML = `
                     <td><input type="checkbox" class="trip-checkbox" 
@@ -349,9 +354,10 @@
                         data-halting-days="${trip.halting_days}"
                         data-halting-cost="${trip.halting_cost}"></td>
                     <td>${trip.trip_number}</td>
+                    <td>${trip.vehicle_number}</td>
+                    <td>${trip.vehicle_type}</td>
                     <td>${trip.from_location}</td>
                     <td>${trip.to_location}</td>
-                    <td>${trip.vehicle_type}</td>
                     <td>${trip.trip_date}</td>
                     <td>${trip.trip_cost.toFixed(2)}</td>
                     <td>${trip.parking_cost.toFixed(2)}</td>
@@ -363,10 +369,13 @@
                 `;
                     tbody.appendChild(row);
                 });
+
+                // Initialize DataTable after data is loaded
+                initializeTripsDataTable();
             })
             .catch(err => {
                 console.error("Error loading trips:", err);
-                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error loading trips</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error loading trips</td></tr>';
             });
     });
 
@@ -430,7 +439,7 @@
         const toDate = toVal ? new Date(toVal) : null;
 
         document.querySelectorAll("#tripsTableBody tr").forEach(row => {
-            const dateCell = row.children[5]; // Trip Date column
+            const dateCell = row.children[6]; // Trip Date column
             if (!dateCell) return;
 
             const tripDateText = dateCell.textContent.trim();
@@ -458,6 +467,11 @@
         document.querySelectorAll("#tripsTableBody tr").forEach(row => {
             row.style.display = "";
         });
+    });
+
+    // Initialize DataTable on page load if there's existing data (edit mode)
+    $(document).ready(function () {
+        initializeTripsDataTable();
     });
 </script>
 

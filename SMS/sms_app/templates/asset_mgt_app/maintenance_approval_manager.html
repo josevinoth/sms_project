@@ -40,7 +40,7 @@
         <tr>
             <td>{{ m.mi_job_card_no }}</td>
             <td>{{ m.mi_vehicle.vm_registrationnumber }}</td>
-            <td>{{ m.get_mi_complaint_display }}</td>
+            <td>{{ m.mi_complaint.complaint_type }}</td>
             <td>{{ m.mi_service_type }}</td>
             <td>₹{{ m.mi_estimated_amount|default:"0.00" }}</td>
             <td>{{ m.mi_job_card_created_on|date:"d-m-Y H:i" }}</td>

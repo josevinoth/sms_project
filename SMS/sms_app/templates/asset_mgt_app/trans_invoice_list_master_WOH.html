@@ -92,7 +92,8 @@
                 <th><input class="form-control filter-input" placeholder="Search Loading Charges"></th>
                 <th><input class="form-control filter-input" placeholder="Search Unloading Charges"></th>
                 <th><input class="form-control filter-input" placeholder="Search Halting Charges"></th>
-                <th><input class="form-control filter-input" placeholder="Search Docket Charges"></th>
+                <th style="display:none;"><input class="form-control filter-input" placeholder="Search Docket Charges">
+                </th>
                 <th><input class="form-control filter-input" placeholder="Search Weighment Charges"></th>
                 <th><input class="form-control filter-input" placeholder="Search Handling Charges"></th>
                 <th><input class="form-control filter-input" placeholder="Search Cancellation Charges"></th>
@@ -146,7 +147,7 @@
                 <th>Loading Charges</th>
                 <th>Unloading Charges</th>
                 <th>Halting Charges</th>
-                <th>Docket Charges</th>
+                <th style="display:none;">Docket Charges</th>
                 <th>Weighment Charges</th>
                 <th>Handling Charges</th>
                 <th>Cancellation Charges</th>
@@ -174,7 +175,7 @@
                 <td>{{ inv.tr_enquirynumber.en_customername }}</td>
 
                 <!-- Planning Date -->
-                <td>{{ inv.tr_created_at|date:"Y-m-d" }}</td>
+                <td data-order="{{ inv.tr_created_at|date:'Y-m-d' }}">{{ inv.tr_created_at|date:"d/m/Y" }}</td>
 
                 <!-- Cnote No -->
                 <td>
@@ -253,7 +254,7 @@
                 <td>{{ inv.tc_loadingcost }}</td>
                 <td>{{ inv.tc_unloadingcost }}</td>
                 <td>{{ inv.tc_haltingcost }}</td>
-                <td>{{ inv.tc_rtocost }}</td>
+                <td style="display:none;">{{ inv.tc_rtocost }}</td>
                 <td>{{ inv.tc_weighmentcost }}</td>
                 <td>{{ inv.tc_handlingcost }}</td>
                 <td>{{ inv.tc_cancellation }}</td>
@@ -366,48 +367,18 @@
 
         function parseDate(val) {
             if (!val) return new Date(0);
+            // Handle dd/mm/yyyy
+            let parts = val.split('/');
+            if (parts.length === 3) {
+                // new Date(year, monthIndex, day)
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
             return new Date(val);
         }
 
     });
 </script>
-<script>
-    $('#add_btn').on('click', function (e) {
-        e.preventDefault();
 
-        let ids = [];
-
-        $('#trans_invoice_master_list tbody input.row-select:checked')
-            .each(function () {
-                ids.push($(this).val());
-            });
-
-        if (ids.length === 0) {
-            alert("Please select at least one invoice");
-            return;
-        }
-
-        $.ajax({
-            url: "{% url 'trans_invoice_list_woh' customer.id %}",
-            type: "POST",
-            data: {
-                'invoice_list[]': ids,
-                'action': 'add',
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function () {
-                location.reload();
-            },
-            error: function (xhr) {
-                let msg = "Failed to add invoice(s)";
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    msg += "\nError: " + xhr.responseJSON.message;
-                }
-                alert(msg);
-            }
-        });
-    });
-</script>
 
 
 {% endblock content %}

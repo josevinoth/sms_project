@@ -38,6 +38,7 @@ class MaintenanceForm(forms.ModelForm):
             "mi_updated_at",
             "mi_updated_by",
             "mi_job_card_no",
+            "mi_approval_status",  # Exclude from form, handled in view
         )
         widgets = {
             "mi_complaint": forms.Select(attrs={"class": "form-control"}),
@@ -55,24 +56,4 @@ class MaintenanceForm(forms.ModelForm):
         for field_name in readonly_fields:
             if field_name in self.fields:
                 self.fields[field_name].required = False
-
-        # ✅ Disable approval_status field (read-only in UI)
-        if "mi_approval_status" in self.fields:
-           # show the current value when editing, or the model default when creating
-           try:
-               if getattr(self.instance, 'pk', None):
-                   # editing existing instance: use its value
-                   self.fields["mi_approval_status"].initial = self.instance.mi_approval_status
-               else:
-                   # new form: use the model field default
-                   self.fields["mi_approval_status"].initial = (
-                       self._meta.model._meta.get_field('mi_approval_status').default
-                   )
-           except Exception:
-               # fallback to 1 if anything goes wrong
-               self.fields["mi_approval_status"].initial = 1
-
-           # keep it disabled (read-only) but ensure the bootstrap class is applied
-           self.fields["mi_approval_status"].disabled = True
-           self.fields["mi_approval_status"].widget.attrs.update({"class": "form-control"})
 
