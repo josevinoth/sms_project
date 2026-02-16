@@ -51,8 +51,8 @@ def home_page(request):
         Q(hc_value__gt=2500000) ) & Q(hc_approval_status__id=3)
     ).count()
     checklist_count = TripHighvalueInfo.objects.filter(thc_approval_status=2).count()
-    manager_listcount =MaintenanceInfo.objects.filter(approval_status=1).count()
-    finance_listcount =MaintenanceInfo.objects.filter(approval_status=2).count()
+    manager_listcount =MaintenanceInfo.objects.filter(mi_approval_status_id=1).count()
+    finance_listcount =MaintenanceInfo.objects.filter(mi_approval_status_id=2).count()
     need_assessment_count= PkneedassessmentInfo.objects.filter(na_status_id=5).count()
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),

@@ -30,18 +30,17 @@ def trans_invoice_add(request):
             invoice = form.save(commit=False)
 
             # calculate total
-            invoice.ti_total = (
-                (invoice.ti_transportation_charges or 0) +
-                (invoice.ti_toll_charges or 0) +
-                (invoice.ti_parking_charges or 0) +
-                (invoice.ti_loading_charges or 0) +
-                (invoice.ti_unloading_charges or 0) +
-                (invoice.ti_halting_charges or 0) +
-                (invoice.ti_docket_charges or 0) +
-                (invoice.ti_weighment_charges or 0) +
-                (invoice.ti_handling_charges or 0) +
-                (invoice.ti_cancellation_charges or 0)
-            )
+            invoice.ti_total = 0  # Initialize to 0 as no WOH items yet
+            invoice.ti_transportation_charges = 0
+            invoice.ti_toll_charges = 0
+            invoice.ti_parking_charges = 0
+            invoice.ti_loading_charges = 0
+            invoice.ti_unloading_charges = 0
+            invoice.ti_halting_charges = 0
+            invoice.ti_docket_charges = 0
+            invoice.ti_weighment_charges = 0
+            invoice.ti_handling_charges = 0
+            invoice.ti_cancellation_charges = 0
 
             # ==================================================
             # ATTACH CONSIGNMENT / TRIP / GOODS
@@ -97,10 +96,10 @@ def trans_invoice_add(request):
             customer_name = str(cust).upper() if cust else ""
 
             if cust:
-                invoice.ti_gst_in = getattr(cust, 'CustomerInfo.cu_gst', '') or invoice.ti_gst_in
-                invoice.ti_pincode = getattr(cust, 'CustomerInfo.cu_pincode', '') or invoice.ti_pincode
+                invoice.ti_gst_in = getattr(cust, 'cu_gst', '') or invoice.ti_gst_in
+                invoice.ti_pincode = getattr(cust, 'cu_pincode', '') or invoice.ti_pincode
                 invoice.ti_customer_short_name = (
-                    getattr(cust, 'CustomerInfo.cu_nameshort', '') or invoice.ti_customer_short_name
+                    getattr(cust, 'cu_nameshort', '') or invoice.ti_customer_short_name
                 )
 
             if "MAA" in customer_name:
@@ -141,7 +140,7 @@ def trans_invoice_add(request):
 
 
 
-from django.db.models import Sum, F, Value, FloatField
+from django.db.models import Sum, F, Value, FloatField, Subquery, OuterRef
 from django.db.models.functions import Coalesce
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
@@ -181,9 +180,6 @@ def trans_invoice_edit(request, invoice_id):
     # ==================================================
     # AGGREGATE CHARGES FROM LIST
     # ==================================================
-    # ==================================================
-    # AGGREGATE CHARGES FROM LIST
-    # ==================================================
     totals = invoice_list.aggregate(
         transport=Sum('ti_trip__tc_tripcost'),
         toll=Sum('ti_trip__tc_tollcost'),
@@ -191,7 +187,7 @@ def trans_invoice_edit(request, invoice_id):
         loading=Sum('ti_trip__tc_loadingcost'),
         unloading=Sum('ti_trip__tc_unloadingcost'),
         halting=Sum('ti_trip__tc_haltingcost'),
-        docket=Sum('ti_docket_charges'), # Docket charges might not be in Trip, creating ambiguity, checking model... keeping as is for safety if not in trip? Wait, earlier I used ti_docket_charges from invoice. Let's check trip model.
+        docket=Sum('ti_docket_charges'), 
         weighment=Sum('ti_trip__tc_weighmentcost'),
         handling=Sum('ti_trip__tc_handlingcost'),
         cancellation=Sum('ti_trip__tc_cancellation'),
@@ -210,7 +206,42 @@ def trans_invoice_edit(request, invoice_id):
         if form.is_valid():
             invoice = form.save(commit=False)
 
-            # TOTAL = SUM OF ALL CHARGES
+            # RE-CALCULATE TOTALS FROM SAVED WOH ITEMS (Ignore form read-only inputs)
+            # Fetch WOH items again to be sure
+            woh_items = TransInvoiceInfo.objects.filter(
+                ti_customer=invoice.ti_customer,
+                ti_inv_no=invoice.ti_inv_no, # Ensure we only sum items for THIS invoice number
+                is_woh=True
+            )
+            
+            # Aggregate again
+            aggs = woh_items.aggregate(
+                transport=Sum('ti_trip__tc_tripcost'),
+                toll=Sum('ti_trip__tc_tollcost'),
+                parking=Sum('ti_trip__tc_parkingcost'),
+                loading=Sum('ti_trip__tc_loadingcost'),
+                unloading=Sum('ti_trip__tc_unloadingcost'),
+                halting=Sum('ti_trip__tc_haltingcost'),
+                docket=Sum('ti_docket_charges'),
+                weighment=Sum('ti_trip__tc_weighmentcost'),
+                handling=Sum('ti_trip__tc_handlingcost'),
+                cancellation=Sum('ti_trip__tc_cancellation'),
+            )
+            
+            # Helper to safe get
+            def get_val(k): return aggs.get(k) or 0.0
+
+            invoice.ti_transportation_charges = get_val('transport')
+            invoice.ti_toll_charges = get_val('toll')
+            invoice.ti_parking_charges = get_val('parking')
+            invoice.ti_loading_charges = get_val('loading')
+            invoice.ti_unloading_charges = get_val('unloading')
+            invoice.ti_halting_charges = get_val('halting')
+            invoice.ti_docket_charges = get_val('docket')
+            invoice.ti_weighment_charges = get_val('weighment')
+            invoice.ti_handling_charges = get_val('handling')
+            invoice.ti_cancellation_charges = get_val('cancellation')
+
             invoice.ti_total = (
                 invoice.ti_transportation_charges +
                 invoice.ti_toll_charges +
@@ -289,11 +320,33 @@ def trans_invoice_edit(request, invoice_id):
 def trans_invoice_list(request):
     first_name = request.session.get('first_name')
 
+    # Subquery to get the total of related WOH invoices
+    woh_total_subquery = (
+        TransInvoiceInfo.objects.filter(
+            is_woh=True,
+            ti_inv_no=OuterRef('ti_inv_no'),
+            ti_customer=OuterRef('ti_customer')
+        )
+        .values('ti_inv_no')  # Group by invoice number
+        .annotate(total=Sum('ti_total'))
+        .values('total')
+    )
+
+    queryset = (
+        TransInvoiceInfo.objects
+        .filter(is_woh=False)
+        .annotate(
+            # Start with 0.0, add WOH sum. Ignore Master's own ti_total as per instruction.
+            grand_total=Coalesce(Subquery(woh_total_subquery), 0.0)
+        )
+        .order_by('-id')
+    )
+
     return render(
         request,
         "asset_mgt_app/trans_invoice_list.html",
         {
-            'trans_invoice_list': TransInvoiceInfo.objects.all().order_by('-id'),
+            'trans_invoice_list': queryset,
             'first_name': first_name,
         }
     )
@@ -324,10 +377,10 @@ def fetch_customer_details(request):
             'customer_short_name': '',
             'branch': '',
             'state': '',
+            'customer_name': '',
         })
 
     customer_name = str(customer).upper()
-
     branch = ""
     state = ""
 
@@ -343,6 +396,7 @@ def fetch_customer_details(request):
         'customer_short_name': customer.cu_nameshort or '',
         'branch': branch,
         'state': state,
+        'customer_name': customer_name,
     })
 
 
@@ -361,13 +415,21 @@ def trans_invoice_list_woh(request, customer_id):
     if request.method == "POST" and request.POST.get("action") == "add":
         import datetime
         try:
-            # these MUST be Trip IDs
             trip_ids = request.POST.getlist('invoice_list[]')
+            invoice_id = request.POST.get('invoice_id')
+            if not invoice_id or invoice_id == 'null':
+                return JsonResponse({'status': 'error', 'message': 'Master invoice ID is required. Please save the invoice first.'}, status=400)
 
-            if not trip_ids:
-                return JsonResponse({'status': 'error', 'message': 'No trips selected'}, status=400)
+            master_inv = TransInvoiceInfo.objects.filter(id=invoice_id).first()
+            if not master_inv:
+                return JsonResponse({'status': 'error', 'message': 'Master invoice not found.'}, status=404)
 
-            # 1. Determine Branch/State Logic for this Customer
+            manual_inv_no = master_inv.ti_inv_no
+            manual_inv_date = master_inv.ti_inv_date
+            
+            if not manual_inv_no:
+                return JsonResponse({'status': 'error', 'message': 'Invoice number is missing in the master invoice. Please enter it first.'}, status=400)
+
             customer_name = str(customer).upper()
             branch = ""
             state = ""
@@ -378,41 +440,27 @@ def trans_invoice_list_woh(request, customer_id):
                 branch = "Bangalore"
                 state = "Karnataka"
 
-            # 2. Iterate and Create/Update Invoice
             for t_id in trip_ids:
-                # fetch trip
                 trip = TripdetailInfo.objects.filter(id=t_id).first()
-                if not trip:
-                    continue
+                if not trip: continue
 
-                # fetch consignment
-                cons = trip.tr_consignmentnumber  # Check if None
-                # fetch goods
+                cons = trip.tr_consignmentnumber
                 goods = None
                 if cons:
                     goods = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=cons).order_by('-id').first()
 
-                # Department
                 department = ""
                 if getattr(trip, 'tr_enquirynumber', None):
                     enq = trip.tr_enquirynumber
                     if enq.en_customerdepartment:
                          department = getattr(enq.en_customerdepartment, 'ct_customerdepartment', "") or ""
 
-                # GST, Pincode, Short Name from Customer
                 gst_in = getattr(customer, 'cu_gst', '') or ""
                 pincode = getattr(customer, 'cu_pincode', '') or ""
                 cust_short = getattr(customer, 'cu_nameshort', '') or ""
 
-                # GENERATE TEMP INV fields
-                # unique inv no format: "WOH-{trip_id}-{customer_id}" or similar.
-                # Since ti_inv_no is unique, and we might add/remove/add again, we need it to be stable for the trip
-                # OR if we removed it, we might have deleted it?
-                # Actually, remove logic (trans_invoice_remove_woh) only updates is_woh=False, it does NOT delete the record.
-                # So if it already exists, update_or_create works fine.
-                # If it does NOT exist, we create it.
-                inv_no = f"WOH-{trip.tr_tripnumber or trip.id}"
-                today = datetime.date.today()
+                inv_no = manual_inv_no
+                inv_date = manual_inv_date if manual_inv_date else datetime.date.today()
 
                 TransInvoiceInfo.objects.update_or_create(
                     ti_trip=trip,
@@ -427,66 +475,69 @@ def trans_invoice_list_woh(request, customer_id):
                         "ti_customer_short_name": cust_short,
                         "ti_branch": branch,
                         "ti_state": state,
-                        # Required fields
                         "ti_inv_no": inv_no,
-                        "ti_inv_date": today,
-                        # Map Costs
+                        "ti_inv_date": inv_date,
                         "ti_transportation_charges": trip.tc_tripcost,
                         "ti_toll_charges": trip.tc_tollcost,
                         "ti_parking_charges": trip.tc_parkingcost,
                         "ti_loading_charges": trip.tc_loadingcost,
                         "ti_unloading_charges": trip.tc_unloadingcost,
                         "ti_halting_charges": trip.tc_haltingcost,
-                        # "ti_docket_charges": 0, # No direct map
                         "ti_weighment_charges": trip.tc_weighmentcost,
                         "ti_handling_charges": trip.tc_handlingcost,
                         "ti_cancellation_charges": trip.tc_cancellation,
-                        # Total
                         "ti_total": (
-                                trip.tc_tripcost +
-                                trip.tc_tollcost +
-                                trip.tc_parkingcost +
-                                trip.tc_loadingcost +
-                                trip.tc_unloadingcost +
-                                trip.tc_haltingcost +
-                                trip.tc_weighmentcost +
-                                trip.tc_handlingcost +
-                                trip.tc_cancellation
+                                (trip.tc_tripcost or 0) +
+                                (trip.tc_tollcost or 0) +
+                                (trip.tc_parkingcost or 0) +
+                                (trip.tc_loadingcost or 0) +
+                                (trip.tc_unloadingcost or 0) +
+                                (trip.tc_haltingcost or 0) +
+                                (trip.tc_weighmentcost or 0) +
+                                (trip.tc_handlingcost or 0) +
+                                (trip.tc_cancellation or 0)
                         )
                     }
                 )
 
             return JsonResponse({'status': 'success'})
-
         except Exception as e:
-            # Return detailed error
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     # ==========================
-    # TRANS INVOICE LIST (SELECTED ONLY)
+    # FETCH LIST SHOWN BELOW
     # ==========================
+    # Capture invoice_id for filtering
+    invoice_id = request.GET.get('invoice_id')
+    inv_no_filter = ""
+    if invoice_id:
+        master_inv = TransInvoiceInfo.objects.filter(id=invoice_id).first()
+        if master_inv:
+            inv_no_filter = master_inv.ti_inv_no
 
-    # ==========================
-    # MASTER LIST (NOT SELECTED)
-    # ==========================
-    selected_trip_ids = (
-        TransInvoiceInfo.objects
-        .filter(
-            ti_customer_id=customer_id,
-            is_woh=True
+    # 1. Trips for the current manual invoice (to show in WOH list)
+    current_woh_trip_ids = []
+    if inv_no_filter:
+        current_woh_trip_ids = (
+            TransInvoiceInfo.objects
+            .filter(ti_customer_id=customer_id, ti_inv_no=inv_no_filter, is_woh=True)
+            .exclude(ti_trip_id__isnull=True)
+            .values_list('ti_trip_id', flat=True)
         )
+
+    # 2. ALL trips already assigned to ANY invoice record for this customer
+    # (These must be excluded from the Master list, even if they are from another invoice)
+    all_assigned_trip_ids = (
+        TransInvoiceInfo.objects
+        .filter(ti_customer_id=customer_id)
         .exclude(ti_trip_id__isnull=True)
         .values_list('ti_trip_id', flat=True)
     )
+
     trans_invoice_list = (
         TripdetailInfo.objects
-        .filter(id__in=selected_trip_ids)
-        .select_related(
-            'tr_enquirynumber',
-            'tr_consignmentnumber',
-            'tr_vehicletype',
-            'tr_vehiclesource',
-        )
+        .filter(id__in=current_woh_trip_ids)
+        .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehiclesource')
         .annotate(
             trip_total=Coalesce(F('tc_tripcost'), 0.0) +
                        Coalesce(F('tc_tollcost'), 0.0) +
@@ -500,28 +551,17 @@ def trans_invoice_list_woh(request, customer_id):
                        Coalesce(F('tc_cancellation'), 0.0)
         )
         .order_by('-tr_created_at')
-
     )
     invoice_list_master = (
         TripdetailInfo.objects
         .filter(
-            tr_enquirynumber__en_customername_id=customer_id
+            tr_enquirynumber__en_customername_id=customer_id,
+            tc_financestatus_id=7  # Only show settled trips
         )
-        .exclude(
-            tr_consignmentnumber__co_consignmentnumber__isnull=True
-        )
-        .exclude(
-            tr_consignmentnumber__co_consignmentnumber=''
-        )
-        .exclude(
-            id__in=selected_trip_ids
-        )
-        .select_related(
-            'tr_enquirynumber',
-            'tr_consignmentnumber',
-            'tr_vehicletype',
-            'tr_vehiclesource',
-        )
+        .exclude(tr_consignmentnumber__co_consignmentnumber__isnull=True)
+        .exclude(tr_consignmentnumber__co_consignmentnumber='')
+        .exclude(id__in=all_assigned_trip_ids)
+        .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehiclesource')
         .annotate(
             trip_total=Coalesce(F('tc_tripcost'), 0.0) +
                        Coalesce(F('tc_tollcost'), 0.0) +
@@ -536,70 +576,56 @@ def trans_invoice_list_woh(request, customer_id):
         )
         .order_by('-tr_created_at')
     )
-    # ==========================
-    # ATTACH INVOICE FIELDS TO TRIP OBJECTS (NO TEMPLATE FILTERS)
-    # ==========================
-    invoice_qs = (
-        TransInvoiceInfo.objects
-        .filter(
-            ti_trip_id__in=selected_trip_ids,
-            ti_customer_id=customer_id,
-            is_woh=True
-        )
-    )
 
-    # map: trip_id -> invoice object
+    invoice_qs = TransInvoiceInfo.objects.filter(ti_trip_id__in=current_woh_trip_ids, ti_customer_id=customer_id, is_woh=True)
     invoice_map = {inv.ti_trip_id: inv for inv in invoice_qs}
 
-    # attach needed invoice fields dynamically to trip
     for trip in trans_invoice_list:
         inv = invoice_map.get(trip.id)
-
-        trip.ti_gst_in = inv.ti_gst_in if inv else ""
-        trip.ti_state = inv.ti_state if inv else ""
-        trip.ti_pincode = inv.ti_pincode if inv else ""
-        trip.ti_branch = inv.ti_branch if inv else ""
-        trip.ti_customer_short_name = inv.ti_customer_short_name if inv else ""
+        if inv:
+            trip.ti_gst_in = inv.ti_gst_in
+            trip.ti_state = inv.ti_state
+            trip.ti_pincode = inv.ti_pincode
+            trip.ti_branch = inv.ti_branch
+            trip.ti_customer_short_name = inv.ti_customer_short_name
+            # Map only needed invoice fields to trip object for display
+            trip.ti_inv_no = inv.ti_inv_no
+            trip.ti_inv_date = inv.ti_inv_date
+            trip.tally_vehicle_no = get_tally_vehicle_no(inv)
+        else:
+            trip.ti_gst_in = ""
+            trip.ti_state = ""
+            trip.ti_pincode = ""
+            trip.ti_branch = ""
+            trip.ti_customer_short_name = ""
+            trip.tally_vehicle_no = ""
+            trip.ti_inv_no = ""
+            trip.ti_inv_date = ""
 
     customer = get_object_or_404(CustomerInfo, id=customer_id)
-
     departments = (
         TripdetailInfo.objects
-        .filter(
-            tr_enquirynumber__en_customername_id=customer_id,
-            tr_enquirynumber__en_customerdepartment__isnull=False
-        )
+        .filter(tr_enquirynumber__en_customername_id=customer_id, tr_enquirynumber__en_customerdepartment__isnull=False)
         .exclude(tr_enquirynumber__en_customerdepartment__ct_customerdepartment="")
         .values_list('tr_enquirynumber__en_customerdepartment__ct_customerdepartment', flat=True)
         .distinct()
         .order_by('tr_enquirynumber__en_customerdepartment__ct_customerdepartment')
     )
-    
-    # Check if departments are empty, maybe en_customerdepartment is just a charfield?
-    # In step 100, I saw CustomerdepartmentInfo(models.Model): ct_customerdepartment = CharField
-    # So it is a model. And Enquiry likely links to it.
-    
     departments = [d for d in departments if d]
 
-    # map trip_id → state & pincode (optional invoice info)
     invoice_meta = {
-        obj.ti_trip_id: {
-            "state": obj.ti_state,
-            "pincode": obj.ti_pincode,
-        }
-        for obj in TransInvoiceInfo.objects.filter(
-            ti_trip_id__in=selected_trip_ids
-        )
+        obj.ti_trip_id: {"state": obj.ti_state, "pincode": obj.ti_pincode}
+        for obj in TransInvoiceInfo.objects.filter(ti_trip_id__in=current_woh_trip_ids)
     }
 
     return render(
         request,
         "asset_mgt_app/trans_invoice_list_WOH.html",
         {
-            "trans_invoice_list": trans_invoice_list,  # TripdetailInfo list
+            "trans_invoice_list": trans_invoice_list,
             "invoice_list_master": invoice_list_master,
             "invoice_meta": invoice_meta,
-            "departments": departments, # 👈 Added to context
+            "departments": departments,
             "customer": customer,
             "first_name": first_name,
         }
@@ -609,51 +635,34 @@ def trans_invoice_list_woh(request, customer_id):
 @login_required(login_url='login_page')
 def trans_invoice_remove_woh(request):
     trip_ids = request.GET.getlist('invoice_list[]')
-
-    TransInvoiceInfo.objects.filter(
-        ti_trip_id__in=trip_ids
-    ).update(is_woh=False)
-
+    TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids).update(is_woh=False)
     return JsonResponse({'status': 'success'})
 
 @login_required(login_url='login_page')
 def trans_invoice_add_woh(request):
     trip_ids = request.POST.getlist('ids[]')
-
     for trip_id in trip_ids:
-        TransInvoiceInfo.objects.update_or_create(
-            ti_trip_id=trip_id,
-            defaults={"is_woh": True}
-        )
-
+        TransInvoiceInfo.objects.update_or_create(ti_trip_id=trip_id, defaults={"is_woh": True})
     return JsonResponse({'status': 'success'})
 
 
 def trans_invoice_excel(request, invoice_no):
-    # 🔹 FETCH DATA (MATCHING WOH LIST LOGIC - BY CUSTOMER)
     first_record = TransInvoiceInfo.objects.filter(ti_inv_no=invoice_no).first()
-    
     if not first_record:
         qs = TransInvoiceInfo.objects.none()
     else:
         customer = first_record.ti_customer
-        qs = (
-            TransInvoiceInfo.objects
-            .filter(ti_customer=customer, is_woh=True)
-            .select_related(
-                "ti_customer",
-                "ti_trip",
-                "ti_consignment",
-                "ti_goods"
-            )
-        )
+        qs = TransInvoiceInfo.objects.filter(ti_customer=customer, ti_inv_no=invoice_no, is_woh=True).select_related("ti_customer","ti_trip","ti_consignment","ti_goods")
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Transport Invoice WOH"
 
     # 🔹 HEADERS
-    headers = [
+    customer_name = str(customer).upper() if first_record and first_record.ti_customer else ""
+
+    # 🔹 HEADERS
+    base_headers = [
         "Planning Date",
         "Cnote No",
         "From",
@@ -671,63 +680,64 @@ def trans_invoice_excel(request, invoice_no):
         "No.of Pcs",
         "Weight",
         "Transportation Charges",
-        "TOLL CHARGES",
+        "Toll Charges",
         "Parking Charges",
         "Loading Charges",
         "Unloading Charges",
-        "HALTING CHARGES",
-        "DOCKET CHARGES",
-        "WEIGHMENT CHARGES",
+        "Halting Charges",
+        "Docket Charges",
+        "Weighment Charges",
         "Transportation Handling Charges",
         "Cancellation Charges",
-        "TOTAL"
+        "Total",
     ]
-    ws.append(headers)
 
-    # 🔹 COLUMN WIDTH
+    extra_headers = []
+    if "DSV" in customer_name:
+        extra_headers = ["AAI S.no", "Eway Bill No"]
+    elif "APM" in customer_name:
+        extra_headers = ["Requestor"]
+    elif "DBS" in customer_name:
+        extra_headers = ["Adhoc Rate /Contracted Rate"]
+    elif "CEVA" in customer_name:
+        extra_headers = ["Requestor", "BOE NO"]
+    elif "EIPL" in customer_name:
+        extra_headers = ["Eway Bill No", "No. of Halting Days", "Billing SOW/Non BillingSOW"]
+    
+    # Default case: extra_headers remains empty []
+
+    ws.append(base_headers + extra_headers)
+
     ws.column_dimensions["A"].width = 18
-    ws.column_dimensions["H"].width = 25
-    ws.column_dimensions["I"].width = 25
-    ws.column_dimensions["J"].width = 25
-    ws.column_dimensions["K"].width = 25
+    for col in "HIJK": ws.column_dimensions[col].width = 25
 
-    def safe(val):
-        return val if val is not None else ""
+    def safe(val): return val if val is not None else ""
 
     for obj in qs:
-        # Resolve related objects safely
         trip = obj.ti_trip
         cons = obj.ti_consignment
         goods = obj.ti_goods
-
-        # Calculate Trip Total dynamically
         trip_total = 0.0
         if trip:
             trip_total = (
-                (trip.tc_tripcost or 0) +
-                (trip.tc_tollcost or 0) +
-                (trip.tc_parkingcost or 0) +
-                (trip.tc_loadingcost or 0) +
-                (trip.tc_unloadingcost or 0) +
-                (trip.tc_haltingcost or 0) +
-                (trip.tc_rtocost or 0) +
-                (trip.tc_weighmentcost or 0) +
-                (trip.tc_handlingcost or 0) +
+                (trip.tc_tripcost or 0) + (trip.tc_tollcost or 0) + (trip.tc_parkingcost or 0) +
+                (trip.tc_loadingcost or 0) + (trip.tc_unloadingcost or 0) + (trip.tc_haltingcost or 0) +
+                (trip.tc_rtocost or 0) + (trip.tc_weighmentcost or 0) + (trip.tc_handlingcost or 0) +
                 (trip.tc_cancellation or 0)
             )
 
-        ws.append([
-            safe(str(trip.tr_departeddate) if trip else ""),
+        row = [
+            safe(trip.tr_enquirynumber.en_pickupdatetime.strftime('%d/%m/%Y') if trip and trip.tr_enquirynumber and trip.tr_enquirynumber.en_pickupdatetime else ""),
             safe(str(cons.co_consignmentnumber) if cons else ""),
             safe(str(trip.tr_departedlocation) if trip else ""),
             safe(str(trip.tr_reportedlocation) if trip else ""),
             safe(obj.ti_department),
             safe(str(trip.tr_vehiclenumber) if trip else ""),
             safe(str(trip.tr_vehicletype) if trip else ""),
-            safe(str(trip.tr_departeddate_pickup) if trip else ""),
-            safe(str(trip.tr_dock_out_time) if trip else ""),
-            safe(str(trip.tr_reporteddate) if trip else ""),
-            safe(str(trip.tr_departeddate_delivery) if trip else ""),
+            safe(trip.tr_departeddate_pickup.strftime('%d/%m/%Y %H:%M') if trip and trip.tr_departeddate_pickup else ""),
+            safe(trip.tr_departeddate.strftime('%d/%m/%Y %H:%M') if trip and trip.tr_departeddate else ""),
+            safe(trip.tr_reporteddate.strftime('%d/%m/%Y %H:%M') if trip and trip.tr_reporteddate else ""),
+            safe(trip.tr_reporteddate_pickup.strftime('%d/%m/%Y %H:%M') if trip and trip.tr_reporteddate_pickup else ""),
             safe(str(goods.cg_consignee) if goods else ""),
             safe(str(cons.co_cusrefnum) if cons else ""),
             safe(str(goods.cg_hawbno) if goods else ""),
@@ -739,172 +749,120 @@ def trans_invoice_excel(request, invoice_no):
             safe(trip.tc_loadingcost if trip else 0),
             safe(trip.tc_unloadingcost if trip else 0),
             safe(trip.tc_haltingcost if trip else 0),
-            safe(0), # DOCKET CHARGES (Placeholder as not in trip)
-            safe(trip.tc_weighmentcost if trip else 0),
-            safe(trip.tc_handlingcost if trip else 0),
-            safe(trip.tc_cancellation if trip else 0),
-            safe(trip_total)
-        ])
+            safe(0), safe(trip.tc_weighmentcost if trip else 0),
+            safe(trip.tc_handlingcost if trip else 0), safe(trip.tc_cancellation if trip else 0),
+            safe(trip_total),
+        ]
+
+        extra_values = []
+        if "DSV" in customer_name:
+            extra_values = [
+                safe(obj.ti_aai_sno),
+                safe(goods.cg_ebillno if goods else ""),
+            ]
+        elif "APM" in customer_name:
+            extra_values = [
+                safe(trip.tr_enquirynumber.en_requestor if trip and trip.tr_enquirynumber else ""),
+            ]
+        elif "DBS" in customer_name:
+            extra_values = [
+                safe(obj.ti_type_of_rate),
+            ]
+        elif "CEVA" in customer_name:
+            extra_values = [
+                safe(trip.tr_enquirynumber.en_requestor if trip and trip.tr_enquirynumber else ""),
+                "",  # BOE NO - kept empty as Cnote No already displays consignment number
+            ]
+        elif "EIPL" in customer_name:
+            extra_values = [
+                safe(goods.cg_ebillno if goods else ""),
+                safe(trip.tc_no_of_days_halting if trip else 0),
+                safe(obj.ti_sow),
+            ]
+        
+        ws.append(row + extra_values)
 
     from io import BytesIO
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
-
-    response = HttpResponse(
-        buffer.getvalue(),
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    response = HttpResponse(buffer.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response["Content-Disposition"] = f'attachment; filename="WOH_invoice_{invoice_no}.xlsx"'
-
     return response
 
 
 def get_tally_vehicle_no(invoice):
     trip = invoice.ti_trip
-    if not trip:
-        return ""
-
-    # 1️⃣ Resolve vehicle number robustly
-    vehicle_no = ""
-
-    if hasattr(trip, "tr_vehiclenumber") and trip.tr_vehiclenumber:
-        vehicle_no = trip.tr_vehiclenumber
-
-    elif hasattr(trip, "tr_vehicle") and trip.tr_vehicle:
-        vehicle_no = getattr(trip.tr_vehicle, "tr_vehiclenumber", "")
-
-    vehicle_no = (vehicle_no or "").strip()
-
-    # 2️⃣ Resolve vehicle source safely
+    if not trip: return ""
+    vehicle_no = (getattr(trip, "tr_vehiclenumber", "") or getattr(getattr(trip, "tr_vehicle", None), "tr_vehiclenumber", "") or "").strip()
     vehicle_source_obj = trip.tr_vehiclesource
-    if not vehicle_source_obj:
-        return ""
-
+    if not vehicle_source_obj: return ""
     vehicle_source = str(vehicle_source_obj).upper()
-
-    # 3️⃣ Apply Tally rules
-    if "OWN" in vehicle_source:
-        return vehicle_no
-
-    elif "ATTACHED" in vehicle_source:
-        return f"{vehicle_no}(A)" if vehicle_no else "(A)"
-
-    elif "MARKET" in vehicle_source:
-        return "MKT"
-
+    if "OWN" in vehicle_source: return vehicle_no
+    elif "ATTACHED" in vehicle_source: return f"{vehicle_no}(A)" if vehicle_no else "(A)"
+    elif "MARKET" in vehicle_source: return "MKT"
     return ""
 
 
 @login_required(login_url='login_page')
 def trans_invoice_tally_excel(request, customer_id):
     customer = get_object_or_404(CustomerInfo, id=customer_id)
-    
-    # Fetch trips where is_woh=True for this customer
-    qs = (
-        TransInvoiceInfo.objects
-        .filter(ti_customer=customer, is_woh=True)
-        .select_related(
-            "ti_customer",
-            "ti_trip",
-            "ti_consignment",
-            "ti_goods"
-        )
-    )
-
+    qs = TransInvoiceInfo.objects.filter(ti_customer=customer, is_woh=True).select_related("ti_customer","ti_trip","ti_consignment","ti_goods")
     if not qs.exists():
         messages.warning(request, "No invoices found in WOH list for this customer.")
         return redirect('trans_invoice_list')
-
     wb = Workbook()
     ws = wb.active
     ws.title = "Tally Export"
-
-    # 🔹 HEADERS (Specialized for Tally)
     headers = [
-        "DATE",
-        "SUNDRY DEBTORS",
-        "STATE",
-        "PINCODE",
-        "VOUCHER NO.",
-        "PRIMARY COST CATEGORY",
-        "CUSTOMER",
-        "JOB NO.",
-        "VEHICLE NUMBER",
-        "Transportation Charges",
-        "Toll Charges",
-        "Parking Charges",
-        "Loading Charges",
-        "Unloading Charges",
-        "Halting Charges",
-        "Docket Charges",
-        "Weighment Charges",
-        "EXTRA KM CHARGES",
-        "EXTRA HOUR CHARGES",
-        "TRANSPORTATION HANDLING CHARGES",
-        "TOTAL"
+        "Date", "Sundry Debtors", "State", "Pincode", "Voucher No.", "Primary Cost Category", "Customer", "Job No.", "Vehicle Number",
+        "Transportation Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges", "Halting Charges",
+        "Docket Charges", "Weighment Charges", "Transportation Handling Charges", "Total"
     ]
     ws.append(headers)
-
-    # 🔹 COLUMN WIDTH
     ws.column_dimensions["A"].width = 15
-    ws.column_dimensions["B"].width = 25
-    ws.column_dimensions["C"].width = 10
-    ws.column_dimensions["D"].width = 10
-    ws.column_dimensions["E"].width = 15
-
-    def safe(val):
-        return val if val is not None else ""
-
+    for col in "BCDE": ws.column_dimensions[col].width = 25
+    def safe(val): return val if val is not None else ""
     for obj in qs:
         trip = obj.ti_trip
         cons = obj.ti_consignment
         
-        # Calculate Total based on the specific fields being displayed
+        # Calculate total from TransInvoiceInfo charges (not trip charges)
         total_val = (
-            (obj.ti_transportation_charges or 0) +
-            (obj.ti_toll_charges or 0) +
-            (obj.ti_parking_charges or 0) +
-            (obj.ti_loading_charges or 0) +
-            (obj.ti_unloading_charges or 0) +
-            (obj.ti_halting_charges or 0) +
-            (obj.ti_docket_charges or 0) +
-            (obj.ti_weighment_charges or 0) +
-            (obj.ti_handling_charges or 0)
+            (obj.ti_transportation_charges or 0) + (obj.ti_toll_charges or 0) + (obj.ti_parking_charges or 0) +
+            (obj.ti_loading_charges or 0) + (obj.ti_unloading_charges or 0) + (obj.ti_halting_charges or 0) +
+            (obj.ti_docket_charges or 0) + (obj.ti_weighment_charges or 0) + (obj.ti_handling_charges or 0) +
+            (obj.ti_cancellation_charges or 0)
         )
-
+        
+        # Format date as dd/mm/yyyy
+        formatted_date = obj.ti_inv_date.strftime('%d/%m/%Y') if obj.ti_inv_date else ""
+        
         ws.append([
-            safe(obj.ti_inv_date),
-            safe(obj.ti_customer_short_name),
-            safe(obj.ti_state),
-            safe(obj.ti_pincode),
+            formatted_date,
+            safe(obj.ti_customer_short_name), 
+            safe(obj.ti_state), 
+            safe(obj.ti_pincode), 
             safe(obj.ti_inv_no),
             safe(str(trip.tr_vehiclesource) if trip and trip.tr_vehiclesource else ""),
-            safe(str(customer.cu_name).strip().upper()),
+            safe(str(customer.cu_name).strip().upper()), 
             safe(str(cons.co_consignmentnumber) if cons else ""),
             safe(get_tally_vehicle_no(obj)),
-            safe(obj.ti_transportation_charges or 0),
-            safe(obj.ti_toll_charges or 0),
+            safe(obj.ti_transportation_charges or 0), 
+            safe(obj.ti_toll_charges or 0), 
             safe(obj.ti_parking_charges or 0),
-            safe(obj.ti_loading_charges or 0),
-            safe(obj.ti_unloading_charges or 0),
+            safe(obj.ti_loading_charges or 0), 
+            safe(obj.ti_unloading_charges or 0), 
             safe(obj.ti_halting_charges or 0),
-            safe(obj.ti_docket_charges or 0),
-            safe(obj.ti_weighment_charges or 0),
-            safe(0), # EXTRA KM CHARGES
-            safe(0), # EXTRA HOUR CHARGES
-            safe(obj.ti_handling_charges or 0), # TRANSPORTATION HANDLING CHARGES
+            safe(obj.ti_docket_charges or 0), 
+            safe(obj.ti_weighment_charges or 0), 
+            safe(obj.ti_handling_charges or 0), 
             safe(total_val)
         ])
-
     from io import BytesIO
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
-
-    response = HttpResponse(
-        buffer.getvalue(),
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    response = HttpResponse(buffer.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response["Content-Disposition"] = f'attachment; filename="Tally_Export_{customer.cu_nameshort or customer.id}.xlsx"'
     return response

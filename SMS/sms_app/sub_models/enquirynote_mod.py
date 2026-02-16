@@ -30,7 +30,8 @@ class EnquirynoteInfo(models.Model):
     en_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
     en_contactno = models.CharField(max_length=10, default='', null=True)
     en_email = models.EmailField(max_length=50, default='')
-    
+    en_requestor = models.CharField(max_length=200, blank=True, null=True)
+
     # New fields for LP/Agent portal
     en_agent_name = models.CharField(max_length=200, null=True, blank=True)
     en_vehicle_req_time = models.TimeField(null=True, blank=True)

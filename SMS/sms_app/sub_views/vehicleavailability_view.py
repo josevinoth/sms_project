@@ -6,7 +6,7 @@ def vehicle_availability_list(request):
     vehicles = VehiclemasterInfo.objects.all()
     vehicle_data = []
 
-    AVAILABLE_STATUS_IDS = [2, 3, 4, 6, 7]   # <-- new rule
+    AVAILABLE_STATUS_IDS = [2, 3, 4, 5, 6, 7]   # <-- new rule
 
     for vehicle in vehicles:
 

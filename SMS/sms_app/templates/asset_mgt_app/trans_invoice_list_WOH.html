@@ -44,12 +44,12 @@
         <thead class="thead-dark">
             <tr>
                 <th>Select</th>
-                <!--<th>INV DATE</th>-->
+                <th>INV DATE</th>
                 <th>Customer Name</th>
                 <th>GST IN</th>
                 <th>State</th>
                 <th>Pincode</th>
-                <!--<th>INV NO</th>-->
+                <th>INV NO</th>
 
                 <th>Branch</th>
                 <th>Vehicle Source</th>
@@ -83,7 +83,7 @@
                 <th>Loading Charges</th>
                 <th>Unloading Charges</th>
                 <th>Halting Charges</th>
-                <th>Docket Charges</th>
+                <th style="display:none;">Docket Charges</th>
                 <th>Weighment Charges</th>
                 <th>Handling Charges</th>
                 <th>Cancellation Charges</th>
@@ -102,10 +102,13 @@
                 </td>
 
                 <!-- ================= CUSTOMER ================= -->
+                <td data-order="{{ trip.ti_inv_date|date:'Y-m-d' }}">{{ trip.ti_inv_date|date:"d/m/Y"|default:"-" }}
+                </td>
                 <td>{{ trip.tr_enquirynumber.en_customername|default:"-" }}</td>
                 <td>{{ trip.ti_gst_in|default:"-" }}</td>
                 <td>{{ trip.ti_state|default:"-" }}</td>
                 <td>{{ trip.ti_pincode|default:"-" }}</td>
+                <td>{{ trip.ti_inv_no|default:"-" }}</td>
                 <td>{{ trip.ti_branch|default:"-" }}</td>
 
 
@@ -114,7 +117,7 @@
                 <td>{{ trip.tr_vehiclesource|default:"-" }}</td>
                 <td>{{ trip.tr_enquirynumber.en_customername|default:"-" }}</td>
                 <td>{{ trip.tally_vehicle_no|default:"-" }}</td>
-                <td>{{ trip.tr_departeddate|default:"-" }}</td>
+                <td data-order="{{ trip.tr_enquirynumber.en_pickupdatetime|date:'Y-m-d' }}">{{ trip.tr_enquirynumber.en_pickupdatetime|date:"d/m/Y" }}</td>
 
                 <!-- ================= CONSIGNMENT ================= -->
                 <td>{{ trip.tr_consignmentnumber.co_consignmentnumber|default:"-" }}</td>
@@ -127,10 +130,10 @@
                 <td>{{ trip.tr_vehicletype|default:"-" }}</td>
 
                 <!-- ================= TIMELINE ================= -->
-                <td>{{ trip.tr_departeddate_pickup|default:"-" }}</td>
-                <td>{{ trip.tr_dock_out_time|default:"-" }}</td>
-                <td>{{ trip.tr_reporteddate|default:"-" }}</td>
-                <td>{{ trip.tr_departeddate_delivery|default:"-" }}</td>
+                <td data-order="{{ trip.tr_departeddate_pickup|date:'Y-m-d H:i' }}">{{ trip.tr_departeddate_pickup|date:"d/m/Y H:i"|default:"-" }}</td>
+                <td data-order="{{ trip.tr_departeddate|date:'Y-m-d H:i' }}">{{ trip.tr_departeddate|date:"d/m/Y H:i"|default:"-" }}</td>
+                <td data-order="{{ trip.tr_reporteddate|date:'Y-m-d H:i' }}">{{ trip.tr_reporteddate|date:"d/m/Y H:i"|default:"-" }}</td>
+                <td data-order="{{ trip.tr_reporteddate_pickup|date:'Y-m-d H:i' }}">{{ trip.tr_reporteddate_pickup|date:"d/m/Y H:i"|default:"-" }}</td>
 
                 <!-- ================= GOODS ================= -->
                 {% with goods=trip.tr_consignmentnumber.cg_consignmentnumber.first %}
@@ -148,7 +151,7 @@
                 <td>{{ trip.tc_loadingcost }}</td>
                 <td>{{ trip.tc_unloadingcost }}</td>
                 <td>{{ trip.tc_haltingcost }}</td>
-                <td>{{ trip.tc_rtocost }}</td>
+                <td style="display:none;">{{ trip.tc_rtocost }}</td>
                 <td>{{ trip.tc_weighmentcost }}</td>
                 <td>{{ trip.tc_handlingcost }}</td>
                 <td>{{ trip.tc_cancellation }}</td>
@@ -181,31 +184,18 @@
 <script>
     $(document).ready(function () {
 
-        var table = new DataTable('#trans_invoice_woh_list', {
-
-            columnDefs: [
-                {
-                    orderable: false,
-                    className: 'select-checkbox',
-                    targets: 0
-                }
-            ],
-
-            select: {
-                style: 'os',
-                selector: 'td:first-child'
-            },
-
+        var wohTable = new DataTable('#trans_invoice_woh_list', {
             order: [[1, 'desc']],
             dom: 'lBfrtip',
             scrollX: true
         });
-</script>
-<script>
-        $('#remove_btn').on('click', function () {
 
+        // ================= REMOVE BTN =================
+        $('#remove_btn').on('click', function (e) {
+            e.preventDefault();
             let ids = [];
 
+            // Use DataTables API to get checked boxes across all pages
             $('#trans_invoice_woh_list tbody input.row-select:checked').each(function () {
                 ids.push($(this).val());
             });
@@ -226,22 +216,25 @@
                 }
             });
         });
-</script>
-<script>
+
+        // ================= ADD BTN =================
         $('#add_btn').on('click', function (e) {
             e.preventDefault();
-
             let ids = [];
 
-            $('#trans_invoice_master_list tbody input.row-select:checked')
-                .each(function () {
-                    ids.push($(this).val());
-                });
+            // Use DataTables API to get checked boxes from master table across all pages
+            let masterTable = $('#trans_invoice_master_list').DataTable();
+            masterTable.rows().nodes().to$().find('input.row-select:checked').each(function () {
+                ids.push($(this).val());
+            });
 
             if (ids.length === 0) {
                 alert("Please select at least one invoice");
                 return false;
             }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const invoiceId = urlParams.get('invoice_id');
 
             $.ajax({
                 url: "{% url 'trans_invoice_list_woh' customer.id %}",
@@ -249,13 +242,22 @@
                 data: {
                     'invoice_list[]': ids,
                     'action': 'add',
+                    'invoice_id': invoiceId,
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
                 success: function () {
                     location.reload();
+                },
+                error: function (xhr) {
+                    let msg = "Failed to add invoice(s)";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += "\nError: " + xhr.responseJSON.message;
+                    }
+                    alert(msg);
                 }
             });
         });
+    });
 </script>
 
 

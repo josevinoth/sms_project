@@ -79,19 +79,6 @@ def market_bill_edit(request, id):
                 for error in errors:
                     messages.error(request, f"{field}: {error}")
     else:
-        # Robust fetch for vehicle type if missing in record but number exists
-        if record.mb_vehicle_number and not record.mb_vehicle_type:
-            # Check Vehicle Master
-            v_master = VehiclemasterInfo.objects.filter(vm_registrationnumber__iexact=record.mb_vehicle_number).first()
-            if v_master and v_master.vm_vehicletype:
-                record.mb_vehicle_type = str(v_master.vm_vehicletype)
-            # Check recent trips with a non-null type
-            v_trip = TripdetailInfo.objects.filter(
-                tr_vehiclenumber__iexact=record.mb_vehicle_number
-            ).exclude(tr_vehicletype__isnull=True).order_by('-tr_created_at').first()
-            if v_trip and v_trip.tr_vehicletype:
-                record.mb_vehicle_type = str(v_trip.tr_vehicletype)
-        
         form = MarketBillForm(instance=record)
 
     # Fetch selected trips data for the edit page table
@@ -166,32 +153,21 @@ def market_bill_delete(request, id):
 
 
 # ==================================================
-# AJAX: GET VEHICLES BY VENDOR
+# AJAX: GET TRIPS BY VENDOR
 # ==================================================
 @login_required(login_url='login_page')
-def get_vehicles_by_vendor(request):
+def get_trips_by_vendor(request):
     vendor_id = request.GET.get('vendor_id')
 
     if not vendor_id:
-        return JsonResponse({'vehicles': []})
+        return JsonResponse({'trips': []})
 
-    vehicles = VehiclemasterInfo.objects.filter(
+    # Get all vehicles for this vendor
+    vendor_vehicles = VehiclemasterInfo.objects.filter(
         vm_vendor_id=vendor_id
     ).values_list('vm_registrationnumber', flat=True)
-
-    vehicle_list = [{'id': v, 'text': v} for v in vehicles if v]
-
-    return JsonResponse({'vehicles': vehicle_list})
-
-
-# ==================================================
-# AJAX: GET TRIPS BY VEHICLE
-# ==================================================
-@login_required(login_url='login_page')
-def get_trips_by_vehicle(request):
-    vehicle_number = request.GET.get('vehicle_number')
-
-    if not vehicle_number:
+    
+    if not vendor_vehicles:
         return JsonResponse({'trips': []})
 
     # Get all already billed trip IDs from all MarketBillInfo records
@@ -201,9 +177,9 @@ def get_trips_by_vehicle(request):
         ids = [tid.strip() for tid in bill.mb_selected_trips.split(',') if tid.strip()]
         billed_trip_ids.update(ids)
 
-    # Filter trips that are not in billed_trip_ids
+    # Filter trips for ANY vehicle of this vendor that are not billed
     trips = TripdetailInfo.objects.filter(
-        tr_vehiclenumber=vehicle_number
+        tr_vehiclenumber__in=list(vendor_vehicles)
     ).exclude(id__in=list(billed_trip_ids)).select_related('tr_enquirynumber', 'tr_consignmentnumber')
 
     trip_list = []
@@ -253,8 +229,12 @@ def get_trips_by_vehicle(request):
         halting_cost = halting_rate * halting_days
 
         # Fetch vehicle type for this trip
-        vehicle = VehiclemasterInfo.objects.filter(vm_registrationnumber=trip.tr_vehiclenumber).first()
-        vehicle_type = str(vehicle.vm_vehicletype) if vehicle and vehicle.vm_vehicletype else ''
+        vehicle_type = ''
+        if trip.tr_vehicletype:
+             vehicle_type = str(trip.tr_vehicletype)
+        else:
+            vehicle = VehiclemasterInfo.objects.filter(vm_registrationnumber=trip.tr_vehiclenumber).first()
+            vehicle_type = str(vehicle.vm_vehicletype) if vehicle and vehicle.vm_vehicletype else ''
 
         trip_list.append({
             'id': trip.id,
@@ -271,27 +251,3 @@ def get_trips_by_vehicle(request):
         })
 
     return JsonResponse({'trips': trip_list})
-
-
-# ==================================================
-# AJAX: GET VEHICLE DETAILS (TYPE)
-# ==================================================
-@login_required(login_url='login_page')
-def get_vehicle_details(request):
-    vehicle_number = request.GET.get('vehicle_number')
-
-    if not vehicle_number:
-        return JsonResponse({'vehicle_type': ''})
-
-    # Try Vehiclemaster first (case-insensitive)
-    v_master = VehiclemasterInfo.objects.filter(vm_registrationnumber__iexact=vehicle_number).first()
-    if v_master and v_master.vm_vehicletype:
-        vehicle_type = str(v_master.vm_vehicletype)
-    else:
-        # Fallback: check TripdetailInfo for this vehicle number - specifically find one with a type
-        v_trip = TripdetailInfo.objects.filter(
-            tr_vehiclenumber__iexact=vehicle_number
-        ).exclude(tr_vehicletype__isnull=True).order_by('-tr_created_at').first()
-        vehicle_type = str(v_trip.tr_vehicletype) if v_trip and v_trip.tr_vehicletype else ''
-
-    return JsonResponse({'vehicle_type': vehicle_type})
