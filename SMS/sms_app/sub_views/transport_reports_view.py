@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Q, F, Sum, Value, FloatField
 from django.db.models.functions import Coalesce, Trim, Upper
+from django.utils.safestring import mark_safe
 from ..models import TripdetailInfo, ConsignmentdetailInfo, CustomerInfo, CustomerdepartmentInfo, ConsignmentgoodsInfo, Places, VehiclemasterInfo, Driverexpense, Vehicle_allotmentInfo, VendorratemasterInfo1, Vendor_info
 from ..sub_forms.dmr_report_form import DmrForm
 
@@ -34,7 +35,7 @@ REF_NO_PENDING_HEADERS = [
 ]
 
 VEHICLE_UTILIZATION_HEADERS = [
-    "SNo", "Vehicle Number", "Vehicle Type", "Utilized Days"
+    "SNo", "Vehicle Number", "Vehicle Type", "Utilized Days", "Non-Utilized Days", "Non-Utilized Dates"
 ]
 
 DRIVERS_ADVANCE_HEADERS = [
@@ -108,8 +109,7 @@ VENDOR_PL_ATTACHED_HEADERS = [
 
 DAILY_TRIP_COUNT_HEADERS = [
     "S.No", "Branch", "Date", "Vehicle No", "Vehicle Type",
-    "Active Trips For the Day", "Empty Trips For the Day",
-    "OWN/Market/Attached", "KM Business", "KM Empty"
+    "Active Trips For the Day", "OWN/Market/Attached"
 ]
 
 MAINTENANCE_REPORT_HEADERS = [
@@ -189,16 +189,23 @@ def vehicle_log_report_view(request):
     # Filters
     if vehicle_number:
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_number)
-    if selected_month and selected_month != '0':
-        trips = trips.filter(tr_loading_time__month=selected_month)
-    if selected_year and selected_year != '0':
-        trips = trips.filter(tr_loading_time__year=selected_year)
+    
+    if selected_month and selected_month != '0' and selected_year and selected_year != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__month=selected_month, tr_loading_time__year=selected_year) |
+            Q(tr_departeddate__month=selected_month, tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__month=selected_month, tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__month=selected_month, tr_reporteddate__year=selected_year) |
+            Q(tr_reporteddate_pickup__month=selected_month, tr_reporteddate_pickup__year=selected_year) |
+            Q(tr_unloading_time__month=selected_month, tr_unloading_time__year=selected_year)
+        )
+
     if from_loc_id:
         trips = trips.filter(tr_departedlocation_id=from_loc_id)
     if to_loc_id:
         trips = trips.filter(tr_reportedlocation_id=to_loc_id)
 
-    trips = trips.order_by('-tr_loading_time')
+    trips = trips.order_by('-tr_created_at') # Order by created_at for consistency if loading_time is missing
 
     trip_cons_ids = [t.tr_consignmentnumber_id for t in trips if t.tr_consignmentnumber_id]
 
@@ -213,9 +220,12 @@ def vehicle_log_report_view(request):
     for idx, trip in enumerate(trips, start=1):
         cons_goods = goods_map.get(trip.tr_consignmentnumber_id)
 
+        # Fallback date for display
+        display_date = trip.tr_loading_time or trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_reporteddate or trip.tr_reporteddate_pickup or trip.tr_created_at
+
         data_rows.append([
             idx,
-            trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else "",
+            display_date.strftime("%d-%m-%Y") if display_date else "",
             safe_str(trip.tr_tripnumber),
             safe_str(trip.tr_vehiclenumber),
             trip.tr_departeddate.strftime("%H:%M") if trip.tr_departeddate else "",
@@ -285,13 +295,21 @@ def trip_cancellation_report_view(request):
     if selected_month and selected_month != '0':
         trips = trips.filter(
             Q(tr_loading_time__month=selected_month) |
-            Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month)
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
         )
 
     if selected_year and selected_year != '0':
         trips = trips.filter(
             Q(tr_loading_time__year=selected_year) |
-            Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year)
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
         )
 
     if from_loc_id:
@@ -313,11 +331,27 @@ def trip_cancellation_report_view(request):
             "Bangalore" if cust_name.endswith("BLR") else ""
         )
 
-        display_date = (
-            trip.tr_loading_time.strftime("%d-%m-%Y")
-            if trip.tr_loading_time else
-            (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else "")
-        )
+        # Filter-aware date selection
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+        target_month = int(selected_month) if selected_month and selected_month != '0' else None
+        target_year = int(selected_year) if selected_year and selected_year != '0' else None
+        
+        trip_date = None
+        for d in dates:
+            if d:
+                month_match = (not target_month or d.month == target_month)
+                year_match = (not target_year or d.year == target_year)
+                if month_match and year_match:
+                    trip_date = d
+                    break
+        if not trip_date:
+            trip_date = next((d for d in dates if d), None)
+        display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
 
         category_id = trip.tr_category_id
         trip_category = "Business" if category_id == 1 else ("Empty" if category_id in [2, 3] else "")
@@ -421,10 +455,21 @@ def vehicle_utilization_report_view(request):
     # -----------------------------
     # Overlap criteria: trip_start <= month_end AND (trip_end >= month_start OR trip_end IS NULL)
     overlapping_trips = TripdetailInfo.objects.filter(
-        tr_departeddate__date__lte=month_end
+        Q(tr_loading_time__date__lte=month_end) |
+        Q(tr_departeddate__date__lte=month_end) |
+        Q(tr_departeddate_pickup__date__lte=month_end) |
+        Q(tr_reporteddate__date__lte=month_end)
     ).filter(
-        Q(tr_reporteddate__date__gte=month_start) | Q(tr_reporteddate__isnull=True)
-    ).values('tr_vehiclenumber', 'tr_departeddate', 'tr_reporteddate')
+        Q(tr_loading_time__date__gte=month_start) |
+        Q(tr_departeddate__date__gte=month_start) |
+        Q(tr_departeddate_pickup__date__gte=month_start) |
+        Q(tr_reporteddate__date__gte=month_start) |
+        Q(tr_reporteddate__isnull=True)
+    ).values(
+        'tr_vehiclenumber', 'tr_departeddate', 'tr_reporteddate', 'tr_loading_time', 
+        'tr_departeddate_pickup', 'tr_reporteddate_pickup', 'tr_unloading_time', 
+        'tc_no_of_days_halting'
+    )
 
     # Group trips by vehicle (normalized registration number)
     trip_map = {}
@@ -447,27 +492,73 @@ def vehicle_utilization_report_view(request):
         utilized_days_set = set() # Using a set of dates to avoid double counting overlapping trips
 
         for trip in veh_trips:
-            t_start = trip['tr_departeddate'].date() if trip['tr_departeddate'] else month_start
-            t_end = trip['tr_reporteddate'].date() if trip['tr_reporteddate'] else today_dt
+            # Multi-field fallback for start and end
+            t_start_dt = trip['tr_departeddate'] or trip['tr_loading_time'] or trip['tr_departeddate_pickup'] or trip['tr_reporteddate']
+            t_end_dt = trip['tr_reporteddate'] or trip['tr_reporteddate_pickup'] or trip['tr_unloading_time']
             
-            # Effective overlap within the selected month
+            if not t_start_dt and not t_end_dt:
+                continue # Skip drafts with no activity dates
+
+            t_start = t_start_dt.date() if t_start_dt else month_start
+            # If trip is unclosed, don't count until today; count as 1 day (the start date)
+            t_end = t_end_dt.date() if t_end_dt else t_start
+            
+            # Effective overlap within the selected month (Base trip period)
             eff_start = max(t_start, month_start)
             eff_end = min(t_end, month_end)
             
             if eff_start <= eff_end:
-                # Add all dates in this range to the set
+                # Add all dates in this movement range to the set
                 curr = eff_start
                 while curr <= eff_end:
                     utilized_days_set.add(curr)
                     curr += timezone.timedelta(days=1)
 
+            # Add Halting Days as additional utilized dates following the end date
+            halting_days = trip.get('tc_no_of_days_halting') or 0
+            if halting_days > 0:
+                # Start adding halting dates from the day after t_end
+                curr_h = t_end + timezone.timedelta(days=1)
+                for _ in range(halting_days):
+                    if month_start <= curr_h <= month_end:
+                        utilized_days_set.add(curr_h)
+                    curr_h += timezone.timedelta(days=1)
+
         utilized_days_count = len(utilized_days_set)
+        
+        # Sort dates and format as comma-separated string of day numbers
+        sorted_dates = sorted(list(utilized_days_set))
+        dates_used_str = ", ".join([d.strftime('%d') for d in sorted_dates])
+
+        # Calculate Non-Utilized Days
+        all_month_days = set(month_start + timezone.timedelta(days=i) for i in range(total_days_in_month))
+        # Filter all_month_days to only include days up to today if the month is current
+        if year_int == today_dt.year and month_int == today_dt.month:
+            all_month_days = {d for d in all_month_days if d <= today_dt}
+        
+        non_utilized_days_set = all_month_days - utilized_days_set
+        non_utilized_days_count = len(non_utilized_days_set)
+        
+        sorted_non_utilized_dates = sorted(list(non_utilized_days_set))
+        sorted_non_utilized_dates = sorted(list(non_utilized_days_set))
+        
+        # Highlight Sundays in red
+        non_utilized_dates_list = []
+        for d in sorted_non_utilized_dates:
+            day_str = d.strftime('%d')
+            if d.weekday() == 6:  # Sunday
+                non_utilized_dates_list.append(f'<span style="color: red; font-weight: bold;">{day_str}</span>')
+            else:
+                non_utilized_dates_list.append(day_str)
+        non_utilized_dates_str = mark_safe(", ".join(non_utilized_dates_list))
 
         data_rows.append([
             counter,
             vehicle.vm_registrationnumber,
             safe_str(vehicle.vm_vehicletype),
-            utilized_days_count
+            utilized_days_count,
+            non_utilized_days_count,
+            non_utilized_dates_str
         ])
         counter += 1
 
@@ -507,14 +598,16 @@ def ref_no_pending_report_view(request):
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
 
-    # Filter trips where customer reference is missing OR pending
+    # Filter trips where customer reference is missing OR pending in BOTH Trip and Consignment
     trips = (
         TripdetailInfo.objects
-        .annotate(ref_clean=Trim('tr_customerref'))
+        .annotate(
+            ref_clean=Trim('tr_customerref'),
+            cons_ref_clean=Trim('tr_consignmentnumber__co_cusrefnum')
+        )
         .filter(
-            Q(ref_clean__isnull=True) |
-            Q(ref_clean__exact='') |
-            Q(ref_clean='0')
+            (Q(ref_clean__isnull=True) | Q(ref_clean__exact='') | Q(ref_clean='0')) &
+            (Q(cons_ref_clean__isnull=True) | Q(cons_ref_clean__exact='') | Q(cons_ref_clean='0'))
         )
         .select_related(
             'tr_enquirynumber',
@@ -531,9 +624,24 @@ def ref_no_pending_report_view(request):
     if customer_id:
         trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
     if selected_month and selected_month != '0':
-        trips = trips.filter(Q(tr_loading_time__month=selected_month) | Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month))
+        trips = trips.filter(
+            Q(tr_loading_time__month=selected_month) |
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
+        )
+
     if selected_year and selected_year != '0':
-        trips = trips.filter(Q(tr_loading_time__year=selected_year) | Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year))
+        trips = trips.filter(
+            Q(tr_loading_time__year=selected_year) |
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
+        )
     if from_loc_id:
         trips = trips.filter(tr_departedlocation_id=from_loc_id)
     if to_loc_id:
@@ -550,8 +658,27 @@ def ref_no_pending_report_view(request):
         cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
         cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
         branch = "Chennai" if cust_name.endswith("MAA") else ("Bangalore" if cust_name.endswith("BLR") else "")
-        display_date = trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else \
-                       (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else "")
+        # Filter-aware date selection
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+        target_month = int(selected_month) if selected_month and selected_month != '0' else None
+        target_year = int(selected_year) if selected_year and selected_year != '0' else None
+        
+        trip_date = None
+        for d in dates:
+            if d:
+                month_match = (not target_month or d.month == target_month)
+                year_match = (not target_year or d.year == target_year)
+                if month_match and year_match:
+                    trip_date = d
+                    break
+        if not trip_date:
+            trip_date = next((d for d in dates if d), None)
+        display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
 
         # Calculate Total Selling (sum of charges)
         total_selling = safe_num(trip.tc_tripcost) + safe_num(trip.tc_tollcost) + safe_num(trip.tc_supervisorcost) + \
@@ -783,13 +910,21 @@ def invoice_pending_report_view(request):
     if selected_month and selected_month != '0':
         trips = trips.filter(
             Q(tr_loading_time__month=selected_month) |
-            Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month)
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
         )
 
     if selected_year and selected_year != '0':
         trips = trips.filter(
             Q(tr_loading_time__year=selected_year) |
-            Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year)
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
         )
 
     if from_loc_id:
@@ -814,8 +949,29 @@ def invoice_pending_report_view(request):
             safe_str(trip.tr_enquirynumber.en_customerdepartment),
             # 2. Customer Short Name
             safe_str(trip.tr_enquirynumber.en_customername),
-            # 3. Planning Date
-            trip.tr_created_at.strftime("%Y-%m-%d") if trip.tr_created_at else "",
+            # 3. Date
+            (lambda: (
+                # Prefer date matching the filter
+                next((d for d in [
+                    trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+                    trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+                    trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+                    trip.tr_dock_out_time, trip.tr_created_at
+                ] if d and (not selected_month or selected_month == '0' or d.month == int(selected_month)) and 
+                  (not selected_year or selected_year == '0' or d.year == int(selected_year))), 
+                # Fallback to first available date
+                next((d for d in [
+                    trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+                    trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+                    trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+                    trip.tr_dock_out_time, trip.tr_created_at
+                ] if d), None)
+            )))().strftime("%d-%m-%Y") if any([
+                trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+                trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+                trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+                trip.tr_dock_out_time, trip.tr_created_at
+            ]) else "",
             # 4. Cnote No
             safe_str(cons.co_consignmentnumber) if cons else "",
             # 5. From
@@ -931,13 +1087,21 @@ def vendor_p_l_mkt_report_view(request):
     if selected_month and selected_month != '0':
         trips = trips.filter(
             Q(tr_loading_time__month=selected_month) |
-            Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month)
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
         )
 
     if selected_year and selected_year != '0':
         trips = trips.filter(
             Q(tr_loading_time__year=selected_year) |
-            Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year)
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
         )
 
     if from_loc_id:
@@ -990,6 +1154,7 @@ def vendor_p_l_mkt_report_view(request):
         )
         allotment_map[key] = a
 
+    invoice_obj_map = {i.ti_trip_id: i for i in invoices}
     invoice_map = {i.ti_trip_id: i.ti_inv_no for i in invoices}
 
     expense_map = {}
@@ -1004,14 +1169,17 @@ def vendor_p_l_mkt_report_view(request):
     for idx, trip in enumerate(trips, start=1):
 
         # ---------------- SELLING ----------------
-        selling_trip = safe_num(trip.tc_tripcost)
-        selling_toll = safe_num(trip.tc_tollcost)
-        selling_aai = safe_num(trip.tc_supervisorcost)
-        selling_loading = safe_num(trip.tc_loadingcost)
-        selling_unloading = safe_num(trip.tc_unloadingcost)
-        selling_weighment = safe_num(trip.tc_weighmentcost)
-        selling_halting = safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost)
-        selling_handling = safe_num(trip.tc_handlingcost)
+        # Fallback to Invoice charges if trip record is missing them
+        inv = invoice_obj_map.get(trip.id)
+
+        selling_trip = safe_num(trip.tc_tripcost) or (safe_num(inv.ti_transportation_charges) if inv else 0.0)
+        selling_toll = safe_num(trip.tc_tollcost) or (safe_num(inv.ti_toll_charges) if inv else 0.0)
+        selling_aai = safe_num(trip.tc_supervisorcost) or (safe_num(inv.ti_docket_charges) if inv else 0.0)
+        selling_loading = safe_num(trip.tc_loadingcost) or (safe_num(inv.ti_loading_charges) if inv else 0.0)
+        selling_unloading = safe_num(trip.tc_unloadingcost) or (safe_num(inv.ti_unloading_charges) if inv else 0.0)
+        selling_weighment = safe_num(trip.tc_weighmentcost) or (safe_num(inv.ti_weighment_charges) if inv else 0.0)
+        selling_halting = (safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost)) or (safe_num(inv.ti_halting_charges) if inv else 0.0)
+        selling_handling = safe_num(trip.tc_handlingcost) or (safe_num(inv.ti_handling_charges) if inv else 0.0)
 
         total_selling = (
             selling_trip + selling_toll + selling_aai +
@@ -1054,19 +1222,39 @@ def vendor_p_l_mkt_report_view(request):
         trip_expenses = expense_map.get(trip.id, [])
 
         buying_loading = buying_unloading = buying_weighment = buying_aai = 0.0
+        buying_toll = buying_halting = buying_handling = buying_parking = buying_rto = buying_batta = 0.0
 
         for e in trip_expenses:
+            # Direct field mapping
             buying_loading += safe_num(e.de_loadingcost)
             buying_unloading += safe_num(e.de_unloadingcost)
             buying_weighment += safe_num(e.de_weighmentcost)
             buying_aai += safe_num(e.de_supervisorcost)
+            buying_parking += safe_num(e.de_parkingcost)
+            buying_rto += safe_num(e.de_rtocost)
+            buying_batta += safe_num(e.de_battacost)
+
+            # Categorize based on expense type for types without specific fields
+            exp_type_str = str(e.de_expense_type).lower() if e.de_expense_type else ""
+            if "toll" in exp_type_str:
+                buying_toll += safe_num(e.de_total_cost)
+            elif "halting" in exp_type_str:
+                buying_halting += safe_num(e.de_total_cost)
+            elif "handling" in exp_type_str:
+                buying_handling += safe_num(e.de_total_cost)
 
         total_buying = (
             buying_trip_cost +
             buying_loading +
             buying_unloading +
             buying_weighment +
-            buying_aai
+            buying_aai +
+            buying_toll +
+            buying_halting +
+            buying_handling +
+            buying_parking +
+            buying_rto +
+            buying_batta
         )
 
         profit = total_selling - total_buying
@@ -1076,8 +1264,26 @@ def vendor_p_l_mkt_report_view(request):
 
         row = [
             idx,
-            trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else
-            (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""),
+            (lambda: (
+                next((d for d in [
+                    trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+                    trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+                    trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+                    trip.tr_dock_out_time, trip.tr_created_at
+                ] if d and (not selected_month or selected_month == '0' or d.month == int(selected_month)) and 
+                  (not selected_year or selected_year == '0' or d.year == int(selected_year))), 
+                next((d for d in [
+                    trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+                    trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+                    trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+                    trip.tr_dock_out_time, trip.tr_created_at
+                ] if d), None))
+            ))().strftime("%d-%m-%Y") if any([
+                trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+                trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+                trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+                trip.tr_dock_out_time, trip.tr_created_at
+            ]) else "",
 
             safe_str(trip.tr_consignmentnumber),
             safe_str(trip.tr_departedlocation),
@@ -1104,13 +1310,13 @@ def vendor_p_l_mkt_report_view(request):
 
             # BUYING
             buying_trip_cost,
-            0,
+            buying_toll,
             buying_aai,
             buying_loading,
             buying_unloading,
             buying_weighment,
-            0,
-            0,
+            buying_halting,
+            buying_handling,
             total_buying,
 
             # PROFIT
@@ -1185,13 +1391,21 @@ def vendor_p_l_attached_report_view(request):
     if selected_month and selected_month != '0':
         trips = trips.filter(
             Q(tr_loading_time__month=selected_month) |
-            Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month)
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
         )
 
     if selected_year and selected_year != '0':
         trips = trips.filter(
             Q(tr_loading_time__year=selected_year) |
-            Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year)
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
         )
 
     if from_loc_id:
@@ -1235,14 +1449,17 @@ def vendor_p_l_attached_report_view(request):
     for idx, trip in enumerate(trips, start=1):
 
         # ---------------- SELLING ----------------
-        selling_trip = safe_num(trip.tc_tripcost)
-        selling_toll = safe_num(trip.tc_tollcost)
-        selling_aai = safe_num(trip.tc_supervisorcost)
-        selling_loading = safe_num(trip.tc_loadingcost)
-        selling_unloading = safe_num(trip.tc_unloadingcost)
-        selling_weighment = safe_num(trip.tc_weighmentcost)
-        selling_halting = safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost)
-        selling_handling = safe_num(trip.tc_handlingcost)
+        # Fallback to Invoice charges if trip record is missing them
+        inv = inv_map.get(trip.id)
+
+        selling_trip = safe_num(trip.tc_tripcost) or (safe_num(inv.ti_transportation_charges) if inv else 0.0)
+        selling_toll = safe_num(trip.tc_tollcost) or (safe_num(inv.ti_toll_charges) if inv else 0.0)
+        selling_aai = safe_num(trip.tc_supervisorcost) or (safe_num(inv.ti_docket_charges) if inv else 0.0)
+        selling_loading = safe_num(trip.tc_loadingcost) or (safe_num(inv.ti_loading_charges) if inv else 0.0)
+        selling_unloading = safe_num(trip.tc_unloadingcost) or (safe_num(inv.ti_unloading_charges) if inv else 0.0)
+        selling_weighment = safe_num(trip.tc_weighmentcost) or (safe_num(inv.ti_weighment_charges) if inv else 0.0)
+        selling_halting = (safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost)) or (safe_num(inv.ti_halting_charges) if inv else 0.0)
+        selling_handling = safe_num(trip.tc_handlingcost) or (safe_num(inv.ti_handling_charges) if inv else 0.0)
 
         selling_parking = safe_num(trip.tc_parkingcost)
         selling_rto = safe_num(trip.tc_rtocost)
@@ -1274,14 +1491,42 @@ def vendor_p_l_attached_report_view(request):
 
         trip_expenses = driver_expense_map.get(trip.id, [])
 
-        buy_loading = sum(safe_num(e.de_loadingcost) for e in trip_expenses)
-        buy_unloading = sum(safe_num(e.de_unloadingcost) for e in trip_expenses)
-        buy_weighment = sum(safe_num(e.de_weighmentcost) for e in trip_expenses)
-        buy_aai = sum(safe_num(e.de_supervisorcost) for e in trip_expenses)
+        buy_loading = buy_unloading = buy_weighment = buy_aai = 0.0
+        buy_toll = buy_halting = buy_handling = buy_parking = buy_rto = buy_batta = 0.0
 
-        total_buying = buying_trip_cost + buy_loading + buy_unloading + buy_weighment + buy_aai
+        for e in trip_expenses:
+            buy_loading += safe_num(e.de_loadingcost)
+            buy_unloading += safe_num(e.de_unloadingcost)
+            buy_weighment += safe_num(e.de_weighmentcost)
+            buy_aai += safe_num(e.de_supervisorcost)
+            buy_parking += safe_num(e.de_parkingcost)
+            buy_rto += safe_num(e.de_rtocost)
+            buy_batta += safe_num(e.de_battacost)
 
-        # ---------------- KM & PROFIT ----------------
+            # Categorize based on expense type for types without specific fields
+            exp_type_str = str(e.de_expense_type).lower() if e.de_expense_type else ""
+            if "toll" in exp_type_str:
+                buy_toll += safe_num(e.de_total_cost)
+            elif "halting" in exp_type_str:
+                buy_halting += safe_num(e.de_total_cost)
+            elif "handling" in exp_type_str:
+                buy_handling += safe_num(e.de_total_cost)
+
+        total_buying = (
+            buying_trip_cost +
+            buy_loading +
+            buy_unloading +
+            buy_weighment +
+            buy_aai +
+            buy_toll +
+            buy_halting +
+            buy_handling +
+            buy_parking +
+            buy_rto +
+            buy_batta
+        )
+
+        # KM & PROFIT ----------------
         reported_km = safe_num(trip.tr_reportedkm)
         departed_km = safe_num(trip.tr_departedkm)
         km_run = reported_km - departed_km if reported_km and departed_km else 0
@@ -1291,10 +1536,31 @@ def vendor_p_l_attached_report_view(request):
         profit = total_selling - total_buying
         profit_pct = (profit / total_buying * 100) if total_buying > 0 else 0
 
+        # Filter-aware date selection
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+        target_month = int(selected_month) if selected_month and selected_month != '0' else None
+        target_year = int(selected_year) if selected_year and selected_year != '0' else None
+        
+        trip_date = None
+        for d in dates:
+            if d:
+                month_match = (not target_month or d.month == target_month)
+                year_match = (not target_year or d.year == target_year)
+                if month_match and year_match:
+                    trip_date = d
+                    break
+        if not trip_date:
+            trip_date = next((d for d in dates if d), None)
+        display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
+
         row = [
             idx,
-            trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else
-            (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""),
+            display_date,
 
             safe_str(trip.tr_consignmentnumber),
             safe_str(trip.tr_departedlocation),
@@ -1388,13 +1654,21 @@ def whatsapp_delivery_status_report_view(request):
     if selected_month and selected_month != '0':
         trips = trips.filter(
             Q(tr_loading_time__month=selected_month) |
-            Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month)
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
         )
 
     if selected_year and selected_year != '0':
         trips = trips.filter(
             Q(tr_loading_time__year=selected_year) |
-            Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year)
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
         )
 
     if from_loc_id:
@@ -1423,10 +1697,31 @@ def whatsapp_delivery_status_report_view(request):
             else ""
         )
 
+        # Filter-aware date selection logic
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+        target_month = int(selected_month) if selected_month and selected_month != '0' else None
+        target_year = int(selected_year) if selected_year and selected_year != '0' else None
+        
+        trip_date = None
+        for d in dates:
+            if d:
+                month_match = (not target_month or d.month == target_month)
+                year_match = (not target_year or d.year == target_year)
+                if month_match and year_match:
+                    trip_date = d
+                    break
+        if not trip_date:
+            trip_date = next((d for d in dates if d), None)
+            
         consignment_date = (
             trip.tr_consignmentnumber.co_consignmentdate.strftime("%d-%m-%Y")
             if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentdate
-            else ""
+            else (trip_date.strftime("%d-%m-%Y") if trip_date else "")
         )
 
         row = [
@@ -1476,11 +1771,13 @@ def daily_trip_count_report_view(request):
 
     customer_id = request.POST.get('dmr_customer')
     dept_id = request.POST.get('customer_department')
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
+    selected_month = request.POST.get('month', '0')
+    selected_year = request.POST.get('year', '0')
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
     vehicle_filter = request.POST.get('vehicle_number')
+    from_date = request.POST.get('from_date')
+    to_date = request.POST.get('to_date')
 
     # ------------------------------------------------
     # BASE QUERY
@@ -1506,16 +1803,44 @@ def daily_trip_count_report_view(request):
     if dept_id:
         trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
 
+    if from_date:
+        trips = trips.filter(
+            Q(tr_loading_time__date__gte=from_date) |
+            Q(tr_departeddate__date__gte=from_date) |
+            Q(tr_departeddate_pickup__date__gte=from_date) |
+            Q(tr_reporteddate__date__gte=from_date) |
+            Q(tr_unloading_time__date__gte=from_date) |
+            Q(tr_created_at__date__gte=from_date)
+        )
+
+    if to_date:
+        trips = trips.filter(
+            Q(tr_loading_time__date__lte=to_date) |
+            Q(tr_departeddate__date__lte=to_date) |
+            Q(tr_departeddate_pickup__date__lte=to_date) |
+            Q(tr_reporteddate__date__lte=to_date) |
+            Q(tr_unloading_time__date__lte=to_date) |
+            Q(tr_created_at__date__lte=to_date)
+        )
+
     if selected_month and selected_month != '0':
         trips = trips.filter(
             Q(tr_loading_time__month=selected_month) |
-            Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month)
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
         )
 
     if selected_year and selected_year != '0':
         trips = trips.filter(
             Q(tr_loading_time__year=selected_year) |
-            Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year)
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
         )
 
     if from_loc_id:
@@ -1537,14 +1862,35 @@ def daily_trip_count_report_view(request):
     for trip in trips:
 
         # Determine trip date
-        trip_date = (
-            trip.tr_loading_time.date() if trip.tr_loading_time
-            else trip.tr_departeddate.date() if trip.tr_departeddate
-            else None
-        )
+        # Filter-aware date selection
+        today = date.today()
 
-        if not trip_date:
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+        target_month = int(selected_month) if selected_month and selected_month != '0' else None
+        target_year = int(selected_year) if selected_year and selected_year != '0' else None
+        
+        full_date = None
+        for d in dates:
+            if d:
+                d_date = d.date() if hasattr(d, 'date') else d
+                # Skip future dates
+                if d_date > today:
+                    continue
+                month_match = (not target_month or d.month == target_month)
+                year_match = (not target_year or d.year == target_year)
+                if month_match and year_match:
+                    full_date = d
+                    break
+        if not full_date:
+            full_date = next((d for d in dates if d and (d.date() if hasattr(d, 'date') else d) <= today), None)
+        if not full_date:
             continue
+        trip_date = full_date.date() if hasattr(full_date, 'date') else full_date
 
         date_str = trip_date.strftime("%d-%m-%Y")
         vehicle_no = safe_str(trip.tr_vehiclenumber)
@@ -1603,25 +1949,30 @@ def daily_trip_count_report_view(request):
             item['vehicle_no'],
             item['vehicle_type'],
             item['active_trips'],
-            item['empty_trips'],
-            item['ownership'],
-            round(item['km_business'], 2),
-            round(item['km_empty'], 2)
+            item['ownership']
         ]
 
         data_rows.append(row)
 
     all_vehicles = VehiclemasterInfo.objects.filter(
-        vm_ownership_id__in=[1, 2 , 3]
+        vm_ownership_id__in=[1, 2, 3]
     ).order_by('vm_registrationnumber')
+
+    # Pagination for groups (dates)
+    paginator = Paginator(data_rows, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     return render(request, "asset_mgt_app/daily_trip_count_report.html", {
         'first_name': first_name,
         'form': form,
         'headers': DAILY_TRIP_COUNT_HEADERS,
-        'data_rows': data_rows,
+        'data_rows': page_obj,
+        'page_obj': page_obj,
         'selected_month': selected_month,
         'selected_year': selected_year,
+        'from_date': from_date,
+        'to_date': to_date,
         'vehicle_filter': vehicle_filter,
         'all_vehicles': all_vehicles
     })
@@ -1658,13 +2009,21 @@ def own_vehicle_pl_report_view(request):
     if selected_month and selected_month != '0':
         trips = trips.filter(
             Q(tr_loading_time__month=selected_month) |
-            Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month)
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
         )
 
     if selected_year and selected_year != '0':
         trips = trips.filter(
             Q(tr_loading_time__year=selected_year) |
-            Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year)
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
         )
 
     if vehicle_number:
@@ -1700,11 +2059,27 @@ def own_vehicle_pl_report_view(request):
 
     for idx, trip in enumerate(trips, start=1):
 
-        date_val = (
-            trip.tr_loading_time.strftime("%d-%m-%Y")
-            if trip.tr_loading_time else
-            (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else "")
-        )
+        # Filter-aware date selection
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+        target_month = int(selected_month) if selected_month and selected_month != '0' else None
+        target_year = int(selected_year) if selected_year and selected_year != '0' else None
+        
+        trip_date = None
+        for d in dates:
+            if d:
+                month_match = (not target_month or d.month == target_month)
+                year_match = (not target_year or d.year == target_year)
+                if month_match and year_match:
+                    trip_date = d
+                    break
+        if not trip_date:
+            trip_date = next((d for d in dates if d), None)
+        date_val = trip_date.strftime("%d-%m-%Y") if trip_date else ""
 
         # -------- SELLING --------
         selling_total = (
@@ -1859,7 +2234,27 @@ def claim_pending_report_view(request):
 
         if trip:
             trip_code = safe_str(trip.tr_tripnumber)
-            trip_date = trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""
+            # Filter-aware date selection
+            dates = [
+                trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+                trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+                trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+                trip.tr_dock_out_time, trip.tr_created_at
+            ]
+            target_month = int(selected_month) if selected_month and selected_month != '0' else None
+            target_year = int(selected_year) if selected_year and selected_year != '0' else None
+            
+            t_date = None
+            for d in dates:
+                if d:
+                    month_match = (not target_month or d.month == target_month)
+                    year_match = (not target_year or d.year == target_year)
+                    if month_match and year_match:
+                        t_date = d
+                        break
+            if not t_date:
+                t_date = next((d for d in dates if d), None)
+            trip_date = t_date.strftime("%d-%m-%Y") if t_date else ""
             truck_no = safe_str(trip.tr_vehiclenumber)
             veh_type = safe_str(trip.tr_vehicletype)
             loc_from = safe_str(trip.tr_departedlocation)
@@ -1940,10 +2335,23 @@ def halting_report_view(request):
         trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
     if selected_month and selected_month != '0':
         trips = trips.filter(
-            Q(tr_loading_time__month=selected_month) | Q(tr_loading_time__isnull=True, tr_created_at__month=selected_month))
+            Q(tr_loading_time__month=selected_month) |
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
+        )
+
     if selected_year and selected_year != '0':
         trips = trips.filter(
-            Q(tr_loading_time__year=selected_year) | Q(tr_loading_time__isnull=True, tr_created_at__year=selected_year))
+            Q(tr_loading_time__year=selected_year) |
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
+        )
             
     trips = trips.order_by('-tr_created_at')
     
@@ -1987,7 +2395,27 @@ def halting_report_view(request):
         # --- Basic Details ---
         branch = safe_str(trip.tr_enquirynumber.en_branch if hasattr(trip.tr_enquirynumber, 'en_branch') else '') 
         
-        date_val = trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""
+        # Filter-aware date selection
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+        target_month = int(selected_month) if selected_month and selected_month != '0' else None
+        target_year = int(selected_year) if selected_year and selected_year != '0' else None
+        
+        full_date = None
+        for d in dates:
+            if d:
+                month_match = (not target_month or d.month == target_month)
+                year_match = (not target_year or d.year == target_year)
+                if month_match and year_match:
+                    full_date = d
+                    break
+        if not full_date:
+            full_date = next((d for d in dates if d), None)
+        date_val = trip_date.strftime("%d-%m-%Y") if trip_date else ""
         veh_no = safe_str(trip.tr_vehiclenumber)
         veh_type = safe_str(trip.tr_vehicletype)
         customer = safe_str(trip.tr_enquirynumber.en_customername)
@@ -2344,9 +2772,24 @@ def diesel_vs_revenue_report_view(request):
     if vehicle_search:
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_search)
     if selected_month and selected_month != '0':
-        trips = trips.filter(tr_loading_time__month=selected_month)
+        trips = trips.filter(
+            Q(tr_loading_time__month=selected_month) |
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
+        )
+
     if selected_year and selected_year != '0':
-        trips = trips.filter(tr_loading_time__year=selected_year)
+        trips = trips.filter(
+            Q(tr_loading_time__year=selected_year) |
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
+        )
 
     trips = trips.order_by('-tr_loading_time')
 
@@ -2361,7 +2804,27 @@ def diesel_vs_revenue_report_view(request):
         cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
         branch = "Chennai" if cust_name.endswith("MAA") else ("Bangalore" if cust_name.endswith("BLR") else "")
         
-        trip_date = trip.tr_loading_time.date() if trip.tr_loading_time else (trip.tr_departeddate.date() if trip.tr_departeddate else None)
+        # Filter-aware date selection
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+        target_month = int(selected_month) if selected_month and selected_month != '0' else None
+        target_year = int(selected_year) if selected_year and selected_year != '0' else None
+        
+        full_date = None
+        for d in dates:
+            if d:
+                month_match = (not target_month or d.month == target_month)
+                year_match = (not target_year or d.year == target_year)
+                if month_match and year_match:
+                    full_date = d
+                    break
+        if not full_date:
+            full_date = next((d for d in dates if d), None)
+        trip_date = full_date.date() if full_date else None
         
         # Revenue calculation (Sum of selling components)
         revenue = safe_num(trip.tc_tripcost) + safe_num(trip.tc_rtocost) + safe_num(trip.tc_betacost) + \
@@ -2460,9 +2923,24 @@ def own_vs_market_sales_report_view(request):
     if dept_id:
         trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
     if selected_month and selected_month != '0':
-        trips = trips.filter(tr_loading_time__month=selected_month)
+        trips = trips.filter(
+            Q(tr_loading_time__month=selected_month) |
+            Q(tr_departeddate__month=selected_month) |
+            Q(tr_departeddate_pickup__month=selected_month) |
+            Q(tr_reporteddate__month=selected_month) |
+            Q(tr_unloading_time__month=selected_month) |
+            Q(tr_created_at__month=selected_month)
+        )
+
     if selected_year and selected_year != '0':
-        trips = trips.filter(tr_loading_time__year=selected_year)
+        trips = trips.filter(
+            Q(tr_loading_time__year=selected_year) |
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
+        )
 
     # Prefetch Vehicle Allotment for Market Buy Rate
     enquiry_ids = [t.tr_enquirynumber_id for t in trips]
@@ -2473,9 +2951,29 @@ def own_vs_market_sales_report_view(request):
 
     for trip in trips:
         # Determine Date
-        trip_date = trip.tr_loading_time.date() if trip.tr_loading_time else (trip.tr_departeddate.date() if trip.tr_departeddate else None)
-        if not trip_date:
+        # Filter-aware date selection
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+        target_month = int(selected_month) if selected_month and selected_month != '0' else None
+        target_year = int(selected_year) if selected_year and selected_year != '0' else None
+        
+        full_date = None
+        for d in dates:
+            if d:
+                month_match = (not target_month or d.month == target_month)
+                year_match = (not target_year or d.year == target_year)
+                if month_match and year_match:
+                    full_date = d
+                    break
+        if not full_date:
+            full_date = next((d for d in dates if d), None)
+        if not full_date:
             continue
+        trip_date = full_date.date()
         
         date_str = trip_date.strftime("%d-%m-%Y")
         

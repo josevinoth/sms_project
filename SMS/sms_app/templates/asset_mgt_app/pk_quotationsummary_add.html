@@ -280,7 +280,7 @@
 </div>
 <hr>
 <div class="container-fluid">
-	<table  id="quotation_list" class="table table-striped table-bordered">
+	<table id="quotation_list" class="table table-striped table-bordered">
 		<thead class="thead-dark">
 		<tr>
 			<th>Created On</th>
@@ -355,109 +355,100 @@
 		document.getElementById("qs_transport_cost").value ='{{transport_cost}}';
 		change_charge_type()
 
-		var user_role='{{role_id}}'
-		var status=document.getElementById("qs_status").value
-		if (status==5)
-		{
-			$('#quotation_report_btn').removeClass('disable_a_href');
-			if (user_role==2)
-			{
-				alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
-				$('#quotation_summary').addClass('disable_a_href');
-				$('#qs_submit_btn').addClass('disable_a_href');
-				$('#add_quotation').addClass('disable_a_href');
-			}
-			else
-			{
-				$('#quotation_summary').removeClass('disable_a_href');
-				$('#qs_submit_btn').removeClass('disable_a_href');
-				$('#add_quotation').removeClass('disable_a_href');
+						var user_role = '{{role_id}}'
+						var status = document.getElementById("qs_status").value
+						if (status == 5) {
+							$('#quotation_report_btn').removeClass('disable_a_href');
+							if (user_role == 2) {
+								alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
+								$('#quotation_summary').addClass('disable_a_href');
+								$('#qs_submit_btn').addClass('disable_a_href');
+								$('#add_quotation').addClass('disable_a_href');
+							}
+							else {
+								$('#quotation_summary').removeClass('disable_a_href');
+								$('#qs_submit_btn').removeClass('disable_a_href');
+								$('#add_quotation').removeClass('disable_a_href');
 
-			}
-		}
-		else
-		{
-			$('#quotation_report_btn').addClass('disable_a_href');
-			var assessment_num = document.getElementById("qs_assessment_num").value
-			if (assessment_num =="")
-			{
-				$('#add_quotation').addClass('disable_a_href');
-			}
-			else
-			{
-				$('#add_quotation').removeClass('disable_a_href');
-			}
-		}
+							}
+						}
+						else {
+							$('#quotation_report_btn').addClass('disable_a_href');
+							var assessment_num = document.getElementById("qs_assessment_num").value
+							if (assessment_num == "") {
+								$('#add_quotation').addClass('disable_a_href');
+							}
+							else {
+								$('#add_quotation').removeClass('disable_a_href');
+							}
+						}
 
-		$('#quotation_list').DataTable({
-			scrollX: true,
-			dom: 'lBfrtip',
-			buttons: [
-				'copy', 'csv', 'excel','print'
-			]
-		});
-	});
-</script>
+						$('#quotation_list').DataTable({
+							scrollX: true,
+							dom: 'lBfrtip',
+							buttons: [
+								'copy', 'csv', 'excel', 'print'
+							]
+						});
+					});
+				</script>
 
-<script>
-	function change_charge_type() {
-		var wood_cost=parseFloat(document.getElementById("qs_wood_cost").value) || 0;
-		var engineer_cost=parseFloat(document.getElementById("qs_engineer_cost").value) || 0;
-		var labour_cost=parseFloat(document.getElementById("qs_labour_cost").value) || 0;
-		var crane_cost=parseFloat(document.getElementById("qs_crane_cost").value) || 0;
-		var ht_cost=parseFloat(document.getElementById("qs_ht_cost").value) || 0;
-		var management_cost=parseFloat(document.getElementById("qs_management_cost").value) || 0;
-		var material_cost=parseFloat(document.getElementById("qs_material_cost").value) || 0;
-		var transport_cost=parseFloat(document.getElementById("qs_transport_cost").value) || 0;
-		var margin=parseFloat(document.getElementById("qs_margin").value) || 0;
-		var total_cost_wo_m= wood_cost+engineer_cost+labour_cost+crane_cost+ht_cost+management_cost+material_cost+transport_cost
-		document.getElementById("qs_total_cost_wom").value=total_cost_wo_m.toFixed(2)
-		var margin_value=total_cost_wo_m*(margin/100)
-		var total_cost=margin_value+total_cost_wo_m
-		document.getElementById("qs_total_cost_wm").value=total_cost.toFixed(2)
+				<script>
+					function change_charge_type() {
+						var wood_cost = parseFloat(document.getElementById("qs_wood_cost").value) || 0;
+						var engineer_cost = parseFloat(document.getElementById("qs_engineer_cost").value) || 0;
+						var labour_cost = parseFloat(document.getElementById("qs_labour_cost").value) || 0;
+						var crane_cost = parseFloat(document.getElementById("qs_crane_cost").value) || 0;
+						var ht_cost = parseFloat(document.getElementById("qs_ht_cost").value) || 0;
+						var management_cost = parseFloat(document.getElementById("qs_management_cost").value) || 0;
+						var material_cost = parseFloat(document.getElementById("qs_material_cost").value) || 0;
+						var transport_cost = parseFloat(document.getElementById("qs_transport_cost").value) || 0;
+						var margin = parseFloat(document.getElementById("qs_margin").value) || 0;
+						var total_cost_wo_m = wood_cost + engineer_cost + labour_cost + crane_cost + ht_cost + management_cost + material_cost + transport_cost
+						document.getElementById("qs_total_cost_wom").value = total_cost_wo_m.toFixed(2)
+						var margin_value = total_cost_wo_m * (margin / 100)
+						var total_cost = Math.round(margin_value + total_cost_wo_m)
+						document.getElementById("qs_total_cost_wm").value = total_cost.toFixed(0)
 
-		var gst=parseFloat(document.getElementById("qs_gst").value) || 0;
-		var final_cost=total_cost+(total_cost*gst/100)
-		document.getElementById("qs_final_cost").value=final_cost.toFixed(2)
+						var gst = parseFloat(document.getElementById("qs_gst").value) || 0;
+						var final_cost = total_cost + (total_cost * gst / 100)
+						document.getElementById("qs_final_cost").value = final_cost.toFixed(2)
 
-		var total_cft=parseFloat(document.getElementById("qs_total_cft").value) || 0;
-		var rate_per_cft_val=parseFloat(total_cost/total_cft)
-		if (isNaN(rate_per_cft_val))
-		{
-			rate_per_cft = 0;
-		}
-		else
-		{
-			rate_per_cft = rate_per_cft_val;
-		}
-		document.getElementById("qs_rate_per_cft").value=rate_per_cft.toFixed(2)
-	}
-</script>
-<!--Unique Field validation-->
-<script>
-	$(document).ready(function() {
-		$('#qs_assessment_num').on('change', function() {
-			var qs_assessment_num = document.getElementById("qs_assessment_num").value;
-			// Send an AJAX request to check if the value exists in the database
-			$.ajax({
-				url: '{% url "pk_quotation_summary_check_unique_field" %}',
-				data: {
-					'qs_assessment_num': qs_assessment_num,
-				},
-				dataType: 'json',
-				success: function(data) {
-					var customer_name_id=data.customer_name_id
-					document.getElementById("qs_customer_name_2").value=customer_name_id
-					var customer_new_name=data.customer_new_name
-					document.getElementById("pkqt_customer_new_name").value=customer_new_name
-					if (data.exists) {
-						$('#unique_field_error').text('This Record already exists.');
-					} else {
-						$('#unique_field_error').text('');
+						var total_cft = parseFloat(document.getElementById("qs_total_cft").value) || 0;
+						var rate_per_cft_val = parseFloat(total_cost / total_cft)
+						if (isNaN(rate_per_cft_val)) {
+							rate_per_cft = 0;
+						}
+						else {
+							rate_per_cft = rate_per_cft_val;
+						}
+						document.getElementById("qs_rate_per_cft").value = rate_per_cft.toFixed(2)
 					}
-				}
-			});
-		});
-	});
-</script>
-{% endblock content %}
+				</script>
+				<!--Unique Field validation-->
+				<script>
+					$(document).ready(function () {
+						$('#qs_assessment_num').on('change', function () {
+							var qs_assessment_num = document.getElementById("qs_assessment_num").value;
+							$.ajax({
+								url: '{% url "pk_quotation_summary_check_unique_field" %}',
+								data: {
+									'qs_assessment_num': qs_assessment_num,
+								},
+								dataType: 'json',
+								success: function (data) {
+									var customer_name_id = data.customer_name_id;
+									document.getElementById("qs_customer_name_2").value = customer_name_id;
+									var customer_new_name = data.customer_new_name;
+									document.getElementById("pkqt_customer_new_name").value = customer_new_name;
+									if (data.exists) {
+										$('#unique_field_error').text('This Record already exists.');
+									} else {
+										$('#unique_field_error').text('');
+									}
+								}
+							});
+						});
+					});
+				</script>
+				{% endblock content %}

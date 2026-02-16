@@ -151,16 +151,28 @@ def add_consigner(request):
 def add_consignee(request):
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
+        address = request.POST.get("address", "").strip()
+        country_code = request.POST.get("country_code", "").strip()
+        
         if not name:
             return JsonResponse({"success": False, "error": "Consignee name cannot be empty."})
-
+        
         existing = ConsigneeInfo.objects.filter(consignee_name__iexact=name).first()
         if existing:
-            return JsonResponse({"success": False,"id": existing.id,"name": existing.consignee_name,"error": "This consignee already exists."})
-
-        new = ConsigneeInfo.objects.create(consignee_name=name)
-        return JsonResponse({"success": True,"id": new.id,"name": new.consignee_name})
-
+            return JsonResponse({
+                "success": False,
+                "id": existing.id,
+                "name": existing.consignee_name,
+                "error": "This consignee already exists."
+            })
+        
+        new = ConsigneeInfo.objects.create(
+            consignee_name=name,
+            consignee_address=address if address else None,
+            consignee_country_code=country_code if country_code else None
+        )
+        return JsonResponse({"success": True, "id": new.id, "name": new.consignee_name})
+    
     return JsonResponse({"success": False, "error": "Invalid request"})
 
 

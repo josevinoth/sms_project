@@ -26,15 +26,14 @@ class DmrForm(forms.Form):
     )
 
     current_year = datetime.now().year
-    default_year = 2026
 
     year = forms.ChoiceField(
         choices=[(0, '---')] + [
-            (y, y) for y in range(2020, max(current_year, default_year) + 1)
+            (y, y) for y in range(2020, current_year + 1)
         ],
         required=False,
         label="Year",
-        initial=default_year
+        initial=current_year
     )
 
     vehicle_number = forms.CharField(
@@ -56,4 +55,16 @@ class DmrForm(forms.Form):
         queryset=Places.objects.all(),
         required=False,
         label="To Location"
+    )
+
+    from_date = forms.DateField(
+        required=False,
+        label="From Date",
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+
+    to_date = forms.DateField(
+        required=False,
+        label="To Date",
+        widget=forms.DateInput(attrs={'type': 'date'})
     )

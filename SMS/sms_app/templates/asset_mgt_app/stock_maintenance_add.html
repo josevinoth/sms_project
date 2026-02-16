@@ -396,130 +396,110 @@
         }
 
         function calculate() {
+
+            // ---------------- BASIC VALUES ----------------
             var len = parseFloat($jq('#id_sm_length').val()) || 0;
             var wid = parseFloat($jq('#id_sm_width').val()) || 0;
             var thk = parseFloat($jq('#id_sm_thickness').val()) || 0;
             var count = parseFloat($jq('#id_sm_count').val()) || 0;
             var rate = parseFloat($jq('#id_sm_per_unit_cost').val()) || 0;
 
-            // Detect stock type text and description
             var stockTypeText = ($jq('#id_sm_stock_type option:selected').text() || "").toLowerCase();
             var descriptionText = ($jq('#id_sm_description').val() || "").toLowerCase();
             var stockTypeVal = $jq('#id_sm_stock_type').val();
 
-            /* ==========================================================
-               DRY-RUN DETECTION (Inspired by Reference Script)
-               Plywood and certain Consumables use SQFT logic.
-               ========================================================== */
-            var isPlywood = /plywood/i.test(stockTypeText) || /plywood/i.test(descriptionText);
-            var isConsumable = /consumable/i.test(stockTypeText);
+            // ---------------- PRIORITY DETECTION ----------------
+            var isRE = /\bre\b/i.test(descriptionText);
+            var isPlywood = !isRE && (/ply/i.test(stockTypeText) || /ply/i.test(descriptionText));
+            var isWood = !isRE && (/wood/i.test(stockTypeText) || /wood/i.test(descriptionText)) && !isPlywood;
+            var isOther = isRE || (!isWood && !isPlywood);
 
-            // Reference script checks for specific prefixes in consumables (Alu, VC, Air, Foam, etc.)
+            var isConsumable = /consumable/i.test(stockTypeText);
             var descPrefixMatch = /^(alu|vc|air|foam|strech|desiccant|tar)/i.test(descriptionText);
 
-            var isWood = (/wood/i.test(stockTypeText) || /wood/i.test(descriptionText)) && !isPlywood;
+            // ---------------- SQFT / CFT DECISION ----------------
+            var useSqft = !isRE && (
+                isPlywood ||
+                ((isConsumable || descPrefixMatch || stockTypeVal == '4' || stockTypeVal == '6') && !isWood)
+            );
 
-            // Reference script uses IDs 4, 6 for SQFT logic, and 1, 5 for CFT
-            var useSqft = isPlywood || ((isConsumable || descPrefixMatch || stockTypeVal == '4' || stockTypeVal == '6') && !isWood);
-
-            // IF OTHER THAN WOOD AND PLYWOOD
-            var isOther = !isWood && !isPlywood;
-
-            // --- Dynamic Label Switching (Synced with Excel Tabs / User Feedback) ---
-            var $lblCount = $jq('#label_sm_count');
-            var $lblPrice = $jq('#label_sm_total_price');
-            var $lblCost = $jq('#label_sm_per_unit_cost');
+            // ---------------- LABEL REFERENCES ----------------
             var $lblThick = $jq('#label_sm_thickness');
             var $lblWidth = $jq('#label_sm_width');
             var $lblLength = $jq('#label_sm_length');
+            var $lblCount = $jq('#label_sm_count');
+            var $lblCost = $jq('#label_sm_per_unit_cost');
+            var $lblPrice = $jq('#label_sm_total_price');
             var $lblUnitCft = $jq('#label_sm_cft');
             var $lblTotalCft = $jq('#label_sm_total_cft');
 
+            // ---------------- RESET LABELS ----------------
+            $lblThick.text('Thickness (In)');
+            $lblWidth.text('Width (In)');
+            $lblLength.text('Length (Feet)');
+            $lblCount.text('Count');
+            $lblCost.text('Per Unit Cost');
+            $lblPrice.text('Total Price');
+            $lblUnitCft.text('CFT');
+            $lblTotalCft.text('Total CFT');
+
+            // ---------------- LABEL LOGIC ----------------
             if (isOther) {
-                // Consumables (Other)
                 $lblCount.text('Qty');
-                $lblCost.text('Per Unit Cost'); // User screenshot showed "Per Unit Wood Cost", but "wood" doesn't belong here
-                $lblPrice.text('Total Price');  // User requested "Total Price" instead of "Total Wood Price"
-            } else if (isPlywood) {
-                // Plywood
-                $lblCount.text('Count');
-                $lblCost.text('Per Unit Cost');
-                $lblPrice.text('Total Plywood Price');
+            }
+            else if (isPlywood) {
                 $lblUnitCft.text('SQFT');
                 $lblTotalCft.text('Total SQFT');
-            } else {
-                // Wood (Default)
-                $lblThick.text('Thickness (In)');
-                $lblWidth.text('Width (In)');
-                $lblLength.text('Length (Feet)');
-                $lblCount.text('Count');
-                $lblCost.text('Per Unit Wood Cost');
-                $lblPrice.text('Total Wood Price');
-                $lblUnitCft.text('CFT');
-                $lblTotalCft.text('Total CFT');
             }
 
-            // --- Consumable/Other Visibility & Editability Logic ---
-            if (isOther) {
+            // ---------------- SHOW / HIDE FIELDS ----------------
+            if (isPlywood || isWood) {
+                $jq('#dimensions_group').show();
+                $jq('#cft_sqft_group').show();
+                $jq('#id_sm_total_price').attr('readonly', true).addClass('disable_a_href');
+            } else {
                 $jq('#dimensions_group').hide();
                 $jq('#cft_sqft_group').hide();
                 $jq('#id_sm_total_price').removeAttr('readonly').removeClass('disable_a_href');
-            } else {
-                $jq('#dimensions_group').show();
-                $jq('#cft_sqft_group').show();
-                $jq('#id_sm_total_price').attr('readonly', 'readonly').addClass('disable_a_href');
             }
 
+            // ---------------- CLEAR VALUES FOR RE ----------------
+            if (isRE) {
+                $jq('#id_sm_length, #id_sm_width, #id_sm_thickness, #id_sm_cft, #id_sm_total_cft').val('');
+            }
+
+            // ---------------- CALCULATION ----------------
             var result_val = 0;
 
+            //  RE / OTHER → Qty × Rate
             if (isOther) {
-                // For Consumables: Amount = Qty * Rate
-                result_val = count;
                 var totalPrice = count * rate;
                 $jq('#id_sm_total_price').val(totalPrice.toFixed(2));
                 return;
             }
 
+            //  PLY → SQFT
             if (useSqft) {
-                // 🟦 SQFT FORMULA (Plywood)
-                result_val = len * wid * count;
-                $jq('#id_sm_cft').val((len * wid).toFixed(4));
+                var sqftPerUnit = len * wid;
+                result_val = sqftPerUnit * count;
+
+                $jq('#id_sm_cft').val(sqftPerUnit.toFixed(4));
                 $jq('#id_sm_total_cft').val(result_val.toFixed(4));
-            } else {
-                // 🟫 CFT FORMULA (Wood)
-                result_val = (thk * len * wid * count) / 144;
-                var perUnitCft = (thk * len * wid) / 144;
-                $jq('#id_sm_cft').val(perUnitCft.toFixed(4));
+            }
+            //  WOOD → CFT
+            else {
+                var cftPerUnit = (thk * len * wid) / 144;
+                result_val = cftPerUnit * count;
+
+                $jq('#id_sm_cft').val(cftPerUnit.toFixed(4));
                 $jq('#id_sm_total_cft').val(result_val.toFixed(4));
             }
 
-            // Total Price calculation
+            // ---------------- TOTAL PRICE ----------------
             var totalPrice = result_val * rate;
             $jq('#id_sm_total_price').val(totalPrice.toFixed(2));
-
-            // --- 🚨 LIVE DASHBOARD UPDATE 🚨 ---
-            // Update the dashboard to reflect pending changes
-            var baselineCount = parseFloat($jq('#dash_total_count').data('baseline')) || 0;
-            var baselineCft = parseFloat($jq('#dash_total_cft').data('baseline')) || 0;
-            var baselineCost = parseFloat($jq('#dash_total_cost').data('baseline')) || 0;
-
-            var isRetrival = (stockTypeVal == '2');
-
-            var newCount, newCft, newCost;
-            if (isRetrival) {
-                newCount = baselineCount - count;
-                newCft = baselineCft - result_val;
-                newCost = baselineCost - totalPrice;
-            } else {
-                newCount = baselineCount + count;
-                newCft = baselineCft + result_val;
-                newCost = baselineCost + totalPrice;
-            }
-
-            $jq('#dash_total_count').text(newCount);
-            $jq('#dash_total_cft').text(newCft.toFixed(2));
-            $jq('#dash_total_cost').text(newCost.toFixed(2));
         }
+
 
 
 
@@ -531,9 +511,53 @@
                     theme: 'bootstrap4',
                     placeholder: '--Select Partcode--',
                     allowClear: true,
-                    minimumResultsForSearch: 0,  // 🔥 Forces search box to be visible
-                    dropdownAutoWidth: true
+                    minimumResultsForSearch: 0,
+                    dropdownAutoWidth: true,
+                    ajax: {
+                        url: "/SMS/get_part_code/",
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                q: params.term // search term
+                            };
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: $jq.map(data, function (item) {
+                                    return {
+                                        text: item.pc_code,
+                                        id: item.id
+                                    }
+                                })
+                            };
+                        },
+                        cache: true
+                    }
                 });
+
+                // If specialized for a specific part (e.g. edit mode or sticky data)
+                // we need to manually add the option if it's not in the (now empty) list
+                var initialPartId = "{{ form.sm_partcode.value|default:'' }}";
+                var initialPartText = "";
+
+                // Try to find the text from the hidden select or from items if available
+                // In this case, since the queryset is empty, we might need to fetch the name once
+                if (initialPartId && initialPartId !== "None") {
+                    $jq.ajax({
+                        url: "/SMS/get_part_details/",
+                        data: { 'part_id': initialPartId },
+                        success: function (data) {
+                            if (!data.error) {
+                                var option = new Option(data.partCodeText || initialPartId, initialPartId, true, true);
+                                $jq('#id_sm_partcode').append(option).trigger('change');
+                                // Trigger fetch details to populate the rest of the form
+                                fetchPartDetails(initialPartId);
+                            }
+                        }
+                    });
+                }
+
             } else {
                 console.warn("Select2 not loaded, retrying in 1s...");
                 setTimeout(initSelect2, 1000);

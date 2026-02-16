@@ -8,9 +8,10 @@ from ..sub_models.part_code_mod import PkpartcodeInfo
 from ..sub_forms.stock_maintenance_form import StockMaintenanceForm
 from ..sub_models.my_user_mod import MyUser
 
+
 def get_stock_totals():
     from django.db.models import Case, When, F, Value
-    
+
     # ID 2 is "Retrival" and it should be subtracted
     totals = StockMaintenance.objects.aggregate(
         total_count=Sum(
@@ -37,6 +38,7 @@ def get_stock_totals():
         'total_cft': totals['total_cft'] or 0,
         'total_cost': totals['total_cost'] or 0,
     }
+
 
 def get_part_totals(part_id):
     from django.db.models import Case, When, F
@@ -66,24 +68,26 @@ def get_part_totals(part_id):
         'total_cost': float(part_totals['total_cost'] or 0),
     }
 
+
 @login_required
 def stock_maintenance_list(request):
     partcode_id = request.GET.get('partcode')
     items = StockMaintenance.objects.all()
-    
+
     if partcode_id:
         items = items.filter(sm_partcode_id=partcode_id)
-    
+
     items = items.order_by('-sm_created_at')
-    
+
     partcodes = PkpartcodeInfo.objects.all().order_by('pc_code')
-    
+
     context = {
         'items': items,
         'partcodes': partcodes,
         'selected_partcode': partcode_id,
     }
     return render(request, 'asset_mgt_app/stock_maintenance_list.html', context)
+
 
 @login_required
 def stock_maintenance_add(request):
@@ -107,7 +111,7 @@ def stock_maintenance_add(request):
             elif isinstance(request.user, MyUser):
                 obj.sm_updated_by = request.user
             else:
-                 obj.sm_updated_by = MyUser.objects.get(pk=request.user.pk)
+                obj.sm_updated_by = MyUser.objects.get(pk=request.user.pk)
 
             obj.save()
 
@@ -126,7 +130,7 @@ def stock_maintenance_add(request):
         form = StockMaintenanceForm(initial=initial_data)
 
     items = StockMaintenance.objects.all().order_by('-sm_created_at')
-    
+
     # If sticky part exists, show its totals initially to avoid jump
     sticky_part_id = request.session.get('sticky_stock_data', {}).get('sm_partcode')
     if sticky_part_id:
@@ -135,7 +139,7 @@ def stock_maintenance_add(request):
         totals = get_stock_totals()
 
     return render(request, 'asset_mgt_app/stock_maintenance_add.html', {
-        'form': form, 
+        'form': form,
         'items': items,
         'totals': totals
     })
@@ -168,7 +172,7 @@ def stock_maintenance_edit(request, pk):
         form = StockMaintenanceForm(instance=item)
 
     items = StockMaintenance.objects.all().order_by('-sm_created_at')
-    
+
     # If editing, show part-specific totals initially to avoid jump
     if item.sm_partcode:
         totals = get_part_totals(item.sm_partcode.id)
@@ -176,7 +180,7 @@ def stock_maintenance_edit(request, pk):
         totals = get_stock_totals()
 
     return render(request, 'asset_mgt_app/stock_maintenance_add.html', {
-        'form': form, 
+        'form': form,
         'items': items,
         'totals': totals
     })
@@ -220,6 +224,7 @@ def get_part_details(request):
             part_totals = get_part_totals(part.id)
 
             data = {
+                'partCodeText': part.pc_code,  # Added for Select2 display
                 'description': desc,
                 'thickness': part.pc_height or 0,
                 'width': part.pc_width or 0,
@@ -233,12 +238,13 @@ def get_part_details(request):
             log_debug(f"DEBUG: Part with id {part_id} not found")
             data = {'error': 'Part not found'}
         except ValueError:
-             data = {'error': 'Invalid Part ID'}
+            data = {'error': 'Invalid Part ID'}
         except Exception as e:
             log_debug(f"DEBUG: Exception: {e}")
             data = {'error': str(e)}
 
     return JsonResponse(data)
+
 
 @login_required
 def stock_maintenance_delete(request, pk):
