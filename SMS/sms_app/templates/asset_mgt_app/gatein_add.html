@@ -129,11 +129,38 @@
 									</div>
 									{% render_field gatein_form.gatein_consignee id="gatein_consignee" class="form-control" %}
 								</div>
+								<div id="geodis_fields">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">HSN Code</span>
+									</div>
+									{% render_field gatein_form.gatein_HSC id="gatein_HSC" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST</span>
+									</div>
+									{% render_field gatein_form.gatein_GST id="gatein_GST" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST %</span>
+									</div>
+
+									{% render_field gatein_form.gatein_GST_percent id="gatein_GST_percent" class="form-control" %}
+								</div>
+									</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Packages</span>
 									</div>
 									{% render_field gatein_form.gatein_no_of_pkg id="gatein_no_of_pkg" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">No.of Pcs</span>
+									</div>
+									{% render_field gatein_form.gatein_no_of_pcs id="gatein_no_of_pcs" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -537,6 +564,32 @@ $(document).ready(function () {
 
     // Run whenever dropdown changes
     $("#gatein_customer").change(toggleEIPLFields);
+});
+</script>
+
+<script>
+$(document).ready(function () {
+
+    function toggleGeodisFields() {
+        var customerText = $("#gatein_customer option:selected").text().trim().toUpperCase();
+
+        if (customerText.includes("GEODIS")) {
+            $("#geodis_fields").show();
+            $("#gatein_HSC, #gatein_GST, #gatein_GST_percent").prop("required", true);
+        } else {
+            $("#geodis_fields").hide();
+            $("#gatein_HSC, #gatein_GST, #gatein_GST_percent")
+                .prop("required", false)
+                .val("");
+        }
+    }
+
+    // Run on page load
+    toggleGeodisFields();
+
+    // Run on dropdown change
+    $("#gatein_customer").change(toggleGeodisFields);
+
 });
 </script>
 
