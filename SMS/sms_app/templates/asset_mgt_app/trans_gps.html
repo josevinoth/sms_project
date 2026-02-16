@@ -11,74 +11,192 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.6.2/dist/dotlottie-wc.js" type="module"></script>
 
-<style>body {
-  background: #121212;
-  color: #f1f1f1;
-}
+<style>
+  body {
+    background: #121212;
+    color: #f1f1f1;
+  }
 
-.card {
-  background: #1e1e1e;
-  color: #f1f1f1;
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-}
+  .card {
+    background: #1e1e1e;
+    color: #f1f1f1;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  }
 
-.card-header {
-  background: linear-gradient(45deg, #0d7377, #14ffec);
-  color: #fff;
-  border-bottom: none;
-}
+  .card-header {
+    background: linear-gradient(45deg, #0d7377, #14ffec);
+    color: #fff;
+    border-bottom: none;
+  }
 
-.table thead {
-  background: #0d7377;
-  color: #fff;
-}
+  .table thead {
+    background: #0d7377;
+    color: #fff;
+  }
 
-button.btn {
-  border-radius: 30px;
-  font-weight: 500;
-  transition: all 0.3s;
-}
+  button.btn {
+    border-radius: 30px;
+    font-weight: 500;
+    transition: all 0.3s;
+  }
 
-button.btn:hover {
-  transform: scale(1.05);
-}
+  button.btn:hover {
+    transform: scale(1.05);
+  }
 
-#map {
-  border: 2px solid #0d7377;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
+  #map {
+    border: 2px solid #0d7377;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  }
 
-/* Dark Modal */
-.modal-content {
-  background: #1e1e1e;
-  color: #f1f1f1;
-}
+  /* Status Bar Styles */
+  .status-bar {
+    display: flex;
+    gap: 15px;
+    background: #1e1e1e;
+    padding: 10px 20px;
+    border-radius: 30px;
+    border: 1px solid #333;
+  }
 
-/* Dark Loader Centered */
-#fullScreenLoader {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(18, 18, 18, 0.95);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999;
-  flex-direction: column;
-  transition: opacity 0.3s ease;
-}
+  .status-badge {
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 8px 15px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+  }
 
-#fullScreenLoader p {
-  margin-top: 20px;
-  font-size: 20px;
-  color: #FF0000;
-  font-weight: bold;
-}
+  .status-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .status-badge.active {
+    border-color: #fff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  }
+
+  /* Custom Marker Pin Styles */
+  .custom-pin {
+    width: 36px;
+    height: 36px;
+    border-radius: 50% 50% 50% 0;
+    position: absolute;
+    transform: rotate(-45deg);
+    border: 3px solid #fff;
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    left: -18px;
+    /* Center horizontally (half width) */
+    top: -36px;
+    /* Position above anchor point */
+  }
+
+  .custom-pin i {
+    transform: rotate(45deg);
+    color: white;
+    font-size: 16px;
+    margin-left: 2px;
+    /* Visual adjustment */
+    margin-top: 2px;
+  }
+
+  .pin-green {
+    background: #28a745;
+  }
+
+  .pin-blue {
+    background: #17a2b8;
+  }
+
+  .pin-red {
+    background: #dc3545;
+  }
+
+  .pin-grey {
+    background: #6c757d;
+  }
+
+  /* Dark Modal */
+  .modal-content {
+    background: #1e1e1e;
+    color: #e0e0e0;
+    border: 1px solid #333;
+  }
+
+  .modal-header,
+  .modal-footer {
+    border-color: #333;
+  }
+
+  /* Dark Leaflet Controls - Compromise: Grey Background + Dark Font */
+  .leaflet-control-layers {
+    background: #e0e0e0 !important;
+    color: #000 !important;
+    border: 1px solid #999 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .leaflet-control-layers-expanded {
+    padding: 12px !important;
+    font-weight: 700;
+    /* Bold dark font */
+  }
+
+  .leaflet-control-layers label {
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    color: #000 !important;
+    /* Explicit Black Text */
+  }
+
+  .leaflet-control-layers-separator {
+    border-top: 1px solid #777 !important;
+    margin: 8px 0 !important;
+  }
+
+  /* Radio/Checkbox styles */
+  .leaflet-control-layers input[type="radio"],
+  .leaflet-control-layers input[type="checkbox"] {
+    margin-right: 8px !important;
+    accent-color: #38bdf8;
+    /* Blue accent */
+  }
+
+
+
+  /* Dark Loader Centered */
+  #fullScreenLoader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(18, 18, 18, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    flex-direction: column;
+    transition: opacity 0.3s ease;
+  }
+
+  #fullScreenLoader p {
+    margin-top: 20px;
+    font-size: 20px;
+    color: #FF0000;
+    font-weight: bold;
+  }
 </style>
 
 <div class="container-fluid p-3 position-relative">
@@ -90,46 +208,67 @@ button.btn:hover {
 
 
 
-<div class="d-flex justify-content-between align-items-center my-3 px-4">
-  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#simTrackingModal" onclick="loadSimTrackingData()">
-    <i class="fas fa-satellite-dish"></i> SIM Tracking
-  </button>
-  <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#filterModal">
-    <i class="fas fa-filter"></i> Filter
-  </button>
-</div>
+    <div class="d-flex justify-content-between align-items-center my-3 px-4">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#simTrackingModal"
+        onclick="loadSimTrackingData()">
+        <i class="fas fa-satellite-dish"></i> SIM Tracking
+      </button>
+
+      <!-- Status Counts Bar -->
+      <div class="status-bar d-none d-md-flex" id="statusCounts">
+        <span class="badge bg-secondary status-badge active" onclick="filterByStatus('all')" id="badge-all">
+          <i class="fas fa-list"></i> Total: <span id="count-all">0</span>
+        </span>
+        <span class="badge bg-success status-badge" onclick="filterByStatus('in_trip')" id="badge-in_trip">
+          <i class="fas fa-route"></i> In Trip: <span id="count-in_trip">0</span>
+        </span>
+        <span class="badge bg-info status-badge" onclick="filterByStatus('available')" id="badge-available">
+          <i class="fas fa-check-circle"></i> Available: <span id="count-available">0</span>
+        </span>
+        <span class="badge bg-danger status-badge" onclick="filterByStatus('workshop')" id="badge-workshop">
+          <i class="fas fa-tools"></i> Workshop: <span id="count-workshop">0</span>
+        </span>
+      </div>
+
+      <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#filterModal">
+        <i class="fas fa-filter"></i> Filter
+      </button>
+    </div>
 
 
-<!-- SIM Tracking Modal -->
-<div class="modal fade" id="simTrackingModal" tabindex="-1" aria-labelledby="simTrackingModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-info text-white">
-        <h5 class="modal-title" id="simTrackingModalLabel"><i class="fas fa-truck"></i> SIM Tracking Details</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <table class="table table-bordered table-hover text-center">
-          <thead class="table-dark">
-            <tr>
-              <th>Vehicle Number</th>
-              <th>Driver Name</th>
-              <th>Mobile Number</th>
-              <th>Status</th>
-              <th>Track</th>
-            </tr>
-          </thead>
-          <tbody id="sim-tracking-body">
-            <tr><td colspan="5" class="text-muted">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <!-- SIM Tracking Modal -->
+    <div class="modal fade" id="simTrackingModal" tabindex="-1" aria-labelledby="simTrackingModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title" id="simTrackingModalLabel"><i class="fas fa-truck"></i> SIM Tracking Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-bordered table-hover text-center">
+              <thead class="table-dark">
+                <tr>
+                  <th>Vehicle Number</th>
+                  <th>Driver Name</th>
+                  <th>Mobile Number</th>
+                  <th>Status</th>
+                  <th>Track</th>
+                </tr>
+              </thead>
+              <tbody id="sim-tracking-body">
+                <tr>
+                  <td colspan="5" class="text-muted">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
     <div class="card-body px-4 position-relative">
       <div id="map" style="height: 600px; width: 100%; border-radius: 10px; border: 2px solid #17a2b8;"></div>
@@ -154,6 +293,7 @@ button.btn:hover {
             <th>Running</th>
             <th>Speed</th>
             <th>Odometer</th>
+            <th>Location</th>
             <th>Last Updated</th>
           </tr>
         </thead>
@@ -200,33 +340,58 @@ button.btn:hover {
 
 <script>
   let allVehicleData = [];
-let currentStatusFilter = "all";
-let currentVehicleFilter = "all";
-let liveTrackMode = false;
-const liveTrackVehicleNumber = "{{ vehicle_number|default:'' }}".toUpperCase().replace(/[\s\-]/g, '');
+  let currentStatusFilter = "all";
+  let currentVehicleFilter = "all";
+  let liveTrackMode = false;
+  const liveTrackVehicleNumber = "{{ vehicle_number|default:'' }}".toUpperCase().replace(/[\s\-]/g, '');
 
-function normalize(num) {
-  return num ? num.toUpperCase().replace(/[\s\-]/g, '') : '';
-}
+  function normalize(num) {
+    return num ? num.toUpperCase().replace(/[\s\-]/g, '') : '';
+  }
 
-const map = L.map("map").setView([12.9716, 77.5946], 6);
+  const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+  });
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution: '© OpenStreetMap contributors',
-}).addTo(map);
+  const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+  });
 
-const runningIcons = {
-  Moving: L.divIcon({ html: '<i class="fa-solid fa-truck" style="color: green; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32] }),
-  Idle: L.divIcon({ html: '<i class="fa-solid fa-truck" style="color: orange; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32] }),
-  Stopped: L.divIcon({ html: '<i class="fa-solid fa-truck" style="color: red; font-size: 28px;"></i>', iconSize: [32, 32], iconAnchor: [16, 32] }),
-};
+  const hybrid = L.layerGroup([satellite, labels]);
 
-function showLoader() {
-  if (!document.getElementById("fullScreenLoader")) {
-    const loader = document.createElement("div");
-    loader.id = "fullScreenLoader";
-    loader.innerHTML = `
+  const streets = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20
+  });
+
+  const map = L.map("map", {
+    center: [12.9716, 77.5946],
+    zoom: 6,
+    layers: [hybrid] // Default to Satellite (Hybrid)
+  });
+
+  const baseMaps = {
+    "Satellite (Hybrid)": hybrid,
+    "Street (Premium)": streets,
+    "Satellite Only": satellite
+  };
+
+  L.control.layers(baseMaps).addTo(map);
+
+  // trip_status: in_trip (Green), available (Blue), workshop (Red)
+  const tripIcons = {
+    in_trip: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-green"><i class="fa-solid fa-truck"></i></div>', iconSize: [36, 36], iconAnchor: [18, 42] }),
+    available: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-blue"><i class="fa-solid fa-truck"></i></div>', iconSize: [36, 36], iconAnchor: [18, 42] }),
+    workshop: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-red"><i class="fa-solid fa-truck"></i></div>', iconSize: [36, 36], iconAnchor: [18, 42] }),
+    default: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-grey"><i class="fa-solid fa-truck"></i></div>', iconSize: [36, 36], iconAnchor: [18, 42] })
+  };
+
+  function showLoader() {
+    if (!document.getElementById("fullScreenLoader")) {
+      const loader = document.createElement("div");
+      loader.id = "fullScreenLoader";
+      loader.innerHTML = `
       <dotlottie-wc
   src="https://lottie.host/d9da93dd-25f1-4d20-b23e-a4cf03af23bc/VlvKHd09Qu.lottie"
   style="width: 300px;height: 300px"
@@ -235,151 +400,199 @@ function showLoader() {
   loop
 ></dotlottie-wc>
       <p>Loading Vehicle Data...</p>`;
-    document.body.appendChild(loader);
-  }
-}
-
-function hideLoader() {
-  const loader = document.getElementById("fullScreenLoader");
-  if (loader) loader.remove();
-}
-
-function populateVehicleDropdown() {
-  const vehicleDropdown = document.getElementById("modalVehicleFilter");
-  vehicleDropdown.innerHTML = '<option value="all">All</option>';
-
-  let filteredList = allVehicleData;
-  if (currentStatusFilter !== "all") {
-    filteredList = filteredList.filter(v => v.status === currentStatusFilter);
-  }
-
-  const uniqueNumbers = [...new Set(filteredList.map(v => v.number))].sort();
-  uniqueNumbers.forEach(num => {
-    const opt = document.createElement("option");
-    opt.value = normalize(num);
-    opt.textContent = num;
-    vehicleDropdown.appendChild(opt);
-  });
-
-  if (typeof $ !== 'undefined' && $.fn.select2) {
-    $(vehicleDropdown).select2({ width: '100%' });
-  }
-}
-
-function applyFiltersAndRender() {
-  let filtered = allVehicleData;
-
-  if (currentStatusFilter !== "all") {
-    filtered = filtered.filter(v => v.status === currentStatusFilter);
-  }
-  if (currentVehicleFilter !== "all") {
-    filtered = filtered.filter(v => normalize(v.number) === currentVehicleFilter);
-  }
-
-  renderMarkers(filtered);
-  renderVehicleTable(filtered);
-}
-
-function renderMarkers(vehicleList) {
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker) map.removeLayer(layer);
-  });
-
-  vehicleList.forEach(v => {
-    const lat = parseFloat(v.lat);
-    const lon = parseFloat(v.lon);
-    const icon = runningIcons[v.running_status] || runningIcons.Stopped;
-
-    if (!isNaN(lat) && !isNaN(lon)) {
-      const marker = L.marker([lat, lon], { icon: icon })
-        .addTo(map)
-        .bindPopup(`<b>${v.number}</b><br>Status: ${v.status.toUpperCase()}<br>Running: ${v.running_status}<br>Speed: ${v.speed} km/h<br>Odometer: ${v.Odometer} km<br>${v.timestamp}`);
-      if (liveTrackMode) {
-        map.setView([lat, lon], 15);
-        marker.openPopup();
-      }
+      document.body.appendChild(loader);
     }
-  });
-}
+  }
 
-function renderVehicleTable(vehicleList) {
-  const tbody = document.getElementById("vehicle-table-body");
-  tbody.innerHTML = "";
+  function hideLoader() {
+    const loader = document.getElementById("fullScreenLoader");
+    if (loader) loader.remove();
+  }
 
-  vehicleList.forEach(v => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
+  function populateVehicleDropdown() {
+    const vehicleDropdown = document.getElementById("modalVehicleFilter");
+    vehicleDropdown.innerHTML = '<option value="all">All</option>';
+
+    let filteredList = allVehicleData;
+    if (currentStatusFilter !== "all") {
+      filteredList = filteredList.filter(v => v.status === currentStatusFilter);
+    }
+
+    const uniqueNumbers = [...new Set(filteredList.map(v => v.number))].sort();
+    uniqueNumbers.forEach(num => {
+      const opt = document.createElement("option");
+      opt.value = normalize(num);
+      opt.textContent = num;
+      vehicleDropdown.appendChild(opt);
+    });
+
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+      $(vehicleDropdown).select2({ width: '100%' });
+    }
+  }
+
+  function updateStatusCounts(data) {
+    const counts = {
+      all: data.length,
+      in_trip: data.filter(v => v.status === 'in_trip').length,
+      available: data.filter(v => v.status === 'available').length,
+      workshop: data.filter(v => v.status === 'workshop').length
+    };
+
+    document.getElementById('count-all').textContent = counts.all;
+    document.getElementById('count-in_trip').textContent = counts.in_trip;
+    document.getElementById('count-available').textContent = counts.available;
+    document.getElementById('count-workshop').textContent = counts.workshop;
+  }
+
+  function filterByStatus(status) {
+    currentStatusFilter = status;
+
+    // Update active badge UI
+    document.querySelectorAll('.status-badge').forEach(el => el.classList.remove('active'));
+    document.getElementById(`badge-${status}`).classList.add('active');
+
+    // Update Dropdown in Filter Modal
+    document.getElementById('modalStatusFilter').value = status;
+
+    // Apply Filter
+    applyFiltersAndRender();
+  }
+
+  function applyFiltersAndRender() {
+    let filtered = allVehicleData;
+
+    if (currentStatusFilter !== "all") {
+      filtered = filtered.filter(v => v.status === currentStatusFilter);
+    }
+    if (currentVehicleFilter !== "all") {
+      filtered = filtered.filter(v => normalize(v.number) === currentVehicleFilter);
+    }
+
+    renderMarkers(filtered);
+    renderVehicleTable(filtered);
+  }
+
+  function timeAgo(timestamp) {
+    if (!timestamp) return '';
+    // Parse: "2026/02/13 21:43:36 GMT+05:30"
+    const cleaned = timestamp.replace('GMT', '').trim();
+    const d = new Date(cleaned);
+    if (isNaN(d)) return '';
+    const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (diff < 60) return diff + ' sec ago';
+    if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' hr ago';
+    return Math.floor(diff / 86400) + ' day ago';
+  }
+
+  function renderMarkers(vehicleList) {
+    map.eachLayer(layer => {
+      if (layer instanceof L.Marker) map.removeLayer(layer);
+    });
+
+    vehicleList.forEach(v => {
+      const lat = parseFloat(v.lat);
+      const lon = parseFloat(v.lon);
+      const icon = tripIcons[v.status] || tripIcons.default;
+      const addr = v.address ? `<br>📍 ${v.address}` : '';
+      const ago = timeAgo(v.timestamp);
+      const agoStr = ago ? ` (${ago})` : '';
+
+      if (!isNaN(lat) && !isNaN(lon)) {
+        const marker = L.marker([lat, lon], { icon: icon })
+          .addTo(map)
+          .bindPopup(`<b>${v.number}</b><br>Status: ${v.status.replace('_', ' ').toUpperCase()}<br>Running: ${v.running_status}<br>Speed: ${v.speed} km/h<br>Odometer: ${v.Odometer} km${addr}<br>🕐 ${v.timestamp}${agoStr}`);
+        if (liveTrackMode) {
+          map.setView([lat, lon], 15);
+          marker.openPopup();
+        }
+      }
+    });
+  }
+
+  function renderVehicleTable(vehicleList) {
+    const tbody = document.getElementById("vehicle-table-body");
+    tbody.innerHTML = "";
+
+    vehicleList.forEach(v => {
+      const tr = document.createElement("tr");
+      const ago = timeAgo(v.timestamp);
+      const agoStr = ago ? `<br><small class="text-success">${ago}</small>` : '';
+      tr.innerHTML = `
       <td><span class="badge bg-${v.status === 'in_trip' ? 'primary' : v.status === 'available' ? 'success' : 'danger'}">${v.status.replace("_", " ").toUpperCase()}</span></td>
       <td>${v.number}</td>
       <td>${v.running_status}</td>
       <td>${v.speed} km/h</td>
       <td>${v.Odometer} km</td>
-      <td>${v.timestamp}</td>`;
-    tbody.appendChild(tr);
-  });
-}
+      <td>${v.address || '-'}</td>
+      <td>${v.timestamp}${agoStr}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
 
-function loadVehicleData(showSpinner = false) {
-  if (showSpinner) showLoader();
+  function loadVehicleData(showSpinner = false) {
+    if (showSpinner) showLoader();
 
-  fetch("/SMS/get_vehicle_data/")
-    .then(res => res.json())
-    .then(data => {
-      allVehicleData = data.all_data || [];
+    fetch("/SMS/get_vehicle_data/?_t=" + Date.now(), { cache: "no-store" })
+      .then(res => res.json())
+      .then(data => {
+        allVehicleData = data.all_data || [];
 
-      if (liveTrackMode) {
-        const liveData = allVehicleData.filter(v => normalize(v.number) === liveTrackVehicleNumber);
-        renderMarkers(liveData);
-        renderVehicleTable(liveData);
-      } else {
+        if (liveTrackMode) {
+          const liveData = allVehicleData.filter(v => normalize(v.number) === liveTrackVehicleNumber);
+          renderMarkers(liveData);
+          renderVehicleTable(liveData);
+        } else {
+          updateStatusCounts(allVehicleData); // Update counts
+          populateVehicleDropdown();
+          applyFiltersAndRender();
+        }
+
+        if (showSpinner) hideLoader();
+      })
+      .catch(err => {
+        console.error("Error loading vehicle data:", err);
+        if (showSpinner) hideLoader();
+      });
+  }
+
+  // --- INIT ON PAGE LOAD ---
+  document.addEventListener("DOMContentLoaded", () => {
+    liveTrackMode = liveTrackVehicleNumber !== "";
+
+    if (!liveTrackMode) populateVehicleDropdown();
+
+    loadVehicleData(true);
+    setInterval(() => loadVehicleData(), 5000);
+
+    document.getElementById("modalStatusFilter").addEventListener("change", function () {
+      currentStatusFilter = this.value;
+      if (!liveTrackMode) {
         populateVehicleDropdown();
+      }
+    });
+
+    document.getElementById("modalVehicleFilter").addEventListener("change", function () {
+      currentVehicleFilter = this.value;
+    });
+
+    document.getElementById("applyFilterBtn").addEventListener("click", () => {
+      if (!liveTrackMode) {
         applyFiltersAndRender();
       }
-
-      if (showSpinner) hideLoader();
-    })
-    .catch(err => {
-      console.error("Error loading vehicle data:", err);
-      if (showSpinner) hideLoader();
+      bootstrap.Modal.getInstance(document.getElementById("filterModal")).hide();
     });
-}
 
-// --- INIT ON PAGE LOAD ---
-document.addEventListener("DOMContentLoaded", () => {
-  liveTrackMode = liveTrackVehicleNumber !== "";
-
-  if (!liveTrackMode) populateVehicleDropdown();
-
-  loadVehicleData(true);
-  setInterval(() => loadVehicleData(), 5000);
-
-  document.getElementById("modalStatusFilter").addEventListener("change", function () {
-    currentStatusFilter = this.value;
-    if (!liveTrackMode) {
-      populateVehicleDropdown();
+    // Optional: Button to Exit Live Track Mode (show all vehicles again)
+    if (liveTrackMode) {
+      const resetBtn = document.createElement("button");
+      resetBtn.textContent = "Show All Vehicles";
+      resetBtn.className = "btn btn-warning my-2";
+      resetBtn.onclick = () => window.location.href = window.location.pathname;
+      document.querySelector(".d-flex.justify-content-between").appendChild(resetBtn);
     }
   });
-
-  document.getElementById("modalVehicleFilter").addEventListener("change", function () {
-    currentVehicleFilter = this.value;
-  });
-
-  document.getElementById("applyFilterBtn").addEventListener("click", () => {
-    if (!liveTrackMode) {
-      applyFiltersAndRender();
-    }
-    bootstrap.Modal.getInstance(document.getElementById("filterModal")).hide();
-  });
-
-  // Optional: Button to Exit Live Track Mode (show all vehicles again)
-  if (liveTrackMode) {
-    const resetBtn = document.createElement("button");
-    resetBtn.textContent = "Show All Vehicles";
-    resetBtn.className = "btn btn-warning my-2";
-    resetBtn.onclick = () => window.location.href = window.location.pathname;
-    document.querySelector(".d-flex.justify-content-between").appendChild(resetBtn);
-  }
-});
 
 </script>
 <script>

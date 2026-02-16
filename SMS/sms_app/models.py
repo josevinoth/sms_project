@@ -237,3 +237,5 @@ from .sub_models.dbs_rate_mod import Dbs_rate
 from .sub_models.sow_choice_mod import Sow_choice
 from .sub_models.maintenance_status_mod import Maintenance_status
 from .sub_models.complaint_type_mod import Complaint_type
+from .sub_models.vehicle_replacement_status_mod import Replacementstatus
+# from .sub_models.customer_registration_mod import CustomerRegistrationInfo

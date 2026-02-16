@@ -226,7 +226,16 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
     quotation_number = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_quotation_number
     margin = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_margin
     gst_val = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_gst
-    customer_name = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_customer_name_2
+    quotation_summary = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id)
+    customer_obj = quotation_summary.qs_customer_name_2
+    new_customer_name = quotation_summary.pkqt_customer_new_name
+
+    if customer_obj and customer_obj.id == 210:
+        customer_display_name = f"Mr. {new_customer_name}"
+    elif customer_obj:
+        customer_display_name = f"Mr. {customer_obj.cu_name}"
+    else:
+        customer_display_name = f"Mr. {new_customer_name}" if new_customer_name else ""
     total_sum=0
     for i in na_req:
         k=i.id
@@ -267,7 +276,7 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
         'final_cost': final_cost,
         'quotation_number': quotation_number,
         'today_date': formatted_date,
-        'customer_name': customer_name,
+        'customer_name': customer_display_name,
     }
     file_name = str("Quotation_") + str(needassessment_num) + str(".pdf")
     template_path = 'asset_mgt_app/bvm_pk_quotation_pdf.html'

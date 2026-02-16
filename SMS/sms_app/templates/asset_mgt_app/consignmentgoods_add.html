@@ -259,7 +259,12 @@
 					<button type="button" class="close" data-dismiss="modal">&times;</button>
 				</div>
 				<div class="modal-body">
-					<input type="text" class="form-control" name="name" placeholder="Enter new consignee name" required>
+					<input type="text" class="form-control mb-2" name="name" placeholder="Enter new consignee name"
+						required>
+					<textarea class="form-control mb-2" name="address" placeholder="Enter consignee address "
+						rows="3"></textarea>
+					<input type="text" class="form-control" name="country_code"
+						placeholder="Enter country code (e.g., +91)" maxlength="10">
 				</div>
 				<div class="modal-footer">
 					<button type="submit" class="btn btn-primary">Save</button>
@@ -272,488 +277,514 @@
 
 <hr>
 <div class="container-fluid">
-	<table  id="consignmentgoods_list" class="table table-striped table-bordered">
+	<table id="consignmentgoods_list" class="table table-striped table-bordered">
 		<thead class="thead-dark">
-		<tr>
-			<th>ID</th>
-			<th>Created On</th>
-			<th>Consignment Number</th>
-			<th>Consigner</th>
-			<th>Consignee</th>
-			<th>Consigner Invoice</th>
-			<th>Value in INR</th>
-			<th style="width: 100px; text-align: center;">No. of Pieces</th>
-			<th>Invoice Weight</th>
-			<th>E-Bill No.</th>
-			<th>Link / Attachment</th>
-			<th>Date of Issue</th>
-			<th>Date of Validity</th>
-			<th>Updated On</th>
-			<th>Updated By</th>
-			<th>Edit</th>
-			<th>Delete</th>
+			<tr>
+				<th>ID</th>
+				<th>Created On</th>
+				<th>Consignment Number</th>
+				<th>Consigner</th>
+				<th>Consignee</th>
+				<th>Consigner Invoice</th>
+				<th>Value in INR</th>
+				<th style="width: 100px; text-align: center;">No. of Pieces</th>
+				<th>Invoice Weight</th>
+				<th>E-Bill No.</th>
+				<th>Link / Attachment</th>
+				<th>Date of Issue</th>
+				<th>Date of Validity</th>
+				<th>Updated On</th>
+				<th>Updated By</th>
+				<th>Edit</th>
+				<th>Delete</th>
 		</thead>
 		<tbody>
-		{% for consignmentgoodsinfo in consignmentgoods_list %}
-		<tr>
-			<td> {{consignmentgoodsinfo.id}}</td>
-			<td> {{consignmentgoodsinfo.cg_created_at}}</td>
-			<td> {{consignmentgoodsinfo.cg_consignmentnumber}}</td>
-			<td> {{consignmentgoodsinfo.cg_consigner}}</td>
-			<td> {{consignmentgoodsinfo.cg_consignee}}</td>
-			<td> {{consignmentgoodsinfo.cg_consignerinvoice}}</td>
-			<td> {{consignmentgoodsinfo.cg_valueininr}}</td>
-			<td>{{ consignmentgoodsinfo.cg_loaded_qty }}/{{ consignmentgoodsinfo.cg_qty }}</td>
-			<td> {{consignmentgoodsinfo.cg_weight}}</td>
-			<td> {{consignmentgoodsinfo.cg_ebillno}}</td>
-			<td style="min-width: 350px;">
-				<!-- Eway -->
-				<div class="mb-2">
-					{% if consignmentgoodsinfo.cg_ewaybill_att %}
-					<a href="{{ consignmentgoodsinfo.cg_ewaybill_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
+			{% for consignmentgoodsinfo in consignmentgoods_list %}
+			<tr>
+				<td> {{consignmentgoodsinfo.id}}</td>
+				<td> {{consignmentgoodsinfo.cg_created_at}}</td>
+				<td> {{consignmentgoodsinfo.cg_consignmentnumber}}</td>
+				<td> {{consignmentgoodsinfo.cg_consigner}}</td>
+				<td> {{consignmentgoodsinfo.cg_consignee}}</td>
+				<td> {{consignmentgoodsinfo.cg_consignerinvoice}}</td>
+				<td> {{consignmentgoodsinfo.cg_valueininr}}</td>
+				<td>{{ consignmentgoodsinfo.cg_loaded_qty }}/{{ consignmentgoodsinfo.cg_qty }}</td>
+				<td> {{consignmentgoodsinfo.cg_weight}}</td>
+				<td> {{consignmentgoodsinfo.cg_ebillno}}</td>
+				<td style="min-width: 350px;">
+					<!-- Eway -->
+					<div class="mb-2">
+						{% if consignmentgoodsinfo.cg_ewaybill_att %}
+						<a href="{{ consignmentgoodsinfo.cg_ewaybill_att.url }}" class="btn btn-sm btn-info mb-1"
+							target="_blank">View</a>
 
-					<form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}" enctype="multipart/form-data" class="d-inline">
+						<form method="post"
+							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}"
+							enctype="multipart/form-data" class="d-inline">
+							{% csrf_token %}
+							<label class="btn btn-sm btn-warning mb-0">
+								Re-attach Eway Bill
+								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+							</label>
+						</form>
+
+						<!-- Delete Eway -->
+						<form method="post"
+							action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'eway' %}"
+							class="d-inline" onsubmit="return confirm('Delete Eway Bill attachment?');">
+							{% csrf_token %}
+							<button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
+						</form>
+						{% else %}
+						<form method="post"
+							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}"
+							enctype="multipart/form-data" class="d-inline">
+							{% csrf_token %}
+							<label class="btn btn-sm btn-primary mb-0">
+								Eway Bill
+								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+							</label>
+						</form>
+						{% endif %}
+					</div>
+
+					<!-- Invoice -->
+					<div class="mb-2">
+						{% if consignmentgoodsinfo.cg_invoice_att %}
+						<a href="{{ consignmentgoodsinfo.cg_invoice_att.url }}" class="btn btn-sm btn-info mb-1"
+							target="_blank">View</a>
+
+						<form method="post"
+							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}"
+							enctype="multipart/form-data" class="d-inline">
+							{% csrf_token %}
+							<label class="btn btn-sm btn-warning mb-0">
+								Re-attach Invoice
+								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+							</label>
+						</form>
+
+						<!-- Delete Invoice -->
+						<form method="post"
+							action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'invoice' %}"
+							class="d-inline" onsubmit="return confirm('Delete Invoice attachment?');">
+							{% csrf_token %}
+							<button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
+						</form>
+						{% else %}
+						<form method="post"
+							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}"
+							enctype="multipart/form-data" class="d-inline">
+							{% csrf_token %}
+							<label class="btn btn-sm btn-primary mb-0">
+								Invoice
+								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+							</label>
+						</form>
+						{% endif %}
+					</div>
+
+					<!-- OTL -->
+					<div>
+						{% if consignmentgoodsinfo.cg_otl_att %}
+						<a href="{{ consignmentgoodsinfo.cg_otl_att.url }}" class="btn btn-sm btn-info mb-1"
+							target="_blank">View</a>
+
+						<form method="post"
+							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}"
+							enctype="multipart/form-data" class="d-inline">
+							{% csrf_token %}
+							<label class="btn btn-sm btn-warning mb-0">
+								Re-attach OTL
+								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+							</label>
+						</form>
+
+						<!-- Delete OTL -->
+						<form method="post"
+							action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'otl' %}"
+							class="d-inline" onsubmit="return confirm('Delete OTL attachment?');">
+							{% csrf_token %}
+							<button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
+						</form>
+						{% else %}
+						<form method="post"
+							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}"
+							enctype="multipart/form-data" class="d-inline">
+							{% csrf_token %}
+							<label class="btn btn-sm btn-primary mb-0">
+								OTL
+								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+							</label>
+						</form>
+						{% endif %}
+					</div>
+
+				</td>
+
+
+				</td>
+
+				<td> {{consignmentgoodsinfo.cg_dateofissue}}</td>
+				<td> {{consignmentgoodsinfo.cg_dateofvalidity}}</td>
+				<td> {{consignmentgoodsinfo.cg_updated_at}}</td>
+				<td> {{consignmentgoodsinfo.cg_lastmodifiedby}}</td>
+				<td>
+					<a class="btn btn-primary" href="{% url 'consignmentgoods_update' consignmentgoodsinfo.id %}">
+						<i class="far fa-edit"></i>
+					</a>
+				</td>
+				<td>
+					<form action="{% url 'consignmentgoods_delete' consignmentgoodsinfo.id %}" method="post"
+						onclick="return confirm('Are you sure?');">
 						{% csrf_token %}
-						<label class="btn btn-sm btn-warning mb-0">
-							Re-attach Eway Bill
-							<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-						</label>
+						<button type="submit" class="btn btn-danger">
+							<i class="fas fa-trash-alt"></i>
+						</button>
 					</form>
-
-					<!-- Delete Eway -->
-					<form method="post" action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'eway' %}" class="d-inline" onsubmit="return confirm('Delete Eway Bill attachment?');">
-						{% csrf_token %}
-						<button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
-					</form>
-					{% else %}
-					<form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}" enctype="multipart/form-data" class="d-inline">
-						{% csrf_token %}
-						<label class="btn btn-sm btn-primary mb-0">
-							Eway Bill
-							<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-						</label>
-					</form>
-					{% endif %}
-				</div>
-
-				<!-- Invoice -->
-				<div class="mb-2">
-					{% if consignmentgoodsinfo.cg_invoice_att %}
-					<a href="{{ consignmentgoodsinfo.cg_invoice_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
-
-					<form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
-						{% csrf_token %}
-						<label class="btn btn-sm btn-warning mb-0">
-							Re-attach Invoice
-							<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-						</label>
-					</form>
-
-					<!-- Delete Invoice -->
-					<form method="post" action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'invoice' %}" class="d-inline" onsubmit="return confirm('Delete Invoice attachment?');">
-						{% csrf_token %}
-						<button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
-					</form>
-					{% else %}
-					<form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
-						{% csrf_token %}
-						<label class="btn btn-sm btn-primary mb-0">
-							Invoice
-							<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-						</label>
-					</form>
-					{% endif %}
-				</div>
-
-				<!-- OTL -->
-				<div>
-					{% if consignmentgoodsinfo.cg_otl_att %}
-					<a href="{{ consignmentgoodsinfo.cg_otl_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
-
-					<form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}" enctype="multipart/form-data" class="d-inline">
-						{% csrf_token %}
-						<label class="btn btn-sm btn-warning mb-0">
-							Re-attach OTL
-							<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-						</label>
-					</form>
-
-					<!-- Delete OTL -->
-					<form method="post" action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'otl' %}" class="d-inline" onsubmit="return confirm('Delete OTL attachment?');">
-						{% csrf_token %}
-						<button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
-					</form>
-					{% else %}
-					<form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}" enctype="multipart/form-data" class="d-inline">
-						{% csrf_token %}
-						<label class="btn btn-sm btn-primary mb-0">
-							OTL
-							<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-						</label>
-					</form>
-					{% endif %}
-				</div>
-
-			</td>
-
-
-			</td>
-
-			<td> {{consignmentgoodsinfo.cg_dateofissue}}</td>
-			<td> {{consignmentgoodsinfo.cg_dateofvalidity}}</td>
-			<td> {{consignmentgoodsinfo.cg_updated_at}}</td>
-			<td> {{consignmentgoodsinfo.cg_lastmodifiedby}}</td>
-			<td>
-				<a class="btn btn-primary" href="{% url 'consignmentgoods_update' consignmentgoodsinfo.id %}" >
-					<i class="far fa-edit"></i>
-				</a>
-			</td>
-			<td>
-				<form action="{% url 'consignmentgoods_delete' consignmentgoodsinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-					{% csrf_token %}
-					<button type="submit" class="btn btn-danger">
-						<i class="fas fa-trash-alt"></i>
-					</button>
-				</form>
-			</td>
-		</tr>
-		{% endfor %}
+				</td>
+			</tr>
+			{% endfor %}
 		</tbody>
 	</table>
 </div>
 
 <script>
-	$(document).ready(function() {
+	$(document).ready(function () {
 		$('#consignmentgoods_list').DataTable({
-        scrollX: true,
-        order: [0, 'desc' ],
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ]
-    });
-      });
+			scrollX: true,
+			order: [0, 'desc'],
+			dom: 'lBfrtip',
+			buttons: [
+				'copy', 'csv', 'excel', 'print'
+			]
+		});
+	});
 </script>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
-        const input = document.getElementById("cg_ebillno");
-        input.addEventListener("input", function () {
-            this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
-        });
-    });
+		const input = document.getElementById("cg_ebillno");
+		input.addEventListener("input", function () {
+			this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+		});
+	});
 </script>
 <script>
 	document.getElementById('add-description-form').addEventListener('submit', function (e) {
-    e.preventDefault();
+		e.preventDefault();
 
-    let description = document.getElementById('new_cg_description').value.trim();
+		let description = document.getElementById('new_cg_description').value.trim();
 
-    fetch("{% url 'add_description' %}", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': '{{ csrf_token }}',
-        },
-        body: new URLSearchParams({
-            'cg_description': description
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.stock_type) {
-            alert('Description added: ' + data.stock_type);
-            $('#addDescriptionModal').modal('hide');
+		fetch("{% url 'add_description' %}", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+				'X-CSRFToken': '{{ csrf_token }}',
+			},
+			body: new URLSearchParams({
+				'cg_description': description
+			})
+		})
+			.then(response => response.json())
+			.then(data => {
+				if (data.stock_type) {
+					alert('Description added: ' + data.stock_type);
+					$('#addDescriptionModal').modal('hide');
 
-            const select = document.getElementById('cg_description');
-            const exists = Array.from(select.options).some(
-                option => option.textContent.trim().toLowerCase() === data.stock_type.trim().toLowerCase()
-            );
+					const select = document.getElementById('cg_description');
+					const exists = Array.from(select.options).some(
+						option => option.textContent.trim().toLowerCase() === data.stock_type.trim().toLowerCase()
+					);
 
-            if (!exists) {
-                const option = document.createElement('option');
-                option.value = data.id;
-                option.textContent = data.stock_type;
-                option.selected = true;
-                select.appendChild(option);
-            } else {
-                // Option already exists, just select it
-                Array.from(select.options).forEach(option => {
-                    if (option.textContent.trim().toLowerCase() === data.stock_type.trim().toLowerCase()) {
-                        option.selected = true;
-                    }
-                });
-            }
-        } else {
-            alert('Error: ' + data.error);
-        }
-    });
-});
+					if (!exists) {
+						const option = document.createElement('option');
+						option.value = data.id;
+						option.textContent = data.stock_type;
+						option.selected = true;
+						select.appendChild(option);
+					} else {
+						// Option already exists, just select it
+						Array.from(select.options).forEach(option => {
+							if (option.textContent.trim().toLowerCase() === data.stock_type.trim().toLowerCase()) {
+								option.selected = true;
+							}
+						});
+					}
+				} else {
+					alert('Error: ' + data.error);
+				}
+			});
+	});
 </script>
 <script>
 	$(document).ready(function () {
-    function toTitleCase(str) {
-            return str.toLowerCase().replace(/\b\w/g, function (char) {
-                return char.toUpperCase();
-            });
-        }
-        $('#addConsignerForm').submit(function (e) {
-        e.preventDefault();
-        var name = $(this).find('input[name="name"]').val().trim();  // Trim here
+		function toTitleCase(str) {
+			return str.toLowerCase().replace(/\b\w/g, function (char) {
+				return char.toUpperCase();
+			});
+		}
+		$('#addConsignerForm').submit(function (e) {
+			e.preventDefault();
+			var name = $(this).find('input[name="name"]').val().trim();  // Trim here
 
-        if (!name) {
-            alert("Please enter a consigner name.");
-            return;
-        }
-        name = toTitleCase(name);
-        $.ajax({
-            url: "{% url 'add_consigner' %}",
-            method: "POST",
-            data: {
-                name: name,
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            },
-            success: function (response) {
-        if (response.success) {
-            let newOption = new Option(response.name, response.id, true, true);
-            $('#cg_consigner').append(newOption).trigger('change');
-            $('#addConsignerModal').modal('hide');
-            $('#addConsignerForm')[0].reset();
-        } else {
-            if (response.id) {
-                // If it exists, select it instead of adding
-                let existingOption = new Option(response.name, response.id, true, true);
-                $('#cg_consigner').append(existingOption).trigger('change');
-                $('#addConsignerModal').modal('hide');
-                $('#addConsignerForm')[0].reset();
-            } else {
-                alert(response.error || "Name already exists.");
-            }
-        }
-    }
+			if (!name) {
+				alert("Please enter a consigner name.");
+				return;
+			}
+			name = toTitleCase(name);
+			$.ajax({
+				url: "{% url 'add_consigner' %}",
+				method: "POST",
+				data: {
+					name: name,
+					csrfmiddlewaretoken: '{{ csrf_token }}'
+				},
+				success: function (response) {
+					if (response.success) {
+						let newOption = new Option(response.name, response.id, true, true);
+						$('#cg_consigner').append(newOption).trigger('change');
+						$('#addConsignerModal').modal('hide');
+						$('#addConsignerForm')[0].reset();
+					} else {
+						if (response.id) {
+							// If it exists, select it instead of adding
+							let existingOption = new Option(response.name, response.id, true, true);
+							$('#cg_consigner').append(existingOption).trigger('change');
+							$('#addConsignerModal').modal('hide');
+							$('#addConsignerForm')[0].reset();
+						} else {
+							alert(response.error || "Name already exists.");
+						}
+					}
+				}
 
-        });
-    });
-    });
+			});
+		});
+	});
 </script>
 
 <script>
 	$(document).ready(function () {
-        function toTitleCase(str) {
-            return str.toLowerCase().replace(/\b\w/g, function (char) {
-                return char.toUpperCase();
-            });
-        }
-        $('#addConsigneeForm').submit(function (e) {
-        e.preventDefault();
-        var name = $(this).find('input[name="name"]').val().trim();  // Trim here
+		function toTitleCase(str) {
+			return str.toLowerCase().replace(/\b\w/g, function (char) {
+				return char.toUpperCase();
+			});
+		}
+		$('#addConsigneeForm').submit(function (e) {
+			e.preventDefault();
+			var name = $(this).find('input[name="name"]').val().trim();
+			var address = $(this).find('textarea[name="address"]').val().trim();
+			var country_code = $(this).find('input[name="country_code"]').val().trim();
 
-        if (!name) {
-            alert("Please enter a consignee name.");
-            return;
-        }
-        name = toTitleCase(name);
-        $.ajax({
-            url: "{% url 'add_consignee' %}",
-            method: "POST",
-            data: {
-                name: name,
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            },
-            success: function (response) {
-        if (response.success) {
-        let newOption = new Option(response.name, response.id, true, true);
-        $('#cg_consignee').append(newOption).trigger('change');
-        $('#addConsigneeModal').modal('hide');
-        $('#addConsigneeForm')[0].reset();
-        } else {
-            if (response.id) {
-            let existingOption = new Option(response.name, response.id, true, true);
-            $('#cg_consignee').append(existingOption).trigger('change');
-            $('#addConsigneeModal').modal('hide');
-            $('#addConsigneeForm')[0].reset();
-            alert(response.error);
-        } else {
-            alert(response.error || "Something went wrong.");
-        }
-    }
+			if (!name) {
+				alert("Please enter a consignee name.");
+				return;
+			}
+			name = toTitleCase(name);
+			$.ajax({
+				url: "{% url 'add_consignee' %}",
+				method: "POST",
+				data: {
+					name: name,
+					address: address,
+					country_code: country_code,
+					csrfmiddlewaretoken: '{{ csrf_token }}'
+				},
+				success: function (response) {
+					if (response.success) {
+						let newOption = new Option(response.name, response.id, true, true);
+						$('#cg_consignee').append(newOption).trigger('change');
+						$('#addConsigneeModal').modal('hide');
+						$('#addConsigneeForm')[0].reset();
+					} else {
+						if (response.id) {
+							let existingOption = new Option(response.name, response.id, true, true);
+							$('#cg_consignee').append(existingOption).trigger('change');
+							$('#addConsigneeModal').modal('hide');
+							$('#addConsigneeForm')[0].reset();
+							alert(response.error);
+						} else {
+							alert(response.error || "Something went wrong.");
+						}
+					}
 
-    }
+				}
 
-        });
-    });
-    });
+			});
+		});
+	});
 </script>
 
 <script>
-	document.getElementById('existingInvoiceSelect').addEventListener('change', function() {
-        const selectedInvoice = this.value;
-        if (selectedInvoice) {
-            document.getElementById('cg_consignerinvoice').value = selectedInvoice;
-        }
-    });
+	document.getElementById('existingInvoiceSelect').addEventListener('change', function () {
+		const selectedInvoice = this.value;
+		if (selectedInvoice) {
+			document.getElementById('cg_consignerinvoice').value = selectedInvoice;
+		}
+	});
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+	document.addEventListener("DOMContentLoaded", function () {
 
-    const consType = document.getElementById("cg_consignmenttype");
+		const consType = document.getElementById("cg_consignmenttype");
 
-    // hide helper
-    function hideField(id) {
-        const el = document.getElementById(id);
-        if (!el) return;
+		// hide helper
+		function hideField(id) {
+			const el = document.getElementById(id);
+			if (!el) return;
 
-        // hide parent
-        let group = el.closest(".input-group");
-        if (group) group.style.display = "none";
-    }
+			// hide parent
+			let group = el.closest(".input-group");
+			if (group) group.style.display = "none";
+		}
 
-    // show helper
-    function showField(id) {
-        const el = document.getElementById(id);
-        if (!el) return;
+		// show helper
+		function showField(id) {
+			const el = document.getElementById(id);
+			if (!el) return;
 
-        let group = el.closest(".input-group");
-        if (group) group.style.display = "";
-    }
+			let group = el.closest(".input-group");
+			if (group) group.style.display = "";
+		}
 
-    function applyRules() {
+		function applyRules() {
 
-        let val = (consType.options[consType.selectedIndex].text || "").trim().toLowerCase();
+			let val = (consType.options[consType.selectedIndex].text || "").trim().toLowerCase();
 
-        // always show all first
-        ["cg_consignervalue", "cg_currency_type", "cg_valueininr",
-         "cg_ebillno", "cg_dateofissue", "cg_dateofvalidity"].forEach(showField);
-
-
-        // ======================================================
-        // LESS VALUE
-        // ======================================================
-        if (val === "less value") {
-
-            // hide fields
-            hideField("cg_ebillno");
-            hideField("cg_dateofissue");
-            hideField("cg_dateofvalidity");
-
-            // make NON mandatory only these hidden fields
-            ["cg_ebillno","cg_dateofissue","cg_dateofvalidity"].forEach(id => {
-                let el = document.getElementById(id);
-                if (el){
-                    el.required = false;
-                    el.value = ""; // optional: clear value
-                }
-            });
-        }
+			// always show all first
+			["cg_consignervalue", "cg_currency_type", "cg_valueininr",
+				"cg_ebillno", "cg_dateofissue", "cg_dateofvalidity"].forEach(showField);
 
 
-        // ======================================================
-        // SEZ
-        // ======================================================
-        else if (val.includes("sez")) {
+			// ======================================================
+			// LESS VALUE
+			// ======================================================
+			if (val === "less value") {
 
-            // hide fields
-            ["cg_consignervalue","cg_currency_type","cg_valueininr",
-             "cg_ebillno","cg_dateofissue","cg_dateofvalidity"]
-             .forEach(hideField);
+				// hide fields
+				hideField("cg_ebillno");
+				hideField("cg_dateofissue");
+				hideField("cg_dateofvalidity");
 
-            // make NON mandatory only these hidden fields
-            ["cg_consignervalue","cg_currency_type","cg_valueininr",
-             "cg_ebillno","cg_dateofissue","cg_dateofvalidity"]
-             .forEach(id => {
-                let el = document.getElementById(id);
-                if (el){
-                    el.required = false;
-                    el.value = ""; // optional: clear value
-                }
-            });
-        }
+				// make NON mandatory only these hidden fields
+				["cg_ebillno", "cg_dateofissue", "cg_dateofvalidity"].forEach(id => {
+					let el = document.getElementById(id);
+					if (el) {
+						el.required = false;
+						el.value = ""; // optional: clear value
+					}
+				});
+			}
 
 
-        // ======================================================
-        // NORMAL
-        // ======================================================
-        else {
-            // show all (already done above)
-            // do not change required here
-        }
-    }
+			// ======================================================
+			// SEZ
+			// ======================================================
+			else if (val.includes("sez")) {
 
-    // init
-    applyRules();
-    consType.addEventListener("change", applyRules);
-    consType.addEventListener("click", applyRules);
+				// hide fields
+				["cg_consignervalue", "cg_currency_type", "cg_valueininr",
+					"cg_ebillno", "cg_dateofissue", "cg_dateofvalidity"]
+					.forEach(hideField);
 
-});
+				// make NON mandatory only these hidden fields
+				["cg_consignervalue", "cg_currency_type", "cg_valueininr",
+					"cg_ebillno", "cg_dateofissue", "cg_dateofvalidity"]
+					.forEach(id => {
+						let el = document.getElementById(id);
+						if (el) {
+							el.required = false;
+							el.value = ""; // optional: clear value
+						}
+					});
+			}
+
+
+			// ======================================================
+			// NORMAL
+			// ======================================================
+			else {
+				// show all (already done above)
+				// do not change required here
+			}
+		}
+
+		// init
+		applyRules();
+		consType.addEventListener("change", applyRules);
+		consType.addEventListener("click", applyRules);
+
+	});
 </script>
 <script>
-$("#cg_consigner").select2({
-    width: '230px'
-});
-$("#cg_consignee").select2({
-    width: '230px'
-});
+	$("#cg_consigner").select2({
+		width: '230px'
+	});
+	$("#cg_consignee").select2({
+		width: '230px'
+	});
 
 </script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+	document.addEventListener("DOMContentLoaded", function () {
 
-    const consType = document.getElementById("cg_consignmenttype");
+		const consType = document.getElementById("cg_consignmenttype");
 
-    function applyConsignmentRules() {
+		function applyConsignmentRules() {
 
-        const selectedText =
-            consType.options[consType.selectedIndex].text.toLowerCase();
+			const selectedText =
+				consType.options[consType.selectedIndex].text.toLowerCase();
 
-        // ===============================
-        // RESET (SHOW ALL + REQUIRED)
-        // ===============================
-        [
-            "cg_consignervalue",
-            "cg_currency_type",
-            "cg_valueininr",
-            "cg_ebillno",
-            "cg_dateofissue",
-            "cg_dateofvalidity"
-        ].forEach(showFieldAndRequired);
+			// ===============================
+			// RESET (SHOW ALL + REQUIRED)
+			// ===============================
+			[
+				"cg_consignervalue",
+				"cg_currency_type",
+				"cg_valueininr",
+				"cg_ebillno",
+				"cg_dateofissue",
+				"cg_dateofvalidity"
+			].forEach(showFieldAndRequired);
 
 
-        // ===============================
-        // LESS VALUE
-        // ===============================
-        if (selectedText === "less value") {
+			// ===============================
+			// LESS VALUE
+			// ===============================
+			if (selectedText === "less value") {
 
-            hideFieldAndNotRequired("cg_ebillno");
-            hideFieldAndNotRequired("cg_dateofissue");
-            hideFieldAndNotRequired("cg_dateofvalidity");
-        }
+				hideFieldAndNotRequired("cg_ebillno");
+				hideFieldAndNotRequired("cg_dateofissue");
+				hideFieldAndNotRequired("cg_dateofvalidity");
+			}
 
-        // ===============================
-        // SEZ
-        // ===============================
-        else if (selectedText.includes("sez")) {
+			// ===============================
+			// SEZ
+			// ===============================
+			else if (selectedText.includes("sez")) {
 
-            hideFieldAndNotRequired("cg_consignervalue");
-            hideFieldAndNotRequired("cg_currency_type");
-            hideFieldAndNotRequired("cg_valueininr");
+				hideFieldAndNotRequired("cg_consignervalue");
+				hideFieldAndNotRequired("cg_currency_type");
+				hideFieldAndNotRequired("cg_valueininr");
 
-            hideFieldAndNotRequired("cg_ebillno");
-            hideFieldAndNotRequired("cg_dateofissue");
-            hideFieldAndNotRequired("cg_dateofvalidity");
-        }
+				hideFieldAndNotRequired("cg_ebillno");
+				hideFieldAndNotRequired("cg_dateofissue");
+				hideFieldAndNotRequired("cg_dateofvalidity");
+			}
 
-        // ===============================
-        // NORMAL
-        // ===============================
-        // Nothing hidden → all required
-    }
+			// ===============================
+			// NORMAL
+			// ===============================
+			// Nothing hidden → all required
+		}
 
-    // init on load
-    applyConsignmentRules();
+		// init on load
+		applyConsignmentRules();
 
-    // apply on change
-    consType.addEventListener("change", applyConsignmentRules);
-});
+		// apply on change
+		consType.addEventListener("change", applyConsignmentRules);
+	});
 </script>
 
 {% endblock content %}

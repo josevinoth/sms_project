@@ -5,7 +5,7 @@ from django.db.models import Q, Sum, Count
 from django.http import JsonResponse
 
 from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm,EnquirynotevehicleForm
-from ..models import Vehicle_allotmentInfo,User_extInfo,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo,Enquirynotevehicle
+from ..models import Vehicle_allotmentInfo,User_extInfo,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo,Enquirynotevehicle,VehiclemasterInfo
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 
@@ -288,12 +288,85 @@ def enquirynote_list(request):
             'consignment_limit_reached': consignment_limit_reached,
         })
 
+    # Vehicle count summary (Own and Attached)
+    vehicles = VehiclemasterInfo.objects.filter(vm_ownership__ow_ownership__icontains='own') | \
+               VehiclemasterInfo.objects.filter(vm_ownership__ow_ownership__icontains='attached')
+    
+    vehicles = vehicles.select_related('vm_vehicletype', 'vm_ownership')
+    
+    # Get the latest trip status for each vehicle using Max aggregation
+    from django.db.models import Max
+    
+    latest_trip_ids = (
+        TripdetailInfo.objects
+        .values('tr_vehiclenumber')
+        .annotate(latest_id=Max('id'))
+        .values_list('latest_id', flat=True)
+    )
+    
+    latest_trips = {
+        t['tr_vehiclenumber']: t['tc_financestatus_id']
+        for t in TripdetailInfo.objects.filter(id__in=latest_trip_ids)
+        .values('tr_vehiclenumber', 'tc_financestatus_id')
+    }
+
+    # Structure: {'Own': {'total': X, 'branches': {'MAA': {'total': Y, 'types': {...}}, ...}}, ...}
+    vehicle_summary = {
+        'Own': {'total': 0, 'branches': {}},
+        'Attached': {'total': 0, 'branches': {}}
+    }
+    IN_TRIP_STATUS_IDS = [1, 8]
+
+    for v in vehicles:
+        reg = v.vm_registrationnumber.strip().upper() if v.vm_registrationnumber else ""
+        if not reg: continue
+        
+        # Determine ownership key
+        ownership_name = v.vm_ownership.ow_ownership.lower() if v.vm_ownership else ""
+        if 'own' in ownership_name:
+            owner_key = 'Own'
+        elif 'attached' in ownership_name:
+            owner_key = 'Attached'
+        else:
+            continue
+
+        # Determine branch key
+        if reg.startswith('TN'): branch_key = 'MAA'
+        elif reg.startswith('KA'): branch_key = 'BLR'
+        else: branch_key = 'OTH'
+            
+        v_vt = v.vm_vehicletype.vt_vehicletype if v.vm_vehicletype else "Unknown"
+        status_id = latest_trips.get(reg)
+        is_in_trip = status_id in IN_TRIP_STATUS_IDS
+        
+        # Increment total for ownership group
+        vehicle_summary[owner_key]['total'] += 1
+        
+        # Initialize branch in group if not exists
+        if branch_key not in vehicle_summary[owner_key]['branches']:
+            vehicle_summary[owner_key]['branches'][branch_key] = {'total': 0, 'types': {}}
+        
+        branch_ref = vehicle_summary[owner_key]['branches'][branch_key]
+        branch_ref['total'] += 1
+
+        # Initialize vehicle type in branch if not exists
+        if v_vt not in branch_ref['types']:
+            branch_ref['types'][v_vt] = {'total': 0, 'avail': 0, 'trip': 0}
+        
+        # Increment counts per vehicle type
+        branch_ref['types'][v_vt]['total'] += 1
+        if is_in_trip:
+            branch_ref['types'][v_vt]['trip'] += 1
+        else:
+            branch_ref['types'][v_vt]['avail'] += 1
+
     context = {
         'page_obj': page_obj,
         'first_name': first_name,
         'role': user_role,
         'enquiry_data': enquiry_data,
         'enquiry_number': enquiry_number,
+        'vehicle_summary': vehicle_summary,
     }
     return render(request, "asset_mgt_app/enquirynote_list.html", context)
 

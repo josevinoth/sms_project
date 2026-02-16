@@ -33,13 +33,19 @@ class StockMaintenanceForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['sm_uom'].widget = forms.HiddenInput()
 
-
         self.fields['sm_stock_type'].empty_label = "--Select Stock Type--"
         self.fields['sm_partcode'].empty_label = "--Select Partcode--"
 
-        # Use the part code as the value (pc_code is a unique CharField)
-        # if 'sm_partcode' in self.fields:
-             # self.fields['sm_partcode'].to_field_name = "pc_code"
+        # SPEED UP: Don't load all partcodes into the HTML dropdown.
+        # Select2 AJAX handles the searching. We only need the selected one for validation.
+        if 'sm_partcode' in self.fields:
+            if self.instance and self.instance.sm_partcode_id:
+                self.fields['sm_partcode'].queryset = PkpartcodeInfo.objects.filter(pk=self.instance.sm_partcode_id)
+            elif self.data and self.data.get('sm_partcode'):
+                # During POST, allow the submitted ID
+                self.fields['sm_partcode'].queryset = PkpartcodeInfo.objects.filter(pk=self.data.get('sm_partcode'))
+            else:
+                self.fields['sm_partcode'].queryset = PkpartcodeInfo.objects.none()
 
         # ===================================
         # READONLY FIELDS (Auto-filled)
