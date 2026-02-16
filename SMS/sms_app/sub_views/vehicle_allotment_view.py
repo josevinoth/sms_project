@@ -379,14 +379,19 @@ def vehicle_allotment_list(request):
     user_ext = User_extInfo.objects.get(user_id=user_id)
     user_role = user_ext.emp_role     # Role object
     user_branch_obj = user_ext.emp_branch  # Location_info object
-    # Extract "MAA" / "BLR" from "BVM MAA"
-    branch_code = user_branch_obj.loc_name.split()[-1]
+    
+    # Defensive: Handle missing branch or role
+    branch_code = ""
+    if user_branch_obj and user_branch_obj.loc_name:
+        # Extract "MAA" / "BLR" from "BVM MAA"
+        branch_code = user_branch_obj.loc_name.split()[-1]
+    
     # Filters from HTML
     enquiry_number = request.GET.get('enquiry_number', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     select_all = request.GET.get('select_all', '')
-
+    
     # -----------------------------
     # BASE QUERYSET
     # -----------------------------
@@ -394,7 +399,8 @@ def vehicle_allotment_list(request):
 
     from datetime import datetime, timedelta
 
-    if user_role.id != 1:
+    # Filter by branch if user is not Admin/Superuser and has a branch
+    if user_role and user_role.id != 1 and branch_code:
         # Filter by branch
         enquirynote_queryset = enquirynote_queryset.filter(
             en_customername__cu_name__icontains=branch_code
