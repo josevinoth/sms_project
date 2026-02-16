@@ -112,8 +112,18 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
                 return redirect(f'/SMS/enquirynote_update/{instance.id}')
             else:
                 print("Enquiry Main Form not Saved")
-                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-                return redirect(request.META['HTTP_REFERER'])
+                print(form.errors)
+                messages.error(request, f'Record Not Saved: {form.errors}')
+                
+                # Re-render with errors
+                enquiryvechicle_form = EnquirynotevehicleForm()
+                context = {
+                    'user_id': user_id,
+                    'form': form,
+                    'enquiryvechicle_form': enquiryvechicle_form,
+                    'first_name': first_name,
+                }
+                return render(request, "asset_mgt_app/enquirynote_add.html", context)
         else:
             print("I am inside post edit Enquirynote")
             enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
@@ -125,8 +135,24 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
                 return redirect(request.META['HTTP_REFERER'])
             else:
                 print("Enquiry Main Form not Saved")
-                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-                return redirect(request.META['HTTP_REFERER'])
+                print(form.errors)
+                messages.error(request, f'Record Not Saved: {form.errors}')
+                
+                # Re-render with errors
+                enquiryvechicle_form = EnquirynotevehicleForm()
+                enquirynotevehicle_list=Enquirynotevehicle.objects.filter(env_enquirynumber=enquirynote_id)
+                enquiry_num_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).id
+                
+                context={
+                    'user_id': user_id,
+                    'form': form,
+                    'enquiryvechicle_form': enquiryvechicle_form,
+                    'first_name': first_name,
+                    'enquirynotevehicle_list': enquirynotevehicle_list,
+                    'enquiry_num_id': enquiry_num_id,
+                    'enquirynote_id': enquirynote_id,
+                }
+                return render(request, "asset_mgt_app/enquirynote_add.html", context)
             # return redirect('/SMS/enquirynote_list')
 
 from django.db.models import Q
