@@ -72,16 +72,19 @@ def get_part_totals(part_id):
 @login_required
 def stock_maintenance_list(request):
     partcode_id = request.GET.get('partcode')
-    items = StockMaintenance.objects.select_related(
-        'sm_stock_type', 'sm_partcode', 'sm_uom', 'sm_updated_by'
-    ).all()
+    select_all = request.GET.get('select_all')
+
+    items = StockMaintenance.objects.select_related('sm_stock_type', 'sm_partcode', 'sm_uom', 'sm_updated_by').order_by('-sm_created_at')
 
     if partcode_id:
         items = items.filter(sm_partcode_id=partcode_id)
 
-    items = items.order_by('-sm_created_at')
+    if select_all == 'true':
+        items = items[:1000]
+    else:
+        items = items[:50]
 
-    partcodes = []
+    partcodes = PkpartcodeInfo.objects.all().order_by('pc_code')
 
     context = {
         'items': items,
@@ -131,10 +134,7 @@ def stock_maintenance_add(request):
         initial_data = request.session.get('sticky_stock_data', {})
         form = StockMaintenanceForm(initial=initial_data)
 
-    # SPEED UP: Only fetch last 10 items for the add page table
-    items = StockMaintenance.objects.select_related(
-        'sm_stock_type', 'sm_partcode', 'sm_uom', 'sm_updated_by'
-    ).all().order_by('-sm_created_at')[:10]
+    items = StockMaintenance.objects.select_related('sm_stock_type', 'sm_partcode', 'sm_uom', 'sm_updated_by').order_by('-sm_created_at')[:1000]
 
     # If sticky part exists, show its totals initially to avoid jump
     sticky_part_id = request.session.get('sticky_stock_data', {}).get('sm_partcode')
@@ -176,10 +176,7 @@ def stock_maintenance_edit(request, pk):
     else:
         form = StockMaintenanceForm(instance=item)
 
-    # SPEED UP: Only fetch last 10 items for the edit page table
-    items = StockMaintenance.objects.select_related(
-        'sm_stock_type', 'sm_partcode', 'sm_uom', 'sm_updated_by'
-    ).all().order_by('-sm_created_at')[:10]
+    items = StockMaintenance.objects.all().order_by('-sm_created_at')
 
     # If editing, show part-specific totals initially to avoid jump
     if item.sm_partcode:
@@ -195,91 +192,47 @@ def stock_maintenance_edit(request, pk):
 
 
 @login_required
+@login_required
 def get_part_details(request):
     part_id = request.GET.get('part_id')
 
-    # helper to log works better than print for me
-    def log_debug(msg):
-        try:
-            with open(r'c:\Users\Admin\PycharmProjects\sms_project_v1\SMS\sms_debug.log', 'a') as f:
-                f.write(f"{msg}\n")
-        except Exception as e:
-            pass
-
-    log_debug(f"DEBUG: get_part_details called with part_id={part_id}")
     data = {}
     if part_id:
         try:
-            # Handle whether input is ID(int) or Code(str)
-            # Try by Code first (string)
             try:
-                part = PkpartcodeInfo.objects.get(pc_code=str(part_id))
-            except (PkpartcodeInfo.DoesNotExist, ValueError):
-                # Only if not found by code, try by PK (ID)
                 part = PkpartcodeInfo.objects.get(pk=part_id)
+            except:
+                part = PkpartcodeInfo.objects.get(pc_code=part_id)
 
-            # Safe access to fields
             desc = str(part.pc_stock_description) if part.pc_stock_description else "NO DESC"
-            thk = part.pc_height if part.pc_height is not None else 0.0
-            wid = part.pc_width if part.pc_width is not None else 0.0
-            ln = part.pc_length if part.pc_length is not None else 0.0
 
-            # Safe access to UOM ID and Name
-            uid = part.pc_uom.id if part.pc_uom else None
-            uname = str(part.pc_uom.unit_of_measure) if part.pc_uom else ""
-
-            # Aggregated totals for this part
             part_totals = get_part_totals(part.id)
 
-            # SPEED UP: Fetch last 50 items specifically for this part to show in the history table
-            items = StockMaintenance.objects.filter(sm_partcode=part).select_related(
-                'sm_stock_type', 'sm_partcode', 'sm_uom', 'sm_updated_by'
-            ).order_by('-sm_created_at')[:50]
-
-            from django.template.loader import render_to_string
-            items_html = render_to_string('asset_mgt_app/partial_stock_items.html', {'items': items})
-
             data = {
-                'partCodeText': part.pc_code,  # Added for Select2 display
+                'partCodeText': part.pc_code,
                 'description': desc,
                 'thickness': part.pc_height or 0,
                 'width': part.pc_width or 0,
                 'length': part.pc_length or 0,
-                'uom_id': uid,
-                'uom_name': uname,
-                'part_totals': part_totals,
-                'items_html': items_html
+                'uom_id': part.pc_uom.id if part.pc_uom else "",
+                'uom_name': part.pc_uom.unit_of_measure if part.pc_uom else "",
+                'part_totals': part_totals
             }
-            log_debug(f"DEBUG: Returning data with items_html")
-        except PkpartcodeInfo.DoesNotExist:
-            log_debug(f"DEBUG: Part with id {part_id} not found")
-            data = {'error': 'Part not found'}
-        except ValueError:
-            data = {'error': 'Invalid Part ID'}
+
         except Exception as e:
-            log_debug(f"DEBUG: Exception: {e}")
             data = {'error': str(e)}
     else:
-        # GLOBAL CASE: Restore initial dashboard and show last 10 global items
         totals = get_stock_totals()
-        
-        items = StockMaintenance.objects.select_related(
-            'sm_stock_type', 'sm_partcode', 'sm_uom', 'sm_updated_by'
-        ).all().order_by('-sm_created_at')[:10]
-        
-        from django.template.loader import render_to_string
-        items_html = render_to_string('asset_mgt_app/partial_stock_items.html', {'items': items})
-        
         data = {
             'part_totals': {
                 'total_count': totals['total_count'],
                 'total_cft': float(totals['total_cft']),
                 'total_cost': float(totals['total_cost']),
-            },
-            'items_html': items_html
+            }
         }
 
     return JsonResponse(data)
+
 
 
 @login_required
