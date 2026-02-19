@@ -32,6 +32,11 @@
     </div>
 
     <div class="col-md-2">
+        <label class="form-label fw-bold">Branch</label>
+        {% render_field form.branch class="form-control" value=selected_branch %}
+    </div>
+
+    <div class="col-md-2">
         <label class="form-label fw-bold">Month</label>
         {% render_field form.month class="form-control" value=selected_month %}
     </div>
