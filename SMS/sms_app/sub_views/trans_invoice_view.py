@@ -111,9 +111,24 @@ def trans_invoice_add(request):
             else:
                 invoice.ti_branch = invoice.ti_branch or ""
                 invoice.ti_state = invoice.ti_state or ""
-
-            invoice.save()
-            saved = True
+            # -------------------------
+            # NEW: enforce UNIQUE invoice number on add page
+            # If an invoice number is provided and already exists (case-insensitive), do not save.
+            # -------------------------
+            inv_no = (invoice.ti_inv_no or "").strip()
+            if inv_no:
+                # Check existence across the table (case-insensitive)
+                if TransInvoiceInfo.objects.filter(ti_inv_no__iexact=inv_no).exists():
+                    messages.error(request, f"Invoice number '{inv_no}' already exists. Please use a unique invoice number.")
+                else:
+                    # assign stripped value and save
+                    invoice.ti_inv_no = inv_no
+                    invoice.save()
+                    saved = True
+            else:
+                # No invoice number provided; save as before
+                invoice.save()
+                saved = True
 
         else:
             messages.error(

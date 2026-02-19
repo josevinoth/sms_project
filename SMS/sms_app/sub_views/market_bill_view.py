@@ -5,7 +5,6 @@ from django.contrib import messages
 
 from ..sub_forms.market_bill_form import MarketBillForm
 from ..sub_models.market_bill_mod import MarketBillInfo
-from ..sub_models.vendor_info_mod import Vendor_info
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
@@ -84,9 +83,11 @@ def market_bill_edit(request, id):
     # Fetch selected trips data for the edit page table
     selected_trips_data = []
     if record.mb_selected_trips:
-        trip_ids = [int(tid) for tid in record.mb_selected_trips.split(',') if tid.strip()]
-        selected_trips = TripdetailInfo.objects.filter(id__in=trip_ids).select_related('tr_enquirynumber', 'tr_consignmentnumber')
-        
+        trip_ids = [int(tid) for tid in record.mb_selected_trips.split(',') if tid.strip()]        # Only include trips that are in 'Settled' financial status (id=4)
+        # Use Tripstatusinfo id 7 as the 'settled' status per request
+        settled_status_id = 7
+        selected_trips = TripdetailInfo.objects.filter(id__in=trip_ids, tc_financestatus_id=settled_status_id).select_related('tr_enquirynumber', 'tr_consignmentnumber')
+
         for trip in selected_trips:
             from_location = ''
             to_location = ''
@@ -112,11 +113,28 @@ def market_bill_edit(request, id):
             else:
                 vehicle_type = ''
 
+            # Determine consignment number (cnote) and trip number separately to avoid mixing
+            consignment_number = ''
+            trip_no = ''
+            if trip.tr_consignmentnumber and getattr(trip.tr_consignmentnumber, 'co_consignmentnumber', None):
+                consignment_number = trip.tr_consignmentnumber.co_consignmentnumber
+            if trip.tr_tripnumber:
+                trip_no = trip.tr_tripnumber
+
+            # Determine customer name if available
+            customer_name = ''
+            if trip.tr_enquirynumber and getattr(trip.tr_enquirynumber, 'en_customername', None):
+                customer_name = str(trip.tr_enquirynumber.en_customername)
+
             selected_trips_data.append({
                 'id': trip.id,
-                'trip_number': (trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentnumber else (trip.tr_tripnumber or '')),
+                'consignment_number': consignment_number,
+                'trip_number': trip_no,
+                # Only show consignment number in Cnote — do not display trip numbers here
+                'display_cnote': consignment_number or '',
                 'vehicle_number': trip.tr_vehiclenumber or '',
                 'vehicle_type': vehicle_type,
+                'customer': customer_name,
                 'from_location': from_location,
                 'to_location': to_location,
                 'trip_date': trip_date,
@@ -174,13 +192,26 @@ def get_trips_by_vendor(request):
     billed_trip_ids = set()
     all_bills = MarketBillInfo.objects.exclude(mb_selected_trips__isnull=True).exclude(mb_selected_trips='')
     for bill in all_bills:
-        ids = [tid.strip() for tid in bill.mb_selected_trips.split(',') if tid.strip()]
-        billed_trip_ids.update(ids)
+        # Normalize to ints for robust filtering
+        try:
+            ids = [int(tid.strip()) for tid in bill.mb_selected_trips.split(',') if tid.strip()]
+            billed_trip_ids.update(ids)
+        except ValueError:
+            # If any non-integer values slip in, fallback to string-based set
+            billed_trip_ids.update([tid.strip() for tid in bill.mb_selected_trips.split(',') if tid.strip()])
 
     # Filter trips for ANY vehicle of this vendor that are not billed
+    # Only show trips that are in settled financial status (single ID)
+    # Use Tripstatusinfo id 7 as the 'settled' status per request
+    settled_status_id = 7
     trips = TripdetailInfo.objects.filter(
-        tr_vehiclenumber__in=list(vendor_vehicles)
-    ).exclude(id__in=list(billed_trip_ids)).select_related('tr_enquirynumber', 'tr_consignmentnumber')
+        tr_vehiclenumber__in=list(vendor_vehicles),
+        tc_financestatus_id=settled_status_id
+    )
+    # Exclude already billed trip ids (if any)
+    if billed_trip_ids:
+        trips = trips.exclude(id__in=list(billed_trip_ids))
+    trips = trips.select_related('tr_enquirynumber', 'tr_consignmentnumber')
 
     trip_list = []
     for trip in trips:
@@ -236,11 +267,28 @@ def get_trips_by_vendor(request):
             vehicle = VehiclemasterInfo.objects.filter(vm_registrationnumber=trip.tr_vehiclenumber).first()
             vehicle_type = str(vehicle.vm_vehicletype) if vehicle and vehicle.vm_vehicletype else ''
 
+        # Determine consignment and trip numbers separately
+        consignment_number = ''
+        trip_no = ''
+        if trip.tr_consignmentnumber and getattr(trip.tr_consignmentnumber, 'co_consignmentnumber', None):
+            consignment_number = trip.tr_consignmentnumber.co_consignmentnumber
+        if trip.tr_tripnumber:
+            trip_no = trip.tr_tripnumber
+
+        # Determine customer
+        customer_name = ''
+        if trip.tr_enquirynumber and getattr(trip.tr_enquirynumber, 'en_customername', None):
+            customer_name = str(trip.tr_enquirynumber.en_customername)
+
         trip_list.append({
             'id': trip.id,
-            'trip_number': (trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentnumber else (trip.tr_tripnumber or '')),
+            'consignment_number': consignment_number,
+            'trip_number': trip_no,
+            # Only provide consignment in the Cnote column; do not show trip numbers
+            'trip_number_display': consignment_number or '',
             'vehicle_number': trip.tr_vehiclenumber or '',
             'vehicle_type': vehicle_type,
+            'customer': customer_name,
             'from_location': from_location,
             'to_location': to_location,
             'trip_date': trip_date,

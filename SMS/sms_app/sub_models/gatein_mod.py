@@ -49,6 +49,7 @@ class Gatein_info(models.Model):
     gatein_HSC = models.IntegerField(blank=True, null=True)
     gatein_GST = models.CharField(blank=True, null=True)
     gatein_GST_percent = models.FloatField(blank=True, null=True)
+    gatein_so_number = models.IntegerField(blank=True, null=True)
     class Meta:
         ordering = ["gatein_job_no"]
 

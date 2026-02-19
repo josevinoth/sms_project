@@ -79,6 +79,12 @@
 									</div>
 									{% render_field gatein_form.gatein_po_num class="form-control" %}
 								</div>
+								<div id="so_number_group" class="input-group input-group-sm mb-3" style="display:none;">
+									<div class="input-group-prepend">
+										<span class="input-group-text">SO Number</span>
+									</div>
+									{% render_field gatein_form.gatein_so_number class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer</span>
@@ -156,7 +162,7 @@
 									</div>
 									{% render_field gatein_form.gatein_no_of_pkg id="gatein_no_of_pkg" class="form-control" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div id="no_of_pcs_group" class="input-group input-group-sm mb-3" style="display:none;">
 									<div class="input-group-prepend">
 										<span class="input-group-text">No.of Pcs</span>
 									</div>
@@ -593,5 +599,38 @@ $(document).ready(function () {
 });
 </script>
 
+<!-- add script to toggle visibility based on selected customer -->
+<script>
+    $(document).ready(function() {
+        function toggleCustomerSpecificFields() {
+            var customerText = $("#gatein_customer option:selected").text().trim().toUpperCase();
+
+            // Default: hide both
+            $("#so_number_group").hide();
+            $("#no_of_pcs_group").hide();
+
+            if (customerText.includes("DAMCO")) {
+                // DAMCO: show both SO Number and No.of Pcs
+                $("#so_number_group").show();
+                $("#no_of_pcs_group").show();
+            } else if (customerText.includes("GEODIS")) {
+                // GEODIS: show No.of Pcs only
+                $("#no_of_pcs_group").show();
+            }
+        }
+
+        // Run once on load
+        toggleCustomerSpecificFields();
+
+        // Run whenever the customer dropdown changes
+        $("#gatein_customer").change(function() {
+            toggleCustomerSpecificFields();
+        });
+    });
+</script>
+
 
 {% endblock content %}
+
+
+
