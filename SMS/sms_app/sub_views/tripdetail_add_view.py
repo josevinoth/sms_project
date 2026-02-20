@@ -115,6 +115,23 @@ def tripdetail_add(request, tripdetail_id=0):
                 except Vehicle_allotmentInfo.DoesNotExist:
                     pass
 
+            # NEW: Fetch existing vehicle starting KM from the last trip's closing KM
+            if vehicle_allotment_id and 'tr_vehiclenumber' in initial_data:
+                # Determine the vehicle number string for querying TripdetailInfo (which uses CharField for vehiclenumber)
+                v_obj = initial_data['tr_vehiclenumber']
+                # If it's an object (Foreign Key from allotment), get the registration number
+                if hasattr(v_obj, 'vm_registrationnumber'): 
+                    search_vehicle_num = v_obj.vm_registrationnumber
+                else:
+                    search_vehicle_num = str(v_obj) # Market vehicle or already a string
+
+                last_trip = TripdetailInfo.objects.filter(
+                    tr_vehiclenumber=search_vehicle_num
+                ).exclude(tr_reportedkm__isnull=True).exclude(tr_reportedkm=0).order_by('-tr_created_at').first()
+
+                if last_trip:
+                    initial_data['tr_reportedkm_pickup'] = last_trip.tr_reportedkm
+
             trip_det_form = TripdetailaddForm(initial=initial_data)
             if vehicle_allotment_id:
                 trip_det_form.fields['tr_category'].widget.attrs['readonly'] = True
