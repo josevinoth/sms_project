@@ -52,6 +52,18 @@
         {% render_field form.to_location class="form-control" value=to_location %}
     </div>
 
+    <!-- Trip Category -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Trip Category</label>
+        {% render_field form.trip_category class="form-control" value=trip_category_id %}
+    </div>
+
+    <!-- Branch -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Branch</label>
+        {% render_field form.branch class="form-control" value=branch_id %}
+    </div>
+
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary mt-3">Filter</button>
     </div>
@@ -109,37 +121,37 @@
 </div>
 
 <script>
-$(document).ready(function () {
+    $(document).ready(function () {
 
-    $('#trip_cancellation_report_table').DataTable({
-        scrollX: true,
-        dom: 'lBfrtip',
+        $('#trip_cancellation_report_table').DataTable({
+            scrollX: true,
+            dom: 'lBfrtip',
 
-        lengthMenu: [
-            [10, 25, 50, 100, -1],
-            [10, 25, 50, 100, "All"]
-        ],
-        pageLength: 10,
-        buttons: [
-            'copy',
-            'csv',
+            lengthMenu: [
+                [10, 25, 50, 100, -1],
+                [10, 25, 50, 100, "All"]
+            ],
+            pageLength: 10,
+            buttons: [
+                'copy',
+                'csv',
 
-            // =========================
-            // EXCEL EXPORT
-            // =========================
-            {
-                extend: 'excelHtml5',
-                text: 'Excel',
-                title: 'Trip Cancellation Report',
+                // =========================
+                // EXCEL EXPORT
+                // =========================
+                {
+                    extend: 'excelHtml5',
+                    text: 'Excel',
+                    title: 'Trip Cancellation Report',
 
-                customize: function (xlsx) {
+                    customize: function (xlsx) {
 
-                    let sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    let styles = xlsx.xl['styles.xml'];
+                        let sheet = xlsx.xl.worksheets['sheet1.xml'];
+                        let styles = xlsx.xl['styles.xml'];
 
-                    // FONT
-                    let fonts = $('fonts', styles);
-                    fonts.append(`
+                        // FONT
+                        let fonts = $('fonts', styles);
+                        fonts.append(`
                         <font>
                             <sz val="11"/>
                             <color rgb="FFFFFFFF"/>
@@ -147,10 +159,10 @@ $(document).ready(function () {
                             <b/>
                         </font>
                     `);
-                    let fontId = fonts.children().length - 1;
-                    // FILL (BLUE)
-                    let fills = $('fills', styles);
-                    fills.append(`
+                        let fontId = fonts.children().length - 1;
+                        // FILL (BLUE)
+                        let fills = $('fills', styles);
+                        fills.append(`
                         <fill>
                             <patternFill patternType="solid">
                                 <fgColor rgb="FF0A3278"/>
@@ -158,53 +170,53 @@ $(document).ready(function () {
                             </patternFill>
                         </fill>
                     `);
-                    let fillId = fills.children().length - 1;
+                        let fillId = fills.children().length - 1;
 
-                    // STYLE
-                    let cellXfs = $('cellXfs', styles);
-                    cellXfs.append(`
+                        // STYLE
+                        let cellXfs = $('cellXfs', styles);
+                        cellXfs.append(`
                         <xf xfId="0" fontId="${fontId}" fillId="${fillId}"
                             borderId="0" applyFont="1" applyFill="1"/>
                     `);
-                    let styleId = cellXfs.children().length - 1;
+                        let styleId = cellXfs.children().length - 1;
 
-                    // APPLY STYLE TO HEADER ROW
-                    $('row:eq(1) c', sheet).attr('s', styleId);
-                }
-            },
-            // =========================
-            // PDF EXPORT
-            // =========================
-            {
-                extend: 'pdfHtml5',
-                orientation: 'landscape',
-                pageSize: 'A4',
-                title: 'Trip Cancellation Report',
+                        // APPLY STYLE TO HEADER ROW
+                        $('row:eq(1) c', sheet).attr('s', styleId);
+                    }
+                },
+                // =========================
+                // PDF EXPORT
+                // =========================
+                {
+                    extend: 'pdfHtml5',
+                    orientation: 'landscape',
+                    pageSize: 'A4',
+                    title: 'Trip Cancellation Report',
 
-                customize: function (doc) {
-                    doc.styles.tableHeader.fillColor = '#0A3278';
-                    doc.styles.tableHeader.color = 'white';
-                    doc.styles.tableHeader.bold = true;
-                }
-            },
+                    customize: function (doc) {
+                        doc.styles.tableHeader.fillColor = '#0A3278';
+                        doc.styles.tableHeader.color = 'white';
+                        doc.styles.tableHeader.bold = true;
+                    }
+                },
 
-            // =========================
-            // PRINT
-            // =========================
-            {
-                extend: 'print',
-                title: 'Trip Cancellation Report',
-                customize: function (win) {
-                    $(win.document.body).find('thead th')
-                        .css('background-color', '#0A3278')
-                        .css('color', 'white')
-                        .css('font-weight', 'bold');
+                // =========================
+                // PRINT
+                // =========================
+                {
+                    extend: 'print',
+                    title: 'Trip Cancellation Report',
+                    customize: function (win) {
+                        $(win.document.body).find('thead th')
+                            .css('background-color', '#0A3278')
+                            .css('color', 'white')
+                            .css('font-weight', 'bold');
+                    }
                 }
-            }
-        ],
-        order: [[0, 'asc']]
+            ],
+            order: [[0, 'asc']]
+        });
     });
-});
 </script>
 
 

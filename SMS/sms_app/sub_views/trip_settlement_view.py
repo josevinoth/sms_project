@@ -11,10 +11,6 @@ def trip_settlement_view(request):
     veh_no = request.GET.get('veh_no', '').strip()
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
-    try:
-        per_page = int(request.GET.get('per_page', 10))
-    except ValueError:
-        per_page = 10
 
     trip_list = TripdetailInfo.objects.select_related(
         'tr_enquirynumber',
@@ -26,25 +22,20 @@ def trip_settlement_view(request):
 
     if veh_no:
         trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
+
     if date_from:
         trip_list = trip_list.filter(tr_departeddate__date__gte=date_from)
+
     if date_to:
         trip_list = trip_list.filter(tr_departeddate__date__lte=date_to)
 
     trip_list = trip_list.order_by('-tr_tripnumber')
 
-    paginator = Paginator(trip_list, per_page)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
     return render(request, "asset_mgt_app/trip_settlement.html", {
-        'tripsettlement_list': page_obj,
-        'page_obj': page_obj,
-        'total_count': paginator.count,
+        'tripsettlement_list': trip_list,
         'veh_no': veh_no,
         'date_from': date_from,
         'date_to': date_to,
-        'per_page': per_page,
     })
 
 @login_required

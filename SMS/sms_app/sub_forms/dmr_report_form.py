@@ -1,7 +1,8 @@
 from datetime import datetime
 import calendar
 from django import forms
-from ..models import CustomerInfo, CustomerdepartmentInfo, Places
+from django.db.models import Q
+from ..models import CustomerInfo, CustomerdepartmentInfo, Places, Trip_category_info, Location_info
 
 
 class DmrForm(forms.Form):
@@ -68,3 +69,20 @@ class DmrForm(forms.Form):
         label="To Date",
         widget=forms.DateInput(attrs={'type': 'date'})
     )
+    
+    trip_category = forms.ModelChoiceField(
+        queryset=Trip_category_info.objects.all(),
+        required=False,
+        label="Trip Category"
+    )
+
+    branch = forms.ModelChoiceField(
+        queryset=Location_info.objects.filter(Q(loc_name__icontains='MAA') | Q(loc_name__icontains='BLR')),
+        required=False,
+        label="Branch"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(DmrForm, self).__init__(*args, **kwargs)
+        if 'branch' in self.fields:
+            self.fields['branch'].label_from_instance = lambda obj: obj.loc_name.replace("BVM ", "")

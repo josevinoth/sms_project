@@ -79,6 +79,12 @@
 									</div>
 									{% render_field gatein_form.gatein_po_num class="form-control" %}
 								</div>
+								<div id="so_number_group" class="input-group input-group-sm mb-3" style="display:none;">
+									<div class="input-group-prepend">
+										<span class="input-group-text">SO Number</span>
+									</div>
+									{% render_field gatein_form.gatein_so_number class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer</span>
@@ -129,11 +135,38 @@
 									</div>
 									{% render_field gatein_form.gatein_consignee id="gatein_consignee" class="form-control" %}
 								</div>
+								<div id="geodis_fields">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">HSN Code</span>
+									</div>
+									{% render_field gatein_form.gatein_HSC id="gatein_HSC" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST</span>
+									</div>
+									{% render_field gatein_form.gatein_GST id="gatein_GST" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST %</span>
+									</div>
+
+									{% render_field gatein_form.gatein_GST_percent id="gatein_GST_percent" class="form-control" %}
+								</div>
+									</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Packages</span>
 									</div>
 									{% render_field gatein_form.gatein_no_of_pkg id="gatein_no_of_pkg" class="form-control" %}
+								</div>
+								<div id="no_of_pcs_group" class="input-group input-group-sm mb-3" style="display:none;">
+									<div class="input-group-prepend">
+										<span class="input-group-text">No.of Pcs</span>
+									</div>
+									{% render_field gatein_form.gatein_no_of_pcs id="gatein_no_of_pcs" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -540,5 +573,64 @@ $(document).ready(function () {
 });
 </script>
 
+<script>
+$(document).ready(function () {
+
+    function toggleGeodisFields() {
+        var customerText = $("#gatein_customer option:selected").text().trim().toUpperCase();
+
+        if (customerText.includes("GEODIS")) {
+            $("#geodis_fields").show();
+            $("#gatein_HSC, #gatein_GST, #gatein_GST_percent").prop("required", true);
+        } else {
+            $("#geodis_fields").hide();
+            $("#gatein_HSC, #gatein_GST, #gatein_GST_percent")
+                .prop("required", false)
+                .val("");
+        }
+    }
+
+    // Run on page load
+    toggleGeodisFields();
+
+    // Run on dropdown change
+    $("#gatein_customer").change(toggleGeodisFields);
+
+});
+</script>
+
+<!-- add script to toggle visibility based on selected customer -->
+<script>
+    $(document).ready(function() {
+        function toggleCustomerSpecificFields() {
+            var customerText = $("#gatein_customer option:selected").text().trim().toUpperCase();
+
+            // Default: hide both
+            $("#so_number_group").hide();
+            $("#no_of_pcs_group").hide();
+
+            if (customerText.includes("DAMCO")) {
+                // DAMCO: show both SO Number and No.of Pcs
+                $("#so_number_group").show();
+                $("#no_of_pcs_group").show();
+            } else if (customerText.includes("GEODIS")) {
+                // GEODIS: show No.of Pcs only
+                $("#no_of_pcs_group").show();
+            }
+        }
+
+        // Run once on load
+        toggleCustomerSpecificFields();
+
+        // Run whenever the customer dropdown changes
+        $("#gatein_customer").change(function() {
+            toggleCustomerSpecificFields();
+        });
+    });
+</script>
+
 
 {% endblock content %}
+
+
+

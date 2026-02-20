@@ -158,6 +158,7 @@
                                 <th>Cnote</th>
                                 <th>Vehicle No</th>
                                 <th>Veh Type</th>
+                                <th>Customer</th>
                                 <th>From</th>
                                 <th>To</th>
                                 <th>Trip Date</th>
@@ -178,9 +179,10 @@
                                         data-halting-days="{{ trip.halting_days }}"
                                         data-halting-cost="{{ trip.halting_cost }}">
                                 </td>
-                                <td>{{ trip.trip_number }}</td>
+                                <td>{{ trip.display_cnote }}</td>
                                 <td>{{ trip.vehicle_number }}</td>
                                 <td>{{ trip.vehicle_type }}</td>
+                                <td>{{ trip.customer }}</td>
                                 <td>{{ trip.from_location }}</td>
                                 <td>{{ trip.to_location }}</td>
                                 <td>{{ trip.trip_date|default:"" }}</td>
@@ -195,13 +197,13 @@
                             {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="11" class="text-center text-muted">No trips found in this bill</td>
+                                <td colspan="12" class="text-center text-muted">No trips found in this bill</td>
                             </tr>
                             {% endif %}
                             {% else %}
                             <!-- ADD Mode: Initial empty state -->
                             <tr>
-                                <td colspan="11" class="text-center text-muted">Select a vendor to view trips</td>
+                                <td colspan="12" class="text-center text-muted">Select a vendor to view trips</td>
                             </tr>
                             {% endif %}
                         </tbody>
@@ -324,10 +326,10 @@
             tripsDataTable = null;
         }
 
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center">Loading...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center">Loading...</td></tr>';
 
         if (!vendorId) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">Select a vendor to view trips</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Select a vendor to view trips</td></tr>';
             return;
         }
 
@@ -337,7 +339,7 @@
                 const availableTrips = data.trips.filter(t => !selectedTripIds.has(t.id.toString()));
 
                 if (availableTrips.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No available trips found for this vendor</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">No available trips found for this vendor</td></tr>';
                     return;
                 }
 
@@ -353,9 +355,10 @@
                         data-parking="${trip.parking_cost}"
                         data-halting-days="${trip.halting_days}"
                         data-halting-cost="${trip.halting_cost}"></td>
-                    <td>${trip.trip_number}</td>
+                    <td>${trip.trip_number_display}</td>
                     <td>${trip.vehicle_number}</td>
                     <td>${trip.vehicle_type}</td>
+                    <td>${trip.customer}</td>
                     <td>${trip.from_location}</td>
                     <td>${trip.to_location}</td>
                     <td>${trip.trip_date}</td>
@@ -375,7 +378,7 @@
             })
             .catch(err => {
                 console.error("Error loading trips:", err);
-                tbody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error loading trips</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Error loading trips</td></tr>';
             });
     });
 
@@ -439,7 +442,7 @@
         const toDate = toVal ? new Date(toVal) : null;
 
         document.querySelectorAll("#tripsTableBody tr").forEach(row => {
-            const dateCell = row.children[6]; // Trip Date column
+            const dateCell = row.children[7]; // Trip Date column (index shifted after adding Customer)
             if (!dateCell) return;
 
             const tripDateText = dateCell.textContent.trim();
@@ -476,3 +479,5 @@
 </script>
 
 {% endblock %}
+
+

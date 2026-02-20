@@ -46,16 +46,28 @@
         {% render_field form.year class="form-control" value=selected_year %}
     </div>
 
-    <!-- From Location -->
+    <!-- Branch -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">From Location</label>
-        {% render_field form.from_location class="form-control" value=from_loc_id %}
+        <label class="form-label fw-bold">Branch</label>
+        <select name="branch" class="form-control">
+            <option value="">Select Branch</option>
+            {% for b in all_branches %}
+            <option value="{{ b.id }}" {% if b.id == selected_branch %}selected{% endif %}>{{ b.loc_name|cut:"BVM " }}
+            </option>
+            {% endfor %}
+        </select>
     </div>
 
-    <!-- To Location -->
+    <!-- Vehicle Source -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">To Location</label>
-        {% render_field form.to_location class="form-control" value=to_loc_id %}
+        <label class="form-label fw-bold">Vehicle Source</label>
+        <select name="vehicle_source" class="form-control">
+            <option value="">Select Source</option>
+            {% for vs in vehicle_sources %}
+            <option value="{{ vs.id }}" {% if vs.id == selected_source %}selected{% endif %}>{{ vs.ow_ownership }}
+            </option>
+            {% endfor %}
+        </select>
     </div>
 
     <div class="col-md-2">
@@ -99,41 +111,41 @@
 </div>
 
 <script>
-$(document).ready(function () {
+    $(document).ready(function () {
 
-    const table = $('#vendor_p_l_report_table').DataTable({
+        const table = $('#vendor_p_l_report_table').DataTable({
 
-        scrollX: true,
-        dom: 'lBfrtip',
+            scrollX: true,
+            dom: 'lBfrtip',
 
-        lengthMenu: [
-            [10, 25, 50, 100, -1],
-            [10, 25, 50, 100, "All"]
-        ],
+            lengthMenu: [
+                [10, 25, 50, 100, -1],
+                [10, 25, 50, 100, "All"]
+            ],
 
-        pageLength: 10,
+            pageLength: 10,
 
-        buttons: [
+            buttons: [
 
-            'copy',
-            'csv',
+                'copy',
+                'csv',
 
-            // ======================
-            // EXCEL EXPORT
-            // ======================
-            {
-                extend: 'excelHtml5',
-                text: 'Excel',
-                title: 'WhatsApp Delivery Status Report',
+                // ======================
+                // EXCEL EXPORT
+                // ======================
+                {
+                    extend: 'excelHtml5',
+                    text: 'Excel',
+                    title: 'WhatsApp Delivery Status Report',
 
-                customize: function (xlsx) {
+                    customize: function (xlsx) {
 
-                    let sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    let styles = xlsx.xl['styles.xml'];
+                        let sheet = xlsx.xl.worksheets['sheet1.xml'];
+                        let styles = xlsx.xl['styles.xml'];
 
-                    // ---------- FONT ----------
-                    let fonts = $('fonts', styles);
-                    fonts.append(`
+                        // ---------- FONT ----------
+                        let fonts = $('fonts', styles);
+                        fonts.append(`
                         <font>
                             <sz val="11"/>
                             <color rgb="FFFFFFFF"/>
@@ -141,11 +153,11 @@ $(document).ready(function () {
                             <b/>
                         </font>
                     `);
-                    let fontId = fonts.children().length - 1;
+                        let fontId = fonts.children().length - 1;
 
-                    // ---------- BLUE FILL ----------
-                    let fills = $('fills', styles);
-                    fills.append(`
+                        // ---------- BLUE FILL ----------
+                        let fills = $('fills', styles);
+                        fills.append(`
                         <fill>
                             <patternFill patternType="solid">
                                 <fgColor rgb="FF0A3278"/>
@@ -153,11 +165,11 @@ $(document).ready(function () {
                             </patternFill>
                         </fill>
                     `);
-                    let fillId = fills.children().length - 1;
+                        let fillId = fills.children().length - 1;
 
-                    // ---------- STYLE ----------
-                    let cellXfs = $('cellXfs', styles);
-                    cellXfs.append(`
+                        // ---------- STYLE ----------
+                        let cellXfs = $('cellXfs', styles);
+                        cellXfs.append(`
                         <xf xfId="0"
                             fontId="${fontId}"
                             fillId="${fillId}"
@@ -166,49 +178,49 @@ $(document).ready(function () {
                             applyFill="1"/>
                     `);
 
-                    let styleId = cellXfs.children().length - 1;
+                        let styleId = cellXfs.children().length - 1;
 
-                    // APPLY STYLE TO HEADER ROW
-                    $('row:eq(1) c', sheet).attr('s', styleId);
+                        // APPLY STYLE TO HEADER ROW
+                        $('row:eq(1) c', sheet).attr('s', styleId);
+                    }
+                },
+
+                // ======================
+                // PDF EXPORT
+                // ======================
+                {
+                    extend: 'pdfHtml5',
+                    orientation: 'landscape',
+                    pageSize: 'A4',
+                    title: 'WhatsApp Delivery Status Report',
+
+                    customize: function (doc) {
+                        doc.styles.tableHeader.fillColor = '#0A3278';
+                        doc.styles.tableHeader.color = 'white';
+                        doc.styles.tableHeader.bold = true;
+                    }
+                },
+
+                // ======================
+                // PRINT
+                // ======================
+                {
+                    extend: 'print',
+                    title: 'WhatsApp Delivery Status Report',
+
+                    customize: function (win) {
+                        $(win.document.body).find('thead th')
+                            .css('background-color', '#0A3278')
+                            .css('color', 'white')
+                            .css('font-weight', 'bold');
+                    }
                 }
-            },
+            ],
 
-            // ======================
-            // PDF EXPORT
-            // ======================
-            {
-                extend: 'pdfHtml5',
-                orientation: 'landscape',
-                pageSize: 'A4',
-                title: 'WhatsApp Delivery Status Report',
+            order: [[0, 'asc']]
+        });
 
-                customize: function (doc) {
-                    doc.styles.tableHeader.fillColor = '#0A3278';
-                    doc.styles.tableHeader.color = 'white';
-                    doc.styles.tableHeader.bold = true;
-                }
-            },
-
-            // ======================
-            // PRINT
-            // ======================
-            {
-                extend: 'print',
-                title: 'WhatsApp Delivery Status Report',
-
-                customize: function (win) {
-                    $(win.document.body).find('thead th')
-                        .css('background-color', '#0A3278')
-                        .css('color', 'white')
-                        .css('font-weight', 'bold');
-                }
-            }
-        ],
-
-        order: [[0, 'asc']]
     });
-
-});
 </script>
 
 
