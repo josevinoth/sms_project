@@ -1,0 +1,16 @@
+{
+  "appId": "com.bvm.smsapp",
+  "appName": "BVM SMS",
+  "webDir": "sms_app/templates",
+  "server": {
+    "url": "http://3.110.26.240/SMS/customer_login/2/",
+    "allowNavigation": [
+      "3.110.26.240",
+      "localhost"
+    ],
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

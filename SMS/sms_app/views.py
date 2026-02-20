@@ -10,6 +10,8 @@ from .sub_views.location_add_view import location_add,location_list,location_del
 from .sub_views.login_page_view import login_page,get_units_for_user
 # from .sub_views.login_page_view_new import login_page_new,home_page_new,get_units
 from .sub_views.logout_page_view import logout_page
+from .sub_views.driver_login_view import driver_login, driver_logout
+from .sub_views.driver_dashboard_view import driver_dashboard
 from .sub_views.print_pdf_view import print_pdf
 from .sub_views.product_add_view import product_add,product_list,product_delete
 from .sub_views.producttype_add_view import producttype_list,producttype_delete,producttype_add
@@ -180,4 +182,7 @@ from .sub_views.stock_maintenance_view import stock_maintenance_list, stock_main
 from .sub_views.trans_invoice_view import (trans_invoice_add,trans_invoice_list,trans_invoice_delete,fetch_customer_details,trans_invoice_list_woh,trans_invoice_remove_woh,trans_invoice_add_woh,trans_invoice_excel,trans_invoice_edit)
 from .sub_views.transport_reports_view import vehicle_log_report_view, trip_cancellation_report_view, ref_no_pending_report_view, vehicle_utilization_report_view, drivers_advance_report_view, invoice_pending_report_view,vendor_p_l_mkt_report_view,vendor_p_l_attached_report_view,whatsapp_delivery_status_report_view,daily_trip_count_report_view, own_vehicle_pl_report_view, claim_pending_report_view, halting_report_view, maintenance_report_view, insurance_renewal_report_view, diesel_vs_revenue_report_view, own_vs_market_sales_report_view,enquiry_pending_report_view
 from .sub_views.market_bill_view import market_bill_add, market_bill_list, market_bill_edit, market_bill_delete, get_trips_by_vendor
+from .sub_views.customer_registration_view import customer_register, customer_registration_list, customer_registration_approve, customer_registration_reject, ajax_search_customers, ajax_check_customer_code
+from .sub_views.customer_enquiry_view import customer_enquiry_add, customer_enquiry_edit, customer_enquiry_list, customer_dashboard, customer_shipment_tracking, customer_track_vehicle, download_pod, download_dmr, ajax_get_vehicle_types
+from .sub_views.customer_login_view import customer_login, ajax_get_customer_departments
 

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Vehicle — {{ vehicle_number }}</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+        }
+
+        .top-bar .back-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
+
+        .top-bar .back-link:hover {
+            color: #38bdf8;
+        }
+
+        .top-bar .vehicle-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            letter-spacing: 1px;
+        }
+
+        .top-bar .vehicle-title i {
+            color: #38bdf8;
+            margin-right: 0.5rem;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .live-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* Map Container */
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Info Card Overlay */
+        .info-card {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 700px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .info-card.loading {
+            opacity: 0.5;
+        }
+
+        .status-indicator {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .status-indicator.moving {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-indicator.idle {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .status-indicator.stopped {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .info-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .info-details .status-text {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 0.3rem;
+        }
+
+        .info-details .status-text.moving {
+            color: #22c55e;
+        }
+
+        .info-details .status-text.idle {
+            color: #fbbf24;
+        }
+
+        .info-details .status-text.stopped {
+            color: #ef4444;
+        }
+
+        .info-details .address {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .info-details .timestamp {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.2rem;
+        }
+
+        .info-metrics {
+            display: flex;
+            gap: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .metric .label {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.1rem;
+        }
+
+        /* No data state */
+        .no-data-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+            color: #64748b;
+        }
+
+        .no-data-overlay i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #334155;
+        }
+
+        .no-data-overlay p {
+            font-size: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .info-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.8rem;
+                bottom: 0.8rem;
+                left: 0.8rem;
+                right: 0.8rem;
+            }
+
+            .info-metrics {
+                width: 100%;
+                justify-content: space-around;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <a href="/SMS/SMS/customer_enquiry_list/" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Shipments
+        </a>
+        <div class="vehicle-title">
+            <i class="fas fa-truck"></i> {{ vehicle_number }}
+        </div>
+        <div class="live-badge">
+            <span class="dot"></span> LIVE
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div class="map-container">
+        <div id="map"></div>
+
+        <!-- Info Card (hidden until data loads) -->
+        <div class="info-card loading" id="infoCard" style="display: none;">
+            <div class="status-indicator stopped" id="statusIcon">
+                <i class="fas fa-truck"></i>
+            </div>
+            <div class="info-details">
+                <div class="status-text stopped" id="statusText">Loading...</div>
+                <div class="address" id="addressText">Fetching location data...</div>
+                <div class="timestamp" id="timestampText"></div>
+            </div>
+            <div class="info-metrics">
+                <div class="metric">
+                    <div class="value" id="speedVal">—</div>
+                    <div class="label">km/h</div>
+                </div>
+                <div class="metric">
+                    <div class="value" id="odometerVal">—</div>
+                    <div class="label">km</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No data fallback -->
+        <div class="no-data-overlay" id="noDataMsg" style="display: none;">
+            <i class="fas fa-satellite-dish"></i>
+            <p>No GPS data available for this vehicle</p>
+        </div>
+    </div>
+
+    <script>
+        const targetVehicle = "{{ vehicle_number }}".toUpperCase().replace(/[\s\-]/g, '');
+
+        function normalize(num) {
+            return num ? num.toUpperCase().replace(/[\s\-]/g, '') : '';
+        }
+
+        // Init map
+        const map = L.map('map', {
+            zoomControl: false
+        }).setView([12.97, 77.59], 6);
+
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '© CartoDB © OSM',
+            maxZoom: 19
+        }).addTo(map);
+
+        let marker = null;
+
+        const truckIcons = {
+            Moving: L.divIcon({
+                html: '<div style="background:#22c55e;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(34,197,94,0.4);"><i class="fas fa-truck" style="color:#fff;font-size:16px;"></i></div>',
+                iconSize: [36, 36], iconAnchor: [18, 18]
+            }),
+            Idle: L.divIcon({
+                html: '<div style="background:#fbbf24;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(251,191,36,0.4);"><i class="fas fa-truck" style="color:#fff;font-size:16px;"></i></div>',
+                iconSize: [36, 36], iconAnchor: [18, 18]
+            }),
+            Stopped: L.divIcon({
+                html: '<div style="background:#ef4444;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(239,68,68,0.4);"><i class="fas fa-truck" style="color:#fff;font-size:16px;"></i></div>',
+                iconSize: [36, 36], iconAnchor: [18, 18]
+            }),
+        };
+
+        function timeAgo(timestamp) {
+            if (!timestamp) return '';
+            const cleaned = timestamp.replace('GMT', '').trim();
+            const d = new Date(cleaned);
+            if (isNaN(d)) return '';
+            const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (diff < 60) return diff + ' seconds ago';
+            if (diff < 3600) return Math.floor(diff / 60) + ' minutes ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
+            return Math.floor(diff / 86400) + ' days ago';
+        }
+
+        function updateUI(v) {
+            const card = document.getElementById('infoCard');
+            const noData = document.getElementById('noDataMsg');
+
+            if (!v) {
+                card.style.display = 'none';
+                noData.style.display = 'block';
+                return;
+            }
+
+            noData.style.display = 'none';
+            card.style.display = 'flex';
+            card.classList.remove('loading');
+
+            const statusLower = (v.running_status || 'Stopped').toLowerCase();
+            const statusClass = statusLower === 'moving' ? 'moving' : statusLower === 'idle' ? 'idle' : 'stopped';
+
+            // Status icon
+            const icon = document.getElementById('statusIcon');
+            icon.className = 'status-indicator ' + statusClass;
+
+            // Status text
+            const sText = document.getElementById('statusText');
+            sText.textContent = v.running_status || 'Stopped';
+            sText.className = 'status-text ' + statusClass;
+
+            // Address
+            document.getElementById('addressText').textContent = v.address || 'Location unavailable';
+
+            // Timestamp
+            const ago = timeAgo(v.timestamp);
+            const ts = v.timestamp || '';
+            const agoStr = ago ? ' · ' + ago : '';
+            document.getElementById('timestampText').textContent = ts + agoStr;
+
+            // Metrics
+            document.getElementById('speedVal').textContent = v.speed || '0';
+            const odo = v.Odometer ? Math.round(parseFloat(v.Odometer)).toLocaleString() : '—';
+            document.getElementById('odometerVal').textContent = odo;
+
+            // Map marker
+            const lat = parseFloat(v.lat);
+            const lon = parseFloat(v.lon);
+            if (!isNaN(lat) && !isNaN(lon)) {
+                const iconObj = truckIcons[v.running_status] || truckIcons.Stopped;
+                if (marker) {
+                    marker.setLatLng([lat, lon]);
+                    marker.setIcon(iconObj);
+                } else {
+                    marker = L.marker([lat, lon], { icon: iconObj }).addTo(map);
+                    map.setView([lat, lon], 17);
+                }
+            }
+        }
+
+        let firstLoad = true;
+        function loadData() {
+            fetch("/SMS/get_vehicle_data/?_t=" + Date.now(), { cache: "no-store" })
+                .then(res => res.json())
+                .then(data => {
+                    const all = data.all_data || [];
+                    const match = all.find(v => normalize(v.number) === targetVehicle);
+                    updateUI(match);
+                    if (match && firstLoad) {
+                        const lat = parseFloat(match.lat);
+                        const lon = parseFloat(match.lon);
+                        if (!isNaN(lat) && !isNaN(lon)) map.setView([lat, lon], 14);
+                        firstLoad = false;
+                    }
+                })
+                .catch(err => {
+                    console.error("GPS fetch error:", err);
+                });
+        }
+
+        loadData();
+        setInterval(loadData, 5000);
+    </script>
+</body>
+
+</html>

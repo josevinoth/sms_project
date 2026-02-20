@@ -1,0 +1,456 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Enquiries | BVM Transport</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #f093fb;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            touch-action: manipulation;
+        }
+
+        a,
+        button,
+        input[type="submit"],
+        .btn {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .container {
+            max-width: 98%;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Navbar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        header {
+            margin: 2rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: var(--dark);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -5px rgba(0, 242, 254, 0.5);
+        }
+
+        .glass-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow-x: auto;
+            backdrop-filter: blur(10px);
+            padding: 0.5rem;
+        }
+
+        .table-responsive-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 1100px;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 1rem 0.9rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.8px;
+            white-space: nowrap;
+            border-bottom: 2px solid var(--glass-border);
+        }
+
+        td {
+            padding: 0.85rem 0.9rem;
+            border-bottom: 1px solid var(--glass-border);
+            white-space: nowrap;
+            font-size: 0.92rem;
+            color: #e2e8f0;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+        }
+
+        .badge-pending {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+        }
+
+        .badge-active {
+            background: rgba(79, 172, 254, 0.1);
+            color: #4facfe;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 1.5rem;
+            width: 350px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.85rem 1rem 0.85rem 2.5rem;
+            color: #f8fafc;
+            font-size: 0.95rem;
+        }
+
+        .tracking-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .tracking-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Tablet */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 0.75rem;
+            }
+
+            header {
+                margin: 1.5rem 0;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            th {
+                font-size: 0.75rem;
+                padding: 0.8rem 0.7rem;
+            }
+
+            td {
+                font-size: 0.85rem;
+                padding: 0.7rem 0.7rem;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.8rem;
+                margin: 1rem 0;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .search-box {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+
+            .glass-card {
+                border-radius: 10px;
+                padding: 0.25rem;
+            }
+
+            nav {
+                padding: 0.8rem 1rem;
+            }
+
+            .logo {
+                font-size: 1rem;
+            }
+
+            .btn-primary {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            th {
+                font-size: 0.65rem;
+                padding: 0.5rem 0.4rem;
+            }
+
+            td {
+                font-size: 0.75rem;
+                padding: 0.5rem 0.4rem;
+            }
+
+            .search-box input {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="logo">BVM TRANSPORT</div>
+        <ul class="nav-links">
+            <li><a href="{% url 'customer_dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}" class="active">My Shipments</a></li>
+            <li><a href="#">Documents</a></li>
+            <li><a href="#">Support</a></li>
+        </ul>
+        <div class="user-profile" style="display: flex; align-items: center; gap: 1rem;">
+            <span id="currentTime" style="color: #94a3b8; font-size: 0.9rem; margin-right: 15px;"></span>
+            <a href="javascript:location.reload();" title="Refresh"
+                style="color: #94a3b8; transition: all 0.3s ease; text-decoration: none; font-size: 1.1rem;">
+                <i class="fas fa-sync-alt"></i>
+            </a>
+            <div
+                style="width: 40px; height: 40px; background: linear-gradient(var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--dark);">
+                {{ request.user.username|make_list|first|upper }}
+            </div>
+            <a href="{% url 'logout_page' %}?business_id=2" class="logout-btn" title="Logout"
+                style="color: #94a3b8; transition: all 0.3s ease; text-decoration: none; margin-left: 10px;"><i
+                    class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <div>
+                <a href="{% url 'customer_dashboard' %}"
+                    style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; display: inline-block; margin-bottom: 0.5rem;">
+                    <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Back to Dashboard
+                </a>
+                <h1>Shipment Registry</h1>
+            </div>
+            <a href="{% url 'customer_enquiry_add' %}" class="btn-primary"><i class="fas fa-plus"></i> Request
+                Shipment</a>
+        </header>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div
+            style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 12px; margin-bottom: 2rem;">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="search-box">
+            <form method="GET" action="{% url 'customer_enquiry_list' %}">
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search by Trip # or Location...">
+            </form>
+        </div>
+
+        <div class="glass-card">
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Customer Name</th>
+                            <th>Agent Name</th>
+                            <th>Vehicle No</th>
+                            <th>Customer Reference</th>
+                            <th>Cnote</th>
+                            <th>Enq Date</th>
+                            <th>Veh Req Date</th>
+                            <th>Dept</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Tracking Link</th>
+                            <th>POD</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in enquiry_list %}
+                        <tr>
+                            <td>{{ item.enq.en_customername.cu_name }}</td>
+                            <td>{{ item.enq.en_agent_name|default:"-" }}</td>
+                            <td>{{ item.vehicle_no }}</td>
+                            <td>{{ item.customer_ref }}</td>
+                            <td>{{ item.cnote }}</td>
+                            <td>{{ item.enq.en_created_at|date:"d M Y" }}</td>
+                            <td>{{ item.enq.en_pickupdatetime|date:"d M Y H:i"|default:"-" }}</td>
+                            <td>{{ item.enq.en_customerdepartment.ct_customerdepartment|default:"-" }}</td>
+                            <td>{{ item.enq.en_fromlocaion.place_name }}</td>
+                            <td>{{ item.enq.en_tolocation.place_name }}</td>
+                            <td>
+                                {% if item.track_link %}
+                                <a href="{{ item.track_link }}" target="_blank" style="color: var(--primary);"><i
+                                        class="fas fa-link"></i> Track</a>
+                                {% else %}-{% endif %}
+                            </td>
+                            <td>
+                                {% if item.pod_trip_id %}
+                                <a href="{% url 'download_pod' item.pod_trip_id %}" class="action-icon"
+                                    title="Download POD"><i class="fas fa-file-pdf"></i></a>
+                                {% else %}-{% endif %}
+                            </td>
+                            <td>
+                                <a href="/SMS/SMS/customer_enquiry_edit/{{ item.enq.id }}/"
+                                    style="color: var(--primary);" title="Edit"><i class="fas fa-edit"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="13" style="text-align: center; padding: 4rem; color: #94a3b8;">No shipments or
+                                enquiries found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Driver Portal - Dashboard</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #f093fb;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+            /* Flex to center content if needed, but here we use container margin */
+            flex-direction: column;
+        }
+
+        .dashboard-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 0;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-header {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .info-label {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(79, 172, 254, 0.1);
+            color: #4facfe;
+            display: inline-block;
+        }
+
+        .action-btn {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: var(--dark);
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-success {
+            background: rgba(34, 197, 94, 0.1);
+            /* Ghost style for next step? Or solid? User likes dark UI. */
+            /* Let's make active action layout prominent */
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .completed-step {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #94a3b8;
+            cursor: default;
+            box-shadow: none;
+        }
+
+        .completed-step i {
+            color: #22c55e;
+        }
+
+        .btn-outline-danger {
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+            padding: 5px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ff6b6b;
+        }
+
+        /* File Input Styling */
+        input[type="file"] {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            color: #94a3b8;
+        }
+
+        /* Section Separator */
+        h6 {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Responsive Tweaks */
+        @media (max-width: 576px) {
+            .dashboard-container {
+                padding: 15px;
+                margin: 0;
+            }
+
+            .action-btn {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header / Logout -->
+        <div class="header-bar">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="/media/Company_Logo.png" alt="BVM" style="height: 35px; width: auto;">
+                <h4 class="header-title" style="margin: 0;">DRIVER PORTAL</h4>
+            </div>
+            <form method="POST" action="" style="margin: 0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="logout">
+                <button type="submit" class="btn-outline-danger">Logout</button>
+            </form>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div
+            style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 12px; margin-bottom: 2rem; color: #f8fafc;">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Trip Details Card -->
+        <div class="card">
+            <div class="card-header">
+                Trip: {{ trip.tr_tripnumber }}
+            </div>
+            <div class="card-body">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <div>
+                        <span class="info-label">Current Status</span>
+                        <span class="status-badge">{{ trip.tc_financestatus.status }}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="info-label">Vehicle</span>
+                        <span class="info-value">{{ trip.tr_vehiclenumber }}</span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <span class="info-label">From</span>
+                        <div class="info-value">{{ trip.tr_departedlocation.place_name|default:"-" }}</div>
+                    </div>
+                    <div>
+                        <span class="info-label">To</span>
+                        <div class="info-value">{{ trip.tr_reportedlocation.place_name|default:"-" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-tasks"></i> Workflow Actions
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <!-- Loading Stage -->
+                    <h6 style="margin-top: 0;">Loading / Origin</h6>
+
+                    <!-- 1. Vehicle Reported -->
+                    {% if trip.tr_departeddate_pickup %}
+                    <button type="button" class="action-btn completed-step">
+                        <i class="fas fa-check"></i> Vehicle Reported ({{ trip.tr_departeddate_pickup|date:"H:i" }})
+                    </button>
+                    {% else %}
+                    <button type="submit" name="action" value="vehicle_reported" class="action-btn btn-primary">
+                        <i class="fas fa-map-marker-alt"></i> Vehicle Reported
+                    </button>
+                    {% endif %}
+
+                    <!-- 2. Loading Dock In -->
+                    {% if trip.tr_loading_time %}
+                    <button type="button" class="action-btn completed-step">
+                        <i class="fas fa-check"></i> Loading Dock In ({{ trip.tr_loading_time|date:"H:i" }})
+                    </button>
+                    {% else %}
+                    <button type="submit" name="action" value="loading_dock_in" class="action-btn btn-success" {{
+                        trip.tr_departeddate_pickup|yesno:",disabled" }}
+                        style="{{ trip.tr_departeddate_pickup|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                        <i class="fas fa-sign-in-alt"></i> Loading Dock In
+                    </button>
+                    {% endif %}
+
+                    <!-- 3. Loading Dock Out -->
+                    {% if trip.tr_dock_in_time %}
+                    <button type="button" class="action-btn completed-step">
+                        <i class="fas fa-check"></i> Loading Dock Out ({{ trip.tr_dock_in_time|date:"H:i" }})
+                    </button>
+                    {% else %}
+                    <button type="submit" name="action" value="loading_dock_out" class="action-btn btn-danger" {{
+                        trip.tr_loading_time|yesno:",disabled" }}
+                        style="{{ trip.tr_loading_time|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                        <i class="fas fa-sign-out-alt"></i> Loading Dock Out
+                    </button>
+                    {% endif %}
+
+                    <!-- 4. Vehicle Started -->
+                    {% if trip.tr_departeddate %}
+                    <button type="button" class="action-btn completed-step">
+                        <i class="fas fa-check"></i> Vehicle Started ({{ trip.tr_departeddate|date:"H:i" }})
+                    </button>
+                    {% else %}
+                    <button type="submit" name="action" value="vehicle_started" class="action-btn btn-primary" {{
+                        trip.tr_dock_in_time|yesno:",disabled" }}
+                        style="{{ trip.tr_dock_in_time|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                        <i class="fas fa-truck"></i> Vehicle Started
+                    </button>
+                    {% endif %}
+
+                    <!-- Unloading Stage -->
+                    <h6>Unloading / Destination</h6>
+
+                    <!-- 5. Vehicle Reported (Unloading) -->
+                    {% if trip.tr_reporteddate %}
+                    <button type="button" class="action-btn completed-step">
+                        <i class="fas fa-check"></i> Vehicle Arrived ({{ trip.tr_reporteddate|date:"H:i" }})
+                    </button>
+                    {% else %}
+                    <button type="submit" name="action" value="vehicle_reported_unloading"
+                        class="action-btn btn-primary" {{ trip.tr_departeddate|yesno:",disabled" }}
+                        style="{{ trip.tr_departeddate|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                        <i class="fas fa-map-marker-alt"></i> Vehicle Arrived
+                    </button>
+                    {% endif %}
+
+                    <!-- 6. Unloading Dock In -->
+                    {% if trip.tr_departeddate_delivery %}
+                    <button type="button" class="action-btn completed-step">
+                        <i class="fas fa-check"></i> Unloading Dock In ({{ trip.tr_departeddate_delivery|date:"H:i" }})
+                    </button>
+                    {% else %}
+                    <button type="submit" name="action" value="unloading_dock_in" class="action-btn btn-success" {{
+                        trip.tr_reporteddate|yesno:",disabled" }}
+                        style="{{ trip.tr_reporteddate|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                        <i class="fas fa-sign-in-alt"></i> Unloading Dock In
+                    </button>
+                    {% endif %}
+
+                    <!-- 7. Unloading Dock Out -->
+                    {% if trip.tr_unloading_time %}
+                    <button type="button" class="action-btn completed-step">
+                        <i class="fas fa-check"></i> Unloading Dock Out ({{ trip.tr_unloading_time|date:"H:i" }})
+                    </button>
+                    {% else %}
+                    <button type="submit" name="action" value="unloading_dock_out" class="action-btn btn-danger" {{
+                        trip.tr_departeddate_delivery|yesno:",disabled" }}
+                        style="{{ trip.tr_departeddate_delivery|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                        <i class="fas fa-sign-out-alt"></i> Unloading Dock Out
+                    </button>
+                    {% endif %}
+
+                    <!-- 8. Vehicle Started (Unloading/Return) -->
+                    {% if trip.tr_reporteddate_delivery %}
+                    <button type="button" class="action-btn completed-step">
+                        <i class="fas fa-check"></i> Vehicle Released ({{ trip.tr_reporteddate_delivery|date:"H:i" }})
+                    </button>
+                    {% else %}
+                    <button type="submit" name="action" value="vehicle_started_unloading" class="action-btn btn-primary"
+                        {{ trip.tr_unloading_time|yesno:",disabled" }}
+                        style="{{ trip.tr_unloading_time|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                        <i class="fas fa-truck-moving"></i> Vehicle Released
+                    </button>
+                    {% endif %}
+
+                </form>
+            </div>
+        </div>
+
+        <!-- POD Upload -->
+        <div class="card">
+            <div class="card-header">
+                Upload POD
+            </div>
+            <div class="card-body">
+                {% if trip.tc_pod_attachment %}
+                <div
+                    style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                    <i class="fas fa-check-circle"></i> POD Uploaded
+                    <br>
+                    <small style="color: #86efac;">{{ trip.tc_pod_attachment.name }}</small>
+                </div>
+                {% endif %}
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="upload_pod">
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <label
+                                style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: rgba(79, 172, 254, 0.1); border: 1px dashed rgba(79, 172, 254, 0.4); border-radius: 12px; cursor: pointer; color: #4facfe; font-weight: 600;">
+                                <i class="fas fa-camera" style="font-size: 1.2rem;"></i> Take Photo
+                                <input type="file" name="pod_file" accept="image/*" capture="environment" required
+                                    id="pod_camera_input" style="display: none;"
+                                    onchange="document.getElementById('pod_file_name').textContent = this.files[0]?.name || ''; document.getElementById('pod_browse_input').removeAttribute('required');">
+                            </label>
+                            <label
+                                style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); border-radius: 12px; cursor: pointer; color: #94a3b8; font-weight: 600;">
+                                <i class="fas fa-folder-open" style="font-size: 1.2rem;"></i> Browse
+                                <input type="file" name="pod_file" accept="image/*,application/pdf"
+                                    id="pod_browse_input" style="display: none;"
+                                    onchange="document.getElementById('pod_file_name').textContent = this.files[0]?.name || ''; document.getElementById('pod_camera_input').removeAttribute('required');">
+                            </label>
+                        </div>
+                        <div id="pod_file_name" style="color: #86efac; font-size: 0.85rem; text-align: center;"></div>
+                    </div>
+                    <button type="submit" class="action-btn btn-primary">Upload</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

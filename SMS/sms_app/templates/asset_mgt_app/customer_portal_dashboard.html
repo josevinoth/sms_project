@@ -1,0 +1,569 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Portal | BVM Transport</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #f093fb;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            touch-action: manipulation;
+        }
+
+        a,
+        button,
+        input[type="submit"],
+        .btn {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 1rem;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--dark);
+        }
+
+        /* Header */
+        header {
+            margin: 3rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .welcome h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: var(--dark);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -5px rgba(0, 242, 254, 0.5);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05));
+            pointer-events: none;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .icon-blue {
+            background: rgba(79, 172, 254, 0.1);
+            color: #4facfe;
+        }
+
+        .icon-green {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .icon-orange {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+        }
+
+        .icon-pink {
+            background: rgba(240, 147, 251, 0.1);
+            color: #f093fb;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Recent Activity Table */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+        }
+
+        .glass-table-container {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.25rem 2rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 1.25rem 2rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .status-transit {
+            background: rgba(79, 172, 254, 0.1);
+            color: #4facfe;
+        }
+
+        .status-pending {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+        }
+
+        .action-icon {
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+
+        .action-icon:hover {
+            color: var(--primary);
+        }
+
+        /* Tracking Button Animation */
+        .tracking-btn {
+            position: relative;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .tracking-btn:hover {
+            background: var(--primary);
+            color: var(--dark);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.8rem;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+                margin: 1rem 0;
+            }
+
+            .welcome h1 {
+                font-size: 1.3rem;
+            }
+
+            .welcome p {
+                font-size: 0.85rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+                border-radius: 14px;
+            }
+
+            .stat-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+                border-radius: 10px;
+                margin-bottom: 0.8rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .stat-label {
+                font-size: 0.7rem;
+            }
+
+            .section-header h2 {
+                font-size: 1.1rem;
+            }
+
+            .section-header {
+                margin-bottom: 1rem;
+            }
+
+            .glass-table-container {
+                border-radius: 14px;
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 800px;
+            }
+
+            th {
+                padding: 0.5rem 0.6rem;
+                font-size: 0.65rem;
+                white-space: nowrap;
+            }
+
+            td {
+                padding: 0.5rem 0.6rem;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+
+            .btn-primary {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+                border-radius: 8px;
+            }
+
+            .tracking-btn {
+                padding: 0.35rem 0.6rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="logo">BVM TRANSPORT</div>
+        <ul class="nav-links">
+            <li><a href="{% url 'customer_dashboard' %}" class="active">Dashboard</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}">My Shipments</a></li>
+            <li><a href="#">Documents</a></li>
+            <li><a href="#">Support</a></li>
+        </ul>
+        <div class="user-profile">
+            <span id="currentTime" style="color: #94a3b8; font-size: 0.9rem; margin-right: 15px;"></span>
+            <a href="javascript:location.reload();" title="Refresh"
+                style="color: #94a3b8; transition: all 0.3s ease; text-decoration: none; font-size: 1.1rem;">
+                <i class="fas fa-sync-alt"></i>
+            </a>
+            <div class="user-avatar">{{ request.user.username|make_list|first|upper }}</div>
+            <a href="{% url 'logout_page' %}?business_id={{ customer.cu_business_sol.id }}" class="logout-btn"
+                title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <div class="welcome">
+                <h1>Welcome back, {{ customer.cu_name }}</h1>
+                {% if department %}
+                <p
+                    style="font-size: 1.1rem; color: #4facfe; margin-top: -0.5rem; margin-bottom: 0.5rem; font-weight: 600;">
+                    {{ department.ct_customerdepartment }} Department</p>
+                {% endif %}
+                <p>Real-time visibility of your logistics ecosystem.</p>
+            </div>
+            <a href="{% url 'customer_enquiry_add' %}" class="btn-primary">
+                <i class="fas fa-plus"></i> New Enquiry
+            </a>
+        </header>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div
+            style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 12px; margin-bottom: 2rem; color: #f8fafc;">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-blue">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value">{{ active_enquiries }}</div>
+                <div class="stat-label">Active Enquiries</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-orange">
+                    <i class="fas fa-truck-fast"></i>
+                </div>
+                <div class="stat-value">{{ in_transit }}</div>
+                <div class="stat-label">In-Transit</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-green">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <div class="stat-value">{{ delivered }}</div>
+                <div class="stat-label">Delivered (MTD)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-pink">
+                    <i class="fas fa-ban"></i>
+                </div>
+                <div class="stat-value">{{ cancelled }}</div>
+                <div class="stat-label">Cancelled</div>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <h2>Recent Shipments</h2>
+            <a href="{% url 'customer_enquiry_list' %}" style="color: var(--secondary); text-decoration: none;">View All
+                <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        <div class="glass-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trip #</th>
+                        <th>Origin</th>
+                        <th>Destination</th>
+                        <th>Vehicle</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trip in recent_shipments %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ trip.tr_tripnumber }}</td>
+                        <td>{{ trip.tr_departedlocation }}</td>
+                        <td>{{ trip.tr_reportedlocation|default:trip.tr_enquirynumber.en_tolocation }}</td>
+                        <td>{{ trip.tr_vehiclenumber }} <br><small style="color: #94a3b8;">{{ trip.tr_vehicletype
+                                }}</small></td>
+                        <td>
+                            {% if trip.tc_financestatus_id == 1 %}
+                            <span class="status-badge status-transit">In-Transit</span>
+                            {% elif trip.tc_financestatus_id == 2 or trip.tc_financestatus_id == 7 %}
+                            <span class="status-badge status-active">Delivered</span>
+                            {% else %}
+                            <span class="status-badge status-pending">{{ trip.tc_financestatus.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'download_dmr' trip.id %}" class="action-icon" title="Download DMR"><i
+                                    class="fas fa-file-excel"></i></a>
+                            {% if trip.tc_financestatus_id == 2 or trip.tc_financestatus_id == 7 %}
+                            <a href="{% url 'download_pod' trip.id %}" class="action-icon" title="Download POD"><i
+                                    class="fas fa-file-pdf"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 4rem; color: #94a3b8;">
+                            <i class="fas fa-box-open"
+                                style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                            No active shipments found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+
+</html>
