@@ -2,6 +2,11 @@
 
 
 {% block content %}
+<div class="container-fluid d-flex justify-content-center py-3">
+    <div class="rounded text-center bg-info shadow-box px-4 py-2">
+        <h3>Trip Closure </h3>
+    </div>
+</div>
 <div class="container-fluid mt-3">
     <div class="row mb-3">
         <div class="col-md-1">
@@ -108,54 +113,7 @@
         </tbody>
     </table>
 </div>
-<div class="pagination mt-3">
-    <span class="step-links">
 
-        {% if page_obj.has_previous %}
-        <a class="btn btn-warning"
-           href="?page=1{% if branch %}&branch={{ branch }}{% endif %}
-           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
-           {% if date_from %}&date_from={{ date_from }}{% endif %}
-           {% if date_to %}&date_to={{ date_to }}{% endif %}">
-            First
-        </a>
-
-        <a class="btn btn-primary"
-           href="?page={{ page_obj.previous_page_number }}
-           {% if branch %}&branch={{ branch }}{% endif %}
-           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
-           {% if date_from %}&date_from={{ date_from }}{% endif %}
-           {% if date_to %}&date_to={{ date_to }}{% endif %}">
-            Previous
-        </a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </span>
-
-        {% if page_obj.has_next %}
-        <a class="btn btn-primary"
-           href="?page={{ page_obj.next_page_number }}
-           {% if branch %}&branch={{ branch }}{% endif %}
-           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
-           {% if date_from %}&date_from={{ date_from }}{% endif %}
-           {% if date_to %}&date_to={{ date_to }}{% endif %}">
-            Next
-        </a>
-
-        <a class="btn btn-warning"
-           href="?page={{ page_obj.paginator.num_pages }}
-           {% if branch %}&branch={{ branch }}{% endif %}
-           {% if selected_status %}&trip_status={{ selected_status }}{% endif %}
-           {% if date_from %}&date_from={{ date_from }}{% endif %}
-           {% if date_to %}&date_to={{ date_to }}{% endif %}">
-            Last
-        </a>
-        {% endif %}
-
-    </span>
-</div>
 
 <script>
    $('#tripclosure_list').DataTable({
@@ -167,17 +125,21 @@
 
 </script>
 <script>
-    $(document).ready(function () {
-        $('#tripclosure_list').DataTable({
-            scrollX: true,
-            order: [0, 'desc'],
-            dom: 'lBfrtip',
-            pageLength: 100,
-            buttons: [
-                'copy', 'csv', 'excel', 'print'
-            ]
-        });
-    });
-</script>
+document.addEventListener("DOMContentLoaded", function () {
+    $('#tripclosure_list').DataTable({
+        order: [[2, 'desc']],
+        scrollCollapse: true,
 
+        pageLength: 10,   // default page size
+
+        lengthMenu: [
+            [10, 25, 50, 100, -1],   // values
+            [10, 25, 50, 100, "All"] // labels
+        ],
+
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+});
+</script>
 {% endblock content %}

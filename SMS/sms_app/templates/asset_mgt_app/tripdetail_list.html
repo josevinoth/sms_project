@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% block content %}
 <div class="container-fluid py-3">
     <div class="row justify-content-center">
@@ -149,46 +149,8 @@
             </tbody>
         </table>
     </div>
-    <div class="mt-2 ml-3">
-        <p class="font-weight-bold" style="color: #0D2F3F;">
-            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
-        </p>
-    </div>
+    
 </div>
-<div class="pagination mt-3">
-    <span class="step-links">
-
-        {% if page_obj.has_previous %}
-        <a class="btn btn-warning"
-            href="?page=1{% if branch %}&branch={{ branch }}{% endif %}{% if selected_status %}&trip_status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
-            First
-        </a>
-
-        <a class="btn btn-primary"
-            href="?page={{ page_obj.previous_page_number }}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_status %}&trip_status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
-            Previous
-        </a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
-
-        {% if page_obj.has_next %}
-        <a class="btn btn-primary"
-            href="?page={{ page_obj.next_page_number }}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_status %}&trip_status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
-            Next
-        </a>
-
-        <a class="btn btn-warning"
-            href="?page={{ page_obj.paginator.num_pages }}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_status %}&trip_status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
-            Last
-        </a>
-        {% endif %}
-
-    </span>
-</div>
-
 
 <script>
     function fetchLiveTracking(vehicleNumber, rowId) {
@@ -224,38 +186,22 @@
     }
 </script>
 <script>
-    $(document).ready(function () {
-        var table = $('#tripdetail_list').DataTable({
-            scrollX: true,
-            order: [[0, 'desc']],
-            dom: 'lBfrtip',
-            lengthChange: true,
-            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-            pageLength: {% if per_page == 'all' %} - 1{% elif per_page %}{{ per_page }}{% else %}50{% endif %},
-        info: false,
-        buttons: [
-        'copy', 'csv', 'excel', 'print'
-    ]
-        });
+document.addEventListener("DOMContentLoaded", function () {
+    $('#tripdetail_list').DataTable({
+        order: [[2, 'desc']],
+        scrollCollapse: true,
 
-    // Trigger server-side reload when DataTables length is changed
-    $('#tripdetail_list').on('length.dt', function (e, settings, len) {
-        var perPage = (len === -1) ? 'all' : len;
-        var url = new URL(window.location.href);
-        url.searchParams.set('per_page', perPage);
-        url.searchParams.set('page', 1); // Reset to page 1
-        window.location.href = url.toString();
-    });
+        pageLength: 10,   // default page size
 
-    // Apply column search
-    $('.filter-input').on('keyup change', function () {
-        var columnIndex = $(this).parent().index();
-        table.column(columnIndex).search(this.value).draw();
-    });
+        lengthMenu: [
+            [10, 25, 50, 100, -1],   // values
+            [10, 25, 50, 100, "All"] // labels
+        ],
 
-    $('#tripdetail_list thead input').on('click', function (e) {
-        e.stopPropagation();
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
     });
-    });
+});
 </script>
+
 {% endblock content %}
