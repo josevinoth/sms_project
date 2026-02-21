@@ -180,46 +180,14 @@ def tripclosure_add(request,tripclosure_id=0):
 @login_required(login_url='login_page')
 def tripclosure_list(request):
     first_name = request.session.get('first_name')
-
     branch = request.GET.get('branch', '')
     selected_status = request.GET.get('trip_status', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
 
-    queryset = TripdetailInfo.objects.all()
-
-    # Branch filter
-    if branch == 'MAA':
-        queryset = queryset.filter(
-            tr_consignmentnumber__co_consignmentnumber__istartswith='MAA'
-        )
-    elif branch == 'BLR':
-        queryset = queryset.filter(
-            tr_consignmentnumber__co_consignmentnumber__istartswith='BLR'
-        )
-
-    # Status filter
-    if selected_status:
-        queryset = queryset.filter(tc_financestatus_id=selected_status)
-
-    # Date filter
-    if date_from:
-        queryset = queryset.filter(tr_created_at__date__gte=date_from)
-    if date_to:
-        queryset = queryset.filter(tr_created_at__date__lte=date_to)
-
-    queryset = queryset.order_by('-id')
-
-    # ✅ PAGINATION (50 per page)
-    paginator = Paginator(queryset, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
     status_list = Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7])
 
     context = {
-        'tripclosure_list': page_obj,   # ✅ MUST be page_obj
-        'page_obj': page_obj,
         'first_name': first_name,
         'branch': branch,
         'status_list': status_list,
@@ -229,6 +197,108 @@ def tripclosure_list(request):
     }
 
     return render(request, "asset_mgt_app/tripclosure_list.html", context)
+
+
+@login_required(login_url='login_page')
+def tripclosure_list_ajax(request):
+    """Server-side DataTables AJAX endpoint for Trip Closure List."""
+    from django.db.models import Q
+
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 50))
+    search_value = request.GET.get('search[value]', '').strip()
+
+    branch = request.GET.get('branch', '').strip()
+    selected_status = request.GET.get('trip_status', '').strip()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
+
+    qs = TripdetailInfo.objects.select_related(
+        'tr_enquirynumber', 'tr_consignmentnumber', 'tc_financestatus'
+    ).all()
+
+    # Branch filter
+    if branch == 'MAA':
+        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='MAA')
+    elif branch == 'BLR':
+        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='BLR')
+
+    if selected_status:
+        qs = qs.filter(tc_financestatus_id=selected_status)
+
+    if date_from:
+        qs = qs.filter(tr_created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(tr_created_at__date__lte=date_to)
+
+    records_total = qs.count()
+
+    # Global search
+    if search_value:
+        qs = qs.filter(
+            Q(tr_tripnumber__icontains=search_value) |
+            Q(tr_enquirynumber__en_enquirynumber__icontains=search_value) |
+            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tc_financestatus__status__icontains=search_value)
+        )
+
+    records_filtered = qs.count()
+
+    # Ordering
+    order_col = int(request.GET.get('order[0][column]', 0))
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+    col_map = {
+        0: 'tr_created_at',
+        1: 'tr_enquirynumber__en_enquirynumber',
+        2: 'tr_consignmentnumber__co_consignmentnumber',
+        3: 'tr_tripnumber',
+        4: 'tc_tripcost',
+        5: 'tc_parkingcost',
+        6: 'tc_tollcost',
+        7: 'tc_loadingcost',
+        8: 'tc_unloadingcost',
+        9: 'tc_weighmentcost',
+        10: 'tc_handlingcost',
+        11: 'tc_pod',
+        12: 'tc_financestatus__status',
+    }
+    order_field = col_map.get(order_col, 'id')
+    if order_dir == 'desc':
+        order_field = '-' + order_field
+    qs = qs.order_by(order_field)
+
+    if length != -1:
+        qs = qs[start:start + length]
+    else:
+        qs = qs[start:]
+
+    data = []
+    for t in qs:
+        data.append([
+            t.tr_created_at.strftime('%Y-%m-%d') if t.tr_created_at else '',
+            str(t.tr_enquirynumber) if t.tr_enquirynumber else '',
+            str(t.tr_consignmentnumber) if t.tr_consignmentnumber else '',
+            t.tr_tripnumber or '',
+            str(t.tc_tripcost) if t.tc_tripcost is not None else '0',
+            str(t.tc_parkingcost) if t.tc_parkingcost is not None else '0',
+            str(t.tc_tollcost) if t.tc_tollcost is not None else '0',
+            str(t.tc_loadingcost) if t.tc_loadingcost is not None else '0',
+            str(t.tc_unloadingcost) if t.tc_unloadingcost is not None else '0',
+            str(t.tc_weighmentcost) if t.tc_weighmentcost is not None else '0',
+            str(t.tc_handlingcost) if t.tc_handlingcost is not None else '0',
+            str(t.tc_pod) if t.tc_pod else '',
+            str(t.tc_financestatus) if t.tc_financestatus else '',
+            t.id,  # for edit URL (index 13)
+            t.id,  # for delete URL (index 14)
+        ])
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': records_filtered,
+        'data': data,
+    })
 
 
 #Delete tripclosure

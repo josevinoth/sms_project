@@ -490,76 +490,140 @@ def tripdetail_add(request, tripdetail_id=0):
 @login_required(login_url='login_page')
 def tripdetail_list(request):
     first_name = request.session.get('first_name')
-
-    # Filters
     branch = request.GET.get('branch', '').strip()
     selected_status_id = request.GET.get('trip_status', '').strip()
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
 
-    # Base queryset
-    tripdetail_queryset = TripdetailInfo.objects.all()
-
-    # Branch filter
-    if branch == 'MAA':
-        tripdetail_queryset = tripdetail_queryset.filter(
-            tr_consignmentnumber__co_consignmentnumber__istartswith='MAA'
-        )
-    elif branch == 'BLR':
-        tripdetail_queryset = tripdetail_queryset.filter(
-            tr_consignmentnumber__co_consignmentnumber__istartswith='BLR'
-        )
-
-    # Status filter
-    if selected_status_id:
-        tripdetail_queryset = tripdetail_queryset.filter(
-            tc_financestatus_id=selected_status_id
-        )
-
-    # Date filters
-    if date_from:
-        tripdetail_queryset = tripdetail_queryset.filter(
-            tr_created_at__date__gte=date_from
-        )
-    if date_to:
-        tripdetail_queryset = tripdetail_queryset.filter(
-            tr_created_at__date__lte=date_to
-        )
-
-    # Order
-    tripdetail_queryset = tripdetail_queryset.order_by('-tr_created_at')
-
-    # ✅ DYNAMIC PAGINATION
-    per_page = request.GET.get('per_page', '50').strip()
-    
-    if per_page == 'all':
-        items_per_page = tripdetail_queryset.count() if tripdetail_queryset.count() > 0 else 50
-    else:
-        try:
-            items_per_page = int(per_page)
-        except ValueError:
-            items_per_page = 50
-
-    paginator = Paginator(tripdetail_queryset, items_per_page)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    # Status dropdown
     status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8])
 
     context = {
-        'tripdetail_list': page_obj,   # IMPORTANT
-        'page_obj': page_obj,          # IMPORTANT
         'first_name': first_name,
         'branch': branch,
         'status_list': status_list,
         'selected_status': int(selected_status_id) if selected_status_id else None,
         'date_from': date_from,
         'date_to': date_to,
-        'per_page': per_page,
     }
 
     return render(request, "asset_mgt_app/tripdetail_list.html", context)
+
+
+@login_required(login_url='login_page')
+def tripdetail_list_ajax(request):
+    """Server-side DataTables AJAX endpoint for Trip Detail List."""
+    from django.db.models import Q
+
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 50))
+    search_value = request.GET.get('search[value]', '').strip()
+
+    # Filters from query params
+    branch = request.GET.get('branch', '').strip()
+    selected_status_id = request.GET.get('trip_status', '').strip()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
+
+    qs = TripdetailInfo.objects.select_related(
+        'tr_enquirynumber', 'tr_consignmentnumber',
+        'tr_departedlocation', 'tr_reportedlocation',
+        'tc_financestatus'
+    ).all()
+
+    # Branch filter
+    if branch == 'MAA':
+        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='MAA')
+    elif branch == 'BLR':
+        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='BLR')
+
+    # Status filter
+    if selected_status_id:
+        qs = qs.filter(tc_financestatus_id=selected_status_id)
+
+    # Date filters
+    if date_from:
+        qs = qs.filter(tr_created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(tr_created_at__date__lte=date_to)
+
+    records_total = qs.count()
+
+    # Global search
+    if search_value:
+        qs = qs.filter(
+            Q(tr_tripnumber__icontains=search_value) |
+            Q(tr_vehiclenumber__icontains=search_value) |
+            Q(tr_enquirynumber__en_enquirynumber__icontains=search_value) |
+            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_departedlocation__place_name__icontains=search_value) |
+            Q(tr_reportedlocation__place_name__icontains=search_value) |
+            Q(tc_financestatus__status__icontains=search_value) |
+            Q(tr_updated_by__first_name__icontains=search_value) |
+            Q(tr_updated_by__username__icontains=search_value)
+        )
+
+    records_filtered = qs.count()
+
+    # Ordering
+    order_col = int(request.GET.get('order[0][column]', 0))
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+    col_map = {
+        0: 'tr_created_at',
+        1: 'tr_enquirynumber__en_enquirynumber',
+        2: 'tr_consignmentnumber__co_consignmentnumber',
+        3: 'tr_tripnumber',
+        4: 'tr_vehiclenumber',
+        5: 'tr_departedlocation__place_name',
+        6: 'tr_departedkm',
+        7: 'tr_departeddate',
+        8: 'tr_reportedlocation__place_name',
+        9: 'tr_reportedkm',
+        10: 'tr_reporteddate',
+        11: 'id', # Placeholder for Track
+        12: 'tc_financestatus__status',
+        13: 'tr_updated_by__first_name',
+        14: 'tr_updated_at',
+    }
+    order_field = col_map.get(order_col, 'tr_created_at')
+    if order_dir == 'desc':
+        order_field = '-' + order_field
+    qs = qs.order_by(order_field)
+
+    # Slice for pagination
+    if length != -1:
+        qs = qs[start:start + length]
+    else:
+        qs = qs[start:]
+
+    data = []
+    for t in qs:
+        data.append([
+            t.tr_created_at.strftime('%Y-%m-%d') if t.tr_created_at else '',
+            str(t.tr_enquirynumber) if t.tr_enquirynumber else '',
+            str(t.tr_consignmentnumber) if t.tr_consignmentnumber else '',
+            t.tr_tripnumber or '',
+            t.tr_vehiclenumber or '',
+            str(t.tr_departedlocation) if t.tr_departedlocation else '',
+            str(t.tr_departedkm) if t.tr_departedkm is not None else '0',
+            str(t.tr_departeddate) if t.tr_departeddate else '',
+            str(t.tr_reportedlocation) if t.tr_reportedlocation else '',
+            str(t.tr_reportedkm) if t.tr_reportedkm is not None else '0',
+            str(t.tr_reporteddate) if t.tr_reporteddate else '',
+            t.tr_track_link or '',
+            str(t.tc_financestatus) if t.tc_financestatus else '',
+            str(t.tr_updated_by) if t.tr_updated_by else '',
+            str(t.tr_updated_at) if t.tr_updated_at else '',
+            t.id,  # for edit URL (index 15)
+            t.id,  # for delete URL (index 16)
+        ])
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': records_filtered,
+        'data': data,
+    })
 
 
 #Delete tripdetail

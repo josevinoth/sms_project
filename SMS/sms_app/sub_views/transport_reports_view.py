@@ -1,4 +1,6 @@
 from datetime import datetime
+from django.http import JsonResponse
+
 from datetime import date
 import calendar
 from django.contrib.auth.decorators import login_required
@@ -10,6 +12,7 @@ from django.utils.safestring import mark_safe
 from ..models import TripdetailInfo, ConsignmentdetailInfo, CustomerInfo, CustomerdepartmentInfo, ConsignmentgoodsInfo, Places, VehiclemasterInfo, Driverexpense, Vehicle_allotmentInfo, VendorratemasterInfo1, Vendor_info, OwnershipInfo, CustomerClaimsInfo
 from ..sub_forms.dmr_report_form import DmrForm
 from ..sub_models.location_info_mod import Location_info
+from ..models import VehiclemasterInfo
 
 # -------------------------
 # HEADERS
@@ -117,7 +120,7 @@ MAINTENANCE_REPORT_HEADERS = [
     "ServiceType", "Job Card No", "Previous Job Card Date", "Previous Job Card No",
     "Expected Date Of delivery", "Expected Amount", "Vendor Name", "Assigned Date",
     "Estimated Amount", "Total KM", "Delivery Date",
-    "Bill Amount", "Bill Date"
+    "Bill Amount"
 ]
 
 INSURANCE_RENEWAL_HEADERS = [
@@ -1468,9 +1471,12 @@ def vendor_p_l_attached_report_view(request):
     selected_year = request.POST.get('year')
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
-    vendor_id = request.POST.get('vendor_id')
-    vehicle_type_id = request.POST.get('vehicle_type')
-    veh_no = request.POST.get('veh_no', '').strip()
+    vendor_id = request.POST.get('vendor_id') or request.GET.get('vendor_id')
+    if vendor_id == "" or vendor_id == "None":
+        vendor_id = None
+        
+    vehicle_type_id = request.POST.get('vehicle_type') or request.GET.get('vehicle_type')
+    veh_no = (request.POST.get('veh_no') or request.GET.get('veh_no', '')).strip()
 
     # Identifty all invoiced trip IDs (Linked directly or via consignment/goods)
     invoiced_trip_ids = list(TransInvoiceInfo.objects.filter(ti_trip__isnull=False).values_list('ti_trip_id', flat=True))
@@ -1542,6 +1548,11 @@ def vendor_p_l_attached_report_view(request):
 
     if vehicle_type_id:
         trips = trips.filter(tr_vehicletype_id=vehicle_type_id)
+
+    if vendor_id:
+        # Filter trips by vehicles belonging to the selected vendor
+        vendor_vehicles = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id).values_list('vm_registrationnumber', flat=True)
+        trips = trips.filter(tr_vehiclenumber__in=vendor_vehicles)
 
     if veh_no:
         trips = trips.filter(tr_vehiclenumber__icontains=veh_no)
@@ -1762,6 +1773,26 @@ def vendor_p_l_attached_report_view(request):
         data_rows.append(row)
 
     from ..models import VehicletypeInfo
+    # Fetch only attached vendors
+    all_vendors = Vendor_info.objects.filter(
+        id__in=VehiclemasterInfo.objects.filter(vm_ownership_id=2).values_list('vm_vendor_id', flat=True)
+    ).order_by('vend_name')
+
+    # Get vehicle numbers based on vendor_id if present
+    if vendor_id:
+        vehicle_numbers_qs = VehiclemasterInfo.objects.filter(
+            vm_ownership_id=2,
+            vm_vendor_id=vendor_id
+        ).exclude(
+            vm_registrationnumber__isnull=True
+        ).exclude(
+            vm_registrationnumber=""
+        )
+    else:
+        vehicle_numbers_qs = VehiclemasterInfo.objects.none()
+    
+    vehicle_numbers = vehicle_numbers_qs.values_list('vm_registrationnumber', flat=True).distinct().order_by('vm_registrationnumber')
+
     return render(request, "asset_mgt_app/vendor_p_l_attached_report.html", {
         'first_name': first_name,
         'form': form,
@@ -1774,9 +1805,33 @@ def vendor_p_l_attached_report_view(request):
         'vendor_id': int(vendor_id) if vendor_id else None,
         'vehicle_type_id': int(vehicle_type_id) if vehicle_type_id else None,
         'veh_no': veh_no,
-        'all_vendors': Vendor_info.objects.all().order_by('vend_name'),
+        'all_vendors': all_vendors,
         'vehicle_types': VehicletypeInfo.objects.all().order_by('vt_vehicletype'),
+        'vehicle_numbers': vehicle_numbers,
     })
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from ..models import VehiclemasterInfo
+
+@login_required(login_url='login_page')
+def get_vehicles_by_vendor(request):
+    vendor_id = request.GET.get('vendor_id')
+
+    vehicles = VehiclemasterInfo.objects.filter(
+        vm_vendor_id=vendor_id,
+        vm_ownership_id=2
+    ).exclude(
+        vm_registrationnumber__isnull=True
+    ).exclude(
+        vm_registrationnumber=""
+    ).values_list(
+        'vm_registrationnumber',
+        flat=True
+    ).distinct().order_by('vm_registrationnumber')
+
+    return JsonResponse(list(vehicles), safe=False)
+
+
 
 
 
@@ -2832,8 +2887,7 @@ def maintenance_report_view(request):
             safe_num(rec.mi_estimated_amount),
             rec.mi_total_km_run,
             rec.mi_est_delivery.strftime("%d-%m-%Y") if rec.mi_est_delivery else "", # Delivery Date -> Est Delivery?
-            safe_num(rec.mi_estimated_amount), # Bill Amount -> Estimated Amount (Final cost)
-            rec.mi_created_at.strftime("%d-%m-%Y") if rec.mi_created_at else ""  # Bill Date -> Created At for now
+            safe_num(rec.mi_estimated_amount) # Bill Amount -> Estimated Amount (Final cost)
         ]
         processed_rows.append(row)
         counter += 1

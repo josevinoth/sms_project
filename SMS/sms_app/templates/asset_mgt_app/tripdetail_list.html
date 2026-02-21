@@ -64,26 +64,6 @@
         <table class="table table-striped table-bordered" id="tripdetail_list">
             <thead class="thead-dark">
                 <tr>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Enquiry Number"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Consignment Number">
-                    </th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Trip Number"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Vehicle Number"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search From Location"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Starting KM"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Starting Date"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search To Location"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Ending KM"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Ending Date"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Track"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Trip Status"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Updated By"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Updated On"></th>
-                    <th></th>
-                    <th></th>
-                </tr>
-                <tr>
                     <th>Created On</th>
                     <th>Enquiry Number</th>
                     <th>Consignment Number</th>
@@ -91,10 +71,10 @@
                     <th>Vehicle Number</th>
                     <th>From Location</th>
                     <th>Starting KM</th>
-                    <th>Starting Date & Time</th>
+                    <th>Starting Date &amp; Time</th>
                     <th>To Location</th>
                     <th>Ending KM</th>
-                    <th>Ending Date & Time</th>
+                    <th>Ending Date &amp; Time</th>
                     <th>Track</th>
                     <th>Trip Status</th>
                     <th>Updated By</th>
@@ -104,104 +84,98 @@
                 </tr>
             </thead>
             <tbody>
-                {% for tripdetailinfo in tripdetail_list %}
-                <tr>
-                    <td data-order="{{ tripdetailinfo.tr_created_at|date:'YmdHis' }}">{{ tripdetailinfo.tr_created_at }}</td>
-                    <td>{{ tripdetailinfo.tr_enquirynumber }}</td>
-                    <td>{{ tripdetailinfo.tr_consignmentnumber }}</td>
-                    <td>{{ tripdetailinfo.tr_tripnumber }}</td>
-                    <td>{{ tripdetailinfo.tr_vehiclenumber }}</td>
-                    <td>{{ tripdetailinfo.tr_departedlocation }}</td>
-                    <td>{{ tripdetailinfo.tr_departedkm }}</td>
-                    <td data-order="{{ tripdetailinfo.tr_departeddate|date:'YmdHis' }}">{{ tripdetailinfo.tr_departeddate }}</td>
-                    <td>{{ tripdetailinfo.tr_reportedlocation }}</td>
-                    <td>{{ tripdetailinfo.tr_reportedkm }}</td>
-                    <td data-order="{{ tripdetailinfo.tr_reporteddate|date:'YmdHis' }}">{{ tripdetailinfo.tr_reporteddate }}</td>
-                    <td id="track-cell-{{ tripdetailinfo.id }}">
-                        {% if tripdetailinfo.tr_track_link %}
-                        <a href="{{ tripdetailinfo.tr_track_link }}" target="_blank"
-                           class="btn btn-info btn-sm">Track</a>
-                        {% else %}
-                        <a href="{% url 'track_vehicle_position' %}?vehicle={{ tripdetailinfo.tr_vehiclenumber }}" class="btn btn-sm btn-info" target="_blank">
-                            Live Track
-                        </a>
-                        {% endif %}
-                    </td>
-                    <td>{{ tripdetailinfo.tc_financestatus }}</td>
-                    <td>{{ tripdetailinfo.tr_updated_by }}</td>
-                    <td data-order="{{ tripdetailinfo.tr_updated_at|date:'YmdHis' }}">{{ tripdetailinfo.tr_updated_at }}</td>
-                    <td>
-                        <a class="btn btn-sm btn-primary" href="{% url 'tripdetail_update' tripdetailinfo.id %}">
-                            <i class="far fa-edit"></i>
-                        </a>
-                    </td>
-                    <td>
-                        <form action="{% url 'tripdetail_delete' tripdetailinfo.id %}" method="post"
-                            onsubmit="return confirm('Are you sure?');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-danger">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
             </tbody>
         </table>
     </div>
-    
 </div>
 
 <script>
-    function fetchLiveTracking(vehicleNumber, rowId) {
-        const target = document.getElementById("track-cell-" + rowId);
-        target.innerHTML = "Fetching...";
+    document.addEventListener("DOMContentLoaded", function () {
+        var params = new URLSearchParams(window.location.search);
 
-        fetch("{% url 'get_vehicle_data' %}")
-            .then(res => res.json())
-            .then(data => {
-                let found = false;
-                vehicleNumber = vehicleNumber.toUpperCase().replace(/[\s-]/g, '');
-
-                for (const vehicle of data) {
-                    const normalizedNumber = vehicle.number.toUpperCase().replace(/[\s-]/g, '');
-                    if (vehicleNumber === normalizedNumber) {
-                        const lat = vehicle.lat;
-                        const lon = vehicle.lon;
-                        const link = `https://maps.google.com/?q=${lat},${lon}`;
-                        target.innerHTML = `<a href="${link}" class="btn btn-success btn-sm" target="_blank">Live Track</a>`;
-                        found = true;
-                        break;
+        $('#tripdetail_list').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{% url 'tripdetail_list_ajax' %}",
+                data: function (d) {
+                    d.branch = params.get('branch') || '';
+                    d.trip_status = params.get('trip_status') || '';
+                    d.date_from = params.get('date_from') || '';
+                    d.date_to = params.get('date_to') || '';
+                }
+            },
+            order: [[0, 'desc']],
+            pageLength: 50,
+            lengthMenu: [
+                [10, 25, 50, 100, -1],
+                [10, 25, 50, 100, "All"]
+            ],
+            columns: [
+                { title: "Created On" },
+                { title: "Enquiry Number" },
+                { title: "Consignment Number" },
+                { title: "Trip Number" },
+                { title: "Vehicle Number" },
+                { title: "From Location" },
+                { title: "Starting KM" },
+                { title: "Starting Date & Time" },
+                { title: "To Location" },
+                { title: "Ending KM" },
+                { title: "Ending Date & Time" },
+                { title: "Track", orderable: false },
+                { title: "Trip Status" },
+                { title: "Updated By" },
+                { title: "Updated On" },
+                { title: "Edit", orderable: false, searchable: false },
+                { title: "Delete", orderable: false, searchable: false }
+            ],
+            columnDefs: [
+                {
+                    targets: 11,
+                    render: function (data, type, row) {
+                        if (data) {
+                            return '<a href="' + data + '" target="_blank" class="btn btn-info btn-sm">Track</a>';
+                        } else if (row[4]) {
+                            return '<a href="{% url "track_vehicle_position" %}?vehicle=' + row[4] + '" class="btn btn-sm btn-info" target="_blank">Live Track</a>';
+                        }
+                        return '';
+                    }
+                },
+                {
+                    targets: 15,
+                    render: function (data, type, row) {
+                        return '<a class="btn btn-sm btn-primary" href="/tripdetail_update/' + row[15] + '/"><i class="far fa-edit"></i></a>';
+                    }
+                },
+                {
+                    targets: 16,
+                    render: function (data, type, row) {
+                        return '<form action="/tripdetail_delete/' + row[15] + '/" method="post" onsubmit="return confirm(\'Are you sure?\');">' +
+                            '<input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '">' +
+                            '<button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></button></form>';
                     }
                 }
-
-                if (!found) {
-                    target.innerHTML = '<span class="text-muted">No Tracking</span>';
-                }
-            })
-            .catch(err => {
-                console.error("Error fetching tracking:", err);
-                target.innerHTML = '<span class="text-danger">Error</span>';
-            });
-    }
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    $('#tripdetail_list').DataTable({
-        order: [[2, 'desc']],
-        scrollCollapse: true,
-
-        pageLength: 10,   // default page size
-
-        lengthMenu: [
-            [10, 25, 50, 100, -1],   // values
-            [10, 25, 50, 100, "All"] // labels
-        ],
-
-        dom: 'lBfrtip',
-        buttons: ['copy', 'csv', 'excel', 'print']
+            ],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
     });
-});
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 
 {% endblock content %}

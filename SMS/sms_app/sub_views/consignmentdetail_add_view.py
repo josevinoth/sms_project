@@ -183,89 +183,19 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
 def consignmentdetail_list(request):
     first_name = request.session.get('first_name')
 
-    # Filters
+    # Dropdowns
+    customers = CustomerInfo.objects.all().order_by('cu_name')
+    employees = User_extInfo.objects.filter(
+        emp_organisation_id=2
+    ).select_related('user').order_by('user__first_name')
+
     customer_id = request.GET.get('customer')
     updated_by_id = request.GET.get('updated_by')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     branch = request.GET.get('branch', '')
 
-    customers = CustomerInfo.objects.all().order_by('cu_name')
-    employees = User_extInfo.objects.filter(
-        emp_organisation_id=2
-    ).select_related('user').order_by('user__first_name')
-
-    # Base Query
-    consignment_qs = ConsignmentdetailInfo.objects.select_related(
-        'co_enquirynumber',
-        'co_customer',
-        'co_status',
-        'co_lastmodifiedby'
-    ).prefetch_related('cg_consignmentnumber')
-
-    # Apply Filters
-    if customer_id:
-        consignment_qs = consignment_qs.filter(co_customer_id=customer_id)
-
-    if updated_by_id:
-        consignment_qs = consignment_qs.filter(co_lastmodifiedby_id=updated_by_id)
-
-    if date_from:
-        consignment_qs = consignment_qs.filter(co_consignmentdate__gte=date_from)
-
-    if date_to:
-        consignment_qs = consignment_qs.filter(co_consignmentdate__lte=date_to)
-
-    if branch == 'MAA':
-        consignment_qs = consignment_qs.filter(co_consignmentnumber__istartswith='MAA')
-    elif branch == 'BLR':
-        consignment_qs = consignment_qs.filter(co_consignmentnumber__istartswith='BLR')
-
-    # Pagination
-    paginator = Paginator(consignment_qs.order_by('-id'), 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    consignments = []
-
-    # Build presentation fields (replacing @property logic)
-    for obj in page_obj:
-
-        goods = obj.cg_consignmentnumber.first()
-
-        obj.co_consigner = goods.cg_consigner if goods else ''
-        obj.co_consignee = goods.cg_consignee if goods else ''
-        obj.co_consignerinvoice = goods.cg_consignerinvoice if goods else ''
-        obj.co_consignervalue = goods.cg_consignervalue if goods else ''
-        obj.co_valueininr = goods.cg_valueininr if goods else ''
-        obj.co_noofpieces = goods.cg_qty if goods else ''
-        obj.co_weight = goods.cg_weight if goods else ''
-        obj.co_ebillno = goods.cg_ebillno if goods else ''
-        obj.co_dateofissue = goods.cg_dateofissue if goods else ''
-        obj.co_dateofvalidity = goods.cg_dateofvalidity if goods else ''
-        obj.co_dimension = (
-            f"{goods.cg_length}x{goods.cg_width}x{goods.cg_height}" if goods else ''
-        )
-
-        obj.co_movement = (
-            obj.co_enquirynumber.en_movement_type if obj.co_enquirynumber else ''
-        )
-
-        obj.display_from_location = (
-            obj.co_fromlocaion or
-            (obj.co_enquirynumber.en_fromlocaion if obj.co_enquirynumber else '')
-        )
-
-        obj.display_to_location = (
-            obj.co_tolocation or
-            (obj.co_enquirynumber.en_tolocation if obj.co_enquirynumber else '')
-        )
-
-        consignments.append(obj)
-
     context = {
-        'consignmentdetail_list': consignments,
-        'page_obj': page_obj,
         'first_name': first_name,
         'customers': customers,
         'employees': employees,
@@ -277,6 +207,172 @@ def consignmentdetail_list(request):
     }
 
     return render(request, "asset_mgt_app/consignmentdetail_list.html", context)
+
+
+@login_required(login_url='login_page')
+def consignmentdetail_list_ajax(request):
+    """Server-side DataTables AJAX endpoint for Consignment Detail List."""
+    from django.db.models import Q, Sum
+
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 50))
+    search_value = request.GET.get('search[value]', '').strip()
+
+    # Filters
+    customer_id = request.GET.get('customer')
+    updated_by_id = request.GET.get('updated_by')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    branch = request.GET.get('branch', '')
+
+    qs = ConsignmentdetailInfo.objects.select_related(
+        'co_enquirynumber', 'co_customer', 'co_status', 'co_lastmodifiedby',
+        'co_fromlocaion', 'co_tolocation', 'co_enquirynumber__en_fromlocaion',
+        'co_enquirynumber__en_tolocation', 'co_enquirynumber__en_movement_type'
+    ).prefetch_related('cg_consignmentnumber', 'cg_consignmentnumber__cg_consigner', 'cg_consignmentnumber__cg_consignee').all()
+
+    # Apply Filters
+    if customer_id:
+        qs = qs.filter(co_customer_id=customer_id)
+    if updated_by_id:
+        qs = qs.filter(co_lastmodifiedby_id=updated_by_id)
+    if date_from:
+        qs = qs.filter(co_consignmentdate__gte=date_from)
+    if date_to:
+        qs = qs.filter(co_consignmentdate__lte=date_to)
+    if branch == 'MAA':
+        qs = qs.filter(co_consignmentnumber__istartswith='MAA')
+    elif branch == 'BLR':
+        qs = qs.filter(co_consignmentnumber__istartswith='BLR')
+
+    records_total = qs.count()
+
+    # Global search
+    if search_value:
+        qs = qs.filter(
+            Q(co_consignmentnumber__icontains=search_value) |
+            Q(co_vehicelnumber__icontains=search_value) |
+            Q(co_customer__cu_name__icontains=search_value) |
+            Q(co_enquirynumber__en_enquirynumber__icontains=search_value) |
+            Q(co_status__status__icontains=search_value) |
+            Q(co_lastmodifiedby__first_name__icontains=search_value) |
+            Q(co_lastmodifiedby__last_name__icontains=search_value) |
+            Q(co_fromlocaion__loc_name__icontains=search_value) |
+            Q(co_tolocation__loc_name__icontains=search_value) |
+            Q(cg_consignmentnumber__cg_consigner__consigner_name__icontains=search_value) |
+            Q(cg_consignmentnumber__cg_consignee__consignee_name__icontains=search_value) |
+            Q(cg_consignmentnumber__cg_consignerinvoice__icontains=search_value) |
+            Q(cg_consignmentnumber__cg_ebillno__icontains=search_value)
+        ).distinct()
+
+    records_filtered = qs.count()
+
+    # Ordering - Mapping UI columns to DB fields
+    order_col = int(request.GET.get('order[0][column]', 0))
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+    col_map = {
+        0: 'id',
+        1: 'co_created_at',
+        2: 'co_enquirynumber__en_enquirynumber',
+        3: 'co_consignmentnumber',
+        4: 'co_consignmentdate',
+        5: 'co_vehicelnumber',
+        6: 'co_fromlocaion__loc_name',
+        7: 'co_tolocation__loc_name',
+        8: 'cg_consignmentnumber__cg_consigner__consigner_name',
+        9: 'cg_consignmentnumber__cg_consignee__consignee_name',
+        10: 'cg_consignmentnumber__cg_consignerinvoice',
+        11: 'cg_consignmentnumber__cg_consignervalue',
+        12: 'cg_consignmentnumber__cg_valueininr',
+        13: 'cg_consignmentnumber__cg_qty',
+        14: 'cg_consignmentnumber__cg_weight',
+        15: 'cg_consignmentnumber__cg_ebillno',
+        16: 'cg_consignmentnumber__cg_consignerinvoice_date',
+        17: 'cg_consignmentnumber__cg_dateofvalidity',
+        18: 'co_containerdescription',
+        20: 'co_enquirynumber__en_movement_type__movement_type',
+        21: 'co_status__status',
+        22: 'co_updated_at',
+        23: 'co_lastmodifiedby__first_name',
+    }
+    order_field = col_map.get(order_col, 'id')
+    if order_dir == 'desc':
+        order_field = '-' + order_field
+    qs = qs.order_by(order_field)
+
+    # Slice for pagination
+    if length == -1:
+        qs = qs[start:]
+    else:
+        qs = qs[start:start + length]
+
+    data = []
+    # Fetch data
+    for obj in qs:
+        related_goods = obj.cg_consignmentnumber.all()
+        # For multiple goods, we sum up totals and take the first one for individual fields
+        goods = related_goods[0] if related_goods else None
+        
+        consigner = str(goods.cg_consigner) if (goods and goods.cg_consigner) else ''
+        consignee = str(goods.cg_consignee) if (goods and goods.cg_consignee) else ''
+        invoice = goods.cg_consignerinvoice if goods else ''
+        
+        total_qty = 0
+        total_weight = 0
+        total_value = 0
+        total_value_inr = 0
+        
+        for g in related_goods:
+            total_qty += g.cg_qty or 0
+            total_weight += g.cg_weight or 0
+            total_value += g.cg_consignervalue or 0
+            total_value_inr += g.cg_valueininr or 0
+        
+        ebill = goods.cg_ebillno if goods else ''
+        issue_date = goods.cg_consignerinvoice_date.strftime('%Y-%m-%d') if (goods and goods.cg_consignerinvoice_date) else ''
+        validity_date = goods.cg_dateofvalidity.strftime('%Y-%m-%d') if (goods and goods.cg_dateofvalidity) else ''
+        dimension = f"{goods.cg_length}x{goods.cg_width}x{goods.cg_height}" if goods else ''
+        
+        display_from = str(obj.co_fromlocaion) if obj.co_fromlocaion else (str(obj.co_enquirynumber.en_fromlocaion) if obj.co_enquirynumber else '')
+        display_to = str(obj.co_tolocation) if obj.co_tolocation else (str(obj.co_enquirynumber.en_tolocation) if obj.co_enquirynumber else '')
+        movement = str(obj.co_enquirynumber.en_movement_type) if (obj.co_enquirynumber and obj.co_enquirynumber.en_movement_type) else ''
+
+        data.append([
+            obj.id,                                     # 0: ID
+            obj.co_created_at.strftime('%Y-%m-%d') if obj.co_created_at else '', # 1: Created On
+            str(obj.co_enquirynumber) if obj.co_enquirynumber else '', # 2: Enquiry Number
+            obj.co_consignmentnumber or '',             # 3: Consignment Number
+            obj.co_consignmentdate.strftime('%Y-%m-%d') if obj.co_consignmentdate else '', # 4: Consignment Date
+            obj.co_vehicelnumber or '',                 # 5: Vehicle Number
+            display_from,                               # 6: From Location
+            display_to,                                 # 7: To Location
+            consigner,                                  # 8: Consigner
+            consignee,                                  # 9: Consignee
+            invoice,                                    # 10: Consigner Invoice
+            str(total_value),                           # 11: Value
+            str(total_value_inr),                       # 12: Value in INR
+            str(total_qty),                             # 13: No. of Pieces
+            str(total_weight),                          # 14: Weight
+            ebill,                                      # 15: Eway-Bill No.
+            issue_date,                                 # 16: Date of Issue
+            validity_date,                              # 17: Date of Validity
+            obj.co_containerdescription or '',          # 18: Container Description
+            dimension,                                  # 19: Dimension
+            movement,                                   # 20: Movement
+            str(obj.co_status) if obj.co_status else '', # 21: Status
+            obj.co_updated_at.strftime('%Y-%m-%d') if obj.co_updated_at else '', # 22: Updated On
+            str(obj.co_lastmodifiedby) if obj.co_lastmodifiedby else '', # 23: Updated By
+            obj.id,                                     # 24: Edit
+            obj.id,                                     # 25: Delete
+        ])
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': records_filtered,
+        'data': data,
+    })
 
 
 #Delete consignmentdetail

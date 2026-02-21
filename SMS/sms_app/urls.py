@@ -191,6 +191,7 @@ urlpatterns = [
     path('enquirynote_delete/<int:enquirynote_id>/', views.enquirynote_delete, name='enquirynote_delete'),  # Delete enquirynote
     path('consignmentdetail_enquiry/<int:enquiry_id>/<str:consignment_number>/', views.consignmentdetail_enquiry, name='consignmentdetail_enquiry'),  # List consignmentdetail,
     path('consignmentdetail_list/', views.consignmentdetail_list, name='consignmentdetail_list'),  # List consignmentdetail,
+    path('consignmentdetail_list_ajax/', views.consignmentdetail_list_ajax, name='consignmentdetail_list_ajax'),  # AJAX data for consignmentdetail
     path('consignmentdetail_insert', views.consignmentdetail_add, name='consignmentdetail_insert'),  # Add consignmentdetail
     path('consignmentdetail_update/<int:consignmentdetail_id>/', views.consignmentdetail_add, name='consignmentdetail_update'),  # Update consignmentdetail
     path('consignmentdetail_nav/<int:consignmentdetail_id>/', views.consignmentdetail_nav, name='consignmentdetail_nav'),  # Update consignmentdetail
@@ -215,6 +216,7 @@ urlpatterns = [
     path('vehicletype_delete/<int:vehicletype_id>/', views.vehicletype_delete, name='vehicletype_delete'),  # Delete vehicletype
     path('tripdetail_enquiry/<int:enquiry_id>/<str:trip_num>/', views.tripdetail_enquiry, name='tripdetail_enquiry'),  # tripdetail_enquiry,
     path('tripdetail_list/', views.tripdetail_list, name='tripdetail_list'),  # List tripdetail,
+    path('tripdetail_list_ajax/', views.tripdetail_list_ajax, name='tripdetail_list_ajax'),  # AJAX data for tripdetail
     path('tripdetail_insert', views.tripdetail_add, name='tripdetail_insert'),  # Add tripdetail
     path('tripdetail_update/<int:tripdetail_id>/', views.tripdetail_add, name='tripdetail_update'),  # Update tripdetail
     path('tripdetail_nav/<int:tripdetail_id>/', views.tripdetail_nav, name='tripdetail_nav'),  # Navigate tripdetail
@@ -230,6 +232,7 @@ urlpatterns = [
     path('trbusinesstype_update/<int:trbusinesstype_id>/', views.trbusinesstype_add, name='trbusinesstype_update'),  # Update trbusinesstype
     path('trbusinesstype_delete/<int:trbusinesstype_id>/', views.trbusinesstype_delete, name='trbusinesstype_delete'),  # Delete trbusinesstype
     path('tripclosure_list/', views.tripclosure_list, name='tripclosure_list'),  # List tripclosure,
+    path('tripclosure_list_ajax/', views.tripclosure_list_ajax, name='tripclosure_list_ajax'),  # AJAX data for tripclosure
     path('tripclosure_insert', views.tripclosure_add, name='tripclosure_insert'),  # Add tripclosure
     path('tripclosure_update/<int:tripclosure_id>/', views.tripclosure_add, name='tripclosure_update'),  # Update tripclosure
     path('tripclosure_nav/<int:tripclosure_id>/', views.tripclosure_nav, name='tripclosure_nav'),  # Nav tripclosure
@@ -1025,6 +1028,7 @@ urlpatterns = [
     path('market_bill/<int:id>/edit/', views.market_bill_edit, name='market_bill_edit'),
     path('market_bill/<int:id>/delete/', views.market_bill_delete, name='market_bill_delete'),
     path('ajax/get_trips_by_vehicle/', views.get_trips_by_vendor, name='get_trips_by_vehicle'),
+    path('ajax/get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
 ]
 
 
